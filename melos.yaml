@@ -1,0 +1,57 @@
+name: wasmi
+
+repository: https://github.com/juancastillo0/wasmi_dart
+
+packages:
+  - packages/**
+
+scripts:
+  analyze:
+    exec: flutter analyze .
+    description: Analyze a specific package in this project.
+
+  check-format:
+    exec: dart format --set-exit-if-changed .
+    description: Check the format of a specific package in this project.
+
+  format:
+    exec: dart format .
+    description: Format a specific package in this project.
+
+  version:
+    description: Updates version numbers in all build files
+    run: bash scripts/version.sh
+
+  build:
+    run: melos run build:apple && melos run build:android && melos run build:other
+    description: Build all native libraries for the project.
+
+  build:apple:
+    run: bash scripts/build-apple.sh
+    description: Build the XCFramework for iOS and macOS.
+
+  build:android:
+    run: bash scripts/build-android.sh
+    description: Build the .tar.gz for Android.
+
+  build:other:
+    run: bash scripts/build-other.sh
+    description: Build the .tar.gz for all other platforms.
+
+  test:
+    run: melos run test:dart --no-select && melos run test:flutter --no-select
+    description: Run all Dart & Flutter tests in this project.
+
+  test:dart:
+    run: melos exec -c 1 --fail-fast -- "dart test test"
+    description: Run Dart tests for a specific package in this project.
+    select-package:
+      flutter: false
+      dir-exists: test
+
+  test:flutter:
+    run: melos exec -c 1 --fail-fast -- "flutter test test"
+    description: Run Flutter tests for a specific package in this project.
+    select-package:
+      flutter: true
+      dir-exists: test
