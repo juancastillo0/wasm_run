@@ -33,6 +33,33 @@ Pointer<wire_list_value_2> mapWasmFunction(WireSyncReturn value) {
   return result;
 }
 
+int mapWasmFunctionMut(
+  WireSyncReturn value,
+  Pointer<wire_list_value_2> result,
+) {
+// List<dynamic> wireSyncReturnIntoDart(WireSyncReturn syncReturn) =>
+//     syncReturn.ref.intoDart();
+  print('dart value $value');
+  final l = wireSyncReturnIntoDart(value);
+  print('dart l $l');
+  final input = _wire2api_list_value_2(l.first);
+  print('dart input $input');
+  final output = [
+    Value2.i64((input.first.field0 as int) * 2),
+  ];
+
+  print('dart output $output');
+
+  final platform = WasmiDartPlatform(DynamicLibrary.open(
+    '/Users/juanmanuelcastillo/Desktop/flutter/wasmi_dart/target/debug/libwasmi_dart.dylib',
+  ));
+  print('dart after platform $result');
+  // TODO: this throws
+  final r = platform.api2wire_list_value_2(output, result);
+  print('dart result $r');
+  return 1;
+}
+
 void mapWasmFunctionVoid(WireSyncReturn value) {
 // List<dynamic> wireSyncReturnIntoDart(WireSyncReturn syncReturn) =>
 //     syncReturn.ref.intoDart();
@@ -50,6 +77,8 @@ void mapWasmFunctionVoid(WireSyncReturn value) {
 
 typedef MapInt = Int64 Function(Int64);
 typedef WasmFunction = Pointer<wire_list_value_2> Function(WireSyncReturn);
+typedef WasmFunctionMut = Int64 Function(
+    WireSyncReturn, Pointer<wire_list_value_2>);
 typedef WasmFunctionVoid = Void Function(WireSyncReturn);
 
 List<Value2> _wire2api_list_value_2(dynamic raw) {
@@ -117,6 +146,18 @@ void main() {
       expect(out, Value2.i64(2));
     });
 
+    test('test function mut', () {
+// /Users/juanmanuelcastillo/.pub-cache/hosted/pub.dev/flutter_rust_bridge-1.72.2/lib/src/ffi/dart_cobject.dart
+      final w = getLibrary();
+      final v = Pointer.fromFunction<WasmFunctionMut>(mapWasmFunctionMut, 0);
+      final out = w.runWasmFuncMut(
+        pointer: v.address,
+        params: [1].map(Value2.i64).toList(),
+      );
+
+      expect(out, Value2.i64(2));
+    });
+
     test('test function void', () {
 // /Users/juanmanuelcastillo/.pub-cache/hosted/pub.dev/flutter_rust_bridge-1.72.2/lib/src/ffi/dart_cobject.dart
       final w = getLibrary();
@@ -159,7 +200,21 @@ void main() {
     )
 )
 ''');
-      final module = await w.compileWasm(moduleWasm: binary);
+      final glob = await w.createGlobal(
+        value: Value2.i64(0),
+        mutability: Mutability.Var,
+      );
+
+      final module = await w.compileWasm(moduleWasm: binary, imports: [
+        ModuleImport(
+          module: 'module',
+          name: 'name',
+          value: ExternalValue.global(
+            value: Value2.i64(0),
+            mutability: Mutability.Var,
+          ),
+        ),
+      ]);
       print(await module.getModuleExports());
       final addResult = await module.callFunctionWithArgs(
         name: 'add',

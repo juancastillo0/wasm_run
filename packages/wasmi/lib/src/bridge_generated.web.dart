@@ -20,8 +20,48 @@ class WasmiDartPlatform extends FlutterRustBridgeBase<WasmiDartWire>
 // Section: api2wire
 
   @protected
+  Object api2wire_Func(Func raw) {
+    return raw.shareOrMove();
+  }
+
+  @protected
+  Object api2wire_Global(Global raw) {
+    return raw.shareOrMove();
+  }
+
+  @protected
+  Object api2wire_Memory(Memory raw) {
+    return raw.shareOrMove();
+  }
+
+  @protected
   String api2wire_String(String raw) {
     return raw;
+  }
+
+  @protected
+  Object api2wire_Table(Table raw) {
+    return raw.shareOrMove();
+  }
+
+  @protected
+  List<dynamic> api2wire_box_autoadd_table_type_2(TableType2 raw) {
+    return api2wire_table_type_2(raw);
+  }
+
+  @protected
+  int api2wire_box_autoadd_u32(int raw) {
+    return api2wire_u32(raw);
+  }
+
+  @protected
+  List<dynamic> api2wire_box_autoadd_value_2(Value2 raw) {
+    return api2wire_value_2(raw);
+  }
+
+  @protected
+  List<dynamic> api2wire_box_autoadd_wasm_memory_type(WasmMemoryType raw) {
+    return api2wire_wasm_memory_type(raw);
   }
 
   @protected
@@ -30,13 +70,55 @@ class WasmiDartPlatform extends FlutterRustBridgeBase<WasmiDartWire>
   }
 
   @protected
+  List<dynamic> api2wire_external_value(ExternalValue raw) {
+    if (raw is ExternalValue_Func) {
+      return [0, api2wire_Func(raw.field0)];
+    }
+    if (raw is ExternalValue_Global) {
+      return [1, api2wire_Global(raw.field0)];
+    }
+    if (raw is ExternalValue_Table) {
+      return [2, api2wire_Table(raw.field0)];
+    }
+    if (raw is ExternalValue_Memory) {
+      return [3, api2wire_Memory(raw.field0)];
+    }
+
+    throw Exception('unreachable');
+  }
+
+  @protected
   Object api2wire_i64(int raw) {
     return castNativeBigInt(raw);
   }
 
   @protected
+  List<dynamic> api2wire_list_module_import(List<ModuleImport> raw) {
+    return raw.map(api2wire_module_import).toList();
+  }
+
+  @protected
   List<dynamic> api2wire_list_value_2(List<Value2> raw) {
     return raw.map(api2wire_value_2).toList();
+  }
+
+  @protected
+  List<dynamic> api2wire_module_import(ModuleImport raw) {
+    return [
+      api2wire_String(raw.module),
+      api2wire_String(raw.name),
+      api2wire_external_value(raw.value)
+    ];
+  }
+
+  @protected
+  int? api2wire_opt_box_autoadd_u32(int? raw) {
+    return raw == null ? null : api2wire_box_autoadd_u32(raw);
+  }
+
+  @protected
+  List<dynamic> api2wire_table_type_2(TableType2 raw) {
+    return [api2wire_u32(raw.min), api2wire_opt_box_autoadd_u32(raw.max)];
   }
 
   @protected
@@ -69,10 +151,28 @@ class WasmiDartPlatform extends FlutterRustBridgeBase<WasmiDartWire>
   }
 
   @protected
+  List<dynamic> api2wire_wasm_memory_type(WasmMemoryType raw) {
+    return [
+      api2wire_u32(raw.initialPages),
+      api2wire_opt_box_autoadd_u32(raw.maximumPages)
+    ];
+  }
+
+  @protected
   List<dynamic> api2wire_wasmi_module_id(WasmiModuleId raw) {
-    return [api2wire_usize(raw.field0)];
+    return [api2wire_u32(raw.field0)];
   }
 // Section: finalizer
+
+  late final Finalizer<PlatformPointer> _GlobalFinalizer =
+      Finalizer<PlatformPointer>(inner.drop_opaque_Global);
+  Finalizer<PlatformPointer> get GlobalFinalizer => _GlobalFinalizer;
+  late final Finalizer<PlatformPointer> _MemoryFinalizer =
+      Finalizer<PlatformPointer>(inner.drop_opaque_Memory);
+  Finalizer<PlatformPointer> get MemoryFinalizer => _MemoryFinalizer;
+  late final Finalizer<PlatformPointer> _TableFinalizer =
+      Finalizer<PlatformPointer>(inner.drop_opaque_Table);
+  Finalizer<PlatformPointer> get TableFinalizer => _TableFinalizer;
 }
 
 // Section: WASM wire module
@@ -93,16 +193,31 @@ class WasmiDartWasmModule implements WasmModule {
   external dynamic /* List<dynamic> */ wire_run_wasm_func(
       int pointer, List<dynamic> params);
 
+  external dynamic /* List<dynamic> */ wire_run_wasm_func_mut(
+      int pointer, List<dynamic> params);
+
   external dynamic /* bool */ wire_run_wasm_func_void(
       int pointer, List<dynamic> params);
 
+  external dynamic /* void */ wire_create_memory(
+      NativePortType port_, List<dynamic> memory_type);
+
+  external dynamic /* void */ wire_create_global(
+      NativePortType port_, List<dynamic> value, int mutability);
+
+  external dynamic /* void */ wire_create_table(
+      NativePortType port_, List<dynamic> value, List<dynamic> table_type);
+
   external dynamic /* void */ wire_compile_wasm(
-      NativePortType port_, Uint8List module_wasm);
+      NativePortType port_, Uint8List module_wasm, List<dynamic> imports);
 
   external dynamic /* void */ wire_call_wasm(NativePortType port_);
 
   external dynamic /* void */ wire_add(
       NativePortType port_, Object a, Object b);
+
+  external dynamic /* void */ wire_instantiate__method__WasmiModuleId(
+      NativePortType port_, List<dynamic> that);
 
   external dynamic /* void */ wire_call_function__method__WasmiModuleId(
       NativePortType port_, List<dynamic> that, String name);
@@ -120,9 +235,68 @@ class WasmiDartWasmModule implements WasmModule {
   external dynamic /* void */ wire_executions__method__WasmiModuleId(
       NativePortType port_, List<dynamic> that);
 
+  external dynamic /* void */ wire_dispose__method__WasmiModuleId(
+      NativePortType port_, List<dynamic> that);
+
   external dynamic /* List<dynamic> */
       wire_call_function_with_args_sync__method__WasmiModuleId(
           List<dynamic> that, String name, List<dynamic> args);
+
+  external dynamic /* List<dynamic> */
+      wire_get_global_value__method__WasmiModuleId(
+          List<dynamic> that, Object global);
+
+  external dynamic /* void */ wire_set_global_value__method__WasmiModuleId(
+      List<dynamic> that, Object global, List<dynamic> value);
+
+  external dynamic /* Uint8List */ wire_get_memory_data__method__WasmiModuleId(
+      List<dynamic> that, Object memory);
+
+  external dynamic /* Uint8List */ wire_read_memory__method__WasmiModuleId(
+      List<dynamic> that, Object memory, int offset, Uint8List buffer);
+
+  external dynamic /* int */ wire_get_memory_pages__method__WasmiModuleId(
+      List<dynamic> that, Object memory);
+
+  external dynamic /* void */ wire_write_memory__method__WasmiModuleId(
+      List<dynamic> that, Object memory, int offset, Uint8List buffer);
+
+  external dynamic /* int */ wire_grow_memory__method__WasmiModuleId(
+      List<dynamic> that, Object memory, int pages);
+
+  external dynamic /* int */ wire_get_table_size__method__WasmiModuleId(
+      List<dynamic> that, Object table);
+
+  external dynamic /* int */ wire_grow_table__method__WasmiModuleId(
+      List<dynamic> that, Object table, int delta, List<dynamic> value);
+
+  external dynamic /* List<dynamic>? */ wire_get_table__method__WasmiModuleId(
+      List<dynamic> that, Object table, int index);
+
+  external dynamic /* void */ wire_set_table__method__WasmiModuleId(
+      List<dynamic> that, Object table, int index, List<dynamic> value);
+
+  external dynamic /* void */ wire_fill_table__method__WasmiModuleId(
+      List<dynamic> that,
+      Object table,
+      int index,
+      List<dynamic> value,
+      int len);
+
+  external dynamic /* void */ wire_link_imports__method__WasmiModuleId(
+      NativePortType port_, List<dynamic> that, List<dynamic> imports);
+
+  external dynamic /*  */ drop_opaque_Global(ptr);
+
+  external int /* *const c_void */ share_opaque_Global(ptr);
+
+  external dynamic /*  */ drop_opaque_Memory(ptr);
+
+  external int /* *const c_void */ share_opaque_Memory(ptr);
+
+  external dynamic /*  */ drop_opaque_Table(ptr);
+
+  external int /* *const c_void */ share_opaque_Table(ptr);
 }
 
 // Section: WASM wire connector
@@ -141,17 +315,37 @@ class WasmiDartWire extends FlutterRustBridgeWasmWireBase<WasmiDartWasmModule> {
           int pointer, List<dynamic> params) =>
       wasmModule.wire_run_wasm_func(pointer, params);
 
+  dynamic /* List<dynamic> */ wire_run_wasm_func_mut(
+          int pointer, List<dynamic> params) =>
+      wasmModule.wire_run_wasm_func_mut(pointer, params);
+
   dynamic /* bool */ wire_run_wasm_func_void(
           int pointer, List<dynamic> params) =>
       wasmModule.wire_run_wasm_func_void(pointer, params);
 
-  void wire_compile_wasm(NativePortType port_, Uint8List module_wasm) =>
-      wasmModule.wire_compile_wasm(port_, module_wasm);
+  void wire_create_memory(NativePortType port_, List<dynamic> memory_type) =>
+      wasmModule.wire_create_memory(port_, memory_type);
+
+  void wire_create_global(
+          NativePortType port_, List<dynamic> value, int mutability) =>
+      wasmModule.wire_create_global(port_, value, mutability);
+
+  void wire_create_table(NativePortType port_, List<dynamic> value,
+          List<dynamic> table_type) =>
+      wasmModule.wire_create_table(port_, value, table_type);
+
+  void wire_compile_wasm(
+          NativePortType port_, Uint8List module_wasm, List<dynamic> imports) =>
+      wasmModule.wire_compile_wasm(port_, module_wasm, imports);
 
   void wire_call_wasm(NativePortType port_) => wasmModule.wire_call_wasm(port_);
 
   void wire_add(NativePortType port_, Object a, Object b) =>
       wasmModule.wire_add(port_, a, b);
+
+  void wire_instantiate__method__WasmiModuleId(
+          NativePortType port_, List<dynamic> that) =>
+      wasmModule.wire_instantiate__method__WasmiModuleId(port_, that);
 
   void wire_call_function__method__WasmiModuleId(
           NativePortType port_, List<dynamic> that, String name) =>
@@ -174,9 +368,86 @@ class WasmiDartWire extends FlutterRustBridgeWasmWireBase<WasmiDartWasmModule> {
           NativePortType port_, List<dynamic> that) =>
       wasmModule.wire_executions__method__WasmiModuleId(port_, that);
 
+  void wire_dispose__method__WasmiModuleId(
+          NativePortType port_, List<dynamic> that) =>
+      wasmModule.wire_dispose__method__WasmiModuleId(port_, that);
+
   dynamic /* List<dynamic> */
       wire_call_function_with_args_sync__method__WasmiModuleId(
               List<dynamic> that, String name, List<dynamic> args) =>
           wasmModule.wire_call_function_with_args_sync__method__WasmiModuleId(
               that, name, args);
+
+  dynamic /* List<dynamic> */ wire_get_global_value__method__WasmiModuleId(
+          List<dynamic> that, Object global) =>
+      wasmModule.wire_get_global_value__method__WasmiModuleId(that, global);
+
+  dynamic /* void */ wire_set_global_value__method__WasmiModuleId(
+          List<dynamic> that, Object global, List<dynamic> value) =>
+      wasmModule.wire_set_global_value__method__WasmiModuleId(
+          that, global, value);
+
+  dynamic /* Uint8List */ wire_get_memory_data__method__WasmiModuleId(
+          List<dynamic> that, Object memory) =>
+      wasmModule.wire_get_memory_data__method__WasmiModuleId(that, memory);
+
+  dynamic /* Uint8List */ wire_read_memory__method__WasmiModuleId(
+          List<dynamic> that, Object memory, int offset, Uint8List buffer) =>
+      wasmModule.wire_read_memory__method__WasmiModuleId(
+          that, memory, offset, buffer);
+
+  dynamic /* int */ wire_get_memory_pages__method__WasmiModuleId(
+          List<dynamic> that, Object memory) =>
+      wasmModule.wire_get_memory_pages__method__WasmiModuleId(that, memory);
+
+  dynamic /* void */ wire_write_memory__method__WasmiModuleId(
+          List<dynamic> that, Object memory, int offset, Uint8List buffer) =>
+      wasmModule.wire_write_memory__method__WasmiModuleId(
+          that, memory, offset, buffer);
+
+  dynamic /* int */ wire_grow_memory__method__WasmiModuleId(
+          List<dynamic> that, Object memory, int pages) =>
+      wasmModule.wire_grow_memory__method__WasmiModuleId(that, memory, pages);
+
+  dynamic /* int */ wire_get_table_size__method__WasmiModuleId(
+          List<dynamic> that, Object table) =>
+      wasmModule.wire_get_table_size__method__WasmiModuleId(that, table);
+
+  dynamic /* int */ wire_grow_table__method__WasmiModuleId(
+          List<dynamic> that, Object table, int delta, List<dynamic> value) =>
+      wasmModule.wire_grow_table__method__WasmiModuleId(
+          that, table, delta, value);
+
+  dynamic /* List<dynamic>? */ wire_get_table__method__WasmiModuleId(
+          List<dynamic> that, Object table, int index) =>
+      wasmModule.wire_get_table__method__WasmiModuleId(that, table, index);
+
+  dynamic /* void */ wire_set_table__method__WasmiModuleId(
+          List<dynamic> that, Object table, int index, List<dynamic> value) =>
+      wasmModule.wire_set_table__method__WasmiModuleId(
+          that, table, index, value);
+
+  dynamic /* void */ wire_fill_table__method__WasmiModuleId(List<dynamic> that,
+          Object table, int index, List<dynamic> value, int len) =>
+      wasmModule.wire_fill_table__method__WasmiModuleId(
+          that, table, index, value, len);
+
+  void wire_link_imports__method__WasmiModuleId(
+          NativePortType port_, List<dynamic> that, List<dynamic> imports) =>
+      wasmModule.wire_link_imports__method__WasmiModuleId(port_, that, imports);
+
+  dynamic /*  */ drop_opaque_Global(ptr) => wasmModule.drop_opaque_Global(ptr);
+
+  int /* *const c_void */ share_opaque_Global(ptr) =>
+      wasmModule.share_opaque_Global(ptr);
+
+  dynamic /*  */ drop_opaque_Memory(ptr) => wasmModule.drop_opaque_Memory(ptr);
+
+  int /* *const c_void */ share_opaque_Memory(ptr) =>
+      wasmModule.share_opaque_Memory(ptr);
+
+  dynamic /*  */ drop_opaque_Table(ptr) => wasmModule.drop_opaque_Table(ptr);
+
+  int /* *const c_void */ share_opaque_Table(ptr) =>
+      wasmModule.share_opaque_Table(ptr);
 }

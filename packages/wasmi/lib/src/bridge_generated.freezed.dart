@@ -15,6 +15,669 @@ final _privateConstructorUsedError = UnsupportedError(
     'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#custom-getters-and-methods');
 
 /// @nodoc
+mixin _$ExternalValue {
+  FrbOpaque get field0 => throw _privateConstructorUsedError;
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function(Func field0) func,
+    required TResult Function(Global field0) global,
+    required TResult Function(Table field0) table,
+    required TResult Function(Memory field0) memory,
+  }) =>
+      throw _privateConstructorUsedError;
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function(Func field0)? func,
+    TResult? Function(Global field0)? global,
+    TResult? Function(Table field0)? table,
+    TResult? Function(Memory field0)? memory,
+  }) =>
+      throw _privateConstructorUsedError;
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function(Func field0)? func,
+    TResult Function(Global field0)? global,
+    TResult Function(Table field0)? table,
+    TResult Function(Memory field0)? memory,
+    required TResult orElse(),
+  }) =>
+      throw _privateConstructorUsedError;
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(ExternalValue_Func value) func,
+    required TResult Function(ExternalValue_Global value) global,
+    required TResult Function(ExternalValue_Table value) table,
+    required TResult Function(ExternalValue_Memory value) memory,
+  }) =>
+      throw _privateConstructorUsedError;
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(ExternalValue_Func value)? func,
+    TResult? Function(ExternalValue_Global value)? global,
+    TResult? Function(ExternalValue_Table value)? table,
+    TResult? Function(ExternalValue_Memory value)? memory,
+  }) =>
+      throw _privateConstructorUsedError;
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(ExternalValue_Func value)? func,
+    TResult Function(ExternalValue_Global value)? global,
+    TResult Function(ExternalValue_Table value)? table,
+    TResult Function(ExternalValue_Memory value)? memory,
+    required TResult orElse(),
+  }) =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $ExternalValueCopyWith<$Res> {
+  factory $ExternalValueCopyWith(
+          ExternalValue value, $Res Function(ExternalValue) then) =
+      _$ExternalValueCopyWithImpl<$Res, ExternalValue>;
+}
+
+/// @nodoc
+class _$ExternalValueCopyWithImpl<$Res, $Val extends ExternalValue>
+    implements $ExternalValueCopyWith<$Res> {
+  _$ExternalValueCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+}
+
+/// @nodoc
+abstract class _$$ExternalValue_FuncCopyWith<$Res> {
+  factory _$$ExternalValue_FuncCopyWith(_$ExternalValue_Func value,
+          $Res Function(_$ExternalValue_Func) then) =
+      __$$ExternalValue_FuncCopyWithImpl<$Res>;
+  @useResult
+  $Res call({Func field0});
+}
+
+/// @nodoc
+class __$$ExternalValue_FuncCopyWithImpl<$Res>
+    extends _$ExternalValueCopyWithImpl<$Res, _$ExternalValue_Func>
+    implements _$$ExternalValue_FuncCopyWith<$Res> {
+  __$$ExternalValue_FuncCopyWithImpl(
+      _$ExternalValue_Func _value, $Res Function(_$ExternalValue_Func) _then)
+      : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? field0 = null,
+  }) {
+    return _then(_$ExternalValue_Func(
+      null == field0
+          ? _value.field0
+          : field0 // ignore: cast_nullable_to_non_nullable
+              as Func,
+    ));
+  }
+}
+
+/// @nodoc
+
+class _$ExternalValue_Func implements ExternalValue_Func {
+  const _$ExternalValue_Func(this.field0);
+
+  @override
+  final Func field0;
+
+  @override
+  String toString() {
+    return 'ExternalValue.func(field0: $field0)';
+  }
+
+  @override
+  bool operator ==(dynamic other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$ExternalValue_Func &&
+            (identical(other.field0, field0) || other.field0 == field0));
+  }
+
+  @override
+  int get hashCode => Object.hash(runtimeType, field0);
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$ExternalValue_FuncCopyWith<_$ExternalValue_Func> get copyWith =>
+      __$$ExternalValue_FuncCopyWithImpl<_$ExternalValue_Func>(
+          this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function(Func field0) func,
+    required TResult Function(Global field0) global,
+    required TResult Function(Table field0) table,
+    required TResult Function(Memory field0) memory,
+  }) {
+    return func(field0);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function(Func field0)? func,
+    TResult? Function(Global field0)? global,
+    TResult? Function(Table field0)? table,
+    TResult? Function(Memory field0)? memory,
+  }) {
+    return func?.call(field0);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function(Func field0)? func,
+    TResult Function(Global field0)? global,
+    TResult Function(Table field0)? table,
+    TResult Function(Memory field0)? memory,
+    required TResult orElse(),
+  }) {
+    if (func != null) {
+      return func(field0);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(ExternalValue_Func value) func,
+    required TResult Function(ExternalValue_Global value) global,
+    required TResult Function(ExternalValue_Table value) table,
+    required TResult Function(ExternalValue_Memory value) memory,
+  }) {
+    return func(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(ExternalValue_Func value)? func,
+    TResult? Function(ExternalValue_Global value)? global,
+    TResult? Function(ExternalValue_Table value)? table,
+    TResult? Function(ExternalValue_Memory value)? memory,
+  }) {
+    return func?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(ExternalValue_Func value)? func,
+    TResult Function(ExternalValue_Global value)? global,
+    TResult Function(ExternalValue_Table value)? table,
+    TResult Function(ExternalValue_Memory value)? memory,
+    required TResult orElse(),
+  }) {
+    if (func != null) {
+      return func(this);
+    }
+    return orElse();
+  }
+}
+
+abstract class ExternalValue_Func implements ExternalValue {
+  const factory ExternalValue_Func(final Func field0) = _$ExternalValue_Func;
+
+  @override
+  Func get field0;
+  @JsonKey(ignore: true)
+  _$$ExternalValue_FuncCopyWith<_$ExternalValue_Func> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class _$$ExternalValue_GlobalCopyWith<$Res> {
+  factory _$$ExternalValue_GlobalCopyWith(_$ExternalValue_Global value,
+          $Res Function(_$ExternalValue_Global) then) =
+      __$$ExternalValue_GlobalCopyWithImpl<$Res>;
+  @useResult
+  $Res call({Global field0});
+}
+
+/// @nodoc
+class __$$ExternalValue_GlobalCopyWithImpl<$Res>
+    extends _$ExternalValueCopyWithImpl<$Res, _$ExternalValue_Global>
+    implements _$$ExternalValue_GlobalCopyWith<$Res> {
+  __$$ExternalValue_GlobalCopyWithImpl(_$ExternalValue_Global _value,
+      $Res Function(_$ExternalValue_Global) _then)
+      : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? field0 = null,
+  }) {
+    return _then(_$ExternalValue_Global(
+      null == field0
+          ? _value.field0
+          : field0 // ignore: cast_nullable_to_non_nullable
+              as Global,
+    ));
+  }
+}
+
+/// @nodoc
+
+class _$ExternalValue_Global implements ExternalValue_Global {
+  const _$ExternalValue_Global(this.field0);
+
+  @override
+  final Global field0;
+
+  @override
+  String toString() {
+    return 'ExternalValue.global(field0: $field0)';
+  }
+
+  @override
+  bool operator ==(dynamic other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$ExternalValue_Global &&
+            (identical(other.field0, field0) || other.field0 == field0));
+  }
+
+  @override
+  int get hashCode => Object.hash(runtimeType, field0);
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$ExternalValue_GlobalCopyWith<_$ExternalValue_Global> get copyWith =>
+      __$$ExternalValue_GlobalCopyWithImpl<_$ExternalValue_Global>(
+          this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function(Func field0) func,
+    required TResult Function(Global field0) global,
+    required TResult Function(Table field0) table,
+    required TResult Function(Memory field0) memory,
+  }) {
+    return global(field0);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function(Func field0)? func,
+    TResult? Function(Global field0)? global,
+    TResult? Function(Table field0)? table,
+    TResult? Function(Memory field0)? memory,
+  }) {
+    return global?.call(field0);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function(Func field0)? func,
+    TResult Function(Global field0)? global,
+    TResult Function(Table field0)? table,
+    TResult Function(Memory field0)? memory,
+    required TResult orElse(),
+  }) {
+    if (global != null) {
+      return global(field0);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(ExternalValue_Func value) func,
+    required TResult Function(ExternalValue_Global value) global,
+    required TResult Function(ExternalValue_Table value) table,
+    required TResult Function(ExternalValue_Memory value) memory,
+  }) {
+    return global(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(ExternalValue_Func value)? func,
+    TResult? Function(ExternalValue_Global value)? global,
+    TResult? Function(ExternalValue_Table value)? table,
+    TResult? Function(ExternalValue_Memory value)? memory,
+  }) {
+    return global?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(ExternalValue_Func value)? func,
+    TResult Function(ExternalValue_Global value)? global,
+    TResult Function(ExternalValue_Table value)? table,
+    TResult Function(ExternalValue_Memory value)? memory,
+    required TResult orElse(),
+  }) {
+    if (global != null) {
+      return global(this);
+    }
+    return orElse();
+  }
+}
+
+abstract class ExternalValue_Global implements ExternalValue {
+  const factory ExternalValue_Global(final Global field0) =
+      _$ExternalValue_Global;
+
+  @override
+  Global get field0;
+  @JsonKey(ignore: true)
+  _$$ExternalValue_GlobalCopyWith<_$ExternalValue_Global> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class _$$ExternalValue_TableCopyWith<$Res> {
+  factory _$$ExternalValue_TableCopyWith(_$ExternalValue_Table value,
+          $Res Function(_$ExternalValue_Table) then) =
+      __$$ExternalValue_TableCopyWithImpl<$Res>;
+  @useResult
+  $Res call({Table field0});
+}
+
+/// @nodoc
+class __$$ExternalValue_TableCopyWithImpl<$Res>
+    extends _$ExternalValueCopyWithImpl<$Res, _$ExternalValue_Table>
+    implements _$$ExternalValue_TableCopyWith<$Res> {
+  __$$ExternalValue_TableCopyWithImpl(
+      _$ExternalValue_Table _value, $Res Function(_$ExternalValue_Table) _then)
+      : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? field0 = null,
+  }) {
+    return _then(_$ExternalValue_Table(
+      null == field0
+          ? _value.field0
+          : field0 // ignore: cast_nullable_to_non_nullable
+              as Table,
+    ));
+  }
+}
+
+/// @nodoc
+
+class _$ExternalValue_Table implements ExternalValue_Table {
+  const _$ExternalValue_Table(this.field0);
+
+  @override
+  final Table field0;
+
+  @override
+  String toString() {
+    return 'ExternalValue.table(field0: $field0)';
+  }
+
+  @override
+  bool operator ==(dynamic other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$ExternalValue_Table &&
+            (identical(other.field0, field0) || other.field0 == field0));
+  }
+
+  @override
+  int get hashCode => Object.hash(runtimeType, field0);
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$ExternalValue_TableCopyWith<_$ExternalValue_Table> get copyWith =>
+      __$$ExternalValue_TableCopyWithImpl<_$ExternalValue_Table>(
+          this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function(Func field0) func,
+    required TResult Function(Global field0) global,
+    required TResult Function(Table field0) table,
+    required TResult Function(Memory field0) memory,
+  }) {
+    return table(field0);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function(Func field0)? func,
+    TResult? Function(Global field0)? global,
+    TResult? Function(Table field0)? table,
+    TResult? Function(Memory field0)? memory,
+  }) {
+    return table?.call(field0);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function(Func field0)? func,
+    TResult Function(Global field0)? global,
+    TResult Function(Table field0)? table,
+    TResult Function(Memory field0)? memory,
+    required TResult orElse(),
+  }) {
+    if (table != null) {
+      return table(field0);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(ExternalValue_Func value) func,
+    required TResult Function(ExternalValue_Global value) global,
+    required TResult Function(ExternalValue_Table value) table,
+    required TResult Function(ExternalValue_Memory value) memory,
+  }) {
+    return table(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(ExternalValue_Func value)? func,
+    TResult? Function(ExternalValue_Global value)? global,
+    TResult? Function(ExternalValue_Table value)? table,
+    TResult? Function(ExternalValue_Memory value)? memory,
+  }) {
+    return table?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(ExternalValue_Func value)? func,
+    TResult Function(ExternalValue_Global value)? global,
+    TResult Function(ExternalValue_Table value)? table,
+    TResult Function(ExternalValue_Memory value)? memory,
+    required TResult orElse(),
+  }) {
+    if (table != null) {
+      return table(this);
+    }
+    return orElse();
+  }
+}
+
+abstract class ExternalValue_Table implements ExternalValue {
+  const factory ExternalValue_Table(final Table field0) = _$ExternalValue_Table;
+
+  @override
+  Table get field0;
+  @JsonKey(ignore: true)
+  _$$ExternalValue_TableCopyWith<_$ExternalValue_Table> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class _$$ExternalValue_MemoryCopyWith<$Res> {
+  factory _$$ExternalValue_MemoryCopyWith(_$ExternalValue_Memory value,
+          $Res Function(_$ExternalValue_Memory) then) =
+      __$$ExternalValue_MemoryCopyWithImpl<$Res>;
+  @useResult
+  $Res call({Memory field0});
+}
+
+/// @nodoc
+class __$$ExternalValue_MemoryCopyWithImpl<$Res>
+    extends _$ExternalValueCopyWithImpl<$Res, _$ExternalValue_Memory>
+    implements _$$ExternalValue_MemoryCopyWith<$Res> {
+  __$$ExternalValue_MemoryCopyWithImpl(_$ExternalValue_Memory _value,
+      $Res Function(_$ExternalValue_Memory) _then)
+      : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? field0 = null,
+  }) {
+    return _then(_$ExternalValue_Memory(
+      null == field0
+          ? _value.field0
+          : field0 // ignore: cast_nullable_to_non_nullable
+              as Memory,
+    ));
+  }
+}
+
+/// @nodoc
+
+class _$ExternalValue_Memory implements ExternalValue_Memory {
+  const _$ExternalValue_Memory(this.field0);
+
+  @override
+  final Memory field0;
+
+  @override
+  String toString() {
+    return 'ExternalValue.memory(field0: $field0)';
+  }
+
+  @override
+  bool operator ==(dynamic other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$ExternalValue_Memory &&
+            (identical(other.field0, field0) || other.field0 == field0));
+  }
+
+  @override
+  int get hashCode => Object.hash(runtimeType, field0);
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$ExternalValue_MemoryCopyWith<_$ExternalValue_Memory> get copyWith =>
+      __$$ExternalValue_MemoryCopyWithImpl<_$ExternalValue_Memory>(
+          this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function(Func field0) func,
+    required TResult Function(Global field0) global,
+    required TResult Function(Table field0) table,
+    required TResult Function(Memory field0) memory,
+  }) {
+    return memory(field0);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function(Func field0)? func,
+    TResult? Function(Global field0)? global,
+    TResult? Function(Table field0)? table,
+    TResult? Function(Memory field0)? memory,
+  }) {
+    return memory?.call(field0);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function(Func field0)? func,
+    TResult Function(Global field0)? global,
+    TResult Function(Table field0)? table,
+    TResult Function(Memory field0)? memory,
+    required TResult orElse(),
+  }) {
+    if (memory != null) {
+      return memory(field0);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(ExternalValue_Func value) func,
+    required TResult Function(ExternalValue_Global value) global,
+    required TResult Function(ExternalValue_Table value) table,
+    required TResult Function(ExternalValue_Memory value) memory,
+  }) {
+    return memory(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(ExternalValue_Func value)? func,
+    TResult? Function(ExternalValue_Global value)? global,
+    TResult? Function(ExternalValue_Table value)? table,
+    TResult? Function(ExternalValue_Memory value)? memory,
+  }) {
+    return memory?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(ExternalValue_Func value)? func,
+    TResult Function(ExternalValue_Global value)? global,
+    TResult Function(ExternalValue_Table value)? table,
+    TResult Function(ExternalValue_Memory value)? memory,
+    required TResult orElse(),
+  }) {
+    if (memory != null) {
+      return memory(this);
+    }
+    return orElse();
+  }
+}
+
+abstract class ExternalValue_Memory implements ExternalValue {
+  const factory ExternalValue_Memory(final Memory field0) =
+      _$ExternalValue_Memory;
+
+  @override
+  Memory get field0;
+  @JsonKey(ignore: true)
+  _$$ExternalValue_MemoryCopyWith<_$ExternalValue_Memory> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
 mixin _$Value2 {
   num get field0 => throw _privateConstructorUsedError;
   @optionalTypeArgs
