@@ -59,6 +59,19 @@ typedef struct wire_list_value_2 {
   int32_t len;
 } wire_list_value_2;
 
+typedef struct wire_WasmiInstanceId {
+  uint32_t field0;
+} wire_WasmiInstanceId;
+
+typedef struct wire_WasmiModuleId {
+  uint32_t field0;
+} wire_WasmiModuleId;
+
+typedef struct wire_list_value_ty {
+  int32_t *ptr;
+  int32_t len;
+} wire_list_value_ty;
+
 typedef struct wire_WasmMemoryType {
   uint32_t initial_pages;
   uint32_t *maximum_pages;
@@ -69,6 +82,18 @@ typedef struct wire_TableType2 {
   uint32_t *max;
 } wire_TableType2;
 
+typedef struct wire_Global {
+  const void *ptr;
+} wire_Global;
+
+typedef struct wire_Memory {
+  const void *ptr;
+} wire_Memory;
+
+typedef struct wire_Table {
+  const void *ptr;
+} wire_Table;
+
 typedef struct wire_Func {
   const void *ptr;
 } wire_Func;
@@ -77,25 +102,13 @@ typedef struct wire_ExternalValue_Func {
   struct wire_Func field0;
 } wire_ExternalValue_Func;
 
-typedef struct wire_Global {
-  const void *ptr;
-} wire_Global;
-
 typedef struct wire_ExternalValue_Global {
   struct wire_Global field0;
 } wire_ExternalValue_Global;
 
-typedef struct wire_Table {
-  const void *ptr;
-} wire_Table;
-
 typedef struct wire_ExternalValue_Table {
   struct wire_Table field0;
 } wire_ExternalValue_Table;
-
-typedef struct wire_Memory {
-  const void *ptr;
-} wire_Memory;
 
 typedef struct wire_ExternalValue_Memory {
   struct wire_Memory field0;
@@ -124,10 +137,6 @@ typedef struct wire_list_module_import {
   int32_t len;
 } wire_list_module_import;
 
-typedef struct wire_WasmiModuleId {
-  uint32_t field0;
-} wire_WasmiModuleId;
-
 void store_dart_post_cobject(DartPostCObjectFnType ptr);
 
 Dart_Handle get_dart_object(uintptr_t ptr);
@@ -148,44 +157,58 @@ WireSyncReturn wire_run_wasm_func_mut(uintptr_t pointer, struct wire_list_value_
 
 WireSyncReturn wire_run_wasm_func_void(uintptr_t pointer, struct wire_list_value_2 *params);
 
-void wire_create_memory(int64_t port_, struct wire_WasmMemoryType *memory_type);
+WireSyncReturn wire_compile_wasm_sync(struct wire_uint_8_list *module_wasm);
 
-void wire_create_global(int64_t port_, struct wire_Value2 *value, int32_t mutability);
-
-void wire_create_table(int64_t port_,
-                       struct wire_Value2 *value,
-                       struct wire_TableType2 *table_type);
-
-void wire_compile_wasm(int64_t port_,
-                       struct wire_uint_8_list *module_wasm,
-                       struct wire_list_module_import *imports);
+void wire_compile_wasm(int64_t port_, struct wire_uint_8_list *module_wasm);
 
 void wire_call_wasm(int64_t port_);
 
 void wire_add(int64_t port_, int64_t a, int64_t b);
 
+void wire_call_function__method__WasmiInstanceId(int64_t port_,
+                                                 struct wire_WasmiInstanceId *that,
+                                                 struct wire_uint_8_list *name);
+
+WireSyncReturn wire_call_function_with_args_sync__method__WasmiInstanceId(struct wire_WasmiInstanceId *that,
+                                                                          struct wire_uint_8_list *name,
+                                                                          struct wire_list_value_2 *args);
+
+void wire_call_function_with_args__method__WasmiInstanceId(int64_t port_,
+                                                           struct wire_WasmiInstanceId *that,
+                                                           struct wire_uint_8_list *name,
+                                                           struct wire_list_value_2 *args);
+
+WireSyncReturn wire_exports__method__WasmiInstanceId(struct wire_WasmiInstanceId *that);
+
+WireSyncReturn wire_instantiate_sync__method__WasmiModuleId(struct wire_WasmiModuleId *that);
+
 void wire_instantiate__method__WasmiModuleId(int64_t port_, struct wire_WasmiModuleId *that);
 
-void wire_call_function__method__WasmiModuleId(int64_t port_,
-                                               struct wire_WasmiModuleId *that,
-                                               struct wire_uint_8_list *name);
+WireSyncReturn wire_get_module_imports__method__WasmiModuleId(struct wire_WasmiModuleId *that);
 
-void wire_call_function_with_args__method__WasmiModuleId(int64_t port_,
-                                                         struct wire_WasmiModuleId *that,
-                                                         struct wire_uint_8_list *name,
-                                                         struct wire_list_value_2 *args);
-
-void wire_get_exports__method__WasmiModuleId(int64_t port_, struct wire_WasmiModuleId *that);
-
-void wire_get_module_exports__method__WasmiModuleId(int64_t port_, struct wire_WasmiModuleId *that);
+WireSyncReturn wire_get_module_exports__method__WasmiModuleId(struct wire_WasmiModuleId *that);
 
 void wire_executions__method__WasmiModuleId(int64_t port_, struct wire_WasmiModuleId *that);
 
 void wire_dispose__method__WasmiModuleId(int64_t port_, struct wire_WasmiModuleId *that);
 
-WireSyncReturn wire_call_function_with_args_sync__method__WasmiModuleId(struct wire_WasmiModuleId *that,
-                                                                        struct wire_uint_8_list *name,
-                                                                        struct wire_list_value_2 *args);
+WireSyncReturn wire_create_function__method__WasmiModuleId(struct wire_WasmiModuleId *that,
+                                                           uintptr_t function_pointer,
+                                                           struct wire_list_value_ty *param_types);
+
+WireSyncReturn wire_create_memory__method__WasmiModuleId(struct wire_WasmiModuleId *that,
+                                                         struct wire_WasmMemoryType *memory_type);
+
+WireSyncReturn wire_create_global__method__WasmiModuleId(struct wire_WasmiModuleId *that,
+                                                         struct wire_Value2 *value,
+                                                         int32_t mutability);
+
+WireSyncReturn wire_create_table__method__WasmiModuleId(struct wire_WasmiModuleId *that,
+                                                        struct wire_Value2 *value,
+                                                        struct wire_TableType2 *table_type);
+
+WireSyncReturn wire_get_global_type__method__WasmiModuleId(struct wire_WasmiModuleId *that,
+                                                           struct wire_Global global);
 
 WireSyncReturn wire_get_global_value__method__WasmiModuleId(struct wire_WasmiModuleId *that,
                                                             struct wire_Global global);
@@ -193,6 +216,9 @@ WireSyncReturn wire_get_global_value__method__WasmiModuleId(struct wire_WasmiMod
 WireSyncReturn wire_set_global_value__method__WasmiModuleId(struct wire_WasmiModuleId *that,
                                                             struct wire_Global global,
                                                             struct wire_Value2 *value);
+
+WireSyncReturn wire_get_memory_type__method__WasmiModuleId(struct wire_WasmiModuleId *that,
+                                                           struct wire_Memory memory);
 
 WireSyncReturn wire_get_memory_data__method__WasmiModuleId(struct wire_WasmiModuleId *that,
                                                            struct wire_Memory memory);
@@ -217,6 +243,9 @@ WireSyncReturn wire_grow_memory__method__WasmiModuleId(struct wire_WasmiModuleId
 WireSyncReturn wire_get_table_size__method__WasmiModuleId(struct wire_WasmiModuleId *that,
                                                           struct wire_Table table);
 
+WireSyncReturn wire_get_table_type__method__WasmiModuleId(struct wire_WasmiModuleId *that,
+                                                          struct wire_Table table);
+
 WireSyncReturn wire_grow_table__method__WasmiModuleId(struct wire_WasmiModuleId *that,
                                                       struct wire_Table table,
                                                       uint32_t delta,
@@ -237,9 +266,8 @@ WireSyncReturn wire_fill_table__method__WasmiModuleId(struct wire_WasmiModuleId 
                                                       struct wire_Value2 *value,
                                                       uint32_t len);
 
-void wire_link_imports__method__WasmiModuleId(int64_t port_,
-                                              struct wire_WasmiModuleId *that,
-                                              struct wire_list_module_import *imports);
+WireSyncReturn wire_link_imports__method__WasmiModuleId(struct wire_WasmiModuleId *that,
+                                                        struct wire_list_module_import *imports);
 
 struct wire_Func new_Func(void);
 
@@ -257,13 +285,21 @@ struct wire_Value2 *new_box_autoadd_value_2_0(void);
 
 struct wire_WasmMemoryType *new_box_autoadd_wasm_memory_type_0(void);
 
+struct wire_WasmiInstanceId *new_box_autoadd_wasmi_instance_id_0(void);
+
 struct wire_WasmiModuleId *new_box_autoadd_wasmi_module_id_0(void);
 
 struct wire_list_module_import *new_list_module_import_0(int32_t len);
 
 struct wire_list_value_2 *new_list_value_2_0(int32_t len);
 
+struct wire_list_value_ty *new_list_value_ty_0(int32_t len);
+
 struct wire_uint_8_list *new_uint_8_list_0(int32_t len);
+
+void drop_opaque_Func(const void *ptr);
+
+const void *share_opaque_Func(const void *ptr);
 
 void drop_opaque_Global(const void *ptr);
 
@@ -306,28 +342,35 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) wire_run_wasm_func);
     dummy_var ^= ((int64_t) (void*) wire_run_wasm_func_mut);
     dummy_var ^= ((int64_t) (void*) wire_run_wasm_func_void);
-    dummy_var ^= ((int64_t) (void*) wire_create_memory);
-    dummy_var ^= ((int64_t) (void*) wire_create_global);
-    dummy_var ^= ((int64_t) (void*) wire_create_table);
+    dummy_var ^= ((int64_t) (void*) wire_compile_wasm_sync);
     dummy_var ^= ((int64_t) (void*) wire_compile_wasm);
     dummy_var ^= ((int64_t) (void*) wire_call_wasm);
     dummy_var ^= ((int64_t) (void*) wire_add);
+    dummy_var ^= ((int64_t) (void*) wire_call_function__method__WasmiInstanceId);
+    dummy_var ^= ((int64_t) (void*) wire_call_function_with_args_sync__method__WasmiInstanceId);
+    dummy_var ^= ((int64_t) (void*) wire_call_function_with_args__method__WasmiInstanceId);
+    dummy_var ^= ((int64_t) (void*) wire_exports__method__WasmiInstanceId);
+    dummy_var ^= ((int64_t) (void*) wire_instantiate_sync__method__WasmiModuleId);
     dummy_var ^= ((int64_t) (void*) wire_instantiate__method__WasmiModuleId);
-    dummy_var ^= ((int64_t) (void*) wire_call_function__method__WasmiModuleId);
-    dummy_var ^= ((int64_t) (void*) wire_call_function_with_args__method__WasmiModuleId);
-    dummy_var ^= ((int64_t) (void*) wire_get_exports__method__WasmiModuleId);
+    dummy_var ^= ((int64_t) (void*) wire_get_module_imports__method__WasmiModuleId);
     dummy_var ^= ((int64_t) (void*) wire_get_module_exports__method__WasmiModuleId);
     dummy_var ^= ((int64_t) (void*) wire_executions__method__WasmiModuleId);
     dummy_var ^= ((int64_t) (void*) wire_dispose__method__WasmiModuleId);
-    dummy_var ^= ((int64_t) (void*) wire_call_function_with_args_sync__method__WasmiModuleId);
+    dummy_var ^= ((int64_t) (void*) wire_create_function__method__WasmiModuleId);
+    dummy_var ^= ((int64_t) (void*) wire_create_memory__method__WasmiModuleId);
+    dummy_var ^= ((int64_t) (void*) wire_create_global__method__WasmiModuleId);
+    dummy_var ^= ((int64_t) (void*) wire_create_table__method__WasmiModuleId);
+    dummy_var ^= ((int64_t) (void*) wire_get_global_type__method__WasmiModuleId);
     dummy_var ^= ((int64_t) (void*) wire_get_global_value__method__WasmiModuleId);
     dummy_var ^= ((int64_t) (void*) wire_set_global_value__method__WasmiModuleId);
+    dummy_var ^= ((int64_t) (void*) wire_get_memory_type__method__WasmiModuleId);
     dummy_var ^= ((int64_t) (void*) wire_get_memory_data__method__WasmiModuleId);
     dummy_var ^= ((int64_t) (void*) wire_read_memory__method__WasmiModuleId);
     dummy_var ^= ((int64_t) (void*) wire_get_memory_pages__method__WasmiModuleId);
     dummy_var ^= ((int64_t) (void*) wire_write_memory__method__WasmiModuleId);
     dummy_var ^= ((int64_t) (void*) wire_grow_memory__method__WasmiModuleId);
     dummy_var ^= ((int64_t) (void*) wire_get_table_size__method__WasmiModuleId);
+    dummy_var ^= ((int64_t) (void*) wire_get_table_type__method__WasmiModuleId);
     dummy_var ^= ((int64_t) (void*) wire_grow_table__method__WasmiModuleId);
     dummy_var ^= ((int64_t) (void*) wire_get_table__method__WasmiModuleId);
     dummy_var ^= ((int64_t) (void*) wire_set_table__method__WasmiModuleId);
@@ -341,10 +384,14 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) new_box_autoadd_u32_0);
     dummy_var ^= ((int64_t) (void*) new_box_autoadd_value_2_0);
     dummy_var ^= ((int64_t) (void*) new_box_autoadd_wasm_memory_type_0);
+    dummy_var ^= ((int64_t) (void*) new_box_autoadd_wasmi_instance_id_0);
     dummy_var ^= ((int64_t) (void*) new_box_autoadd_wasmi_module_id_0);
     dummy_var ^= ((int64_t) (void*) new_list_module_import_0);
     dummy_var ^= ((int64_t) (void*) new_list_value_2_0);
+    dummy_var ^= ((int64_t) (void*) new_list_value_ty_0);
     dummy_var ^= ((int64_t) (void*) new_uint_8_list_0);
+    dummy_var ^= ((int64_t) (void*) drop_opaque_Func);
+    dummy_var ^= ((int64_t) (void*) share_opaque_Func);
     dummy_var ^= ((int64_t) (void*) drop_opaque_Global);
     dummy_var ^= ((int64_t) (void*) share_opaque_Global);
     dummy_var ^= ((int64_t) (void*) drop_opaque_Memory);

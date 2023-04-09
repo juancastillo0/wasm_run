@@ -65,6 +65,11 @@ class WasmiDartPlatform extends FlutterRustBridgeBase<WasmiDartWire>
   }
 
   @protected
+  List<dynamic> api2wire_box_autoadd_wasmi_instance_id(WasmiInstanceId raw) {
+    return api2wire_wasmi_instance_id(raw);
+  }
+
+  @protected
   List<dynamic> api2wire_box_autoadd_wasmi_module_id(WasmiModuleId raw) {
     return api2wire_wasmi_module_id(raw);
   }
@@ -100,6 +105,11 @@ class WasmiDartPlatform extends FlutterRustBridgeBase<WasmiDartWire>
   @protected
   List<dynamic> api2wire_list_value_2(List<Value2> raw) {
     return raw.map(api2wire_value_2).toList();
+  }
+
+  @protected
+  List<dynamic> api2wire_list_value_ty(List<ValueTy> raw) {
+    return raw.map(api2wire_value_ty).toList();
   }
 
   @protected
@@ -159,11 +169,19 @@ class WasmiDartPlatform extends FlutterRustBridgeBase<WasmiDartWire>
   }
 
   @protected
+  List<dynamic> api2wire_wasmi_instance_id(WasmiInstanceId raw) {
+    return [api2wire_u32(raw.field0)];
+  }
+
+  @protected
   List<dynamic> api2wire_wasmi_module_id(WasmiModuleId raw) {
     return [api2wire_u32(raw.field0)];
   }
 // Section: finalizer
 
+  late final Finalizer<PlatformPointer> _FuncFinalizer =
+      Finalizer<PlatformPointer>(inner.drop_opaque_Func);
+  Finalizer<PlatformPointer> get FuncFinalizer => _FuncFinalizer;
   late final Finalizer<PlatformPointer> _GlobalFinalizer =
       Finalizer<PlatformPointer>(inner.drop_opaque_Global);
   Finalizer<PlatformPointer> get GlobalFinalizer => _GlobalFinalizer;
@@ -199,38 +217,45 @@ class WasmiDartWasmModule implements WasmModule {
   external dynamic /* bool */ wire_run_wasm_func_void(
       int pointer, List<dynamic> params);
 
-  external dynamic /* void */ wire_create_memory(
-      NativePortType port_, List<dynamic> memory_type);
-
-  external dynamic /* void */ wire_create_global(
-      NativePortType port_, List<dynamic> value, int mutability);
-
-  external dynamic /* void */ wire_create_table(
-      NativePortType port_, List<dynamic> value, List<dynamic> table_type);
+  external dynamic /* List<dynamic> */ wire_compile_wasm_sync(
+      Uint8List module_wasm);
 
   external dynamic /* void */ wire_compile_wasm(
-      NativePortType port_, Uint8List module_wasm, List<dynamic> imports);
+      NativePortType port_, Uint8List module_wasm);
 
   external dynamic /* void */ wire_call_wasm(NativePortType port_);
 
   external dynamic /* void */ wire_add(
       NativePortType port_, Object a, Object b);
 
+  external dynamic /* void */ wire_call_function__method__WasmiInstanceId(
+      NativePortType port_, List<dynamic> that, String name);
+
+  external dynamic /* List<dynamic> */
+      wire_call_function_with_args_sync__method__WasmiInstanceId(
+          List<dynamic> that, String name, List<dynamic> args);
+
+  external dynamic /* void */
+      wire_call_function_with_args__method__WasmiInstanceId(
+          NativePortType port_,
+          List<dynamic> that,
+          String name,
+          List<dynamic> args);
+
+  external dynamic /* List<dynamic> */ wire_exports__method__WasmiInstanceId(
+      List<dynamic> that);
+
+  external dynamic /* List<dynamic> */
+      wire_instantiate_sync__method__WasmiModuleId(List<dynamic> that);
+
   external dynamic /* void */ wire_instantiate__method__WasmiModuleId(
       NativePortType port_, List<dynamic> that);
 
-  external dynamic /* void */ wire_call_function__method__WasmiModuleId(
-      NativePortType port_, List<dynamic> that, String name);
+  external dynamic /* List<dynamic> */
+      wire_get_module_imports__method__WasmiModuleId(List<dynamic> that);
 
-  external dynamic /* void */
-      wire_call_function_with_args__method__WasmiModuleId(NativePortType port_,
-          List<dynamic> that, String name, List<dynamic> args);
-
-  external dynamic /* void */ wire_get_exports__method__WasmiModuleId(
-      NativePortType port_, List<dynamic> that);
-
-  external dynamic /* void */ wire_get_module_exports__method__WasmiModuleId(
-      NativePortType port_, List<dynamic> that);
+  external dynamic /* List<dynamic> */
+      wire_get_module_exports__method__WasmiModuleId(List<dynamic> that);
 
   external dynamic /* void */ wire_executions__method__WasmiModuleId(
       NativePortType port_, List<dynamic> that);
@@ -238,9 +263,21 @@ class WasmiDartWasmModule implements WasmModule {
   external dynamic /* void */ wire_dispose__method__WasmiModuleId(
       NativePortType port_, List<dynamic> that);
 
+  external dynamic /* Object */ wire_create_function__method__WasmiModuleId(
+      List<dynamic> that, int function_pointer, List<dynamic> param_types);
+
+  external dynamic /* Object */ wire_create_memory__method__WasmiModuleId(
+      List<dynamic> that, List<dynamic> memory_type);
+
+  external dynamic /* Object */ wire_create_global__method__WasmiModuleId(
+      List<dynamic> that, List<dynamic> value, int mutability);
+
+  external dynamic /* Object */ wire_create_table__method__WasmiModuleId(
+      List<dynamic> that, List<dynamic> value, List<dynamic> table_type);
+
   external dynamic /* List<dynamic> */
-      wire_call_function_with_args_sync__method__WasmiModuleId(
-          List<dynamic> that, String name, List<dynamic> args);
+      wire_get_global_type__method__WasmiModuleId(
+          List<dynamic> that, Object global);
 
   external dynamic /* List<dynamic> */
       wire_get_global_value__method__WasmiModuleId(
@@ -248,6 +285,10 @@ class WasmiDartWasmModule implements WasmModule {
 
   external dynamic /* void */ wire_set_global_value__method__WasmiModuleId(
       List<dynamic> that, Object global, List<dynamic> value);
+
+  external dynamic /* List<dynamic> */
+      wire_get_memory_type__method__WasmiModuleId(
+          List<dynamic> that, Object memory);
 
   external dynamic /* Uint8List */ wire_get_memory_data__method__WasmiModuleId(
       List<dynamic> that, Object memory);
@@ -267,6 +308,10 @@ class WasmiDartWasmModule implements WasmModule {
   external dynamic /* int */ wire_get_table_size__method__WasmiModuleId(
       List<dynamic> that, Object table);
 
+  external dynamic /* List<dynamic> */
+      wire_get_table_type__method__WasmiModuleId(
+          List<dynamic> that, Object table);
+
   external dynamic /* int */ wire_grow_table__method__WasmiModuleId(
       List<dynamic> that, Object table, int delta, List<dynamic> value);
 
@@ -284,7 +329,11 @@ class WasmiDartWasmModule implements WasmModule {
       int len);
 
   external dynamic /* void */ wire_link_imports__method__WasmiModuleId(
-      NativePortType port_, List<dynamic> that, List<dynamic> imports);
+      List<dynamic> that, List<dynamic> imports);
+
+  external dynamic /*  */ drop_opaque_Func(ptr);
+
+  external int /* *const c_void */ share_opaque_Func(ptr);
 
   external dynamic /*  */ drop_opaque_Global(ptr);
 
@@ -323,46 +372,54 @@ class WasmiDartWire extends FlutterRustBridgeWasmWireBase<WasmiDartWasmModule> {
           int pointer, List<dynamic> params) =>
       wasmModule.wire_run_wasm_func_void(pointer, params);
 
-  void wire_create_memory(NativePortType port_, List<dynamic> memory_type) =>
-      wasmModule.wire_create_memory(port_, memory_type);
+  dynamic /* List<dynamic> */ wire_compile_wasm_sync(Uint8List module_wasm) =>
+      wasmModule.wire_compile_wasm_sync(module_wasm);
 
-  void wire_create_global(
-          NativePortType port_, List<dynamic> value, int mutability) =>
-      wasmModule.wire_create_global(port_, value, mutability);
-
-  void wire_create_table(NativePortType port_, List<dynamic> value,
-          List<dynamic> table_type) =>
-      wasmModule.wire_create_table(port_, value, table_type);
-
-  void wire_compile_wasm(
-          NativePortType port_, Uint8List module_wasm, List<dynamic> imports) =>
-      wasmModule.wire_compile_wasm(port_, module_wasm, imports);
+  void wire_compile_wasm(NativePortType port_, Uint8List module_wasm) =>
+      wasmModule.wire_compile_wasm(port_, module_wasm);
 
   void wire_call_wasm(NativePortType port_) => wasmModule.wire_call_wasm(port_);
 
   void wire_add(NativePortType port_, Object a, Object b) =>
       wasmModule.wire_add(port_, a, b);
 
+  void wire_call_function__method__WasmiInstanceId(
+          NativePortType port_, List<dynamic> that, String name) =>
+      wasmModule.wire_call_function__method__WasmiInstanceId(port_, that, name);
+
+  dynamic /* List<dynamic> */
+      wire_call_function_with_args_sync__method__WasmiInstanceId(
+              List<dynamic> that, String name, List<dynamic> args) =>
+          wasmModule.wire_call_function_with_args_sync__method__WasmiInstanceId(
+              that, name, args);
+
+  void wire_call_function_with_args__method__WasmiInstanceId(
+          NativePortType port_,
+          List<dynamic> that,
+          String name,
+          List<dynamic> args) =>
+      wasmModule.wire_call_function_with_args__method__WasmiInstanceId(
+          port_, that, name, args);
+
+  dynamic /* List<dynamic> */ wire_exports__method__WasmiInstanceId(
+          List<dynamic> that) =>
+      wasmModule.wire_exports__method__WasmiInstanceId(that);
+
+  dynamic /* List<dynamic> */ wire_instantiate_sync__method__WasmiModuleId(
+          List<dynamic> that) =>
+      wasmModule.wire_instantiate_sync__method__WasmiModuleId(that);
+
   void wire_instantiate__method__WasmiModuleId(
           NativePortType port_, List<dynamic> that) =>
       wasmModule.wire_instantiate__method__WasmiModuleId(port_, that);
 
-  void wire_call_function__method__WasmiModuleId(
-          NativePortType port_, List<dynamic> that, String name) =>
-      wasmModule.wire_call_function__method__WasmiModuleId(port_, that, name);
+  dynamic /* List<dynamic> */ wire_get_module_imports__method__WasmiModuleId(
+          List<dynamic> that) =>
+      wasmModule.wire_get_module_imports__method__WasmiModuleId(that);
 
-  void wire_call_function_with_args__method__WasmiModuleId(NativePortType port_,
-          List<dynamic> that, String name, List<dynamic> args) =>
-      wasmModule.wire_call_function_with_args__method__WasmiModuleId(
-          port_, that, name, args);
-
-  void wire_get_exports__method__WasmiModuleId(
-          NativePortType port_, List<dynamic> that) =>
-      wasmModule.wire_get_exports__method__WasmiModuleId(port_, that);
-
-  void wire_get_module_exports__method__WasmiModuleId(
-          NativePortType port_, List<dynamic> that) =>
-      wasmModule.wire_get_module_exports__method__WasmiModuleId(port_, that);
+  dynamic /* List<dynamic> */ wire_get_module_exports__method__WasmiModuleId(
+          List<dynamic> that) =>
+      wasmModule.wire_get_module_exports__method__WasmiModuleId(that);
 
   void wire_executions__method__WasmiModuleId(
           NativePortType port_, List<dynamic> that) =>
@@ -372,11 +429,30 @@ class WasmiDartWire extends FlutterRustBridgeWasmWireBase<WasmiDartWasmModule> {
           NativePortType port_, List<dynamic> that) =>
       wasmModule.wire_dispose__method__WasmiModuleId(port_, that);
 
-  dynamic /* List<dynamic> */
-      wire_call_function_with_args_sync__method__WasmiModuleId(
-              List<dynamic> that, String name, List<dynamic> args) =>
-          wasmModule.wire_call_function_with_args_sync__method__WasmiModuleId(
-              that, name, args);
+  dynamic /* Object */ wire_create_function__method__WasmiModuleId(
+          List<dynamic> that,
+          int function_pointer,
+          List<dynamic> param_types) =>
+      wasmModule.wire_create_function__method__WasmiModuleId(
+          that, function_pointer, param_types);
+
+  dynamic /* Object */ wire_create_memory__method__WasmiModuleId(
+          List<dynamic> that, List<dynamic> memory_type) =>
+      wasmModule.wire_create_memory__method__WasmiModuleId(that, memory_type);
+
+  dynamic /* Object */ wire_create_global__method__WasmiModuleId(
+          List<dynamic> that, List<dynamic> value, int mutability) =>
+      wasmModule.wire_create_global__method__WasmiModuleId(
+          that, value, mutability);
+
+  dynamic /* Object */ wire_create_table__method__WasmiModuleId(
+          List<dynamic> that, List<dynamic> value, List<dynamic> table_type) =>
+      wasmModule.wire_create_table__method__WasmiModuleId(
+          that, value, table_type);
+
+  dynamic /* List<dynamic> */ wire_get_global_type__method__WasmiModuleId(
+          List<dynamic> that, Object global) =>
+      wasmModule.wire_get_global_type__method__WasmiModuleId(that, global);
 
   dynamic /* List<dynamic> */ wire_get_global_value__method__WasmiModuleId(
           List<dynamic> that, Object global) =>
@@ -386,6 +462,10 @@ class WasmiDartWire extends FlutterRustBridgeWasmWireBase<WasmiDartWasmModule> {
           List<dynamic> that, Object global, List<dynamic> value) =>
       wasmModule.wire_set_global_value__method__WasmiModuleId(
           that, global, value);
+
+  dynamic /* List<dynamic> */ wire_get_memory_type__method__WasmiModuleId(
+          List<dynamic> that, Object memory) =>
+      wasmModule.wire_get_memory_type__method__WasmiModuleId(that, memory);
 
   dynamic /* Uint8List */ wire_get_memory_data__method__WasmiModuleId(
           List<dynamic> that, Object memory) =>
@@ -413,6 +493,10 @@ class WasmiDartWire extends FlutterRustBridgeWasmWireBase<WasmiDartWasmModule> {
           List<dynamic> that, Object table) =>
       wasmModule.wire_get_table_size__method__WasmiModuleId(that, table);
 
+  dynamic /* List<dynamic> */ wire_get_table_type__method__WasmiModuleId(
+          List<dynamic> that, Object table) =>
+      wasmModule.wire_get_table_type__method__WasmiModuleId(that, table);
+
   dynamic /* int */ wire_grow_table__method__WasmiModuleId(
           List<dynamic> that, Object table, int delta, List<dynamic> value) =>
       wasmModule.wire_grow_table__method__WasmiModuleId(
@@ -432,9 +516,14 @@ class WasmiDartWire extends FlutterRustBridgeWasmWireBase<WasmiDartWasmModule> {
       wasmModule.wire_fill_table__method__WasmiModuleId(
           that, table, index, value, len);
 
-  void wire_link_imports__method__WasmiModuleId(
-          NativePortType port_, List<dynamic> that, List<dynamic> imports) =>
-      wasmModule.wire_link_imports__method__WasmiModuleId(port_, that, imports);
+  dynamic /* void */ wire_link_imports__method__WasmiModuleId(
+          List<dynamic> that, List<dynamic> imports) =>
+      wasmModule.wire_link_imports__method__WasmiModuleId(that, imports);
+
+  dynamic /*  */ drop_opaque_Func(ptr) => wasmModule.drop_opaque_Func(ptr);
+
+  int /* *const c_void */ share_opaque_Func(ptr) =>
+      wasmModule.share_opaque_Func(ptr);
 
   dynamic /*  */ drop_opaque_Global(ptr) => wasmModule.drop_opaque_Global(ptr);
 
