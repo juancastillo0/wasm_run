@@ -15,25 +15,23 @@ use std::{
     fmt::{Debug, Display},
     sync::RwLock,
 };
-pub use wasmi::{core::Pages, Func, Global, Memory, Mutability, Table};
-use wasmi::{errors::MemoryError, *};
+pub use wasmi::{core::Pages, Func, Global, GlobalType, Memory, Mutability, Table};
+use wasmi::{core::ValueType, *};
 
-// TODO: use Map
 static ARRAY: Lazy<RwLock<GlobalState>> = Lazy::new(|| RwLock::new(Default::default()));
 
 #[derive(Debug, Default)]
 struct GlobalState {
     map: HashMap<u32, WasmiModuleImpl>,
-    instances: HashMap<u32, Instance>,
     last_id: u32,
 }
 
 #[derive(Debug)]
 struct WasmiModuleImpl {
     module: Module,
-    instance: Instance,
     linker: Linker<u32>,
     store: Store<u32>,
+    instance: Option<Instance>,
     builder: Option<WasmiModuleBuilder>,
 }
 
@@ -50,6 +48,53 @@ struct WasmiModuleBuilder {
 impl Debug for WasmiModuleBuilder {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("WasmiModuleBuilder").finish()
+    }
+}
+
+impl WasmiInstanceId {
+    pub fn call_function(&self, name: String) -> Result<Vec<Value2>> {
+        self.call_function_with_args(name, vec![])
+    }
+    pub fn call_function_with_args_sync(
+        &self,
+        name: String,
+        args: Vec<Value2>,
+    ) -> Result<SyncReturn<Vec<Value2>>> {
+        self.call_function_with_args(name, args).map(SyncReturn)
+    }
+    pub fn call_function_with_args(&self, name: String, args: Vec<Value2>) -> Result<Vec<Value2>> {
+        let mut arr = ARRAY.write().unwrap();
+        let value = &mut arr.map.get_mut(&self.0).unwrap();
+
+        let func = value
+            .instance
+            .unwrap()
+            .get_func(&value.store, &name)
+            .unwrap();
+        let mut outputs: Vec<Value> = func
+            .ty(&value.store)
+            .results()
+            .iter()
+            .map(|t| Value::default(*t))
+            .collect();
+        let inputs: Vec<Value> = args
+            .into_iter()
+            .map(|v| v.to_value(&mut value.store))
+            .collect();
+        func.call(&mut value.store, inputs.as_slice(), &mut outputs)?;
+        Ok(outputs.into_iter().map(|a| (&a).into()).collect())
+    }
+
+    pub fn exports(&self) -> SyncReturn<Vec<ModuleExportValue>> {
+        let value = &ARRAY.read().unwrap().map[&self.0];
+        SyncReturn(
+            value
+                .instance
+                .unwrap()
+                .exports(&value.store)
+                .map(|e| ModuleExportValue::from_export(e, &value.store))
+                .collect(),
+        )
     }
 }
 
@@ -87,8 +132,10 @@ impl Value2 {
             Value2::ExternRef(i) => Value::ExternRef(ExternRef::null()),
         }
     }
+}
 
-    fn from_value(value: &Value) -> Self {
+impl From<&Value> for Value2 {
+    fn from(value: &Value) -> Self {
         match value {
             Value::I32(i) => Value2::I32(*i),
             Value::I64(i) => Value2::I64(*i),
@@ -100,73 +147,114 @@ impl Value2 {
     }
 }
 
-impl From<Value> for Value2 {
-    fn from(value: Value) -> Self {
-        Value2::from_value(&value)
+#[derive(Debug)]
+pub struct GlobalTy {
+    /// The value type of the global variable.
+    pub content: ValueTy,
+    /// The mutability of the global variable.
+    pub mutability: Mutability,
+}
+
+impl From<&GlobalType> for GlobalTy {
+    fn from(value: &GlobalType) -> Self {
+        GlobalTy {
+            content: (&value.content()).into(),
+            mutability: value.mutability().into(),
+        }
     }
 }
 
-// #[frb(mirror(FuncRef))]
-// pub struct _FuncRef {
-//     inner: Option<Func>,
-// }
+#[derive(Debug)]
+pub struct TableTy {
+    /// The type of values stored in the [`Table`].
+    pub element: ValueTy,
+    /// The minimum number of elements the [`Table`] must have.
+    pub min: u32,
+    /// The optional maximum number of elements the [`Table`] can have.
+    ///
+    /// If this is `None` then the [`Table`] is not limited in size.
+    pub max: Option<u32>,
+}
 
-// #[frb(mirror(F32))]
-// struct _F32(f32); // u32 as
+impl From<&TableType> for TableTy {
+    fn from(value: &TableType) -> Self {
+        TableTy {
+            element: (&value.element()).into(),
+            min: value.minimum(),
+            max: value.maximum(),
+        }
+    }
+}
 
-// #[frb(mirror(F32))]
-// struct _F32(f32); // u32 as
+#[derive(Debug)]
+pub enum ValueTy {
+    /// 32-bit signed or unsigned integer.
+    I32,
+    /// 64-bit signed or unsigned integer.
+    I64,
+    /// 32-bit IEEE 754-2008 floating point number.
+    F32,
+    /// 64-bit IEEE 754-2008 floating point number.
+    F64,
+    /// A nullable function reference.
+    FuncRef,
+    /// A nullable external reference.
+    ExternRef,
+}
 
-// #[frb(mirror(F64))]
-// struct _F64(f64); // u64 as
+impl From<&ValueType> for ValueTy {
+    fn from(value: &ValueType) -> Self {
+        match value {
+            ValueType::I32 => ValueTy::I32,
+            ValueType::I64 => ValueTy::I64,
+            ValueType::F32 => ValueTy::F32,
+            ValueType::F64 => ValueTy::F64,
+            ValueType::FuncRef => ValueTy::FuncRef,
+            ValueType::ExternRef => ValueTy::ExternRef,
+        }
+    }
+}
 
-pub trait WasmiModule {
-    fn call_function(&mut self, name: String) -> Result<Vec<Value2>>;
-    fn call_function_with_args(&mut self, name: String, args: Vec<Value2>) -> Result<Vec<Value2>>;
-    fn get_exports(&self) -> Vec<String>;
-    fn get_module_exports(&self) -> Vec<String>;
+impl From<ValueTy> for ValueType {
+    fn from(value: ValueTy) -> Self {
+        match value {
+            ValueTy::I32 => ValueType::I32,
+            ValueTy::I64 => ValueType::I64,
+            ValueTy::F32 => ValueType::F32,
+            ValueTy::F64 => ValueType::F64,
+            ValueTy::FuncRef => ValueType::FuncRef,
+            ValueTy::ExternRef => ValueType::ExternRef,
+        }
+    }
 }
 
 impl WasmiModuleId {
+    pub fn instantiate_sync(&self) -> Result<SyncReturn<WasmiInstanceId>> {
+        Ok(SyncReturn(self.instantiate()?))
+    }
     pub fn instantiate(&self) -> Result<WasmiInstanceId> {
         let mut state = ARRAY.write().unwrap();
-        if state.instances.contains_key(&self.0) {
+        let mut module = state.map.get_mut(&self.0).unwrap();
+        if module.instance.is_some() {
             return Err(anyhow::anyhow!("Instance already exists"));
         }
-        let module = state.map.get_mut(&self.0).unwrap();
         let instance = module
             .linker
             .instantiate(&mut module.store, &module.module)?
             .start(&mut module.store)?;
 
-        state.instances.insert(self.0, instance);
+        module.instance = Some(instance);
         Ok(WasmiInstanceId(self.0))
     }
 
-    pub fn call_function(&self, name: String) -> Result<Vec<Value2>> {
-        ARRAY
-            .write()
-            .unwrap()
-            .map
-            .get_mut(&self.0)
-            .unwrap()
-            .call_function(name)
+    pub fn get_module_imports(&self) -> SyncReturn<Vec<ModuleImportDesc>> {
+        SyncReturn(self.with_module(|m| m.module.imports().map(|i| (&i).into()).collect()))
     }
-    pub fn call_function_with_args(&self, name: String, args: Vec<Value2>) -> Result<Vec<Value2>> {
-        ARRAY
-            .write()
-            .unwrap()
-            .map
-            .get_mut(&self.0)
-            .unwrap()
-            .call_function_with_args(name, args)
+
+    pub fn get_module_exports(&self) -> SyncReturn<Vec<ModuleExportDesc>> {
+        SyncReturn(self.with_module(|m| m.module.exports().map(|i| (&i).into()).collect()))
     }
-    pub fn get_exports(&self) -> Vec<String> {
-        ARRAY.read().unwrap().map[&self.0].get_exports()
-    }
-    pub fn get_module_exports(&self) -> Vec<String> {
-        ARRAY.read().unwrap().map[&self.0].get_module_exports()
-    }
+
     pub fn executions(&self, sink: StreamSink<i32>) -> Result<()> {
         let mut arr = ARRAY.write().unwrap();
         let value = &mut arr.map.get_mut(&self.0).unwrap();
@@ -176,33 +264,11 @@ impl WasmiModuleId {
         value.builder = Some(WasmiModuleBuilder { sink });
         Ok(())
     }
+
     pub fn dispose(&self) -> Result<()> {
         let mut arr = ARRAY.write().unwrap();
         arr.map.remove(&self.0);
         Ok(())
-    }
-
-    pub fn call_function_with_args_sync(
-        &self,
-        name: String,
-        args: Vec<Value2>,
-    ) -> Result<SyncReturn<Vec<Value2>>> {
-        let mut arr = ARRAY.write().unwrap();
-        let value = &mut arr.map.get_mut(&self.0).unwrap();
-
-        let func = value.instance.get_func(&value.store, &name).unwrap();
-        let mut outputs: Vec<Value> = func
-            .ty(&value.store)
-            .results()
-            .iter()
-            .map(|t| Value::default(*t))
-            .collect();
-        let inputs: Vec<Value> = args
-            .into_iter()
-            .map(|v| v.to_value(&mut value.store))
-            .collect();
-        func.call(&mut value.store, inputs.as_slice(), &mut outputs)?;
-        Ok(SyncReturn(outputs.into_iter().map(|a| a.into()).collect()))
     }
 
     fn with_module_mut<T>(&self, f: impl FnOnce(&mut WasmiModuleImpl) -> T) -> T {
@@ -217,10 +283,79 @@ impl WasmiModuleId {
         f(value)
     }
 
+    pub fn create_function(
+        &self,
+        function_pointer: usize,
+        param_types: Vec<ValueTy>,
+    ) -> Result<SyncReturn<RustOpaque<Func>>> {
+        self.with_module_mut(|module| {
+            let f: WasmFunction = unsafe { std::mem::transmute(function_pointer) };
+            let func = Func::new(
+                &mut module.store,
+                // TODO: support results
+                FuncType::new(param_types.into_iter().map(ValueType::from), []),
+                move |_caller, params, _results| {
+                    let mapped: Vec<Value2> = params.iter().map(Value2::from).collect();
+                    let inputs = vec![mapped].into_dart();
+                    let pointer = new_leak_box_ptr(inputs);
+                    unsafe {
+                        f(pointer);
+                    }
+                    std::result::Result::Ok(())
+                },
+            );
+            Ok(SyncReturn(RustOpaque::new(func)))
+        })
+    }
+
+    pub fn create_memory(
+        &self,
+        memory_type: WasmMemoryType,
+    ) -> Result<SyncReturn<RustOpaque<Memory>>> {
+        self.with_module_mut(|module| {
+            let mem_type = memory_type.to_memory_type()?;
+            let memory = Memory::new(&mut module.store, mem_type).map_err(to_anyhow)?;
+            Ok(SyncReturn(RustOpaque::new(memory)))
+        })
+    }
+
+    pub fn create_global(
+        &self,
+        value: Value2,
+        mutability: Mutability,
+    ) -> Result<SyncReturn<RustOpaque<Global>>> {
+        self.with_module_mut(|module| {
+            let mapped = value.to_value(&mut module.store);
+            let global = Global::new(&mut module.store, mapped, mutability);
+            Ok(SyncReturn(RustOpaque::new(global)))
+        })
+    }
+
+    pub fn create_table(
+        &self,
+        value: Value2,
+        table_type: TableType2,
+    ) -> Result<SyncReturn<RustOpaque<Table>>> {
+        self.with_module_mut(|module| {
+            let mapped_value = value.to_value(&mut module.store);
+            let table = Table::new(
+                &mut module.store,
+                TableType::new(mapped_value.ty(), table_type.min, table_type.max),
+                mapped_value,
+            )
+            .map_err(to_anyhow)?;
+            Ok(SyncReturn(RustOpaque::new(table)))
+        })
+    }
+
     // GLOBAL
 
+    pub fn get_global_type(&self, global: RustOpaque<Global>) -> SyncReturn<GlobalTy> {
+        SyncReturn(self.with_module(|m| (&global.ty(&m.store)).into()))
+    }
+
     pub fn get_global_value(&self, global: RustOpaque<Global>) -> SyncReturn<Value2> {
-        SyncReturn(self.with_module(|m| global.get(&m.store).into()))
+        SyncReturn(self.with_module(|m| (&global.get(&m.store)).into()))
     }
 
     pub fn set_global_value(
@@ -236,10 +371,12 @@ impl WasmiModuleId {
                 .map_err(to_anyhow)
         })
     }
-    // TODO: type
 
     // MEMORY
 
+    pub fn get_memory_type(&self, memory: RustOpaque<Memory>) -> SyncReturn<WasmMemoryType> {
+        SyncReturn(self.with_module(|m| (&memory.ty(&m.store)).into()))
+    }
     pub fn get_memory_data(&self, memory: RustOpaque<Memory>) -> SyncReturn<Vec<u8>> {
         SyncReturn(self.with_module(|m| memory.data(&m.store).to_owned()))
     }
@@ -290,6 +427,9 @@ impl WasmiModuleId {
     pub fn get_table_size(&self, table: RustOpaque<Table>) -> SyncReturn<u32> {
         SyncReturn(self.with_module(|m| table.size(&m.store)))
     }
+    pub fn get_table_type(&self, table: RustOpaque<Table>) -> SyncReturn<TableTy> {
+        SyncReturn(self.with_module(|m| (&table.ty(&m.store)).into()))
+    }
 
     pub fn grow_table(
         &self,
@@ -307,7 +447,7 @@ impl WasmiModuleId {
     }
 
     pub fn get_table(&self, table: RustOpaque<Table>, index: u32) -> SyncReturn<Option<Value2>> {
-        SyncReturn(self.with_module(|m| table.get(&m.store, index).map(|v| v.into())))
+        SyncReturn(self.with_module(|m| table.get(&m.store, index).map(|v| (&v).into())))
     }
 
     pub fn set_table(
@@ -341,114 +481,24 @@ impl WasmiModuleId {
         })
     }
 
-    pub fn link_imports(&self, imports: Vec<ModuleImport>) -> Result<()> {
+    pub fn link_imports(&self, imports: Vec<ModuleImport>) -> Result<SyncReturn<()>> {
         self.with_module_mut(|m| {
             for import in imports {
                 m.linker
                     .define(&import.module, &import.name, import.value.to_extern())?;
             }
-            Ok(())
+            Ok(SyncReturn(()))
         })
     }
-
-    // TODO: ty
 }
 
 fn to_anyhow<T: Display>(value: T) -> anyhow::Error {
     anyhow::anyhow!(value.to_string())
 }
 
-// pub fn call_function(self:  &mutRustOpaque<Box<dyn WasmiModule>>, name: String) -> Result<Vec<Value2>> {
-//     self.call_function(name)
-// }
-// pub fn call_function_with_args(
-//     self: &mut RustOpaque<Box<dyn WasmiModule>>,
-//     name: String,
-//     args: Vec<Value2>,
-// ) -> Result<Vec<Value2>> {
-//     self.call_function_with_args(name, args)
-// }
-// pub fn get_exports(d: RustOpaque<Box<dyn WasmiModule>>) -> Vec<String> {
-//     d.get_exports()
-// }
-// pub fn get_module_exports(d: RustOpaque<Box<dyn WasmiModule>>) -> Vec<String> {
-//     d.get_module_exports()
-// }
-
-impl WasmiModule for WasmiModuleImpl {
-    fn call_function(&mut self, name: String) -> Result<Vec<Value2>> {
-        let func = self.instance.get_func(&self.store, &name).unwrap();
-        let mut outputs: Vec<Value> = vec![];
-        func.call(&mut self.store, &[], &mut outputs)?;
-        Ok(outputs.into_iter().map(|a| a.into()).collect())
-    }
-
-    fn call_function_with_args(&mut self, name: String, args: Vec<Value2>) -> Result<Vec<Value2>> {
-        let func = self.instance.get_func(&self.store, &name).unwrap();
-        let mut outputs: Vec<Value> = func
-            .ty(&self.store)
-            .results()
-            .iter()
-            .map(|t| Value::default(*t))
-            .collect();
-        let inputs: Vec<Value> = args
-            .into_iter()
-            .map(|v| v.to_value(&mut self.store))
-            .collect();
-        func.call(&mut self.store, inputs.as_slice(), &mut outputs)?;
-        Ok(outputs.into_iter().map(|a| a.into()).collect())
-    }
-
-    // fn executions(&mut self, sink: StreamSink<int64>) -> Result<()> {
-    //     if self.stream_sink.is_some() {
-    //         return Err(anyhow::anyhow!("Stream sink already set"));
-    //     }
-    //     self.stream_sink = Some(sink);
-    //     Ok(())
-    // }
-
-    fn get_exports(&self) -> Vec<String> {
-        // self.module.exports();
-        let exports = self.instance.exports(&self.store);
-        let mut names = vec![];
-        for export in exports {
-            names.push(export.name().to_string());
-        }
-        names
-    }
-
-    fn get_module_exports(&self) -> Vec<String> {
-        let exports = self.module.exports();
-        let mut names = vec![];
-        for export in exports {
-            let value = format!("{} {:?}", export.name(), export.ty());
-            names.push(value);
-        }
-        names
-    }
-}
-
 pub fn parse_wat_format(wat: String) -> Result<Vec<u8>> {
     Ok(wat::parse_str(wat)?)
 }
-
-// pub fn executions(sink: StreamSink<i32>) -> RustOpaque<WasmiModuleBuilder> {
-//     RustOpaque::new(WasmiModuleBuilder { stream_sink: sink })
-// }
-
-// #[frb(mirror(Extern))]
-// pub enum _Extern {
-//     /// A WebAssembly global which acts like a [`Cell<T>`] of sorts, supporting `get` and `set` operations.
-//     ///
-//     /// [`Cell<T>`]: https://doc.rust-lang.org/core/cell/struct.Cell.html
-//     Global(Global),
-//     /// A WebAssembly table which is an array of funtion references.
-//     Table(Table),
-//     /// A WebAssembly linear memory.
-//     Memory(Memory),
-//     /// A WebAssembly function which can be called.
-//     Func(Func),
-// }
 
 pub struct ModuleImport {
     pub module: String,
@@ -463,6 +513,9 @@ pub fn run_function(pointer: i64) -> SyncReturn<Vec<Value2>> {
     let result = unsafe { f(1) };
     SyncReturn(vec![Value2::I64(result)])
 }
+
+// TODO: Support return values
+type WasmFunction = unsafe extern "C" fn(args: *mut DartAbi) -> c_void;
 
 type wasm_func = unsafe extern "C" fn(args: *mut DartAbi) -> *mut wire_list_value_2;
 type wasm_func_mut =
@@ -535,13 +588,13 @@ impl WasmMemoryType {
     }
 }
 
-pub fn create_memory(memory_type: WasmMemoryType) -> Result<RustOpaque<Memory>> {
-    let engine = Engine::default();
-    let index = 1;
-    let mut store = Store::new(&engine, index);
-    let mem_type = memory_type.to_memory_type()?;
-    let memory = Memory::new(&mut store, mem_type).map_err(to_anyhow)?;
-    Ok(RustOpaque::new(memory))
+impl From<&MemoryType> for WasmMemoryType {
+    fn from(memory_type: &MemoryType) -> Self {
+        WasmMemoryType {
+            initial_pages: memory_type.initial_pages().into(),
+            maximum_pages: memory_type.maximum_pages().map(|v| v.into()),
+        }
+    }
 }
 
 #[frb(mirror(Mutability))]
@@ -572,6 +625,92 @@ pub enum _Mutability {
 // }
 
 #[derive(Debug)]
+pub enum ExternalType {
+    Func(FuncTy),
+    Global(GlobalTy),
+    Table(TableTy),
+    Memory(WasmMemoryType),
+}
+
+impl From<&ExternType> for ExternalType {
+    fn from(import: &ExternType) -> Self {
+        match import {
+            ExternType::Func(f) => ExternalType::Func(f.into()),
+            ExternType::Global(f) => ExternalType::Global(f.into()),
+            ExternType::Table(f) => ExternalType::Table(f.into()),
+            ExternType::Memory(f) => ExternalType::Memory(f.into()),
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct ModuleImportDesc {
+    pub module: String,
+    pub name: String,
+    pub ty: ExternalType,
+}
+
+impl From<&ImportType<'_>> for ModuleImportDesc {
+    fn from(import: &ImportType) -> Self {
+        ModuleImportDesc {
+            module: import.module().to_string(),
+            name: import.name().to_string(),
+            ty: import.ty().into(),
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct FuncTy {
+    /// The number of function parameters.
+    pub params: Vec<ValueTy>,
+    /// The ordered and merged parameter and result types of the function type.]
+    pub results: Vec<ValueTy>,
+}
+
+impl From<&FuncType> for FuncTy {
+    fn from(func: &FuncType) -> Self {
+        FuncTy {
+            params: func.params().into_iter().map(ValueTy::from).collect(),
+            results: func.results().into_iter().map(ValueTy::from).collect(),
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct ModuleExportDesc {
+    pub name: String,
+    pub ty: ExternalType,
+}
+
+impl From<&ExportType<'_>> for ModuleExportDesc {
+    fn from(export: &ExportType) -> Self {
+        ModuleExportDesc {
+            name: export.name().to_string(),
+            ty: export.ty().into(),
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct ModuleExportValue {
+    pub desc: ModuleExportDesc,
+    pub value: ExternalValue,
+}
+
+impl ModuleExportValue {
+    fn from_export<T>(export: Export, store: &Store<T>) -> Self {
+        ModuleExportValue {
+            desc: ModuleExportDesc {
+                name: export.name().to_string(),
+                ty: (&export.ty(store)).into(),
+            },
+            value: export.into_extern().into(),
+        }
+    }
+}
+
+#[derive(Debug)]
 pub enum ExternalValue {
     Func(RustOpaque<Func>),
     Global(RustOpaque<Global>),
@@ -591,6 +730,17 @@ pub enum ExternalValue {
 impl Default for wire_ExternalValue {
     fn default() -> Self {
         wire_ExternalValue::new_with_null_ptr()
+    }
+}
+
+impl From<Extern> for ExternalValue {
+    fn from(extern_: Extern) -> Self {
+        match extern_ {
+            Extern::Func(f) => ExternalValue::Func(RustOpaque::new(f)),
+            Extern::Global(g) => ExternalValue::Global(RustOpaque::new(g)),
+            Extern::Table(t) => ExternalValue::Table(RustOpaque::new(t)),
+            Extern::Memory(m) => ExternalValue::Memory(RustOpaque::new(m)),
+        }
     }
 }
 
@@ -634,15 +784,6 @@ impl ExternalValue {
     // }
 }
 
-pub fn create_global(value: Value2, mutability: Mutability) -> Result<RustOpaque<Global>> {
-    let engine = Engine::default();
-    let index = 1;
-    let mut store = Store::new(&engine, index);
-    let mapped = value.to_value(&mut store);
-    let global = Global::new(&mut store, mapped, mutability);
-    Ok(RustOpaque::new(global))
-}
-
 #[derive(Debug)]
 pub struct TableType2 {
     /// The minimum number of elements the [`Table`] must have.
@@ -653,63 +794,28 @@ pub struct TableType2 {
     pub max: Option<u32>,
 }
 
-pub fn create_table(value: Value2, table_type: TableType2) -> Result<RustOpaque<Table>> {
-    let engine = Engine::default();
-    let index = 1;
-    let mut store = Store::new(&engine, index);
-    let mapped_value = value.to_value(&mut store);
-    let table = Table::new(
-        &mut store,
-        TableType::new(mapped_value.ty(), table_type.min, table_type.max),
-        mapped_value,
-    )
-    .map_err(|err| anyhow::anyhow!(err.to_string()))?;
-    Ok(RustOpaque::new(table))
+pub fn compile_wasm_sync(module_wasm: Vec<u8>) -> Result<SyncReturn<WasmiModuleId>> {
+    compile_wasm(module_wasm).map(SyncReturn)
 }
 
-pub fn compile_wasm(
-    module_wasm: Vec<u8>,
-    imports: Vec<ModuleImport>,
-    // sink: StreamSink<i32>
-    // builder: WasmiModuleBuilder, // sink: StreamSink<int64>,
-    // definitions: Map<Map<String, int64>>,
-) -> Result<WasmiModuleId> {
+pub fn compile_wasm(module_wasm: Vec<u8>) -> Result<WasmiModuleId> {
     let engine = Engine::default();
     let module = Module::new(&engine, &mut &module_wasm[..])?;
-    let mut linker = <Linker<HostState>>::new(&engine);
-
-    // module.imports().for_each(|import| {
-    //     import.ty();
-    //     println!("Import: {:?}", import);
-    // });
-    // linker.define(module, name, item);
+    let linker = <Linker<HostState>>::new(&engine);
 
     type HostState = u32;
-    let mut store = Store::new(&engine, 42);
-    // let host_hello = Func::wrap(&mut store, |caller: Caller<'_, HostState>, param: i32| {
-    //     println!("Got {param} from WebAssembly");
-    //     println!("My host state is: {}", caller.data());
-    // });
 
-    // for import in imports {
-    //     linker.define(
-    //         &import.module,
-    //         &import.name,
-    //         import.value.to_extern(&mut store)?,
-    //     )?;
-    // }
-    // linker.define("host", "hello", host_hello)?;
-    let instance = linker.instantiate(&mut store, &module)?.start(&mut store)?;
+    let mut arr = ARRAY.write().unwrap();
+    arr.last_id += 1;
+    let id = arr.last_id;
+    let store = Store::new(&engine, id);
     let inner = WasmiModuleImpl {
-        instance,
         module,
         store,
         builder: None,
         linker,
+        instance: None,
     };
-    let mut arr = ARRAY.write().unwrap();
-    arr.last_id += 1;
-    let id = arr.last_id;
     arr.map.insert(id, inner);
 
     Ok(WasmiModuleId(id))
