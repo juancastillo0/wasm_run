@@ -6,3 +6,5 @@ import 'package:wasmi/src/bridge_generated.dart';
 typedef ExternalLibrary = Object;
 
 WasmiDart createWrapperImpl(ExternalLibrary lib) => throw UnimplementedError();
+
+ExternalLibrary defaultLibraryImpl() => throw UnimplementedError();

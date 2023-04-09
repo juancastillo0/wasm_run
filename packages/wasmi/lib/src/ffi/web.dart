@@ -5,3 +5,5 @@ typedef ExternalLibrary = WasmModule;
 
 WasmiDart createWrapperImpl(ExternalLibrary module) =>
     WasmiDartImpl.wasm(module);
+
+ExternalLibrary defaultLibraryImpl() => throw UnimplementedError();

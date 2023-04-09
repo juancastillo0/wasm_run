@@ -9,3 +9,7 @@ WasmiDart createWrapper(ExternalLibrary lib) {
   _wrapper ??= createWrapperImpl(lib);
   return _wrapper!;
 }
+
+WasmiDart defaultInstance() {
+  return createWrapper(defaultLibraryImpl());
+}
