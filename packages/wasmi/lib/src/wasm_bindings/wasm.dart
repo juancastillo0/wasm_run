@@ -12,10 +12,3 @@ Future<WasmModule> compileAsyncWasmModule(Uint8List bytes) async {
 WasmModule compileWasmModule(Uint8List bytes) {
   return platform_impl.compileWasmModule(bytes);
 }
-
-class WasmInstanceModule {
-  final WasmInstance instance;
-  final WasmModule module;
-
-  WasmInstanceModule(this.instance, this.module);
-}

@@ -1,3 +1,6 @@
+@TestOn('!browser')
+
+import 'dart:convert';
 import 'dart:ffi';
 import 'dart:io';
 
@@ -201,6 +204,8 @@ void main() {
 )
 ''',
       );
+
+      print(base64Encode(binary));
       // final glob = await w.createGlobal(
       //   value: Value2.i64(0),
       //   mutability: Mutability.Var,

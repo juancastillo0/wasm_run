@@ -1,5 +1,5 @@
 import 'dart:ffi' as ffi;
-import 'dart:typed_data';
+import 'dart:typed_data' show Uint8List;
 
 import 'package:flutter_rust_bridge/flutter_rust_bridge.dart'
     show WireSyncReturn, wireSyncReturnIntoDart;
@@ -105,7 +105,7 @@ Value2 _fromWasmValue(WasmValue value, WasmiModuleId module) {
       final function = value.value! as WasmFunction;
       final functionId = _References.getOrCreateId(function, module);
       final func = module.createFunction(
-        functionPointer: _References.globalWasmFunctionPointer.address,
+        functionPointer: _References.globalWasmFunctionPointer,
         functionId: functionId,
         paramTypes: function.params.map((v) => _toValueTy(v!)).toList(),
       );
@@ -232,8 +232,9 @@ class _References {
     return _idToReference[id];
   }
 
-  static late final globalWasmFunctionPointer =
-      ffi.Pointer.fromFunction<_GlobalWasmFunction>(_globalWasmFunction);
+  static int get globalWasmFunctionPointer =>
+      ffi.Pointer.fromFunction<_GlobalWasmFunction>(_globalWasmFunction)
+          .address;
   static void _globalWasmFunction(
     int functionId,
     WireSyncReturn value,
@@ -335,7 +336,7 @@ class _Builder extends WasmInstanceBuilder {
         // TODO: verify with type from [function]
         final functionId = _References.getOrCreateId(function, module.module);
         final func = module.module.createFunction(
-          functionPointer: _References.globalWasmFunctionPointer.address,
+          functionPointer: _References.globalWasmFunctionPointer,
           functionId: functionId,
           paramTypes: type.field0.params,
         );

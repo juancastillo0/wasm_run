@@ -1,6 +1,6 @@
-import 'dart:collection';
+import 'dart:collection' show UnmodifiableMapView;
 import 'dart:js_util' as js_util;
-import 'dart:typed_data';
+import 'dart:typed_data' show Uint8List;
 
 import 'package:wasm_interop/wasm_interop.dart';
 
