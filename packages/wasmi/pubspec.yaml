@@ -1,13 +1,13 @@
 name: wasmi
 description: A starting point for Dart libraries or applications.
-version: 1.0.0
-# repository: https://github.com/my_org/my_repo
+version: 0.0.1
+homepage: https://github.com/juancastillo0/wasm_interpreter
 
 environment:
   sdk: '>=2.19.0 <3.0.0'
 
 dependencies:
-  meta: ^1.9.1
+  meta: ^1.8.0
   ffi: ^2.0.1
   flutter_rust_bridge: ^1.72.2
   freezed_annotation: ^2.2.0
