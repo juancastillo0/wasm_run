@@ -1,26 +1,30 @@
+import 'dart:ffi' as ffi;
 import 'dart:typed_data';
 
-import 'dart:ffi' as ffi;
 import 'package:flutter_rust_bridge/flutter_rust_bridge.dart'
     show WireSyncReturn, wireSyncReturnIntoDart;
-import 'package:wasmi/src/bridge_generated.dart' as wasm_io;
 import 'package:wasmi/src/bridge_generated.dart';
+import 'package:wasmi/wasmi.dart' show defaultInstance;
 
 import 'wasm_interface.dart' as wasm;
 import 'wasm_interface.dart' hide WasmModule;
-import 'package:wasmi/wasmi.dart' as wasm_io;
-
-final _wasm = wasm_io.defaultInstance();
 
 Future<WasmModule> compileAsyncWasmModule(Uint8List bytes) async {
+  final module = await defaultInstance().compileWasm(moduleWasm: bytes);
+  return WasmModule._(module);
+}
+
+WasmModule compileWasmModule(Uint8List bytes) {
   return WasmModule(bytes);
 }
 
 class WasmModule implements wasm.WasmModule {
-  final wasm_io.WasmiModuleId module;
+  final WasmiModuleId module;
 
   WasmModule(Uint8List bytes)
-      : module = _wasm.compileWasmSync(moduleWasm: bytes);
+      : module = defaultInstance().compileWasmSync(moduleWasm: bytes);
+
+  WasmModule._(this.module);
 
   @override
   WasmInstanceBuilder builder() {
@@ -30,8 +34,8 @@ class WasmModule implements wasm.WasmModule {
   @override
   WasmGlobal createGlobal(WasmValue value, {required bool mutable}) {
     final global = module.createGlobal(
-      value: _fromWasmValue(value),
-      mutability: mutable ? wasm_io.Mutability.Var : wasm_io.Mutability.Const,
+      value: _fromWasmValue(value, module),
+      mutability: mutable ? Mutability.Var : Mutability.Const,
     );
     return _Global(global, module);
   }
@@ -39,7 +43,7 @@ class WasmModule implements wasm.WasmModule {
   @override
   WasmMemory createMemory(int pages, {int? maxPages}) {
     final memory = module.createMemory(
-      memoryType: wasm_io.WasmMemoryType(
+      memoryType: WasmMemoryType(
         initialPages: pages,
         maximumPages: maxPages,
       ),
@@ -53,11 +57,11 @@ class WasmModule implements wasm.WasmModule {
     required int minSize,
     int? maxSize,
   }) {
-    final inner = _fromWasmValue(value);
+    final inner = _fromWasmValue(value, module);
     return _Table(
       module.createTable(
         value: inner,
-        tableType: wasm_io.TableType2(
+        tableType: TableType2(
           min: minSize,
           max: maxSize,
         ),
@@ -85,7 +89,7 @@ class WasmModule implements wasm.WasmModule {
   }
 }
 
-Value2 _fromWasmValue(WasmValue value) {
+Value2 _fromWasmValue(WasmValue value, WasmiModuleId module) {
   switch (value.type) {
     case WasmValueType.i32:
       return Value2.i32(value.value! as int);
@@ -96,13 +100,20 @@ Value2 _fromWasmValue(WasmValue value) {
     case WasmValueType.f64:
       return Value2.f64(value.value! as double);
     case WasmValueType.externRef:
-      return Value2.externRef(value.value);
+      return Value2.externRef(_References.getOrCreateId(value.value, module));
     case WasmValueType.funcRef:
-      return Value2.funcRef(value.value);
+      final function = value.value! as WasmFunction;
+      final functionId = _References.getOrCreateId(function, module);
+      final func = module.createFunction(
+        functionPointer: _References.globalWasmFunctionPointer.address,
+        functionId: functionId,
+        paramTypes: function.params.map((v) => _toValueTy(v!)).toList(),
+      );
+      return Value2.funcRef(func);
   }
 }
 
-ImportExportKind _toImpExpKind(wasm_io.ExternalType kind) {
+ImportExportKind _toImpExpKind(ExternalType kind) {
   return kind.when(
     func: (_) => ImportExportKind.function,
     global: (_) => ImportExportKind.global,
@@ -111,9 +122,63 @@ ImportExportKind _toImpExpKind(wasm_io.ExternalType kind) {
   );
 }
 
-WasmExternal _toWasmExternal(ModuleExportValue value, WasmModule module) {
+WasmFunction _toWasmFunction(Func func, WasmiModuleId module) {
+  Value2 mapValue(WasmValue v) => _fromWasmValue(v, module);
+  final type = module.getFunctionType(func: func);
+
+  return WasmFunction(
+    (args) {
+      final result = module.callFunctionHandleSync(
+        func: func,
+        args: args.map(mapValue).toList(),
+      );
+      return result
+          .map((r) => _References.dartValueFromWasm(r, module))
+          .toList();
+    },
+    type.params.map(_toWasmValueType).toList(),
+    results: type.results.map(_toWasmValueType).toList(),
+  );
+}
+
+WasmValueType _toWasmValueType(ValueTy ty) {
+  switch (ty) {
+    case ValueTy.I32:
+      return WasmValueType.i32;
+    case ValueTy.I64:
+      return WasmValueType.i64;
+    case ValueTy.F32:
+      return WasmValueType.f32;
+    case ValueTy.F64:
+      return WasmValueType.f64;
+    case ValueTy.ExternRef:
+      return WasmValueType.externRef;
+    case ValueTy.FuncRef:
+      return WasmValueType.funcRef;
+  }
+}
+
+ValueTy _toValueTy(WasmValueType ty) {
+  switch (ty) {
+    case WasmValueType.i32:
+      return ValueTy.I32;
+    case WasmValueType.i64:
+      return ValueTy.I64;
+    case WasmValueType.f32:
+      return ValueTy.F32;
+    case WasmValueType.f64:
+      return ValueTy.F64;
+    case WasmValueType.externRef:
+      return ValueTy.ExternRef;
+    case WasmValueType.funcRef:
+      return ValueTy.FuncRef;
+  }
+}
+
+WasmExternal _toWasmExternal(ModuleExportValue value, _Instance instance) {
+  final module = instance.module;
   return value.value.when(
-    func: (func) => _func(func, module.module),
+    func: (func) => _toWasmFunction(func, module.module),
     global: (global) => _Global(global, module.module),
     table: (table) => _Table(table, module.module),
     memory: (memory) => _Memory(memory, module.module),
@@ -131,44 +196,120 @@ WasmExternal _toWasmExternal(ModuleExportValue value, WasmModule module) {
   // }
 }
 
-int _allFunctionIndex = 1;
-final _allFunctions = <int, List<Value2> Function(List<Value2> args)>{};
-
 typedef _GlobalWasmFunction = ffi.Void Function(ffi.Int64, WireSyncReturn);
-final _globalWasmFunctionPointer =
-    ffi.Pointer.fromFunction<_GlobalWasmFunction>(_globalWasmFunction);
-void _globalWasmFunction(
-  int functionId,
-  WireSyncReturn value,
-) {
-  final l = wireSyncReturnIntoDart(value);
-  final input = _wire2api_list_value_2(l.first);
-  _allFunctions[functionId]!(input);
-  // TODO: return value
-  // final result = platform.api2wire_list_value_2(output);
-}
 
-List<Value2> _wire2api_list_value_2(dynamic raw) {
-  final list = raw as List;
-  return list.map(_wire2api_value_2).toList();
-}
+// ignore: avoid_classes_with_only_static_members
+class _References {
+  const _References._();
 
-Value2 _wire2api_value_2(dynamic raw) {
-  switch (raw[0]) {
-    case 0:
-      return Value2_I32(raw[1]);
-    case 1:
-      return Value2_I64(raw[1]);
-    case 2:
-      return Value2_F32(raw[1]);
-    case 3:
-      return Value2_F64(raw[1]);
-    case 4:
-      return Value2_FuncRef(raw[1]);
-    case 5:
-      return Value2_ExternRef(raw[1]);
-    default:
-      throw Exception("unreachable");
+  static int _lastId = 1;
+  static final Map<int, WasmiModuleId> _idToModule = {};
+  static final Map<int, Object?> _idToReference = {};
+  static final Map<Object?, int> _referenceToId = {};
+
+  static int getOrCreateId(Object? reference, WasmiModuleId module) {
+    final id = _referenceToId.putIfAbsent(reference, () {
+      final id = _lastId++;
+      _idToReference[id] = reference;
+      return id;
+    });
+
+    _idToModule.update(
+      id,
+      // TODO: Make the key dependent on the module id
+      (value) => value.field0 != module.field0
+          ? throw Exception(
+              'Multiple modules for same reference id $reference $id.'
+              ' ${value.field0} !+ ${module.field0}',
+            )
+          : value,
+      ifAbsent: () => module,
+    );
+    return id;
+  }
+
+  static Object? getReference(int id) {
+    return _idToReference[id];
+  }
+
+  static late final globalWasmFunctionPointer =
+      ffi.Pointer.fromFunction<_GlobalWasmFunction>(_globalWasmFunction);
+  static void _globalWasmFunction(
+    int functionId,
+    WireSyncReturn value,
+  ) {
+    final l = wireSyncReturnIntoDart(value);
+    final input = _wire2api_list_value_2(l.first);
+    final function = getReference(functionId);
+    if (function is! WasmFunction) {
+      throw Exception('Invalid function reference $functionId');
+    }
+
+    final module = _References._idToModule[functionId]!;
+    final args = input.map((v) => dartValueTypedFromWasm(v, module)).toList();
+
+    // TODO: should it be a List argument?
+    // Function.apply(function, args);
+    function.inner(args);
+    // TODO: return value
+    // final result = platform.api2wire_list_value_2(output);
+  }
+
+  static List<Value2> _wire2api_list_value_2(dynamic raw) {
+    final list = raw as List;
+    return list.map(_wire2api_value_2).toList();
+  }
+
+  static Value2 _wire2api_value_2(dynamic raw) {
+    switch (raw[0]) {
+      case 0:
+        return Value2_I32(raw[1] as int);
+      case 1:
+        return Value2_I64(raw[1] as int);
+      case 2:
+        return Value2_F32(raw[1] as double);
+      case 3:
+        return Value2_F64(raw[1] as double);
+      case 4:
+        return Value2_FuncRef(
+          raw[1] == null
+              ? null
+              : Func.fromRaw(raw[0] as int, raw[1] as int, defaultInstance()),
+        );
+      case 5:
+        return Value2_ExternRef(raw[1] as int);
+      default:
+        throw Exception("unreachable");
+    }
+  }
+
+  static Object? dartValueFromWasm(Value2 raw, WasmiModuleId module) {
+    return raw.when(
+      i32: (value) => value,
+      i64: (value) => value,
+      f32: (value) => value,
+      f64: (value) => value,
+      funcRef: (func) {
+        if (func == null) return null;
+        return _toWasmFunction(func, module);
+      },
+      externRef: getReference,
+    );
+  }
+
+  static WasmValue dartValueTypedFromWasm(Value2 raw, WasmiModuleId module) {
+    return raw.when(
+      i32: WasmValue.i32,
+      // TODO: BigInt not necessary in native
+      i64: (i64) => WasmValue.i64(BigInt.from(i64)),
+      f32: WasmValue.f32,
+      f64: WasmValue.f64,
+      funcRef: (func) {
+        if (func == null) return const WasmValue.funcRef(null);
+        return WasmValue.funcRef(_toWasmFunction(func, module));
+      },
+      externRef: (id) => WasmValue.externRef(getReference(id)),
+    );
   }
 }
 
@@ -178,59 +319,29 @@ class _Builder extends WasmInstanceBuilder {
   _Builder(this.module);
 
   @override
-  void addFunction(
-    String moduleName,
-    String name,
-    List<Value2> Function(List<Value2> args) fn,
-  ) {
-    _allFunctions[_allFunctionIndex++] = fn;
-
-    final desc = module.module
-        .getModuleImports()
-        .firstWhere((e) => e.module == moduleName && e.name == name);
-    final type = desc.ty;
-    if (type is! wasm_io.ExternalType_Func) {
-      throw Exception("Expected function");
-    }
-
-    final func = module.module.createFunction(
-      functionPointer: _globalWasmFunctionPointer.address,
-      paramTypes: type.field0.params,
-    );
-    linkImport(moduleName, name, ExternalValue.func(func));
-  }
-
-  // @override
-  // void addGlobal(String moduleName, String name, WasmGlobal global) {
-  //   linkImport(
-  //     moduleName,
-  //     name,
-  //     ExternalValue.global((global as _Global).global),
-  //   );
-  // }
-
-  // @override
-  // void addMemory(String moduleName, String name, WasmMemory memory) {
-  //   linkImport(
-  //     moduleName,
-  //     name,
-  //     ExternalValue.memory((memory as _Memory).memory),
-  //   );
-  // }
-
-  // @override
-  // void addTable(String moduleName, String name, WasmTable table) {
-  //   linkImport(moduleName, name, ExternalValue.table((table as _Table).table));
-  // }
-
-  @override
-  void addImport(String moduleName, String name, wasm.WasmExternal value) {
+  void addImport(String moduleName, String name, WasmExternal value) {
     final mapped = value.when(
       memory: (memory) => ExternalValue.memory((memory as _Memory).memory),
       table: (table) => ExternalValue.table((table as _Table).table),
       global: (global) => ExternalValue.global((global as _Global).global),
-      function: (function) =>
-          ExternalValue.func((function as _function).function),
+      function: (function) {
+        final desc = module.module
+            .getModuleImports()
+            .firstWhere((e) => e.module == moduleName && e.name == name);
+        final type = desc.ty;
+        if (type is! ExternalType_Func) {
+          throw Exception("Expected function");
+        }
+        // TODO: verify with type from [function]
+        final functionId = _References.getOrCreateId(function, module.module);
+        final func = module.module.createFunction(
+          functionPointer: _References.globalWasmFunctionPointer.address,
+          functionId: functionId,
+          paramTypes: type.field0.params,
+        );
+
+        return ExternalValue.func(func);
+      },
     );
     linkImport(moduleName, name, mapped);
   }
@@ -255,49 +366,40 @@ class _Builder extends WasmInstanceBuilder {
 
   @override
   void enableWasi({bool captureStdout = false, bool captureStderr = false}) {
-    builder.enableWasi(
-      captureStdout: captureStdout,
-      captureStderr: captureStderr,
-    );
+    // TODO: implement enableWasi
+    throw UnimplementedError();
   }
 }
 
 class _Instance extends WasmInstance {
-  final wasm_io.WasmiInstanceId instance;
+  final WasmiInstanceId instance;
 
   @override
   final WasmModule module;
 
   late final Map<String, ModuleExportValue> _exports;
-  late final Map<String, WasmExternal> _exportsMapped;
+  @override
+  late final Map<String, WasmExternal> exports;
 
   _Instance(this.instance, this.module) {
     final d = instance.exports();
+    // TODO: remove _exports
     _exports = Map.fromIterables(d.map((e) => e.desc.name), d);
-    _exportsMapped = _exports.map(
-      (key, value) => MapEntry(key, _toWasmExternal(value, module)),
+    exports = _exports.map(
+      (key, value) => MapEntry(key, _toWasmExternal(value, this)),
     );
   }
 
   @override
-  T? getExportTyped<T extends WasmExternal>(String name) {
-    final value = _exportsMapped[name];
-    return value is T ? value : null;
-  }
+  Stream<List<int>> get stderr => throw UnimplementedError();
 
   @override
-  Map<String, WasmExternal> exports() => _exportsMapped;
-
-  @override
-  Stream<List<int>> get stderr => instance.stderr;
-
-  @override
-  Stream<List<int>> get stdout => instance.stdout;
+  Stream<List<int>> get stdout => throw UnimplementedError();
 }
 
 class _Memory extends WasmMemory {
-  final wasm_io.Memory memory;
-  final wasm_io.WasmiModuleId module;
+  final Memory memory;
+  final WasmiModuleId module;
 
   _Memory(this.memory, this.module);
 
@@ -339,35 +441,41 @@ class _Memory extends WasmMemory {
 }
 
 class _Global extends WasmGlobal {
-  final wasm_io.Global global;
+  final Global global;
   final WasmiModuleId module;
 
   _Global(this.global, this.module);
 
-  // TODO: implement type
   @override
-  Object? get value => module.getGlobalValue(global: global);
+  Object? get() {
+    final nativeValue = module.getGlobalValue(global: global);
+    return _References.dartValueFromWasm(nativeValue, module);
+  }
 
   @override
-  set value(Object? val) {
-    module.setGlobalValue(global: global, value: val);
+  void set(WasmValue value) {
+    final nativeValue = _fromWasmValue(value, module);
+    module.setGlobalValue(global: global, value: nativeValue);
   }
 }
 
 class _Table extends WasmTable {
-  final wasm_io.Table table;
-  final wasm_io.WasmiModuleId module;
+  final Table table;
+  final WasmiModuleId module;
 
   _Table(this.table, this.module);
 
   @override
   Object? get(int index) {
-    return module.getTable(table: table, index: index);
+    final nativeValue = module.getTable(table: table, index: index);
+    if (nativeValue == null) return null;
+    return _References.dartValueFromWasm(nativeValue, module);
   }
 
   @override
-  void set(int index, Object? value) {
-    module.setTable(table: table, value: value, index: index);
+  void set(int index, WasmValue value) {
+    final nativeValue = _fromWasmValue(value, module);
+    module.setTable(table: table, value: nativeValue, index: index);
   }
 
   @override
@@ -378,7 +486,7 @@ class _Table extends WasmTable {
     return module.growTable(
       table: table,
       delta: delta,
-      value: _fromWasmValue(fillValue),
+      value: _fromWasmValue(fillValue, module),
     );
   }
 }
