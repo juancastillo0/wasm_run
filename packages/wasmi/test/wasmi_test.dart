@@ -2,16 +2,15 @@ import 'dart:ffi';
 import 'dart:io';
 
 import 'package:flutter_rust_bridge/flutter_rust_bridge.dart';
-import 'package:wasmi/src/bridge_generated.dart';
+import 'package:test/test.dart';
 import 'package:wasmi/src/bridge_generated.io.dart';
 import 'package:wasmi/wasmi.dart';
-import 'package:test/test.dart';
 
 int addOne(int v) => v + 1;
 
-final platform = WasmiDartPlatform(DynamicLibrary.open(
-  '/Users/juanmanuelcastillo/Desktop/flutter/wasmi_dart/target/debug/libwasmi_dart.dylib',
-));
+final platform = WasmiDartPlatform(
+  DynamicLibrary.open('../../target/debug/libwasmi_dart.dylib'),
+);
 
 Pointer<wire_list_value_2> mapWasmFunction(WireSyncReturn value) {
 // List<dynamic> wireSyncReturnIntoDart(WireSyncReturn syncReturn) =>
@@ -50,12 +49,14 @@ int mapWasmFunctionMut(
 
   print('dart output $output');
 
-  final platform = WasmiDartPlatform(DynamicLibrary.open(
-    '/Users/juanmanuelcastillo/Desktop/flutter/wasmi_dart/target/debug/libwasmi_dart.dylib',
-  ));
+  final platform = WasmiDartPlatform(
+    DynamicLibrary.open('../../target/debug/libwasmi_dart.dylib'),
+  );
   print('dart after platform $result');
   // TODO: this throws
-  final r = platform.api2wire_list_value_2(output, result);
+  final r = platform.api2wire_list_value_2(
+    output, // result
+  );
   print('dart result $r');
   return 1;
 }
@@ -120,9 +121,7 @@ void main() {
   group('A group of tests', () {
     WasmiDart getLibrary() {
       return createWrapper(
-        DynamicLibrary.open(
-          '/Users/juanmanuelcastillo/Desktop/flutter/wasmi_dart/target/debug/libwasmi_dart.dylib',
-        ),
+        DynamicLibrary.open('../../target/debug/libwasmi_dart.dylib'),
       );
     }
 
@@ -131,7 +130,7 @@ void main() {
       final v = Pointer.fromFunction<MapInt>(addOne, 0);
       final out = w.runFunction(pointer: v.address);
 
-      expect(out, Value2.i64(2));
+      expect(out, [Value2.i64(2)]);
     });
 
     test('test function', () {
@@ -191,7 +190,8 @@ void main() {
 //       final module = await w.compileWasm(moduleWasm: binary);
 //       print(await module.getModuleExports());
 
-      final binary = await w.parseWatFormat(wat: r'''
+      final binary = await w.parseWatFormat(
+        wat: r'''
 (module
     (func (export "add") (param $a i32) (param $b i32) (result i32)
         local.get $a
@@ -199,24 +199,29 @@ void main() {
         i32.add
     )
 )
-''');
-      final glob = await w.createGlobal(
-        value: Value2.i64(0),
-        mutability: Mutability.Var,
+''',
       );
+      // final glob = await w.createGlobal(
+      //   value: Value2.i64(0),
+      //   mutability: Mutability.Var,
+      // );
 
-      final module = await w.compileWasm(moduleWasm: binary, imports: [
-        ModuleImport(
-          module: 'module',
-          name: 'name',
-          value: ExternalValue.global(
-            value: Value2.i64(0),
-            mutability: Mutability.Var,
-          ),
-        ),
-      ]);
-      print(await module.getModuleExports());
-      final addResult = await module.callFunctionWithArgs(
+      //  imports: [
+      //   ModuleImport(
+      //     module: 'module',
+      //     name: 'name',
+      //     value: ExternalValue.global(
+      //       value: Value2.i64(0),
+      //       mutability: Mutability.Var,
+      //     ),
+      //   ),
+      // ]
+
+      final module = await w.compileWasm(moduleWasm: binary);
+      print(module.getModuleExports());
+
+      final instance = module.instantiateSync();
+      final addResult = await instance.callFunctionWithArgs(
         name: 'add',
         args: [1, 4].map(Value2.i32).toList(),
       );
