@@ -15,7 +15,7 @@ dependencies:
 
 dev_dependencies:
   ffigen: ^7.2.10
-  lints: ^2.0.0
   test: ^1.21.0
   build_runner: ^2.3.3
   freezed: ^2.3.2
+  lint: ^2.0.1
