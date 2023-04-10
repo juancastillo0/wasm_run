@@ -1,28 +1,41 @@
-#
-# To learn more about a Podspec see http://guides.cocoapods.org/syntax/podspec.html.
-# Run `pod lib lint flutter_wasmi.podspec` to validate before publishing.
-#
+release_tag_name = 'wasmi-v0.0.0' # generated; do not edit
+
+# We cannot distribute the XCFramework alongside the library directly,
+# so we have to fetch the correct version here.
+framework_name = 'Wasmi.xcframework'
+remote_zip_name = "#{framework_name}.zip"
+url = "https://github.com/juancastillo0/wasm_interpreter/releases/download/#{release_tag_name}/#{remote_zip_name}"
+local_zip_name = "#{release_tag_name}.zip"
+`
+cd Frameworks
+rm -rf #{framework_name}
+
+if [ ! -f #{local_zip_name} ]
+then
+  curl -L #{url} -o #{local_zip_name}
+fi
+
+unzip #{local_zip_name}
+cd -
+`
+
 Pod::Spec.new do |s|
-  s.name             = 'flutter_wasmi'
-  s.version          = '0.0.1'
-  s.summary          = 'A new Flutter FFI plugin project.'
-  s.description      = <<-DESC
-A new Flutter FFI plugin project.
-                       DESC
-  s.homepage         = 'http://example.com'
-  s.license          = { :file => '../LICENSE' }
-  s.author           = { 'Your Company' => 'email@example.com' }
+  s.name          = 'wasmi'
+  s.version       = '0.0.1'
+  s.summary       = 'iOS/macOS Flutter bindings for wasmi'
+  s.license       = { :file => '../LICENSE' }
+  s.homepage      = 'https://github.com/juancastillo0/wasm_interpreter'
+  s.authors       = { 'Juan Manuel Castillo' => '42351046+juancastillo0@users.noreply.github.com' }
 
   # This will ensure the source files in Classes/ are included in the native
   # builds of apps using this FFI plugin. Podspec does not support relative
   # paths, so Classes contains a forwarder C file that relatively imports
   # `../src/*` so that the C sources can be shared among all target platforms.
-  s.source           = { :path => '.' }
-  s.source_files = 'Classes/**/*'
-  s.dependency 'Flutter'
-  s.platform = :ios, '9.0'
+  s.source              = { :path => '.' }
+  s.source_files        = 'Classes/**/*'
+  s.public_header_files = 'Classes/**/*.h'
+  s.vendored_frameworks = "Frameworks/#{framework_name}"
 
-  # Flutter.framework does not contain a i386 slice.
-  s.pod_target_xcconfig = { 'DEFINES_MODULE' => 'YES', 'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'i386' }
-  s.swift_version = '5.0'
+  s.ios.deployment_target = '11.0'
+  s.osx.deployment_target = '10.11'
 end

@@ -1,6 +1,6 @@
 name: wasmi
 
-repository: https://github.com/juancastillo0/wasmi_dart
+repository: https://github.com/juancastillo0/wasm_interpreter
 
 packages:
   - packages/**

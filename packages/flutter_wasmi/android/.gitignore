@@ -7,3 +7,6 @@
 /build
 /captures
 .cxx
+# Ignore Rust binaries
+src/main/jniLibs/
+*.tar.gz

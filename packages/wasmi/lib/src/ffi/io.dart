@@ -17,3 +17,15 @@ ExternalLibrary defaultLibraryImpl() {
 
   return DynamicLibrary.open('../../target/debug/$filename');
 }
+
+ExternalLibrary createLibraryImpl() {
+  const base = 'wasmi_dart';
+
+  if (Platform.isIOS || Platform.isMacOS) {
+    return DynamicLibrary.executable();
+  } else if (Platform.isWindows) {
+    return DynamicLibrary.open('$base.dll');
+  } else {
+    return DynamicLibrary.open('lib$base.so');
+  }
+}
