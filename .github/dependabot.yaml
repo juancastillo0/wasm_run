@@ -1,0 +1,23 @@
+version: 2
+enable-beta-ecosystems: true
+updates:
+  - package-ecosystem: pub
+    directory: "/packages/wasmi"
+    schedule:
+      interval: weekly
+  # - package-ecosystem: pub
+  #   directory: "/packages/wasmi/example"
+  #   schedule:
+  #     interval: weekly
+  - package-ecosystem: pub
+    directory: "/packages/flutter_wasmi"
+    schedule:
+      interval: weekly
+  - package-ecosystem: pub
+    directory: "/packages/flutter_wasmi/example"
+    schedule:
+      interval: weekly
+  - package-ecosystem: cargo
+    directory: "/packages/wasmi/native"
+    schedule:
+      interval: weekly
