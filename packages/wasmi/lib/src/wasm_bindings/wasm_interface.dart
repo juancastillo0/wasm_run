@@ -1,9 +1,9 @@
 import 'dart:typed_data';
 
 abstract class WasmModule {
-  factory WasmModule(Uint8List bytes) {
-    throw UnimplementedError();
-  }
+  // factory WasmModule(Uint8List bytes) {
+  //   throw UnimplementedError();
+  // }
 
   WasmInstanceBuilder builder();
 
@@ -20,6 +20,9 @@ abstract class WasmModule {
   List<ModuleImportDescriptor> getImports();
 
   List<ModuleExportDescriptor> getExports();
+
+  @override
+  String toString() => 'WasmModule(${getImports()}, ${getExports()})';
 }
 
 abstract class WasmInstanceBuilder {
@@ -50,15 +53,18 @@ abstract class WasmInstance {
   WasmMemory? lookupMemory(String name) => getExportTyped(name);
 
   T? getExportTyped<T extends WasmExternal>(String name) {
-    final export = exports()[name];
+    final export = exports[name];
     return export is T ? export : null;
   }
 
-  Map<String, WasmExternal> exports();
+  Map<String, WasmExternal> get exports;
 
   Stream<List<int>> get stderr;
 
   Stream<List<int>> get stdout;
+
+  @override
+  String toString() => 'WasmInstance($module, $exports)';
 }
 
 abstract class WasmMemory extends WasmExternal {
@@ -78,7 +84,7 @@ abstract class WasmMemory extends WasmExternal {
 abstract class WasmTable extends WasmExternal {
   void set(int index, WasmValue value);
 
-  WasmValue get(int index);
+  Object? get(int index);
 
   int get length;
 
@@ -86,17 +92,28 @@ abstract class WasmTable extends WasmExternal {
 }
 
 abstract class WasmGlobal extends WasmExternal {
-  WasmValue get value;
+  void set(WasmValue value);
 
-  set value(WasmValue val);
+  Object? get();
 }
 
 class WasmFunction extends WasmExternal {
-  const WasmFunction(this.inner);
+  const WasmFunction(
+    this.inner,
+    this.params, {
+    this.results,
+  });
 
-  final Function inner;
+  // const WasmFunction.fromArgs(Function inner, int numParams);
+  final List<WasmValueType?> params;
+  final List<WasmValueType>? results;
 
-  Object? call(List args) => Function.apply(inner, args);
+  final List<Object?> Function(List<WasmValue> args) inner;
+
+  List<Object?> call(List<WasmValue> args) => inner(args);
+
+  @override
+  String toString() => 'WasmFunction($inner, $params, $results)';
 }
 
 /// Any of:
@@ -139,6 +156,9 @@ class WasmImport {
   final WasmExternal value;
 
   WasmImport(this.moduleName, this.name, this.value);
+
+  @override
+  String toString() => 'WasmImport($moduleName, $value, $value)';
 }
 
 enum WasmValueType {
@@ -182,13 +202,17 @@ class WasmValue {
 
   /// A nullable [`Func`][`crate::Func`] reference, a.k.a. [`FuncRef`].
   const WasmValue.funcRef(
-    WasmFunction this.value,
+    // TODO: should this be nullable?
+    WasmFunction? this.value,
   ) : type = WasmValueType.funcRef;
 
   /// A nullable external object reference, a.k.a. [`ExternRef`].
   const WasmValue.externRef(
     this.value,
   ) : type = WasmValueType.externRef;
+
+  @override
+  String toString() => 'WasmValue($value, $type)';
 }
 
 /// [WasmModule] import entry.
@@ -203,6 +227,9 @@ class ModuleImportDescriptor {
   final ImportExportKind kind;
 
   const ModuleImportDescriptor(this.module, this.name, this.kind);
+
+  @override
+  String toString() => 'ModuleImportDescriptor($module, $name, $kind)';
 }
 
 /// [WasmModule] exports entry.
@@ -214,6 +241,9 @@ class ModuleExportDescriptor {
   final ImportExportKind kind;
 
   const ModuleExportDescriptor(this.name, this.kind);
+
+  @override
+  String toString() => 'ModuleExportDescriptor($name, $kind)';
 }
 
 // /// [WasmModule] exports entry.
@@ -240,4 +270,44 @@ enum ImportExportKind {
 
   /// [WasmTable]
   table
+}
+
+Function makeFunction(int numArgs, Function(List) inner) {
+  switch (numArgs) {
+    case 0:
+      return () => inner([]);
+    case 1:
+      return (a0) => inner([a0]);
+    case 2:
+      return (a0, a1) => inner([a0, a1]);
+    case 3:
+      return (a0, a1, a2) => inner([a0, a1, a2]);
+    case 4:
+      return (a0, a1, a2, a3) => inner([a0, a1, a2, a3]);
+    case 5:
+      return (a0, a1, a2, a3, a4) => inner([a0, a1, a2, a3, a4]);
+    case 6:
+      return (a0, a1, a2, a3, a4, a5) => inner([a0, a1, a2, a3, a4, a5]);
+    case 7:
+      return (a0, a1, a2, a3, a4, a5, a6) =>
+          inner([a0, a1, a2, a3, a4, a5, a6]);
+    case 8:
+      return (a0, a1, a2, a3, a4, a5, a6, a7) =>
+          inner([a0, a1, a2, a3, a4, a5, a6, a7]);
+    case 9:
+      return (a0, a1, a2, a3, a4, a5, a6, a7, a8) =>
+          inner([a0, a1, a2, a3, a4, a5, a6, a7, a8]);
+    case 10:
+      return (a0, a1, a2, a3, a4, a5, a6, a7, a8, a9) =>
+          inner([a0, a1, a2, a3, a4, a5, a6, a7, a8, a9]);
+    case 11:
+      return (a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10) =>
+          inner([a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10]);
+    case 12:
+      return (a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11) =>
+          inner([a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11]);
+
+    default:
+      throw StateError('Unsupported number of arguments: $numArgs');
+  }
 }

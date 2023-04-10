@@ -1,12 +1,18 @@
 import 'dart:collection';
+import 'dart:js_util' as js_util;
 import 'dart:typed_data';
+
+import 'package:wasm_interop/wasm_interop.dart';
 
 import 'wasm_interface.dart' as wasm;
 import 'wasm_interface.dart' hide WasmModule;
-import 'package:wasm_interop/wasm_interop.dart';
 
 Future<wasm.WasmModule> compileAsyncWasmModule(Uint8List bytes) async {
   return WasmModule.compileAsync(bytes);
+}
+
+WasmModule compileWasmModule(Uint8List bytes) {
+  return WasmModule(bytes);
 }
 
 class WasmModule implements wasm.WasmModule {
@@ -114,26 +120,15 @@ class _Builder extends WasmInstanceBuilder {
   _Builder(this.module);
 
   @override
-  void addFunction(String moduleName, String name, WasmFunction fn) {
-    importMap.putIfAbsent(moduleName, () => {})[name] = fn.inner;
-  }
-
-  @override
-  void addGlobal(String moduleName, String name, WasmGlobal global) {
-    final Global _global = (global as _Global).global;
-    importMap.putIfAbsent(moduleName, () => {})[name] = _global;
-  }
-
-  @override
-  void addMemory(String moduleName, String name, WasmMemory memory) {
-    final Memory _memory = (memory as _Memory).memory;
-    importMap.putIfAbsent(moduleName, () => {})[name] = _memory;
-  }
-
-  @override
-  void addTable(String moduleName, String name, WasmTable table) {
-    final Table _table = (table as _Table).table;
-    importMap.putIfAbsent(moduleName, () => {})[name] = _table;
+  void addImport(String moduleName, String name, wasm.WasmExternal value) {
+    final mapped = value.when(
+      memory: (memory) => (memory as _Memory).memory,
+      table: (table) => (table as _Table).table,
+      global: (global) => (global as _Global).global,
+      // TODO: this will throw
+      function: (function) => function.inner,
+    );
+    importMap.putIfAbsent(moduleName, () => {})[name] = mapped;
   }
 
   @override
@@ -159,16 +154,36 @@ class _Instance extends WasmInstance {
   @override
   late final WasmModule module = WasmModule._(instance.module);
 
-  Map<String, WasmExternal>? _exports;
-
-  _Instance(this.instance);
-
   @override
-  Map<String, WasmExternal> exports() =>
-      _exports ??= UnmodifiableMapView(Map.fromEntries(
+  late final UnmodifiableMapView<String, WasmExternal> exports;
+
+  _Instance(this.instance) {
+    exports = UnmodifiableMapView(
+      Map.fromEntries(
         instance.functions.entries
             .map<MapEntry<String, WasmExternal>>(
-              (e) => MapEntry(e.key, WasmFunction(e.value)),
+              (e) {
+                final params = List.generate(
+                  js_util.getProperty(e.value, 'length') as int,
+                  (index) => null,
+                );
+
+                return MapEntry(
+                  e.key,
+                  WasmFunction(
+                    (args) {
+                      final result = Function.apply(
+                        e.value,
+                        args.map((e) => e.value).toList(),
+                      );
+                      return result is List
+                          ? result
+                          : [if (result != null) result];
+                    },
+                    params,
+                  ),
+                );
+              },
             )
             .followedBy(instance.globals.entries
                 .map((e) => MapEntry(e.key, _Global(e.value))))
@@ -176,7 +191,9 @@ class _Instance extends WasmInstance {
                 .map((e) => MapEntry(e.key, _Memory(e.value))))
             .followedBy(instance.tables.entries
                 .map((e) => MapEntry(e.key, _Table(e.value)))),
-      ));
+      ),
+    );
+  }
 
   @override
   // TODO: implement stderr
@@ -223,11 +240,11 @@ class _Global extends WasmGlobal {
   _Global(this.global);
 
   @override
-  Object? get value => global.value;
+  Object? get() => global.value;
 
   @override
-  set value(Object? val) {
-    global.value = val;
+  void set(WasmValue value) {
+    global.value = value.value;
   }
 }
 
@@ -236,7 +253,8 @@ class _Table extends WasmTable {
   _Table(this.table);
 
   @override
-  void set(int index, Object? value) => table.jsObject.set(index, value);
+  void set(int index, WasmValue value) =>
+      table.jsObject.set(index, value.value);
 
   @override
   Object? get(int index) => table.jsObject.get(index);
@@ -249,7 +267,7 @@ class _Table extends WasmTable {
     final previous = table.grow(delta);
     if (fillValue.value != null) {
       for (var i = previous; i < table.length; i++) {
-        set(i, fillValue.value);
+        set(i, fillValue);
       }
     }
     return previous;
