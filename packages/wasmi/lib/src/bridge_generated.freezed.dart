@@ -1341,14 +1341,14 @@ abstract class ExternalValue_Memory implements ExternalValue {
 
 /// @nodoc
 mixin _$Value2 {
-  num get field0 => throw _privateConstructorUsedError;
+  Object? get field0 => throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
     required TResult Function(int field0) i32,
     required TResult Function(int field0) i64,
     required TResult Function(double field0) f32,
     required TResult Function(double field0) f64,
-    required TResult Function(int field0) funcRef,
+    required TResult Function(Func? field0) funcRef,
     required TResult Function(int field0) externRef,
   }) =>
       throw _privateConstructorUsedError;
@@ -1358,7 +1358,7 @@ mixin _$Value2 {
     TResult? Function(int field0)? i64,
     TResult? Function(double field0)? f32,
     TResult? Function(double field0)? f64,
-    TResult? Function(int field0)? funcRef,
+    TResult? Function(Func? field0)? funcRef,
     TResult? Function(int field0)? externRef,
   }) =>
       throw _privateConstructorUsedError;
@@ -1368,7 +1368,7 @@ mixin _$Value2 {
     TResult Function(int field0)? i64,
     TResult Function(double field0)? f32,
     TResult Function(double field0)? f64,
-    TResult Function(int field0)? funcRef,
+    TResult Function(Func? field0)? funcRef,
     TResult Function(int field0)? externRef,
     required TResult orElse(),
   }) =>
@@ -1491,7 +1491,7 @@ class _$Value2_I32 implements Value2_I32 {
     required TResult Function(int field0) i64,
     required TResult Function(double field0) f32,
     required TResult Function(double field0) f64,
-    required TResult Function(int field0) funcRef,
+    required TResult Function(Func? field0) funcRef,
     required TResult Function(int field0) externRef,
   }) {
     return i32(field0);
@@ -1504,7 +1504,7 @@ class _$Value2_I32 implements Value2_I32 {
     TResult? Function(int field0)? i64,
     TResult? Function(double field0)? f32,
     TResult? Function(double field0)? f64,
-    TResult? Function(int field0)? funcRef,
+    TResult? Function(Func? field0)? funcRef,
     TResult? Function(int field0)? externRef,
   }) {
     return i32?.call(field0);
@@ -1517,7 +1517,7 @@ class _$Value2_I32 implements Value2_I32 {
     TResult Function(int field0)? i64,
     TResult Function(double field0)? f32,
     TResult Function(double field0)? f64,
-    TResult Function(int field0)? funcRef,
+    TResult Function(Func? field0)? funcRef,
     TResult Function(int field0)? externRef,
     required TResult orElse(),
   }) {
@@ -1649,7 +1649,7 @@ class _$Value2_I64 implements Value2_I64 {
     required TResult Function(int field0) i64,
     required TResult Function(double field0) f32,
     required TResult Function(double field0) f64,
-    required TResult Function(int field0) funcRef,
+    required TResult Function(Func? field0) funcRef,
     required TResult Function(int field0) externRef,
   }) {
     return i64(field0);
@@ -1662,7 +1662,7 @@ class _$Value2_I64 implements Value2_I64 {
     TResult? Function(int field0)? i64,
     TResult? Function(double field0)? f32,
     TResult? Function(double field0)? f64,
-    TResult? Function(int field0)? funcRef,
+    TResult? Function(Func? field0)? funcRef,
     TResult? Function(int field0)? externRef,
   }) {
     return i64?.call(field0);
@@ -1675,7 +1675,7 @@ class _$Value2_I64 implements Value2_I64 {
     TResult Function(int field0)? i64,
     TResult Function(double field0)? f32,
     TResult Function(double field0)? f64,
-    TResult Function(int field0)? funcRef,
+    TResult Function(Func? field0)? funcRef,
     TResult Function(int field0)? externRef,
     required TResult orElse(),
   }) {
@@ -1807,7 +1807,7 @@ class _$Value2_F32 implements Value2_F32 {
     required TResult Function(int field0) i64,
     required TResult Function(double field0) f32,
     required TResult Function(double field0) f64,
-    required TResult Function(int field0) funcRef,
+    required TResult Function(Func? field0) funcRef,
     required TResult Function(int field0) externRef,
   }) {
     return f32(field0);
@@ -1820,7 +1820,7 @@ class _$Value2_F32 implements Value2_F32 {
     TResult? Function(int field0)? i64,
     TResult? Function(double field0)? f32,
     TResult? Function(double field0)? f64,
-    TResult? Function(int field0)? funcRef,
+    TResult? Function(Func? field0)? funcRef,
     TResult? Function(int field0)? externRef,
   }) {
     return f32?.call(field0);
@@ -1833,7 +1833,7 @@ class _$Value2_F32 implements Value2_F32 {
     TResult Function(int field0)? i64,
     TResult Function(double field0)? f32,
     TResult Function(double field0)? f64,
-    TResult Function(int field0)? funcRef,
+    TResult Function(Func? field0)? funcRef,
     TResult Function(int field0)? externRef,
     required TResult orElse(),
   }) {
@@ -1965,7 +1965,7 @@ class _$Value2_F64 implements Value2_F64 {
     required TResult Function(int field0) i64,
     required TResult Function(double field0) f32,
     required TResult Function(double field0) f64,
-    required TResult Function(int field0) funcRef,
+    required TResult Function(Func? field0) funcRef,
     required TResult Function(int field0) externRef,
   }) {
     return f64(field0);
@@ -1978,7 +1978,7 @@ class _$Value2_F64 implements Value2_F64 {
     TResult? Function(int field0)? i64,
     TResult? Function(double field0)? f32,
     TResult? Function(double field0)? f64,
-    TResult? Function(int field0)? funcRef,
+    TResult? Function(Func? field0)? funcRef,
     TResult? Function(int field0)? externRef,
   }) {
     return f64?.call(field0);
@@ -1991,7 +1991,7 @@ class _$Value2_F64 implements Value2_F64 {
     TResult Function(int field0)? i64,
     TResult Function(double field0)? f32,
     TResult Function(double field0)? f64,
-    TResult Function(int field0)? funcRef,
+    TResult Function(Func? field0)? funcRef,
     TResult Function(int field0)? externRef,
     required TResult orElse(),
   }) {
@@ -2061,7 +2061,7 @@ abstract class _$$Value2_FuncRefCopyWith<$Res> {
           _$Value2_FuncRef value, $Res Function(_$Value2_FuncRef) then) =
       __$$Value2_FuncRefCopyWithImpl<$Res>;
   @useResult
-  $Res call({int field0});
+  $Res call({Func? field0});
 }
 
 /// @nodoc
@@ -2075,13 +2075,13 @@ class __$$Value2_FuncRefCopyWithImpl<$Res>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? field0 = null,
+    Object? field0 = freezed,
   }) {
     return _then(_$Value2_FuncRef(
-      null == field0
+      freezed == field0
           ? _value.field0
           : field0 // ignore: cast_nullable_to_non_nullable
-              as int,
+              as Func?,
     ));
   }
 }
@@ -2089,10 +2089,10 @@ class __$$Value2_FuncRefCopyWithImpl<$Res>
 /// @nodoc
 
 class _$Value2_FuncRef implements Value2_FuncRef {
-  const _$Value2_FuncRef(this.field0);
+  const _$Value2_FuncRef([this.field0]);
 
   @override
-  final int field0;
+  final Func? field0;
 
   @override
   String toString() {
@@ -2123,7 +2123,7 @@ class _$Value2_FuncRef implements Value2_FuncRef {
     required TResult Function(int field0) i64,
     required TResult Function(double field0) f32,
     required TResult Function(double field0) f64,
-    required TResult Function(int field0) funcRef,
+    required TResult Function(Func? field0) funcRef,
     required TResult Function(int field0) externRef,
   }) {
     return funcRef(field0);
@@ -2136,7 +2136,7 @@ class _$Value2_FuncRef implements Value2_FuncRef {
     TResult? Function(int field0)? i64,
     TResult? Function(double field0)? f32,
     TResult? Function(double field0)? f64,
-    TResult? Function(int field0)? funcRef,
+    TResult? Function(Func? field0)? funcRef,
     TResult? Function(int field0)? externRef,
   }) {
     return funcRef?.call(field0);
@@ -2149,7 +2149,7 @@ class _$Value2_FuncRef implements Value2_FuncRef {
     TResult Function(int field0)? i64,
     TResult Function(double field0)? f32,
     TResult Function(double field0)? f64,
-    TResult Function(int field0)? funcRef,
+    TResult Function(Func? field0)? funcRef,
     TResult Function(int field0)? externRef,
     required TResult orElse(),
   }) {
@@ -2204,10 +2204,10 @@ class _$Value2_FuncRef implements Value2_FuncRef {
 }
 
 abstract class Value2_FuncRef implements Value2 {
-  const factory Value2_FuncRef(final int field0) = _$Value2_FuncRef;
+  const factory Value2_FuncRef([final Func? field0]) = _$Value2_FuncRef;
 
   @override
-  int get field0;
+  Func? get field0;
   @JsonKey(ignore: true)
   _$$Value2_FuncRefCopyWith<_$Value2_FuncRef> get copyWith =>
       throw _privateConstructorUsedError;
@@ -2281,7 +2281,7 @@ class _$Value2_ExternRef implements Value2_ExternRef {
     required TResult Function(int field0) i64,
     required TResult Function(double field0) f32,
     required TResult Function(double field0) f64,
-    required TResult Function(int field0) funcRef,
+    required TResult Function(Func? field0) funcRef,
     required TResult Function(int field0) externRef,
   }) {
     return externRef(field0);
@@ -2294,7 +2294,7 @@ class _$Value2_ExternRef implements Value2_ExternRef {
     TResult? Function(int field0)? i64,
     TResult? Function(double field0)? f32,
     TResult? Function(double field0)? f64,
-    TResult? Function(int field0)? funcRef,
+    TResult? Function(Func? field0)? funcRef,
     TResult? Function(int field0)? externRef,
   }) {
     return externRef?.call(field0);
@@ -2307,7 +2307,7 @@ class _$Value2_ExternRef implements Value2_ExternRef {
     TResult Function(int field0)? i64,
     TResult Function(double field0)? f32,
     TResult Function(double field0)? f64,
-    TResult Function(int field0)? funcRef,
+    TResult Function(Func? field0)? funcRef,
     TResult Function(int field0)? externRef,
     required TResult orElse(),
   }) {

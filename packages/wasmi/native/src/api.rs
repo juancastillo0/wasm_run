@@ -3,8 +3,8 @@ use crate::bridge_generated::{
 };
 use anyhow::{Ok, Result};
 use flutter_rust_bridge::{
-    frb, opaque_dyn, support::new_leak_box_ptr, DartAbi, DartSafe, IntoDart, RustOpaque,
-    StreamSink, SyncReturn,
+    frb, opaque_dyn, support::new_leak_box_ptr, DartAbi, DartOpaque, DartSafe, IntoDart,
+    RustOpaque, StreamSink, SyncReturn,
 };
 use once_cell::sync::Lazy;
 use std::{
@@ -64,25 +64,14 @@ impl WasmiInstanceId {
     }
     pub fn call_function_with_args(&self, name: String, args: Vec<Value2>) -> Result<Vec<Value2>> {
         let mut arr = ARRAY.write().unwrap();
-        let value = &mut arr.map.get_mut(&self.0).unwrap();
+        let value = arr.map.get_mut(&self.0).unwrap();
 
         let func = value
             .instance
             .unwrap()
             .get_func(&value.store, &name)
             .unwrap();
-        let mut outputs: Vec<Value> = func
-            .ty(&value.store)
-            .results()
-            .iter()
-            .map(|t| Value::default(*t))
-            .collect();
-        let inputs: Vec<Value> = args
-            .into_iter()
-            .map(|v| v.to_value(&mut value.store))
-            .collect();
-        func.call(&mut value.store, inputs.as_slice(), &mut outputs)?;
-        Ok(outputs.into_iter().map(|a| (&a).into()).collect())
+        WasmiModuleId::call_function_handle_with_args(value, func, args)
     }
 
     pub fn exports(&self) -> SyncReturn<Vec<ModuleExportValue>> {
@@ -110,7 +99,7 @@ pub enum Value2 {
     /// Value of 64-bit IEEE 754-2008 floating point number.
     F64(f64),
     /// A nullable [`Func`][`crate::Func`] reference, a.k.a. [`FuncRef`].
-    FuncRef(u32), // NonZeroU32
+    FuncRef(Option<RustOpaque<Func>>), // NonZeroU32
     /// A nullable external object reference, a.k.a. [`ExternRef`].
     ExternRef(u32), // NonZeroU32
 }
@@ -122,27 +111,24 @@ impl Value2 {
             Value2::I64(i) => Value::I64(*i),
             Value2::F32(i) => Value::F32(i.to_bits().into()),
             Value2::F64(i) => Value::F64(i.to_bits().into()),
-            Value2::FuncRef(i) => Value::FuncRef(
-                Func::wrap(ctx, |caller: Caller<'_, T>, param: i32| {
-                    // println!("Got {param} from WebAssembly");
-                    // println!("My host state is: {}", caller.data());
-                })
-                .into(),
-            ),
-            Value2::ExternRef(i) => Value::ExternRef(ExternRef::null()),
+            Value2::FuncRef(i) => {
+                let inner = i.as_ref().map(|f| f.clone().try_unwrap().unwrap());
+                Value::FuncRef(FuncRef::new(inner))
+            }
+            Value2::ExternRef(i) => Value::ExternRef(ExternRef::new::<u32>(ctx, Some(*i))),
         }
     }
-}
 
-impl From<&Value> for Value2 {
-    fn from(value: &Value) -> Self {
+    fn from_value<'a, T: 'a>(value: &Value, ctx: impl Into<StoreContext<'a, T>>) -> Self {
         match value {
             Value::I32(i) => Value2::I32(*i),
             Value::I64(i) => Value2::I64(*i),
             Value::F32(i) => Value2::F32(i.to_float()),
             Value::F64(i) => Value2::F64(i.to_float()),
-            Value::FuncRef(i) => Value2::FuncRef(0), // NonZeroU32::new(1).unwrap()),
-            Value::ExternRef(i) => Value2::ExternRef(0), // NonZeroU32::new(1).unwrap()),
+            Value::FuncRef(i) => Value2::FuncRef(i.func().map(|f| RustOpaque::new(*f))), // NonZeroU32::new(1).unwrap()),
+            Value::ExternRef(i) => {
+                Value2::ExternRef(*(i.data(ctx).unwrap().downcast_ref::<u32>().unwrap()))
+            } // NonZeroU32::new(1).unwrap()),
         }
     }
 }
@@ -159,7 +145,7 @@ impl From<&GlobalType> for GlobalTy {
     fn from(value: &GlobalType) -> Self {
         GlobalTy {
             content: (&value.content()).into(),
-            mutability: value.mutability().into(),
+            mutability: value.mutability(),
         }
     }
 }
@@ -271,6 +257,45 @@ impl WasmiModuleId {
         Ok(())
     }
 
+    pub fn call_function_handle_sync(
+        &self,
+        func: RustOpaque<Func>,
+        args: Vec<Value2>,
+    ) -> Result<SyncReturn<Vec<Value2>>> {
+        self.call_function_handle(func, args).map(SyncReturn)
+    }
+    pub fn call_function_handle(
+        &self,
+        func: RustOpaque<Func>,
+        args: Vec<Value2>,
+    ) -> Result<Vec<Value2>> {
+        let mut arr = ARRAY.write().unwrap();
+        let value = arr.map.get_mut(&self.0).unwrap();
+        WasmiModuleId::call_function_handle_with_args(value, *func, args)
+    }
+
+    fn call_function_handle_with_args(
+        value: &mut WasmiModuleImpl,
+        func: Func,
+        args: Vec<Value2>,
+    ) -> Result<Vec<Value2>> {
+        let mut outputs: Vec<Value> = func
+            .ty(&value.store)
+            .results()
+            .iter()
+            .map(|t| Value::default(*t))
+            .collect();
+        let inputs: Vec<Value> = args
+            .into_iter()
+            .map(|v| v.to_value(&mut value.store))
+            .collect();
+        func.call(&mut value.store, inputs.as_slice(), &mut outputs)?;
+        Ok(outputs
+            .into_iter()
+            .map(|a| Value2::from_value(&a, &value.store))
+            .collect())
+    }
+
     fn with_module_mut<T>(&self, f: impl FnOnce(&mut WasmiModuleImpl) -> T) -> T {
         let mut arr = ARRAY.write().unwrap();
         let value = arr.map.get_mut(&self.0).unwrap();
@@ -283,9 +308,14 @@ impl WasmiModuleId {
         f(value)
     }
 
+    pub fn get_function_type(&self, func: RustOpaque<Func>) -> SyncReturn<FuncTy> {
+        SyncReturn(self.with_module(|m| (&func.ty(&m.store)).into()))
+    }
+
     pub fn create_function(
         &self,
         function_pointer: usize,
+        function_id: u32,
         param_types: Vec<ValueTy>,
     ) -> Result<SyncReturn<RustOpaque<Func>>> {
         self.with_module_mut(|module| {
@@ -294,12 +324,15 @@ impl WasmiModuleId {
                 &mut module.store,
                 // TODO: support results
                 FuncType::new(param_types.into_iter().map(ValueType::from), []),
-                move |_caller, params, _results| {
-                    let mapped: Vec<Value2> = params.iter().map(Value2::from).collect();
+                move |caller, params, _results| {
+                    let mapped: Vec<Value2> = params
+                        .iter()
+                        .map(|a| Value2::from_value(a, &caller))
+                        .collect();
                     let inputs = vec![mapped].into_dart();
                     let pointer = new_leak_box_ptr(inputs);
                     unsafe {
-                        f(pointer);
+                        f(function_id, pointer);
                     }
                     std::result::Result::Ok(())
                 },
@@ -355,7 +388,7 @@ impl WasmiModuleId {
     }
 
     pub fn get_global_value(&self, global: RustOpaque<Global>) -> SyncReturn<Value2> {
-        SyncReturn(self.with_module(|m| (&global.get(&m.store)).into()))
+        SyncReturn(self.with_module(|m| Value2::from_value(&global.get(&m.store), &m.store)))
     }
 
     pub fn set_global_value(
@@ -447,7 +480,11 @@ impl WasmiModuleId {
     }
 
     pub fn get_table(&self, table: RustOpaque<Table>, index: u32) -> SyncReturn<Option<Value2>> {
-        SyncReturn(self.with_module(|m| table.get(&m.store, index).map(|v| (&v).into())))
+        SyncReturn(self.with_module(|m| {
+            table
+                .get(&m.store, index)
+                .map(|v| Value2::from_value(&v, &m.store))
+        }))
     }
 
     pub fn set_table(
@@ -515,7 +552,7 @@ pub fn run_function(pointer: i64) -> SyncReturn<Vec<Value2>> {
 }
 
 // TODO: Support return values
-type WasmFunction = unsafe extern "C" fn(args: *mut DartAbi) -> c_void;
+type WasmFunction = unsafe extern "C" fn(function_id: u32, args: *mut DartAbi) -> c_void;
 
 type wasm_func = unsafe extern "C" fn(args: *mut DartAbi) -> *mut wire_list_value_2;
 type wasm_func_mut =
@@ -671,8 +708,8 @@ pub struct FuncTy {
 impl From<&FuncType> for FuncTy {
     fn from(func: &FuncType) -> Self {
         FuncTy {
-            params: func.params().into_iter().map(ValueTy::from).collect(),
-            results: func.results().into_iter().map(ValueTy::from).collect(),
+            params: func.params().iter().map(ValueTy::from).collect(),
+            results: func.results().iter().map(ValueTy::from).collect(),
         }
     }
 }

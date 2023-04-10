@@ -122,9 +122,34 @@ abstract class WasmiDart {
 
   FlutterRustBridgeTaskConstMeta get kDisposeMethodWasmiModuleIdConstMeta;
 
+  List<Value2> callFunctionHandleSyncMethodWasmiModuleId(
+      {required WasmiModuleId that,
+      required Func func,
+      required List<Value2> args,
+      dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta
+      get kCallFunctionHandleSyncMethodWasmiModuleIdConstMeta;
+
+  Future<List<Value2>> callFunctionHandleMethodWasmiModuleId(
+      {required WasmiModuleId that,
+      required Func func,
+      required List<Value2> args,
+      dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta
+      get kCallFunctionHandleMethodWasmiModuleIdConstMeta;
+
+  FuncTy getFunctionTypeMethodWasmiModuleId(
+      {required WasmiModuleId that, required Func func, dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta
+      get kGetFunctionTypeMethodWasmiModuleIdConstMeta;
+
   Func createFunctionMethodWasmiModuleId(
       {required WasmiModuleId that,
       required int functionPointer,
+      required int functionId,
       required List<ValueTy> paramTypes,
       dynamic hint});
 
@@ -509,9 +534,9 @@ class Value2 with _$Value2 {
   ) = Value2_F64;
 
   /// A nullable [`Func`][`crate::Func`] reference, a.k.a. [`FuncRef`].
-  const factory Value2.funcRef(
-    int field0,
-  ) = Value2_FuncRef;
+  const factory Value2.funcRef([
+    Func? field0,
+  ]) = Value2_FuncRef;
 
   /// A nullable external object reference, a.k.a. [`ExternRef`].
   const factory Value2.externRef(
@@ -624,13 +649,37 @@ class WasmiModuleId {
         that: this,
       );
 
+  List<Value2> callFunctionHandleSync(
+          {required Func func, required List<Value2> args, dynamic hint}) =>
+      bridge.callFunctionHandleSyncMethodWasmiModuleId(
+        that: this,
+        func: func,
+        args: args,
+      );
+
+  Future<List<Value2>> callFunctionHandle(
+          {required Func func, required List<Value2> args, dynamic hint}) =>
+      bridge.callFunctionHandleMethodWasmiModuleId(
+        that: this,
+        func: func,
+        args: args,
+      );
+
+  FuncTy getFunctionType({required Func func, dynamic hint}) =>
+      bridge.getFunctionTypeMethodWasmiModuleId(
+        that: this,
+        func: func,
+      );
+
   Func createFunction(
           {required int functionPointer,
+          required int functionId,
           required List<ValueTy> paramTypes,
           dynamic hint}) =>
       bridge.createFunctionMethodWasmiModuleId(
         that: this,
         functionPointer: functionPointer,
+        functionId: functionId,
         paramTypes: paramTypes,
       );
 
@@ -1171,20 +1220,95 @@ class WasmiDartImpl implements WasmiDart {
         argNames: ["that"],
       );
 
+  List<Value2> callFunctionHandleSyncMethodWasmiModuleId(
+      {required WasmiModuleId that,
+      required Func func,
+      required List<Value2> args,
+      dynamic hint}) {
+    var arg0 = _platform.api2wire_box_autoadd_wasmi_module_id(that);
+    var arg1 = _platform.api2wire_Func(func);
+    var arg2 = _platform.api2wire_list_value_2(args);
+    return _platform.executeSync(FlutterRustBridgeSyncTask(
+      callFfi: () => _platform.inner
+          .wire_call_function_handle_sync__method__WasmiModuleId(
+              arg0, arg1, arg2),
+      parseSuccessData: _wire2api_list_value_2,
+      constMeta: kCallFunctionHandleSyncMethodWasmiModuleIdConstMeta,
+      argValues: [that, func, args],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta
+      get kCallFunctionHandleSyncMethodWasmiModuleIdConstMeta =>
+          const FlutterRustBridgeTaskConstMeta(
+            debugName: "call_function_handle_sync__method__WasmiModuleId",
+            argNames: ["that", "func", "args"],
+          );
+
+  Future<List<Value2>> callFunctionHandleMethodWasmiModuleId(
+      {required WasmiModuleId that,
+      required Func func,
+      required List<Value2> args,
+      dynamic hint}) {
+    var arg0 = _platform.api2wire_box_autoadd_wasmi_module_id(that);
+    var arg1 = _platform.api2wire_Func(func);
+    var arg2 = _platform.api2wire_list_value_2(args);
+    return _platform.executeNormal(FlutterRustBridgeTask(
+      callFfi: (port_) => _platform.inner
+          .wire_call_function_handle__method__WasmiModuleId(
+              port_, arg0, arg1, arg2),
+      parseSuccessData: _wire2api_list_value_2,
+      constMeta: kCallFunctionHandleMethodWasmiModuleIdConstMeta,
+      argValues: [that, func, args],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta
+      get kCallFunctionHandleMethodWasmiModuleIdConstMeta =>
+          const FlutterRustBridgeTaskConstMeta(
+            debugName: "call_function_handle__method__WasmiModuleId",
+            argNames: ["that", "func", "args"],
+          );
+
+  FuncTy getFunctionTypeMethodWasmiModuleId(
+      {required WasmiModuleId that, required Func func, dynamic hint}) {
+    var arg0 = _platform.api2wire_box_autoadd_wasmi_module_id(that);
+    var arg1 = _platform.api2wire_Func(func);
+    return _platform.executeSync(FlutterRustBridgeSyncTask(
+      callFfi: () => _platform.inner
+          .wire_get_function_type__method__WasmiModuleId(arg0, arg1),
+      parseSuccessData: _wire2api_func_ty,
+      constMeta: kGetFunctionTypeMethodWasmiModuleIdConstMeta,
+      argValues: [that, func],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta
+      get kGetFunctionTypeMethodWasmiModuleIdConstMeta =>
+          const FlutterRustBridgeTaskConstMeta(
+            debugName: "get_function_type__method__WasmiModuleId",
+            argNames: ["that", "func"],
+          );
+
   Func createFunctionMethodWasmiModuleId(
       {required WasmiModuleId that,
       required int functionPointer,
+      required int functionId,
       required List<ValueTy> paramTypes,
       dynamic hint}) {
     var arg0 = _platform.api2wire_box_autoadd_wasmi_module_id(that);
     var arg1 = api2wire_usize(functionPointer);
-    var arg2 = _platform.api2wire_list_value_ty(paramTypes);
+    var arg2 = api2wire_u32(functionId);
+    var arg3 = _platform.api2wire_list_value_ty(paramTypes);
     return _platform.executeSync(FlutterRustBridgeSyncTask(
       callFfi: () => _platform.inner
-          .wire_create_function__method__WasmiModuleId(arg0, arg1, arg2),
+          .wire_create_function__method__WasmiModuleId(arg0, arg1, arg2, arg3),
       parseSuccessData: _wire2api_Func,
       constMeta: kCreateFunctionMethodWasmiModuleIdConstMeta,
-      argValues: [that, functionPointer, paramTypes],
+      argValues: [that, functionPointer, functionId, paramTypes],
       hint: hint,
     ));
   }
@@ -1193,7 +1317,7 @@ class WasmiDartImpl implements WasmiDart {
       get kCreateFunctionMethodWasmiModuleIdConstMeta =>
           const FlutterRustBridgeTaskConstMeta(
             debugName: "create_function__method__WasmiModuleId",
-            argNames: ["that", "functionPointer", "paramTypes"],
+            argNames: ["that", "functionPointer", "functionId", "paramTypes"],
           );
 
   Memory createMemoryMethodWasmiModuleId(
@@ -1687,6 +1811,10 @@ class WasmiDartImpl implements WasmiDart {
     return raw as bool;
   }
 
+  Func _wire2api_box_autoadd_Func(dynamic raw) {
+    return _wire2api_Func(raw);
+  }
+
   FuncTy _wire2api_box_autoadd_func_ty(dynamic raw) {
     return _wire2api_func_ty(raw);
   }
@@ -1848,6 +1976,10 @@ class WasmiDartImpl implements WasmiDart {
     return Mutability.values[raw];
   }
 
+  Func? _wire2api_opt_box_autoadd_Func(dynamic raw) {
+    return raw == null ? null : _wire2api_box_autoadd_Func(raw);
+  }
+
   int? _wire2api_opt_box_autoadd_u32(dynamic raw) {
     return raw == null ? null : _wire2api_box_autoadd_u32(raw);
   }
@@ -1903,7 +2035,7 @@ class WasmiDartImpl implements WasmiDart {
         );
       case 4:
         return Value2_FuncRef(
-          _wire2api_u32(raw[1]),
+          _wire2api_opt_box_autoadd_Func(raw[1]),
         );
       case 5:
         return Value2_ExternRef(

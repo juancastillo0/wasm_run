@@ -45,6 +45,11 @@ class WasmiDartPlatform extends FlutterRustBridgeBase<WasmiDartWire>
   }
 
   @protected
+  Object api2wire_box_autoadd_Func(Func raw) {
+    return api2wire_Func(raw);
+  }
+
+  @protected
   List<dynamic> api2wire_box_autoadd_table_type_2(TableType2 raw) {
     return api2wire_table_type_2(raw);
   }
@@ -122,6 +127,11 @@ class WasmiDartPlatform extends FlutterRustBridgeBase<WasmiDartWire>
   }
 
   @protected
+  Object? api2wire_opt_box_autoadd_Func(Func? raw) {
+    return raw == null ? null : api2wire_box_autoadd_Func(raw);
+  }
+
+  @protected
   int? api2wire_opt_box_autoadd_u32(int? raw) {
     return raw == null ? null : api2wire_box_autoadd_u32(raw);
   }
@@ -151,7 +161,7 @@ class WasmiDartPlatform extends FlutterRustBridgeBase<WasmiDartWire>
       return [3, api2wire_f64(raw.field0)];
     }
     if (raw is Value2_FuncRef) {
-      return [4, api2wire_u32(raw.field0)];
+      return [4, api2wire_opt_box_autoadd_Func(raw.field0)];
     }
     if (raw is Value2_ExternRef) {
       return [5, api2wire_u32(raw.field0)];
@@ -263,8 +273,25 @@ class WasmiDartWasmModule implements WasmModule {
   external dynamic /* void */ wire_dispose__method__WasmiModuleId(
       NativePortType port_, List<dynamic> that);
 
+  external dynamic /* List<dynamic> */
+      wire_call_function_handle_sync__method__WasmiModuleId(
+          List<dynamic> that, Object func, List<dynamic> args);
+
+  external dynamic /* void */ wire_call_function_handle__method__WasmiModuleId(
+      NativePortType port_,
+      List<dynamic> that,
+      Object func,
+      List<dynamic> args);
+
+  external dynamic /* List<dynamic> */
+      wire_get_function_type__method__WasmiModuleId(
+          List<dynamic> that, Object func);
+
   external dynamic /* Object */ wire_create_function__method__WasmiModuleId(
-      List<dynamic> that, int function_pointer, List<dynamic> param_types);
+      List<dynamic> that,
+      int function_pointer,
+      int function_id,
+      List<dynamic> param_types);
 
   external dynamic /* Object */ wire_create_memory__method__WasmiModuleId(
       List<dynamic> that, List<dynamic> memory_type);
@@ -429,12 +456,28 @@ class WasmiDartWire extends FlutterRustBridgeWasmWireBase<WasmiDartWasmModule> {
           NativePortType port_, List<dynamic> that) =>
       wasmModule.wire_dispose__method__WasmiModuleId(port_, that);
 
+  dynamic /* List<dynamic> */
+      wire_call_function_handle_sync__method__WasmiModuleId(
+              List<dynamic> that, Object func, List<dynamic> args) =>
+          wasmModule.wire_call_function_handle_sync__method__WasmiModuleId(
+              that, func, args);
+
+  void wire_call_function_handle__method__WasmiModuleId(NativePortType port_,
+          List<dynamic> that, Object func, List<dynamic> args) =>
+      wasmModule.wire_call_function_handle__method__WasmiModuleId(
+          port_, that, func, args);
+
+  dynamic /* List<dynamic> */ wire_get_function_type__method__WasmiModuleId(
+          List<dynamic> that, Object func) =>
+      wasmModule.wire_get_function_type__method__WasmiModuleId(that, func);
+
   dynamic /* Object */ wire_create_function__method__WasmiModuleId(
           List<dynamic> that,
           int function_pointer,
+          int function_id,
           List<dynamic> param_types) =>
       wasmModule.wire_create_function__method__WasmiModuleId(
-          that, function_pointer, param_types);
+          that, function_pointer, function_id, param_types);
 
   dynamic /* Object */ wire_create_memory__method__WasmiModuleId(
           List<dynamic> that, List<dynamic> memory_type) =>
