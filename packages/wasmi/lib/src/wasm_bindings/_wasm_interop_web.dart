@@ -61,19 +61,19 @@ class WasmModule implements wasm.WasmModule {
     switch (value.type) {
       case WasmValueType.i32:
         return _Global(
-          Global.i32(value: value.value as int, mutable: mutable),
+          Global.i32(value: value.value! as int, mutable: mutable),
         );
       case WasmValueType.i64:
         return _Global(
-          Global.i64(value: value.value as BigInt, mutable: mutable),
+          Global.i64(value: value.value! as BigInt, mutable: mutable),
         );
       case WasmValueType.f32:
         return _Global(
-          Global.f32(value: value.value as double, mutable: mutable),
+          Global.f32(value: value.value! as double, mutable: mutable),
         );
       case WasmValueType.f64:
         return _Global(
-          Global.f64(value: value.value as double, mutable: mutable),
+          Global.f64(value: value.value! as double, mutable: mutable),
         );
       case WasmValueType.externRef:
         return _Global(
@@ -81,7 +81,7 @@ class WasmModule implements wasm.WasmModule {
         );
       case WasmValueType.funcRef:
         return _Global(
-          // TODO: Implement funcRef "funcany"
+          // TODO: Implement funcRef "anyfunc"
           Global.externref(value: value.value, mutable: mutable),
         );
     }
@@ -120,7 +120,11 @@ class _Builder extends WasmInstanceBuilder {
   _Builder(this.module);
 
   @override
-  void addImport(String moduleName, String name, wasm.WasmExternal value) {
+  WasmInstanceBuilder addImport(
+    String moduleName,
+    String name,
+    wasm.WasmExternal value,
+  ) {
     final mapped = value.when(
       memory: (memory) => (memory as _Memory).memory,
       table: (table) => (table as _Table).table,
@@ -129,6 +133,16 @@ class _Builder extends WasmInstanceBuilder {
       function: (function) => function.inner,
     );
     importMap.putIfAbsent(moduleName, () => {})[name] = mapped;
+    return this;
+  }
+
+  @override
+  WasmInstanceBuilder enableWasi({
+    bool captureStdout = false,
+    bool captureStderr = false,
+  }) {
+    // TODO: implement enableWasi
+    return this;
   }
 
   @override
@@ -141,11 +155,6 @@ class _Builder extends WasmInstanceBuilder {
     final instance =
         await Instance.fromModuleAsync(module, importMap: importMap);
     return _Instance(instance);
-  }
-
-  @override
-  void enableWasi({bool captureStdout = false, bool captureStderr = false}) {
-    // TODO: implement enableWasi
   }
 }
 

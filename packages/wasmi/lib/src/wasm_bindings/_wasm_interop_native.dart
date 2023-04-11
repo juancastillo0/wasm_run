@@ -320,7 +320,11 @@ class _Builder extends WasmInstanceBuilder {
   _Builder(this.module);
 
   @override
-  void addImport(String moduleName, String name, WasmExternal value) {
+  WasmInstanceBuilder addImport(
+    String moduleName,
+    String name,
+    WasmExternal value,
+  ) {
     final mapped = value.when(
       memory: (memory) => ExternalValue.memory((memory as _Memory).memory),
       table: (table) => ExternalValue.table((table as _Table).table),
@@ -345,12 +349,22 @@ class _Builder extends WasmInstanceBuilder {
       },
     );
     linkImport(moduleName, name, mapped);
+    return this;
   }
 
   void linkImport(String moduleName, String name, ExternalValue value) {
     module.module.linkImports(
       imports: [ModuleImport(module: moduleName, name: name, value: value)],
     );
+  }
+
+  @override
+  WasmInstanceBuilder enableWasi({
+    bool captureStdout = false,
+    bool captureStderr = false,
+  }) {
+    // TODO: implement enableWasi
+    throw UnimplementedError();
   }
 
   @override
@@ -363,12 +377,6 @@ class _Builder extends WasmInstanceBuilder {
   Future<WasmInstance> buildAsync() async {
     final instance = await module.module.instantiate();
     return _Instance(instance, module);
-  }
-
-  @override
-  void enableWasi({bool captureStdout = false, bool captureStderr = false}) {
-    // TODO: implement enableWasi
-    throw UnimplementedError();
   }
 }
 
@@ -432,7 +440,7 @@ class _Memory extends WasmMemory {
   }
 
   @override
-  int get lengthInBytes => lengthInPages * 64000;
+  int get lengthInBytes => lengthInPages * 64000; // 65536
 
   @override
   int get lengthInPages => module.getMemoryPages(memory: memory);
