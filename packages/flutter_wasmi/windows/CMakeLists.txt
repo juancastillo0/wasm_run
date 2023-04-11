@@ -1,4 +1,4 @@
-set(LibraryVersion "wasmi-v0.0.0") # generated; do not edit
+set(LibraryVersion "wasmi-v0.0.1") # generated; do not edit
 
 # TODO Remove this workaround once Flutter supports Windows ARM.
 # https://github.com/flutter/flutter/issues/116196
