@@ -7,7 +7,7 @@ typedef ExternalLibrary = DynamicLibrary;
 
 WasmiDart createWrapperImpl(ExternalLibrary dylib) => WasmiDartImpl(dylib);
 
-ExternalLibrary defaultLibraryImpl() {
+ExternalLibrary localTestingLibraryImpl() {
   String filename = 'libwasmi_dart.so';
   if (Platform.isMacOS) {
     filename = 'libwasmi_dart.dylib';

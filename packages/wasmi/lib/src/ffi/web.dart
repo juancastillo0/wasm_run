@@ -6,7 +6,7 @@ typedef ExternalLibrary = WasmModule;
 WasmiDart createWrapperImpl(ExternalLibrary module) =>
     WasmiDartImpl.wasm(module);
 
-ExternalLibrary defaultLibraryImpl() => throw UnimplementedError();
+ExternalLibrary localTestingLibraryImpl() => throw UnimplementedError();
 
 ExternalLibrary createLibraryImpl() {
   // TODO add web support. See:

@@ -11,7 +11,11 @@ WasmiDart createWrapper(ExternalLibrary lib) {
 }
 
 WasmiDart defaultInstance() {
-  return createWrapper(defaultLibraryImpl());
+  try {
+    return createWrapper(localTestingLibraryImpl());
+  } catch (_) {
+    return createLib();
+  }
 }
 
 WasmiDart createLib() => createWrapper(createLibraryImpl());
