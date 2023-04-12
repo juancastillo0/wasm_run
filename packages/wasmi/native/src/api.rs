@@ -545,7 +545,7 @@ pub struct ModuleImport {
 
 type ffF = unsafe extern "C" fn(args: i64) -> i64;
 
-pub fn run_function(pointer: i64) -> SyncReturn<Vec<Value2>> {
+pub fn run_function(pointer: usize) -> SyncReturn<Vec<Value2>> {
     let f: ffF = unsafe { std::mem::transmute(pointer) };
     let result = unsafe { f(1) };
     SyncReturn(vec![Value2::I64(result)])

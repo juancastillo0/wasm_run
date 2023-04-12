@@ -20,7 +20,7 @@ cd -
 `
 
 Pod::Spec.new do |s|
-  s.name          = 'wasmi'
+  s.name          = 'flutter_wasmi'
   s.version       = '0.0.1'
   s.summary       = 'iOS/macOS Flutter bindings for wasmi'
   s.license       = { :file => '../LICENSE' }

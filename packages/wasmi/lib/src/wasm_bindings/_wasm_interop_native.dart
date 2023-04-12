@@ -440,7 +440,7 @@ class _Memory extends WasmMemory {
   }
 
   @override
-  int get lengthInBytes => lengthInPages * 64000; // 65536
+  int get lengthInBytes => lengthInPages * 65536;
 
   @override
   int get lengthInPages => module.getMemoryPages(memory: memory);
