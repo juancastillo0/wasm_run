@@ -20,6 +20,15 @@ import 'bridge_generated.io.dart'
 part 'bridge_generated.freezed.dart';
 
 abstract class WasmiDart {
+  Memory createSharedMemory({required CompiledModule module, dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kCreateSharedMemoryConstMeta;
+
+  WasmiModuleId moduleBuilder(
+      {required CompiledModule module, WasiConfig? wasiConfig, dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kModuleBuilderConstMeta;
+
   Future<Uint8List> parseWatFormat({required String wat, dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kParseWatFormatConstMeta;
@@ -43,14 +52,19 @@ abstract class WasmiDart {
 
   FlutterRustBridgeTaskConstMeta get kRunWasmFuncVoidConstMeta;
 
-  WasmiModuleId compileWasmSync({required Uint8List moduleWasm, dynamic hint});
-
-  FlutterRustBridgeTaskConstMeta get kCompileWasmSyncConstMeta;
-
-  Future<WasmiModuleId> compileWasm(
-      {required Uint8List moduleWasm, dynamic hint});
+  Future<CompiledModule> compileWasm(
+      {required Uint8List moduleWasm,
+      required ModuleConfig config,
+      dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kCompileWasmConstMeta;
+
+  CompiledModule compileWasmSync(
+      {required Uint8List moduleWasm,
+      required ModuleConfig config,
+      dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kCompileWasmSyncConstMeta;
 
   Future<void> callWasm({dynamic hint});
 
@@ -100,22 +114,12 @@ abstract class WasmiDart {
 
   FlutterRustBridgeTaskConstMeta get kInstantiateMethodWasmiModuleIdConstMeta;
 
-  List<ModuleImportDesc> getModuleImportsMethodWasmiModuleId(
-      {required WasmiModuleId that, dynamic hint});
+  void linkImportsMethodWasmiModuleId(
+      {required WasmiModuleId that,
+      required List<ModuleImport> imports,
+      dynamic hint});
 
-  FlutterRustBridgeTaskConstMeta
-      get kGetModuleImportsMethodWasmiModuleIdConstMeta;
-
-  List<ModuleExportDesc> getModuleExportsMethodWasmiModuleId(
-      {required WasmiModuleId that, dynamic hint});
-
-  FlutterRustBridgeTaskConstMeta
-      get kGetModuleExportsMethodWasmiModuleIdConstMeta;
-
-  Stream<int> executionsMethodWasmiModuleId(
-      {required WasmiModuleId that, dynamic hint});
-
-  FlutterRustBridgeTaskConstMeta get kExecutionsMethodWasmiModuleIdConstMeta;
+  FlutterRustBridgeTaskConstMeta get kLinkImportsMethodWasmiModuleIdConstMeta;
 
   Future<void> disposeMethodWasmiModuleId(
       {required WasmiModuleId that, dynamic hint});
@@ -287,12 +291,21 @@ abstract class WasmiDart {
 
   FlutterRustBridgeTaskConstMeta get kFillTableMethodWasmiModuleIdConstMeta;
 
-  void linkImportsMethodWasmiModuleId(
-      {required WasmiModuleId that,
-      required List<ModuleImport> imports,
-      dynamic hint});
+  List<ModuleImportDesc> getModuleImportsMethodCompiledModule(
+      {required CompiledModule that, dynamic hint});
 
-  FlutterRustBridgeTaskConstMeta get kLinkImportsMethodWasmiModuleIdConstMeta;
+  FlutterRustBridgeTaskConstMeta
+      get kGetModuleImportsMethodCompiledModuleConstMeta;
+
+  List<ModuleExportDesc> getModuleExportsMethodCompiledModule(
+      {required CompiledModule that, dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta
+      get kGetModuleExportsMethodCompiledModuleConstMeta;
+
+  DropFnType get dropOpaqueArcStdSyncMutexModule;
+  ShareFnType get shareOpaqueArcStdSyncMutexModule;
+  OpaqueTypeFinalizer get ArcStdSyncMutexModuleFinalizer;
 
   DropFnType get dropOpaqueFunc;
   ShareFnType get shareOpaqueFunc;
@@ -309,6 +322,22 @@ abstract class WasmiDart {
   DropFnType get dropOpaqueTable;
   ShareFnType get shareOpaqueTable;
   OpaqueTypeFinalizer get TableFinalizer;
+}
+
+@sealed
+class ArcStdSyncMutexModule extends FrbOpaque {
+  final WasmiDart bridge;
+  ArcStdSyncMutexModule.fromRaw(int ptr, int size, this.bridge)
+      : super.unsafe(ptr, size);
+  @override
+  DropFnType get dropFn => bridge.dropOpaqueArcStdSyncMutexModule;
+
+  @override
+  ShareFnType get shareFn => bridge.shareOpaqueArcStdSyncMutexModule;
+
+  @override
+  OpaqueTypeFinalizer get staticFinalizer =>
+      bridge.ArcStdSyncMutexModuleFinalizer;
 }
 
 @sealed
@@ -365,6 +394,36 @@ class Table extends FrbOpaque {
 
   @override
   OpaqueTypeFinalizer get staticFinalizer => bridge.TableFinalizer;
+}
+
+class CompiledModule {
+  final WasmiDart bridge;
+  final ArcStdSyncMutexModule field0;
+
+  const CompiledModule({
+    required this.bridge,
+    required this.field0,
+  });
+
+  List<ModuleImportDesc> getModuleImports({dynamic hint}) =>
+      bridge.getModuleImportsMethodCompiledModule(
+        that: this,
+      );
+
+  List<ModuleExportDesc> getModuleExports({dynamic hint}) =>
+      bridge.getModuleExportsMethodCompiledModule(
+        that: this,
+      );
+}
+
+class EnvVariable {
+  final String name;
+  final String value;
+
+  const EnvVariable({
+    required this.name,
+    required this.value,
+  });
 }
 
 @freezed
@@ -425,6 +484,105 @@ class GlobalTy {
   });
 }
 
+class ModuleConfig {
+  /// Is `true` if the [`multi-value`] Wasm proposal is enabled.
+  final bool? multiValue;
+
+  /// Is `true` if the [`bulk-memory`] Wasm proposal is enabled.
+  final bool? bulkMemory;
+
+  /// Is `true` if the [`reference-types`] Wasm proposal is enabled.
+  final bool? referenceTypes;
+
+  /// Is `true` if `wasmi` executions shall consume fuel.
+  final bool? consumeFuel;
+  final ModuleConfigWasmi? wasmi;
+  final ModuleConfigWasmtime? wasmtime;
+
+  const ModuleConfig({
+    this.multiValue,
+    this.bulkMemory,
+    this.referenceTypes,
+    this.consumeFuel,
+    this.wasmi,
+    this.wasmtime,
+  });
+}
+
+class ModuleConfigWasmi {
+  /// WASMI
+  /// The limits set on the value stack and call stack.
+  final WasiStackLimits? stackLimits;
+
+  /// The amount of Wasm stacks to keep in cache at most.
+  final int? cachedStacks;
+
+  /// Is `true` if the `mutable-global` Wasm proposal is enabled.
+  final bool? mutableGlobal;
+
+  /// Is `true` if the `sign-extension` Wasm proposal is enabled.
+  final bool? signExtension;
+
+  /// Is `true` if the `saturating-float-to-int` Wasm proposal is enabled.
+  final bool? saturatingFloatToInt;
+
+  /// Is `true` if the [`tail-call`] Wasm proposal is enabled.
+  final bool? tailCall;
+
+  /// Is `true` if the [`extended-const`] Wasm proposal is enabled.
+  final bool? extendedConst;
+
+  /// Is `true` if Wasm instructions on `f32` and `f64` types are allowed.
+  final bool? floats;
+
+  const ModuleConfigWasmi({
+    this.stackLimits,
+    this.cachedStacks,
+    this.mutableGlobal,
+    this.signExtension,
+    this.saturatingFloatToInt,
+    this.tailCall,
+    this.extendedConst,
+    this.floats,
+  });
+}
+
+class ModuleConfigWasmtime {
+  /// Configures whether DWARF debug information will be emitted during
+  /// compilation.
+  final bool? debugInfo;
+  final bool? wasmBacktrace;
+  final bool? nativeUnwindInfo;
+  final bool? epochInterruption;
+  final int? maxWasmStack;
+  final bool? wasmThreads;
+  final bool? wasmSimd;
+  final bool? wasmMultiMemory;
+  final bool? wasmMemory64;
+  final int? staticMemoryMaximumSize;
+  final bool? staticMemoryForced;
+  final int? staticMemoryGuardSize;
+  final bool? parallelCompilation;
+  final bool? generateAddressMap;
+
+  const ModuleConfigWasmtime({
+    this.debugInfo,
+    this.wasmBacktrace,
+    this.nativeUnwindInfo,
+    this.epochInterruption,
+    this.maxWasmStack,
+    this.wasmThreads,
+    this.wasmSimd,
+    this.wasmMultiMemory,
+    this.wasmMemory64,
+    this.staticMemoryMaximumSize,
+    this.staticMemoryForced,
+    this.staticMemoryGuardSize,
+    this.parallelCompilation,
+    this.generateAddressMap,
+  });
+}
+
 class ModuleExportDesc {
   final String name;
   final ExternalType ty;
@@ -475,6 +633,16 @@ enum Mutability {
 
   /// The value of the global variable is mutable.
   Var,
+}
+
+class PreopenedDir {
+  final String wasmGuestPath;
+  final String hostPath;
+
+  const PreopenedDir({
+    required this.wasmGuestPath,
+    required this.hostPath,
+  });
 }
 
 class TableTy {
@@ -564,6 +732,48 @@ enum ValueTy {
   ExternRef,
 }
 
+class WasiConfig {
+  final bool captureStdout;
+  final bool captureStderr;
+  final bool inheritStdin;
+  final bool inheritEnv;
+  final bool inheritArgs;
+  final List<String> args;
+  final List<EnvVariable> env;
+  final List<String> preopenedFiles;
+  final List<PreopenedDir> preopenedDirs;
+
+  const WasiConfig({
+    required this.captureStdout,
+    required this.captureStderr,
+    required this.inheritStdin,
+    required this.inheritEnv,
+    required this.inheritArgs,
+    required this.args,
+    required this.env,
+    required this.preopenedFiles,
+    required this.preopenedDirs,
+  });
+}
+
+/// The configured limits of the Wasm stack.
+class WasiStackLimits {
+  /// The initial value stack height that the Wasm stack prepares.
+  final int initialValueStackHeight;
+
+  /// The maximum value stack height in use that the Wasm stack allows.
+  final int maximumValueStackHeight;
+
+  /// The maximum number of nested calls that the Wasm stack allows.
+  final int maximumRecursionDepth;
+
+  const WasiStackLimits({
+    required this.initialValueStackHeight,
+    required this.maximumValueStackHeight,
+    required this.maximumRecursionDepth,
+  });
+}
+
 class WasmMemoryType {
   final int initialPages;
   final int? maximumPages;
@@ -630,19 +840,10 @@ class WasmiModuleId {
         that: this,
       );
 
-  List<ModuleImportDesc> getModuleImports({dynamic hint}) =>
-      bridge.getModuleImportsMethodWasmiModuleId(
+  void linkImports({required List<ModuleImport> imports, dynamic hint}) =>
+      bridge.linkImportsMethodWasmiModuleId(
         that: this,
-      );
-
-  List<ModuleExportDesc> getModuleExports({dynamic hint}) =>
-      bridge.getModuleExportsMethodWasmiModuleId(
-        that: this,
-      );
-
-  Stream<int> executions({dynamic hint}) =>
-      bridge.executionsMethodWasmiModuleId(
-        that: this,
+        imports: imports,
       );
 
   Future<void> dispose({dynamic hint}) => bridge.disposeMethodWasmiModuleId(
@@ -834,12 +1035,6 @@ class WasmiModuleId {
         value: value,
         len: len,
       );
-
-  void linkImports({required List<ModuleImport> imports, dynamic hint}) =>
-      bridge.linkImportsMethodWasmiModuleId(
-        that: this,
-        imports: imports,
-      );
 }
 
 class WasmiDartImpl implements WasmiDart {
@@ -851,6 +1046,42 @@ class WasmiDartImpl implements WasmiDart {
   factory WasmiDartImpl.wasm(FutureOr<WasmModule> module) =>
       WasmiDartImpl(module as ExternalLibrary);
   WasmiDartImpl.raw(this._platform);
+  Memory createSharedMemory({required CompiledModule module, dynamic hint}) {
+    var arg0 = _platform.api2wire_box_autoadd_compiled_module(module);
+    return _platform.executeSync(FlutterRustBridgeSyncTask(
+      callFfi: () => _platform.inner.wire_create_shared_memory(arg0),
+      parseSuccessData: _wire2api_Memory,
+      constMeta: kCreateSharedMemoryConstMeta,
+      argValues: [module],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta get kCreateSharedMemoryConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "create_shared_memory",
+        argNames: ["module"],
+      );
+
+  WasmiModuleId moduleBuilder(
+      {required CompiledModule module, WasiConfig? wasiConfig, dynamic hint}) {
+    var arg0 = _platform.api2wire_box_autoadd_compiled_module(module);
+    var arg1 = _platform.api2wire_opt_box_autoadd_wasi_config(wasiConfig);
+    return _platform.executeSync(FlutterRustBridgeSyncTask(
+      callFfi: () => _platform.inner.wire_module_builder(arg0, arg1),
+      parseSuccessData: _wire2api_wasmi_module_id,
+      constMeta: kModuleBuilderConstMeta,
+      argValues: [module, wasiConfig],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta get kModuleBuilderConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "module_builder",
+        argNames: ["module", "wasiConfig"],
+      );
+
   Future<Uint8List> parseWatFormat({required String wat, dynamic hint}) {
     var arg0 = _platform.api2wire_String(wat);
     return _platform.executeNormal(FlutterRustBridgeTask(
@@ -869,7 +1100,7 @@ class WasmiDartImpl implements WasmiDart {
       );
 
   List<Value2> runFunction({required int pointer, dynamic hint}) {
-    var arg0 = _platform.api2wire_i64(pointer);
+    var arg0 = api2wire_usize(pointer);
     return _platform.executeSync(FlutterRustBridgeSyncTask(
       callFfi: () => _platform.inner.wire_run_function(arg0),
       parseSuccessData: _wire2api_list_value_2,
@@ -942,31 +1173,17 @@ class WasmiDartImpl implements WasmiDart {
         argNames: ["pointer", "params"],
       );
 
-  WasmiModuleId compileWasmSync({required Uint8List moduleWasm, dynamic hint}) {
+  Future<CompiledModule> compileWasm(
+      {required Uint8List moduleWasm,
+      required ModuleConfig config,
+      dynamic hint}) {
     var arg0 = _platform.api2wire_uint_8_list(moduleWasm);
-    return _platform.executeSync(FlutterRustBridgeSyncTask(
-      callFfi: () => _platform.inner.wire_compile_wasm_sync(arg0),
-      parseSuccessData: _wire2api_wasmi_module_id,
-      constMeta: kCompileWasmSyncConstMeta,
-      argValues: [moduleWasm],
-      hint: hint,
-    ));
-  }
-
-  FlutterRustBridgeTaskConstMeta get kCompileWasmSyncConstMeta =>
-      const FlutterRustBridgeTaskConstMeta(
-        debugName: "compile_wasm_sync",
-        argNames: ["moduleWasm"],
-      );
-
-  Future<WasmiModuleId> compileWasm(
-      {required Uint8List moduleWasm, dynamic hint}) {
-    var arg0 = _platform.api2wire_uint_8_list(moduleWasm);
+    var arg1 = _platform.api2wire_box_autoadd_module_config(config);
     return _platform.executeNormal(FlutterRustBridgeTask(
-      callFfi: (port_) => _platform.inner.wire_compile_wasm(port_, arg0),
-      parseSuccessData: (d) => _wire2api_wasmi_module_id(d),
+      callFfi: (port_) => _platform.inner.wire_compile_wasm(port_, arg0, arg1),
+      parseSuccessData: (d) => _wire2api_compiled_module(d),
       constMeta: kCompileWasmConstMeta,
-      argValues: [moduleWasm],
+      argValues: [moduleWasm, config],
       hint: hint,
     ));
   }
@@ -974,7 +1191,28 @@ class WasmiDartImpl implements WasmiDart {
   FlutterRustBridgeTaskConstMeta get kCompileWasmConstMeta =>
       const FlutterRustBridgeTaskConstMeta(
         debugName: "compile_wasm",
-        argNames: ["moduleWasm"],
+        argNames: ["moduleWasm", "config"],
+      );
+
+  CompiledModule compileWasmSync(
+      {required Uint8List moduleWasm,
+      required ModuleConfig config,
+      dynamic hint}) {
+    var arg0 = _platform.api2wire_uint_8_list(moduleWasm);
+    var arg1 = _platform.api2wire_box_autoadd_module_config(config);
+    return _platform.executeSync(FlutterRustBridgeSyncTask(
+      callFfi: () => _platform.inner.wire_compile_wasm_sync(arg0, arg1),
+      parseSuccessData: _wire2api_compiled_module,
+      constMeta: kCompileWasmSyncConstMeta,
+      argValues: [moduleWasm, config],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta get kCompileWasmSyncConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "compile_wasm_sync",
+        argNames: ["moduleWasm", "config"],
       );
 
   Future<void> callWasm({dynamic hint}) {
@@ -1142,63 +1380,26 @@ class WasmiDartImpl implements WasmiDart {
         argNames: ["that"],
       );
 
-  List<ModuleImportDesc> getModuleImportsMethodWasmiModuleId(
-      {required WasmiModuleId that, dynamic hint}) {
+  void linkImportsMethodWasmiModuleId(
+      {required WasmiModuleId that,
+      required List<ModuleImport> imports,
+      dynamic hint}) {
     var arg0 = _platform.api2wire_box_autoadd_wasmi_module_id(that);
+    var arg1 = _platform.api2wire_list_module_import(imports);
     return _platform.executeSync(FlutterRustBridgeSyncTask(
       callFfi: () =>
-          _platform.inner.wire_get_module_imports__method__WasmiModuleId(arg0),
-      parseSuccessData: _wire2api_list_module_import_desc,
-      constMeta: kGetModuleImportsMethodWasmiModuleIdConstMeta,
-      argValues: [that],
+          _platform.inner.wire_link_imports__method__WasmiModuleId(arg0, arg1),
+      parseSuccessData: _wire2api_unit,
+      constMeta: kLinkImportsMethodWasmiModuleIdConstMeta,
+      argValues: [that, imports],
       hint: hint,
     ));
   }
 
-  FlutterRustBridgeTaskConstMeta
-      get kGetModuleImportsMethodWasmiModuleIdConstMeta =>
-          const FlutterRustBridgeTaskConstMeta(
-            debugName: "get_module_imports__method__WasmiModuleId",
-            argNames: ["that"],
-          );
-
-  List<ModuleExportDesc> getModuleExportsMethodWasmiModuleId(
-      {required WasmiModuleId that, dynamic hint}) {
-    var arg0 = _platform.api2wire_box_autoadd_wasmi_module_id(that);
-    return _platform.executeSync(FlutterRustBridgeSyncTask(
-      callFfi: () =>
-          _platform.inner.wire_get_module_exports__method__WasmiModuleId(arg0),
-      parseSuccessData: _wire2api_list_module_export_desc,
-      constMeta: kGetModuleExportsMethodWasmiModuleIdConstMeta,
-      argValues: [that],
-      hint: hint,
-    ));
-  }
-
-  FlutterRustBridgeTaskConstMeta
-      get kGetModuleExportsMethodWasmiModuleIdConstMeta =>
-          const FlutterRustBridgeTaskConstMeta(
-            debugName: "get_module_exports__method__WasmiModuleId",
-            argNames: ["that"],
-          );
-
-  Stream<int> executionsMethodWasmiModuleId(
-      {required WasmiModuleId that, dynamic hint}) {
-    var arg0 = _platform.api2wire_box_autoadd_wasmi_module_id(that);
-    return _platform.executeStream(FlutterRustBridgeTask(
-      callFfi: (port_) =>
-          _platform.inner.wire_executions__method__WasmiModuleId(port_, arg0),
-      parseSuccessData: _wire2api_i32,
-      constMeta: kExecutionsMethodWasmiModuleIdConstMeta,
-      argValues: [that],
-      hint: hint,
-    ));
-  }
-
-  FlutterRustBridgeTaskConstMeta get kExecutionsMethodWasmiModuleIdConstMeta =>
+  FlutterRustBridgeTaskConstMeta get kLinkImportsMethodWasmiModuleIdConstMeta =>
       const FlutterRustBridgeTaskConstMeta(
-        debugName: "executions__method__WasmiModuleId",
-        argNames: ["that"],
+        debugName: "link_imports__method__WasmiModuleId",
+        argNames: ["that", "imports"],
       );
 
   Future<void> disposeMethodWasmiModuleId(
@@ -1744,27 +1945,52 @@ class WasmiDartImpl implements WasmiDart {
         argNames: ["that", "table", "index", "value", "len"],
       );
 
-  void linkImportsMethodWasmiModuleId(
-      {required WasmiModuleId that,
-      required List<ModuleImport> imports,
-      dynamic hint}) {
-    var arg0 = _platform.api2wire_box_autoadd_wasmi_module_id(that);
-    var arg1 = _platform.api2wire_list_module_import(imports);
+  List<ModuleImportDesc> getModuleImportsMethodCompiledModule(
+      {required CompiledModule that, dynamic hint}) {
+    var arg0 = _platform.api2wire_box_autoadd_compiled_module(that);
     return _platform.executeSync(FlutterRustBridgeSyncTask(
       callFfi: () =>
-          _platform.inner.wire_link_imports__method__WasmiModuleId(arg0, arg1),
-      parseSuccessData: _wire2api_unit,
-      constMeta: kLinkImportsMethodWasmiModuleIdConstMeta,
-      argValues: [that, imports],
+          _platform.inner.wire_get_module_imports__method__CompiledModule(arg0),
+      parseSuccessData: _wire2api_list_module_import_desc,
+      constMeta: kGetModuleImportsMethodCompiledModuleConstMeta,
+      argValues: [that],
       hint: hint,
     ));
   }
 
-  FlutterRustBridgeTaskConstMeta get kLinkImportsMethodWasmiModuleIdConstMeta =>
-      const FlutterRustBridgeTaskConstMeta(
-        debugName: "link_imports__method__WasmiModuleId",
-        argNames: ["that", "imports"],
-      );
+  FlutterRustBridgeTaskConstMeta
+      get kGetModuleImportsMethodCompiledModuleConstMeta =>
+          const FlutterRustBridgeTaskConstMeta(
+            debugName: "get_module_imports__method__CompiledModule",
+            argNames: ["that"],
+          );
+
+  List<ModuleExportDesc> getModuleExportsMethodCompiledModule(
+      {required CompiledModule that, dynamic hint}) {
+    var arg0 = _platform.api2wire_box_autoadd_compiled_module(that);
+    return _platform.executeSync(FlutterRustBridgeSyncTask(
+      callFfi: () =>
+          _platform.inner.wire_get_module_exports__method__CompiledModule(arg0),
+      parseSuccessData: _wire2api_list_module_export_desc,
+      constMeta: kGetModuleExportsMethodCompiledModuleConstMeta,
+      argValues: [that],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta
+      get kGetModuleExportsMethodCompiledModuleConstMeta =>
+          const FlutterRustBridgeTaskConstMeta(
+            debugName: "get_module_exports__method__CompiledModule",
+            argNames: ["that"],
+          );
+
+  DropFnType get dropOpaqueArcStdSyncMutexModule =>
+      _platform.inner.drop_opaque_ArcStdSyncMutexModule;
+  ShareFnType get shareOpaqueArcStdSyncMutexModule =>
+      _platform.inner.share_opaque_ArcStdSyncMutexModule;
+  OpaqueTypeFinalizer get ArcStdSyncMutexModuleFinalizer =>
+      _platform.ArcStdSyncMutexModuleFinalizer;
 
   DropFnType get dropOpaqueFunc => _platform.inner.drop_opaque_Func;
   ShareFnType get shareOpaqueFunc => _platform.inner.share_opaque_Func;
@@ -1786,6 +2012,10 @@ class WasmiDartImpl implements WasmiDart {
     _platform.dispose();
   }
 // Section: wire2api
+
+  ArcStdSyncMutexModule _wire2api_ArcStdSyncMutexModule(dynamic raw) {
+    return ArcStdSyncMutexModule.fromRaw(raw[0], raw[1], this);
+  }
 
   Func _wire2api_Func(dynamic raw) {
     return Func.fromRaw(raw[0], raw[1], this);
@@ -1837,6 +2067,16 @@ class WasmiDartImpl implements WasmiDart {
 
   WasmMemoryType _wire2api_box_autoadd_wasm_memory_type(dynamic raw) {
     return _wire2api_wasm_memory_type(raw);
+  }
+
+  CompiledModule _wire2api_compiled_module(dynamic raw) {
+    final arr = raw as List<dynamic>;
+    if (arr.length != 1)
+      throw Exception('unexpected arr length: expect 1 but see ${arr.length}');
+    return CompiledModule(
+      bridge: this,
+      field0: _wire2api_ArcStdSyncMutexModule(arr[0]),
+    );
   }
 
   ExternalType _wire2api_external_type(dynamic raw) {
@@ -2082,6 +2322,11 @@ class WasmiDartImpl implements WasmiDart {
 }
 
 // Section: api2wire
+
+@protected
+bool api2wire_bool(bool raw) {
+  return raw;
+}
 
 @protected
 double api2wire_f32(double raw) {

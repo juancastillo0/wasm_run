@@ -20,6 +20,11 @@ class WasmiDartPlatform extends FlutterRustBridgeBase<WasmiDartWire>
 // Section: api2wire
 
   @protected
+  Object api2wire_ArcStdSyncMutexModule(ArcStdSyncMutexModule raw) {
+    return raw.shareOrMove();
+  }
+
+  @protected
   Object api2wire_Func(Func raw) {
     return raw.shareOrMove();
   }
@@ -40,6 +45,11 @@ class WasmiDartPlatform extends FlutterRustBridgeBase<WasmiDartWire>
   }
 
   @protected
+  List<String> api2wire_StringList(List<String> raw) {
+    return raw;
+  }
+
+  @protected
   Object api2wire_Table(Table raw) {
     return raw.shareOrMove();
   }
@@ -47,6 +57,33 @@ class WasmiDartPlatform extends FlutterRustBridgeBase<WasmiDartWire>
   @protected
   Object api2wire_box_autoadd_Func(Func raw) {
     return api2wire_Func(raw);
+  }
+
+  @protected
+  bool api2wire_box_autoadd_bool(bool raw) {
+    return api2wire_bool(raw);
+  }
+
+  @protected
+  List<dynamic> api2wire_box_autoadd_compiled_module(CompiledModule raw) {
+    return api2wire_compiled_module(raw);
+  }
+
+  @protected
+  List<dynamic> api2wire_box_autoadd_module_config(ModuleConfig raw) {
+    return api2wire_module_config(raw);
+  }
+
+  @protected
+  List<dynamic> api2wire_box_autoadd_module_config_wasmi(
+      ModuleConfigWasmi raw) {
+    return api2wire_module_config_wasmi(raw);
+  }
+
+  @protected
+  List<dynamic> api2wire_box_autoadd_module_config_wasmtime(
+      ModuleConfigWasmtime raw) {
+    return api2wire_module_config_wasmtime(raw);
   }
 
   @protected
@@ -60,8 +97,28 @@ class WasmiDartPlatform extends FlutterRustBridgeBase<WasmiDartWire>
   }
 
   @protected
+  Object api2wire_box_autoadd_u64(int raw) {
+    return api2wire_u64(raw);
+  }
+
+  @protected
+  int api2wire_box_autoadd_usize(int raw) {
+    return api2wire_usize(raw);
+  }
+
+  @protected
   List<dynamic> api2wire_box_autoadd_value_2(Value2 raw) {
     return api2wire_value_2(raw);
+  }
+
+  @protected
+  List<dynamic> api2wire_box_autoadd_wasi_config(WasiConfig raw) {
+    return api2wire_wasi_config(raw);
+  }
+
+  @protected
+  List<dynamic> api2wire_box_autoadd_wasi_stack_limits(WasiStackLimits raw) {
+    return api2wire_wasi_stack_limits(raw);
   }
 
   @protected
@@ -77,6 +134,16 @@ class WasmiDartPlatform extends FlutterRustBridgeBase<WasmiDartWire>
   @protected
   List<dynamic> api2wire_box_autoadd_wasmi_module_id(WasmiModuleId raw) {
     return api2wire_wasmi_module_id(raw);
+  }
+
+  @protected
+  List<dynamic> api2wire_compiled_module(CompiledModule raw) {
+    return [api2wire_ArcStdSyncMutexModule(raw.field0)];
+  }
+
+  @protected
+  List<dynamic> api2wire_env_variable(EnvVariable raw) {
+    return [api2wire_String(raw.name), api2wire_String(raw.value)];
   }
 
   @protected
@@ -103,8 +170,18 @@ class WasmiDartPlatform extends FlutterRustBridgeBase<WasmiDartWire>
   }
 
   @protected
+  List<dynamic> api2wire_list_env_variable(List<EnvVariable> raw) {
+    return raw.map(api2wire_env_variable).toList();
+  }
+
+  @protected
   List<dynamic> api2wire_list_module_import(List<ModuleImport> raw) {
     return raw.map(api2wire_module_import).toList();
+  }
+
+  @protected
+  List<dynamic> api2wire_list_preopened_dir(List<PreopenedDir> raw) {
+    return raw.map(api2wire_preopened_dir).toList();
   }
 
   @protected
@@ -115,6 +192,52 @@ class WasmiDartPlatform extends FlutterRustBridgeBase<WasmiDartWire>
   @protected
   List<dynamic> api2wire_list_value_ty(List<ValueTy> raw) {
     return raw.map(api2wire_value_ty).toList();
+  }
+
+  @protected
+  List<dynamic> api2wire_module_config(ModuleConfig raw) {
+    return [
+      api2wire_opt_box_autoadd_bool(raw.multiValue),
+      api2wire_opt_box_autoadd_bool(raw.bulkMemory),
+      api2wire_opt_box_autoadd_bool(raw.referenceTypes),
+      api2wire_opt_box_autoadd_bool(raw.consumeFuel),
+      api2wire_opt_box_autoadd_module_config_wasmi(raw.wasmi),
+      api2wire_opt_box_autoadd_module_config_wasmtime(raw.wasmtime)
+    ];
+  }
+
+  @protected
+  List<dynamic> api2wire_module_config_wasmi(ModuleConfigWasmi raw) {
+    return [
+      api2wire_opt_box_autoadd_wasi_stack_limits(raw.stackLimits),
+      api2wire_opt_box_autoadd_usize(raw.cachedStacks),
+      api2wire_opt_box_autoadd_bool(raw.mutableGlobal),
+      api2wire_opt_box_autoadd_bool(raw.signExtension),
+      api2wire_opt_box_autoadd_bool(raw.saturatingFloatToInt),
+      api2wire_opt_box_autoadd_bool(raw.tailCall),
+      api2wire_opt_box_autoadd_bool(raw.extendedConst),
+      api2wire_opt_box_autoadd_bool(raw.floats)
+    ];
+  }
+
+  @protected
+  List<dynamic> api2wire_module_config_wasmtime(ModuleConfigWasmtime raw) {
+    return [
+      api2wire_opt_box_autoadd_bool(raw.debugInfo),
+      api2wire_opt_box_autoadd_bool(raw.wasmBacktrace),
+      api2wire_opt_box_autoadd_bool(raw.nativeUnwindInfo),
+      api2wire_opt_box_autoadd_bool(raw.epochInterruption),
+      api2wire_opt_box_autoadd_usize(raw.maxWasmStack),
+      api2wire_opt_box_autoadd_bool(raw.wasmThreads),
+      api2wire_opt_box_autoadd_bool(raw.wasmSimd),
+      api2wire_opt_box_autoadd_bool(raw.wasmMultiMemory),
+      api2wire_opt_box_autoadd_bool(raw.wasmMemory64),
+      api2wire_opt_box_autoadd_u64(raw.staticMemoryMaximumSize),
+      api2wire_opt_box_autoadd_bool(raw.staticMemoryForced),
+      api2wire_opt_box_autoadd_u64(raw.staticMemoryGuardSize),
+      api2wire_opt_box_autoadd_bool(raw.parallelCompilation),
+      api2wire_opt_box_autoadd_bool(raw.generateAddressMap)
+    ];
   }
 
   @protected
@@ -132,13 +255,63 @@ class WasmiDartPlatform extends FlutterRustBridgeBase<WasmiDartWire>
   }
 
   @protected
+  bool? api2wire_opt_box_autoadd_bool(bool? raw) {
+    return raw == null ? null : api2wire_box_autoadd_bool(raw);
+  }
+
+  @protected
+  List<dynamic>? api2wire_opt_box_autoadd_module_config_wasmi(
+      ModuleConfigWasmi? raw) {
+    return raw == null ? null : api2wire_box_autoadd_module_config_wasmi(raw);
+  }
+
+  @protected
+  List<dynamic>? api2wire_opt_box_autoadd_module_config_wasmtime(
+      ModuleConfigWasmtime? raw) {
+    return raw == null
+        ? null
+        : api2wire_box_autoadd_module_config_wasmtime(raw);
+  }
+
+  @protected
   int? api2wire_opt_box_autoadd_u32(int? raw) {
     return raw == null ? null : api2wire_box_autoadd_u32(raw);
   }
 
   @protected
+  Object? api2wire_opt_box_autoadd_u64(int? raw) {
+    return raw == null ? null : api2wire_box_autoadd_u64(raw);
+  }
+
+  @protected
+  int? api2wire_opt_box_autoadd_usize(int? raw) {
+    return raw == null ? null : api2wire_box_autoadd_usize(raw);
+  }
+
+  @protected
+  List<dynamic>? api2wire_opt_box_autoadd_wasi_config(WasiConfig? raw) {
+    return raw == null ? null : api2wire_box_autoadd_wasi_config(raw);
+  }
+
+  @protected
+  List<dynamic>? api2wire_opt_box_autoadd_wasi_stack_limits(
+      WasiStackLimits? raw) {
+    return raw == null ? null : api2wire_box_autoadd_wasi_stack_limits(raw);
+  }
+
+  @protected
+  List<dynamic> api2wire_preopened_dir(PreopenedDir raw) {
+    return [api2wire_String(raw.wasmGuestPath), api2wire_String(raw.hostPath)];
+  }
+
+  @protected
   List<dynamic> api2wire_table_type_2(TableType2 raw) {
     return [api2wire_u32(raw.min), api2wire_opt_box_autoadd_u32(raw.max)];
+  }
+
+  @protected
+  Object api2wire_u64(int raw) {
+    return castNativeBigInt(raw);
   }
 
   @protected
@@ -171,6 +344,30 @@ class WasmiDartPlatform extends FlutterRustBridgeBase<WasmiDartWire>
   }
 
   @protected
+  List<dynamic> api2wire_wasi_config(WasiConfig raw) {
+    return [
+      api2wire_bool(raw.captureStdout),
+      api2wire_bool(raw.captureStderr),
+      api2wire_bool(raw.inheritStdin),
+      api2wire_bool(raw.inheritEnv),
+      api2wire_bool(raw.inheritArgs),
+      api2wire_StringList(raw.args),
+      api2wire_list_env_variable(raw.env),
+      api2wire_StringList(raw.preopenedFiles),
+      api2wire_list_preopened_dir(raw.preopenedDirs)
+    ];
+  }
+
+  @protected
+  List<dynamic> api2wire_wasi_stack_limits(WasiStackLimits raw) {
+    return [
+      api2wire_usize(raw.initialValueStackHeight),
+      api2wire_usize(raw.maximumValueStackHeight),
+      api2wire_usize(raw.maximumRecursionDepth)
+    ];
+  }
+
+  @protected
   List<dynamic> api2wire_wasm_memory_type(WasmMemoryType raw) {
     return [
       api2wire_u32(raw.initialPages),
@@ -189,6 +386,10 @@ class WasmiDartPlatform extends FlutterRustBridgeBase<WasmiDartWire>
   }
 // Section: finalizer
 
+  late final Finalizer<PlatformPointer> _ArcStdSyncMutexModuleFinalizer =
+      Finalizer<PlatformPointer>(inner.drop_opaque_ArcStdSyncMutexModule);
+  Finalizer<PlatformPointer> get ArcStdSyncMutexModuleFinalizer =>
+      _ArcStdSyncMutexModuleFinalizer;
   late final Finalizer<PlatformPointer> _FuncFinalizer =
       Finalizer<PlatformPointer>(inner.drop_opaque_Func);
   Finalizer<PlatformPointer> get FuncFinalizer => _FuncFinalizer;
@@ -213,10 +414,16 @@ external WasmiDartWasmModule get wasmModule;
 class WasmiDartWasmModule implements WasmModule {
   external Object /* Promise */ call([String? moduleName]);
   external WasmiDartWasmModule bind(dynamic thisArg, String moduleName);
+  external dynamic /* Object */ wire_create_shared_memory(
+      List<dynamic> _module);
+
+  external dynamic /* List<dynamic> */ wire_module_builder(
+      List<dynamic> module, List<dynamic>? wasi_config);
+
   external dynamic /* void */ wire_parse_wat_format(
       NativePortType port_, String wat);
 
-  external dynamic /* List<dynamic> */ wire_run_function(Object pointer);
+  external dynamic /* List<dynamic> */ wire_run_function(int pointer);
 
   external dynamic /* List<dynamic> */ wire_run_wasm_func(
       int pointer, List<dynamic> params);
@@ -227,11 +434,11 @@ class WasmiDartWasmModule implements WasmModule {
   external dynamic /* bool */ wire_run_wasm_func_void(
       int pointer, List<dynamic> params);
 
-  external dynamic /* List<dynamic> */ wire_compile_wasm_sync(
-      Uint8List module_wasm);
-
   external dynamic /* void */ wire_compile_wasm(
-      NativePortType port_, Uint8List module_wasm);
+      NativePortType port_, Uint8List module_wasm, List<dynamic> config);
+
+  external dynamic /* List<dynamic> */ wire_compile_wasm_sync(
+      Uint8List module_wasm, List<dynamic> config);
 
   external dynamic /* void */ wire_call_wasm(NativePortType port_);
 
@@ -261,14 +468,8 @@ class WasmiDartWasmModule implements WasmModule {
   external dynamic /* void */ wire_instantiate__method__WasmiModuleId(
       NativePortType port_, List<dynamic> that);
 
-  external dynamic /* List<dynamic> */
-      wire_get_module_imports__method__WasmiModuleId(List<dynamic> that);
-
-  external dynamic /* List<dynamic> */
-      wire_get_module_exports__method__WasmiModuleId(List<dynamic> that);
-
-  external dynamic /* void */ wire_executions__method__WasmiModuleId(
-      NativePortType port_, List<dynamic> that);
+  external dynamic /* void */ wire_link_imports__method__WasmiModuleId(
+      List<dynamic> that, List<dynamic> imports);
 
   external dynamic /* void */ wire_dispose__method__WasmiModuleId(
       NativePortType port_, List<dynamic> that);
@@ -355,8 +556,15 @@ class WasmiDartWasmModule implements WasmModule {
       List<dynamic> value,
       int len);
 
-  external dynamic /* void */ wire_link_imports__method__WasmiModuleId(
-      List<dynamic> that, List<dynamic> imports);
+  external dynamic /* List<dynamic> */
+      wire_get_module_imports__method__CompiledModule(List<dynamic> that);
+
+  external dynamic /* List<dynamic> */
+      wire_get_module_exports__method__CompiledModule(List<dynamic> that);
+
+  external dynamic /*  */ drop_opaque_ArcStdSyncMutexModule(ptr);
+
+  external int /* *const c_void */ share_opaque_ArcStdSyncMutexModule(ptr);
 
   external dynamic /*  */ drop_opaque_Func(ptr);
 
@@ -381,10 +589,17 @@ class WasmiDartWire extends FlutterRustBridgeWasmWireBase<WasmiDartWasmModule> {
   WasmiDartWire(FutureOr<WasmModule> module)
       : super(WasmModule.cast<WasmiDartWasmModule>(module));
 
+  dynamic /* Object */ wire_create_shared_memory(List<dynamic> _module) =>
+      wasmModule.wire_create_shared_memory(_module);
+
+  dynamic /* List<dynamic> */ wire_module_builder(
+          List<dynamic> module, List<dynamic>? wasi_config) =>
+      wasmModule.wire_module_builder(module, wasi_config);
+
   void wire_parse_wat_format(NativePortType port_, String wat) =>
       wasmModule.wire_parse_wat_format(port_, wat);
 
-  dynamic /* List<dynamic> */ wire_run_function(Object pointer) =>
+  dynamic /* List<dynamic> */ wire_run_function(int pointer) =>
       wasmModule.wire_run_function(pointer);
 
   dynamic /* List<dynamic> */ wire_run_wasm_func(
@@ -399,11 +614,13 @@ class WasmiDartWire extends FlutterRustBridgeWasmWireBase<WasmiDartWasmModule> {
           int pointer, List<dynamic> params) =>
       wasmModule.wire_run_wasm_func_void(pointer, params);
 
-  dynamic /* List<dynamic> */ wire_compile_wasm_sync(Uint8List module_wasm) =>
-      wasmModule.wire_compile_wasm_sync(module_wasm);
+  void wire_compile_wasm(
+          NativePortType port_, Uint8List module_wasm, List<dynamic> config) =>
+      wasmModule.wire_compile_wasm(port_, module_wasm, config);
 
-  void wire_compile_wasm(NativePortType port_, Uint8List module_wasm) =>
-      wasmModule.wire_compile_wasm(port_, module_wasm);
+  dynamic /* List<dynamic> */ wire_compile_wasm_sync(
+          Uint8List module_wasm, List<dynamic> config) =>
+      wasmModule.wire_compile_wasm_sync(module_wasm, config);
 
   void wire_call_wasm(NativePortType port_) => wasmModule.wire_call_wasm(port_);
 
@@ -440,17 +657,9 @@ class WasmiDartWire extends FlutterRustBridgeWasmWireBase<WasmiDartWasmModule> {
           NativePortType port_, List<dynamic> that) =>
       wasmModule.wire_instantiate__method__WasmiModuleId(port_, that);
 
-  dynamic /* List<dynamic> */ wire_get_module_imports__method__WasmiModuleId(
-          List<dynamic> that) =>
-      wasmModule.wire_get_module_imports__method__WasmiModuleId(that);
-
-  dynamic /* List<dynamic> */ wire_get_module_exports__method__WasmiModuleId(
-          List<dynamic> that) =>
-      wasmModule.wire_get_module_exports__method__WasmiModuleId(that);
-
-  void wire_executions__method__WasmiModuleId(
-          NativePortType port_, List<dynamic> that) =>
-      wasmModule.wire_executions__method__WasmiModuleId(port_, that);
+  dynamic /* void */ wire_link_imports__method__WasmiModuleId(
+          List<dynamic> that, List<dynamic> imports) =>
+      wasmModule.wire_link_imports__method__WasmiModuleId(that, imports);
 
   void wire_dispose__method__WasmiModuleId(
           NativePortType port_, List<dynamic> that) =>
@@ -559,9 +768,19 @@ class WasmiDartWire extends FlutterRustBridgeWasmWireBase<WasmiDartWasmModule> {
       wasmModule.wire_fill_table__method__WasmiModuleId(
           that, table, index, value, len);
 
-  dynamic /* void */ wire_link_imports__method__WasmiModuleId(
-          List<dynamic> that, List<dynamic> imports) =>
-      wasmModule.wire_link_imports__method__WasmiModuleId(that, imports);
+  dynamic /* List<dynamic> */ wire_get_module_imports__method__CompiledModule(
+          List<dynamic> that) =>
+      wasmModule.wire_get_module_imports__method__CompiledModule(that);
+
+  dynamic /* List<dynamic> */ wire_get_module_exports__method__CompiledModule(
+          List<dynamic> that) =>
+      wasmModule.wire_get_module_exports__method__CompiledModule(that);
+
+  dynamic /*  */ drop_opaque_ArcStdSyncMutexModule(ptr) =>
+      wasmModule.drop_opaque_ArcStdSyncMutexModule(ptr);
+
+  int /* *const c_void */ share_opaque_ArcStdSyncMutexModule(ptr) =>
+      wasmModule.share_opaque_ArcStdSyncMutexModule(ptr);
 
   dynamic /*  */ drop_opaque_Func(ptr) => wasmModule.drop_opaque_Func(ptr);
 

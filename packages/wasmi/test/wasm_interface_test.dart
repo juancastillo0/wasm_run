@@ -34,8 +34,7 @@ void main() {
       expect(
         module.getExports().map((e) => e.toString()),
         [
-          const ModuleExportDescriptor('add', ImportExportKind.function)
-              .toString(),
+          const WasmModuleExport('add', WasmExternalKind.function).toString(),
         ],
       );
       expect(module.getImports(), isEmpty);
