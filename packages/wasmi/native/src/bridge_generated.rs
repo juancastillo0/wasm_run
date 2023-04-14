@@ -19,8 +19,62 @@ use std::sync::Arc;
 
 // Section: imports
 
+use crate::config::EnvVariable;
+use crate::config::ModuleConfig;
+use crate::config::ModuleConfigWasmi;
+use crate::config::ModuleConfigWasmtime;
+use crate::config::PreopenedDir;
+use crate::config::WasiConfig;
+use crate::config::WasiStackLimits;
+use crate::types::ExternalType;
+use crate::types::ExternalValue;
+use crate::types::FuncTy;
+use crate::types::GlobalTy;
+use crate::types::ModuleExportDesc;
+use crate::types::ModuleExportValue;
+use crate::types::ModuleImport;
+use crate::types::ModuleImportDesc;
+use crate::types::Mutability;
+use crate::types::TableTy;
+use crate::types::TableType2;
+use crate::types::Value2;
+use crate::types::ValueTy;
+use crate::types::WasmMemoryType;
+
 // Section: wire functions
 
+fn wire_create_shared_memory_impl(
+    _module: impl Wire2Api<CompiledModule> + UnwindSafe,
+) -> support::WireSyncReturn {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
+        WrapInfo {
+            debug_name: "create_shared_memory",
+            port: None,
+            mode: FfiCallMode::Sync,
+        },
+        move || {
+            let api__module = _module.wire2api();
+            create_shared_memory(api__module)
+        },
+    )
+}
+fn wire_module_builder_impl(
+    module: impl Wire2Api<CompiledModule> + UnwindSafe,
+    wasi_config: impl Wire2Api<Option<WasiConfig>> + UnwindSafe,
+) -> support::WireSyncReturn {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
+        WrapInfo {
+            debug_name: "module_builder",
+            port: None,
+            mode: FfiCallMode::Sync,
+        },
+        move || {
+            let api_module = module.wire2api();
+            let api_wasi_config = wasi_config.wire2api();
+            module_builder(api_module, api_wasi_config)
+        },
+    )
+}
 fn wire_parse_wat_format_impl(port_: MessagePort, wat: impl Wire2Api<String> + UnwindSafe) {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap(
         WrapInfo {
@@ -34,7 +88,7 @@ fn wire_parse_wat_format_impl(port_: MessagePort, wat: impl Wire2Api<String> + U
         },
     )
 }
-fn wire_run_function_impl(pointer: impl Wire2Api<i64> + UnwindSafe) -> support::WireSyncReturn {
+fn wire_run_function_impl(pointer: impl Wire2Api<usize> + UnwindSafe) -> support::WireSyncReturn {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
         WrapInfo {
             debug_name: "run_function",
@@ -98,8 +152,27 @@ fn wire_run_wasm_func_void_impl(
         },
     )
 }
+fn wire_compile_wasm_impl(
+    port_: MessagePort,
+    module_wasm: impl Wire2Api<Vec<u8>> + UnwindSafe,
+    config: impl Wire2Api<ModuleConfig> + UnwindSafe,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap(
+        WrapInfo {
+            debug_name: "compile_wasm",
+            port: Some(port_),
+            mode: FfiCallMode::Normal,
+        },
+        move || {
+            let api_module_wasm = module_wasm.wire2api();
+            let api_config = config.wire2api();
+            move |task_callback| compile_wasm(api_module_wasm, api_config)
+        },
+    )
+}
 fn wire_compile_wasm_sync_impl(
     module_wasm: impl Wire2Api<Vec<u8>> + UnwindSafe,
+    config: impl Wire2Api<ModuleConfig> + UnwindSafe,
 ) -> support::WireSyncReturn {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
         WrapInfo {
@@ -109,20 +182,8 @@ fn wire_compile_wasm_sync_impl(
         },
         move || {
             let api_module_wasm = module_wasm.wire2api();
-            compile_wasm_sync(api_module_wasm)
-        },
-    )
-}
-fn wire_compile_wasm_impl(port_: MessagePort, module_wasm: impl Wire2Api<Vec<u8>> + UnwindSafe) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap(
-        WrapInfo {
-            debug_name: "compile_wasm",
-            port: Some(port_),
-            mode: FfiCallMode::Normal,
-        },
-        move || {
-            let api_module_wasm = module_wasm.wire2api();
-            move |task_callback| compile_wasm(api_module_wasm)
+            let api_config = config.wire2api();
+            compile_wasm_sync(api_module_wasm, api_config)
         },
     )
 }
@@ -259,49 +320,20 @@ fn wire_instantiate__method__WasmiModuleId_impl(
         },
     )
 }
-fn wire_get_module_imports__method__WasmiModuleId_impl(
+fn wire_link_imports__method__WasmiModuleId_impl(
     that: impl Wire2Api<WasmiModuleId> + UnwindSafe,
+    imports: impl Wire2Api<Vec<ModuleImport>> + UnwindSafe,
 ) -> support::WireSyncReturn {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
         WrapInfo {
-            debug_name: "get_module_imports__method__WasmiModuleId",
+            debug_name: "link_imports__method__WasmiModuleId",
             port: None,
             mode: FfiCallMode::Sync,
         },
         move || {
             let api_that = that.wire2api();
-            Ok(WasmiModuleId::get_module_imports(&api_that))
-        },
-    )
-}
-fn wire_get_module_exports__method__WasmiModuleId_impl(
-    that: impl Wire2Api<WasmiModuleId> + UnwindSafe,
-) -> support::WireSyncReturn {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
-        WrapInfo {
-            debug_name: "get_module_exports__method__WasmiModuleId",
-            port: None,
-            mode: FfiCallMode::Sync,
-        },
-        move || {
-            let api_that = that.wire2api();
-            Ok(WasmiModuleId::get_module_exports(&api_that))
-        },
-    )
-}
-fn wire_executions__method__WasmiModuleId_impl(
-    port_: MessagePort,
-    that: impl Wire2Api<WasmiModuleId> + UnwindSafe,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap(
-        WrapInfo {
-            debug_name: "executions__method__WasmiModuleId",
-            port: Some(port_),
-            mode: FfiCallMode::Stream,
-        },
-        move || {
-            let api_that = that.wire2api();
-            move |task_callback| WasmiModuleId::executions(&api_that, task_callback.stream_sink())
+            let api_imports = imports.wire2api();
+            WasmiModuleId::link_imports(&api_that, api_imports)
         },
     )
 }
@@ -741,20 +773,33 @@ fn wire_fill_table__method__WasmiModuleId_impl(
         },
     )
 }
-fn wire_link_imports__method__WasmiModuleId_impl(
-    that: impl Wire2Api<WasmiModuleId> + UnwindSafe,
-    imports: impl Wire2Api<Vec<ModuleImport>> + UnwindSafe,
+fn wire_get_module_imports__method__CompiledModule_impl(
+    that: impl Wire2Api<CompiledModule> + UnwindSafe,
 ) -> support::WireSyncReturn {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
         WrapInfo {
-            debug_name: "link_imports__method__WasmiModuleId",
+            debug_name: "get_module_imports__method__CompiledModule",
             port: None,
             mode: FfiCallMode::Sync,
         },
         move || {
             let api_that = that.wire2api();
-            let api_imports = imports.wire2api();
-            WasmiModuleId::link_imports(&api_that, api_imports)
+            Ok(CompiledModule::get_module_imports(&api_that))
+        },
+    )
+}
+fn wire_get_module_exports__method__CompiledModule_impl(
+    that: impl Wire2Api<CompiledModule> + UnwindSafe,
+) -> support::WireSyncReturn {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
+        WrapInfo {
+            debug_name: "get_module_exports__method__CompiledModule",
+            port: None,
+            mode: FfiCallMode::Sync,
+        },
+        move || {
+            let api_that = that.wire2api();
+            Ok(CompiledModule::get_module_exports(&api_that))
         },
     )
 }
@@ -785,6 +830,12 @@ where
 {
     fn wire2api(self) -> Option<T> {
         (!self.is_null()).then(|| self.wire2api())
+    }
+}
+
+impl Wire2Api<bool> for bool {
+    fn wire2api(self) -> bool {
+        self
     }
 }
 
@@ -824,6 +875,11 @@ impl Wire2Api<u32> for u32 {
         self
     }
 }
+impl Wire2Api<u64> for u64 {
+    fn wire2api(self) -> u64 {
+        self
+    }
+}
 impl Wire2Api<u8> for u8 {
     fn wire2api(self) -> u8 {
         self
@@ -851,6 +907,13 @@ impl Wire2Api<ValueTy> for i32 {
 }
 
 // Section: impl IntoDart
+
+impl support::IntoDart for CompiledModule {
+    fn into_dart(self) -> support::DartAbi {
+        vec![self.0.into_dart()].into_dart()
+    }
+}
+impl support::IntoDartExceptPrimitive for CompiledModule {}
 
 impl support::IntoDart for ExternalType {
     fn into_dart(self) -> support::DartAbi {
@@ -1010,12 +1073,22 @@ mod web {
     // Section: wire functions
 
     #[wasm_bindgen]
+    pub fn wire_create_shared_memory(_module: JsValue) -> support::WireSyncReturn {
+        wire_create_shared_memory_impl(_module)
+    }
+
+    #[wasm_bindgen]
+    pub fn wire_module_builder(module: JsValue, wasi_config: JsValue) -> support::WireSyncReturn {
+        wire_module_builder_impl(module, wasi_config)
+    }
+
+    #[wasm_bindgen]
     pub fn wire_parse_wat_format(port_: MessagePort, wat: String) {
         wire_parse_wat_format_impl(port_, wat)
     }
 
     #[wasm_bindgen]
-    pub fn wire_run_function(pointer: i64) -> support::WireSyncReturn {
+    pub fn wire_run_function(pointer: usize) -> support::WireSyncReturn {
         wire_run_function_impl(pointer)
     }
 
@@ -1035,13 +1108,16 @@ mod web {
     }
 
     #[wasm_bindgen]
-    pub fn wire_compile_wasm_sync(module_wasm: Box<[u8]>) -> support::WireSyncReturn {
-        wire_compile_wasm_sync_impl(module_wasm)
+    pub fn wire_compile_wasm(port_: MessagePort, module_wasm: Box<[u8]>, config: JsValue) {
+        wire_compile_wasm_impl(port_, module_wasm, config)
     }
 
     #[wasm_bindgen]
-    pub fn wire_compile_wasm(port_: MessagePort, module_wasm: Box<[u8]>) {
-        wire_compile_wasm_impl(port_, module_wasm)
+    pub fn wire_compile_wasm_sync(
+        module_wasm: Box<[u8]>,
+        config: JsValue,
+    ) -> support::WireSyncReturn {
+        wire_compile_wasm_sync_impl(module_wasm, config)
     }
 
     #[wasm_bindgen]
@@ -1098,22 +1174,11 @@ mod web {
     }
 
     #[wasm_bindgen]
-    pub fn wire_get_module_imports__method__WasmiModuleId(
+    pub fn wire_link_imports__method__WasmiModuleId(
         that: JsValue,
+        imports: JsValue,
     ) -> support::WireSyncReturn {
-        wire_get_module_imports__method__WasmiModuleId_impl(that)
-    }
-
-    #[wasm_bindgen]
-    pub fn wire_get_module_exports__method__WasmiModuleId(
-        that: JsValue,
-    ) -> support::WireSyncReturn {
-        wire_get_module_exports__method__WasmiModuleId_impl(that)
-    }
-
-    #[wasm_bindgen]
-    pub fn wire_executions__method__WasmiModuleId(port_: MessagePort, that: JsValue) {
-        wire_executions__method__WasmiModuleId_impl(port_, that)
+        wire_link_imports__method__WasmiModuleId_impl(that, imports)
     }
 
     #[wasm_bindgen]
@@ -1324,16 +1389,37 @@ mod web {
     }
 
     #[wasm_bindgen]
-    pub fn wire_link_imports__method__WasmiModuleId(
+    pub fn wire_get_module_imports__method__CompiledModule(
         that: JsValue,
-        imports: JsValue,
     ) -> support::WireSyncReturn {
-        wire_link_imports__method__WasmiModuleId_impl(that, imports)
+        wire_get_module_imports__method__CompiledModule_impl(that)
+    }
+
+    #[wasm_bindgen]
+    pub fn wire_get_module_exports__method__CompiledModule(
+        that: JsValue,
+    ) -> support::WireSyncReturn {
+        wire_get_module_exports__method__CompiledModule_impl(that)
     }
 
     // Section: allocate functions
 
     // Section: related functions
+
+    #[wasm_bindgen]
+    pub fn drop_opaque_ArcStdSyncMutexModule(ptr: *const c_void) {
+        unsafe {
+            Arc::<Arc<std::sync::Mutex<Module>>>::decrement_strong_count(ptr as _);
+        }
+    }
+
+    #[wasm_bindgen]
+    pub fn share_opaque_ArcStdSyncMutexModule(ptr: *const c_void) -> *const c_void {
+        unsafe {
+            Arc::<Arc<std::sync::Mutex<Module>>>::increment_strong_count(ptr as _);
+            ptr
+        }
+    }
 
     #[wasm_bindgen]
     pub fn drop_opaque_Func(ptr: *const c_void) {
@@ -1402,7 +1488,43 @@ mod web {
             self
         }
     }
+    impl Wire2Api<Vec<String>> for JsValue {
+        fn wire2api(self) -> Vec<String> {
+            self.dyn_into::<JsArray>()
+                .unwrap()
+                .iter()
+                .map(Wire2Api::wire2api)
+                .collect()
+        }
+    }
 
+    impl Wire2Api<CompiledModule> for JsValue {
+        fn wire2api(self) -> CompiledModule {
+            let self_ = self.dyn_into::<JsArray>().unwrap();
+            assert_eq!(
+                self_.length(),
+                1,
+                "Expected 1 elements, got {}",
+                self_.length()
+            );
+            CompiledModule(self_.get(0).wire2api())
+        }
+    }
+    impl Wire2Api<EnvVariable> for JsValue {
+        fn wire2api(self) -> EnvVariable {
+            let self_ = self.dyn_into::<JsArray>().unwrap();
+            assert_eq!(
+                self_.length(),
+                2,
+                "Expected 2 elements, got {}",
+                self_.length()
+            );
+            EnvVariable {
+                name: self_.get(0).wire2api(),
+                value: self_.get(1).wire2api(),
+            }
+        }
+    }
     impl Wire2Api<ExternalValue> for JsValue {
         fn wire2api(self) -> ExternalValue {
             let self_ = self.unchecked_into::<JsArray>();
@@ -1416,8 +1538,26 @@ mod web {
         }
     }
 
+    impl Wire2Api<Vec<EnvVariable>> for JsValue {
+        fn wire2api(self) -> Vec<EnvVariable> {
+            self.dyn_into::<JsArray>()
+                .unwrap()
+                .iter()
+                .map(Wire2Api::wire2api)
+                .collect()
+        }
+    }
     impl Wire2Api<Vec<ModuleImport>> for JsValue {
         fn wire2api(self) -> Vec<ModuleImport> {
+            self.dyn_into::<JsArray>()
+                .unwrap()
+                .iter()
+                .map(Wire2Api::wire2api)
+                .collect()
+        }
+    }
+    impl Wire2Api<Vec<PreopenedDir>> for JsValue {
+        fn wire2api(self) -> Vec<PreopenedDir> {
             self.dyn_into::<JsArray>()
                 .unwrap()
                 .iter()
@@ -1443,6 +1583,73 @@ mod web {
                 .collect()
         }
     }
+    impl Wire2Api<ModuleConfig> for JsValue {
+        fn wire2api(self) -> ModuleConfig {
+            let self_ = self.dyn_into::<JsArray>().unwrap();
+            assert_eq!(
+                self_.length(),
+                6,
+                "Expected 6 elements, got {}",
+                self_.length()
+            );
+            ModuleConfig {
+                multi_value: self_.get(0).wire2api(),
+                bulk_memory: self_.get(1).wire2api(),
+                reference_types: self_.get(2).wire2api(),
+                consume_fuel: self_.get(3).wire2api(),
+                wasmi: self_.get(4).wire2api(),
+                wasmtime: self_.get(5).wire2api(),
+            }
+        }
+    }
+    impl Wire2Api<ModuleConfigWasmi> for JsValue {
+        fn wire2api(self) -> ModuleConfigWasmi {
+            let self_ = self.dyn_into::<JsArray>().unwrap();
+            assert_eq!(
+                self_.length(),
+                8,
+                "Expected 8 elements, got {}",
+                self_.length()
+            );
+            ModuleConfigWasmi {
+                stack_limits: self_.get(0).wire2api(),
+                cached_stacks: self_.get(1).wire2api(),
+                mutable_global: self_.get(2).wire2api(),
+                sign_extension: self_.get(3).wire2api(),
+                saturating_float_to_int: self_.get(4).wire2api(),
+                tail_call: self_.get(5).wire2api(),
+                extended_const: self_.get(6).wire2api(),
+                floats: self_.get(7).wire2api(),
+            }
+        }
+    }
+    impl Wire2Api<ModuleConfigWasmtime> for JsValue {
+        fn wire2api(self) -> ModuleConfigWasmtime {
+            let self_ = self.dyn_into::<JsArray>().unwrap();
+            assert_eq!(
+                self_.length(),
+                14,
+                "Expected 14 elements, got {}",
+                self_.length()
+            );
+            ModuleConfigWasmtime {
+                debug_info: self_.get(0).wire2api(),
+                wasm_backtrace: self_.get(1).wire2api(),
+                native_unwind_info: self_.get(2).wire2api(),
+                epoch_interruption: self_.get(3).wire2api(),
+                max_wasm_stack: self_.get(4).wire2api(),
+                wasm_threads: self_.get(5).wire2api(),
+                wasm_simd: self_.get(6).wire2api(),
+                wasm_multi_memory: self_.get(7).wire2api(),
+                wasm_memory64: self_.get(8).wire2api(),
+                static_memory_maximum_size: self_.get(9).wire2api(),
+                static_memory_forced: self_.get(10).wire2api(),
+                static_memory_guard_size: self_.get(11).wire2api(),
+                parallel_compilation: self_.get(12).wire2api(),
+                generate_address_map: self_.get(13).wire2api(),
+            }
+        }
+    }
     impl Wire2Api<ModuleImport> for JsValue {
         fn wire2api(self) -> ModuleImport {
             let self_ = self.dyn_into::<JsArray>().unwrap();
@@ -1466,6 +1673,42 @@ mod web {
         }
     }
 
+    impl Wire2Api<Option<ModuleConfigWasmi>> for JsValue {
+        fn wire2api(self) -> Option<ModuleConfigWasmi> {
+            (!self.is_undefined() && !self.is_null()).then(|| self.wire2api())
+        }
+    }
+    impl Wire2Api<Option<ModuleConfigWasmtime>> for JsValue {
+        fn wire2api(self) -> Option<ModuleConfigWasmtime> {
+            (!self.is_undefined() && !self.is_null()).then(|| self.wire2api())
+        }
+    }
+
+    impl Wire2Api<Option<WasiConfig>> for JsValue {
+        fn wire2api(self) -> Option<WasiConfig> {
+            (!self.is_undefined() && !self.is_null()).then(|| self.wire2api())
+        }
+    }
+    impl Wire2Api<Option<WasiStackLimits>> for JsValue {
+        fn wire2api(self) -> Option<WasiStackLimits> {
+            (!self.is_undefined() && !self.is_null()).then(|| self.wire2api())
+        }
+    }
+    impl Wire2Api<PreopenedDir> for JsValue {
+        fn wire2api(self) -> PreopenedDir {
+            let self_ = self.dyn_into::<JsArray>().unwrap();
+            assert_eq!(
+                self_.length(),
+                2,
+                "Expected 2 elements, got {}",
+                self_.length()
+            );
+            PreopenedDir {
+                wasm_guest_path: self_.get(0).wire2api(),
+                host_path: self_.get(1).wire2api(),
+            }
+        }
+    }
     impl Wire2Api<TableType2> for JsValue {
         fn wire2api(self) -> TableType2 {
             let self_ = self.dyn_into::<JsArray>().unwrap();
@@ -1503,6 +1746,44 @@ mod web {
         }
     }
 
+    impl Wire2Api<WasiConfig> for JsValue {
+        fn wire2api(self) -> WasiConfig {
+            let self_ = self.dyn_into::<JsArray>().unwrap();
+            assert_eq!(
+                self_.length(),
+                9,
+                "Expected 9 elements, got {}",
+                self_.length()
+            );
+            WasiConfig {
+                capture_stdout: self_.get(0).wire2api(),
+                capture_stderr: self_.get(1).wire2api(),
+                inherit_stdin: self_.get(2).wire2api(),
+                inherit_env: self_.get(3).wire2api(),
+                inherit_args: self_.get(4).wire2api(),
+                args: self_.get(5).wire2api(),
+                env: self_.get(6).wire2api(),
+                preopened_files: self_.get(7).wire2api(),
+                preopened_dirs: self_.get(8).wire2api(),
+            }
+        }
+    }
+    impl Wire2Api<WasiStackLimits> for JsValue {
+        fn wire2api(self) -> WasiStackLimits {
+            let self_ = self.dyn_into::<JsArray>().unwrap();
+            assert_eq!(
+                self_.length(),
+                3,
+                "Expected 3 elements, got {}",
+                self_.length()
+            );
+            WasiStackLimits {
+                initial_value_stack_height: self_.get(0).wire2api(),
+                maximum_value_stack_height: self_.get(1).wire2api(),
+                maximum_recursion_depth: self_.get(2).wire2api(),
+            }
+        }
+    }
     impl Wire2Api<WasmMemoryType> for JsValue {
         fn wire2api(self) -> WasmMemoryType {
             let self_ = self.dyn_into::<JsArray>().unwrap();
@@ -1544,6 +1825,16 @@ mod web {
     }
     // Section: impl Wire2Api for JsValue
 
+    impl Wire2Api<RustOpaque<Arc<std::sync::Mutex<Module>>>> for JsValue {
+        fn wire2api(self) -> RustOpaque<Arc<std::sync::Mutex<Module>>> {
+            #[cfg(target_pointer_width = "64")]
+            {
+                compile_error!("64-bit pointers are not supported.");
+            }
+
+            unsafe { support::opaque_from_dart((self.as_f64().unwrap() as usize) as _) }
+        }
+    }
     impl Wire2Api<RustOpaque<Func>> for JsValue {
         fn wire2api(self) -> RustOpaque<Func> {
             #[cfg(target_pointer_width = "64")]
@@ -1589,6 +1880,11 @@ mod web {
             unsafe { support::opaque_from_dart((self.as_f64().unwrap() as usize) as _) }
         }
     }
+    impl Wire2Api<bool> for JsValue {
+        fn wire2api(self) -> bool {
+            self.is_truthy()
+        }
+    }
     impl Wire2Api<f32> for JsValue {
         fn wire2api(self) -> f32 {
             self.unchecked_into_f64() as _
@@ -1614,14 +1910,34 @@ mod web {
             (self.unchecked_into_f64() as i32).wire2api()
         }
     }
+    impl Wire2Api<Option<bool>> for JsValue {
+        fn wire2api(self) -> Option<bool> {
+            (!self.is_undefined() && !self.is_null()).then(|| self.wire2api())
+        }
+    }
     impl Wire2Api<Option<u32>> for JsValue {
         fn wire2api(self) -> Option<u32> {
+            (!self.is_undefined() && !self.is_null()).then(|| self.wire2api())
+        }
+    }
+    impl Wire2Api<Option<u64>> for JsValue {
+        fn wire2api(self) -> Option<u64> {
+            (!self.is_undefined() && !self.is_null()).then(|| self.wire2api())
+        }
+    }
+    impl Wire2Api<Option<usize>> for JsValue {
+        fn wire2api(self) -> Option<usize> {
             (!self.is_undefined() && !self.is_null()).then(|| self.wire2api())
         }
     }
     impl Wire2Api<u32> for JsValue {
         fn wire2api(self) -> u32 {
             self.unchecked_into_f64() as _
+        }
+    }
+    impl Wire2Api<u64> for JsValue {
+        fn wire2api(self) -> u64 {
+            ::std::convert::TryInto::try_into(self.dyn_into::<js_sys::BigInt>().unwrap()).unwrap()
         }
     }
     impl Wire2Api<u8> for JsValue {
@@ -1654,12 +1970,27 @@ mod io {
     // Section: wire functions
 
     #[no_mangle]
+    pub extern "C" fn wire_create_shared_memory(
+        _module: *mut wire_CompiledModule,
+    ) -> support::WireSyncReturn {
+        wire_create_shared_memory_impl(_module)
+    }
+
+    #[no_mangle]
+    pub extern "C" fn wire_module_builder(
+        module: *mut wire_CompiledModule,
+        wasi_config: *mut wire_WasiConfig,
+    ) -> support::WireSyncReturn {
+        wire_module_builder_impl(module, wasi_config)
+    }
+
+    #[no_mangle]
     pub extern "C" fn wire_parse_wat_format(port_: i64, wat: *mut wire_uint_8_list) {
         wire_parse_wat_format_impl(port_, wat)
     }
 
     #[no_mangle]
-    pub extern "C" fn wire_run_function(pointer: i64) -> support::WireSyncReturn {
+    pub extern "C" fn wire_run_function(pointer: usize) -> support::WireSyncReturn {
         wire_run_function_impl(pointer)
     }
 
@@ -1688,15 +2019,20 @@ mod io {
     }
 
     #[no_mangle]
-    pub extern "C" fn wire_compile_wasm_sync(
+    pub extern "C" fn wire_compile_wasm(
+        port_: i64,
         module_wasm: *mut wire_uint_8_list,
-    ) -> support::WireSyncReturn {
-        wire_compile_wasm_sync_impl(module_wasm)
+        config: *mut wire_ModuleConfig,
+    ) {
+        wire_compile_wasm_impl(port_, module_wasm, config)
     }
 
     #[no_mangle]
-    pub extern "C" fn wire_compile_wasm(port_: i64, module_wasm: *mut wire_uint_8_list) {
-        wire_compile_wasm_impl(port_, module_wasm)
+    pub extern "C" fn wire_compile_wasm_sync(
+        module_wasm: *mut wire_uint_8_list,
+        config: *mut wire_ModuleConfig,
+    ) -> support::WireSyncReturn {
+        wire_compile_wasm_sync_impl(module_wasm, config)
     }
 
     #[no_mangle]
@@ -1760,25 +2096,11 @@ mod io {
     }
 
     #[no_mangle]
-    pub extern "C" fn wire_get_module_imports__method__WasmiModuleId(
+    pub extern "C" fn wire_link_imports__method__WasmiModuleId(
         that: *mut wire_WasmiModuleId,
+        imports: *mut wire_list_module_import,
     ) -> support::WireSyncReturn {
-        wire_get_module_imports__method__WasmiModuleId_impl(that)
-    }
-
-    #[no_mangle]
-    pub extern "C" fn wire_get_module_exports__method__WasmiModuleId(
-        that: *mut wire_WasmiModuleId,
-    ) -> support::WireSyncReturn {
-        wire_get_module_exports__method__WasmiModuleId_impl(that)
-    }
-
-    #[no_mangle]
-    pub extern "C" fn wire_executions__method__WasmiModuleId(
-        port_: i64,
-        that: *mut wire_WasmiModuleId,
-    ) {
-        wire_executions__method__WasmiModuleId_impl(port_, that)
+        wire_link_imports__method__WasmiModuleId_impl(that, imports)
     }
 
     #[no_mangle]
@@ -1992,14 +2314,25 @@ mod io {
     }
 
     #[no_mangle]
-    pub extern "C" fn wire_link_imports__method__WasmiModuleId(
-        that: *mut wire_WasmiModuleId,
-        imports: *mut wire_list_module_import,
+    pub extern "C" fn wire_get_module_imports__method__CompiledModule(
+        that: *mut wire_CompiledModule,
     ) -> support::WireSyncReturn {
-        wire_link_imports__method__WasmiModuleId_impl(that, imports)
+        wire_get_module_imports__method__CompiledModule_impl(that)
+    }
+
+    #[no_mangle]
+    pub extern "C" fn wire_get_module_exports__method__CompiledModule(
+        that: *mut wire_CompiledModule,
+    ) -> support::WireSyncReturn {
+        wire_get_module_exports__method__CompiledModule_impl(that)
     }
 
     // Section: allocate functions
+
+    #[no_mangle]
+    pub extern "C" fn new_ArcStdSyncMutexModule() -> wire_ArcStdSyncMutexModule {
+        wire_ArcStdSyncMutexModule::new_with_null_ptr()
+    }
 
     #[no_mangle]
     pub extern "C" fn new_Func() -> wire_Func {
@@ -2017,6 +2350,15 @@ mod io {
     }
 
     #[no_mangle]
+    pub extern "C" fn new_StringList_0(len: i32) -> *mut wire_StringList {
+        let wrap = wire_StringList {
+            ptr: support::new_leak_vec_ptr(<*mut wire_uint_8_list>::new_with_null_ptr(), len),
+            len,
+        };
+        support::new_leak_box_ptr(wrap)
+    }
+
+    #[no_mangle]
     pub extern "C" fn new_Table() -> wire_Table {
         wire_Table::new_with_null_ptr()
     }
@@ -2024,6 +2366,31 @@ mod io {
     #[no_mangle]
     pub extern "C" fn new_box_autoadd_Func_0() -> *mut wire_Func {
         support::new_leak_box_ptr(wire_Func::new_with_null_ptr())
+    }
+
+    #[no_mangle]
+    pub extern "C" fn new_box_autoadd_bool_0(value: bool) -> *mut bool {
+        support::new_leak_box_ptr(value)
+    }
+
+    #[no_mangle]
+    pub extern "C" fn new_box_autoadd_compiled_module_0() -> *mut wire_CompiledModule {
+        support::new_leak_box_ptr(wire_CompiledModule::new_with_null_ptr())
+    }
+
+    #[no_mangle]
+    pub extern "C" fn new_box_autoadd_module_config_0() -> *mut wire_ModuleConfig {
+        support::new_leak_box_ptr(wire_ModuleConfig::new_with_null_ptr())
+    }
+
+    #[no_mangle]
+    pub extern "C" fn new_box_autoadd_module_config_wasmi_0() -> *mut wire_ModuleConfigWasmi {
+        support::new_leak_box_ptr(wire_ModuleConfigWasmi::new_with_null_ptr())
+    }
+
+    #[no_mangle]
+    pub extern "C" fn new_box_autoadd_module_config_wasmtime_0() -> *mut wire_ModuleConfigWasmtime {
+        support::new_leak_box_ptr(wire_ModuleConfigWasmtime::new_with_null_ptr())
     }
 
     #[no_mangle]
@@ -2037,8 +2404,28 @@ mod io {
     }
 
     #[no_mangle]
+    pub extern "C" fn new_box_autoadd_u64_0(value: u64) -> *mut u64 {
+        support::new_leak_box_ptr(value)
+    }
+
+    #[no_mangle]
+    pub extern "C" fn new_box_autoadd_usize_0(value: usize) -> *mut usize {
+        support::new_leak_box_ptr(value)
+    }
+
+    #[no_mangle]
     pub extern "C" fn new_box_autoadd_value_2_0() -> *mut wire_Value2 {
         support::new_leak_box_ptr(wire_Value2::new_with_null_ptr())
+    }
+
+    #[no_mangle]
+    pub extern "C" fn new_box_autoadd_wasi_config_0() -> *mut wire_WasiConfig {
+        support::new_leak_box_ptr(wire_WasiConfig::new_with_null_ptr())
+    }
+
+    #[no_mangle]
+    pub extern "C" fn new_box_autoadd_wasi_stack_limits_0() -> *mut wire_WasiStackLimits {
+        support::new_leak_box_ptr(wire_WasiStackLimits::new_with_null_ptr())
     }
 
     #[no_mangle]
@@ -2057,9 +2444,27 @@ mod io {
     }
 
     #[no_mangle]
+    pub extern "C" fn new_list_env_variable_0(len: i32) -> *mut wire_list_env_variable {
+        let wrap = wire_list_env_variable {
+            ptr: support::new_leak_vec_ptr(<wire_EnvVariable>::new_with_null_ptr(), len),
+            len,
+        };
+        support::new_leak_box_ptr(wrap)
+    }
+
+    #[no_mangle]
     pub extern "C" fn new_list_module_import_0(len: i32) -> *mut wire_list_module_import {
         let wrap = wire_list_module_import {
             ptr: support::new_leak_vec_ptr(<wire_ModuleImport>::new_with_null_ptr(), len),
+            len,
+        };
+        support::new_leak_box_ptr(wrap)
+    }
+
+    #[no_mangle]
+    pub extern "C" fn new_list_preopened_dir_0(len: i32) -> *mut wire_list_preopened_dir {
+        let wrap = wire_list_preopened_dir {
+            ptr: support::new_leak_vec_ptr(<wire_PreopenedDir>::new_with_null_ptr(), len),
             len,
         };
         support::new_leak_box_ptr(wrap)
@@ -2093,6 +2498,21 @@ mod io {
     }
 
     // Section: related functions
+
+    #[no_mangle]
+    pub extern "C" fn drop_opaque_ArcStdSyncMutexModule(ptr: *const c_void) {
+        unsafe {
+            Arc::<Arc<std::sync::Mutex<Module>>>::decrement_strong_count(ptr as _);
+        }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn share_opaque_ArcStdSyncMutexModule(ptr: *const c_void) -> *const c_void {
+        unsafe {
+            Arc::<Arc<std::sync::Mutex<Module>>>::increment_strong_count(ptr as _);
+            ptr
+        }
+    }
 
     #[no_mangle]
     pub extern "C" fn drop_opaque_Func(ptr: *const c_void) {
@@ -2156,6 +2576,11 @@ mod io {
 
     // Section: impl Wire2Api
 
+    impl Wire2Api<RustOpaque<Arc<std::sync::Mutex<Module>>>> for wire_ArcStdSyncMutexModule {
+        fn wire2api(self) -> RustOpaque<Arc<std::sync::Mutex<Module>>> {
+            unsafe { support::opaque_from_dart(self.ptr as _) }
+        }
+    }
     impl Wire2Api<RustOpaque<Func>> for wire_Func {
         fn wire2api(self) -> RustOpaque<Func> {
             unsafe { support::opaque_from_dart(self.ptr as _) }
@@ -2177,15 +2602,54 @@ mod io {
             String::from_utf8_lossy(&vec).into_owned()
         }
     }
+    impl Wire2Api<Vec<String>> for *mut wire_StringList {
+        fn wire2api(self) -> Vec<String> {
+            let vec = unsafe {
+                let wrap = support::box_from_leak_ptr(self);
+                support::vec_from_leak_ptr(wrap.ptr, wrap.len)
+            };
+            vec.into_iter().map(Wire2Api::wire2api).collect()
+        }
+    }
     impl Wire2Api<RustOpaque<Table>> for wire_Table {
         fn wire2api(self) -> RustOpaque<Table> {
             unsafe { support::opaque_from_dart(self.ptr as _) }
         }
     }
+
     impl Wire2Api<RustOpaque<Func>> for *mut wire_Func {
         fn wire2api(self) -> RustOpaque<Func> {
             let wrap = unsafe { support::box_from_leak_ptr(self) };
             Wire2Api::<RustOpaque<Func>>::wire2api(*wrap).into()
+        }
+    }
+    impl Wire2Api<bool> for *mut bool {
+        fn wire2api(self) -> bool {
+            unsafe { *support::box_from_leak_ptr(self) }
+        }
+    }
+    impl Wire2Api<CompiledModule> for *mut wire_CompiledModule {
+        fn wire2api(self) -> CompiledModule {
+            let wrap = unsafe { support::box_from_leak_ptr(self) };
+            Wire2Api::<CompiledModule>::wire2api(*wrap).into()
+        }
+    }
+    impl Wire2Api<ModuleConfig> for *mut wire_ModuleConfig {
+        fn wire2api(self) -> ModuleConfig {
+            let wrap = unsafe { support::box_from_leak_ptr(self) };
+            Wire2Api::<ModuleConfig>::wire2api(*wrap).into()
+        }
+    }
+    impl Wire2Api<ModuleConfigWasmi> for *mut wire_ModuleConfigWasmi {
+        fn wire2api(self) -> ModuleConfigWasmi {
+            let wrap = unsafe { support::box_from_leak_ptr(self) };
+            Wire2Api::<ModuleConfigWasmi>::wire2api(*wrap).into()
+        }
+    }
+    impl Wire2Api<ModuleConfigWasmtime> for *mut wire_ModuleConfigWasmtime {
+        fn wire2api(self) -> ModuleConfigWasmtime {
+            let wrap = unsafe { support::box_from_leak_ptr(self) };
+            Wire2Api::<ModuleConfigWasmtime>::wire2api(*wrap).into()
         }
     }
     impl Wire2Api<TableType2> for *mut wire_TableType2 {
@@ -2199,10 +2663,32 @@ mod io {
             unsafe { *support::box_from_leak_ptr(self) }
         }
     }
+    impl Wire2Api<u64> for *mut u64 {
+        fn wire2api(self) -> u64 {
+            unsafe { *support::box_from_leak_ptr(self) }
+        }
+    }
+    impl Wire2Api<usize> for *mut usize {
+        fn wire2api(self) -> usize {
+            unsafe { *support::box_from_leak_ptr(self) }
+        }
+    }
     impl Wire2Api<Value2> for *mut wire_Value2 {
         fn wire2api(self) -> Value2 {
             let wrap = unsafe { support::box_from_leak_ptr(self) };
             Wire2Api::<Value2>::wire2api(*wrap).into()
+        }
+    }
+    impl Wire2Api<WasiConfig> for *mut wire_WasiConfig {
+        fn wire2api(self) -> WasiConfig {
+            let wrap = unsafe { support::box_from_leak_ptr(self) };
+            Wire2Api::<WasiConfig>::wire2api(*wrap).into()
+        }
+    }
+    impl Wire2Api<WasiStackLimits> for *mut wire_WasiStackLimits {
+        fn wire2api(self) -> WasiStackLimits {
+            let wrap = unsafe { support::box_from_leak_ptr(self) };
+            Wire2Api::<WasiStackLimits>::wire2api(*wrap).into()
         }
     }
     impl Wire2Api<WasmMemoryType> for *mut wire_WasmMemoryType {
@@ -2221,6 +2707,19 @@ mod io {
         fn wire2api(self) -> WasmiModuleId {
             let wrap = unsafe { support::box_from_leak_ptr(self) };
             Wire2Api::<WasmiModuleId>::wire2api(*wrap).into()
+        }
+    }
+    impl Wire2Api<CompiledModule> for wire_CompiledModule {
+        fn wire2api(self) -> CompiledModule {
+            CompiledModule(self.field0.wire2api())
+        }
+    }
+    impl Wire2Api<EnvVariable> for wire_EnvVariable {
+        fn wire2api(self) -> EnvVariable {
+            EnvVariable {
+                name: self.name.wire2api(),
+                value: self.value.wire2api(),
+            }
         }
     }
     impl Wire2Api<ExternalValue> for wire_ExternalValue {
@@ -2251,8 +2750,26 @@ mod io {
         }
     }
 
+    impl Wire2Api<Vec<EnvVariable>> for *mut wire_list_env_variable {
+        fn wire2api(self) -> Vec<EnvVariable> {
+            let vec = unsafe {
+                let wrap = support::box_from_leak_ptr(self);
+                support::vec_from_leak_ptr(wrap.ptr, wrap.len)
+            };
+            vec.into_iter().map(Wire2Api::wire2api).collect()
+        }
+    }
     impl Wire2Api<Vec<ModuleImport>> for *mut wire_list_module_import {
         fn wire2api(self) -> Vec<ModuleImport> {
+            let vec = unsafe {
+                let wrap = support::box_from_leak_ptr(self);
+                support::vec_from_leak_ptr(wrap.ptr, wrap.len)
+            };
+            vec.into_iter().map(Wire2Api::wire2api).collect()
+        }
+    }
+    impl Wire2Api<Vec<PreopenedDir>> for *mut wire_list_preopened_dir {
+        fn wire2api(self) -> Vec<PreopenedDir> {
             let vec = unsafe {
                 let wrap = support::box_from_leak_ptr(self);
                 support::vec_from_leak_ptr(wrap.ptr, wrap.len)
@@ -2278,6 +2795,52 @@ mod io {
             vec.into_iter().map(Wire2Api::wire2api).collect()
         }
     }
+    impl Wire2Api<ModuleConfig> for wire_ModuleConfig {
+        fn wire2api(self) -> ModuleConfig {
+            ModuleConfig {
+                multi_value: self.multi_value.wire2api(),
+                bulk_memory: self.bulk_memory.wire2api(),
+                reference_types: self.reference_types.wire2api(),
+                consume_fuel: self.consume_fuel.wire2api(),
+                wasmi: self.wasmi.wire2api(),
+                wasmtime: self.wasmtime.wire2api(),
+            }
+        }
+    }
+    impl Wire2Api<ModuleConfigWasmi> for wire_ModuleConfigWasmi {
+        fn wire2api(self) -> ModuleConfigWasmi {
+            ModuleConfigWasmi {
+                stack_limits: self.stack_limits.wire2api(),
+                cached_stacks: self.cached_stacks.wire2api(),
+                mutable_global: self.mutable_global.wire2api(),
+                sign_extension: self.sign_extension.wire2api(),
+                saturating_float_to_int: self.saturating_float_to_int.wire2api(),
+                tail_call: self.tail_call.wire2api(),
+                extended_const: self.extended_const.wire2api(),
+                floats: self.floats.wire2api(),
+            }
+        }
+    }
+    impl Wire2Api<ModuleConfigWasmtime> for wire_ModuleConfigWasmtime {
+        fn wire2api(self) -> ModuleConfigWasmtime {
+            ModuleConfigWasmtime {
+                debug_info: self.debug_info.wire2api(),
+                wasm_backtrace: self.wasm_backtrace.wire2api(),
+                native_unwind_info: self.native_unwind_info.wire2api(),
+                epoch_interruption: self.epoch_interruption.wire2api(),
+                max_wasm_stack: self.max_wasm_stack.wire2api(),
+                wasm_threads: self.wasm_threads.wire2api(),
+                wasm_simd: self.wasm_simd.wire2api(),
+                wasm_multi_memory: self.wasm_multi_memory.wire2api(),
+                wasm_memory64: self.wasm_memory64.wire2api(),
+                static_memory_maximum_size: self.static_memory_maximum_size.wire2api(),
+                static_memory_forced: self.static_memory_forced.wire2api(),
+                static_memory_guard_size: self.static_memory_guard_size.wire2api(),
+                parallel_compilation: self.parallel_compilation.wire2api(),
+                generate_address_map: self.generate_address_map.wire2api(),
+            }
+        }
+    }
     impl Wire2Api<ModuleImport> for wire_ModuleImport {
         fn wire2api(self) -> ModuleImport {
             ModuleImport {
@@ -2288,6 +2851,14 @@ mod io {
         }
     }
 
+    impl Wire2Api<PreopenedDir> for wire_PreopenedDir {
+        fn wire2api(self) -> PreopenedDir {
+            PreopenedDir {
+                wasm_guest_path: self.wasm_guest_path.wire2api(),
+                host_path: self.host_path.wire2api(),
+            }
+        }
+    }
     impl Wire2Api<TableType2> for wire_TableType2 {
         fn wire2api(self) -> TableType2 {
             TableType2 {
@@ -2344,6 +2915,30 @@ mod io {
         }
     }
 
+    impl Wire2Api<WasiConfig> for wire_WasiConfig {
+        fn wire2api(self) -> WasiConfig {
+            WasiConfig {
+                capture_stdout: self.capture_stdout.wire2api(),
+                capture_stderr: self.capture_stderr.wire2api(),
+                inherit_stdin: self.inherit_stdin.wire2api(),
+                inherit_env: self.inherit_env.wire2api(),
+                inherit_args: self.inherit_args.wire2api(),
+                args: self.args.wire2api(),
+                env: self.env.wire2api(),
+                preopened_files: self.preopened_files.wire2api(),
+                preopened_dirs: self.preopened_dirs.wire2api(),
+            }
+        }
+    }
+    impl Wire2Api<WasiStackLimits> for wire_WasiStackLimits {
+        fn wire2api(self) -> WasiStackLimits {
+            WasiStackLimits {
+                initial_value_stack_height: self.initial_value_stack_height.wire2api(),
+                maximum_value_stack_height: self.maximum_value_stack_height.wire2api(),
+                maximum_recursion_depth: self.maximum_recursion_depth.wire2api(),
+            }
+        }
+    }
     impl Wire2Api<WasmMemoryType> for wire_WasmMemoryType {
         fn wire2api(self) -> WasmMemoryType {
             WasmMemoryType {
@@ -2366,6 +2961,12 @@ mod io {
 
     #[repr(C)]
     #[derive(Clone)]
+    pub struct wire_ArcStdSyncMutexModule {
+        ptr: *const core::ffi::c_void,
+    }
+
+    #[repr(C)]
+    #[derive(Clone)]
     pub struct wire_Func {
         ptr: *const core::ffi::c_void,
     }
@@ -2384,14 +2985,48 @@ mod io {
 
     #[repr(C)]
     #[derive(Clone)]
+    pub struct wire_StringList {
+        ptr: *mut *mut wire_uint_8_list,
+        len: i32,
+    }
+
+    #[repr(C)]
+    #[derive(Clone)]
     pub struct wire_Table {
         ptr: *const core::ffi::c_void,
     }
 
     #[repr(C)]
     #[derive(Clone)]
+    pub struct wire_CompiledModule {
+        field0: wire_ArcStdSyncMutexModule,
+    }
+
+    #[repr(C)]
+    #[derive(Clone)]
+    pub struct wire_EnvVariable {
+        name: *mut wire_uint_8_list,
+        value: *mut wire_uint_8_list,
+    }
+
+    #[repr(C)]
+    #[derive(Clone)]
+    pub struct wire_list_env_variable {
+        ptr: *mut wire_EnvVariable,
+        len: i32,
+    }
+
+    #[repr(C)]
+    #[derive(Clone)]
     pub struct wire_list_module_import {
         ptr: *mut wire_ModuleImport,
+        len: i32,
+    }
+
+    #[repr(C)]
+    #[derive(Clone)]
+    pub struct wire_list_preopened_dir {
+        ptr: *mut wire_PreopenedDir,
         len: i32,
     }
 
@@ -2411,10 +3046,60 @@ mod io {
 
     #[repr(C)]
     #[derive(Clone)]
+    pub struct wire_ModuleConfig {
+        multi_value: *mut bool,
+        bulk_memory: *mut bool,
+        reference_types: *mut bool,
+        consume_fuel: *mut bool,
+        wasmi: *mut wire_ModuleConfigWasmi,
+        wasmtime: *mut wire_ModuleConfigWasmtime,
+    }
+
+    #[repr(C)]
+    #[derive(Clone)]
+    pub struct wire_ModuleConfigWasmi {
+        stack_limits: *mut wire_WasiStackLimits,
+        cached_stacks: *mut usize,
+        mutable_global: *mut bool,
+        sign_extension: *mut bool,
+        saturating_float_to_int: *mut bool,
+        tail_call: *mut bool,
+        extended_const: *mut bool,
+        floats: *mut bool,
+    }
+
+    #[repr(C)]
+    #[derive(Clone)]
+    pub struct wire_ModuleConfigWasmtime {
+        debug_info: *mut bool,
+        wasm_backtrace: *mut bool,
+        native_unwind_info: *mut bool,
+        epoch_interruption: *mut bool,
+        max_wasm_stack: *mut usize,
+        wasm_threads: *mut bool,
+        wasm_simd: *mut bool,
+        wasm_multi_memory: *mut bool,
+        wasm_memory64: *mut bool,
+        static_memory_maximum_size: *mut u64,
+        static_memory_forced: *mut bool,
+        static_memory_guard_size: *mut u64,
+        parallel_compilation: *mut bool,
+        generate_address_map: *mut bool,
+    }
+
+    #[repr(C)]
+    #[derive(Clone)]
     pub struct wire_ModuleImport {
         module: *mut wire_uint_8_list,
         name: *mut wire_uint_8_list,
         value: wire_ExternalValue,
+    }
+
+    #[repr(C)]
+    #[derive(Clone)]
+    pub struct wire_PreopenedDir {
+        wasm_guest_path: *mut wire_uint_8_list,
+        host_path: *mut wire_uint_8_list,
     }
 
     #[repr(C)]
@@ -2429,6 +3114,28 @@ mod io {
     pub struct wire_uint_8_list {
         ptr: *mut u8,
         len: i32,
+    }
+
+    #[repr(C)]
+    #[derive(Clone)]
+    pub struct wire_WasiConfig {
+        capture_stdout: bool,
+        capture_stderr: bool,
+        inherit_stdin: bool,
+        inherit_env: bool,
+        inherit_args: bool,
+        args: *mut wire_StringList,
+        env: *mut wire_list_env_variable,
+        preopened_files: *mut wire_StringList,
+        preopened_dirs: *mut wire_list_preopened_dir,
+    }
+
+    #[repr(C)]
+    #[derive(Clone)]
+    pub struct wire_WasiStackLimits {
+        initial_value_stack_height: usize,
+        maximum_value_stack_height: usize,
+        maximum_recursion_depth: usize,
     }
 
     #[repr(C)]
@@ -2554,6 +3261,13 @@ mod io {
         }
     }
 
+    impl NewWithNullPtr for wire_ArcStdSyncMutexModule {
+        fn new_with_null_ptr() -> Self {
+            Self {
+                ptr: core::ptr::null(),
+            }
+        }
+    }
     impl NewWithNullPtr for wire_Func {
         fn new_with_null_ptr() -> Self {
             Self {
@@ -2581,6 +3295,35 @@ mod io {
             Self {
                 ptr: core::ptr::null(),
             }
+        }
+    }
+
+    impl NewWithNullPtr for wire_CompiledModule {
+        fn new_with_null_ptr() -> Self {
+            Self {
+                field0: wire_ArcStdSyncMutexModule::new_with_null_ptr(),
+            }
+        }
+    }
+
+    impl Default for wire_CompiledModule {
+        fn default() -> Self {
+            Self::new_with_null_ptr()
+        }
+    }
+
+    impl NewWithNullPtr for wire_EnvVariable {
+        fn new_with_null_ptr() -> Self {
+            Self {
+                name: core::ptr::null_mut(),
+                value: core::ptr::null_mut(),
+            }
+        }
+    }
+
+    impl Default for wire_EnvVariable {
+        fn default() -> Self {
+            Self::new_with_null_ptr()
         }
     }
 
@@ -2629,6 +3372,73 @@ mod io {
         })
     }
 
+    impl NewWithNullPtr for wire_ModuleConfig {
+        fn new_with_null_ptr() -> Self {
+            Self {
+                multi_value: core::ptr::null_mut(),
+                bulk_memory: core::ptr::null_mut(),
+                reference_types: core::ptr::null_mut(),
+                consume_fuel: core::ptr::null_mut(),
+                wasmi: core::ptr::null_mut(),
+                wasmtime: core::ptr::null_mut(),
+            }
+        }
+    }
+
+    impl Default for wire_ModuleConfig {
+        fn default() -> Self {
+            Self::new_with_null_ptr()
+        }
+    }
+
+    impl NewWithNullPtr for wire_ModuleConfigWasmi {
+        fn new_with_null_ptr() -> Self {
+            Self {
+                stack_limits: core::ptr::null_mut(),
+                cached_stacks: core::ptr::null_mut(),
+                mutable_global: core::ptr::null_mut(),
+                sign_extension: core::ptr::null_mut(),
+                saturating_float_to_int: core::ptr::null_mut(),
+                tail_call: core::ptr::null_mut(),
+                extended_const: core::ptr::null_mut(),
+                floats: core::ptr::null_mut(),
+            }
+        }
+    }
+
+    impl Default for wire_ModuleConfigWasmi {
+        fn default() -> Self {
+            Self::new_with_null_ptr()
+        }
+    }
+
+    impl NewWithNullPtr for wire_ModuleConfigWasmtime {
+        fn new_with_null_ptr() -> Self {
+            Self {
+                debug_info: core::ptr::null_mut(),
+                wasm_backtrace: core::ptr::null_mut(),
+                native_unwind_info: core::ptr::null_mut(),
+                epoch_interruption: core::ptr::null_mut(),
+                max_wasm_stack: core::ptr::null_mut(),
+                wasm_threads: core::ptr::null_mut(),
+                wasm_simd: core::ptr::null_mut(),
+                wasm_multi_memory: core::ptr::null_mut(),
+                wasm_memory64: core::ptr::null_mut(),
+                static_memory_maximum_size: core::ptr::null_mut(),
+                static_memory_forced: core::ptr::null_mut(),
+                static_memory_guard_size: core::ptr::null_mut(),
+                parallel_compilation: core::ptr::null_mut(),
+                generate_address_map: core::ptr::null_mut(),
+            }
+        }
+    }
+
+    impl Default for wire_ModuleConfigWasmtime {
+        fn default() -> Self {
+            Self::new_with_null_ptr()
+        }
+    }
+
     impl NewWithNullPtr for wire_ModuleImport {
         fn new_with_null_ptr() -> Self {
             Self {
@@ -2640,6 +3450,21 @@ mod io {
     }
 
     impl Default for wire_ModuleImport {
+        fn default() -> Self {
+            Self::new_with_null_ptr()
+        }
+    }
+
+    impl NewWithNullPtr for wire_PreopenedDir {
+        fn new_with_null_ptr() -> Self {
+            Self {
+                wasm_guest_path: core::ptr::null_mut(),
+                host_path: core::ptr::null_mut(),
+            }
+        }
+    }
+
+    impl Default for wire_PreopenedDir {
         fn default() -> Self {
             Self::new_with_null_ptr()
         }
@@ -2721,6 +3546,44 @@ mod io {
                 field0: Default::default(),
             }),
         })
+    }
+
+    impl NewWithNullPtr for wire_WasiConfig {
+        fn new_with_null_ptr() -> Self {
+            Self {
+                capture_stdout: Default::default(),
+                capture_stderr: Default::default(),
+                inherit_stdin: Default::default(),
+                inherit_env: Default::default(),
+                inherit_args: Default::default(),
+                args: core::ptr::null_mut(),
+                env: core::ptr::null_mut(),
+                preopened_files: core::ptr::null_mut(),
+                preopened_dirs: core::ptr::null_mut(),
+            }
+        }
+    }
+
+    impl Default for wire_WasiConfig {
+        fn default() -> Self {
+            Self::new_with_null_ptr()
+        }
+    }
+
+    impl NewWithNullPtr for wire_WasiStackLimits {
+        fn new_with_null_ptr() -> Self {
+            Self {
+                initial_value_stack_height: Default::default(),
+                maximum_value_stack_height: Default::default(),
+                maximum_recursion_depth: Default::default(),
+            }
+        }
+    }
+
+    impl Default for wire_WasiStackLimits {
+        fn default() -> Self {
+            Self::new_with_null_ptr()
+        }
     }
 
     impl NewWithNullPtr for wire_WasmMemoryType {

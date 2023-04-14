@@ -1,54 +1,228 @@
-use crate::bridge_generated::{
-    new_list_value_2_0, wire_ExternalValue, wire_list_value_2, NewWithNullPtr, Wire2Api,
-};
+use crate::bridge_generated::{new_list_value_2_0, wire_list_value_2, Wire2Api};
+use crate::config::*;
 use crate::types::*;
 use anyhow::{Ok, Result};
 use flutter_rust_bridge::{
-    frb, opaque_dyn, support::new_leak_box_ptr, DartAbi, DartOpaque, DartSafe, IntoDart,
-    RustOpaque, StreamSink, SyncReturn,
+    support::new_leak_box_ptr, DartAbi, IntoDart, RustOpaque, StreamSink, SyncReturn,
 };
 use once_cell::sync::Lazy;
+use std::io::Write;
 use std::{
     collections::HashMap,
     convert::TryInto,
-    default,
     ffi::c_void,
-    fmt::{Debug, Display},
-    sync::RwLock,
+    fs,
+    os::fd::AsRawFd,
+    sync::{Arc, RwLock},
 };
-pub use wasmi::{core::Pages, Func, Global, GlobalType, Memory, Mutability, Table};
+use wasi_common::{file::FileCaps, pipe::WritePipe};
+pub use wasmi::{core::Pages, Func, Global, GlobalType, Memory, Module, Mutability, Table};
 use wasmi::{core::ValueType, *};
 
 static ARRAY: Lazy<RwLock<GlobalState>> = Lazy::new(|| RwLock::new(Default::default()));
 
-#[derive(Debug, Default)]
+#[derive(Default)]
 struct GlobalState {
     map: HashMap<u32, WasmiModuleImpl>,
     last_id: u32,
 }
 
-#[derive(Debug)]
 struct WasmiModuleImpl {
-    module: Module,
-    linker: Linker<u32>,
-    store: Store<u32>,
+    module: Arc<std::sync::Mutex<Module>>,
+    linker: Linker<StoreState>,
+    store: Store<StoreState>,
     instance: Option<Instance>,
-    builder: Option<WasmiModuleBuilder>,
+    stdout: Option<StreamSink<Vec<u8>>>,
+    stderr: Option<StreamSink<Vec<u8>>>,
 }
 
-// impl std::panic::RefUnwindSafe for WasmiModuleImpl {}
-// impl std::panic::UnwindSafe for WasmiModuleImpl {}
+// impl Debug for WasmiModuleImpl {
+//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+//         f.debug_struct("WasmiModuleImpl").finish()
+//     }
+// }
+
+struct StoreState {
+    wasi_ctx: Option<wasmi_wasi::WasiCtx>,
+}
 
 pub struct WasmiModuleId(pub u32);
 pub struct WasmiInstanceId(pub u32);
 
-struct WasmiModuleBuilder {
-    sink: StreamSink<i32>,
+pub fn create_shared_memory(_module: CompiledModule) -> Result<SyncReturn<RustOpaque<Memory>>> {
+    Err(anyhow::Error::msg(
+        "shared_memory is not supported for wasmi",
+    ))
 }
 
-impl Debug for WasmiModuleBuilder {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("WasmiModuleBuilder").finish()
+pub fn module_builder(
+    module: CompiledModule,
+    wasi_config: Option<WasiConfig>,
+) -> Result<SyncReturn<WasmiModuleId>> {
+    let guard = module.0.lock().unwrap();
+    let engine = guard.engine();
+    let mut linker = <Linker<StoreState>>::new(engine);
+
+    let mut arr = ARRAY.write().unwrap();
+    arr.last_id += 1;
+
+    let id = arr.last_id;
+    let mut wasi_ctx = None;
+    if let Some(wasi_config) = wasi_config {
+        wasmi_wasi::add_to_linker(&mut linker, |ctx| ctx.wasi_ctx.as_mut().unwrap())?;
+
+        // add wasi to linker
+        let mut wasi_builder = wasmi_wasi::WasiCtxBuilder::new();
+        if wasi_config.inherit_args {
+            wasi_builder = wasi_builder.inherit_args()?;
+        }
+        if wasi_config.inherit_env {
+            wasi_builder = wasi_builder.inherit_env()?;
+        }
+        if wasi_config.inherit_stdin {
+            wasi_builder = wasi_builder.inherit_stdin();
+        }
+        if !wasi_config.capture_stdout {
+            wasi_builder = wasi_builder.inherit_stdout();
+        }
+        if !wasi_config.capture_stderr {
+            wasi_builder = wasi_builder.inherit_stderr();
+        }
+        if !wasi_config.args.is_empty() {
+            for value in wasi_config.args {
+                wasi_builder = wasi_builder.arg(&value)?;
+            }
+        }
+        if !wasi_config.env.is_empty() {
+            for EnvVariable { name, value } in wasi_config.env {
+                wasi_builder = wasi_builder.env(&name, &value)?;
+            }
+        }
+        if !wasi_config.preopened_dirs.is_empty() {
+            for PreopenedDir {
+                wasm_guest_path,
+                host_path,
+            } in wasi_config.preopened_dirs
+            {
+                let dir = wasmi_wasi::sync::Dir::open_ambient_dir(
+                    host_path,
+                    wasmi_wasi::sync::ambient_authority(),
+                )?;
+                wasi_builder = wasi_builder.preopened_dir(dir, wasm_guest_path)?;
+            }
+        }
+
+        let mut wasi = wasi_builder.build();
+
+        if !wasi_config.preopened_files.is_empty() {
+            for value in wasi_config.preopened_files {
+                let file = fs::File::open(value)?;
+                let vv = file.as_raw_fd().as_raw_fd();
+                let wasm_file =
+                    wasmi_wasi::sync::file::File::from_cap_std(cap_std::fs::File::from_std(file));
+                let mut caps = FileCaps::empty();
+                caps.extend([
+                    FileCaps::READ,
+                    FileCaps::FILESTAT_SET_SIZE,
+                    FileCaps::FILESTAT_GET,
+                ]);
+                // TODO: not sure if this is correct
+                wasi.insert_file(vv.try_into().unwrap(), Box::new(wasm_file), caps);
+            }
+        }
+
+        // let std_dir = fs::File::open("test.txt").unwrap();
+        // let fd = std_dir.as_fd().as_raw_fd();
+        // let directory = wasmi_wasi::sync::Dir::from_std_file(std_dir);
+        // wasi.insert_dir(fd, directory, directory, caps, file_caps);
+
+        // wasmi_wasi::sync::Dir::open_ambient_dir(path, wasmi_wasi::sync::ambient_authority());
+        // wasmi_wasi::sync::Dir::reopen_dir(dir);
+
+        // use std::io::{self, BufRead, Read};
+
+        if wasi_config.capture_stdout {
+            let stdout_handler = ModuleIOWriter {
+                id,
+                is_stdout: true,
+            };
+            wasi.set_stdout(Box::new(WritePipe::new(stdout_handler)));
+        }
+        if wasi_config.capture_stderr {
+            let stderr_handler = ModuleIOWriter {
+                id,
+                is_stdout: false,
+            };
+            wasi.set_stderr(Box::new(WritePipe::new(stderr_handler)));
+        }
+        wasi_ctx = Some(wasi);
+    }
+
+    // if wasi_config.capture_stdout {
+    //     let mut stdout = io::sink();
+    //     let v = wasi_common::pipe::WritePipe::new_in_memory();
+    //     let mut stdout_reader = io::BufReader::new(v);
+    //     let stdout_lines = stdout_reader.lines();
+    //     v.sync();
+
+    //     // Define a closure that will be called whenever new data is available on the stdout stream.
+
+    //     wasi.set_stdout(Box::new(wasi_common::pipe::WritePipe::new(stdout_handler)));
+
+    //     // s.set_stdin(Box::new(crate::pipe::ReadPipe::new(std::io::empty())));
+
+    //     // s.set_stderr(Box::new(crate::pipe::WritePipe::new(std::io::sink())));
+    //     // wasi.set_stdout(stdout);
+    //     spawn(move || {
+    //         for line in stdout_lines {
+    //             let oo = v.try_into_inner().unwrap();
+    //             println!("line: {:?}", line);
+    //             if let Some(sink) = builder.stdout {
+    //                 sink.add(value)
+    //             }
+    //         }
+    //     });
+    // }
+
+    let store = Store::new(engine, StoreState { wasi_ctx });
+    let module_builder = WasmiModuleImpl {
+        module: Arc::clone(&module.0),
+        linker,
+        store,
+        stdout: None,
+        stderr: None,
+        instance: None,
+    };
+    arr.map.insert(id, module_builder);
+
+    Ok(SyncReturn(WasmiModuleId(id)))
+}
+
+struct ModuleIOWriter {
+    id: u32,
+    is_stdout: bool,
+}
+
+impl Write for ModuleIOWriter {
+    fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+        let arr = ARRAY.read().unwrap();
+
+        let sink = if self.is_stdout {
+            arr.map[&self.id].stdout.as_ref()
+        } else {
+            arr.map[&self.id].stderr.as_ref()
+        };
+        let mut bytes_written = 0;
+        if let Some(stream) = sink {
+            if stream.add(buf.to_owned()) {
+                bytes_written = buf.len();
+            }
+        }
+        std::io::Result::Ok(bytes_written)
+    }
+
+    fn flush(&mut self) -> std::io::Result<()> {
+        std::io::Result::Ok(())
     }
 }
 
