@@ -572,10 +572,10 @@ pub fn parse_wat_format(wat: String) -> Result<Vec<u8>> {
     Ok(wat::parse_str(wat)?)
 }
 
-type ffF = unsafe extern "C" fn(args: i64) -> i64;
+type DartMapInt = unsafe extern "C" fn(args: i64) -> i64;
 
 pub fn run_function(pointer: usize) -> SyncReturn<Vec<Value2>> {
-    let f: ffF = unsafe { std::mem::transmute(pointer) };
+    let f: DartMapInt = unsafe { std::mem::transmute(pointer) };
     let result = unsafe { f(1) };
     SyncReturn(vec![Value2::I64(result)])
 }
@@ -583,13 +583,12 @@ pub fn run_function(pointer: usize) -> SyncReturn<Vec<Value2>> {
 // TODO: Support return values
 type WasmFunction = unsafe extern "C" fn(function_id: u32, args: *mut DartAbi) -> c_void;
 
-type wasm_func = unsafe extern "C" fn(args: *mut DartAbi) -> *mut wire_list_value_2;
-type wasm_func_mut =
-    unsafe extern "C" fn(args: *mut DartAbi, output: *mut wire_list_value_2) -> i64;
-type wasm_func_void = unsafe extern "C" fn(args: *mut DartAbi) -> c_void;
+type WasmFuncT = unsafe extern "C" fn(args: *mut DartAbi) -> *mut wire_list_value_2;
+type WasmFuncMutT = unsafe extern "C" fn(args: *mut DartAbi, output: *mut wire_list_value_2) -> i64;
+type WasmFuncVoidT = unsafe extern "C" fn(args: *mut DartAbi) -> c_void;
 
 pub fn run_wasm_func(pointer: usize, params: Vec<Value2>) -> SyncReturn<Vec<Value2>> {
-    let f: wasm_func = unsafe { std::mem::transmute(pointer) };
+    let f: WasmFuncT = unsafe { std::mem::transmute(pointer) };
 
     // let pp = new_list_value_2_0(params.len().try_into().unwrap());
     // pp.write(val);
@@ -613,7 +612,7 @@ pub fn run_wasm_func(pointer: usize, params: Vec<Value2>) -> SyncReturn<Vec<Valu
 }
 
 pub fn run_wasm_func_mut(pointer: usize, params: Vec<Value2>) -> SyncReturn<Vec<Value2>> {
-    let f: wasm_func_mut = unsafe { std::mem::transmute(pointer) };
+    let f: WasmFuncMutT = unsafe { std::mem::transmute(pointer) };
 
     println!("inputs: {:?}", params);
     let inputs = vec![params].into_dart();
@@ -632,13 +631,13 @@ pub fn run_wasm_func_mut(pointer: usize, params: Vec<Value2>) -> SyncReturn<Vec<
 }
 
 pub fn run_wasm_func_void(pointer: usize, params: Vec<Value2>) -> SyncReturn<bool> {
-    let f: wasm_func_void = unsafe { std::mem::transmute(pointer) };
+    let f: WasmFuncVoidT = unsafe { std::mem::transmute(pointer) };
     println!("inputs: {:?}", params);
     let inputs = vec![params].into_dart();
     println!("after inputs: {:?}", inputs.ty);
     let pointer = new_leak_box_ptr(inputs);
     println!("pointer: {:?}", pointer);
-    let result = unsafe { f(pointer) };
+    unsafe { f(pointer) };
     SyncReturn(true)
 }
 
