@@ -28,20 +28,77 @@ jobs:
       - name: Check Rust format
         working-directory: ./packages/wasmi/native/src
         run: rustfmt --check lib.rs
+        if: always()
       - name: Rust code analysis
         run: cargo clippy -- -D warnings
+        if: always()
       - name: Run Rust tests
         run: cargo test
+        if: always()
       - name: Build Rust code for Dart tests
         run: cargo build -r
+        id: build_rust
+        if: always()
 
       # Dart/Flutter
       - name: Check Dart format
         run: melos run check-format --no-select
+        if: always()
       - name: Dart code analysis
         run: melos run analyze --no-select
+        if: always()
       - name: Run Dart tests
         run: melos run test
+        if: always() && steps.build_rust.outcome == 'success'
+
+      # Web Browser tests
+      - run: |
+          git clone https://github.com/flutter/web_installers.git
+          cd web_installers/packages/web_drivers
+          pub get
+        if: always()
+
+      # Safari
+      - run: dart lib/web_driver_installer.dart safaridriver
+        working-directory: web_installers/packages/web_drivers
+        id: safaridriver
+        if: always()
+      - run: dart run test -p safari
+        working-directory: packages/wasmi/example
+        if: always() && steps.safaridriver.outcome == 'success'
+      - run: flutter drive --target=test_driver/integration_test.dart --target=integration_test/main_test.dart -d web-server --browser-name=safari --driver-port=4444
+        working-directory: packages/flutter_wasmi/example
+        if: always() && steps.safaridriver.outcome == 'success'
+
+      # Chrome
+      - name: Install and run Chrome Driver
+        run: |
+          dart lib/web_driver_installer.dart chromedriver --install-only
+          chromedriver/chromedriver --port=4445 &
+        working-directory: web_installers/packages/web_drivers
+        id: chromedriver
+        if: always()
+      - run: dart run test -p chrome
+        working-directory: packages/wasmi/example
+        if: always() && steps.chromedriver.outcome == 'success'
+      - run: flutter drive --target=test_driver/integration_test.dart --target=integration_test/main_test.dart -d web-server --browser-name=chrome --driver-port=4445
+        working-directory: packages/flutter_wasmi/example
+        if: always() && steps.chromedriver.outcome == 'success'
+
+      # Firefox
+      - name: Install and run Firefox Driver
+        run: |
+          dart lib/web_driver_installer.dart firefoxdriver --install-only
+          firefoxdriver/geckodriver --port=4446
+        working-directory: web_installers/packages/web_drivers
+        id: firefoxdriver
+        if: always()
+      - run: dart run test -p firefox
+        working-directory: packages/wasmi/example
+        if: always() && steps.firefoxdriver.outcome == 'success'
+      - run: flutter drive --target=test_driver/integration_test.dart --target=integration_test/main_test.dart -d web-server --browser-name=firefox --driver-port=4446
+        working-directory: packages/flutter_wasmi/example
+        if: always() && steps.firefoxdriver.outcome == 'success'
 
   macos_integration_test:
     runs-on: macos-latest
@@ -65,6 +122,55 @@ jobs:
       - name: Run Flutter integration tests
         working-directory: packages/flutter_wasmi/example
         run: flutter test -d macos integration_test
+
+      # Web Browser tests
+      - run: |
+          git clone https://github.com/flutter/web_installers.git
+          cd web_installers/packages/web_drivers
+          pub get
+        if: always()
+
+      # Safari
+      - run: dart lib/web_driver_installer.dart safaridriver
+        working-directory: web_installers/packages/web_drivers
+        id: safaridriver
+        if: always()
+      - run: dart run test -p safari
+        working-directory: packages/wasmi/example
+        if: always() && steps.safaridriver.outcome == 'success'
+      - run: flutter drive --target=test_driver/integration_test.dart --target=integration_test/main_test.dart -d web-server --browser-name=safari --driver-port=4444
+        working-directory: packages/flutter_wasmi/example
+        if: always() && steps.safaridriver.outcome == 'success'
+
+      # Chrome
+      - name: Install and run Chrome Driver
+        run: |
+          dart lib/web_driver_installer.dart chromedriver --install-only
+          chromedriver/chromedriver --port=4445 &
+        working-directory: web_installers/packages/web_drivers
+        id: chromedriver
+        if: always()
+      - run: dart run test -p chrome
+        working-directory: packages/wasmi/example
+        if: always() && steps.chromedriver.outcome == 'success'
+      - run: flutter drive --target=test_driver/integration_test.dart --target=integration_test/main_test.dart -d web-server --browser-name=chrome --driver-port=4445
+        working-directory: packages/flutter_wasmi/example
+        if: always() && steps.chromedriver.outcome == 'success'
+
+      # Firefox
+      - name: Install and run Firefox Driver
+        run: |
+          dart lib/web_driver_installer.dart firefoxdriver --install-only
+          firefoxdriver/geckodriver --port=4446
+        working-directory: web_installers/packages/web_drivers
+        id: firefoxdriver
+        if: always()
+      - run: dart run test -p firefox
+        working-directory: packages/wasmi/example
+        if: always() && steps.firefoxdriver.outcome == 'success'
+      - run: flutter drive --target=test_driver/integration_test.dart --target=integration_test/main_test.dart -d web-server --browser-name=firefox --driver-port=4446
+        working-directory: packages/flutter_wasmi/example
+        if: always() && steps.firefoxdriver.outcome == 'success'
 
   windows_integration_test:
     runs-on: windows-latest
