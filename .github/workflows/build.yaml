@@ -55,7 +55,7 @@ jobs:
       - run: |
           git clone https://github.com/flutter/web_installers.git
           cd web_installers/packages/web_drivers
-          pub get
+          dart pub get
         if: always()
 
       # Safari
@@ -89,7 +89,7 @@ jobs:
       - name: Install and run Firefox Driver
         run: |
           dart lib/web_driver_installer.dart firefoxdriver --install-only
-          firefoxdriver/geckodriver --port=4446
+          firefoxdriver/geckodriver --port=4446 &
         working-directory: web_installers/packages/web_drivers
         id: firefoxdriver
         if: always()
@@ -127,11 +127,11 @@ jobs:
       - run: |
           git clone https://github.com/flutter/web_installers.git
           cd web_installers/packages/web_drivers
-          pub get
+          dart pub get
         if: always()
 
       # Safari
-      - run: dart lib/web_driver_installer.dart safaridriver
+      - run: dart lib/web_driver_installer.dart safaridriver &
         working-directory: web_installers/packages/web_drivers
         id: safaridriver
         if: always()
@@ -188,7 +188,7 @@ jobs:
           toolchain: stable
 
       - name: Build the binaries
-        run: melos run build:other -- dev
+        run: melos run build:other
       - name: Copy the binaries to the needed location
         shell: bash
         run: |
