@@ -4,31 +4,84 @@ import 'dart:typed_data' show Uint8List;
 
 import 'package:wasm_interop/wasm_interop.dart';
 
-import 'wasm_interface.dart' as wasm;
-import 'wasm_interface.dart' hide WasmModule;
+import '../bridge_generated.dart' show ModuleConfig;
+import 'wasm_interface.dart';
 
-Future<wasm.WasmModule> compileAsyncWasmModule(Uint8List bytes) async {
-  return WasmModule.compileAsync(bytes);
+Future<WasmModule> compileAsyncWasmModule(
+  Uint8List bytes,
+  // TODO: use ModuleConfig
+  {
+  ModuleConfig? config,
+}) async {
+  return _WasmModule.compileAsync(bytes);
 }
 
-WasmModule compileWasmModule(Uint8List bytes) {
-  return WasmModule(bytes);
+WasmModule compileWasmModule(
+  Uint8List bytes, {
+  ModuleConfig? config,
+}) {
+  return _WasmModule(bytes);
 }
 
-class WasmModule implements wasm.WasmModule {
+class _WasmModule implements WasmModule {
   final Module module;
-  WasmModule(Uint8List bytes) : module = Module.fromBytes(bytes);
-  WasmModule._(this.module);
+  _WasmModule(Uint8List bytes) : module = Module.fromBytes(bytes);
+  _WasmModule._(this.module);
 
-  static Future<wasm.WasmModule> compileAsync(Uint8List bytes) async {
+  static Future<WasmModule> compileAsync(Uint8List bytes) async {
     final module = await Module.fromBytesAsync(bytes);
-    return WasmModule._(module);
+    return _WasmModule._(module);
   }
 
   @override
-  WasmInstanceBuilder builder() {
+  WasmMemory createSharedMemory(int pages, {int? maxPages}) {
+    return _Memory(
+      Memory.shared(
+        initial: pages,
+        maximum: maxPages ?? 65536, // 2^16
+      ),
+    );
+  }
+
+  @override
+  WasmInstanceBuilder builder({WasiConfig? wasiConfig}) {
+    if (wasiConfig != null) {
+      throw UnsupportedError('WASI is not supported on web');
+    }
     return _Builder(module);
   }
+
+  @override
+  List<WasmModuleImport> getImports() {
+    return module.imports
+        .map(
+          (e) => WasmModuleImport(
+            e.module,
+            e.name,
+            WasmExternalKind.values.byName(e.kind.name),
+          ),
+        )
+        .toList();
+  }
+
+  @override
+  List<WasmModuleExport> getExports() {
+    return module.exports
+        .map(
+          (e) => WasmModuleExport(
+            e.name,
+            WasmExternalKind.values.byName(e.kind.name),
+          ),
+        )
+        .toList();
+  }
+}
+
+class _Builder extends WasmInstanceBuilder {
+  final Module module;
+  final Map<String, Map<String, Object>> importMap = {};
+
+  _Builder(this.module);
 
   @override
   WasmMemory createMemory(int pages, {int? maxPages}) {
@@ -88,42 +141,10 @@ class WasmModule implements wasm.WasmModule {
   }
 
   @override
-  List<wasm.ModuleImportDescriptor> getImports() {
-    return module.imports
-        .map(
-          (e) => wasm.ModuleImportDescriptor(
-            e.module,
-            e.name,
-            wasm.ImportExportKind.values.byName(e.kind.name),
-          ),
-        )
-        .toList();
-  }
-
-  @override
-  List<wasm.ModuleExportDescriptor> getExports() {
-    return module.exports
-        .map(
-          (e) => wasm.ModuleExportDescriptor(
-            e.name,
-            wasm.ImportExportKind.values.byName(e.kind.name),
-          ),
-        )
-        .toList();
-  }
-}
-
-class _Builder extends WasmInstanceBuilder {
-  final Module module;
-  final Map<String, Map<String, Object>> importMap = {};
-
-  _Builder(this.module);
-
-  @override
   WasmInstanceBuilder addImport(
     String moduleName,
     String name,
-    wasm.WasmExternal value,
+    WasmExternal value,
   ) {
     final mapped = value.when(
       memory: (memory) => (memory as _Memory).memory,
@@ -161,7 +182,7 @@ class _Builder extends WasmInstanceBuilder {
 class _Instance extends WasmInstance {
   final Instance instance;
   @override
-  late final WasmModule module = WasmModule._(instance.module);
+  late final _WasmModule module = _WasmModule._(instance.module);
 
   @override
   late final UnmodifiableMapView<String, WasmExternal> exports;
@@ -194,12 +215,18 @@ class _Instance extends WasmInstance {
                 );
               },
             )
-            .followedBy(instance.globals.entries
-                .map((e) => MapEntry(e.key, _Global(e.value))))
-            .followedBy(instance.memories.entries
-                .map((e) => MapEntry(e.key, _Memory(e.value))))
-            .followedBy(instance.tables.entries
-                .map((e) => MapEntry(e.key, _Table(e.value)))),
+            .followedBy(
+              instance.globals.entries
+                  .map((e) => MapEntry(e.key, _Global(e.value))),
+            )
+            .followedBy(
+              instance.memories.entries
+                  .map((e) => MapEntry(e.key, _Memory(e.value))),
+            )
+            .followedBy(
+              instance.tables.entries
+                  .map((e) => MapEntry(e.key, _Table(e.value))),
+            ),
       ),
     );
   }

@@ -1,14 +1,45 @@
 import 'dart:typed_data';
 
+import '../bridge_generated.dart' show WasiConfig;
+
+export '../bridge_generated.dart'
+    show
+        // ModuleConfig,
+        // ModuleConfigWasmi,
+        // WasiStackLimits,
+        // ModuleConfigWasmtime,
+        WasiConfig,
+        EnvVariable,
+        PreopenedDir;
+
 abstract class WasmModule {
+  // TODO: initial instead of pages, shared: true
+  // TODO: initial instead of minSize
   // factory WasmModule(Uint8List bytes) {
   //   throw UnimplementedError();
   // }
 
   /// A builder that creates a new [WasmInstance] from this module.
   /// It configures the imports and definitions of the instance.
-  WasmInstanceBuilder builder();
+  /// [wasiConfig] is not supported in the browser executor.
+  WasmInstanceBuilder builder({WasiConfig? wasiConfig});
 
+  /// Creates a new memory with [pages] and [maxPages] pages.
+  /// Not supported in the wasmi executor.
+  WasmMemory createSharedMemory(int pages, {int? maxPages});
+
+  /// Returns a list of imports required by this module.
+  List<WasmModuleImport> getImports();
+
+  /// Returns a list of exports provided by this module.
+  List<WasmModuleExport> getExports();
+
+  @override
+  String toString() => 'WasmModule(${getImports()}, ${getExports()})';
+}
+
+/// Constructs a new [WasmInstance] of a [WasmModule] by adding imports [addImport].
+abstract class WasmInstanceBuilder {
   /// Creates a new memory with [pages] and [maxPages] pages.
   WasmMemory createMemory(int pages, {int? maxPages});
 
@@ -22,18 +53,6 @@ abstract class WasmModule {
     int? maxSize,
   });
 
-  /// Returns a list of imports required by this module.
-  List<ModuleImportDescriptor> getImports();
-
-  /// Returns a list of exports provided by this module.
-  List<ModuleExportDescriptor> getExports();
-
-  @override
-  String toString() => 'WasmModule(${getImports()}, ${getExports()})';
-}
-
-/// Constructs a new [WasmInstance] of a [WasmModule] by adding imports [addImport].
-abstract class WasmInstanceBuilder {
   /// Adds a new import to the module.
   /// May throw if the import is not found or the type definition does not match [value].
   WasmInstanceBuilder addImport(
@@ -211,11 +230,11 @@ abstract class WasmExternal {
   }
 
   /// The kind of this [WasmExternal].
-  ImportExportKind get kind => when(
-        memory: (_) => ImportExportKind.memory,
-        table: (_) => ImportExportKind.table,
-        global: (_) => ImportExportKind.global,
-        function: (_) => ImportExportKind.function,
+  WasmExternalKind get kind => when(
+        memory: (_) => WasmExternalKind.memory,
+        table: (_) => WasmExternalKind.table,
+        global: (_) => WasmExternalKind.global,
+        function: (_) => WasmExternalKind.function,
       );
 }
 
@@ -318,7 +337,7 @@ class WasmValue {
 }
 
 /// [WasmModule] import entry.
-class ModuleImportDescriptor {
+class WasmModuleImport {
   /// Name of imports module, not to confuse with [Module].
   final String module;
 
@@ -326,30 +345,30 @@ class ModuleImportDescriptor {
   final String name;
 
   /// Kind of import entry.
-  final ImportExportKind kind;
+  final WasmExternalKind kind;
 
-  const ModuleImportDescriptor(this.module, this.name, this.kind);
+  const WasmModuleImport(this.module, this.name, this.kind);
 
   @override
   String toString() => 'ModuleImportDescriptor($module, $name, $kind)';
 }
 
 /// [WasmModule] exports entry.
-class ModuleExportDescriptor {
+class WasmModuleExport {
   /// Name of exports entry.
   final String name;
 
   /// Kind of export entry.
-  final ImportExportKind kind;
+  final WasmExternalKind kind;
 
-  const ModuleExportDescriptor(this.name, this.kind);
+  const WasmModuleExport(this.name, this.kind);
 
   @override
   String toString() => 'ModuleExportDescriptor($name, $kind)';
 }
 
 /// Possible kinds of import or export entries.
-enum ImportExportKind {
+enum WasmExternalKind {
   /// [WasmFunction]
   function,
 

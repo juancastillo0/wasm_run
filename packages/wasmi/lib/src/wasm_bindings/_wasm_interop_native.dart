@@ -6,85 +6,65 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge.dart'
 import 'package:wasmi/src/bridge_generated.dart';
 import 'package:wasmi/wasmi.dart' show defaultInstance;
 
-import 'wasm_interface.dart' as wasm;
-import 'wasm_interface.dart' hide WasmModule;
+import 'wasm_interface.dart';
 
-Future<WasmModule> compileAsyncWasmModule(Uint8List bytes) async {
-  final module = await defaultInstance().compileWasm(moduleWasm: bytes);
-  return WasmModule._(module);
+Future<WasmModule> compileAsyncWasmModule(
+  Uint8List bytes, {
+  ModuleConfig? config,
+}) async {
+  final module = await defaultInstance().compileWasm(
+    moduleWasm: bytes,
+    config: config ?? const ModuleConfig(),
+  );
+  return _WasmModule._(module);
 }
 
-WasmModule compileWasmModule(Uint8List bytes) {
-  return WasmModule(bytes);
+WasmModule compileWasmModule(
+  Uint8List bytes, {
+  ModuleConfig? config,
+}) {
+  final module = defaultInstance().compileWasmSync(
+    moduleWasm: bytes,
+    config: config ?? const ModuleConfig(),
+  );
+  return _WasmModule._(module);
 }
 
-class WasmModule implements wasm.WasmModule {
-  final WasmiModuleId module;
+class _WasmModule implements WasmModule {
+  final CompiledModule module;
 
-  WasmModule(Uint8List bytes)
-      : module = defaultInstance().compileWasmSync(moduleWasm: bytes);
-
-  WasmModule._(this.module);
+  _WasmModule._(this.module);
 
   @override
-  WasmInstanceBuilder builder() {
-    return _Builder(this);
+  WasmMemory createSharedMemory(int pages, {int? maxPages}) {
+    // final memory = defaultInstance().createSharedMemory(module: module);
+    // return _Memory(memory, store);
+    // TODO: implement createSharedMemory
+    throw UnimplementedError();
   }
 
   @override
-  WasmGlobal createGlobal(WasmValue value, {required bool mutable}) {
-    final global = module.createGlobal(
-      value: _fromWasmValue(value, module),
-      mutability: mutable ? Mutability.Var : Mutability.Const,
-    );
-    return _Global(global, module);
+  WasmInstanceBuilder builder({WasiConfig? wasiConfig}) {
+    final builder =
+        defaultInstance().moduleBuilder(module: module, wasiConfig: wasiConfig);
+    return _Builder(this, builder);
   }
 
   @override
-  WasmMemory createMemory(int pages, {int? maxPages}) {
-    final memory = module.createMemory(
-      memoryType: WasmMemoryType(
-        initialPages: pages,
-        maximumPages: maxPages,
-      ),
-    );
-    return _Memory(memory, module);
-  }
-
-  @override
-  WasmTable createTable({
-    required WasmValue value,
-    required int minSize,
-    int? maxSize,
-  }) {
-    final inner = _fromWasmValue(value, module);
-    return _Table(
-      module.createTable(
-        value: inner,
-        tableType: TableType2(
-          min: minSize,
-          max: maxSize,
-        ),
-      ),
-      module,
-    );
-  }
-
-  @override
-  List<ModuleImportDescriptor> getImports() {
+  List<WasmModuleImport> getImports() {
     final imports = module.getModuleImports();
     return imports
         .map(
-          (e) => ModuleImportDescriptor(e.module, e.name, _toImpExpKind(e.ty)),
+          (e) => WasmModuleImport(e.module, e.name, _toImpExpKind(e.ty)),
         )
         .toList();
   }
 
   @override
-  List<ModuleExportDescriptor> getExports() {
+  List<WasmModuleExport> getExports() {
     final exports = module.getModuleExports();
     return exports
-        .map((e) => ModuleExportDescriptor(e.name, _toImpExpKind(e.ty)))
+        .map((e) => WasmModuleExport(e.name, _toImpExpKind(e.ty)))
         .toList();
   }
 }
@@ -113,12 +93,12 @@ Value2 _fromWasmValue(WasmValue value, WasmiModuleId module) {
   }
 }
 
-ImportExportKind _toImpExpKind(ExternalType kind) {
+WasmExternalKind _toImpExpKind(ExternalType kind) {
   return kind.when(
-    func: (_) => ImportExportKind.function,
-    global: (_) => ImportExportKind.global,
-    table: (_) => ImportExportKind.table,
-    memory: (_) => ImportExportKind.memory,
+    func: (_) => WasmExternalKind.function,
+    global: (_) => WasmExternalKind.global,
+    table: (_) => WasmExternalKind.table,
+    memory: (_) => WasmExternalKind.memory,
   );
 }
 
@@ -176,12 +156,12 @@ ValueTy _toValueTy(WasmValueType ty) {
 }
 
 WasmExternal _toWasmExternal(ModuleExportValue value, _Instance instance) {
-  final module = instance.module;
+  final module = instance.builder.module;
   return value.value.when(
-    func: (func) => _toWasmFunction(func, module.module),
-    global: (global) => _Global(global, module.module),
-    table: (table) => _Table(table, module.module),
-    memory: (memory) => _Memory(memory, module.module),
+    func: (func) => _toWasmFunction(func, module),
+    global: (global) => _Global(global, module),
+    table: (table) => _Table(table, module),
+    memory: (memory) => _Memory(memory, module),
   );
 
   // (value.desc.ty) {
@@ -315,9 +295,49 @@ class _References {
 }
 
 class _Builder extends WasmInstanceBuilder {
-  final WasmModule module;
+  final _WasmModule compiledModule;
+  final WasmiModuleId module;
 
-  _Builder(this.module);
+  _Builder(this.compiledModule, this.module);
+
+  @override
+  WasmGlobal createGlobal(WasmValue value, {required bool mutable}) {
+    final global = module.createGlobal(
+      value: _fromWasmValue(value, module),
+      mutability: mutable ? Mutability.Var : Mutability.Const,
+    );
+    return _Global(global, module);
+  }
+
+  @override
+  WasmMemory createMemory(int pages, {int? maxPages}) {
+    final memory = module.createMemory(
+      memoryType: WasmMemoryType(
+        initialPages: pages,
+        maximumPages: maxPages,
+      ),
+    );
+    return _Memory(memory, module);
+  }
+
+  @override
+  WasmTable createTable({
+    required WasmValue value,
+    required int minSize,
+    int? maxSize,
+  }) {
+    final inner = _fromWasmValue(value, module);
+    return _Table(
+      module.createTable(
+        value: inner,
+        tableType: TableType2(
+          min: minSize,
+          max: maxSize,
+        ),
+      ),
+      module,
+    );
+  }
 
   @override
   WasmInstanceBuilder addImport(
@@ -330,7 +350,7 @@ class _Builder extends WasmInstanceBuilder {
       table: (table) => ExternalValue.table((table as _Table).table),
       global: (global) => ExternalValue.global((global as _Global).global),
       function: (function) {
-        final desc = module.module
+        final desc = compiledModule.module
             .getModuleImports()
             .firstWhere((e) => e.module == moduleName && e.name == name);
         final type = desc.ty;
@@ -338,8 +358,8 @@ class _Builder extends WasmInstanceBuilder {
           throw Exception("Expected function");
         }
         // TODO: verify with type from [function]
-        final functionId = _References.getOrCreateId(function, module.module);
-        final func = module.module.createFunction(
+        final functionId = _References.getOrCreateId(function, module);
+        final func = module.createFunction(
           functionPointer: _References.globalWasmFunctionPointer,
           functionId: functionId,
           paramTypes: type.field0.params,
@@ -353,7 +373,7 @@ class _Builder extends WasmInstanceBuilder {
   }
 
   void linkImport(String moduleName, String name, ExternalValue value) {
-    module.module.linkImports(
+    module.linkImports(
       imports: [ModuleImport(module: moduleName, name: name, value: value)],
     );
   }
@@ -369,28 +389,28 @@ class _Builder extends WasmInstanceBuilder {
 
   @override
   WasmInstance build() {
-    final instance = module.module.instantiateSync();
-    return _Instance(instance, module);
+    final instance = module.instantiateSync();
+    return _Instance(instance, this);
   }
 
   @override
   Future<WasmInstance> buildAsync() async {
-    final instance = await module.module.instantiate();
-    return _Instance(instance, module);
+    final instance = await module.instantiate();
+    return _Instance(instance, this);
   }
 }
 
 class _Instance extends WasmInstance {
   final WasmiInstanceId instance;
-
+  final _Builder builder;
   @override
-  final WasmModule module;
+  _WasmModule get module => builder.compiledModule;
 
   late final Map<String, ModuleExportValue> _exports;
   @override
   late final Map<String, WasmExternal> exports;
 
-  _Instance(this.instance, this.module) {
+  _Instance(this.instance, this.builder) {
     final d = instance.exports();
     // TODO: remove _exports
     _exports = Map.fromIterables(d.map((e) => e.desc.name), d);
