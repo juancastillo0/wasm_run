@@ -1,6 +1,9 @@
 #!/bin/bash
 
 # Setup
+BUILD_PROFILE=${1:-release} # dev, other Cargo.toml profile or release (default)
+BUILD_PROFILE_PATH=$BUILD_PROFILE
+if [[ $BUILD_PROFILE == "dev" ]]; then BUILD_PROFILE_PATH="debug"; fi
 BUILD_DIR=platform-build
 mkdir $BUILD_DIR
 cd $BUILD_DIR
@@ -14,9 +17,9 @@ zig_build () {
     local PLATFORM_NAME="$2"
     local LIBNAME="$3"
     rustup target add "$TARGET"
-    cargo zigbuild --target "$TARGET" -r
+    cargo zigbuild --target "$TARGET" --profile $BUILD_PROFILE
     mkdir "$PLATFORM_NAME"
-    cp "../target/$TARGET/release/$LIBNAME" "$PLATFORM_NAME/"
+    cp "../target/$TARGET/$BUILD_PROFILE_PATH/$LIBNAME" "$PLATFORM_NAME/"
 }
 
 win_build () {
@@ -24,9 +27,9 @@ win_build () {
     local PLATFORM_NAME="$2"
     local LIBNAME="$3"
     rustup target add "$TARGET"
-    cargo xwin build --target "$TARGET" -r
+    cargo xwin build --target "$TARGET" --profile $BUILD_PROFILE
     mkdir "$PLATFORM_NAME"
-    cp "../target/$TARGET/release/$LIBNAME" "$PLATFORM_NAME/"
+    cp "../target/$TARGET/$BUILD_PROFILE_PATH/$LIBNAME" "$PLATFORM_NAME/"
 }
 
 # Build all the dynamic libraries

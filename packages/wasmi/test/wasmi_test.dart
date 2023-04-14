@@ -219,10 +219,13 @@ void main() {
       //   ),
       // ]
 
-      final module = await w.compileWasm(moduleWasm: binary);
+      final module = await w.compileWasm(
+        moduleWasm: binary,
+        config: const ModuleConfig(),
+      );
       print(module.getModuleExports());
 
-      final instance = module.instantiateSync();
+      final instance = w.moduleBuilder(module: module).instantiateSync();
       final addResult = await instance.callFunctionWithArgs(
         name: 'add',
         args: [1, 4].map(Value2.i32).toList(),

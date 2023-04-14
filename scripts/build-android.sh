@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # Setup
+BUILD_PROFILE=${1:-release} # dev, other Cargo.toml profile or release (default)
 BUILD_DIR=platform-build
 mkdir $BUILD_DIR
 cd $BUILD_DIR
@@ -24,7 +25,7 @@ cargo ndk -o $JNI_DIR \
         -t arm64-v8a \
         -t x86 \
         -t x86_64 \
-        build --release 
+        build --profile $BUILD_PROFILE 
 
 # Archive the dynamic libs
 cd $JNI_DIR

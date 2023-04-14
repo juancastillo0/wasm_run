@@ -14,8 +14,17 @@ ExternalLibrary localTestingLibraryImpl() {
   } else if (Platform.isWindows) {
     filename = 'wasmi_dart.dll';
   }
-
-  return DynamicLibrary.open('../../target/debug/$filename');
+  for (final dir in [
+    '../../target/debug/$filename',
+    '../../../target/debug/$filename',
+    '../../target/release/$filename',
+    '../../../target/release/$filename',
+  ]) {
+    try {
+      return DynamicLibrary.open(dir);
+    } catch (_) {}
+  }
+  throw Exception('Could not find $filename in debug or release');
 }
 
 ExternalLibrary createLibraryImpl() {
