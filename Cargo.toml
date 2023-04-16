@@ -1,2 +1,2 @@
 [workspace]
-members = ["packages/wasmi/native"]
+members = ["packages/wasmi/native", "packages/rust_wasi_example"]
