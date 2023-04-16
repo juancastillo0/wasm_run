@@ -374,4 +374,351 @@ void testAll() {
     expect(table[0], f43);
     expect((table[1] as WasmFunction)([]), 84);
   });
+
+  test('wasi', () async {
+    final startTimestamp = DateTime.now().millisecondsSinceEpoch;
+    Uint8List binary;
+    String wasmFile = '../../target/wasm32-wasi/debug/rust_wasi_example.wasm';
+    try {
+      binary = await File(wasmFile).readAsBytes();
+    } catch (e) {
+      wasmFile = '../../../target/wasm32-wasi/debug/rust_wasi_example.wasm';
+      binary = await File(wasmFile).readAsBytes();
+    }
+    final module = compileWasmModule(binary);
+
+    final fileToDelete =
+        File('${Directory.current.path}${Platform.pathSeparator}wasi.wasm')
+          ..writeAsBytesSync(binary);
+    addTearDown(() => fileToDelete.deleteSync());
+
+    print(module);
+    expect(
+      module.getExports().map((e) => e.toString()),
+      [
+        WasmModuleExport('alloc', WasmExternalKind.function),
+        WasmModuleExport('current_time', WasmExternalKind.function),
+        WasmModuleExport('dealloc', WasmExternalKind.function),
+        // WasmModuleExport('file_data', WasmExternalKind.function),
+        WasmModuleExport('file_data_raw', WasmExternalKind.function),
+        WasmModuleExport('get_args', WasmExternalKind.function),
+        WasmModuleExport('get_env_vars', WasmExternalKind.function),
+        WasmModuleExport('memory', WasmExternalKind.memory),
+        WasmModuleExport('print_hello', WasmExternalKind.function),
+        WasmModuleExport('read_file_size', WasmExternalKind.function),
+      ].map((e) => e.toString()),
+    );
+    expect(
+      module.getImports().map((e) => e.toString()),
+      [
+        WasmModuleImport(
+          'wasi_snapshot_preview1',
+          'args_get',
+          WasmExternalKind.function,
+        ),
+        WasmModuleImport(
+          'wasi_snapshot_preview1',
+          'args_sizes_get',
+          WasmExternalKind.function,
+        ),
+        WasmModuleImport(
+          'wasi_snapshot_preview1',
+          'clock_time_get',
+          WasmExternalKind.function,
+        ),
+        WasmModuleImport(
+          'wasi_snapshot_preview1',
+          'fd_write',
+          WasmExternalKind.function,
+        ),
+        WasmModuleImport(
+          'wasi_snapshot_preview1',
+          'path_filestat_get',
+          WasmExternalKind.function,
+        ),
+        WasmModuleImport(
+          'wasi_snapshot_preview1',
+          'environ_get',
+          WasmExternalKind.function,
+        ),
+        WasmModuleImport(
+          'wasi_snapshot_preview1',
+          'environ_sizes_get',
+          WasmExternalKind.function,
+        ),
+        WasmModuleImport(
+          'wasi_snapshot_preview1',
+          'fd_prestat_get',
+          WasmExternalKind.function,
+        ),
+        WasmModuleImport(
+          'wasi_snapshot_preview1',
+          'fd_prestat_dir_name',
+          WasmExternalKind.function,
+        ),
+        WasmModuleImport(
+          'wasi_snapshot_preview1',
+          'proc_exit',
+          WasmExternalKind.function,
+        ),
+      ].map((e) => e.toString()),
+    );
+
+    final args = ['arg1'];
+    final builder1 = module.builder(
+      wasiConfig: WasiConfig(
+        captureStdout: false,
+        captureStderr: false,
+        inheritStdin: false,
+        inheritEnv: false,
+        inheritArgs: false,
+        args: args,
+        env: [EnvVariable(name: 'name', value: 'value')],
+        // TODO: this doesn't work
+        preopenedFiles: [File(wasmFile).absolute.path],
+        preopenedDirs: [
+          PreopenedDir(
+            wasmGuestPath: Directory.current.path,
+            hostPath: Directory.current.path,
+          ),
+        ],
+      ),
+    );
+    final instance1 = await builder1.buildAsync();
+
+    final printHello = instance1.lookupFunction('print_hello')!;
+    // TODO: fix stdout capture
+    // final List<String> stdout1 = [];
+    // instance1.stdout.listen((event) {
+    //   stdout1.add(utf8.decode(event));
+    // });
+    printHello();
+
+    final currentTime = instance1.lookupFunction('current_time')!;
+    final now1 = DateTime.now().millisecondsSinceEpoch;
+    await Future<void>.delayed(const Duration(milliseconds: 1));
+    final t = currentTime().first as int;
+    expect(now1, lessThan(t));
+    await Future<void>.delayed(const Duration(milliseconds: 1));
+    expect(DateTime.now().millisecondsSinceEpoch, greaterThan(t));
+
+    final memory = instance1.lookupMemory('memory')!;
+    final _alloc = instance1.lookupFunction('alloc')!.inner;
+    final alloc = (int bytes) => _alloc(bytes) as int;
+    final dealloc = instance1.lookupFunction('dealloc')!.inner as void Function(
+      int offset,
+      int bytes,
+    );
+
+    final getArgs = instance1.lookupFunction('get_args')!;
+    final initialMemOffset = getArgs().first as int;
+
+    final parsedArgs = Parser.parseList(
+      Parser(memory.view, initialMemOffset),
+      Parser.parseUtf8,
+      dealloc: dealloc,
+    );
+    expect(parsedArgs, args);
+
+    final getEnvVars = instance1.lookupFunction('get_env_vars')!;
+    final Map<String, String> parsedEnvVars = {};
+    final envVarsOffset = getEnvVars().first as int;
+    Parser.parseList(
+      Parser(memory.view, envVarsOffset),
+      (p) {
+        final key = Parser.parseUtf8(p);
+        final value = Parser.parseUtf8(p);
+        parsedEnvVars[key] = value;
+      },
+      dealloc: dealloc,
+    );
+    expect(parsedEnvVars, {'name': 'value'});
+
+    T withBufferOffset<T>(Uint8List buffer, T Function(int offset) f) {
+      final offset = alloc(buffer.length);
+      memory.write(offset: offset, buffer: buffer);
+      final result = f(offset);
+      dealloc(offset, buffer.length);
+      return result;
+    }
+
+    final readFileSize = instance1.lookupFunction('read_file_size')!;
+    {
+      // final bb = utf8.encode(File(wasmFile).absolute.path);
+      final bb = utf8.encode(fileToDelete.path);
+
+      final buffer = Uint8List(bb.length + 1);
+      List.copyRange(buffer, 0, bb);
+      buffer[buffer.length - 1] = 0; // C string null terminator
+
+      final offset = alloc(buffer.length);
+      memory.write(offset: offset, buffer: buffer);
+      final size = readFileSize([offset]).first as int;
+      dealloc(offset, buffer.length);
+
+      expect(size, binary.lengthInBytes);
+    }
+
+    // TODO: explore file_data
+    final fileData = instance1.lookupFunction('file_data_raw')!;
+
+    {
+      final buffer = Uint8List.fromList(utf8.encode(fileToDelete.path));
+      final dataOffset = withBufferOffset(
+        buffer,
+        // utf8 with length
+        (offset) => fileData.inner(offset, buffer.length) as int,
+      );
+
+      final data = Parser(
+        memory.read(
+          offset: dataOffset,
+          length: memory.lengthInBytes - dataOffset,
+        ),
+        0,
+        viewDelta: dataOffset,
+      ).parse(FileData.fromParser, dealloc: dealloc);
+
+      print(data);
+      expect(data.size, binary.lengthInBytes);
+      expect(data.read_only, false);
+      if (data.created != null) {
+        expect(startTimestamp, lessThan(data.created!));
+        expect(data.modified, greaterThan(data.created!));
+        expect(
+          DateTime.now().millisecondsSinceEpoch,
+          greaterThan(data.modified!),
+        );
+      }
+    }
+  }, skip: isWeb);
+}
+
+final endian = Endian.host;
+
+class Parser {
+  final Uint8List memView;
+  final int initialMemOffset;
+  final int viewDelta;
+  int memOffset;
+  ByteData get byteData => memView.buffer.asByteData();
+  bool _isDealloc = false;
+
+  // TODO: improve api, maybe pass WasmMemory
+  // TODO: improve api, only one method parses and it requires dealloc
+  Parser(
+    this.memView,
+    this.initialMemOffset, {
+    this.viewDelta = 0,
+  }) : memOffset = initialMemOffset;
+
+  void _dealloc(void Function(int offset, int bytes)? dealloc) {
+    if (dealloc != null) {
+      if (_isDealloc) throw StateError('Already deallocated');
+      _isDealloc = true;
+      dealloc(initialMemOffset + viewDelta, memOffset + viewDelta);
+    }
+  }
+
+  static List<T> parseList<T>(
+    Parser p,
+    T Function(Parser) parse, {
+    void Function(int offset, int bytes)? dealloc,
+  }) {
+    final length = parseLength(p);
+    final result = List.generate(length, (_) => parse(p));
+
+    p._dealloc(dealloc);
+    return result;
+  }
+
+  static String parseUtf8(
+    Parser p, {
+    void Function(int offset, int bytes)? dealloc,
+  }) {
+    final strLength = parseLength(p);
+    final bytes = Uint8List.view(p.memView.buffer, p.memOffset, strLength);
+    p.memOffset += strLength;
+    final str = utf8.decode(bytes);
+    p._dealloc(dealloc);
+    return str;
+  }
+
+  static int parseLength(
+    Parser p, {
+    void Function(int offset, int bytes)? dealloc,
+  }) {
+    // Uint32List.view(p.memView.buffer, p.memOffset, 1).first;
+    final length = p.byteData.getUint32(p.memOffset, endian);
+    p.memOffset += 4;
+
+    p._dealloc(dealloc);
+    return length;
+  }
+
+  T parse<T>(
+    T Function(Parser) fn, {
+    void Function(int offset, int bytes)? dealloc,
+  }) {
+    final result = fn(this);
+    _dealloc(dealloc);
+    return result;
+  }
+
+  bool parseBool() {
+    final value = memView[memOffset];
+    memOffset += 1;
+    return value == 1;
+  }
+
+  int parseUint64() {
+    final value = byteData.getUint64(memOffset, endian);
+    memOffset += 8;
+    return value;
+  }
+
+  T? parseNullable<T>(T Function() parse) {
+    if (parseBool()) {
+      return parse();
+    } else {
+      return null;
+    }
+  }
+}
+
+class FileData {
+  final int size;
+  final bool read_only;
+  final int? modified;
+  final int? accessed;
+  final int? created;
+
+  FileData({
+    required this.size,
+    required this.read_only,
+    required this.modified,
+    required this.accessed,
+    required this.created,
+  });
+
+  factory FileData.fromParser(Parser p) {
+    final size = p.parseUint64();
+    final read_only = p.parseBool();
+    final modified = p.parseNullable(() => p.parseUint64());
+    final accessed = p.parseNullable(() => p.parseUint64());
+    final created = p.parseNullable(() => p.parseUint64());
+
+    return FileData(
+      size: size,
+      read_only: read_only,
+      modified: modified,
+      accessed: accessed,
+      created: created,
+    );
+  }
+
+  @override
+  String toString() {
+    return 'FileData(size: $size, read_only: $read_only, modified: $modified, accessed: $accessed, created: $created)';
+  }
 }

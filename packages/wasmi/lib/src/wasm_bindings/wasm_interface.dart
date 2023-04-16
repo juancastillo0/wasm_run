@@ -154,6 +154,12 @@ abstract class WasmTable extends WasmExternal {
   /// Returns the value at [index].
   Object? get(int index);
 
+  /// Returns the value at [index].
+  Object? operator [](int index) => get(index);
+
+  /// Sets the value at [index] to [value].
+  void operator []=(int index, WasmValue value) => set(index, value);
+
   /// The amount of available positions in the table.
   int get length;
 
