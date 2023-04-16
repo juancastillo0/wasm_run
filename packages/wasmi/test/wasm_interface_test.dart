@@ -41,9 +41,7 @@ void main() {
 
       final instance = module.builder().build();
 
-      final result = instance
-          .lookupFunction('add')!
-          .call([1, 4].map(WasmValue.i32).toList());
+      final result = instance.lookupFunction('add')!.call([1, 4]);
       expect(result, [5]);
       print('result $result');
     });

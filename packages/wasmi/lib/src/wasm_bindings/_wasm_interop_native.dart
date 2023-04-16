@@ -30,7 +30,7 @@ WasmModule compileWasmModule(
   return _WasmModule._(module);
 }
 
-class _WasmModule implements WasmModule {
+class _WasmModule extends WasmModule {
   final CompiledModule module;
 
   _WasmModule._(this.module);
@@ -93,6 +93,30 @@ Value2 _fromWasmValue(WasmValue value, WasmiModuleId module) {
   }
 }
 
+Value2 _fromWasmValueRaw(ValueTy ty, Object? value, WasmiModuleId module) {
+  switch (ty) {
+    case ValueTy.I32:
+      return Value2.i32(value! as int);
+    case ValueTy.I64:
+      return Value2.i64((value! as BigInt).toInt());
+    case ValueTy.F32:
+      return Value2.f32(value! as double);
+    case ValueTy.F64:
+      return Value2.f64(value! as double);
+    case ValueTy.ExternRef:
+      return Value2.externRef(_References.getOrCreateId(value, module));
+    case ValueTy.FuncRef:
+      final function = value! as WasmFunction;
+      final functionId = _References.getOrCreateId(function, module);
+      final func = module.createFunction(
+        functionPointer: _References.globalWasmFunctionPointer,
+        functionId: functionId,
+        paramTypes: function.params.map((v) => _toValueTy(v!)).toList(),
+      );
+      return Value2.funcRef(func);
+  }
+}
+
 WasmExternalKind _toImpExpKind(ExternalType kind) {
   return kind.when(
     func: (_) => WasmExternalKind.function,
@@ -103,19 +127,29 @@ WasmExternalKind _toImpExpKind(ExternalType kind) {
 }
 
 WasmFunction _toWasmFunction(Func func, WasmiModuleId module) {
-  Value2 mapValue(WasmValue v) => _fromWasmValue(v, module);
   final type = module.getFunctionType(func: func);
 
   return WasmFunction(
-    (args) {
-      final result = module.callFunctionHandleSync(
-        func: func,
-        args: args.map(mapValue).toList(),
-      );
-      return result
-          .map((r) => _References.dartValueFromWasm(r, module))
-          .toList();
-    },
+    makeFunction(
+      type.params.length,
+      (args) {
+        int i = 0;
+        final result = module.callFunctionHandleSync(
+          func: func,
+          args: args
+              .map((v) => _fromWasmValueRaw(type.params[i++], v, module))
+              .toList(),
+        );
+        // TODO: sync with web behavior. Use undefined placeholder?
+        if (result.isEmpty) return null;
+        if (result.length == 1) {
+          return _References.dartValueFromWasm(result.first, module);
+        }
+        return result
+            .map((r) => _References.dartValueFromWasm(r, module))
+            .toList();
+      },
+    ),
     type.params.map(_toWasmValueType).toList(),
     results: type.results.map(_toWasmValueType).toList(),
   );
@@ -227,11 +261,11 @@ class _References {
     }
 
     final module = _References._idToModule[functionId]!;
-    final args = input.map((v) => dartValueTypedFromWasm(v, module)).toList();
+    final args = input.map((v) => dartValueFromWasm(v, module)).toList();
 
     // TODO: should it be a List argument?
     // Function.apply(function, args);
-    function.inner(args);
+    function.call(args);
     // TODO: return value
     // final result = platform.api2wire_list_value_2(output);
   }

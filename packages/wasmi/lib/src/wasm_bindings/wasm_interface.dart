@@ -168,30 +168,74 @@ abstract class WasmGlobal extends WasmExternal {
   Object? get();
 }
 
+/// A Wasm function.
+///
+/// ```dart
+/// final wasmFunction = WasmFunction((int a, int b) => a + b, [WasmValueType.i32, WasmValueType.i32]);
+/// final List result = wasmFunction([1, 2]);
+/// assert(result.first == 3);
+/// final resultInner = wasmFunction.inner(1, 2);
+/// assert(resultInner, 3);
+/// ```
 class WasmFunction extends WasmExternal {
+  /// Constructs a Wasm function.
+  ///
+  /// ```dart
+  /// final wasmFunction = WasmFunction((int a, int b) => a + b, [WasmValueType.i32, WasmValueType.i32]);
+  /// final result = wasmFunction([1, 2]);
+  /// assert(result.first == 3);
+  /// final resultInner = wasmFunction.inner(1, 2);
+  /// assert(resultInner, 3);
+  /// ```
   const WasmFunction(
     this.inner,
     this.params, {
     this.results,
   });
 
-  // const WasmFunction.fromArgs(Function inner, int numParams);
-
   /// The parameters of the function.
   /// The types may be null if the wasm runtime does not expose this information.
   /// For example in web browsers.
+  /// However, the length of the list is always the number of parameters.
   final List<WasmValueType?> params;
+
+  /// The number of parameters of the function.
+  int get numberOfParameters => params.length;
 
   /// The result types of the function.
   /// May be null if the wasm runtime does not expose this information.
   /// For example in web browsers.
   final List<WasmValueType>? results;
 
-  /// The inner function that is called when the function is invoked.
-  final List<Object?> Function(List<WasmValue> args) inner;
+  /// The inner function that is called when this function is invoked.
+  /// It receives positional parameters and does not receive a list of values like [call].
+  /// If you execute it, you will need to pass the Dart values as positional parameters
+  /// as the expected [params] and the return type will not be cast to a [List].
+  final Function inner;
 
-  /// Invokes [inner] with the given [args].
-  List<Object?> call(List<WasmValue> args) => inner(args);
+  /// Invokes [inner] with the given [args]
+  /// and casts the result to a [List] of Dart values.
+  List<Object?> call([List<Object?>? args]) {
+    // `?? const []` is required for dart2js
+    final values = Function.apply(inner, args ?? const []);
+    // TODO: handle i128
+    // TODO: handle null refs
+    if (values is List) {
+      return values;
+      // TODO: Use undefined placeholder for null values.
+    } else if (values != null) {
+      return [values];
+    }
+    return const [];
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is WasmFunction && inner == other.inner;
+  }
+
+  @override
+  int get hashCode => inner.hashCode;
 
   @override
   String toString() => 'WasmFunction($inner, $params, $results)';
@@ -390,7 +434,7 @@ enum WasmExternalKind {
   table
 }
 
-Function makeFunction(int numArgs, Function(List) inner) {
+Function makeFunction(int numArgs, dynamic Function(List<Object?>) inner) {
   switch (numArgs) {
     case 0:
       return () => inner([]);
@@ -424,6 +468,122 @@ Function makeFunction(int numArgs, Function(List) inner) {
     case 12:
       return (a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11) =>
           inner([a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11]);
+    case 13:
+      return (a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12) =>
+          inner([a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12]);
+    case 14:
+      return (a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13) =>
+          inner([a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13]);
+    case 15:
+      return (a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13,
+              a14) =>
+          inner([
+            a0,
+            a1,
+            a2,
+            a3,
+            a4,
+            a5,
+            a6,
+            a7,
+            a8,
+            a9,
+            a10,
+            a11,
+            a12,
+            a13,
+            a14
+          ]);
+    case 16:
+      return (a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14,
+              a15) =>
+          inner([
+            a0,
+            a1,
+            a2,
+            a3,
+            a4,
+            a5,
+            a6,
+            a7,
+            a8,
+            a9,
+            a10,
+            a11,
+            a12,
+            a13,
+            a14,
+            a15
+          ]);
+    case 17:
+      return (a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14,
+              a15, a16) =>
+          inner([
+            a0,
+            a1,
+            a2,
+            a3,
+            a4,
+            a5,
+            a6,
+            a7,
+            a8,
+            a9,
+            a10,
+            a11,
+            a12,
+            a13,
+            a14,
+            a15,
+            a16
+          ]);
+    case 18:
+      return (a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14,
+              a15, a16, a17) =>
+          inner([
+            a0,
+            a1,
+            a2,
+            a3,
+            a4,
+            a5,
+            a6,
+            a7,
+            a8,
+            a9,
+            a10,
+            a11,
+            a12,
+            a13,
+            a14,
+            a15,
+            a16,
+            a17
+          ]);
+    case 19:
+      return (a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14,
+              a15, a16, a17, a18) =>
+          inner([
+            a0,
+            a1,
+            a2,
+            a3,
+            a4,
+            a5,
+            a6,
+            a7,
+            a8,
+            a9,
+            a10,
+            a11,
+            a12,
+            a13,
+            a14,
+            a15,
+            a16,
+            a17,
+            a18
+          ]);
 
     default:
       throw StateError('Unsupported number of arguments: $numArgs');
