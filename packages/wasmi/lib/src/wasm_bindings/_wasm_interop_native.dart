@@ -55,7 +55,12 @@ class _WasmModule extends WasmModule {
     final imports = module.getModuleImports();
     return imports
         .map(
-          (e) => WasmModuleImport(e.module, e.name, _toImpExpKind(e.ty)),
+          (e) => WasmModuleImport(
+            e.module,
+            e.name,
+            _toImpExpKind(e.ty),
+            type: e.ty,
+          ),
         )
         .toList();
   }
@@ -64,7 +69,7 @@ class _WasmModule extends WasmModule {
   List<WasmModuleExport> getExports() {
     final exports = module.getModuleExports();
     return exports
-        .map((e) => WasmModuleExport(e.name, _toImpExpKind(e.ty)))
+        .map((e) => WasmModuleExport(e.name, _toImpExpKind(e.ty), type: e.ty))
         .toList();
   }
 }

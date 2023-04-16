@@ -12,6 +12,7 @@ export '../bridge_generated.dart'
         ModuleConfigWasmi,
         WasiStackLimits,
         ModuleConfigWasmtime,
+        ExternalType,
         WasiConfig,
         EnvVariable,
         PreopenedDir;

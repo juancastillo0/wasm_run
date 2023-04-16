@@ -1,6 +1,6 @@
 import 'dart:typed_data';
 
-import '../bridge_generated.dart' show WasiConfig;
+import '../bridge_generated.dart' show ExternalType, WasiConfig;
 
 export '../bridge_generated.dart'
     show
@@ -8,6 +8,7 @@ export '../bridge_generated.dart'
         // ModuleConfigWasmi,
         // WasiStackLimits,
         // ModuleConfigWasmtime,
+        ExternalType,
         WasiConfig,
         EnvVariable,
         PreopenedDir;
@@ -399,10 +400,18 @@ class WasmModuleImport {
   /// Kind of import entry.
   final WasmExternalKind kind;
 
-  const WasmModuleImport(this.module, this.name, this.kind);
+  /// Type of import entry.
+  final ExternalType? type;
+
+  const WasmModuleImport(
+    this.module,
+    this.name,
+    this.kind, {
+    this.type,
+  });
 
   @override
-  String toString() => 'ModuleImportDescriptor($module, $name, $kind)';
+  String toString() => 'WasmModuleImport($module, $name, $kind)';
 }
 
 /// [WasmModule] exports entry.
@@ -413,10 +422,17 @@ class WasmModuleExport {
   /// Kind of export entry.
   final WasmExternalKind kind;
 
-  const WasmModuleExport(this.name, this.kind);
+  /// Type of export entry.
+  final ExternalType? type;
+
+  const WasmModuleExport(
+    this.name,
+    this.kind, {
+    this.type,
+  });
 
   @override
-  String toString() => 'ModuleExportDescriptor($name, $kind)';
+  String toString() => 'WasmModuleExport($name, $kind)';
 }
 
 /// Possible kinds of import or export entries.
