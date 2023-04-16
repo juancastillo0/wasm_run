@@ -432,24 +432,12 @@ class _Memory extends WasmMemory {
 
   _Memory(this.memory, this.module);
 
-  // TODO: maybe only expose read and write
-
   @override
-  int operator [](int index) {
-    return read(offset: index, length: 1).first;
-  }
-
-  @override
-  void operator []=(int index, int value) {
-    final buffer = Uint8List.fromList([value]);
-    write(offset: index, buffer: buffer);
-  }
-
   Uint8List read({required int offset, required int length}) {
-    final buffer = Uint8List(length);
-    return module.readMemory(memory: memory, offset: offset, buffer: buffer);
+    return module.readMemory(memory: memory, offset: offset, bytes: length);
   }
 
+  @override
   void write({required int offset, required Uint8List buffer}) {
     module.writeMemory(memory: memory, offset: offset, buffer: buffer);
   }
@@ -460,7 +448,7 @@ class _Memory extends WasmMemory {
   }
 
   @override
-  int get lengthInBytes => lengthInPages * 65536;
+  int get lengthInBytes => lengthInPages * WasmMemory.bytesPerPage;
 
   @override
   int get lengthInPages => module.getMemoryPages(memory: memory);

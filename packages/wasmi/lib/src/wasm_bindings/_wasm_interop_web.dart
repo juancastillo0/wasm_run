@@ -23,7 +23,7 @@ WasmModule compileWasmModule(
   return _WasmModule(bytes);
 }
 
-class _WasmModule implements WasmModule {
+class _WasmModule extends WasmModule {
   final Module module;
   _WasmModule(Uint8List bytes) : module = Module.fromBytes(bytes);
   _WasmModule._(this.module);
@@ -198,21 +198,17 @@ class _Instance extends WasmInstance {
                   (index) => null,
                 );
 
-                return MapEntry(
-                  e.key,
-                  WasmFunction(
-                    (args) {
-                      final result = Function.apply(
-                        e.value,
-                        args.map((e) => e.value).toList(),
-                      );
-                      return result is List
-                          ? result
-                          : [if (result != null) result];
-                    },
-                    params,
-                  ),
-                );
+                return MapEntry(e.key, WasmFunction(e.value, params));
+                // makeFunction(params.length, (args) {
+                //   // final result = Function.apply(
+                //   //   e.value,
+                //   //   args.map((e) => e.value).toList(),
+                //   // );
+                //   final result = Function.apply(e.value, args);
+                //   return result is List
+                //       ? result
+                //       : [if (result != null) result];
+                // }),
               },
             )
             .followedBy(
@@ -246,16 +242,6 @@ class _Memory extends WasmMemory {
   _Memory(this.memory);
 
   @override
-  int operator [](int index) {
-    return view[index];
-  }
-
-  @override
-  void operator []=(int index, int value) {
-    view[index] = value;
-  }
-
-  @override
   void grow(int deltaPages) {
     memory.grow(deltaPages);
   }
@@ -268,6 +254,16 @@ class _Memory extends WasmMemory {
 
   @override
   Uint8List get view => Uint8List.view(memory.buffer);
+
+  @override
+  Uint8List read({required int offset, required int length}) {
+    return view.sublist(offset, offset + length);
+  }
+
+  @override
+  void write({required int offset, required Uint8List buffer}) {
+    List.copyRange(view, offset, buffer);
+  }
 }
 
 class _Global extends WasmGlobal {

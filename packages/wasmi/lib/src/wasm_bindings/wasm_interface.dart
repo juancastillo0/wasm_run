@@ -120,9 +120,11 @@ abstract class WasmInstance {
 }
 
 abstract class WasmMemory extends WasmExternal {
-  int operator [](int index);
+  /// Reads [length] bytes starting from [offset] and returns them as a [Uint8List].
+  Uint8List read({required int offset, required int length});
 
-  void operator []=(int index, int value);
+  /// Writes [buffer] from [offset] to [buffer.length].
+  void write({required int offset, required Uint8List buffer});
 
   /// Grows the memory by [deltaPages] pages.
   /// May throw if the memory cannot be grown.
@@ -135,7 +137,13 @@ abstract class WasmMemory extends WasmExternal {
   int get lengthInPages;
 
   /// A view of the memory as a [Uint8List].
+  /// TODO: improve performance by using native pointer.
   Uint8List get view;
+
+  /// The number of bytes per page in a wasm memory.
+  /// The maximum size of the memory in pages.
+  /// [WasmMemory.bytesPerPage] = 65536 = 2^16 = 64KiB
+  static const bytesPerPage = 65536;
 }
 
 abstract class WasmTable extends WasmExternal {
