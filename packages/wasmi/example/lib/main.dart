@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:test/test.dart';
@@ -19,21 +20,27 @@ Future<Uint8List> getBinary({
   try {
     final w = defaultInstance();
     binary = await w.parseWatFormat(wat: wat);
-    // print(base64Encode(binary));
     // ignore: avoid_catching_errors
   } catch (_) {
-    if (identical(0, 0.0)) {
-      binary = base64Decode(base64Binary);
+    if (isWeb) {
+      return base64Decode(base64Binary);
     } else {
       rethrow;
     }
+  }
+
+  final encoded = base64Encode(binary);
+  if (encoded != base64Binary) {
+    throw StateError(
+      'Invalid base64 encoded module.\nParam: $base64Binary\nProcessedWat: $encoded',
+    );
   }
 
   return binary;
 }
 
 void testAll() {
-  test('interface simple add', () async {
+  test('simple add', () async {
     final Uint8List binary = await getBinary(
       wat: r'''
 (module
@@ -65,12 +72,12 @@ void testAll() {
       isLibrary ? [WasmValueType.i32, WasmValueType.i32] : [null, null],
     );
     expect(add.results, isLibrary ? [WasmValueType.i32] : null);
-    final result = add.call([1, 4].map(WasmValue.i32).toList());
+    final result = add.call([1, 4]);
     expect(result, [5]);
     print('result $result');
   });
 
-  test('interface import function', () async {
+  test('import function', () async {
     final binary = await getBinary(
       wat: r'''
         (module
@@ -102,12 +109,11 @@ void testAll() {
       ],
     );
 
-    List<WasmValue>? argsList;
+    int? argsList;
 
     final hostHello = WasmFunction(
-      (args) {
+      (int args) {
         argsList = args;
-        return [];
       },
       [WasmValueType.i32],
     );
@@ -116,10 +122,12 @@ void testAll() {
         (module.builder()..addImport('host', 'hello', hostHello)).build();
 
     expect(argsList, isNull);
-    final result = instance.lookupFunction('hello')!.call([]);
+    final hello = instance.lookupFunction('hello')!;
+    hello.inner();
+    final result = hello();
 
     expect(result, isEmpty);
-    expect(argsList, [const WasmValue.i32(3)]);
+    expect(argsList, 3);
   });
 
   test('globals', () async {
@@ -182,5 +190,188 @@ void testAll() {
     global.set(WasmValue.i32(4));
     expect(getGlobal([]), [4]);
     expect(global.get(), 4);
+  });
+
+  test('memory utf8 string', () async {
+    final binary = await getBinary(
+      wat: r'''
+(module
+(import "console" "logUtf8" (func $log (param i32 i32)))
+(import "js" "mem" (memory 1))
+(data (i32.const 0) "Hi")
+(func (export "writeHi")
+  i32.const 0  ;; pass offset 0 to log
+  i32.const 2  ;; pass length 2 to log
+  call $log))''',
+      base64Binary:
+          'AGFzbQEAAAABCQJgAn9/AGAAAAIdAgdjb25zb2xlB2xvZ1V0ZjgAAAJqcwNtZW0CAAEDAgEBBwsBB3dyaXRlSGkAAQoKAQgAQQBBAhAACwsIAQBBAAsCSGkADQRuYW1lAQYBAANsb2c=',
+    );
+
+    final module = await compileAsyncWasmModule(binary);
+    expect(
+      module.getExports().map((e) => e.toString()),
+      [
+        const WasmModuleExport('writeHi', WasmExternalKind.function).toString(),
+      ],
+    );
+    expect(
+      module.getImports().map((e) => e.toString()),
+      [
+        const WasmModuleImport(
+          'console',
+          'logUtf8',
+          WasmExternalKind.function,
+        ).toString(),
+        const WasmModuleImport(
+          'js',
+          'mem',
+          WasmExternalKind.memory,
+        ).toString(),
+      ],
+    );
+
+    final builder = module.builder();
+    final memory = builder.createMemory(1);
+    expect(memory.lengthInBytes, WasmMemory.bytesPerPage);
+    expect(memory.lengthInPages, 1);
+    expect(memory.view, Uint8List(WasmMemory.bytesPerPage));
+
+    String? result;
+    final logUtf8 = WasmFunction(
+      (int offset, int length) {
+        // final offset = args[0].value as int;
+        // final length = args[1].value as int;
+        final bytes = memory.view.sublist(offset, offset + length);
+        result = utf8.decode(bytes);
+      },
+      [WasmValueType.i32, WasmValueType.i32],
+    );
+    final instance = builder
+        .addImports([WasmImport('js', 'mem', memory)])
+        .addImport('console', 'logUtf8', logUtf8)
+        .build();
+
+    // expect(memory[1], utf8.encode('i').first);
+    expect(memory.view[1], utf8.encode('i').first);
+
+    final writeHi = instance.lookupFunction('writeHi')!;
+    expect(writeHi.params, <WasmValueType>[]);
+    expect(writeHi.results, isLibrary ? <WasmValueType>[] : null);
+
+    expect(result, isNull);
+    expect(writeHi([]), <dynamic>[]);
+    expect(result, 'Hi');
+
+    memory.grow(2);
+    expect(memory.lengthInBytes, WasmMemory.bytesPerPage * 3);
+    expect(memory.lengthInPages, 3);
+    final m = Uint8List(WasmMemory.bytesPerPage * 3);
+    m.setRange(0, 2, utf8.encode('Hi'));
+    expect(memory.view, m);
+
+    memory.write(offset: 1, buffer: Uint8List.fromList(utf8.encode('o')));
+    // memory[1] = utf8.encode('o').first;
+    expect(writeHi([]), <dynamic>[]);
+    expect(result, 'Ho');
+  });
+
+  test('table func call', () async {
+    final binary = await getBinary(
+      wat: r'''
+(module
+  (table 2 funcref)
+  (func $f1 (result i32)
+    i32.const 42)
+  (func $f2 (result i32)
+    i32.const 13)
+  (elem (i32.const 0) $f1 $f2)
+  (type $return_i32 (func (result i32)))
+  (func (export "callByIndex") (param $i i32) (result i32)
+    local.get $i
+    call_indirect (type $return_i32))
+)''',
+      base64Binary:
+          'AGFzbQEAAAABCgJgAAF/YAF/AX8DBAMAAAEEBAFwAAIHDwELY2FsbEJ5SW5kZXgAAgkIAQBBAAsCAAEKEwMEAEEqCwQAQQ0LBwAgABEAAAsAJwRuYW1lAQkCAAJmMQECZjICBgECAQABaQQNAQAKcmV0dXJuX2kzMg==',
+    );
+
+    final module = compileWasmModule(binary);
+
+    expect(
+      module.getExports().map((e) => e.toString()),
+      [
+        const WasmModuleExport('callByIndex', WasmExternalKind.function)
+            .toString(),
+      ],
+    );
+    expect(
+      module.getImports().map((e) => e.toString()),
+      <String>[],
+    );
+
+    final instance = await module.builder().buildAsync();
+
+    final call = instance.lookupFunction('callByIndex')!;
+
+    expect(call.params, [isLibrary ? WasmValueType.i32 : null]);
+    expect(call.results, isLibrary ? [WasmValueType.i32] : null);
+    // TODO: test inner
+    expect(call([0]), [42]);
+    expect(call.inner(1), 13);
+
+    expect(() => call([2]), throwsA(isA<Object>()));
+  });
+
+  test('tables import', () async {
+    final binary = await getBinary(
+      wat: r'''
+(module
+    (import "js" "tbl" (table 2 anyfunc))
+    (func $f42 (result i32) i32.const 42)
+    (func $f83 (result i32) i32.const 83)
+    (elem (i32.const 0) $f42 $f83)
+)
+''',
+      base64Binary:
+          'AGFzbQEAAAABBQFgAAF/AgwBAmpzA3RibAFwAAIDAwIAAAkIAQBBAAsCAAEKDAIEAEEqCwUAQdMACwASBG5hbWUBCwIAA2Y0MgEDZjgz',
+    );
+
+    final module = compileWasmModule(binary);
+
+    expect(
+      module.getExports().map((e) => e.toString()),
+      <String>[],
+    );
+    expect(
+      module.getImports().map((e) => e.toString()),
+      [
+        const WasmModuleImport(
+          'js',
+          'tbl',
+          WasmExternalKind.table,
+        ).toString(),
+      ],
+    );
+
+    final builder = module.builder();
+    final table = builder.createTable(
+      minSize: 2,
+      value: WasmValue.funcRef(null),
+    );
+    expect(table.length, 2);
+
+    expect(table[0], isNull);
+
+    builder.addImports([WasmImport('js', 'tbl', table)]).build();
+
+    final f42 = table.get(0) as WasmFunction;
+    expect(f42.inner(), 42);
+
+    final f43 = WasmFunction(() => 43, []);
+    final f84 = WasmFunction(() => 84, []);
+    table[0] = WasmValue.funcRef(f43);
+    table[1] = WasmValue.funcRef(f84);
+
+    expect(table[0], f43);
+    expect((table[1] as WasmFunction)([]), 84);
   });
 }
