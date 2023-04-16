@@ -217,7 +217,7 @@ abstract class WasmiDart {
       {required WasmiModuleId that,
       required Memory memory,
       required int offset,
-      required Uint8List buffer,
+      required int bytes,
       dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kReadMemoryMethodWasmiModuleIdConstMeta;
@@ -945,13 +945,13 @@ class WasmiModuleId {
   Uint8List readMemory(
           {required Memory memory,
           required int offset,
-          required Uint8List buffer,
+          required int bytes,
           dynamic hint}) =>
       bridge.readMemoryMethodWasmiModuleId(
         that: this,
         memory: memory,
         offset: offset,
-        buffer: buffer,
+        bytes: bytes,
       );
 
   int getMemoryPages({required Memory memory, dynamic hint}) =>
@@ -1706,18 +1706,18 @@ class WasmiDartImpl implements WasmiDart {
       {required WasmiModuleId that,
       required Memory memory,
       required int offset,
-      required Uint8List buffer,
+      required int bytes,
       dynamic hint}) {
     var arg0 = _platform.api2wire_box_autoadd_wasmi_module_id(that);
     var arg1 = _platform.api2wire_Memory(memory);
     var arg2 = api2wire_usize(offset);
-    var arg3 = _platform.api2wire_uint_8_list(buffer);
+    var arg3 = api2wire_usize(bytes);
     return _platform.executeSync(FlutterRustBridgeSyncTask(
       callFfi: () => _platform.inner
           .wire_read_memory__method__WasmiModuleId(arg0, arg1, arg2, arg3),
       parseSuccessData: _wire2api_uint_8_list,
       constMeta: kReadMemoryMethodWasmiModuleIdConstMeta,
-      argValues: [that, memory, offset, buffer],
+      argValues: [that, memory, offset, bytes],
       hint: hint,
     ));
   }
@@ -1725,7 +1725,7 @@ class WasmiDartImpl implements WasmiDart {
   FlutterRustBridgeTaskConstMeta get kReadMemoryMethodWasmiModuleIdConstMeta =>
       const FlutterRustBridgeTaskConstMeta(
         debugName: "read_memory__method__WasmiModuleId",
-        argNames: ["that", "memory", "offset", "buffer"],
+        argNames: ["that", "memory", "offset", "bytes"],
       );
 
   int getMemoryPagesMethodWasmiModuleId(

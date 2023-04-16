@@ -581,7 +581,7 @@ fn wire_read_memory__method__WasmiModuleId_impl(
     that: impl Wire2Api<WasmiModuleId> + UnwindSafe,
     memory: impl Wire2Api<RustOpaque<Memory>> + UnwindSafe,
     offset: impl Wire2Api<usize> + UnwindSafe,
-    buffer: impl Wire2Api<Vec<u8>> + UnwindSafe,
+    bytes: impl Wire2Api<usize> + UnwindSafe,
 ) -> support::WireSyncReturn {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
         WrapInfo {
@@ -593,8 +593,8 @@ fn wire_read_memory__method__WasmiModuleId_impl(
             let api_that = that.wire2api();
             let api_memory = memory.wire2api();
             let api_offset = offset.wire2api();
-            let api_buffer = buffer.wire2api();
-            WasmiModuleId::read_memory(&api_that, api_memory, api_offset, api_buffer)
+            let api_bytes = bytes.wire2api();
+            WasmiModuleId::read_memory(&api_that, api_memory, api_offset, api_bytes)
         },
     )
 }
@@ -1300,9 +1300,9 @@ mod web {
         that: JsValue,
         memory: JsValue,
         offset: usize,
-        buffer: Box<[u8]>,
+        bytes: usize,
     ) -> support::WireSyncReturn {
-        wire_read_memory__method__WasmiModuleId_impl(that, memory, offset, buffer)
+        wire_read_memory__method__WasmiModuleId_impl(that, memory, offset, bytes)
     }
 
     #[wasm_bindgen]
@@ -2225,9 +2225,9 @@ mod io {
         that: *mut wire_WasmiModuleId,
         memory: wire_Memory,
         offset: usize,
-        buffer: *mut wire_uint_8_list,
+        bytes: usize,
     ) -> support::WireSyncReturn {
-        wire_read_memory__method__WasmiModuleId_impl(that, memory, offset, buffer)
+        wire_read_memory__method__WasmiModuleId_impl(that, memory, offset, bytes)
     }
 
     #[no_mangle]

@@ -9,10 +9,8 @@ use once_cell::sync::Lazy;
 use std::io::Write;
 use std::{
     collections::HashMap,
-    convert::TryInto,
     ffi::c_void,
     fs,
-    os::fd::AsRawFd,
     sync::{Arc, RwLock},
 };
 use wasi_common::{file::FileCaps, pipe::WritePipe};
@@ -20,6 +18,9 @@ pub use wasmi::{core::Pages, Func, Global, GlobalType, Memory, Module, Mutabilit
 use wasmi::{core::ValueType, *};
 
 static ARRAY: Lazy<RwLock<GlobalState>> = Lazy::new(|| RwLock::new(Default::default()));
+// TODO: make it module independent
+static CALLER_STACK: Lazy<RwLock<Vec<RwLock<Caller<StoreState>>>>> =
+    Lazy::new(|| RwLock::new(Default::default()));
 
 #[derive(Default)]
 struct GlobalState {
@@ -46,7 +47,10 @@ struct StoreState {
     wasi_ctx: Option<wasmi_wasi::WasiCtx>,
 }
 
+#[derive(Debug, Clone, Copy)]
 pub struct WasmiModuleId(pub u32);
+
+#[derive(Debug, Clone, Copy)]
 pub struct WasmiInstanceId(pub u32);
 
 pub fn create_shared_memory(_module: CompiledModule) -> Result<SyncReturn<RustOpaque<Memory>>> {
@@ -104,10 +108,8 @@ pub fn module_builder(
                 host_path,
             } in wasi_config.preopened_dirs
             {
-                let dir = wasmi_wasi::sync::Dir::open_ambient_dir(
-                    host_path,
-                    wasmi_wasi::sync::ambient_authority(),
-                )?;
+                let dir =
+                    wasmi_wasi::Dir::open_ambient_dir(host_path, wasmi_wasi::ambient_authority())?;
                 wasi_builder = wasi_builder.preopened_dir(dir, wasm_guest_path)?;
             }
         }
@@ -117,17 +119,21 @@ pub fn module_builder(
         if !wasi_config.preopened_files.is_empty() {
             for value in wasi_config.preopened_files {
                 let file = fs::File::open(value)?;
-                let vv = file.as_raw_fd().as_raw_fd();
+                // let vv = file.as_fd().as_raw_fd();
                 let wasm_file =
-                    wasmi_wasi::sync::file::File::from_cap_std(cap_std::fs::File::from_std(file));
-                let mut caps = FileCaps::empty();
-                caps.extend([
-                    FileCaps::READ,
-                    FileCaps::FILESTAT_SET_SIZE,
-                    FileCaps::FILESTAT_GET,
-                ]);
+                    wasmi_wasi::file::File::from_cap_std(cap_std::fs::File::from_std(file));
+                let caps = FileCaps::all();
+                // let mut caps = FileCaps::empty();
+                // caps.extend([
+                //     FileCaps::READ,
+                //     FileCaps::FILESTAT_SET_SIZE,
+                //     FileCaps::FILESTAT_GET,
+                // ]);
+
+                // vv.try_into().unwrap()
+                let table_size = wasi.table().push(Box::new(false)).unwrap();
                 // TODO: not sure if this is correct
-                wasi.insert_file(vv.try_into().unwrap(), Box::new(wasm_file), caps);
+                wasi.insert_file(table_size, Box::new(wasm_file), caps);
             }
         }
 
@@ -198,6 +204,7 @@ pub fn module_builder(
     Ok(SyncReturn(WasmiModuleId(id)))
 }
 
+// TODO: save it in the store state so we can access it later with caller
 struct ModuleIOWriter {
     id: u32,
     is_stdout: bool,
@@ -281,13 +288,13 @@ impl WasmiModuleId {
         Ok(WasmiInstanceId(self.0))
     }
     pub fn link_imports(&self, imports: Vec<ModuleImport>) -> Result<SyncReturn<()>> {
-        self.with_module_mut(|m| {
-            for import in imports {
-                m.linker
-                    .define(&import.module, &import.name, &import.value)?;
-            }
-            Ok(SyncReturn(()))
-        })
+        let mut arr = ARRAY.write().unwrap();
+        let m = arr.map.get_mut(&self.0).unwrap();
+        for import in imports {
+            m.linker
+                .define(&import.module, &import.name, &import.value)?;
+        }
+        Ok(SyncReturn(()))
     }
 
     // pub fn executions(&self, sink: StreamSink<i32>) -> Result<()> {
@@ -345,20 +352,32 @@ impl WasmiModuleId {
             .collect())
     }
 
-    fn with_module_mut<T>(&self, f: impl FnOnce(&mut WasmiModuleImpl) -> T) -> T {
+    fn with_module_mut<T>(&self, f: impl FnOnce(StoreContextMut<'_, StoreState>) -> T) -> T {
+        {
+            let stack = CALLER_STACK.read().unwrap();
+            if let Some(caller) = stack.last() {
+                return f(caller.write().unwrap().as_context_mut());
+            }
+        }
         let mut arr = ARRAY.write().unwrap();
         let value = arr.map.get_mut(&self.0).unwrap();
-        f(value)
+        f(value.store.as_context_mut())
     }
 
-    fn with_module<T>(&self, f: impl FnOnce(&WasmiModuleImpl) -> T) -> T {
+    fn with_module<T>(&self, f: impl FnOnce(&StoreContext<'_, StoreState>) -> T) -> T {
+        {
+            let stack = CALLER_STACK.read().unwrap();
+            if let Some(caller) = stack.last() {
+                return f(&caller.read().unwrap().as_context());
+            }
+        }
         let arr = ARRAY.read().unwrap();
         let value = &arr.map[&self.0];
-        f(value)
+        f(&value.store.as_context())
     }
 
     pub fn get_function_type(&self, func: RustOpaque<Func>) -> SyncReturn<FuncTy> {
-        SyncReturn(self.with_module(|m| (&func.ty(&m.store)).into()))
+        SyncReturn(self.with_module(|store| (&func.ty(store)).into()))
     }
 
     pub fn create_function(
@@ -367,10 +386,10 @@ impl WasmiModuleId {
         function_id: u32,
         param_types: Vec<ValueTy>,
     ) -> Result<SyncReturn<RustOpaque<Func>>> {
-        self.with_module_mut(|module| {
+        self.with_module_mut(|store| {
             let f: WasmFunction = unsafe { std::mem::transmute(function_pointer) };
             let func = Func::new(
-                &mut module.store,
+                store,
                 // TODO: support results
                 FuncType::new(param_types.into_iter().map(ValueType::from), []),
                 move |caller, params, _results| {
@@ -380,8 +399,16 @@ impl WasmiModuleId {
                         .collect();
                     let inputs = vec![mapped].into_dart();
                     let pointer = new_leak_box_ptr(inputs);
+                    {
+                        let v = RwLock::new(unsafe { std::mem::transmute(caller) });
+                        CALLER_STACK.write().unwrap().push(v);
+                    }
                     unsafe {
                         f(function_id, pointer);
+                        pointer.drop_in_place();
+                    }
+                    {
+                        CALLER_STACK.write().unwrap().pop();
                     }
                     std::result::Result::Ok(())
                 },
@@ -394,9 +421,9 @@ impl WasmiModuleId {
         &self,
         memory_type: WasmMemoryType,
     ) -> Result<SyncReturn<RustOpaque<Memory>>> {
-        self.with_module_mut(|module| {
+        self.with_module_mut(|store| {
             let mem_type = memory_type.to_memory_type()?;
-            let memory = Memory::new(&mut module.store, mem_type).map_err(to_anyhow)?;
+            let memory = Memory::new(store, mem_type).map_err(to_anyhow)?;
             Ok(SyncReturn(RustOpaque::new(memory)))
         })
     }
@@ -406,9 +433,9 @@ impl WasmiModuleId {
         value: Value2,
         mutability: Mutability,
     ) -> Result<SyncReturn<RustOpaque<Global>>> {
-        self.with_module_mut(|module| {
-            let mapped = value.to_value(&mut module.store);
-            let global = Global::new(&mut module.store, mapped, mutability);
+        self.with_module_mut(|mut store| {
+            let mapped = value.to_value(&mut store);
+            let global = Global::new(&mut store, mapped, mutability);
             Ok(SyncReturn(RustOpaque::new(global)))
         })
     }
@@ -418,10 +445,10 @@ impl WasmiModuleId {
         value: Value2,
         table_type: TableType2,
     ) -> Result<SyncReturn<RustOpaque<Table>>> {
-        self.with_module_mut(|module| {
-            let mapped_value = value.to_value(&mut module.store);
+        self.with_module_mut(|mut store| {
+            let mapped_value = value.to_value(&mut store);
             let table = Table::new(
-                &mut module.store,
+                &mut store,
                 TableType::new(mapped_value.ty(), table_type.min, table_type.max),
                 mapped_value,
             )
@@ -433,11 +460,11 @@ impl WasmiModuleId {
     // GLOBAL
 
     pub fn get_global_type(&self, global: RustOpaque<Global>) -> SyncReturn<GlobalTy> {
-        SyncReturn(self.with_module(|m| (&global.ty(&m.store)).into()))
+        SyncReturn(self.with_module(|store| (&global.ty(store)).into()))
     }
 
     pub fn get_global_value(&self, global: RustOpaque<Global>) -> SyncReturn<Value2> {
-        SyncReturn(self.with_module(|m| Value2::from_value(&global.get(&m.store), &m.store)))
+        SyncReturn(self.with_module(|store| Value2::from_value(&global.get(store), store)))
     }
 
     pub fn set_global_value(
@@ -445,10 +472,10 @@ impl WasmiModuleId {
         global: RustOpaque<Global>,
         value: Value2,
     ) -> Result<SyncReturn<()>> {
-        self.with_module_mut(|m| {
-            let mapped = value.to_value(&mut m.store);
+        self.with_module_mut(|mut store| {
+            let mapped = value.to_value(&mut store);
             global
-                .set(&mut m.store, mapped)
+                .set(&mut store, mapped)
                 .map(|_| SyncReturn(()))
                 .map_err(to_anyhow)
         })
@@ -457,26 +484,28 @@ impl WasmiModuleId {
     // MEMORY
 
     pub fn get_memory_type(&self, memory: RustOpaque<Memory>) -> SyncReturn<WasmMemoryType> {
-        SyncReturn(self.with_module(|m| (&memory.ty(&m.store)).into()))
+        SyncReturn(self.with_module(|store| (&memory.ty(store)).into()))
     }
     pub fn get_memory_data(&self, memory: RustOpaque<Memory>) -> SyncReturn<Vec<u8>> {
-        SyncReturn(self.with_module(|m| memory.data(&m.store).to_owned()))
+        SyncReturn(self.with_module(|store| memory.data(store).to_owned()))
     }
     pub fn read_memory(
         &self,
         memory: RustOpaque<Memory>,
         offset: usize,
-        mut buffer: Vec<u8>,
+        bytes: usize,
     ) -> Result<SyncReturn<Vec<u8>>> {
-        self.with_module(|m| {
+        self.with_module(|store| {
+            let mut buffer = Vec::with_capacity(bytes);
+            unsafe { buffer.set_len(bytes) };
             memory
-                .read(&m.store, offset, &mut buffer)
+                .read(store, offset, &mut buffer)
                 .map(|_| SyncReturn(buffer))
                 .map_err(to_anyhow)
         })
     }
     pub fn get_memory_pages(&self, memory: RustOpaque<Memory>) -> SyncReturn<u32> {
-        SyncReturn(self.with_module(|m| memory.current_pages(&m.store).into()))
+        SyncReturn(self.with_module(|store| memory.current_pages(store).into()))
     }
 
     pub fn write_memory(
@@ -485,18 +514,18 @@ impl WasmiModuleId {
         offset: usize,
         buffer: Vec<u8>,
     ) -> Result<SyncReturn<()>> {
-        self.with_module_mut(|m| {
+        self.with_module_mut(|store| {
             memory
-                .write(&mut m.store, offset, &buffer)
+                .write(store, offset, &buffer)
                 .map(SyncReturn)
                 .map_err(to_anyhow)
         })
     }
     pub fn grow_memory(&self, memory: RustOpaque<Memory>, pages: u32) -> Result<SyncReturn<u32>> {
-        self.with_module_mut(|m| {
+        self.with_module_mut(|store| {
             memory
                 .grow(
-                    &mut m.store,
+                    store,
                     Pages::new(pages).ok_or(anyhow::anyhow!("Invalid pages"))?,
                 )
                 .map(|p| SyncReturn(p.into()))
@@ -507,10 +536,10 @@ impl WasmiModuleId {
     // TABLE
 
     pub fn get_table_size(&self, table: RustOpaque<Table>) -> SyncReturn<u32> {
-        SyncReturn(self.with_module(|m| table.size(&m.store)))
+        SyncReturn(self.with_module(|store| table.size(store)))
     }
     pub fn get_table_type(&self, table: RustOpaque<Table>) -> SyncReturn<TableTy> {
-        SyncReturn(self.with_module(|m| (&table.ty(&m.store)).into()))
+        SyncReturn(self.with_module(|store| (&table.ty(store)).into()))
     }
 
     pub fn grow_table(
@@ -519,20 +548,20 @@ impl WasmiModuleId {
         delta: u32,
         value: Value2,
     ) -> Result<SyncReturn<u32>> {
-        self.with_module_mut(|m| {
-            let mapped = value.to_value(&mut m.store);
+        self.with_module_mut(|mut store| {
+            let mapped = value.to_value(&mut store);
             table
-                .grow(&mut m.store, delta, mapped)
+                .grow(&mut store, delta, mapped)
                 .map(SyncReturn)
                 .map_err(to_anyhow)
         })
     }
 
     pub fn get_table(&self, table: RustOpaque<Table>, index: u32) -> SyncReturn<Option<Value2>> {
-        SyncReturn(self.with_module(|m| {
+        SyncReturn(self.with_module(|store| {
             table
-                .get(&m.store, index)
-                .map(|v| Value2::from_value(&v, &m.store))
+                .get(store, index)
+                .map(|v| Value2::from_value(&v, store))
         }))
     }
 
@@ -542,10 +571,10 @@ impl WasmiModuleId {
         index: u32,
         value: Value2,
     ) -> Result<SyncReturn<()>> {
-        self.with_module_mut(|m| {
-            let mapped = value.to_value(&mut m.store);
+        self.with_module_mut(|mut store| {
+            let mapped = value.to_value(&mut store);
             table
-                .set(&mut m.store, index, mapped)
+                .set(&mut store, index, mapped)
                 .map(SyncReturn)
                 .map_err(to_anyhow)
         })
@@ -558,10 +587,10 @@ impl WasmiModuleId {
         value: Value2,
         len: u32,
     ) -> Result<SyncReturn<()>> {
-        self.with_module_mut(|m| {
-            let mapped = value.to_value(&mut m.store);
+        self.with_module_mut(|mut store| {
+            let mapped = value.to_value(&mut store);
             table
-                .fill(&mut m.store, index, mapped, len)
+                .fill(&mut store, index, mapped, len)
                 .map(|_| SyncReturn(()))
                 .map_err(to_anyhow)
         })

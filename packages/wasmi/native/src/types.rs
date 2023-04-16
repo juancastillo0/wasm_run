@@ -26,7 +26,7 @@ pub enum Value2 {
 
 impl Value2 {
     // TODO: we should probably take ownership of self
-    pub fn to_value<T>(&self, ctx: &mut Store<T>) -> Value {
+    pub fn to_value(&self, ctx: impl AsContextMut) -> Value {
         match self {
             Value2::I32(i) => Value::I32(*i),
             Value2::I64(i) => Value::I64(*i),

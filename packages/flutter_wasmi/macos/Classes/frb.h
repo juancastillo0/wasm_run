@@ -332,7 +332,7 @@ WireSyncReturn wire_get_memory_data__method__WasmiModuleId(struct wire_WasmiModu
 WireSyncReturn wire_read_memory__method__WasmiModuleId(struct wire_WasmiModuleId *that,
                                                        struct wire_Memory memory,
                                                        uintptr_t offset,
-                                                       struct wire_uint_8_list *buffer);
+                                                       uintptr_t bytes);
 
 WireSyncReturn wire_get_memory_pages__method__WasmiModuleId(struct wire_WasmiModuleId *that,
                                                             struct wire_Memory memory);

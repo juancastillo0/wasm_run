@@ -522,7 +522,7 @@ class WasmiDartWasmModule implements WasmModule {
       List<dynamic> that, Object memory);
 
   external dynamic /* Uint8List */ wire_read_memory__method__WasmiModuleId(
-      List<dynamic> that, Object memory, int offset, Uint8List buffer);
+      List<dynamic> that, Object memory, int offset, int bytes);
 
   external dynamic /* int */ wire_get_memory_pages__method__WasmiModuleId(
       List<dynamic> that, Object memory);
@@ -724,9 +724,9 @@ class WasmiDartWire extends FlutterRustBridgeWasmWireBase<WasmiDartWasmModule> {
       wasmModule.wire_get_memory_data__method__WasmiModuleId(that, memory);
 
   dynamic /* Uint8List */ wire_read_memory__method__WasmiModuleId(
-          List<dynamic> that, Object memory, int offset, Uint8List buffer) =>
+          List<dynamic> that, Object memory, int offset, int bytes) =>
       wasmModule.wire_read_memory__method__WasmiModuleId(
-          that, memory, offset, buffer);
+          that, memory, offset, bytes);
 
   dynamic /* int */ wire_get_memory_pages__method__WasmiModuleId(
           List<dynamic> that, Object memory) =>
