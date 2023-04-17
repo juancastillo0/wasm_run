@@ -641,6 +641,66 @@ void testAll() {
       }
     }
   }, skip: isWeb);
+
+  test('multi value', () async {
+    final binary = await getBinary(
+      wat: r'''
+(module
+  (func $f (import "" "f") (param i32 f32) (result f32 i32))
+
+  (func $g (export "g") (param i32 f32) (result f32 i32)
+    (call $f (local.get 0) (local.get 1))
+  )
+
+  (func $round_trip_many
+    (export "round_trip_many")
+    (param i64 i64 i64 i64 i64 i64 i64 i64 i64 i64)
+    (result i64 i64 i64 i64 i64 i64 i64 i64 i64 i64)
+
+    local.get 0
+    local.get 1
+    local.get 2
+    local.get 3
+    local.get 4
+    local.get 5
+    local.get 6
+    local.get 7
+    local.get 8
+    local.get 9)
+)''',
+      base64Binary:
+          'AGFzbQEAAAABHwJgAn99An1/YAp+fn5+fn5+fn5+Cn5+fn5+fn5+fn4CBgEAAWYAAAMDAgABBxcCAWcAAQ9yb3VuZF90cmlwX21hbnkAAgohAggAIAAgARAACxYAIAAgASACIAMgBCAFIAYgByAIIAkLAB8EbmFtZQEYAwABZgEBZwIPcm91bmRfdHJpcF9tYW55',
+    );
+
+    final module = compileWasmModule(binary);
+
+    final instance = module
+        .builder()
+        .addImport(
+          '',
+          'f',
+          WasmFunction(
+            (int a, double b) {
+              return [b, a];
+            },
+            params: [WasmValueType.i32, WasmValueType.f32],
+            results: [WasmValueType.f32, WasmValueType.i32],
+          ),
+        )
+        .build();
+
+    final g = instance.lookupFunction('g')!;
+    final roundTripMany = instance.lookupFunction('round_trip_many')!;
+
+    expect(g([42, 409.32000732421875]), [(409.32000732421875), 42]);
+    expect(g.inner(42, 3.240000009536743), [3.240000009536743, 42]);
+
+    // TODO: improve tests for i64 BigInt on web
+    if (!isLibrary) return;
+    final params = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(BigInt.from).toList();
+    expect(roundTripMany(params), params);
+    expect(Function.apply(roundTripMany.inner, params), params);
+  });
 }
 
 final endian = Endian.host;
