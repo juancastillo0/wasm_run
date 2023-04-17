@@ -1,3 +1,5 @@
+use std::io::Write;
+
 use lib_flutter_rust_bridge_codegen::{
     config_parse, frb_codegen, get_symbols_if_no_duplicates, RawOpts,
 };
@@ -29,6 +31,21 @@ fn main() {
     for config in configs.iter() {
         frb_codegen(config, &all_symbols).unwrap();
     }
+    let mut generated = std::fs::File::options()
+        .append(true)
+        .open("../lib/src/bridge_generated.dart")
+        .unwrap();
+
+    generated
+        .write(
+            "
+extension WasmiDartImplPlatform on WasmiDartImpl {
+    WasmiDartPlatform get platform => _platform;
+}
+"
+            .as_bytes(),
+        )
+        .unwrap();
 
     // Format the generated Dart code
     _ = std::process::Command::new("flutter")

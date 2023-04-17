@@ -3,8 +3,11 @@ import 'dart:typed_data' show Uint8List;
 
 import 'package:flutter_rust_bridge/flutter_rust_bridge.dart'
     show WireSyncReturn, wireSyncReturnIntoDart;
-import 'package:wasmi/src/bridge_generated.dart';
+import 'package:wasmi/src/bridge_generated.io.dart';
+import 'package:wasmi/src/wasm_bindings/wasm_interface.dart';
 import 'package:wasmi/wasmi.dart' show defaultInstance;
+
+final _noReturnPlaceholder = Object();
 
 import 'wasm_interface.dart';
 
@@ -87,14 +90,10 @@ Value2 _fromWasmValue(WasmValue value, WasmiModuleId module) {
     case WasmValueType.externRef:
       return Value2.externRef(_References.getOrCreateId(value.value, module));
     case WasmValueType.funcRef:
-      final function = value.value! as WasmFunction;
-      final functionId = _References.getOrCreateId(function, module);
-      final func = module.createFunction(
-        functionPointer: _References.globalWasmFunctionPointer,
-        functionId: functionId,
-        paramTypes: function.params.map((v) => _toValueTy(v!)).toList(),
-      );
-      return Value2.funcRef(func);
+      if (value.value == null) {
+        return const Value2.funcRef();
+      }
+      return _makeFunction(value.value! as WasmFunction, module);
   }
 }
 
@@ -111,15 +110,22 @@ Value2 _fromWasmValueRaw(ValueTy ty, Object? value, WasmiModuleId module) {
     case ValueTy.ExternRef:
       return Value2.externRef(_References.getOrCreateId(value, module));
     case ValueTy.FuncRef:
-      final function = value! as WasmFunction;
-      final functionId = _References.getOrCreateId(function, module);
-      final func = module.createFunction(
-        functionPointer: _References.globalWasmFunctionPointer,
-        functionId: functionId,
-        paramTypes: function.params.map((v) => _toValueTy(v!)).toList(),
-      );
-      return Value2.funcRef(func);
+      if (value == null) {
+        return const Value2.funcRef();
+      }
+      return _makeFunction(value as WasmFunction, module);
   }
+}
+
+Value2_FuncRef _makeFunction(WasmFunction function, WasmiModuleId module) {
+  final functionId = _References.getOrCreateId(function, module);
+  final func = module.createFunction(
+    functionPointer: _References.globalWasmFunctionPointer,
+    functionId: functionId,
+    paramTypes: function.params.map((v) => _toValueTy(v!)).toList(),
+    resultTypes: function.results!.map((v) => _toValueTy(v)).toList(),
+  );
+  return Value2_FuncRef(func);
 }
 
 WasmExternalKind _toImpExpKind(ExternalType kind) {
@@ -133,20 +139,22 @@ WasmExternalKind _toImpExpKind(ExternalType kind) {
 
 WasmFunction _toWasmFunction(Func func, WasmiModuleId module) {
   final type = module.getFunctionType(func: func);
+  final params = type.params;
 
   return WasmFunction(
+    params: params.map(_toWasmValueType).toList(),
+    results: type.results.map(_toWasmValueType).toList(),
     makeFunction(
-      type.params.length,
+      params.length,
       (args) {
         int i = 0;
         final result = module.callFunctionHandleSync(
           func: func,
           args: args
-              .map((v) => _fromWasmValueRaw(type.params[i++], v, module))
+              .map((v) => _fromWasmValueRaw(params[i++], v, module))
               .toList(),
         );
-        // TODO: sync with web behavior. Use undefined placeholder?
-        if (result.isEmpty) return null;
+        if (result.isEmpty) return _noReturnPlaceholder;
         if (result.length == 1) {
           return _References.dartValueFromWasm(result.first, module);
         }
@@ -155,8 +163,6 @@ WasmFunction _toWasmFunction(Func func, WasmiModuleId module) {
             .toList();
       },
     ),
-    type.params.map(_toWasmValueType).toList(),
-    results: type.results.map(_toWasmValueType).toList(),
   );
 }
 
@@ -215,7 +221,10 @@ WasmExternal _toWasmExternal(ModuleExportValue value, _Instance instance) {
   // }
 }
 
-typedef _GlobalWasmFunction = ffi.Void Function(ffi.Int64, WireSyncReturn);
+typedef GlobalWasmFunction = ffi.Pointer<wire_list_value_2> Function(
+  ffi.Int64 functionId,
+  WireSyncReturn wasmArguments,
+);
 
 // ignore: avoid_classes_with_only_static_members
 class _References {
@@ -252,9 +261,8 @@ class _References {
   }
 
   static int get globalWasmFunctionPointer =>
-      ffi.Pointer.fromFunction<_GlobalWasmFunction>(_globalWasmFunction)
-          .address;
-  static void _globalWasmFunction(
+      ffi.Pointer.fromFunction<GlobalWasmFunction>(_globalWasmFunction).address;
+  static ffi.Pointer<wire_list_value_2> _globalWasmFunction(
     int functionId,
     WireSyncReturn value,
   ) {
@@ -263,16 +271,31 @@ class _References {
     final function = getReference(functionId);
     if (function is! WasmFunction) {
       throw Exception('Invalid function reference $functionId');
+    } else if (function.results == null) {
+      throw Exception('Function $functionId has no return values');
     }
 
     final module = _References._idToModule[functionId]!;
     final args = input.map((v) => dartValueFromWasm(v, module)).toList();
 
+    final platform = (defaultInstance() as WasmiDartImpl).platform;
     // TODO: should it be a List argument?
     // Function.apply(function, args);
-    function.call(args);
-    // TODO: return value
-    // final result = platform.api2wire_list_value_2(output);
+    final output = function.call(args);
+
+    if (output.isEmpty) {
+      // TODO: null pointer?
+      // ignore: invalid_use_of_protected_member
+      return platform.api2wire_list_value_2(const []);
+    }
+    final results = function.results!;
+    int i = 0;
+    final mapped = output
+        .map((e) => _fromWasmValueRaw(_toValueTy(results[i++]), e, module))
+        .toList();
+    // ignore: invalid_use_of_protected_member
+    final pointer = platform.api2wire_list_value_2(mapped);
+    return pointer;
   }
 
   static List<Value2> _wire2api_list_value_2(dynamic raw) {
@@ -280,7 +303,8 @@ class _References {
     return list.map(_wire2api_value_2).toList();
   }
 
-  static Value2 _wire2api_value_2(dynamic raw) {
+  static Value2 _wire2api_value_2(dynamic raw_) {
+    final raw = raw_ as List;
     switch (raw[0]) {
       case 0:
         return Value2_I32(raw[1] as int);
@@ -396,12 +420,42 @@ class _Builder extends WasmInstanceBuilder {
         if (type is! ExternalType_Func) {
           throw Exception("Expected function");
         }
-        // TODO: verify with type from [function]
-        final functionId = _References.getOrCreateId(function, module);
+        final expectedParams =
+            type.field0.params.map(_toWasmValueType).toList();
+        {
+          int i = 0;
+          if (function.params.length != expectedParams.length ||
+              function.params.any((e) => expectedParams[i++] != e)) {
+            throw Exception(
+              "WasmFunction.params != expectedParams. $function.params != $expectedParams",
+            );
+          }
+        }
+
+        final expectedResults =
+            type.field0.results.map(_toWasmValueType).toList();
+        var functionToSave = function;
+        if (function.results != null) {
+          int i = 0;
+          if (function.results!.length != expectedResults.length ||
+              function.results!.any((e) => expectedResults[i++] != e)) {
+            throw Exception(
+              "WasmFunction.results != expectedResults. $function.params != $expectedResults",
+            );
+          }
+        } else {
+          functionToSave = WasmFunction(
+            function.inner,
+            params: expectedParams,
+            results: expectedResults,
+          );
+        }
+        final functionId = _References.getOrCreateId(functionToSave, module);
         final func = module.createFunction(
           functionPointer: _References.globalWasmFunctionPointer,
           functionId: functionId,
           paramTypes: type.field0.params,
+          resultTypes: type.field0.results,
         );
 
         return ExternalValue.func(func);

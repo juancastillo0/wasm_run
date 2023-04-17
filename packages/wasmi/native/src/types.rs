@@ -25,18 +25,17 @@ pub enum Value2 {
 }
 
 impl Value2 {
-    // TODO: we should probably take ownership of self
-    pub fn to_value(&self, ctx: impl AsContextMut) -> Value {
+    pub fn to_value(self, ctx: impl AsContextMut) -> Value {
         match self {
-            Value2::I32(i) => Value::I32(*i),
-            Value2::I64(i) => Value::I64(*i),
+            Value2::I32(i) => Value::I32(i),
+            Value2::I64(i) => Value::I64(i),
             Value2::F32(i) => Value::F32(i.to_bits().into()),
             Value2::F64(i) => Value::F64(i.to_bits().into()),
             Value2::FuncRef(i) => {
-                let inner = i.as_ref().map(|f| f.clone().try_unwrap().unwrap());
+                let inner = i.map(|f| Func::clone(&f));
                 Value::FuncRef(FuncRef::new(inner))
             }
-            Value2::ExternRef(i) => Value::ExternRef(ExternRef::new::<u32>(ctx, Some(*i))),
+            Value2::ExternRef(i) => Value::ExternRef(ExternRef::new::<u32>(ctx, Some(i))),
         }
     }
 

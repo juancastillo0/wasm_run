@@ -414,6 +414,7 @@ fn wire_create_function__method__WasmiModuleId_impl(
     function_pointer: impl Wire2Api<usize> + UnwindSafe,
     function_id: impl Wire2Api<u32> + UnwindSafe,
     param_types: impl Wire2Api<Vec<ValueTy>> + UnwindSafe,
+    result_types: impl Wire2Api<Vec<ValueTy>> + UnwindSafe,
 ) -> support::WireSyncReturn {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
         WrapInfo {
@@ -426,11 +427,13 @@ fn wire_create_function__method__WasmiModuleId_impl(
             let api_function_pointer = function_pointer.wire2api();
             let api_function_id = function_id.wire2api();
             let api_param_types = param_types.wire2api();
+            let api_result_types = result_types.wire2api();
             WasmiModuleId::create_function(
                 &api_that,
                 api_function_pointer,
                 api_function_id,
                 api_param_types,
+                api_result_types,
             )
         },
     )
@@ -1219,12 +1222,14 @@ mod web {
         function_pointer: usize,
         function_id: u32,
         param_types: JsValue,
+        result_types: JsValue,
     ) -> support::WireSyncReturn {
         wire_create_function__method__WasmiModuleId_impl(
             that,
             function_pointer,
             function_id,
             param_types,
+            result_types,
         )
     }
 
@@ -2144,12 +2149,14 @@ mod io {
         function_pointer: usize,
         function_id: u32,
         param_types: *mut wire_list_value_ty,
+        result_types: *mut wire_list_value_ty,
     ) -> support::WireSyncReturn {
         wire_create_function__method__WasmiModuleId_impl(
             that,
             function_pointer,
             function_id,
             param_types,
+            result_types,
         )
     }
 

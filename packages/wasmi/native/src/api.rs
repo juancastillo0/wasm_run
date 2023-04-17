@@ -14,6 +14,7 @@ use std::{
     sync::{Arc, RwLock},
 };
 use wasi_common::{file::FileCaps, pipe::WritePipe};
+use wasmi::core::Trap;
 pub use wasmi::{core::Pages, Func, Global, GlobalType, Memory, Module, Mutability, Table};
 use wasmi::{core::ValueType, *};
 
@@ -385,30 +386,46 @@ impl WasmiModuleId {
         function_pointer: usize,
         function_id: u32,
         param_types: Vec<ValueTy>,
+        result_types: Vec<ValueTy>,
     ) -> Result<SyncReturn<RustOpaque<Func>>> {
         self.with_module_mut(|store| {
             let f: WasmFunction = unsafe { std::mem::transmute(function_pointer) };
             let func = Func::new(
                 store,
-                // TODO: support results
-                FuncType::new(param_types.into_iter().map(ValueType::from), []),
-                move |caller, params, _results| {
+                FuncType::new(
+                    param_types.into_iter().map(ValueType::from),
+                    result_types.into_iter().map(ValueType::from),
+                ),
+                move |caller, params, results| {
                     let mapped: Vec<Value2> = params
                         .iter()
                         .map(|a| Value2::from_value(a, &caller))
                         .collect();
                     let inputs = vec![mapped].into_dart();
-                    let pointer = new_leak_box_ptr(inputs);
                     {
                         let v = RwLock::new(unsafe { std::mem::transmute(caller) });
                         CALLER_STACK.write().unwrap().push(v);
                     }
-                    unsafe {
-                        f(function_id, pointer);
+                    let output: Vec<Value2> = unsafe {
+                        let pointer = new_leak_box_ptr(inputs);
+                        let result = f(function_id, pointer);
                         pointer.drop_in_place();
+                        result.wire2api()
+                    };
+                    let last_caller = CALLER_STACK.write().unwrap().pop();
+
+                    if output.len() != results.len() {
+                        return std::result::Result::Err(Trap::new("Invalid output length"));
+                    } else if last_caller.is_none() {
+                        return std::result::Result::Err(Trap::new("CALLER_STACK is empty"));
+                    } else if output.is_empty() {
+                        return std::result::Result::Ok(());
                     }
-                    {
-                        CALLER_STACK.write().unwrap().pop();
+                    let last_caller = last_caller.unwrap();
+                    let mut caller = last_caller.write().unwrap();
+                    let mut outputs = output.into_iter();
+                    for value in results {
+                        *value = outputs.next().unwrap().to_value(caller.as_context_mut());
                     }
                     std::result::Result::Ok(())
                 },
@@ -609,8 +626,8 @@ pub fn run_function(pointer: usize) -> SyncReturn<Vec<Value2>> {
     SyncReturn(vec![Value2::I64(result)])
 }
 
-// TODO: Support return values
-type WasmFunction = unsafe extern "C" fn(function_id: u32, args: *mut DartAbi) -> c_void;
+type WasmFunction =
+    unsafe extern "C" fn(function_id: u32, args: *mut DartAbi) -> *mut wire_list_value_2;
 
 type WasmFuncT = unsafe extern "C" fn(args: *mut DartAbi) -> *mut wire_list_value_2;
 type WasmFuncMutT = unsafe extern "C" fn(args: *mut DartAbi, output: *mut wire_list_value_2) -> i64;
