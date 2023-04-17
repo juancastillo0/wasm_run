@@ -1152,23 +1152,33 @@ class WasmiDartWire implements FlutterRustBridgeWireBase {
     int function_pointer,
     int function_id,
     ffi.Pointer<wire_list_value_ty> param_types,
+    ffi.Pointer<wire_list_value_ty> result_types,
   ) {
     return _wire_create_function__method__WasmiModuleId(
       that,
       function_pointer,
       function_id,
       param_types,
+      result_types,
     );
   }
 
   late final _wire_create_function__method__WasmiModuleIdPtr = _lookup<
           ffi.NativeFunction<
-              WireSyncReturn Function(ffi.Pointer<wire_WasmiModuleId>,
-                  ffi.UintPtr, ffi.Uint32, ffi.Pointer<wire_list_value_ty>)>>(
+              WireSyncReturn Function(
+                  ffi.Pointer<wire_WasmiModuleId>,
+                  ffi.UintPtr,
+                  ffi.Uint32,
+                  ffi.Pointer<wire_list_value_ty>,
+                  ffi.Pointer<wire_list_value_ty>)>>(
       'wire_create_function__method__WasmiModuleId');
   late final _wire_create_function__method__WasmiModuleId =
       _wire_create_function__method__WasmiModuleIdPtr.asFunction<
-          WireSyncReturn Function(ffi.Pointer<wire_WasmiModuleId>, int, int,
+          WireSyncReturn Function(
+              ffi.Pointer<wire_WasmiModuleId>,
+              int,
+              int,
+              ffi.Pointer<wire_list_value_ty>,
               ffi.Pointer<wire_list_value_ty>)>();
 
   WireSyncReturn wire_create_memory__method__WasmiModuleId(

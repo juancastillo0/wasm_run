@@ -300,7 +300,8 @@ WireSyncReturn wire_get_function_type__method__WasmiModuleId(struct wire_WasmiMo
 WireSyncReturn wire_create_function__method__WasmiModuleId(struct wire_WasmiModuleId *that,
                                                            uintptr_t function_pointer,
                                                            uint32_t function_id,
-                                                           struct wire_list_value_ty *param_types);
+                                                           struct wire_list_value_ty *param_types,
+                                                           struct wire_list_value_ty *result_types);
 
 WireSyncReturn wire_create_memory__method__WasmiModuleId(struct wire_WasmiModuleId *that,
                                                          struct wire_WasmMemoryType *memory_type);

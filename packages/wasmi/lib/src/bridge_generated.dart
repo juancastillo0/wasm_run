@@ -155,6 +155,7 @@ abstract class WasmiDart {
       required int functionPointer,
       required int functionId,
       required List<ValueTy> paramTypes,
+      required List<ValueTy> resultTypes,
       dynamic hint});
 
   FlutterRustBridgeTaskConstMeta
@@ -876,12 +877,14 @@ class WasmiModuleId {
           {required int functionPointer,
           required int functionId,
           required List<ValueTy> paramTypes,
+          required List<ValueTy> resultTypes,
           dynamic hint}) =>
       bridge.createFunctionMethodWasmiModuleId(
         that: this,
         functionPointer: functionPointer,
         functionId: functionId,
         paramTypes: paramTypes,
+        resultTypes: resultTypes,
       );
 
   Memory createMemory({required WasmMemoryType memoryType, dynamic hint}) =>
@@ -1499,17 +1502,20 @@ class WasmiDartImpl implements WasmiDart {
       required int functionPointer,
       required int functionId,
       required List<ValueTy> paramTypes,
+      required List<ValueTy> resultTypes,
       dynamic hint}) {
     var arg0 = _platform.api2wire_box_autoadd_wasmi_module_id(that);
     var arg1 = api2wire_usize(functionPointer);
     var arg2 = api2wire_u32(functionId);
     var arg3 = _platform.api2wire_list_value_ty(paramTypes);
+    var arg4 = _platform.api2wire_list_value_ty(resultTypes);
     return _platform.executeSync(FlutterRustBridgeSyncTask(
       callFfi: () => _platform.inner
-          .wire_create_function__method__WasmiModuleId(arg0, arg1, arg2, arg3),
+          .wire_create_function__method__WasmiModuleId(
+              arg0, arg1, arg2, arg3, arg4),
       parseSuccessData: _wire2api_Func,
       constMeta: kCreateFunctionMethodWasmiModuleIdConstMeta,
-      argValues: [that, functionPointer, functionId, paramTypes],
+      argValues: [that, functionPointer, functionId, paramTypes, resultTypes],
       hint: hint,
     ));
   }
@@ -1518,7 +1524,13 @@ class WasmiDartImpl implements WasmiDart {
       get kCreateFunctionMethodWasmiModuleIdConstMeta =>
           const FlutterRustBridgeTaskConstMeta(
             debugName: "create_function__method__WasmiModuleId",
-            argNames: ["that", "functionPointer", "functionId", "paramTypes"],
+            argNames: [
+              "that",
+              "functionPointer",
+              "functionId",
+              "paramTypes",
+              "resultTypes"
+            ],
           );
 
   Memory createMemoryMethodWasmiModuleId(
@@ -2369,3 +2381,7 @@ int api2wire_value_ty(ValueTy raw) {
 }
 
 // Section: finalizer
+
+extension WasmiDartImplPlatform on WasmiDartImpl {
+  WasmiDartPlatform get platform => _platform;
+}

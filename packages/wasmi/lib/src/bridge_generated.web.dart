@@ -492,7 +492,8 @@ class WasmiDartWasmModule implements WasmModule {
       List<dynamic> that,
       int function_pointer,
       int function_id,
-      List<dynamic> param_types);
+      List<dynamic> param_types,
+      List<dynamic> result_types);
 
   external dynamic /* Object */ wire_create_memory__method__WasmiModuleId(
       List<dynamic> that, List<dynamic> memory_type);
@@ -684,9 +685,10 @@ class WasmiDartWire extends FlutterRustBridgeWasmWireBase<WasmiDartWasmModule> {
           List<dynamic> that,
           int function_pointer,
           int function_id,
-          List<dynamic> param_types) =>
+          List<dynamic> param_types,
+          List<dynamic> result_types) =>
       wasmModule.wire_create_function__method__WasmiModuleId(
-          that, function_pointer, function_id, param_types);
+          that, function_pointer, function_id, param_types, result_types);
 
   dynamic /* Object */ wire_create_memory__method__WasmiModuleId(
           List<dynamic> that, List<dynamic> memory_type) =>
