@@ -7,6 +7,15 @@ import 'package:wasm_interop/wasm_interop.dart';
 import '../bridge_generated.dart' show ModuleConfig;
 import 'wasm_interface.dart';
 
+bool isVoidReturn(dynamic value) {
+  switch (value) {
+    case null:
+      return false;
+    default:
+      return value == null;
+  }
+}
+
 Future<WasmModule> compileAsyncWasmModule(
   Uint8List bytes,
   // TODO: use ModuleConfig
@@ -150,7 +159,6 @@ class _Builder extends WasmInstanceBuilder {
       memory: (memory) => (memory as _Memory).memory,
       table: (table) => (table as _Table).table,
       global: (global) => (global as _Global).global,
-      // TODO: this will throw
       function: (function) => function.inner,
     );
     importMap.putIfAbsent(moduleName, () => {})[name] = mapped;
@@ -193,12 +201,15 @@ class _Instance extends WasmInstance {
         instance.functions.entries
             .map<MapEntry<String, WasmExternal>>(
               (e) {
-                final params = List.generate(
+                final params = List.filled(
                   js_util.getProperty(e.value, 'length') as int,
-                  (index) => null,
+                  null,
                 );
-
-                return MapEntry(e.key, WasmFunction(e.value, params));
+                return MapEntry(
+                  e.key,
+                  // results is not supported on web https://github.com/WebAssembly/js-types/blob/main/proposals/js-types/Overview.md
+                  WasmFunction(e.value, params: params, results: null),
+                );
                 // makeFunction(params.length, (args) {
                 //   // final result = Function.apply(
                 //   //   e.value,
@@ -285,11 +296,34 @@ class _Table extends WasmTable {
   _Table(this.table);
 
   @override
-  void set(int index, WasmValue value) =>
+  void set(int index, WasmValue value) {
+    if (value.type == WasmValueType.funcRef && value.value is WasmFunction) {
+      final v = value.value! as WasmFunction;
+      js_util.setProperty(v.inner, 'DartWasmFunction', value.value);
+      table.jsObject.set(index, v.inner);
+    } else {
       table.jsObject.set(index, value.value);
+    }
+  }
 
   @override
-  Object? get(int index) => table.jsObject.get(index);
+  Object? get(int index) {
+    final v = table.jsObject.get(index);
+    if (v is Function &&
+        v is! WasmFunction &&
+        js_util.hasProperty(v, 'length')) {
+      if (js_util.hasProperty(v, 'DartWasmFunction')) {
+        return js_util.getProperty(v, 'DartWasmFunction');
+      }
+      // TODO: test globals
+      return WasmFunction(
+        v,
+        params: List.filled(js_util.getProperty(v, 'length') as int, null),
+        results: null,
+      );
+    }
+    return v;
+  }
 
   @override
   int get length => table.length;

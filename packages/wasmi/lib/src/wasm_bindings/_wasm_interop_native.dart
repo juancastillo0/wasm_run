@@ -9,7 +9,7 @@ import 'package:wasmi/wasmi.dart' show defaultInstance;
 
 final _noReturnPlaceholder = Object();
 
-import 'wasm_interface.dart';
+bool isVoidReturn(dynamic value) => identical(value, _noReturnPlaceholder);
 
 Future<WasmModule> compileAsyncWasmModule(
   Uint8List bytes, {

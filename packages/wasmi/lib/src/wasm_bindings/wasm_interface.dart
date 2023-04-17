@@ -1,6 +1,9 @@
 import 'dart:typed_data';
 
 import '../bridge_generated.dart' show ExternalType, WasiConfig;
+import '_wasm_interop_stub.dart'
+    if (dart.library.io) '_wasm_interop_native.dart'
+    if (dart.library.html) '_wasm_interop_web.dart' show isVoidReturn;
 
 export '../bridge_generated.dart'
     show
@@ -178,8 +181,12 @@ abstract class WasmGlobal extends WasmExternal {
 /// A Wasm function.
 ///
 /// ```dart
-/// final wasmFunction = WasmFunction((int a, int b) => a + b, [WasmValueType.i32, WasmValueType.i32]);
-/// final List result = wasmFunction([1, 2]);
+/// final wasmFunction = WasmFunction(
+///   (int a, int b) => a + b,
+///   params: [WasmValueType.i32, WasmValueType.i32],
+///   results: [WasmValueType.i32],
+/// );
+/// final result = wasmFunction([1, 2]);
 /// assert(result.first == 3);
 /// final resultInner = wasmFunction.inner(1, 2);
 /// assert(resultInner, 3);
@@ -188,17 +195,27 @@ class WasmFunction extends WasmExternal {
   /// Constructs a Wasm function.
   ///
   /// ```dart
-  /// final wasmFunction = WasmFunction((int a, int b) => a + b, [WasmValueType.i32, WasmValueType.i32]);
+  /// final wasmFunction = WasmFunction(
+  ///   (int a, int b) => a + b,
+  ///   params: [WasmValueType.i32, WasmValueType.i32],
+  ///   results: [WasmValueType.i32],
+  /// );
   /// final result = wasmFunction([1, 2]);
   /// assert(result.first == 3);
   /// final resultInner = wasmFunction.inner(1, 2);
   /// assert(resultInner, 3);
   /// ```
   const WasmFunction(
-    this.inner,
-    this.params, {
-    this.results,
+    this.inner, {
+    required this.params,
+    required this.results,
   });
+
+  /// Constructs a Wasm function with no results.
+  WasmFunction.voidReturn(
+    this.inner, {
+    required this.params,
+  }) : results = const [];
 
   /// The parameters of the function.
   /// The types may be null if the wasm runtime does not expose this information.
@@ -229,11 +246,11 @@ class WasmFunction extends WasmExternal {
     // TODO: handle null refs
     if (values is List) {
       return values;
-      // TODO: Use undefined placeholder for null values.
-    } else if (values != null) {
-      return [values];
+    } else if (isVoidReturn(values) ||
+        values == null && (results?.isEmpty ?? false)) {
+      return const [];
     }
-    return const [];
+    return [values];
   }
 
   @override
