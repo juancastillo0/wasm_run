@@ -440,11 +440,17 @@ void testAll() {
         WasmModuleExport('memory', WasmExternalKind.memory),
         WasmModuleExport('print_hello', WasmExternalKind.function),
         WasmModuleExport('read_file_size', WasmExternalKind.function),
+        WasmModuleExport('stderr_log', WasmExternalKind.function),
       ].map((e) => e.toString()),
     );
     expect(
       module.getImports().map((e) => e.toString()),
       [
+        WasmModuleImport(
+          'example_imports',
+          'translate',
+          WasmExternalKind.function,
+        ),
         WasmModuleImport(
           'wasi_snapshot_preview1',
           'args_get',
@@ -516,6 +522,15 @@ void testAll() {
             hostPath: Directory.current.path,
           ),
         ],
+      ),
+    );
+    builder1.addImport(
+      'example_imports',
+      'translate',
+      WasmFunction(
+        (int v) => v + 0.5,
+        params: [WasmValueType.i32],
+        results: [WasmValueType.f64],
       ),
     );
     final instance1 = await builder1.buildAsync();

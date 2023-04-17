@@ -6,6 +6,16 @@ pub extern "C" fn print_hello() {
 }
 
 #[no_mangle]
+pub extern "C" fn stderr_log(msg_utf16: *const u16, msg_utf16_length: u32) {
+    let msg = String::from_utf16(unsafe {
+        std::slice::from_raw_parts(msg_utf16, msg_utf16_length.try_into().unwrap())
+    })
+    .unwrap();
+    let flt = unsafe { translate(msg_utf16_length.try_into().unwrap()) };
+    eprintln!("{} {}", flt, msg);
+}
+
+#[no_mangle]
 pub extern "C" fn read_file_size(path: *const c_char) -> u64 {
     // String::from_raw_parts(buf, length, capacity);
     let path = unsafe { std::ffi::CStr::from_ptr(path) };
@@ -194,14 +204,10 @@ pub struct MyStruct {
 //     }
 // }
 
-// TODO: test imports
 #[link(wasm_import_module = "example_imports")]
 extern "C" {
-    // imports the name `foo` from `example_imports`
-    pub fn foo();
-
     // functions can have integer/float arguments/return values
-    pub fn translate(a: i32) -> f32;
+    fn translate(a: i32) -> f64;
 
     // Note that the ABI of Rust and wasm is somewhat in flux, so while this
     // works, it's recommended to rely on raw integer/float values where
@@ -210,6 +216,6 @@ extern "C" {
 
     // you can also explicitly specify the name to import, this imports `bar`
     // instead of `baz` from `example_imports`.
-    #[link_name = "bar"]
-    pub fn baz();
+    // #[link_name = "bar"]
+    // fn baz();
 }
