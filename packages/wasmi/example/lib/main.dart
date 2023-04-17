@@ -111,11 +111,11 @@ void testAll() {
 
     int? argsList;
 
-    final hostHello = WasmFunction(
+    final hostHello = WasmFunction.voidReturn(
       (int args) {
         argsList = args;
       },
-      [WasmValueType.i32],
+      params: [WasmValueType.i32],
     );
 
     final instance =
@@ -237,14 +237,14 @@ void testAll() {
     expect(memory.view, Uint8List(WasmMemory.bytesPerPage));
 
     String? result;
-    final logUtf8 = WasmFunction(
+    final logUtf8 = WasmFunction.voidReturn(
       (int offset, int length) {
         // final offset = args[0].value as int;
         // final length = args[1].value as int;
         final bytes = memory.view.sublist(offset, offset + length);
         result = utf8.decode(bytes);
       },
-      [WasmValueType.i32, WasmValueType.i32],
+      params: [WasmValueType.i32, WasmValueType.i32],
     );
     final instance = builder
         .addImports([WasmImport('js', 'mem', memory)])
@@ -365,14 +365,46 @@ void testAll() {
 
     final f42 = table.get(0) as WasmFunction;
     expect(f42.inner(), 42);
+    expect((table[1] as WasmFunction)(), [83]);
 
-    final f43 = WasmFunction(() => 43, []);
-    final f84 = WasmFunction(() => 84, []);
+    // TODO: test web updates
+
+    if (!isLibrary) return;
+
+    final f43 = WasmFunction(
+      () => 43,
+      params: [],
+      results: [WasmValueType.i32],
+    );
+    final f84 = WasmFunction(
+      () => 84.3,
+      params: [],
+      results: [WasmValueType.f64],
+    );
     table[0] = WasmValue.funcRef(f43);
     table[1] = WasmValue.funcRef(f84);
 
-    expect(table[0], f43);
-    expect((table[1] as WasmFunction)([]), 84);
+    expect(table[0], isNot(f42));
+    expect(table[0], isNot(null));
+
+    expect((table.get(0) as WasmFunction).inner(), 43);
+    expect((table[1] as WasmFunction)(), [84.3]);
+
+    table.set(
+      0,
+      WasmValue.funcRef(WasmFunction(
+        (BigInt p) => [-1.4, p],
+        params: [WasmValueType.i64],
+        results: [WasmValueType.f64, WasmValueType.i64],
+      )),
+    );
+
+    expect((table.get(0) as WasmFunction)([5]), [-1.4, BigInt.from(5)]);
+    // TODO: should we allow this? 5 and BigInt.from(5) are both valid
+    expect(
+      (table.get(0) as WasmFunction)([BigInt.from(5)]),
+      [-1.4, BigInt.from(5)],
+    );
   });
 
   test('wasi', () async {
@@ -499,7 +531,7 @@ void testAll() {
     final currentTime = instance1.lookupFunction('current_time')!;
     final now1 = DateTime.now().millisecondsSinceEpoch;
     await Future<void>.delayed(const Duration(milliseconds: 1));
-    final t = currentTime().first as int;
+    final t = (currentTime().first as BigInt).toInt();
     expect(now1, lessThan(t));
     await Future<void>.delayed(const Duration(milliseconds: 1));
     expect(DateTime.now().millisecondsSinceEpoch, greaterThan(t));
@@ -555,7 +587,7 @@ void testAll() {
 
       final offset = alloc(buffer.length);
       memory.write(offset: offset, buffer: buffer);
-      final size = readFileSize([offset]).first as int;
+      final size = (readFileSize([offset]).first as BigInt).toInt();
       dealloc(offset, buffer.length);
 
       expect(size, binary.lengthInBytes);

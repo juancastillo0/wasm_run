@@ -102,7 +102,7 @@ Value2 _fromWasmValueRaw(ValueTy ty, Object? value, WasmiModuleId module) {
     case ValueTy.I32:
       return Value2.i32(value! as int);
     case ValueTy.I64:
-      return Value2.i64((value! as BigInt).toInt());
+      return Value2.i64(value is int ? value : (value! as BigInt).toInt());
     case ValueTy.F32:
       return Value2.f32(value! as double);
     case ValueTy.F64:
@@ -330,7 +330,7 @@ class _References {
   static Object? dartValueFromWasm(Value2 raw, WasmiModuleId module) {
     return raw.when(
       i32: (value) => value,
-      i64: (value) => value,
+      i64: (value) => BigInt.from(value),
       f32: (value) => value,
       f64: (value) => value,
       funcRef: (func) {
