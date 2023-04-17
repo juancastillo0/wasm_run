@@ -40,6 +40,13 @@ WINDOWS_LIBNAME=wasmi_dart.dll
 win_build aarch64-pc-windows-msvc windows-arm64 $WINDOWS_LIBNAME
 win_build x86_64-pc-windows-msvc windows-x64 $WINDOWS_LIBNAME
 
+if [[ $WASM_BUILD_RUST_WASI_EXAMPLE != false ]]
+then 
+    rustup target add wasm32-wasi
+    cargo build --target wasm32-wasi --profile $BUILD_PROFILE \
+            --manifest-path ../packages/rust_wasi_example/Cargo.toml
+fi
+
 # Archive the dynamic libs
 tar -czvf other.tar.gz linux-* windows-*
 

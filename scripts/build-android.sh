@@ -16,7 +16,8 @@ rustup target add \
         aarch64-linux-android \
         armv7-linux-androideabi \
         x86_64-linux-android \
-        i686-linux-android
+        i686-linux-android \
+        wasm32-wasi
 
 # Build the android libraries in the jniLibs directory
 cargo ndk -o $JNI_DIR \
@@ -26,6 +27,12 @@ cargo ndk -o $JNI_DIR \
         -t x86 \
         -t x86_64 \
         build --profile $BUILD_PROFILE 
+
+if [[ $WASM_BUILD_RUST_WASI_EXAMPLE != false ]]
+then
+        cargo build --target wasm32-wasi --profile $BUILD_PROFILE \
+                --manifest-path ../packages/rust_wasi_example/Cargo.toml
+fi
 
 # Archive the dynamic libs
 cd $JNI_DIR

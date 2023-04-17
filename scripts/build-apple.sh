@@ -17,6 +17,13 @@ do
     cargo build --profile $BUILD_PROFILE --target=$TARGET
 done
 
+if [[ $WASM_BUILD_RUST_WASI_EXAMPLE != false ]]
+then
+        rustup target add wasm32-wasi
+        cargo build --target wasm32-wasi --profile $BUILD_PROFILE \
+                --manifest-path ../packages/rust_wasi_example/Cargo.toml
+fi
+
 # Create XCFramework zip
 FRAMEWORK="Wasmi.xcframework"
 LIBNAME=libwasmi_dart.a

@@ -1,2 +1,3 @@
 [workspace]
-members = ["packages/wasmi/native", "packages/rust_wasi_example"]
+members = ["packages/wasmi/native"]
+exclude = ["packages/rust_wasi_example"]

@@ -378,11 +378,13 @@ void testAll() {
   test('wasi', () async {
     final startTimestamp = DateTime.now().millisecondsSinceEpoch;
     Uint8List binary;
-    String wasmFile = '../../target/wasm32-wasi/debug/rust_wasi_example.wasm';
+    String wasmFile =
+        '../rust_wasi_example/target/wasm32-wasi/debug/rust_wasi_example.wasm';
     try {
       binary = await File(wasmFile).readAsBytes();
     } catch (e) {
-      wasmFile = '../../../target/wasm32-wasi/debug/rust_wasi_example.wasm';
+      wasmFile =
+          '../../rust_wasi_example/target/wasm32-wasi/debug/rust_wasi_example.wasm';
       binary = await File(wasmFile).readAsBytes();
     }
     final module = compileWasmModule(binary);
