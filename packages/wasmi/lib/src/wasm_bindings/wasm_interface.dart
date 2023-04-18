@@ -113,11 +113,11 @@ abstract class WasmInstance {
 
   /// When using WASI with [WasmInstanceBuilder.enableWasi],
   /// this is the stderr stream.
-  Stream<List<int>> get stderr;
+  Stream<Uint8List> get stderr;
 
   /// When using WASI with [WasmInstanceBuilder.enableWasi],
   /// this is the stdout stream.
-  Stream<List<int>> get stdout;
+  Stream<Uint8List> get stdout;
 
   @override
   String toString() => 'WasmInstance($module, $exports)';

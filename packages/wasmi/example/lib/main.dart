@@ -239,8 +239,6 @@ void testAll() {
     String? result;
     final logUtf8 = WasmFunction.voidReturn(
       (int offset, int length) {
-        // final offset = args[0].value as int;
-        // final length = args[1].value as int;
         final bytes = memory.view.sublist(offset, offset + length);
         result = utf8.decode(bytes);
       },
@@ -314,7 +312,6 @@ void testAll() {
 
     expect(call.params, [isLibrary ? WasmValueType.i32 : null]);
     expect(call.results, isLibrary ? [WasmValueType.i32] : null);
-    // TODO: test inner
     expect(call([0]), [42]);
     expect(call.inner(1), 13);
 
@@ -507,8 +504,8 @@ void testAll() {
     final args = ['arg1'];
     final builder1 = module.builder(
       wasiConfig: WasiConfig(
-        captureStdout: false,
-        captureStderr: false,
+        captureStdout: true,
+        captureStderr: true,
         inheritStdin: false,
         inheritEnv: false,
         inheritArgs: false,
@@ -534,14 +531,6 @@ void testAll() {
       ),
     );
     final instance1 = await builder1.buildAsync();
-
-    final printHello = instance1.lookupFunction('print_hello')!;
-    // TODO: fix stdout capture
-    // final List<String> stdout1 = [];
-    // instance1.stdout.listen((event) {
-    //   stdout1.add(utf8.decode(event));
-    // });
-    printHello();
 
     final currentTime = instance1.lookupFunction('current_time')!;
     final now1 = DateTime.now().millisecondsSinceEpoch;
@@ -632,14 +621,43 @@ void testAll() {
       expect(data.size, binary.lengthInBytes);
       expect(data.read_only, false);
       if (data.created != null) {
-        expect(startTimestamp, lessThan(data.created!));
-        expect(data.modified, greaterThan(data.created!));
+        // may be null for some platforms
+        expect(startTimestamp, lessThanOrEqualTo(data.created!));
+        expect(data.modified, greaterThanOrEqualTo(data.created!));
         expect(
           DateTime.now().millisecondsSinceEpoch,
           greaterThan(data.modified!),
         );
       }
     }
+
+    /// IO
+
+    final printHello = instance1.lookupFunction('print_hello')!;
+    final List<String> stdout1 = [];
+    final stdout = instance1.stdout;
+    stdout.listen((event) {
+      stdout1.add(utf8.decode(event));
+    });
+    printHello.inner();
+    await Future<void>.delayed(Duration.zero);
+    expect(stdout1.last, 'Hello, world! 2\n');
+
+    final stderrLog = instance1.lookupFunction('stderr_log')!;
+    final List<String> stderr1 = [];
+    final stderr = await instance1.stderr;
+    stderr.listen((event) {
+      stderr1.add(utf8.decode(event));
+    });
+
+    final errMsg = 'error message';
+    final buffer = Uint8List.sublistView(Uint16List.fromList(errMsg.codeUnits));
+    withBufferOffset(buffer, (offset) {
+      stderrLog([offset, errMsg.codeUnits.length]);
+    });
+
+    await Future<void>.delayed(Duration.zero);
+    expect(stderr1.last, '${errMsg.length + 0.5} $errMsg\n');
   }, skip: isWeb);
 
   test('multi value', () async {

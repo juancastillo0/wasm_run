@@ -12,7 +12,9 @@ pub extern "C" fn stderr_log(msg_utf16: *const u16, msg_utf16_length: u32) {
     })
     .unwrap();
     let flt = unsafe { translate(msg_utf16_length.try_into().unwrap()) };
-    eprintln!("{} {}", flt, msg);
+    let err = format!("{} {}\n", flt, msg);
+    // TODO: eprintln!("{} {}", flt, err); splits into multiple (5) lines
+    eprint!("{}", err);
 }
 
 #[no_mangle]
