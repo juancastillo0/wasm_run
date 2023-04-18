@@ -1,4 +1,4 @@
-use crate::bridge_generated::{new_list_value_2_0, wire_list_value_2, Wire2Api};
+use crate::bridge_generated::{new_list_wasm_val_0, wire_list_wasm_val, Wire2Api};
 use crate::config::*;
 use crate::types::*;
 use anyhow::{Ok, Result};
@@ -20,7 +20,7 @@ use wasmi::{core::ValueType, *};
 
 static ARRAY: Lazy<RwLock<GlobalState>> = Lazy::new(|| RwLock::new(Default::default()));
 // TODO: make it module independent
-static CALLER_STACK: Lazy<RwLock<Vec<RwLock<Caller<StoreState>>>>> =
+static CALLER_STACK: Lazy<RwLock<Vec<RwLock<StoreContextMut<'_, StoreState>>>>> =
     Lazy::new(|| RwLock::new(Default::default()));
 
 #[derive(Default)]
@@ -34,8 +34,6 @@ struct WasmiModuleImpl {
     linker: Linker<StoreState>,
     store: Store<StoreState>,
     instance: Option<Instance>,
-    stdout: Option<StreamSink<Vec<u8>>>,
-    stderr: Option<StreamSink<Vec<u8>>>,
 }
 
 // impl Debug for WasmiModuleImpl {
@@ -46,6 +44,9 @@ struct WasmiModuleImpl {
 
 struct StoreState {
     wasi_ctx: Option<wasmi_wasi::WasiCtx>,
+    stdout: Option<StreamSink<Vec<u8>>>,
+    stderr: Option<StreamSink<Vec<u8>>>,
+    // TODO: add to stdin?
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -191,13 +192,18 @@ pub fn module_builder(
     //     });
     // }
 
-    let store = Store::new(engine, StoreState { wasi_ctx });
+    let store = Store::new(
+        engine,
+        StoreState {
+            wasi_ctx,
+            stdout: None,
+            stderr: None,
+        },
+    );
     let module_builder = WasmiModuleImpl {
         module: Arc::clone(&module.0),
         linker,
         store,
-        stdout: None,
-        stderr: None,
         instance: None,
     };
     arr.map.insert(id, module_builder);
@@ -213,20 +219,22 @@ struct ModuleIOWriter {
 
 impl Write for ModuleIOWriter {
     fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
-        let arr = ARRAY.read().unwrap();
+        WasmiModuleId(self.id).with_module(|store| {
+            let data = store.data();
 
-        let sink = if self.is_stdout {
-            arr.map[&self.id].stdout.as_ref()
-        } else {
-            arr.map[&self.id].stderr.as_ref()
-        };
-        let mut bytes_written = 0;
-        if let Some(stream) = sink {
-            if stream.add(buf.to_owned()) {
-                bytes_written = buf.len();
+            let sink = if self.is_stdout {
+                data.stdout.as_ref()
+            } else {
+                data.stderr.as_ref()
+            };
+            let mut bytes_written = buf.len();
+            if let Some(stream) = sink {
+                if !stream.add(buf.to_owned()) {
+                    bytes_written = 0;
+                }
             }
-        }
-        std::io::Result::Ok(bytes_written)
+            std::io::Result::Ok(bytes_written)
+        })
     }
 
     fn flush(&mut self) -> std::io::Result<()> {
@@ -234,29 +242,14 @@ impl Write for ModuleIOWriter {
     }
 }
 
+#[derive(Debug)]
+#[allow(non_camel_case_types)]
+pub enum StdIOKind {
+    stdout,
+    stderr,
+}
+
 impl WasmiInstanceId {
-    pub fn call_function(&self, name: String) -> Result<Vec<Value2>> {
-        self.call_function_with_args(name, vec![])
-    }
-    pub fn call_function_with_args_sync(
-        &self,
-        name: String,
-        args: Vec<Value2>,
-    ) -> Result<SyncReturn<Vec<Value2>>> {
-        self.call_function_with_args(name, args).map(SyncReturn)
-    }
-    pub fn call_function_with_args(&self, name: String, args: Vec<Value2>) -> Result<Vec<Value2>> {
-        let mut arr = ARRAY.write().unwrap();
-        let value = arr.map.get_mut(&self.0).unwrap();
-
-        let func = value
-            .instance
-            .unwrap()
-            .get_func(&value.store, &name)
-            .unwrap();
-        WasmiModuleId::call_function_handle_with_args(value, func, args)
-    }
-
     pub fn exports(&self) -> SyncReturn<Vec<ModuleExportValue>> {
         let value = &ARRAY.read().unwrap().map[&self.0];
         SyncReturn(
@@ -298,15 +291,25 @@ impl WasmiModuleId {
         Ok(SyncReturn(()))
     }
 
-    // pub fn executions(&self, sink: StreamSink<i32>) -> Result<()> {
-    //     let mut arr = ARRAY.write().unwrap();
-    //     let value = &mut arr.map.get_mut(&self.0).unwrap();
-    //     if value.builder.is_some() {
-    //         return Err(anyhow::anyhow!("Stream sink already set"));
-    //     }
-    //     value.builder = Some(WasmiModuleBuilder { sink });
-    //     Ok(())
-    // }
+    pub fn stdio_stream(&self, sink: StreamSink<Vec<u8>>, kind: StdIOKind) -> Result<()> {
+        self.with_module_mut(|mut store| {
+            let store_state = store.data_mut();
+            {
+                let value = match kind {
+                    StdIOKind::stdout => &store_state.stdout,
+                    StdIOKind::stderr => &store_state.stderr,
+                };
+                if value.is_some() {
+                    return Err(anyhow::anyhow!("Stream sink already set"));
+                }
+            }
+            match kind {
+                StdIOKind::stdout => store_state.stdout = Some(sink),
+                StdIOKind::stderr => store_state.stderr = Some(sink),
+            };
+            Ok(())
+        })
+    }
 
     pub fn dispose(&self) -> Result<()> {
         let mut arr = ARRAY.write().unwrap();
@@ -317,40 +320,29 @@ impl WasmiModuleId {
     pub fn call_function_handle_sync(
         &self,
         func: RustOpaque<Func>,
-        args: Vec<Value2>,
-    ) -> Result<SyncReturn<Vec<Value2>>> {
+        args: Vec<WasmVal>,
+    ) -> Result<SyncReturn<Vec<WasmVal>>> {
         self.call_function_handle(func, args).map(SyncReturn)
     }
     pub fn call_function_handle(
         &self,
         func: RustOpaque<Func>,
-        args: Vec<Value2>,
-    ) -> Result<Vec<Value2>> {
-        let mut arr = ARRAY.write().unwrap();
-        let value = arr.map.get_mut(&self.0).unwrap();
-        WasmiModuleId::call_function_handle_with_args(value, *func, args)
-    }
-
-    fn call_function_handle_with_args(
-        value: &mut WasmiModuleImpl,
-        func: Func,
-        args: Vec<Value2>,
-    ) -> Result<Vec<Value2>> {
-        let mut outputs: Vec<Value> = func
-            .ty(&value.store)
-            .results()
-            .iter()
-            .map(|t| Value::default(*t))
-            .collect();
-        let inputs: Vec<Value> = args
-            .into_iter()
-            .map(|v| v.to_value(&mut value.store))
-            .collect();
-        func.call(&mut value.store, inputs.as_slice(), &mut outputs)?;
-        Ok(outputs
-            .into_iter()
-            .map(|a| Value2::from_value(&a, &value.store))
-            .collect())
+        args: Vec<WasmVal>,
+    ) -> Result<Vec<WasmVal>> {
+        self.with_module_mut(|mut store| {
+            let mut outputs: Vec<Value> = func
+                .ty(&store)
+                .results()
+                .iter()
+                .map(|t| Value::default(*t))
+                .collect();
+            let inputs: Vec<Value> = args.into_iter().map(|v| v.to_value(&mut store)).collect();
+            func.call(&mut store, inputs.as_slice(), &mut outputs)?;
+            Ok(outputs
+                .into_iter()
+                .map(|a| WasmVal::from_value(&a, &store))
+                .collect())
+        })
     }
 
     fn with_module_mut<T>(&self, f: impl FnOnce(StoreContextMut<'_, StoreState>) -> T) -> T {
@@ -362,19 +354,29 @@ impl WasmiModuleId {
         }
         let mut arr = ARRAY.write().unwrap();
         let value = arr.map.get_mut(&self.0).unwrap();
-        f(value.store.as_context_mut())
+
+        let mut ctx = value.store.as_context_mut();
+        {
+            let v = RwLock::new(unsafe { std::mem::transmute(ctx.as_context_mut()) });
+            CALLER_STACK.write().unwrap().push(v);
+        }
+        let result = f(ctx);
+        CALLER_STACK.write().unwrap().pop();
+        result
     }
 
     fn with_module<T>(&self, f: impl FnOnce(&StoreContext<'_, StoreState>) -> T) -> T {
-        {
-            let stack = CALLER_STACK.read().unwrap();
-            if let Some(caller) = stack.last() {
-                return f(&caller.read().unwrap().as_context());
-            }
-        }
-        let arr = ARRAY.read().unwrap();
-        let value = &arr.map[&self.0];
-        f(&value.store.as_context())
+        // TODO: Only read
+        // {
+        //     let stack = CALLER_STACK.read().unwrap();
+        //     if let Some(caller) = stack.last() {
+        //         return f(&caller.read().unwrap().as_context());
+        //     }
+        // }
+        // let arr = ARRAY.read().unwrap();
+        // let value = &arr.map[&self.0];
+        // f(&value.store.as_context())
+        self.with_module_mut(|ctx| f(&ctx.as_context()))
     }
 
     pub fn get_function_type(&self, func: RustOpaque<Func>) -> SyncReturn<FuncTy> {
@@ -396,17 +398,18 @@ impl WasmiModuleId {
                     param_types.into_iter().map(ValueType::from),
                     result_types.into_iter().map(ValueType::from),
                 ),
-                move |caller, params, results| {
-                    let mapped: Vec<Value2> = params
+                move |mut caller, params, results| {
+                    let mapped: Vec<WasmVal> = params
                         .iter()
-                        .map(|a| Value2::from_value(a, &caller))
+                        .map(|a| WasmVal::from_value(a, &caller))
                         .collect();
                     let inputs = vec![mapped].into_dart();
                     {
-                        let v = RwLock::new(unsafe { std::mem::transmute(caller) });
+                        let v =
+                            RwLock::new(unsafe { std::mem::transmute(caller.as_context_mut()) });
                         CALLER_STACK.write().unwrap().push(v);
                     }
-                    let output: Vec<Value2> = unsafe {
+                    let output: Vec<WasmVal> = unsafe {
                         let pointer = new_leak_box_ptr(inputs);
                         let result = f(function_id, pointer);
                         pointer.drop_in_place();
@@ -434,10 +437,7 @@ impl WasmiModuleId {
         })
     }
 
-    pub fn create_memory(
-        &self,
-        memory_type: WasmMemoryType,
-    ) -> Result<SyncReturn<RustOpaque<Memory>>> {
+    pub fn create_memory(&self, memory_type: MemoryTy) -> Result<SyncReturn<RustOpaque<Memory>>> {
         self.with_module_mut(|store| {
             let mem_type = memory_type.to_memory_type()?;
             let memory = Memory::new(store, mem_type).map_err(to_anyhow)?;
@@ -447,7 +447,7 @@ impl WasmiModuleId {
 
     pub fn create_global(
         &self,
-        value: Value2,
+        value: WasmVal,
         mutability: Mutability,
     ) -> Result<SyncReturn<RustOpaque<Global>>> {
         self.with_module_mut(|mut store| {
@@ -459,8 +459,8 @@ impl WasmiModuleId {
 
     pub fn create_table(
         &self,
-        value: Value2,
-        table_type: TableType2,
+        value: WasmVal,
+        table_type: TableArgs,
     ) -> Result<SyncReturn<RustOpaque<Table>>> {
         self.with_module_mut(|mut store| {
             let mapped_value = value.to_value(&mut store);
@@ -480,14 +480,14 @@ impl WasmiModuleId {
         SyncReturn(self.with_module(|store| (&global.ty(store)).into()))
     }
 
-    pub fn get_global_value(&self, global: RustOpaque<Global>) -> SyncReturn<Value2> {
-        SyncReturn(self.with_module(|store| Value2::from_value(&global.get(store), store)))
+    pub fn get_global_value(&self, global: RustOpaque<Global>) -> SyncReturn<WasmVal> {
+        SyncReturn(self.with_module(|store| WasmVal::from_value(&global.get(store), store)))
     }
 
     pub fn set_global_value(
         &self,
         global: RustOpaque<Global>,
-        value: Value2,
+        value: WasmVal,
     ) -> Result<SyncReturn<()>> {
         self.with_module_mut(|mut store| {
             let mapped = value.to_value(&mut store);
@@ -500,7 +500,7 @@ impl WasmiModuleId {
 
     // MEMORY
 
-    pub fn get_memory_type(&self, memory: RustOpaque<Memory>) -> SyncReturn<WasmMemoryType> {
+    pub fn get_memory_type(&self, memory: RustOpaque<Memory>) -> SyncReturn<MemoryTy> {
         SyncReturn(self.with_module(|store| (&memory.ty(store)).into()))
     }
     pub fn get_memory_data(&self, memory: RustOpaque<Memory>) -> SyncReturn<Vec<u8>> {
@@ -563,7 +563,7 @@ impl WasmiModuleId {
         &self,
         table: RustOpaque<Table>,
         delta: u32,
-        value: Value2,
+        value: WasmVal,
     ) -> Result<SyncReturn<u32>> {
         self.with_module_mut(|mut store| {
             let mapped = value.to_value(&mut store);
@@ -574,11 +574,11 @@ impl WasmiModuleId {
         })
     }
 
-    pub fn get_table(&self, table: RustOpaque<Table>, index: u32) -> SyncReturn<Option<Value2>> {
+    pub fn get_table(&self, table: RustOpaque<Table>, index: u32) -> SyncReturn<Option<WasmVal>> {
         SyncReturn(self.with_module(|store| {
             table
                 .get(store, index)
-                .map(|v| Value2::from_value(&v, store))
+                .map(|v| WasmVal::from_value(&v, store))
         }))
     }
 
@@ -586,7 +586,7 @@ impl WasmiModuleId {
         &self,
         table: RustOpaque<Table>,
         index: u32,
-        value: Value2,
+        value: WasmVal,
     ) -> Result<SyncReturn<()>> {
         self.with_module_mut(|mut store| {
             let mapped = value.to_value(&mut store);
@@ -601,7 +601,7 @@ impl WasmiModuleId {
         &self,
         table: RustOpaque<Table>,
         index: u32,
-        value: Value2,
+        value: WasmVal,
         len: u32,
     ) -> Result<SyncReturn<()>> {
         self.with_module_mut(|mut store| {
@@ -620,25 +620,26 @@ pub fn parse_wat_format(wat: String) -> Result<Vec<u8>> {
 
 type DartMapInt = unsafe extern "C" fn(args: i64) -> i64;
 
-pub fn run_function(pointer: usize) -> SyncReturn<Vec<Value2>> {
+pub fn run_function(pointer: usize) -> SyncReturn<Vec<WasmVal>> {
     let f: DartMapInt = unsafe { std::mem::transmute(pointer) };
     let result = unsafe { f(1) };
-    SyncReturn(vec![Value2::I64(result)])
+    SyncReturn(vec![WasmVal::i64(result)])
 }
 
 type WasmFunction =
-    unsafe extern "C" fn(function_id: u32, args: *mut DartAbi) -> *mut wire_list_value_2;
+    unsafe extern "C" fn(function_id: u32, args: *mut DartAbi) -> *mut wire_list_wasm_val;
 
-type WasmFuncT = unsafe extern "C" fn(args: *mut DartAbi) -> *mut wire_list_value_2;
-type WasmFuncMutT = unsafe extern "C" fn(args: *mut DartAbi, output: *mut wire_list_value_2) -> i64;
+type WasmFuncT = unsafe extern "C" fn(args: *mut DartAbi) -> *mut wire_list_wasm_val;
+type WasmFuncMutT =
+    unsafe extern "C" fn(args: *mut DartAbi, output: *mut wire_list_wasm_val) -> i64;
 type WasmFuncVoidT = unsafe extern "C" fn(args: *mut DartAbi) -> c_void;
 
-pub fn run_wasm_func(pointer: usize, params: Vec<Value2>) -> SyncReturn<Vec<Value2>> {
+pub fn run_wasm_func(pointer: usize, params: Vec<WasmVal>) -> SyncReturn<Vec<WasmVal>> {
     let f: WasmFuncT = unsafe { std::mem::transmute(pointer) };
 
     // let pp = new_list_value_2_0(params.len().try_into().unwrap());
     // pp.write(val);
-    // let vv = wire_list_value_2 {
+    // let vv = wire_list_wasm_val {
     //     ptr: params.into_iter().map(|v| v.into()).collect(),
     //     len: params.len().try_into().unwrap(),
     // };
@@ -657,7 +658,7 @@ pub fn run_wasm_func(pointer: usize, params: Vec<Value2>) -> SyncReturn<Vec<Valu
     // vec![Value2::Int(result as i64)]
 }
 
-pub fn run_wasm_func_mut(pointer: usize, params: Vec<Value2>) -> SyncReturn<Vec<Value2>> {
+pub fn run_wasm_func_mut(pointer: usize, params: Vec<WasmVal>) -> SyncReturn<Vec<WasmVal>> {
     let f: WasmFuncMutT = unsafe { std::mem::transmute(pointer) };
 
     println!("inputs: {:?}", params);
@@ -665,8 +666,7 @@ pub fn run_wasm_func_mut(pointer: usize, params: Vec<Value2>) -> SyncReturn<Vec<
     println!("after inputs: {:?}", inputs.ty);
     let pointer = new_leak_box_ptr(inputs);
     println!("pointer: {:?}", pointer);
-
-    let out = new_list_value_2_0(1);
+    let out = new_list_wasm_val_0(1);
     println!("result pointer before: {:?}", out);
 
     let int_out = unsafe { f(pointer, out) };
@@ -676,7 +676,7 @@ pub fn run_wasm_func_mut(pointer: usize, params: Vec<Value2>) -> SyncReturn<Vec<
     SyncReturn(output)
 }
 
-pub fn run_wasm_func_void(pointer: usize, params: Vec<Value2>) -> SyncReturn<bool> {
+pub fn run_wasm_func_void(pointer: usize, params: Vec<WasmVal>) -> SyncReturn<bool> {
     let f: WasmFuncVoidT = unsafe { std::mem::transmute(pointer) };
     println!("inputs: {:?}", params);
     let inputs = vec![params].into_dart();

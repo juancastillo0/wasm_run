@@ -30,16 +30,16 @@ use crate::types::ExternalType;
 use crate::types::ExternalValue;
 use crate::types::FuncTy;
 use crate::types::GlobalTy;
+use crate::types::MemoryTy;
 use crate::types::ModuleExportDesc;
 use crate::types::ModuleExportValue;
 use crate::types::ModuleImport;
 use crate::types::ModuleImportDesc;
 use crate::types::Mutability;
+use crate::types::TableArgs;
 use crate::types::TableTy;
-use crate::types::TableType2;
-use crate::types::Value2;
 use crate::types::ValueTy;
-use crate::types::WasmMemoryType;
+use crate::types::WasmVal;
 
 // Section: wire functions
 
@@ -103,7 +103,7 @@ fn wire_run_function_impl(pointer: impl Wire2Api<usize> + UnwindSafe) -> support
 }
 fn wire_run_wasm_func_impl(
     pointer: impl Wire2Api<usize> + UnwindSafe,
-    params: impl Wire2Api<Vec<Value2>> + UnwindSafe,
+    params: impl Wire2Api<Vec<WasmVal>> + UnwindSafe,
 ) -> support::WireSyncReturn {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
         WrapInfo {
@@ -120,7 +120,7 @@ fn wire_run_wasm_func_impl(
 }
 fn wire_run_wasm_func_mut_impl(
     pointer: impl Wire2Api<usize> + UnwindSafe,
-    params: impl Wire2Api<Vec<Value2>> + UnwindSafe,
+    params: impl Wire2Api<Vec<WasmVal>> + UnwindSafe,
 ) -> support::WireSyncReturn {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
         WrapInfo {
@@ -137,7 +137,7 @@ fn wire_run_wasm_func_mut_impl(
 }
 fn wire_run_wasm_func_void_impl(
     pointer: impl Wire2Api<usize> + UnwindSafe,
-    params: impl Wire2Api<Vec<Value2>> + UnwindSafe,
+    params: impl Wire2Api<Vec<WasmVal>> + UnwindSafe,
 ) -> support::WireSyncReturn {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
         WrapInfo {
@@ -215,65 +215,6 @@ fn wire_add_impl(
         },
     )
 }
-fn wire_call_function__method__WasmiInstanceId_impl(
-    port_: MessagePort,
-    that: impl Wire2Api<WasmiInstanceId> + UnwindSafe,
-    name: impl Wire2Api<String> + UnwindSafe,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap(
-        WrapInfo {
-            debug_name: "call_function__method__WasmiInstanceId",
-            port: Some(port_),
-            mode: FfiCallMode::Normal,
-        },
-        move || {
-            let api_that = that.wire2api();
-            let api_name = name.wire2api();
-            move |task_callback| WasmiInstanceId::call_function(&api_that, api_name)
-        },
-    )
-}
-fn wire_call_function_with_args_sync__method__WasmiInstanceId_impl(
-    that: impl Wire2Api<WasmiInstanceId> + UnwindSafe,
-    name: impl Wire2Api<String> + UnwindSafe,
-    args: impl Wire2Api<Vec<Value2>> + UnwindSafe,
-) -> support::WireSyncReturn {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
-        WrapInfo {
-            debug_name: "call_function_with_args_sync__method__WasmiInstanceId",
-            port: None,
-            mode: FfiCallMode::Sync,
-        },
-        move || {
-            let api_that = that.wire2api();
-            let api_name = name.wire2api();
-            let api_args = args.wire2api();
-            WasmiInstanceId::call_function_with_args_sync(&api_that, api_name, api_args)
-        },
-    )
-}
-fn wire_call_function_with_args__method__WasmiInstanceId_impl(
-    port_: MessagePort,
-    that: impl Wire2Api<WasmiInstanceId> + UnwindSafe,
-    name: impl Wire2Api<String> + UnwindSafe,
-    args: impl Wire2Api<Vec<Value2>> + UnwindSafe,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap(
-        WrapInfo {
-            debug_name: "call_function_with_args__method__WasmiInstanceId",
-            port: Some(port_),
-            mode: FfiCallMode::Normal,
-        },
-        move || {
-            let api_that = that.wire2api();
-            let api_name = name.wire2api();
-            let api_args = args.wire2api();
-            move |task_callback| {
-                WasmiInstanceId::call_function_with_args(&api_that, api_name, api_args)
-            }
-        },
-    )
-}
 fn wire_exports__method__WasmiInstanceId_impl(
     that: impl Wire2Api<WasmiInstanceId> + UnwindSafe,
 ) -> support::WireSyncReturn {
@@ -337,6 +278,26 @@ fn wire_link_imports__method__WasmiModuleId_impl(
         },
     )
 }
+fn wire_stdio_stream__method__WasmiModuleId_impl(
+    port_: MessagePort,
+    that: impl Wire2Api<WasmiModuleId> + UnwindSafe,
+    kind: impl Wire2Api<StdIOKind> + UnwindSafe,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap(
+        WrapInfo {
+            debug_name: "stdio_stream__method__WasmiModuleId",
+            port: Some(port_),
+            mode: FfiCallMode::Stream,
+        },
+        move || {
+            let api_that = that.wire2api();
+            let api_kind = kind.wire2api();
+            move |task_callback| {
+                WasmiModuleId::stdio_stream(&api_that, task_callback.stream_sink(), api_kind)
+            }
+        },
+    )
+}
 fn wire_dispose__method__WasmiModuleId_impl(
     port_: MessagePort,
     that: impl Wire2Api<WasmiModuleId> + UnwindSafe,
@@ -356,7 +317,7 @@ fn wire_dispose__method__WasmiModuleId_impl(
 fn wire_call_function_handle_sync__method__WasmiModuleId_impl(
     that: impl Wire2Api<WasmiModuleId> + UnwindSafe,
     func: impl Wire2Api<RustOpaque<Func>> + UnwindSafe,
-    args: impl Wire2Api<Vec<Value2>> + UnwindSafe,
+    args: impl Wire2Api<Vec<WasmVal>> + UnwindSafe,
 ) -> support::WireSyncReturn {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
         WrapInfo {
@@ -376,7 +337,7 @@ fn wire_call_function_handle__method__WasmiModuleId_impl(
     port_: MessagePort,
     that: impl Wire2Api<WasmiModuleId> + UnwindSafe,
     func: impl Wire2Api<RustOpaque<Func>> + UnwindSafe,
-    args: impl Wire2Api<Vec<Value2>> + UnwindSafe,
+    args: impl Wire2Api<Vec<WasmVal>> + UnwindSafe,
 ) {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap(
         WrapInfo {
@@ -440,7 +401,7 @@ fn wire_create_function__method__WasmiModuleId_impl(
 }
 fn wire_create_memory__method__WasmiModuleId_impl(
     that: impl Wire2Api<WasmiModuleId> + UnwindSafe,
-    memory_type: impl Wire2Api<WasmMemoryType> + UnwindSafe,
+    memory_type: impl Wire2Api<MemoryTy> + UnwindSafe,
 ) -> support::WireSyncReturn {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
         WrapInfo {
@@ -457,7 +418,7 @@ fn wire_create_memory__method__WasmiModuleId_impl(
 }
 fn wire_create_global__method__WasmiModuleId_impl(
     that: impl Wire2Api<WasmiModuleId> + UnwindSafe,
-    value: impl Wire2Api<Value2> + UnwindSafe,
+    value: impl Wire2Api<WasmVal> + UnwindSafe,
     mutability: impl Wire2Api<Mutability> + UnwindSafe,
 ) -> support::WireSyncReturn {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
@@ -476,8 +437,8 @@ fn wire_create_global__method__WasmiModuleId_impl(
 }
 fn wire_create_table__method__WasmiModuleId_impl(
     that: impl Wire2Api<WasmiModuleId> + UnwindSafe,
-    value: impl Wire2Api<Value2> + UnwindSafe,
-    table_type: impl Wire2Api<TableType2> + UnwindSafe,
+    value: impl Wire2Api<WasmVal> + UnwindSafe,
+    table_type: impl Wire2Api<TableArgs> + UnwindSafe,
 ) -> support::WireSyncReturn {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
         WrapInfo {
@@ -530,7 +491,7 @@ fn wire_get_global_value__method__WasmiModuleId_impl(
 fn wire_set_global_value__method__WasmiModuleId_impl(
     that: impl Wire2Api<WasmiModuleId> + UnwindSafe,
     global: impl Wire2Api<RustOpaque<Global>> + UnwindSafe,
-    value: impl Wire2Api<Value2> + UnwindSafe,
+    value: impl Wire2Api<WasmVal> + UnwindSafe,
 ) -> support::WireSyncReturn {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
         WrapInfo {
@@ -696,7 +657,7 @@ fn wire_grow_table__method__WasmiModuleId_impl(
     that: impl Wire2Api<WasmiModuleId> + UnwindSafe,
     table: impl Wire2Api<RustOpaque<Table>> + UnwindSafe,
     delta: impl Wire2Api<u32> + UnwindSafe,
-    value: impl Wire2Api<Value2> + UnwindSafe,
+    value: impl Wire2Api<WasmVal> + UnwindSafe,
 ) -> support::WireSyncReturn {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
         WrapInfo {
@@ -736,7 +697,7 @@ fn wire_set_table__method__WasmiModuleId_impl(
     that: impl Wire2Api<WasmiModuleId> + UnwindSafe,
     table: impl Wire2Api<RustOpaque<Table>> + UnwindSafe,
     index: impl Wire2Api<u32> + UnwindSafe,
-    value: impl Wire2Api<Value2> + UnwindSafe,
+    value: impl Wire2Api<WasmVal> + UnwindSafe,
 ) -> support::WireSyncReturn {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
         WrapInfo {
@@ -757,7 +718,7 @@ fn wire_fill_table__method__WasmiModuleId_impl(
     that: impl Wire2Api<WasmiModuleId> + UnwindSafe,
     table: impl Wire2Api<RustOpaque<Table>> + UnwindSafe,
     index: impl Wire2Api<u32> + UnwindSafe,
-    value: impl Wire2Api<Value2> + UnwindSafe,
+    value: impl Wire2Api<WasmVal> + UnwindSafe,
     len: impl Wire2Api<u32> + UnwindSafe,
 ) -> support::WireSyncReturn {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
@@ -873,6 +834,16 @@ impl Wire2Api<Mutability> for i32 {
     }
 }
 
+impl Wire2Api<StdIOKind> for i32 {
+    fn wire2api(self) -> StdIOKind {
+        match self {
+            0 => StdIOKind::stdout,
+            1 => StdIOKind::stderr,
+            _ => unreachable!("Invalid variant for StdIOKind: {}", self),
+        }
+    }
+}
+
 impl Wire2Api<u32> for u32 {
     fn wire2api(self) -> u32 {
         self
@@ -894,16 +865,15 @@ impl Wire2Api<usize> for usize {
         self
     }
 }
-
 impl Wire2Api<ValueTy> for i32 {
     fn wire2api(self) -> ValueTy {
         match self {
-            0 => ValueTy::I32,
-            1 => ValueTy::I64,
-            2 => ValueTy::F32,
-            3 => ValueTy::F64,
-            4 => ValueTy::FuncRef,
-            5 => ValueTy::ExternRef,
+            0 => ValueTy::i32,
+            1 => ValueTy::i64,
+            2 => ValueTy::f32,
+            3 => ValueTy::f64,
+            4 => ValueTy::funcRef,
+            5 => ValueTy::externRef,
             _ => unreachable!("Invalid variant for ValueTy: {}", self),
         }
     }
@@ -961,6 +931,17 @@ impl support::IntoDart for GlobalTy {
 }
 impl support::IntoDartExceptPrimitive for GlobalTy {}
 
+impl support::IntoDart for MemoryTy {
+    fn into_dart(self) -> support::DartAbi {
+        vec![
+            self.initial_pages.into_dart(),
+            self.maximum_pages.into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl support::IntoDartExceptPrimitive for MemoryTy {}
+
 impl support::IntoDart for ModuleExportDesc {
     fn into_dart(self) -> support::DartAbi {
         vec![self.name.into_dart(), self.ty.into_dart()].into_dart()
@@ -1010,45 +991,34 @@ impl support::IntoDart for TableTy {
 }
 impl support::IntoDartExceptPrimitive for TableTy {}
 
-impl support::IntoDart for Value2 {
-    fn into_dart(self) -> support::DartAbi {
-        match self {
-            Self::I32(field0) => vec![0.into_dart(), field0.into_dart()],
-            Self::I64(field0) => vec![1.into_dart(), field0.into_dart()],
-            Self::F32(field0) => vec![2.into_dart(), field0.into_dart()],
-            Self::F64(field0) => vec![3.into_dart(), field0.into_dart()],
-            Self::FuncRef(field0) => vec![4.into_dart(), field0.into_dart()],
-            Self::ExternRef(field0) => vec![5.into_dart(), field0.into_dart()],
-        }
-        .into_dart()
-    }
-}
-impl support::IntoDartExceptPrimitive for Value2 {}
 impl support::IntoDart for ValueTy {
     fn into_dart(self) -> support::DartAbi {
         match self {
-            Self::I32 => 0,
-            Self::I64 => 1,
-            Self::F32 => 2,
-            Self::F64 => 3,
-            Self::FuncRef => 4,
-            Self::ExternRef => 5,
+            Self::i32 => 0,
+            Self::i64 => 1,
+            Self::f32 => 2,
+            Self::f64 => 3,
+            Self::funcRef => 4,
+            Self::externRef => 5,
         }
         .into_dart()
     }
 }
 impl support::IntoDartExceptPrimitive for ValueTy {}
-impl support::IntoDart for WasmMemoryType {
+impl support::IntoDart for WasmVal {
     fn into_dart(self) -> support::DartAbi {
-        vec![
-            self.initial_pages.into_dart(),
-            self.maximum_pages.into_dart(),
-        ]
+        match self {
+            Self::i32(field0) => vec![0.into_dart(), field0.into_dart()],
+            Self::i64(field0) => vec![1.into_dart(), field0.into_dart()],
+            Self::f32(field0) => vec![2.into_dart(), field0.into_dart()],
+            Self::f64(field0) => vec![3.into_dart(), field0.into_dart()],
+            Self::funcRef(field0) => vec![4.into_dart(), field0.into_dart()],
+            Self::externRef(field0) => vec![5.into_dart(), field0.into_dart()],
+        }
         .into_dart()
     }
 }
-impl support::IntoDartExceptPrimitive for WasmMemoryType {}
-
+impl support::IntoDartExceptPrimitive for WasmVal {}
 impl support::IntoDart for WasmiInstanceId {
     fn into_dart(self) -> support::DartAbi {
         vec![self.0.into_dart()].into_dart()
@@ -1134,34 +1104,6 @@ mod web {
     }
 
     #[wasm_bindgen]
-    pub fn wire_call_function__method__WasmiInstanceId(
-        port_: MessagePort,
-        that: JsValue,
-        name: String,
-    ) {
-        wire_call_function__method__WasmiInstanceId_impl(port_, that, name)
-    }
-
-    #[wasm_bindgen]
-    pub fn wire_call_function_with_args_sync__method__WasmiInstanceId(
-        that: JsValue,
-        name: String,
-        args: JsValue,
-    ) -> support::WireSyncReturn {
-        wire_call_function_with_args_sync__method__WasmiInstanceId_impl(that, name, args)
-    }
-
-    #[wasm_bindgen]
-    pub fn wire_call_function_with_args__method__WasmiInstanceId(
-        port_: MessagePort,
-        that: JsValue,
-        name: String,
-        args: JsValue,
-    ) {
-        wire_call_function_with_args__method__WasmiInstanceId_impl(port_, that, name, args)
-    }
-
-    #[wasm_bindgen]
     pub fn wire_exports__method__WasmiInstanceId(that: JsValue) -> support::WireSyncReturn {
         wire_exports__method__WasmiInstanceId_impl(that)
     }
@@ -1182,6 +1124,11 @@ mod web {
         imports: JsValue,
     ) -> support::WireSyncReturn {
         wire_link_imports__method__WasmiModuleId_impl(that, imports)
+    }
+
+    #[wasm_bindgen]
+    pub fn wire_stdio_stream__method__WasmiModuleId(port_: MessagePort, that: JsValue, kind: i32) {
+        wire_stdio_stream__method__WasmiModuleId_impl(port_, that, kind)
     }
 
     #[wasm_bindgen]
@@ -1570,15 +1517,6 @@ mod web {
                 .collect()
         }
     }
-    impl Wire2Api<Vec<Value2>> for JsValue {
-        fn wire2api(self) -> Vec<Value2> {
-            self.dyn_into::<JsArray>()
-                .unwrap()
-                .iter()
-                .map(Wire2Api::wire2api)
-                .collect()
-        }
-    }
     impl Wire2Api<Vec<ValueTy>> for JsValue {
         fn wire2api(self) -> Vec<ValueTy> {
             self.dyn_into::<JsArray>()
@@ -1586,6 +1524,30 @@ mod web {
                 .iter()
                 .map(Wire2Api::wire2api)
                 .collect()
+        }
+    }
+    impl Wire2Api<Vec<WasmVal>> for JsValue {
+        fn wire2api(self) -> Vec<WasmVal> {
+            self.dyn_into::<JsArray>()
+                .unwrap()
+                .iter()
+                .map(Wire2Api::wire2api)
+                .collect()
+        }
+    }
+    impl Wire2Api<MemoryTy> for JsValue {
+        fn wire2api(self) -> MemoryTy {
+            let self_ = self.dyn_into::<JsArray>().unwrap();
+            assert_eq!(
+                self_.length(),
+                2,
+                "Expected 2 elements, got {}",
+                self_.length()
+            );
+            MemoryTy {
+                initial_pages: self_.get(0).wire2api(),
+                maximum_pages: self_.get(1).wire2api(),
+            }
         }
     }
     impl Wire2Api<ModuleConfig> for JsValue {
@@ -1714,8 +1676,9 @@ mod web {
             }
         }
     }
-    impl Wire2Api<TableType2> for JsValue {
-        fn wire2api(self) -> TableType2 {
+
+    impl Wire2Api<TableArgs> for JsValue {
+        fn wire2api(self) -> TableArgs {
             let self_ = self.dyn_into::<JsArray>().unwrap();
             assert_eq!(
                 self_.length(),
@@ -1723,7 +1686,7 @@ mod web {
                 "Expected 2 elements, got {}",
                 self_.length()
             );
-            TableType2 {
+            TableArgs {
                 min: self_.get(0).wire2api(),
                 max: self_.get(1).wire2api(),
             }
@@ -1733,21 +1696,6 @@ mod web {
     impl Wire2Api<Vec<u8>> for Box<[u8]> {
         fn wire2api(self) -> Vec<u8> {
             self.into_vec()
-        }
-    }
-
-    impl Wire2Api<Value2> for JsValue {
-        fn wire2api(self) -> Value2 {
-            let self_ = self.unchecked_into::<JsArray>();
-            match self_.get(0).unchecked_into_f64() as _ {
-                0 => Value2::I32(self_.get(1).wire2api()),
-                1 => Value2::I64(self_.get(1).wire2api()),
-                2 => Value2::F32(self_.get(1).wire2api()),
-                3 => Value2::F64(self_.get(1).wire2api()),
-                4 => Value2::FuncRef(self_.get(1).wire2api()),
-                5 => Value2::ExternRef(self_.get(1).wire2api()),
-                _ => unreachable!(),
-            }
         }
     }
 
@@ -1789,18 +1737,17 @@ mod web {
             }
         }
     }
-    impl Wire2Api<WasmMemoryType> for JsValue {
-        fn wire2api(self) -> WasmMemoryType {
-            let self_ = self.dyn_into::<JsArray>().unwrap();
-            assert_eq!(
-                self_.length(),
-                2,
-                "Expected 2 elements, got {}",
-                self_.length()
-            );
-            WasmMemoryType {
-                initial_pages: self_.get(0).wire2api(),
-                maximum_pages: self_.get(1).wire2api(),
+    impl Wire2Api<WasmVal> for JsValue {
+        fn wire2api(self) -> WasmVal {
+            let self_ = self.unchecked_into::<JsArray>();
+            match self_.get(0).unchecked_into_f64() as _ {
+                0 => WasmVal::i32(self_.get(1).wire2api()),
+                1 => WasmVal::i64(self_.get(1).wire2api()),
+                2 => WasmVal::f32(self_.get(1).wire2api()),
+                3 => WasmVal::f64(self_.get(1).wire2api()),
+                4 => WasmVal::funcRef(self_.get(1).wire2api()),
+                5 => WasmVal::externRef(self_.get(1).wire2api()),
+                _ => unreachable!(),
             }
         }
     }
@@ -1935,6 +1882,11 @@ mod web {
             (!self.is_undefined() && !self.is_null()).then(|| self.wire2api())
         }
     }
+    impl Wire2Api<StdIOKind> for JsValue {
+        fn wire2api(self) -> StdIOKind {
+            (self.unchecked_into_f64() as i32).wire2api()
+        }
+    }
     impl Wire2Api<u32> for JsValue {
         fn wire2api(self) -> u32 {
             self.unchecked_into_f64() as _
@@ -2002,7 +1954,7 @@ mod io {
     #[no_mangle]
     pub extern "C" fn wire_run_wasm_func(
         pointer: usize,
-        params: *mut wire_list_value_2,
+        params: *mut wire_list_wasm_val,
     ) -> support::WireSyncReturn {
         wire_run_wasm_func_impl(pointer, params)
     }
@@ -2010,7 +1962,7 @@ mod io {
     #[no_mangle]
     pub extern "C" fn wire_run_wasm_func_mut(
         pointer: usize,
-        params: *mut wire_list_value_2,
+        params: *mut wire_list_wasm_val,
     ) -> support::WireSyncReturn {
         wire_run_wasm_func_mut_impl(pointer, params)
     }
@@ -2018,7 +1970,7 @@ mod io {
     #[no_mangle]
     pub extern "C" fn wire_run_wasm_func_void(
         pointer: usize,
-        params: *mut wire_list_value_2,
+        params: *mut wire_list_wasm_val,
     ) -> support::WireSyncReturn {
         wire_run_wasm_func_void_impl(pointer, params)
     }
@@ -2048,34 +2000,6 @@ mod io {
     #[no_mangle]
     pub extern "C" fn wire_add(port_: i64, a: i64, b: i64) {
         wire_add_impl(port_, a, b)
-    }
-
-    #[no_mangle]
-    pub extern "C" fn wire_call_function__method__WasmiInstanceId(
-        port_: i64,
-        that: *mut wire_WasmiInstanceId,
-        name: *mut wire_uint_8_list,
-    ) {
-        wire_call_function__method__WasmiInstanceId_impl(port_, that, name)
-    }
-
-    #[no_mangle]
-    pub extern "C" fn wire_call_function_with_args_sync__method__WasmiInstanceId(
-        that: *mut wire_WasmiInstanceId,
-        name: *mut wire_uint_8_list,
-        args: *mut wire_list_value_2,
-    ) -> support::WireSyncReturn {
-        wire_call_function_with_args_sync__method__WasmiInstanceId_impl(that, name, args)
-    }
-
-    #[no_mangle]
-    pub extern "C" fn wire_call_function_with_args__method__WasmiInstanceId(
-        port_: i64,
-        that: *mut wire_WasmiInstanceId,
-        name: *mut wire_uint_8_list,
-        args: *mut wire_list_value_2,
-    ) {
-        wire_call_function_with_args__method__WasmiInstanceId_impl(port_, that, name, args)
     }
 
     #[no_mangle]
@@ -2109,6 +2033,15 @@ mod io {
     }
 
     #[no_mangle]
+    pub extern "C" fn wire_stdio_stream__method__WasmiModuleId(
+        port_: i64,
+        that: *mut wire_WasmiModuleId,
+        kind: i32,
+    ) {
+        wire_stdio_stream__method__WasmiModuleId_impl(port_, that, kind)
+    }
+
+    #[no_mangle]
     pub extern "C" fn wire_dispose__method__WasmiModuleId(
         port_: i64,
         that: *mut wire_WasmiModuleId,
@@ -2120,7 +2053,7 @@ mod io {
     pub extern "C" fn wire_call_function_handle_sync__method__WasmiModuleId(
         that: *mut wire_WasmiModuleId,
         func: wire_Func,
-        args: *mut wire_list_value_2,
+        args: *mut wire_list_wasm_val,
     ) -> support::WireSyncReturn {
         wire_call_function_handle_sync__method__WasmiModuleId_impl(that, func, args)
     }
@@ -2130,7 +2063,7 @@ mod io {
         port_: i64,
         that: *mut wire_WasmiModuleId,
         func: wire_Func,
-        args: *mut wire_list_value_2,
+        args: *mut wire_list_wasm_val,
     ) {
         wire_call_function_handle__method__WasmiModuleId_impl(port_, that, func, args)
     }
@@ -2163,7 +2096,7 @@ mod io {
     #[no_mangle]
     pub extern "C" fn wire_create_memory__method__WasmiModuleId(
         that: *mut wire_WasmiModuleId,
-        memory_type: *mut wire_WasmMemoryType,
+        memory_type: *mut wire_MemoryTy,
     ) -> support::WireSyncReturn {
         wire_create_memory__method__WasmiModuleId_impl(that, memory_type)
     }
@@ -2171,7 +2104,7 @@ mod io {
     #[no_mangle]
     pub extern "C" fn wire_create_global__method__WasmiModuleId(
         that: *mut wire_WasmiModuleId,
-        value: *mut wire_Value2,
+        value: *mut wire_WasmVal,
         mutability: i32,
     ) -> support::WireSyncReturn {
         wire_create_global__method__WasmiModuleId_impl(that, value, mutability)
@@ -2180,8 +2113,8 @@ mod io {
     #[no_mangle]
     pub extern "C" fn wire_create_table__method__WasmiModuleId(
         that: *mut wire_WasmiModuleId,
-        value: *mut wire_Value2,
-        table_type: *mut wire_TableType2,
+        value: *mut wire_WasmVal,
+        table_type: *mut wire_TableArgs,
     ) -> support::WireSyncReturn {
         wire_create_table__method__WasmiModuleId_impl(that, value, table_type)
     }
@@ -2206,7 +2139,7 @@ mod io {
     pub extern "C" fn wire_set_global_value__method__WasmiModuleId(
         that: *mut wire_WasmiModuleId,
         global: wire_Global,
-        value: *mut wire_Value2,
+        value: *mut wire_WasmVal,
     ) -> support::WireSyncReturn {
         wire_set_global_value__method__WasmiModuleId_impl(that, global, value)
     }
@@ -2285,7 +2218,7 @@ mod io {
         that: *mut wire_WasmiModuleId,
         table: wire_Table,
         delta: u32,
-        value: *mut wire_Value2,
+        value: *mut wire_WasmVal,
     ) -> support::WireSyncReturn {
         wire_grow_table__method__WasmiModuleId_impl(that, table, delta, value)
     }
@@ -2304,7 +2237,7 @@ mod io {
         that: *mut wire_WasmiModuleId,
         table: wire_Table,
         index: u32,
-        value: *mut wire_Value2,
+        value: *mut wire_WasmVal,
     ) -> support::WireSyncReturn {
         wire_set_table__method__WasmiModuleId_impl(that, table, index, value)
     }
@@ -2314,7 +2247,7 @@ mod io {
         that: *mut wire_WasmiModuleId,
         table: wire_Table,
         index: u32,
-        value: *mut wire_Value2,
+        value: *mut wire_WasmVal,
         len: u32,
     ) -> support::WireSyncReturn {
         wire_fill_table__method__WasmiModuleId_impl(that, table, index, value, len)
@@ -2386,6 +2319,11 @@ mod io {
     }
 
     #[no_mangle]
+    pub extern "C" fn new_box_autoadd_memory_ty_0() -> *mut wire_MemoryTy {
+        support::new_leak_box_ptr(wire_MemoryTy::new_with_null_ptr())
+    }
+
+    #[no_mangle]
     pub extern "C" fn new_box_autoadd_module_config_0() -> *mut wire_ModuleConfig {
         support::new_leak_box_ptr(wire_ModuleConfig::new_with_null_ptr())
     }
@@ -2401,8 +2339,8 @@ mod io {
     }
 
     #[no_mangle]
-    pub extern "C" fn new_box_autoadd_table_type_2_0() -> *mut wire_TableType2 {
-        support::new_leak_box_ptr(wire_TableType2::new_with_null_ptr())
+    pub extern "C" fn new_box_autoadd_table_args_0() -> *mut wire_TableArgs {
+        support::new_leak_box_ptr(wire_TableArgs::new_with_null_ptr())
     }
 
     #[no_mangle]
@@ -2421,11 +2359,6 @@ mod io {
     }
 
     #[no_mangle]
-    pub extern "C" fn new_box_autoadd_value_2_0() -> *mut wire_Value2 {
-        support::new_leak_box_ptr(wire_Value2::new_with_null_ptr())
-    }
-
-    #[no_mangle]
     pub extern "C" fn new_box_autoadd_wasi_config_0() -> *mut wire_WasiConfig {
         support::new_leak_box_ptr(wire_WasiConfig::new_with_null_ptr())
     }
@@ -2436,8 +2369,8 @@ mod io {
     }
 
     #[no_mangle]
-    pub extern "C" fn new_box_autoadd_wasm_memory_type_0() -> *mut wire_WasmMemoryType {
-        support::new_leak_box_ptr(wire_WasmMemoryType::new_with_null_ptr())
+    pub extern "C" fn new_box_autoadd_wasm_val_0() -> *mut wire_WasmVal {
+        support::new_leak_box_ptr(wire_WasmVal::new_with_null_ptr())
     }
 
     #[no_mangle]
@@ -2478,18 +2411,18 @@ mod io {
     }
 
     #[no_mangle]
-    pub extern "C" fn new_list_value_2_0(len: i32) -> *mut wire_list_value_2 {
-        let wrap = wire_list_value_2 {
-            ptr: support::new_leak_vec_ptr(<wire_Value2>::new_with_null_ptr(), len),
+    pub extern "C" fn new_list_value_ty_0(len: i32) -> *mut wire_list_value_ty {
+        let wrap = wire_list_value_ty {
+            ptr: support::new_leak_vec_ptr(Default::default(), len),
             len,
         };
         support::new_leak_box_ptr(wrap)
     }
 
     #[no_mangle]
-    pub extern "C" fn new_list_value_ty_0(len: i32) -> *mut wire_list_value_ty {
-        let wrap = wire_list_value_ty {
-            ptr: support::new_leak_vec_ptr(Default::default(), len),
+    pub extern "C" fn new_list_wasm_val_0(len: i32) -> *mut wire_list_wasm_val {
+        let wrap = wire_list_wasm_val {
+            ptr: support::new_leak_vec_ptr(<wire_WasmVal>::new_with_null_ptr(), len),
             len,
         };
         support::new_leak_box_ptr(wrap)
@@ -2641,6 +2574,12 @@ mod io {
             Wire2Api::<CompiledModule>::wire2api(*wrap).into()
         }
     }
+    impl Wire2Api<MemoryTy> for *mut wire_MemoryTy {
+        fn wire2api(self) -> MemoryTy {
+            let wrap = unsafe { support::box_from_leak_ptr(self) };
+            Wire2Api::<MemoryTy>::wire2api(*wrap).into()
+        }
+    }
     impl Wire2Api<ModuleConfig> for *mut wire_ModuleConfig {
         fn wire2api(self) -> ModuleConfig {
             let wrap = unsafe { support::box_from_leak_ptr(self) };
@@ -2659,10 +2598,10 @@ mod io {
             Wire2Api::<ModuleConfigWasmtime>::wire2api(*wrap).into()
         }
     }
-    impl Wire2Api<TableType2> for *mut wire_TableType2 {
-        fn wire2api(self) -> TableType2 {
+    impl Wire2Api<TableArgs> for *mut wire_TableArgs {
+        fn wire2api(self) -> TableArgs {
             let wrap = unsafe { support::box_from_leak_ptr(self) };
-            Wire2Api::<TableType2>::wire2api(*wrap).into()
+            Wire2Api::<TableArgs>::wire2api(*wrap).into()
         }
     }
     impl Wire2Api<u32> for *mut u32 {
@@ -2680,12 +2619,6 @@ mod io {
             unsafe { *support::box_from_leak_ptr(self) }
         }
     }
-    impl Wire2Api<Value2> for *mut wire_Value2 {
-        fn wire2api(self) -> Value2 {
-            let wrap = unsafe { support::box_from_leak_ptr(self) };
-            Wire2Api::<Value2>::wire2api(*wrap).into()
-        }
-    }
     impl Wire2Api<WasiConfig> for *mut wire_WasiConfig {
         fn wire2api(self) -> WasiConfig {
             let wrap = unsafe { support::box_from_leak_ptr(self) };
@@ -2698,10 +2631,10 @@ mod io {
             Wire2Api::<WasiStackLimits>::wire2api(*wrap).into()
         }
     }
-    impl Wire2Api<WasmMemoryType> for *mut wire_WasmMemoryType {
-        fn wire2api(self) -> WasmMemoryType {
+    impl Wire2Api<WasmVal> for *mut wire_WasmVal {
+        fn wire2api(self) -> WasmVal {
             let wrap = unsafe { support::box_from_leak_ptr(self) };
-            Wire2Api::<WasmMemoryType>::wire2api(*wrap).into()
+            Wire2Api::<WasmVal>::wire2api(*wrap).into()
         }
     }
     impl Wire2Api<WasmiInstanceId> for *mut wire_WasmiInstanceId {
@@ -2784,15 +2717,6 @@ mod io {
             vec.into_iter().map(Wire2Api::wire2api).collect()
         }
     }
-    impl Wire2Api<Vec<Value2>> for *mut wire_list_value_2 {
-        fn wire2api(self) -> Vec<Value2> {
-            let vec = unsafe {
-                let wrap = support::box_from_leak_ptr(self);
-                support::vec_from_leak_ptr(wrap.ptr, wrap.len)
-            };
-            vec.into_iter().map(Wire2Api::wire2api).collect()
-        }
-    }
     impl Wire2Api<Vec<ValueTy>> for *mut wire_list_value_ty {
         fn wire2api(self) -> Vec<ValueTy> {
             let vec = unsafe {
@@ -2800,6 +2724,23 @@ mod io {
                 support::vec_from_leak_ptr(wrap.ptr, wrap.len)
             };
             vec.into_iter().map(Wire2Api::wire2api).collect()
+        }
+    }
+    impl Wire2Api<Vec<WasmVal>> for *mut wire_list_wasm_val {
+        fn wire2api(self) -> Vec<WasmVal> {
+            let vec = unsafe {
+                let wrap = support::box_from_leak_ptr(self);
+                support::vec_from_leak_ptr(wrap.ptr, wrap.len)
+            };
+            vec.into_iter().map(Wire2Api::wire2api).collect()
+        }
+    }
+    impl Wire2Api<MemoryTy> for wire_MemoryTy {
+        fn wire2api(self) -> MemoryTy {
+            MemoryTy {
+                initial_pages: self.initial_pages.wire2api(),
+                maximum_pages: self.maximum_pages.wire2api(),
+            }
         }
     }
     impl Wire2Api<ModuleConfig> for wire_ModuleConfig {
@@ -2866,9 +2807,10 @@ mod io {
             }
         }
     }
-    impl Wire2Api<TableType2> for wire_TableType2 {
-        fn wire2api(self) -> TableType2 {
-            TableType2 {
+
+    impl Wire2Api<TableArgs> for wire_TableArgs {
+        fn wire2api(self) -> TableArgs {
+            TableArgs {
                 min: self.min.wire2api(),
                 max: self.max.wire2api(),
             }
@@ -2880,44 +2822,6 @@ mod io {
             unsafe {
                 let wrap = support::box_from_leak_ptr(self);
                 support::vec_from_leak_ptr(wrap.ptr, wrap.len)
-            }
-        }
-    }
-
-    impl Wire2Api<Value2> for wire_Value2 {
-        fn wire2api(self) -> Value2 {
-            match self.tag {
-                0 => unsafe {
-                    let ans = support::box_from_leak_ptr(self.kind);
-                    let ans = support::box_from_leak_ptr(ans.I32);
-                    Value2::I32(ans.field0.wire2api())
-                },
-                1 => unsafe {
-                    let ans = support::box_from_leak_ptr(self.kind);
-                    let ans = support::box_from_leak_ptr(ans.I64);
-                    Value2::I64(ans.field0.wire2api())
-                },
-                2 => unsafe {
-                    let ans = support::box_from_leak_ptr(self.kind);
-                    let ans = support::box_from_leak_ptr(ans.F32);
-                    Value2::F32(ans.field0.wire2api())
-                },
-                3 => unsafe {
-                    let ans = support::box_from_leak_ptr(self.kind);
-                    let ans = support::box_from_leak_ptr(ans.F64);
-                    Value2::F64(ans.field0.wire2api())
-                },
-                4 => unsafe {
-                    let ans = support::box_from_leak_ptr(self.kind);
-                    let ans = support::box_from_leak_ptr(ans.FuncRef);
-                    Value2::FuncRef(ans.field0.wire2api())
-                },
-                5 => unsafe {
-                    let ans = support::box_from_leak_ptr(self.kind);
-                    let ans = support::box_from_leak_ptr(ans.ExternRef);
-                    Value2::ExternRef(ans.field0.wire2api())
-                },
-                _ => unreachable!(),
             }
         }
     }
@@ -2946,11 +2850,40 @@ mod io {
             }
         }
     }
-    impl Wire2Api<WasmMemoryType> for wire_WasmMemoryType {
-        fn wire2api(self) -> WasmMemoryType {
-            WasmMemoryType {
-                initial_pages: self.initial_pages.wire2api(),
-                maximum_pages: self.maximum_pages.wire2api(),
+    impl Wire2Api<WasmVal> for wire_WasmVal {
+        fn wire2api(self) -> WasmVal {
+            match self.tag {
+                0 => unsafe {
+                    let ans = support::box_from_leak_ptr(self.kind);
+                    let ans = support::box_from_leak_ptr(ans.i32);
+                    WasmVal::i32(ans.field0.wire2api())
+                },
+                1 => unsafe {
+                    let ans = support::box_from_leak_ptr(self.kind);
+                    let ans = support::box_from_leak_ptr(ans.i64);
+                    WasmVal::i64(ans.field0.wire2api())
+                },
+                2 => unsafe {
+                    let ans = support::box_from_leak_ptr(self.kind);
+                    let ans = support::box_from_leak_ptr(ans.f32);
+                    WasmVal::f32(ans.field0.wire2api())
+                },
+                3 => unsafe {
+                    let ans = support::box_from_leak_ptr(self.kind);
+                    let ans = support::box_from_leak_ptr(ans.f64);
+                    WasmVal::f64(ans.field0.wire2api())
+                },
+                4 => unsafe {
+                    let ans = support::box_from_leak_ptr(self.kind);
+                    let ans = support::box_from_leak_ptr(ans.funcRef);
+                    WasmVal::funcRef(ans.field0.wire2api())
+                },
+                5 => unsafe {
+                    let ans = support::box_from_leak_ptr(self.kind);
+                    let ans = support::box_from_leak_ptr(ans.externRef);
+                    WasmVal::externRef(ans.field0.wire2api())
+                },
+                _ => unreachable!(),
             }
         }
     }
@@ -3039,16 +2972,23 @@ mod io {
 
     #[repr(C)]
     #[derive(Clone)]
-    pub struct wire_list_value_2 {
-        ptr: *mut wire_Value2,
+    pub struct wire_list_value_ty {
+        ptr: *mut i32,
         len: i32,
     }
 
     #[repr(C)]
     #[derive(Clone)]
-    pub struct wire_list_value_ty {
-        ptr: *mut i32,
+    pub struct wire_list_wasm_val {
+        ptr: *mut wire_WasmVal,
         len: i32,
+    }
+
+    #[repr(C)]
+    #[derive(Clone)]
+    pub struct wire_MemoryTy {
+        initial_pages: u32,
+        maximum_pages: *mut u32,
     }
 
     #[repr(C)]
@@ -3111,7 +3051,7 @@ mod io {
 
     #[repr(C)]
     #[derive(Clone)]
-    pub struct wire_TableType2 {
+    pub struct wire_TableArgs {
         min: u32,
         max: *mut u32,
     }
@@ -3143,13 +3083,6 @@ mod io {
         initial_value_stack_height: usize,
         maximum_value_stack_height: usize,
         maximum_recursion_depth: usize,
-    }
-
-    #[repr(C)]
-    #[derive(Clone)]
-    pub struct wire_WasmMemoryType {
-        initial_pages: u32,
-        maximum_pages: *mut u32,
     }
 
     #[repr(C)]
@@ -3205,54 +3138,54 @@ mod io {
 
     #[repr(C)]
     #[derive(Clone)]
-    pub struct wire_Value2 {
+    pub struct wire_WasmVal {
         tag: i32,
-        kind: *mut Value2Kind,
+        kind: *mut WasmValKind,
     }
 
     #[repr(C)]
-    pub union Value2Kind {
-        I32: *mut wire_Value2_I32,
-        I64: *mut wire_Value2_I64,
-        F32: *mut wire_Value2_F32,
-        F64: *mut wire_Value2_F64,
-        FuncRef: *mut wire_Value2_FuncRef,
-        ExternRef: *mut wire_Value2_ExternRef,
+    pub union WasmValKind {
+        i32: *mut wire_WasmVal_i32,
+        i64: *mut wire_WasmVal_i64,
+        f32: *mut wire_WasmVal_f32,
+        f64: *mut wire_WasmVal_f64,
+        funcRef: *mut wire_WasmVal_funcRef,
+        externRef: *mut wire_WasmVal_externRef,
     }
 
     #[repr(C)]
     #[derive(Clone)]
-    pub struct wire_Value2_I32 {
+    pub struct wire_WasmVal_i32 {
         field0: i32,
     }
 
     #[repr(C)]
     #[derive(Clone)]
-    pub struct wire_Value2_I64 {
+    pub struct wire_WasmVal_i64 {
         field0: i64,
     }
 
     #[repr(C)]
     #[derive(Clone)]
-    pub struct wire_Value2_F32 {
+    pub struct wire_WasmVal_f32 {
         field0: f32,
     }
 
     #[repr(C)]
     #[derive(Clone)]
-    pub struct wire_Value2_F64 {
+    pub struct wire_WasmVal_f64 {
         field0: f64,
     }
 
     #[repr(C)]
     #[derive(Clone)]
-    pub struct wire_Value2_FuncRef {
+    pub struct wire_WasmVal_funcRef {
         field0: *mut wire_Func,
     }
 
     #[repr(C)]
     #[derive(Clone)]
-    pub struct wire_Value2_ExternRef {
+    pub struct wire_WasmVal_externRef {
         field0: u32,
     }
 
@@ -3379,6 +3312,21 @@ mod io {
         })
     }
 
+    impl NewWithNullPtr for wire_MemoryTy {
+        fn new_with_null_ptr() -> Self {
+            Self {
+                initial_pages: Default::default(),
+                maximum_pages: core::ptr::null_mut(),
+            }
+        }
+    }
+
+    impl Default for wire_MemoryTy {
+        fn default() -> Self {
+            Self::new_with_null_ptr()
+        }
+    }
+
     impl NewWithNullPtr for wire_ModuleConfig {
         fn new_with_null_ptr() -> Self {
             Self {
@@ -3477,7 +3425,7 @@ mod io {
         }
     }
 
-    impl NewWithNullPtr for wire_TableType2 {
+    impl NewWithNullPtr for wire_TableArgs {
         fn new_with_null_ptr() -> Self {
             Self {
                 min: Default::default(),
@@ -3486,73 +3434,10 @@ mod io {
         }
     }
 
-    impl Default for wire_TableType2 {
+    impl Default for wire_TableArgs {
         fn default() -> Self {
             Self::new_with_null_ptr()
         }
-    }
-
-    impl NewWithNullPtr for wire_Value2 {
-        fn new_with_null_ptr() -> Self {
-            Self {
-                tag: -1,
-                kind: core::ptr::null_mut(),
-            }
-        }
-    }
-
-    #[no_mangle]
-    pub extern "C" fn inflate_Value2_I32() -> *mut Value2Kind {
-        support::new_leak_box_ptr(Value2Kind {
-            I32: support::new_leak_box_ptr(wire_Value2_I32 {
-                field0: Default::default(),
-            }),
-        })
-    }
-
-    #[no_mangle]
-    pub extern "C" fn inflate_Value2_I64() -> *mut Value2Kind {
-        support::new_leak_box_ptr(Value2Kind {
-            I64: support::new_leak_box_ptr(wire_Value2_I64 {
-                field0: Default::default(),
-            }),
-        })
-    }
-
-    #[no_mangle]
-    pub extern "C" fn inflate_Value2_F32() -> *mut Value2Kind {
-        support::new_leak_box_ptr(Value2Kind {
-            F32: support::new_leak_box_ptr(wire_Value2_F32 {
-                field0: Default::default(),
-            }),
-        })
-    }
-
-    #[no_mangle]
-    pub extern "C" fn inflate_Value2_F64() -> *mut Value2Kind {
-        support::new_leak_box_ptr(Value2Kind {
-            F64: support::new_leak_box_ptr(wire_Value2_F64 {
-                field0: Default::default(),
-            }),
-        })
-    }
-
-    #[no_mangle]
-    pub extern "C" fn inflate_Value2_FuncRef() -> *mut Value2Kind {
-        support::new_leak_box_ptr(Value2Kind {
-            FuncRef: support::new_leak_box_ptr(wire_Value2_FuncRef {
-                field0: core::ptr::null_mut(),
-            }),
-        })
-    }
-
-    #[no_mangle]
-    pub extern "C" fn inflate_Value2_ExternRef() -> *mut Value2Kind {
-        support::new_leak_box_ptr(Value2Kind {
-            ExternRef: support::new_leak_box_ptr(wire_Value2_ExternRef {
-                field0: Default::default(),
-            }),
-        })
     }
 
     impl NewWithNullPtr for wire_WasiConfig {
@@ -3593,19 +3478,67 @@ mod io {
         }
     }
 
-    impl NewWithNullPtr for wire_WasmMemoryType {
+    impl NewWithNullPtr for wire_WasmVal {
         fn new_with_null_ptr() -> Self {
             Self {
-                initial_pages: Default::default(),
-                maximum_pages: core::ptr::null_mut(),
+                tag: -1,
+                kind: core::ptr::null_mut(),
             }
         }
     }
 
-    impl Default for wire_WasmMemoryType {
-        fn default() -> Self {
-            Self::new_with_null_ptr()
-        }
+    #[no_mangle]
+    pub extern "C" fn inflate_WasmVal_i32() -> *mut WasmValKind {
+        support::new_leak_box_ptr(WasmValKind {
+            i32: support::new_leak_box_ptr(wire_WasmVal_i32 {
+                field0: Default::default(),
+            }),
+        })
+    }
+
+    #[no_mangle]
+    pub extern "C" fn inflate_WasmVal_i64() -> *mut WasmValKind {
+        support::new_leak_box_ptr(WasmValKind {
+            i64: support::new_leak_box_ptr(wire_WasmVal_i64 {
+                field0: Default::default(),
+            }),
+        })
+    }
+
+    #[no_mangle]
+    pub extern "C" fn inflate_WasmVal_f32() -> *mut WasmValKind {
+        support::new_leak_box_ptr(WasmValKind {
+            f32: support::new_leak_box_ptr(wire_WasmVal_f32 {
+                field0: Default::default(),
+            }),
+        })
+    }
+
+    #[no_mangle]
+    pub extern "C" fn inflate_WasmVal_f64() -> *mut WasmValKind {
+        support::new_leak_box_ptr(WasmValKind {
+            f64: support::new_leak_box_ptr(wire_WasmVal_f64 {
+                field0: Default::default(),
+            }),
+        })
+    }
+
+    #[no_mangle]
+    pub extern "C" fn inflate_WasmVal_funcRef() -> *mut WasmValKind {
+        support::new_leak_box_ptr(WasmValKind {
+            funcRef: support::new_leak_box_ptr(wire_WasmVal_funcRef {
+                field0: core::ptr::null_mut(),
+            }),
+        })
+    }
+
+    #[no_mangle]
+    pub extern "C" fn inflate_WasmVal_externRef() -> *mut WasmValKind {
+        support::new_leak_box_ptr(WasmValKind {
+            externRef: support::new_leak_box_ptr(wire_WasmVal_externRef {
+                field0: Default::default(),
+            }),
+        })
     }
 
     impl NewWithNullPtr for wire_WasmiInstanceId {

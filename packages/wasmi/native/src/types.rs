@@ -7,47 +7,47 @@ use flutter_rust_bridge::{frb, RustOpaque};
 pub use wasmi::{core::Pages, Func, Global, GlobalType, Memory, Mutability, Table};
 use wasmi::{core::ValueType, *};
 
-// #[frb(mirror(Value))]
+#[allow(non_camel_case_types)]
 #[derive(Debug)]
-pub enum Value2 {
+pub enum WasmVal {
     /// Value of 32-bit signed or unsigned integer.
-    I32(i32),
+    i32(i32),
     /// Value of 64-bit signed or unsigned integer.
-    I64(i64),
+    i64(i64),
     /// Value of 32-bit IEEE 754-2008 floating point number.
-    F32(f32),
+    f32(f32),
     /// Value of 64-bit IEEE 754-2008 floating point number.
-    F64(f64),
+    f64(f64),
     /// A nullable [`Func`][`crate::Func`] reference, a.k.a. [`FuncRef`].
-    FuncRef(Option<RustOpaque<Func>>), // NonZeroU32
+    funcRef(Option<RustOpaque<Func>>), // NonZeroU32
     /// A nullable external object reference, a.k.a. [`ExternRef`].
-    ExternRef(u32), // NonZeroU32
+    externRef(u32), // NonZeroU32
 }
 
-impl Value2 {
+impl WasmVal {
     pub fn to_value(self, ctx: impl AsContextMut) -> Value {
         match self {
-            Value2::I32(i) => Value::I32(i),
-            Value2::I64(i) => Value::I64(i),
-            Value2::F32(i) => Value::F32(i.to_bits().into()),
-            Value2::F64(i) => Value::F64(i.to_bits().into()),
-            Value2::FuncRef(i) => {
+            WasmVal::i32(i) => Value::I32(i),
+            WasmVal::i64(i) => Value::I64(i),
+            WasmVal::f32(i) => Value::F32(i.to_bits().into()),
+            WasmVal::f64(i) => Value::F64(i.to_bits().into()),
+            WasmVal::funcRef(i) => {
                 let inner = i.map(|f| Func::clone(&f));
                 Value::FuncRef(FuncRef::new(inner))
             }
-            Value2::ExternRef(i) => Value::ExternRef(ExternRef::new::<u32>(ctx, Some(i))),
+            WasmVal::externRef(i) => Value::ExternRef(ExternRef::new::<u32>(ctx, Some(i))),
         }
     }
 
     pub fn from_value<'a, T: 'a>(value: &Value, ctx: impl Into<StoreContext<'a, T>>) -> Self {
         match value {
-            Value::I32(i) => Value2::I32(*i),
-            Value::I64(i) => Value2::I64(*i),
-            Value::F32(i) => Value2::F32(i.to_float()),
-            Value::F64(i) => Value2::F64(i.to_float()),
-            Value::FuncRef(i) => Value2::FuncRef(i.func().map(|f| RustOpaque::new(*f))), // NonZeroU32::new(1).unwrap()),
+            Value::I32(i) => WasmVal::i32(*i),
+            Value::I64(i) => WasmVal::i64(*i),
+            Value::F32(i) => WasmVal::f32(i.to_float()),
+            Value::F64(i) => WasmVal::f64(i.to_float()),
+            Value::FuncRef(i) => WasmVal::funcRef(i.func().map(|f| RustOpaque::new(*f))), // NonZeroU32::new(1).unwrap()),
             Value::ExternRef(i) => {
-                Value2::ExternRef(*(i.data(ctx).unwrap().downcast_ref::<u32>().unwrap()))
+                WasmVal::externRef(*(i.data(ctx).unwrap().downcast_ref::<u32>().unwrap()))
             } // NonZeroU32::new(1).unwrap()),
         }
     }
@@ -92,31 +92,32 @@ impl From<&TableType> for TableTy {
     }
 }
 
+#[allow(non_camel_case_types)]
 #[derive(Debug)]
 pub enum ValueTy {
     /// 32-bit signed or unsigned integer.
-    I32,
+    i32,
     /// 64-bit signed or unsigned integer.
-    I64,
+    i64,
     /// 32-bit IEEE 754-2008 floating point number.
-    F32,
+    f32,
     /// 64-bit IEEE 754-2008 floating point number.
-    F64,
+    f64,
     /// A nullable function reference.
-    FuncRef,
+    funcRef,
     /// A nullable external reference.
-    ExternRef,
+    externRef,
 }
 
 impl From<&ValueType> for ValueTy {
     fn from(value: &ValueType) -> Self {
         match value {
-            ValueType::I32 => ValueTy::I32,
-            ValueType::I64 => ValueTy::I64,
-            ValueType::F32 => ValueTy::F32,
-            ValueType::F64 => ValueTy::F64,
-            ValueType::FuncRef => ValueTy::FuncRef,
-            ValueType::ExternRef => ValueTy::ExternRef,
+            ValueType::I32 => ValueTy::i32,
+            ValueType::I64 => ValueTy::i64,
+            ValueType::F32 => ValueTy::f32,
+            ValueType::F64 => ValueTy::f64,
+            ValueType::FuncRef => ValueTy::funcRef,
+            ValueType::ExternRef => ValueTy::externRef,
         }
     }
 }
@@ -124,12 +125,12 @@ impl From<&ValueType> for ValueTy {
 impl From<ValueTy> for ValueType {
     fn from(value: ValueTy) -> Self {
         match value {
-            ValueTy::I32 => ValueType::I32,
-            ValueTy::I64 => ValueType::I64,
-            ValueTy::F32 => ValueType::F32,
-            ValueTy::F64 => ValueType::F64,
-            ValueTy::FuncRef => ValueType::FuncRef,
-            ValueTy::ExternRef => ValueType::ExternRef,
+            ValueTy::i32 => ValueType::I32,
+            ValueTy::i64 => ValueType::I64,
+            ValueTy::f32 => ValueType::F32,
+            ValueTy::f64 => ValueType::F64,
+            ValueTy::funcRef => ValueType::FuncRef,
+            ValueTy::externRef => ValueType::ExternRef,
         }
     }
 }
@@ -153,7 +154,7 @@ pub enum ExternalType {
     Func(FuncTy),
     Global(GlobalTy),
     Table(TableTy),
-    Memory(WasmMemoryType),
+    Memory(MemoryTy),
 }
 
 impl From<&ExternType> for ExternalType {
@@ -300,7 +301,7 @@ impl From<&ExternalValue> for Extern {
 }
 
 #[derive(Debug)]
-pub struct TableType2 {
+pub struct TableArgs {
     /// The minimum number of elements the [`Table`] must have.
     pub min: u32,
     /// The optional maximum number of elements the [`Table`] can have.
@@ -310,20 +311,20 @@ pub struct TableType2 {
 }
 
 #[derive(Debug)]
-pub struct WasmMemoryType {
+pub struct MemoryTy {
     pub initial_pages: u32,
     pub maximum_pages: Option<u32>,
 }
 
-impl WasmMemoryType {
+impl MemoryTy {
     pub fn to_memory_type(&self) -> Result<MemoryType> {
         MemoryType::new(self.initial_pages, self.maximum_pages).map_err(to_anyhow)
     }
 }
 
-impl From<&MemoryType> for WasmMemoryType {
+impl From<&MemoryType> for MemoryTy {
     fn from(memory_type: &MemoryType) -> Self {
-        WasmMemoryType {
+        MemoryTy {
             initial_pages: memory_type.initial_pages().into(),
             maximum_pages: memory_type.maximum_pages().map(|v| v.into()),
         }
