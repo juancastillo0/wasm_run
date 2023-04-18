@@ -50,7 +50,7 @@ class _WasmModule extends WasmModule {
   WasmInstanceBuilder builder({WasiConfig? wasiConfig}) {
     final builder =
         defaultInstance().moduleBuilder(module: module, wasiConfig: wasiConfig);
-    return _Builder(this, builder);
+    return _Builder(this, builder, wasiConfig);
   }
 
   @override
@@ -77,47 +77,47 @@ class _WasmModule extends WasmModule {
   }
 }
 
-Value2 _fromWasmValue(WasmValue value, WasmiModuleId module) {
+WasmVal _fromWasmValue(WasmValue value, WasmiModuleId module) {
   switch (value.type) {
     case WasmValueType.i32:
-      return Value2.i32(value.value! as int);
+      return WasmVal.i32(value.value! as int);
     case WasmValueType.i64:
-      return Value2.i64((value.value! as BigInt).toInt());
+      return WasmVal.i64((value.value! as BigInt).toInt());
     case WasmValueType.f32:
-      return Value2.f32(value.value! as double);
+      return WasmVal.f32(value.value! as double);
     case WasmValueType.f64:
-      return Value2.f64(value.value! as double);
+      return WasmVal.f64(value.value! as double);
     case WasmValueType.externRef:
-      return Value2.externRef(_References.getOrCreateId(value.value, module));
+      return WasmVal.externRef(_References.getOrCreateId(value.value, module));
     case WasmValueType.funcRef:
       if (value.value == null) {
-        return const Value2.funcRef();
+        return const WasmVal.funcRef();
       }
       return _makeFunction(value.value! as WasmFunction, module);
   }
 }
 
-Value2 _fromWasmValueRaw(ValueTy ty, Object? value, WasmiModuleId module) {
+WasmVal _fromWasmValueRaw(ValueTy ty, Object? value, WasmiModuleId module) {
   switch (ty) {
-    case ValueTy.I32:
-      return Value2.i32(value! as int);
-    case ValueTy.I64:
-      return Value2.i64(value is int ? value : (value! as BigInt).toInt());
-    case ValueTy.F32:
-      return Value2.f32(value! as double);
-    case ValueTy.F64:
-      return Value2.f64(value! as double);
-    case ValueTy.ExternRef:
-      return Value2.externRef(_References.getOrCreateId(value, module));
-    case ValueTy.FuncRef:
+    case ValueTy.i32:
+      return WasmVal.i32(value! as int);
+    case ValueTy.i64:
+      return WasmVal.i64(value is int ? value : (value! as BigInt).toInt());
+    case ValueTy.f32:
+      return WasmVal.f32(value! as double);
+    case ValueTy.f64:
+      return WasmVal.f64(value! as double);
+    case ValueTy.externRef:
+      return WasmVal.externRef(_References.getOrCreateId(value, module));
+    case ValueTy.funcRef:
       if (value == null) {
-        return const Value2.funcRef();
+        return const WasmVal.funcRef();
       }
       return _makeFunction(value as WasmFunction, module);
   }
 }
 
-Value2_FuncRef _makeFunction(WasmFunction function, WasmiModuleId module) {
+WasmVal_funcRef _makeFunction(WasmFunction function, WasmiModuleId module) {
   final functionId = _References.getOrCreateId(function, module);
   final func = module.createFunction(
     functionPointer: _References.globalWasmFunctionPointer,
@@ -125,7 +125,7 @@ Value2_FuncRef _makeFunction(WasmFunction function, WasmiModuleId module) {
     paramTypes: function.params.map((v) => _toValueTy(v!)).toList(),
     resultTypes: function.results!.map((v) => _toValueTy(v)).toList(),
   );
-  return Value2_FuncRef(func);
+  return WasmVal_funcRef(func);
 }
 
 WasmExternalKind _toImpExpKind(ExternalType kind) {
@@ -168,17 +168,17 @@ WasmFunction _toWasmFunction(Func func, WasmiModuleId module) {
 
 WasmValueType _toWasmValueType(ValueTy ty) {
   switch (ty) {
-    case ValueTy.I32:
+    case ValueTy.i32:
       return WasmValueType.i32;
-    case ValueTy.I64:
+    case ValueTy.i64:
       return WasmValueType.i64;
-    case ValueTy.F32:
+    case ValueTy.f32:
       return WasmValueType.f32;
-    case ValueTy.F64:
+    case ValueTy.f64:
       return WasmValueType.f64;
-    case ValueTy.ExternRef:
+    case ValueTy.externRef:
       return WasmValueType.externRef;
-    case ValueTy.FuncRef:
+    case ValueTy.funcRef:
       return WasmValueType.funcRef;
   }
 }
@@ -186,17 +186,17 @@ WasmValueType _toWasmValueType(ValueTy ty) {
 ValueTy _toValueTy(WasmValueType ty) {
   switch (ty) {
     case WasmValueType.i32:
-      return ValueTy.I32;
+      return ValueTy.i32;
     case WasmValueType.i64:
-      return ValueTy.I64;
+      return ValueTy.i64;
     case WasmValueType.f32:
-      return ValueTy.F32;
+      return ValueTy.f32;
     case WasmValueType.f64:
-      return ValueTy.F64;
+      return ValueTy.f64;
     case WasmValueType.externRef:
-      return ValueTy.ExternRef;
+      return ValueTy.externRef;
     case WasmValueType.funcRef:
-      return ValueTy.FuncRef;
+      return ValueTy.funcRef;
   }
 }
 
@@ -221,7 +221,7 @@ WasmExternal _toWasmExternal(ModuleExportValue value, _Instance instance) {
   // }
 }
 
-typedef GlobalWasmFunction = ffi.Pointer<wire_list_value_2> Function(
+typedef GlobalWasmFunction = ffi.Pointer<wire_list_wasm_val> Function(
   ffi.Int64 functionId,
   WireSyncReturn wasmArguments,
 );
@@ -262,7 +262,7 @@ class _References {
 
   static int get globalWasmFunctionPointer =>
       ffi.Pointer.fromFunction<GlobalWasmFunction>(_globalWasmFunction).address;
-  static ffi.Pointer<wire_list_value_2> _globalWasmFunction(
+  static ffi.Pointer<wire_list_wasm_val> _globalWasmFunction(
     int functionId,
     WireSyncReturn value,
   ) {
@@ -286,7 +286,7 @@ class _References {
     if (output.isEmpty) {
       // TODO: null pointer?
       // ignore: invalid_use_of_protected_member
-      return platform.api2wire_list_value_2(const []);
+      return platform.api2wire_list_wasm_val(const []);
     }
     final results = function.results!;
     int i = 0;
@@ -294,40 +294,40 @@ class _References {
         .map((e) => _fromWasmValueRaw(_toValueTy(results[i++]), e, module))
         .toList();
     // ignore: invalid_use_of_protected_member
-    final pointer = platform.api2wire_list_value_2(mapped);
+    final pointer = platform.api2wire_list_wasm_val(mapped);
     return pointer;
   }
 
-  static List<Value2> _wire2api_list_value_2(dynamic raw) {
+  static List<WasmVal> _wire2api_list_value_2(dynamic raw) {
     final list = raw as List;
     return list.map(_wire2api_value_2).toList();
   }
 
-  static Value2 _wire2api_value_2(dynamic raw_) {
+  static WasmVal _wire2api_value_2(dynamic raw_) {
     final raw = raw_ as List;
     switch (raw[0]) {
       case 0:
-        return Value2_I32(raw[1] as int);
+        return WasmVal_i32(raw[1] as int);
       case 1:
-        return Value2_I64(raw[1] as int);
+        return WasmVal_i64(raw[1] as int);
       case 2:
-        return Value2_F32(raw[1] as double);
+        return WasmVal_f32(raw[1] as double);
       case 3:
-        return Value2_F64(raw[1] as double);
+        return WasmVal_f64(raw[1] as double);
       case 4:
-        return Value2_FuncRef(
+        return WasmVal_funcRef(
           raw[1] == null
               ? null
               : Func.fromRaw(raw[0] as int, raw[1] as int, defaultInstance()),
         );
       case 5:
-        return Value2_ExternRef(raw[1] as int);
+        return WasmVal_externRef(raw[1] as int);
       default:
         throw Exception("unreachable");
     }
   }
 
-  static Object? dartValueFromWasm(Value2 raw, WasmiModuleId module) {
+  static Object? dartValueFromWasm(WasmVal raw, WasmiModuleId module) {
     return raw.when(
       i32: (value) => value,
       i64: (value) => BigInt.from(value),
@@ -341,7 +341,7 @@ class _References {
     );
   }
 
-  static WasmValue dartValueTypedFromWasm(Value2 raw, WasmiModuleId module) {
+  static WasmValue dartValueTypedFromWasm(WasmVal raw, WasmiModuleId module) {
     return raw.when(
       i32: WasmValue.i32,
       // TODO: BigInt not necessary in native
@@ -360,8 +360,9 @@ class _References {
 class _Builder extends WasmInstanceBuilder {
   final _WasmModule compiledModule;
   final WasmiModuleId module;
+  final WasiConfig? wasiConfig;
 
-  _Builder(this.compiledModule, this.module);
+  _Builder(this.compiledModule, this.module, this.wasiConfig);
 
   @override
   WasmGlobal createGlobal(WasmValue value, {required bool mutable}) {
@@ -375,7 +376,7 @@ class _Builder extends WasmInstanceBuilder {
   @override
   WasmMemory createMemory(int pages, {int? maxPages}) {
     final memory = module.createMemory(
-      memoryType: WasmMemoryType(
+      memoryType: MemoryTy(
         initialPages: pages,
         maximumPages: maxPages,
       ),
@@ -393,7 +394,7 @@ class _Builder extends WasmInstanceBuilder {
     return _Table(
       module.createTable(
         value: inner,
-        tableType: TableType2(
+        tableType: TableArgs(
           min: minSize,
           max: maxSize,
         ),
@@ -503,6 +504,9 @@ class _Instance extends WasmInstance {
   @override
   late final Map<String, WasmExternal> exports;
 
+  Stream<Uint8List>? _stderr;
+  Stream<Uint8List>? _stdout;
+
   _Instance(this.instance, this.builder) {
     final d = instance.exports();
     // TODO: remove _exports
@@ -510,13 +514,39 @@ class _Instance extends WasmInstance {
     exports = _exports.map(
       (key, value) => MapEntry(key, _toWasmExternal(value, this)),
     );
+    if (builder.wasiConfig?.captureStderr == true) {
+      _stderr ??= builder.module
+          .stdioStream(kind: StdIOKind.stderr)
+          .asBroadcastStream();
+      _stderr!.first;
+    }
+    if (builder.wasiConfig?.captureStderr == true) {
+      _stdout ??= builder.module
+          .stdioStream(kind: StdIOKind.stdout)
+          .asBroadcastStream();
+      _stdout!.first;
+    }
   }
 
   @override
-  Stream<List<int>> get stderr => throw UnimplementedError();
+  Stream<Uint8List> get stderr {
+    if (builder.wasiConfig == null) {
+      throw Exception("Wasi is not enabled");
+    } else if (builder.wasiConfig!.captureStderr == false) {
+      throw Exception("Wasi is not capturing stderr");
+    }
+    return _stderr!;
+  }
 
   @override
-  Stream<List<int>> get stdout => throw UnimplementedError();
+  Stream<Uint8List> get stdout {
+    if (builder.wasiConfig == null) {
+      throw Exception("Wasi is not enabled");
+    } else if (builder.wasiConfig!.captureStdout == false) {
+      throw Exception("Wasi is not capturing stdout");
+    }
+    return _stdout!;
+  }
 }
 
 class _Memory extends WasmMemory {

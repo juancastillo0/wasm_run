@@ -240,11 +240,11 @@ class _Instance extends WasmInstance {
 
   @override
   // TODO: implement stderr
-  Stream<List<int>> get stderr => throw UnimplementedError();
+  Stream<Uint8List> get stderr => throw UnimplementedError();
 
   @override
   // TODO: implement stdout
-  Stream<List<int>> get stdout => throw UnimplementedError();
+  Stream<Uint8List> get stdout => throw UnimplementedError();
 }
 
 class _Memory extends WasmMemory {

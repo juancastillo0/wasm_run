@@ -7,7 +7,6 @@ import 'dart:io';
 import 'package:flutter_rust_bridge/flutter_rust_bridge.dart';
 import 'package:test/test.dart';
 import 'package:wasmi/src/bridge_generated.io.dart';
-import 'package:wasmi/wasmi.dart';
 
 int addOne(int v) => v + 1;
 
@@ -15,7 +14,7 @@ final platform = WasmiDartPlatform(
   DynamicLibrary.open('../../target/debug/libwasmi_dart.dylib'),
 );
 
-Pointer<wire_list_value_2> mapWasmFunction(WireSyncReturn value) {
+Pointer<wire_list_wasm_val> mapWasmFunction(WireSyncReturn value) {
 // List<dynamic> wireSyncReturnIntoDart(WireSyncReturn syncReturn) =>
 //     syncReturn.ref.intoDart();
   print('dart value $value');
@@ -24,20 +23,21 @@ Pointer<wire_list_value_2> mapWasmFunction(WireSyncReturn value) {
   final input = _wire2api_list_value_2(l.first);
   print('dart input $input');
   final output = [
-    Value2.i64((input.first.field0 as int) * 2),
+    WasmVal.i64((input.first.field0 as int) * 2),
   ];
 
   print('dart output $output');
   print('dart after platform');
   // TODO: this throws
-  final result = platform.api2wire_list_value_2(output);
+  // ignore: invalid_use_of_protected_member
+  final result = platform.api2wire_list_wasm_val(output);
   print('dart result $result');
   return result;
 }
 
 int mapWasmFunctionMut(
   WireSyncReturn value,
-  Pointer<wire_list_value_2> result,
+  Pointer<wire_list_wasm_val> result,
 ) {
 // List<dynamic> wireSyncReturnIntoDart(WireSyncReturn syncReturn) =>
 //     syncReturn.ref.intoDart();
@@ -47,7 +47,7 @@ int mapWasmFunctionMut(
   final input = _wire2api_list_value_2(l.first);
   print('dart input $input');
   final output = [
-    Value2.i64((input.first.field0 as int) * 2),
+    WasmVal.i64((input.first.field0 as int) * 2),
   ];
 
   print('dart output $output');
@@ -57,7 +57,8 @@ int mapWasmFunctionMut(
   );
   print('dart after platform $result');
   // TODO: this throws
-  final r = platform.api2wire_list_value_2(
+  // ignore: invalid_use_of_protected_member
+  final r = platform.api2wire_list_wasm_val(
     output, // result
   );
   print('dart result $r');
@@ -73,46 +74,46 @@ void mapWasmFunctionVoid(WireSyncReturn value) {
   final input = _wire2api_list_value_2(l.first);
   print('dart input $input');
   final output = [
-    Value2.i64((input.first.field0 as int) * 2),
+    WasmVal.i64((input.first.field0 as int) * 2),
   ];
 
   print('dart output $output');
 }
 
 typedef MapInt = Int64 Function(Int64);
-typedef WasmFunction = Pointer<wire_list_value_2> Function(WireSyncReturn);
+typedef WasmFunction = Pointer<wire_list_wasm_val> Function(WireSyncReturn);
 typedef WasmFunctionMut = Int64 Function(
-    WireSyncReturn, Pointer<wire_list_value_2>);
+    WireSyncReturn, Pointer<wire_list_wasm_val>);
 typedef WasmFunctionVoid = Void Function(WireSyncReturn);
 
-List<Value2> _wire2api_list_value_2(dynamic raw) {
+List<WasmVal> _wire2api_list_value_2(dynamic raw) {
   return (raw as List<dynamic>).map(_wire2api_value_2).toList();
 }
 
-Value2 _wire2api_value_2(dynamic raw) {
+WasmVal _wire2api_value_2(dynamic raw) {
   switch (raw[0]) {
     // case 0:
-    //   return Value2_I32(
+    //   return WasmVal_I32(
     //     _wire2api_i32(raw[1]),
     //   );
     case 1:
-      return Value2_I64(
+      return WasmVal_i64(
         raw[1] as int,
       );
     // case 2:
-    //   return Value2_F32(
+    //   return WasmVal_F32(
     //     _wire2api_f32(raw[1]),
     //   );
     // case 3:
-    //   return Value2_F64(
+    //   return WasmVal_F64(
     //     _wire2api_f64(raw[1]),
     //   );
     // case 4:
-    //   return Value2_FuncRef(
+    //   return WasmVal_FuncRef(
     //     _wire2api_u32(raw[1]),
     //   );
     // case 5:
-    //   return Value2_ExternRef(
+    //   return WasmVal_ExternRef(
     //     _wire2api_u32(raw[1]),
     //   );
     default:
@@ -123,9 +124,7 @@ Value2 _wire2api_value_2(dynamic raw) {
 void main() {
   group('A group of tests', () {
     WasmiDart getLibrary() {
-      return createWrapper(
-        DynamicLibrary.open('../../target/debug/libwasmi_dart.dylib'),
-      );
+      return WasmiDartImpl.raw(platform);
     }
 
     test('simple function', () async {
@@ -133,7 +132,7 @@ void main() {
       final v = Pointer.fromFunction<MapInt>(addOne, 0);
       final out = w.runFunction(pointer: v.address);
 
-      expect(out, [Value2.i64(2)]);
+      expect(out, [WasmVal.i64(2)]);
     });
 
     test(
@@ -144,10 +143,10 @@ void main() {
         final v = Pointer.fromFunction<WasmFunction>(mapWasmFunction);
         final out = w.runWasmFunc(
           pointer: v.address,
-          params: [1].map(Value2.i64).toList(),
+          params: [1].map(WasmVal.i64).toList(),
         );
 
-        expect(out, Value2.i64(2));
+        expect(out, WasmVal.i64(2));
       },
       skip: 'TODO: find out how to receive results in wasm function',
     );
@@ -160,10 +159,10 @@ void main() {
         final v = Pointer.fromFunction<WasmFunctionMut>(mapWasmFunctionMut, 0);
         final out = w.runWasmFuncMut(
           pointer: v.address,
-          params: [1].map(Value2.i64).toList(),
+          params: [1].map(WasmVal.i64).toList(),
         );
 
-        expect(out, Value2.i64(2));
+        expect(out, WasmVal.i64(2));
       },
       skip: 'TODO: find out how to receive results in wasm function',
     );
@@ -174,7 +173,7 @@ void main() {
       final v = Pointer.fromFunction<WasmFunctionVoid>(mapWasmFunctionVoid);
       final out = w.runWasmFuncVoid(
         pointer: v.address,
-        params: [1].map(Value2.i64).toList(),
+        params: [1].map(WasmVal.i64).toList(),
       );
 
       expect(out, true);
@@ -203,7 +202,7 @@ void main() {
 
       print(base64Encode(binary));
       // final glob = await w.createGlobal(
-      //   value: Value2.i64(0),
+      //   value: WasmVal.i64(0),
       //   mutability: Mutability.Var,
       // );
 
@@ -213,7 +212,7 @@ void main() {
       //     module: 'module',
       //     name: 'name',
       //     value: ExternalValue.global(
-      //       value: Value2.i64(0),
+      //       value: WasmVal.i64(0),
       //       mutability: Mutability.Var,
       //     ),
       //   ),
@@ -225,14 +224,19 @@ void main() {
       );
       print(module.getModuleExports());
 
-      final instance = w.moduleBuilder(module: module).instantiateSync();
-      final addResult = await instance.callFunctionWithArgs(
-        name: 'add',
-        args: [1, 4].map(Value2.i32).toList(),
+      final builder = w.moduleBuilder(module: module);
+      final instance = builder.instantiateSync();
+      final exports = instance.exports();
+      final add = exports.firstWhere((e) => e.desc.name == 'add').value
+          as ExternalValue_Func;
+
+      final addResult = await builder.callFunctionHandle(
+        func: add.field0,
+        args: [1, 4].map(WasmVal.i32).toList(),
       );
       expect(
         addResult,
-        [Value2.i32(5)],
+        [WasmVal.i32(5)],
       );
     });
   });
