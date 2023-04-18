@@ -33,22 +33,22 @@ abstract class WasmiDart {
 
   FlutterRustBridgeTaskConstMeta get kParseWatFormatConstMeta;
 
-  List<Value2> runFunction({required int pointer, dynamic hint});
+  List<WasmVal> runFunction({required int pointer, dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kRunFunctionConstMeta;
 
-  List<Value2> runWasmFunc(
-      {required int pointer, required List<Value2> params, dynamic hint});
+  List<WasmVal> runWasmFunc(
+      {required int pointer, required List<WasmVal> params, dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kRunWasmFuncConstMeta;
 
-  List<Value2> runWasmFuncMut(
-      {required int pointer, required List<Value2> params, dynamic hint});
+  List<WasmVal> runWasmFuncMut(
+      {required int pointer, required List<WasmVal> params, dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kRunWasmFuncMutConstMeta;
 
   bool runWasmFuncVoid(
-      {required int pointer, required List<Value2> params, dynamic hint});
+      {required int pointer, required List<WasmVal> params, dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kRunWasmFuncVoidConstMeta;
 
@@ -74,30 +74,6 @@ abstract class WasmiDart {
 
   FlutterRustBridgeTaskConstMeta get kAddConstMeta;
 
-  Future<List<Value2>> callFunctionMethodWasmiInstanceId(
-      {required WasmiInstanceId that, required String name, dynamic hint});
-
-  FlutterRustBridgeTaskConstMeta
-      get kCallFunctionMethodWasmiInstanceIdConstMeta;
-
-  List<Value2> callFunctionWithArgsSyncMethodWasmiInstanceId(
-      {required WasmiInstanceId that,
-      required String name,
-      required List<Value2> args,
-      dynamic hint});
-
-  FlutterRustBridgeTaskConstMeta
-      get kCallFunctionWithArgsSyncMethodWasmiInstanceIdConstMeta;
-
-  Future<List<Value2>> callFunctionWithArgsMethodWasmiInstanceId(
-      {required WasmiInstanceId that,
-      required String name,
-      required List<Value2> args,
-      dynamic hint});
-
-  FlutterRustBridgeTaskConstMeta
-      get kCallFunctionWithArgsMethodWasmiInstanceIdConstMeta;
-
   List<ModuleExportValue> exportsMethodWasmiInstanceId(
       {required WasmiInstanceId that, dynamic hint});
 
@@ -121,24 +97,29 @@ abstract class WasmiDart {
 
   FlutterRustBridgeTaskConstMeta get kLinkImportsMethodWasmiModuleIdConstMeta;
 
+  Stream<Uint8List> stdioStreamMethodWasmiModuleId(
+      {required WasmiModuleId that, required StdIOKind kind, dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kStdioStreamMethodWasmiModuleIdConstMeta;
+
   Future<void> disposeMethodWasmiModuleId(
       {required WasmiModuleId that, dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kDisposeMethodWasmiModuleIdConstMeta;
 
-  List<Value2> callFunctionHandleSyncMethodWasmiModuleId(
+  List<WasmVal> callFunctionHandleSyncMethodWasmiModuleId(
       {required WasmiModuleId that,
       required Func func,
-      required List<Value2> args,
+      required List<WasmVal> args,
       dynamic hint});
 
   FlutterRustBridgeTaskConstMeta
       get kCallFunctionHandleSyncMethodWasmiModuleIdConstMeta;
 
-  Future<List<Value2>> callFunctionHandleMethodWasmiModuleId(
+  Future<List<WasmVal>> callFunctionHandleMethodWasmiModuleId(
       {required WasmiModuleId that,
       required Func func,
-      required List<Value2> args,
+      required List<WasmVal> args,
       dynamic hint});
 
   FlutterRustBridgeTaskConstMeta
@@ -163,14 +144,14 @@ abstract class WasmiDart {
 
   Memory createMemoryMethodWasmiModuleId(
       {required WasmiModuleId that,
-      required WasmMemoryType memoryType,
+      required MemoryTy memoryType,
       dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kCreateMemoryMethodWasmiModuleIdConstMeta;
 
   Global createGlobalMethodWasmiModuleId(
       {required WasmiModuleId that,
-      required Value2 value,
+      required WasmVal value,
       required Mutability mutability,
       dynamic hint});
 
@@ -178,8 +159,8 @@ abstract class WasmiDart {
 
   Table createTableMethodWasmiModuleId(
       {required WasmiModuleId that,
-      required Value2 value,
-      required TableType2 tableType,
+      required WasmVal value,
+      required TableArgs tableType,
       dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kCreateTableMethodWasmiModuleIdConstMeta;
@@ -189,7 +170,7 @@ abstract class WasmiDart {
 
   FlutterRustBridgeTaskConstMeta get kGetGlobalTypeMethodWasmiModuleIdConstMeta;
 
-  Value2 getGlobalValueMethodWasmiModuleId(
+  WasmVal getGlobalValueMethodWasmiModuleId(
       {required WasmiModuleId that, required Global global, dynamic hint});
 
   FlutterRustBridgeTaskConstMeta
@@ -198,13 +179,13 @@ abstract class WasmiDart {
   void setGlobalValueMethodWasmiModuleId(
       {required WasmiModuleId that,
       required Global global,
-      required Value2 value,
+      required WasmVal value,
       dynamic hint});
 
   FlutterRustBridgeTaskConstMeta
       get kSetGlobalValueMethodWasmiModuleIdConstMeta;
 
-  WasmMemoryType getMemoryTypeMethodWasmiModuleId(
+  MemoryTy getMemoryTypeMethodWasmiModuleId(
       {required WasmiModuleId that, required Memory memory, dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kGetMemoryTypeMethodWasmiModuleIdConstMeta;
@@ -260,12 +241,12 @@ abstract class WasmiDart {
       {required WasmiModuleId that,
       required Table table,
       required int delta,
-      required Value2 value,
+      required WasmVal value,
       dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kGrowTableMethodWasmiModuleIdConstMeta;
 
-  Value2? getTableMethodWasmiModuleId(
+  WasmVal? getTableMethodWasmiModuleId(
       {required WasmiModuleId that,
       required Table table,
       required int index,
@@ -277,7 +258,7 @@ abstract class WasmiDart {
       {required WasmiModuleId that,
       required Table table,
       required int index,
-      required Value2 value,
+      required WasmVal value,
       dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kSetTableMethodWasmiModuleIdConstMeta;
@@ -286,7 +267,7 @@ abstract class WasmiDart {
       {required WasmiModuleId that,
       required Table table,
       required int index,
-      required Value2 value,
+      required WasmVal value,
       required int len,
       dynamic hint});
 
@@ -439,7 +420,7 @@ class ExternalType with _$ExternalType {
     TableTy field0,
   ) = ExternalType_Table;
   const factory ExternalType.memory(
-    WasmMemoryType field0,
+    MemoryTy field0,
   ) = ExternalType_Memory;
 }
 
@@ -482,6 +463,16 @@ class GlobalTy {
   const GlobalTy({
     required this.content,
     required this.mutability,
+  });
+}
+
+class MemoryTy {
+  final int initialPages;
+  final int? maximumPages;
+
+  const MemoryTy({
+    required this.initialPages,
+    this.maximumPages,
   });
 }
 
@@ -646,6 +637,26 @@ class PreopenedDir {
   });
 }
 
+enum StdIOKind {
+  stdout,
+  stderr,
+}
+
+class TableArgs {
+  /// The minimum number of elements the [`Table`] must have.
+  final int min;
+
+  /// The optional maximum number of elements the [`Table`] can have.
+  ///
+  /// If this is `None` then the [`Table`] is not limited in size.
+  final int? max;
+
+  const TableArgs({
+    required this.min,
+    this.max,
+  });
+}
+
 class TableTy {
   /// The type of values stored in the [`Table`].
   final ValueTy element;
@@ -665,72 +676,24 @@ class TableTy {
   });
 }
 
-class TableType2 {
-  /// The minimum number of elements the [`Table`] must have.
-  final int min;
-
-  /// The optional maximum number of elements the [`Table`] can have.
-  ///
-  /// If this is `None` then the [`Table`] is not limited in size.
-  final int? max;
-
-  const TableType2({
-    required this.min,
-    this.max,
-  });
-}
-
-@freezed
-class Value2 with _$Value2 {
-  /// Value of 32-bit signed or unsigned integer.
-  const factory Value2.i32(
-    int field0,
-  ) = Value2_I32;
-
-  /// Value of 64-bit signed or unsigned integer.
-  const factory Value2.i64(
-    int field0,
-  ) = Value2_I64;
-
-  /// Value of 32-bit IEEE 754-2008 floating point number.
-  const factory Value2.f32(
-    double field0,
-  ) = Value2_F32;
-
-  /// Value of 64-bit IEEE 754-2008 floating point number.
-  const factory Value2.f64(
-    double field0,
-  ) = Value2_F64;
-
-  /// A nullable [`Func`][`crate::Func`] reference, a.k.a. [`FuncRef`].
-  const factory Value2.funcRef([
-    Func? field0,
-  ]) = Value2_FuncRef;
-
-  /// A nullable external object reference, a.k.a. [`ExternRef`].
-  const factory Value2.externRef(
-    int field0,
-  ) = Value2_ExternRef;
-}
-
 enum ValueTy {
   /// 32-bit signed or unsigned integer.
-  I32,
+  i32,
 
   /// 64-bit signed or unsigned integer.
-  I64,
+  i64,
 
   /// 32-bit IEEE 754-2008 floating point number.
-  F32,
+  f32,
 
   /// 64-bit IEEE 754-2008 floating point number.
-  F64,
+  f64,
 
   /// A nullable function reference.
-  FuncRef,
+  funcRef,
 
   /// A nullable external reference.
-  ExternRef,
+  externRef,
 }
 
 class WasiConfig {
@@ -775,14 +738,37 @@ class WasiStackLimits {
   });
 }
 
-class WasmMemoryType {
-  final int initialPages;
-  final int? maximumPages;
+@freezed
+class WasmVal with _$WasmVal {
+  /// Value of 32-bit signed or unsigned integer.
+  const factory WasmVal.i32(
+    int field0,
+  ) = WasmVal_i32;
 
-  const WasmMemoryType({
-    required this.initialPages,
-    this.maximumPages,
-  });
+  /// Value of 64-bit signed or unsigned integer.
+  const factory WasmVal.i64(
+    int field0,
+  ) = WasmVal_i64;
+
+  /// Value of 32-bit IEEE 754-2008 floating point number.
+  const factory WasmVal.f32(
+    double field0,
+  ) = WasmVal_f32;
+
+  /// Value of 64-bit IEEE 754-2008 floating point number.
+  const factory WasmVal.f64(
+    double field0,
+  ) = WasmVal_f64;
+
+  /// A nullable [`Func`][`crate::Func`] reference, a.k.a. [`FuncRef`].
+  const factory WasmVal.funcRef([
+    Func? field0,
+  ]) = WasmVal_funcRef;
+
+  /// A nullable external object reference, a.k.a. [`ExternRef`].
+  const factory WasmVal.externRef(
+    int field0,
+  ) = WasmVal_externRef;
 }
 
 class WasmiInstanceId {
@@ -793,28 +779,6 @@ class WasmiInstanceId {
     required this.bridge,
     required this.field0,
   });
-
-  Future<List<Value2>> callFunction({required String name, dynamic hint}) =>
-      bridge.callFunctionMethodWasmiInstanceId(
-        that: this,
-        name: name,
-      );
-
-  List<Value2> callFunctionWithArgsSync(
-          {required String name, required List<Value2> args, dynamic hint}) =>
-      bridge.callFunctionWithArgsSyncMethodWasmiInstanceId(
-        that: this,
-        name: name,
-        args: args,
-      );
-
-  Future<List<Value2>> callFunctionWithArgs(
-          {required String name, required List<Value2> args, dynamic hint}) =>
-      bridge.callFunctionWithArgsMethodWasmiInstanceId(
-        that: this,
-        name: name,
-        args: args,
-      );
 
   List<ModuleExportValue> exports({dynamic hint}) =>
       bridge.exportsMethodWasmiInstanceId(
@@ -847,20 +811,26 @@ class WasmiModuleId {
         imports: imports,
       );
 
+  Stream<Uint8List> stdioStream({required StdIOKind kind, dynamic hint}) =>
+      bridge.stdioStreamMethodWasmiModuleId(
+        that: this,
+        kind: kind,
+      );
+
   Future<void> dispose({dynamic hint}) => bridge.disposeMethodWasmiModuleId(
         that: this,
       );
 
-  List<Value2> callFunctionHandleSync(
-          {required Func func, required List<Value2> args, dynamic hint}) =>
+  List<WasmVal> callFunctionHandleSync(
+          {required Func func, required List<WasmVal> args, dynamic hint}) =>
       bridge.callFunctionHandleSyncMethodWasmiModuleId(
         that: this,
         func: func,
         args: args,
       );
 
-  Future<List<Value2>> callFunctionHandle(
-          {required Func func, required List<Value2> args, dynamic hint}) =>
+  Future<List<WasmVal>> callFunctionHandle(
+          {required Func func, required List<WasmVal> args, dynamic hint}) =>
       bridge.callFunctionHandleMethodWasmiModuleId(
         that: this,
         func: func,
@@ -887,14 +857,14 @@ class WasmiModuleId {
         resultTypes: resultTypes,
       );
 
-  Memory createMemory({required WasmMemoryType memoryType, dynamic hint}) =>
+  Memory createMemory({required MemoryTy memoryType, dynamic hint}) =>
       bridge.createMemoryMethodWasmiModuleId(
         that: this,
         memoryType: memoryType,
       );
 
   Global createGlobal(
-          {required Value2 value,
+          {required WasmVal value,
           required Mutability mutability,
           dynamic hint}) =>
       bridge.createGlobalMethodWasmiModuleId(
@@ -904,8 +874,8 @@ class WasmiModuleId {
       );
 
   Table createTable(
-          {required Value2 value,
-          required TableType2 tableType,
+          {required WasmVal value,
+          required TableArgs tableType,
           dynamic hint}) =>
       bridge.createTableMethodWasmiModuleId(
         that: this,
@@ -919,21 +889,21 @@ class WasmiModuleId {
         global: global,
       );
 
-  Value2 getGlobalValue({required Global global, dynamic hint}) =>
+  WasmVal getGlobalValue({required Global global, dynamic hint}) =>
       bridge.getGlobalValueMethodWasmiModuleId(
         that: this,
         global: global,
       );
 
   void setGlobalValue(
-          {required Global global, required Value2 value, dynamic hint}) =>
+          {required Global global, required WasmVal value, dynamic hint}) =>
       bridge.setGlobalValueMethodWasmiModuleId(
         that: this,
         global: global,
         value: value,
       );
 
-  WasmMemoryType getMemoryType({required Memory memory, dynamic hint}) =>
+  MemoryTy getMemoryType({required Memory memory, dynamic hint}) =>
       bridge.getMemoryTypeMethodWasmiModuleId(
         that: this,
         memory: memory,
@@ -997,7 +967,7 @@ class WasmiModuleId {
   int growTable(
           {required Table table,
           required int delta,
-          required Value2 value,
+          required WasmVal value,
           dynamic hint}) =>
       bridge.growTableMethodWasmiModuleId(
         that: this,
@@ -1006,7 +976,7 @@ class WasmiModuleId {
         value: value,
       );
 
-  Value2? getTable({required Table table, required int index, dynamic hint}) =>
+  WasmVal? getTable({required Table table, required int index, dynamic hint}) =>
       bridge.getTableMethodWasmiModuleId(
         that: this,
         table: table,
@@ -1016,7 +986,7 @@ class WasmiModuleId {
   void setTable(
           {required Table table,
           required int index,
-          required Value2 value,
+          required WasmVal value,
           dynamic hint}) =>
       bridge.setTableMethodWasmiModuleId(
         that: this,
@@ -1028,7 +998,7 @@ class WasmiModuleId {
   void fillTable(
           {required Table table,
           required int index,
-          required Value2 value,
+          required WasmVal value,
           required int len,
           dynamic hint}) =>
       bridge.fillTableMethodWasmiModuleId(
@@ -1102,11 +1072,11 @@ class WasmiDartImpl implements WasmiDart {
         argNames: ["wat"],
       );
 
-  List<Value2> runFunction({required int pointer, dynamic hint}) {
+  List<WasmVal> runFunction({required int pointer, dynamic hint}) {
     var arg0 = api2wire_usize(pointer);
     return _platform.executeSync(FlutterRustBridgeSyncTask(
       callFfi: () => _platform.inner.wire_run_function(arg0),
-      parseSuccessData: _wire2api_list_value_2,
+      parseSuccessData: _wire2api_list_wasm_val,
       constMeta: kRunFunctionConstMeta,
       argValues: [pointer],
       hint: hint,
@@ -1119,13 +1089,13 @@ class WasmiDartImpl implements WasmiDart {
         argNames: ["pointer"],
       );
 
-  List<Value2> runWasmFunc(
-      {required int pointer, required List<Value2> params, dynamic hint}) {
+  List<WasmVal> runWasmFunc(
+      {required int pointer, required List<WasmVal> params, dynamic hint}) {
     var arg0 = api2wire_usize(pointer);
-    var arg1 = _platform.api2wire_list_value_2(params);
+    var arg1 = _platform.api2wire_list_wasm_val(params);
     return _platform.executeSync(FlutterRustBridgeSyncTask(
       callFfi: () => _platform.inner.wire_run_wasm_func(arg0, arg1),
-      parseSuccessData: _wire2api_list_value_2,
+      parseSuccessData: _wire2api_list_wasm_val,
       constMeta: kRunWasmFuncConstMeta,
       argValues: [pointer, params],
       hint: hint,
@@ -1138,13 +1108,13 @@ class WasmiDartImpl implements WasmiDart {
         argNames: ["pointer", "params"],
       );
 
-  List<Value2> runWasmFuncMut(
-      {required int pointer, required List<Value2> params, dynamic hint}) {
+  List<WasmVal> runWasmFuncMut(
+      {required int pointer, required List<WasmVal> params, dynamic hint}) {
     var arg0 = api2wire_usize(pointer);
-    var arg1 = _platform.api2wire_list_value_2(params);
+    var arg1 = _platform.api2wire_list_wasm_val(params);
     return _platform.executeSync(FlutterRustBridgeSyncTask(
       callFfi: () => _platform.inner.wire_run_wasm_func_mut(arg0, arg1),
-      parseSuccessData: _wire2api_list_value_2,
+      parseSuccessData: _wire2api_list_wasm_val,
       constMeta: kRunWasmFuncMutConstMeta,
       argValues: [pointer, params],
       hint: hint,
@@ -1158,9 +1128,9 @@ class WasmiDartImpl implements WasmiDart {
       );
 
   bool runWasmFuncVoid(
-      {required int pointer, required List<Value2> params, dynamic hint}) {
+      {required int pointer, required List<WasmVal> params, dynamic hint}) {
     var arg0 = api2wire_usize(pointer);
-    var arg1 = _platform.api2wire_list_value_2(params);
+    var arg1 = _platform.api2wire_list_wasm_val(params);
     return _platform.executeSync(FlutterRustBridgeSyncTask(
       callFfi: () => _platform.inner.wire_run_wasm_func_void(arg0, arg1),
       parseSuccessData: _wire2api_bool,
@@ -1252,79 +1222,6 @@ class WasmiDartImpl implements WasmiDart {
         argNames: ["a", "b"],
       );
 
-  Future<List<Value2>> callFunctionMethodWasmiInstanceId(
-      {required WasmiInstanceId that, required String name, dynamic hint}) {
-    var arg0 = _platform.api2wire_box_autoadd_wasmi_instance_id(that);
-    var arg1 = _platform.api2wire_String(name);
-    return _platform.executeNormal(FlutterRustBridgeTask(
-      callFfi: (port_) => _platform.inner
-          .wire_call_function__method__WasmiInstanceId(port_, arg0, arg1),
-      parseSuccessData: _wire2api_list_value_2,
-      constMeta: kCallFunctionMethodWasmiInstanceIdConstMeta,
-      argValues: [that, name],
-      hint: hint,
-    ));
-  }
-
-  FlutterRustBridgeTaskConstMeta
-      get kCallFunctionMethodWasmiInstanceIdConstMeta =>
-          const FlutterRustBridgeTaskConstMeta(
-            debugName: "call_function__method__WasmiInstanceId",
-            argNames: ["that", "name"],
-          );
-
-  List<Value2> callFunctionWithArgsSyncMethodWasmiInstanceId(
-      {required WasmiInstanceId that,
-      required String name,
-      required List<Value2> args,
-      dynamic hint}) {
-    var arg0 = _platform.api2wire_box_autoadd_wasmi_instance_id(that);
-    var arg1 = _platform.api2wire_String(name);
-    var arg2 = _platform.api2wire_list_value_2(args);
-    return _platform.executeSync(FlutterRustBridgeSyncTask(
-      callFfi: () => _platform.inner
-          .wire_call_function_with_args_sync__method__WasmiInstanceId(
-              arg0, arg1, arg2),
-      parseSuccessData: _wire2api_list_value_2,
-      constMeta: kCallFunctionWithArgsSyncMethodWasmiInstanceIdConstMeta,
-      argValues: [that, name, args],
-      hint: hint,
-    ));
-  }
-
-  FlutterRustBridgeTaskConstMeta
-      get kCallFunctionWithArgsSyncMethodWasmiInstanceIdConstMeta =>
-          const FlutterRustBridgeTaskConstMeta(
-            debugName: "call_function_with_args_sync__method__WasmiInstanceId",
-            argNames: ["that", "name", "args"],
-          );
-
-  Future<List<Value2>> callFunctionWithArgsMethodWasmiInstanceId(
-      {required WasmiInstanceId that,
-      required String name,
-      required List<Value2> args,
-      dynamic hint}) {
-    var arg0 = _platform.api2wire_box_autoadd_wasmi_instance_id(that);
-    var arg1 = _platform.api2wire_String(name);
-    var arg2 = _platform.api2wire_list_value_2(args);
-    return _platform.executeNormal(FlutterRustBridgeTask(
-      callFfi: (port_) => _platform.inner
-          .wire_call_function_with_args__method__WasmiInstanceId(
-              port_, arg0, arg1, arg2),
-      parseSuccessData: _wire2api_list_value_2,
-      constMeta: kCallFunctionWithArgsMethodWasmiInstanceIdConstMeta,
-      argValues: [that, name, args],
-      hint: hint,
-    ));
-  }
-
-  FlutterRustBridgeTaskConstMeta
-      get kCallFunctionWithArgsMethodWasmiInstanceIdConstMeta =>
-          const FlutterRustBridgeTaskConstMeta(
-            debugName: "call_function_with_args__method__WasmiInstanceId",
-            argNames: ["that", "name", "args"],
-          );
-
   List<ModuleExportValue> exportsMethodWasmiInstanceId(
       {required WasmiInstanceId that, dynamic hint}) {
     var arg0 = _platform.api2wire_box_autoadd_wasmi_instance_id(that);
@@ -1405,6 +1302,26 @@ class WasmiDartImpl implements WasmiDart {
         argNames: ["that", "imports"],
       );
 
+  Stream<Uint8List> stdioStreamMethodWasmiModuleId(
+      {required WasmiModuleId that, required StdIOKind kind, dynamic hint}) {
+    var arg0 = _platform.api2wire_box_autoadd_wasmi_module_id(that);
+    var arg1 = api2wire_std_io_kind(kind);
+    return _platform.executeStream(FlutterRustBridgeTask(
+      callFfi: (port_) => _platform.inner
+          .wire_stdio_stream__method__WasmiModuleId(port_, arg0, arg1),
+      parseSuccessData: _wire2api_uint_8_list,
+      constMeta: kStdioStreamMethodWasmiModuleIdConstMeta,
+      argValues: [that, kind],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta get kStdioStreamMethodWasmiModuleIdConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "stdio_stream__method__WasmiModuleId",
+        argNames: ["that", "kind"],
+      );
+
   Future<void> disposeMethodWasmiModuleId(
       {required WasmiModuleId that, dynamic hint}) {
     var arg0 = _platform.api2wire_box_autoadd_wasmi_module_id(that);
@@ -1424,19 +1341,19 @@ class WasmiDartImpl implements WasmiDart {
         argNames: ["that"],
       );
 
-  List<Value2> callFunctionHandleSyncMethodWasmiModuleId(
+  List<WasmVal> callFunctionHandleSyncMethodWasmiModuleId(
       {required WasmiModuleId that,
       required Func func,
-      required List<Value2> args,
+      required List<WasmVal> args,
       dynamic hint}) {
     var arg0 = _platform.api2wire_box_autoadd_wasmi_module_id(that);
     var arg1 = _platform.api2wire_Func(func);
-    var arg2 = _platform.api2wire_list_value_2(args);
+    var arg2 = _platform.api2wire_list_wasm_val(args);
     return _platform.executeSync(FlutterRustBridgeSyncTask(
       callFfi: () => _platform.inner
           .wire_call_function_handle_sync__method__WasmiModuleId(
               arg0, arg1, arg2),
-      parseSuccessData: _wire2api_list_value_2,
+      parseSuccessData: _wire2api_list_wasm_val,
       constMeta: kCallFunctionHandleSyncMethodWasmiModuleIdConstMeta,
       argValues: [that, func, args],
       hint: hint,
@@ -1450,19 +1367,19 @@ class WasmiDartImpl implements WasmiDart {
             argNames: ["that", "func", "args"],
           );
 
-  Future<List<Value2>> callFunctionHandleMethodWasmiModuleId(
+  Future<List<WasmVal>> callFunctionHandleMethodWasmiModuleId(
       {required WasmiModuleId that,
       required Func func,
-      required List<Value2> args,
+      required List<WasmVal> args,
       dynamic hint}) {
     var arg0 = _platform.api2wire_box_autoadd_wasmi_module_id(that);
     var arg1 = _platform.api2wire_Func(func);
-    var arg2 = _platform.api2wire_list_value_2(args);
+    var arg2 = _platform.api2wire_list_wasm_val(args);
     return _platform.executeNormal(FlutterRustBridgeTask(
       callFfi: (port_) => _platform.inner
           .wire_call_function_handle__method__WasmiModuleId(
               port_, arg0, arg1, arg2),
-      parseSuccessData: _wire2api_list_value_2,
+      parseSuccessData: _wire2api_list_wasm_val,
       constMeta: kCallFunctionHandleMethodWasmiModuleIdConstMeta,
       argValues: [that, func, args],
       hint: hint,
@@ -1535,10 +1452,10 @@ class WasmiDartImpl implements WasmiDart {
 
   Memory createMemoryMethodWasmiModuleId(
       {required WasmiModuleId that,
-      required WasmMemoryType memoryType,
+      required MemoryTy memoryType,
       dynamic hint}) {
     var arg0 = _platform.api2wire_box_autoadd_wasmi_module_id(that);
-    var arg1 = _platform.api2wire_box_autoadd_wasm_memory_type(memoryType);
+    var arg1 = _platform.api2wire_box_autoadd_memory_ty(memoryType);
     return _platform.executeSync(FlutterRustBridgeSyncTask(
       callFfi: () =>
           _platform.inner.wire_create_memory__method__WasmiModuleId(arg0, arg1),
@@ -1558,11 +1475,11 @@ class WasmiDartImpl implements WasmiDart {
 
   Global createGlobalMethodWasmiModuleId(
       {required WasmiModuleId that,
-      required Value2 value,
+      required WasmVal value,
       required Mutability mutability,
       dynamic hint}) {
     var arg0 = _platform.api2wire_box_autoadd_wasmi_module_id(that);
-    var arg1 = _platform.api2wire_box_autoadd_value_2(value);
+    var arg1 = _platform.api2wire_box_autoadd_wasm_val(value);
     var arg2 = api2wire_mutability(mutability);
     return _platform.executeSync(FlutterRustBridgeSyncTask(
       callFfi: () => _platform.inner
@@ -1583,12 +1500,12 @@ class WasmiDartImpl implements WasmiDart {
 
   Table createTableMethodWasmiModuleId(
       {required WasmiModuleId that,
-      required Value2 value,
-      required TableType2 tableType,
+      required WasmVal value,
+      required TableArgs tableType,
       dynamic hint}) {
     var arg0 = _platform.api2wire_box_autoadd_wasmi_module_id(that);
-    var arg1 = _platform.api2wire_box_autoadd_value_2(value);
-    var arg2 = _platform.api2wire_box_autoadd_table_type_2(tableType);
+    var arg1 = _platform.api2wire_box_autoadd_wasm_val(value);
+    var arg2 = _platform.api2wire_box_autoadd_table_args(tableType);
     return _platform.executeSync(FlutterRustBridgeSyncTask(
       callFfi: () => _platform.inner
           .wire_create_table__method__WasmiModuleId(arg0, arg1, arg2),
@@ -1626,14 +1543,14 @@ class WasmiDartImpl implements WasmiDart {
             argNames: ["that", "global"],
           );
 
-  Value2 getGlobalValueMethodWasmiModuleId(
+  WasmVal getGlobalValueMethodWasmiModuleId(
       {required WasmiModuleId that, required Global global, dynamic hint}) {
     var arg0 = _platform.api2wire_box_autoadd_wasmi_module_id(that);
     var arg1 = _platform.api2wire_Global(global);
     return _platform.executeSync(FlutterRustBridgeSyncTask(
       callFfi: () => _platform.inner
           .wire_get_global_value__method__WasmiModuleId(arg0, arg1),
-      parseSuccessData: _wire2api_value_2,
+      parseSuccessData: _wire2api_wasm_val,
       constMeta: kGetGlobalValueMethodWasmiModuleIdConstMeta,
       argValues: [that, global],
       hint: hint,
@@ -1650,11 +1567,11 @@ class WasmiDartImpl implements WasmiDart {
   void setGlobalValueMethodWasmiModuleId(
       {required WasmiModuleId that,
       required Global global,
-      required Value2 value,
+      required WasmVal value,
       dynamic hint}) {
     var arg0 = _platform.api2wire_box_autoadd_wasmi_module_id(that);
     var arg1 = _platform.api2wire_Global(global);
-    var arg2 = _platform.api2wire_box_autoadd_value_2(value);
+    var arg2 = _platform.api2wire_box_autoadd_wasm_val(value);
     return _platform.executeSync(FlutterRustBridgeSyncTask(
       callFfi: () => _platform.inner
           .wire_set_global_value__method__WasmiModuleId(arg0, arg1, arg2),
@@ -1672,14 +1589,14 @@ class WasmiDartImpl implements WasmiDart {
             argNames: ["that", "global", "value"],
           );
 
-  WasmMemoryType getMemoryTypeMethodWasmiModuleId(
+  MemoryTy getMemoryTypeMethodWasmiModuleId(
       {required WasmiModuleId that, required Memory memory, dynamic hint}) {
     var arg0 = _platform.api2wire_box_autoadd_wasmi_module_id(that);
     var arg1 = _platform.api2wire_Memory(memory);
     return _platform.executeSync(FlutterRustBridgeSyncTask(
       callFfi: () => _platform.inner
           .wire_get_memory_type__method__WasmiModuleId(arg0, arg1),
-      parseSuccessData: _wire2api_wasm_memory_type,
+      parseSuccessData: _wire2api_memory_ty,
       constMeta: kGetMemoryTypeMethodWasmiModuleIdConstMeta,
       argValues: [that, memory],
       hint: hint,
@@ -1857,12 +1774,12 @@ class WasmiDartImpl implements WasmiDart {
       {required WasmiModuleId that,
       required Table table,
       required int delta,
-      required Value2 value,
+      required WasmVal value,
       dynamic hint}) {
     var arg0 = _platform.api2wire_box_autoadd_wasmi_module_id(that);
     var arg1 = _platform.api2wire_Table(table);
     var arg2 = api2wire_u32(delta);
-    var arg3 = _platform.api2wire_box_autoadd_value_2(value);
+    var arg3 = _platform.api2wire_box_autoadd_wasm_val(value);
     return _platform.executeSync(FlutterRustBridgeSyncTask(
       callFfi: () => _platform.inner
           .wire_grow_table__method__WasmiModuleId(arg0, arg1, arg2, arg3),
@@ -1879,7 +1796,7 @@ class WasmiDartImpl implements WasmiDart {
         argNames: ["that", "table", "delta", "value"],
       );
 
-  Value2? getTableMethodWasmiModuleId(
+  WasmVal? getTableMethodWasmiModuleId(
       {required WasmiModuleId that,
       required Table table,
       required int index,
@@ -1890,7 +1807,7 @@ class WasmiDartImpl implements WasmiDart {
     return _platform.executeSync(FlutterRustBridgeSyncTask(
       callFfi: () => _platform.inner
           .wire_get_table__method__WasmiModuleId(arg0, arg1, arg2),
-      parseSuccessData: _wire2api_opt_box_autoadd_value_2,
+      parseSuccessData: _wire2api_opt_box_autoadd_wasm_val,
       constMeta: kGetTableMethodWasmiModuleIdConstMeta,
       argValues: [that, table, index],
       hint: hint,
@@ -1907,12 +1824,12 @@ class WasmiDartImpl implements WasmiDart {
       {required WasmiModuleId that,
       required Table table,
       required int index,
-      required Value2 value,
+      required WasmVal value,
       dynamic hint}) {
     var arg0 = _platform.api2wire_box_autoadd_wasmi_module_id(that);
     var arg1 = _platform.api2wire_Table(table);
     var arg2 = api2wire_u32(index);
-    var arg3 = _platform.api2wire_box_autoadd_value_2(value);
+    var arg3 = _platform.api2wire_box_autoadd_wasm_val(value);
     return _platform.executeSync(FlutterRustBridgeSyncTask(
       callFfi: () => _platform.inner
           .wire_set_table__method__WasmiModuleId(arg0, arg1, arg2, arg3),
@@ -1933,13 +1850,13 @@ class WasmiDartImpl implements WasmiDart {
       {required WasmiModuleId that,
       required Table table,
       required int index,
-      required Value2 value,
+      required WasmVal value,
       required int len,
       dynamic hint}) {
     var arg0 = _platform.api2wire_box_autoadd_wasmi_module_id(that);
     var arg1 = _platform.api2wire_Table(table);
     var arg2 = api2wire_u32(index);
-    var arg3 = _platform.api2wire_box_autoadd_value_2(value);
+    var arg3 = _platform.api2wire_box_autoadd_wasm_val(value);
     var arg4 = api2wire_u32(len);
     return _platform.executeSync(FlutterRustBridgeSyncTask(
       callFfi: () => _platform.inner
@@ -2065,6 +1982,10 @@ class WasmiDartImpl implements WasmiDart {
     return _wire2api_global_ty(raw);
   }
 
+  MemoryTy _wire2api_box_autoadd_memory_ty(dynamic raw) {
+    return _wire2api_memory_ty(raw);
+  }
+
   TableTy _wire2api_box_autoadd_table_ty(dynamic raw) {
     return _wire2api_table_ty(raw);
   }
@@ -2073,12 +1994,8 @@ class WasmiDartImpl implements WasmiDart {
     return raw as int;
   }
 
-  Value2 _wire2api_box_autoadd_value_2(dynamic raw) {
-    return _wire2api_value_2(raw);
-  }
-
-  WasmMemoryType _wire2api_box_autoadd_wasm_memory_type(dynamic raw) {
-    return _wire2api_wasm_memory_type(raw);
+  WasmVal _wire2api_box_autoadd_wasm_val(dynamic raw) {
+    return _wire2api_wasm_val(raw);
   }
 
   CompiledModule _wire2api_compiled_module(dynamic raw) {
@@ -2107,7 +2024,7 @@ class WasmiDartImpl implements WasmiDart {
         );
       case 3:
         return ExternalType_Memory(
-          _wire2api_box_autoadd_wasm_memory_type(raw[1]),
+          _wire2api_box_autoadd_memory_ty(raw[1]),
         );
       default:
         throw Exception("unreachable");
@@ -2185,12 +2102,22 @@ class WasmiDartImpl implements WasmiDart {
     return (raw as List<dynamic>).map(_wire2api_module_import_desc).toList();
   }
 
-  List<Value2> _wire2api_list_value_2(dynamic raw) {
-    return (raw as List<dynamic>).map(_wire2api_value_2).toList();
-  }
-
   List<ValueTy> _wire2api_list_value_ty(dynamic raw) {
     return (raw as List<dynamic>).map(_wire2api_value_ty).toList();
+  }
+
+  List<WasmVal> _wire2api_list_wasm_val(dynamic raw) {
+    return (raw as List<dynamic>).map(_wire2api_wasm_val).toList();
+  }
+
+  MemoryTy _wire2api_memory_ty(dynamic raw) {
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2)
+      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return MemoryTy(
+      initialPages: _wire2api_u32(arr[0]),
+      maximumPages: _wire2api_opt_box_autoadd_u32(arr[1]),
+    );
   }
 
   ModuleExportDesc _wire2api_module_export_desc(dynamic raw) {
@@ -2236,8 +2163,8 @@ class WasmiDartImpl implements WasmiDart {
     return raw == null ? null : _wire2api_box_autoadd_u32(raw);
   }
 
-  Value2? _wire2api_opt_box_autoadd_value_2(dynamic raw) {
-    return raw == null ? null : _wire2api_box_autoadd_value_2(raw);
+  WasmVal? _wire2api_opt_box_autoadd_wasm_val(dynamic raw) {
+    return raw == null ? null : _wire2api_box_autoadd_wasm_val(raw);
   }
 
   TableTy _wire2api_table_ty(dynamic raw) {
@@ -2267,49 +2194,39 @@ class WasmiDartImpl implements WasmiDart {
     return;
   }
 
-  Value2 _wire2api_value_2(dynamic raw) {
+  ValueTy _wire2api_value_ty(dynamic raw) {
+    return ValueTy.values[raw];
+  }
+
+  WasmVal _wire2api_wasm_val(dynamic raw) {
     switch (raw[0]) {
       case 0:
-        return Value2_I32(
+        return WasmVal_i32(
           _wire2api_i32(raw[1]),
         );
       case 1:
-        return Value2_I64(
+        return WasmVal_i64(
           _wire2api_i64(raw[1]),
         );
       case 2:
-        return Value2_F32(
+        return WasmVal_f32(
           _wire2api_f32(raw[1]),
         );
       case 3:
-        return Value2_F64(
+        return WasmVal_f64(
           _wire2api_f64(raw[1]),
         );
       case 4:
-        return Value2_FuncRef(
+        return WasmVal_funcRef(
           _wire2api_opt_box_autoadd_Func(raw[1]),
         );
       case 5:
-        return Value2_ExternRef(
+        return WasmVal_externRef(
           _wire2api_u32(raw[1]),
         );
       default:
         throw Exception("unreachable");
     }
-  }
-
-  ValueTy _wire2api_value_ty(dynamic raw) {
-    return ValueTy.values[raw];
-  }
-
-  WasmMemoryType _wire2api_wasm_memory_type(dynamic raw) {
-    final arr = raw as List<dynamic>;
-    if (arr.length != 2)
-      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
-    return WasmMemoryType(
-      initialPages: _wire2api_u32(arr[0]),
-      maximumPages: _wire2api_opt_box_autoadd_u32(arr[1]),
-    );
   }
 
   WasmiInstanceId _wire2api_wasmi_instance_id(dynamic raw) {
@@ -2357,6 +2274,11 @@ int api2wire_i32(int raw) {
 
 @protected
 int api2wire_mutability(Mutability raw) {
+  return api2wire_i32(raw.index);
+}
+
+@protected
+int api2wire_std_io_kind(StdIOKind raw) {
   return api2wire_i32(raw.index);
 }
 

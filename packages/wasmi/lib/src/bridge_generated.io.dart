@@ -87,6 +87,13 @@ class WasmiDartPlatform extends FlutterRustBridgeBase<WasmiDartWire> {
   }
 
   @protected
+  ffi.Pointer<wire_MemoryTy> api2wire_box_autoadd_memory_ty(MemoryTy raw) {
+    final ptr = inner.new_box_autoadd_memory_ty_0();
+    _api_fill_to_wire_memory_ty(raw, ptr.ref);
+    return ptr;
+  }
+
+  @protected
   ffi.Pointer<wire_ModuleConfig> api2wire_box_autoadd_module_config(
       ModuleConfig raw) {
     final ptr = inner.new_box_autoadd_module_config_0();
@@ -111,10 +118,9 @@ class WasmiDartPlatform extends FlutterRustBridgeBase<WasmiDartWire> {
   }
 
   @protected
-  ffi.Pointer<wire_TableType2> api2wire_box_autoadd_table_type_2(
-      TableType2 raw) {
-    final ptr = inner.new_box_autoadd_table_type_2_0();
-    _api_fill_to_wire_table_type_2(raw, ptr.ref);
+  ffi.Pointer<wire_TableArgs> api2wire_box_autoadd_table_args(TableArgs raw) {
+    final ptr = inner.new_box_autoadd_table_args_0();
+    _api_fill_to_wire_table_args(raw, ptr.ref);
     return ptr;
   }
 
@@ -134,13 +140,6 @@ class WasmiDartPlatform extends FlutterRustBridgeBase<WasmiDartWire> {
   }
 
   @protected
-  ffi.Pointer<wire_Value2> api2wire_box_autoadd_value_2(Value2 raw) {
-    final ptr = inner.new_box_autoadd_value_2_0();
-    _api_fill_to_wire_value_2(raw, ptr.ref);
-    return ptr;
-  }
-
-  @protected
   ffi.Pointer<wire_WasiConfig> api2wire_box_autoadd_wasi_config(
       WasiConfig raw) {
     final ptr = inner.new_box_autoadd_wasi_config_0();
@@ -157,10 +156,9 @@ class WasmiDartPlatform extends FlutterRustBridgeBase<WasmiDartWire> {
   }
 
   @protected
-  ffi.Pointer<wire_WasmMemoryType> api2wire_box_autoadd_wasm_memory_type(
-      WasmMemoryType raw) {
-    final ptr = inner.new_box_autoadd_wasm_memory_type_0();
-    _api_fill_to_wire_wasm_memory_type(raw, ptr.ref);
+  ffi.Pointer<wire_WasmVal> api2wire_box_autoadd_wasm_val(WasmVal raw) {
+    final ptr = inner.new_box_autoadd_wasm_val_0();
+    _api_fill_to_wire_wasm_val(raw, ptr.ref);
     return ptr;
   }
 
@@ -216,19 +214,19 @@ class WasmiDartPlatform extends FlutterRustBridgeBase<WasmiDartWire> {
   }
 
   @protected
-  ffi.Pointer<wire_list_value_2> api2wire_list_value_2(List<Value2> raw) {
-    final ans = inner.new_list_value_2_0(raw.length);
+  ffi.Pointer<wire_list_value_ty> api2wire_list_value_ty(List<ValueTy> raw) {
+    final ans = inner.new_list_value_ty_0(raw.length);
     for (var i = 0; i < raw.length; ++i) {
-      _api_fill_to_wire_value_2(raw[i], ans.ref.ptr[i]);
+      ans.ref.ptr[i] = api2wire_value_ty(raw[i]);
     }
     return ans;
   }
 
   @protected
-  ffi.Pointer<wire_list_value_ty> api2wire_list_value_ty(List<ValueTy> raw) {
-    final ans = inner.new_list_value_ty_0(raw.length);
+  ffi.Pointer<wire_list_wasm_val> api2wire_list_wasm_val(List<WasmVal> raw) {
+    final ans = inner.new_list_wasm_val_0(raw.length);
     for (var i = 0; i < raw.length; ++i) {
-      ans.ref.ptr[i] = api2wire_value_ty(raw[i]);
+      _api_fill_to_wire_wasm_val(raw[i], ans.ref.ptr[i]);
     }
     return ans;
   }
@@ -352,6 +350,11 @@ class WasmiDartPlatform extends FlutterRustBridgeBase<WasmiDartWire> {
     _api_fill_to_wire_compiled_module(apiObj, wireObj.ref);
   }
 
+  void _api_fill_to_wire_box_autoadd_memory_ty(
+      MemoryTy apiObj, ffi.Pointer<wire_MemoryTy> wireObj) {
+    _api_fill_to_wire_memory_ty(apiObj, wireObj.ref);
+  }
+
   void _api_fill_to_wire_box_autoadd_module_config(
       ModuleConfig apiObj, ffi.Pointer<wire_ModuleConfig> wireObj) {
     _api_fill_to_wire_module_config(apiObj, wireObj.ref);
@@ -368,14 +371,9 @@ class WasmiDartPlatform extends FlutterRustBridgeBase<WasmiDartWire> {
     _api_fill_to_wire_module_config_wasmtime(apiObj, wireObj.ref);
   }
 
-  void _api_fill_to_wire_box_autoadd_table_type_2(
-      TableType2 apiObj, ffi.Pointer<wire_TableType2> wireObj) {
-    _api_fill_to_wire_table_type_2(apiObj, wireObj.ref);
-  }
-
-  void _api_fill_to_wire_box_autoadd_value_2(
-      Value2 apiObj, ffi.Pointer<wire_Value2> wireObj) {
-    _api_fill_to_wire_value_2(apiObj, wireObj.ref);
+  void _api_fill_to_wire_box_autoadd_table_args(
+      TableArgs apiObj, ffi.Pointer<wire_TableArgs> wireObj) {
+    _api_fill_to_wire_table_args(apiObj, wireObj.ref);
   }
 
   void _api_fill_to_wire_box_autoadd_wasi_config(
@@ -388,9 +386,9 @@ class WasmiDartPlatform extends FlutterRustBridgeBase<WasmiDartWire> {
     _api_fill_to_wire_wasi_stack_limits(apiObj, wireObj.ref);
   }
 
-  void _api_fill_to_wire_box_autoadd_wasm_memory_type(
-      WasmMemoryType apiObj, ffi.Pointer<wire_WasmMemoryType> wireObj) {
-    _api_fill_to_wire_wasm_memory_type(apiObj, wireObj.ref);
+  void _api_fill_to_wire_box_autoadd_wasm_val(
+      WasmVal apiObj, ffi.Pointer<wire_WasmVal> wireObj) {
+    _api_fill_to_wire_wasm_val(apiObj, wireObj.ref);
   }
 
   void _api_fill_to_wire_box_autoadd_wasmi_instance_id(
@@ -444,6 +442,11 @@ class WasmiDartPlatform extends FlutterRustBridgeBase<WasmiDartWire> {
       wireObj.kind.ref.Memory.ref.field0 = pre_field0;
       return;
     }
+  }
+
+  void _api_fill_to_wire_memory_ty(MemoryTy apiObj, wire_MemoryTy wireObj) {
+    wireObj.initial_pages = api2wire_u32(apiObj.initialPages);
+    wireObj.maximum_pages = api2wire_opt_box_autoadd_u32(apiObj.maximumPages);
   }
 
   void _api_fill_to_wire_module_config(
@@ -546,55 +549,9 @@ class WasmiDartPlatform extends FlutterRustBridgeBase<WasmiDartWire> {
     wireObj.host_path = api2wire_String(apiObj.hostPath);
   }
 
-  void _api_fill_to_wire_table_type_2(
-      TableType2 apiObj, wire_TableType2 wireObj) {
+  void _api_fill_to_wire_table_args(TableArgs apiObj, wire_TableArgs wireObj) {
     wireObj.min = api2wire_u32(apiObj.min);
     wireObj.max = api2wire_opt_box_autoadd_u32(apiObj.max);
-  }
-
-  void _api_fill_to_wire_value_2(Value2 apiObj, wire_Value2 wireObj) {
-    if (apiObj is Value2_I32) {
-      var pre_field0 = api2wire_i32(apiObj.field0);
-      wireObj.tag = 0;
-      wireObj.kind = inner.inflate_Value2_I32();
-      wireObj.kind.ref.I32.ref.field0 = pre_field0;
-      return;
-    }
-    if (apiObj is Value2_I64) {
-      var pre_field0 = api2wire_i64(apiObj.field0);
-      wireObj.tag = 1;
-      wireObj.kind = inner.inflate_Value2_I64();
-      wireObj.kind.ref.I64.ref.field0 = pre_field0;
-      return;
-    }
-    if (apiObj is Value2_F32) {
-      var pre_field0 = api2wire_f32(apiObj.field0);
-      wireObj.tag = 2;
-      wireObj.kind = inner.inflate_Value2_F32();
-      wireObj.kind.ref.F32.ref.field0 = pre_field0;
-      return;
-    }
-    if (apiObj is Value2_F64) {
-      var pre_field0 = api2wire_f64(apiObj.field0);
-      wireObj.tag = 3;
-      wireObj.kind = inner.inflate_Value2_F64();
-      wireObj.kind.ref.F64.ref.field0 = pre_field0;
-      return;
-    }
-    if (apiObj is Value2_FuncRef) {
-      var pre_field0 = api2wire_opt_box_autoadd_Func(apiObj.field0);
-      wireObj.tag = 4;
-      wireObj.kind = inner.inflate_Value2_FuncRef();
-      wireObj.kind.ref.FuncRef.ref.field0 = pre_field0;
-      return;
-    }
-    if (apiObj is Value2_ExternRef) {
-      var pre_field0 = api2wire_u32(apiObj.field0);
-      wireObj.tag = 5;
-      wireObj.kind = inner.inflate_Value2_ExternRef();
-      wireObj.kind.ref.ExternRef.ref.field0 = pre_field0;
-      return;
-    }
   }
 
   void _api_fill_to_wire_wasi_config(
@@ -620,10 +577,49 @@ class WasmiDartPlatform extends FlutterRustBridgeBase<WasmiDartWire> {
         api2wire_usize(apiObj.maximumRecursionDepth);
   }
 
-  void _api_fill_to_wire_wasm_memory_type(
-      WasmMemoryType apiObj, wire_WasmMemoryType wireObj) {
-    wireObj.initial_pages = api2wire_u32(apiObj.initialPages);
-    wireObj.maximum_pages = api2wire_opt_box_autoadd_u32(apiObj.maximumPages);
+  void _api_fill_to_wire_wasm_val(WasmVal apiObj, wire_WasmVal wireObj) {
+    if (apiObj is WasmVal_i32) {
+      var pre_field0 = api2wire_i32(apiObj.field0);
+      wireObj.tag = 0;
+      wireObj.kind = inner.inflate_WasmVal_i32();
+      wireObj.kind.ref.i32.ref.field0 = pre_field0;
+      return;
+    }
+    if (apiObj is WasmVal_i64) {
+      var pre_field0 = api2wire_i64(apiObj.field0);
+      wireObj.tag = 1;
+      wireObj.kind = inner.inflate_WasmVal_i64();
+      wireObj.kind.ref.i64.ref.field0 = pre_field0;
+      return;
+    }
+    if (apiObj is WasmVal_f32) {
+      var pre_field0 = api2wire_f32(apiObj.field0);
+      wireObj.tag = 2;
+      wireObj.kind = inner.inflate_WasmVal_f32();
+      wireObj.kind.ref.f32.ref.field0 = pre_field0;
+      return;
+    }
+    if (apiObj is WasmVal_f64) {
+      var pre_field0 = api2wire_f64(apiObj.field0);
+      wireObj.tag = 3;
+      wireObj.kind = inner.inflate_WasmVal_f64();
+      wireObj.kind.ref.f64.ref.field0 = pre_field0;
+      return;
+    }
+    if (apiObj is WasmVal_funcRef) {
+      var pre_field0 = api2wire_opt_box_autoadd_Func(apiObj.field0);
+      wireObj.tag = 4;
+      wireObj.kind = inner.inflate_WasmVal_funcRef();
+      wireObj.kind.ref.funcRef.ref.field0 = pre_field0;
+      return;
+    }
+    if (apiObj is WasmVal_externRef) {
+      var pre_field0 = api2wire_u32(apiObj.field0);
+      wireObj.tag = 5;
+      wireObj.kind = inner.inflate_WasmVal_externRef();
+      wireObj.kind.ref.externRef.ref.field0 = pre_field0;
+      return;
+    }
   }
 
   void _api_fill_to_wire_wasmi_instance_id(
@@ -799,7 +795,7 @@ class WasmiDartWire implements FlutterRustBridgeWireBase {
 
   WireSyncReturn wire_run_wasm_func(
     int pointer,
-    ffi.Pointer<wire_list_value_2> params,
+    ffi.Pointer<wire_list_wasm_val> params,
   ) {
     return _wire_run_wasm_func(
       pointer,
@@ -810,13 +806,13 @@ class WasmiDartWire implements FlutterRustBridgeWireBase {
   late final _wire_run_wasm_funcPtr = _lookup<
       ffi.NativeFunction<
           WireSyncReturn Function(ffi.UintPtr,
-              ffi.Pointer<wire_list_value_2>)>>('wire_run_wasm_func');
+              ffi.Pointer<wire_list_wasm_val>)>>('wire_run_wasm_func');
   late final _wire_run_wasm_func = _wire_run_wasm_funcPtr.asFunction<
-      WireSyncReturn Function(int, ffi.Pointer<wire_list_value_2>)>();
+      WireSyncReturn Function(int, ffi.Pointer<wire_list_wasm_val>)>();
 
   WireSyncReturn wire_run_wasm_func_mut(
     int pointer,
-    ffi.Pointer<wire_list_value_2> params,
+    ffi.Pointer<wire_list_wasm_val> params,
   ) {
     return _wire_run_wasm_func_mut(
       pointer,
@@ -827,13 +823,13 @@ class WasmiDartWire implements FlutterRustBridgeWireBase {
   late final _wire_run_wasm_func_mutPtr = _lookup<
       ffi.NativeFunction<
           WireSyncReturn Function(ffi.UintPtr,
-              ffi.Pointer<wire_list_value_2>)>>('wire_run_wasm_func_mut');
+              ffi.Pointer<wire_list_wasm_val>)>>('wire_run_wasm_func_mut');
   late final _wire_run_wasm_func_mut = _wire_run_wasm_func_mutPtr.asFunction<
-      WireSyncReturn Function(int, ffi.Pointer<wire_list_value_2>)>();
+      WireSyncReturn Function(int, ffi.Pointer<wire_list_wasm_val>)>();
 
   WireSyncReturn wire_run_wasm_func_void(
     int pointer,
-    ffi.Pointer<wire_list_value_2> params,
+    ffi.Pointer<wire_list_wasm_val> params,
   ) {
     return _wire_run_wasm_func_void(
       pointer,
@@ -844,9 +840,9 @@ class WasmiDartWire implements FlutterRustBridgeWireBase {
   late final _wire_run_wasm_func_voidPtr = _lookup<
       ffi.NativeFunction<
           WireSyncReturn Function(ffi.UintPtr,
-              ffi.Pointer<wire_list_value_2>)>>('wire_run_wasm_func_void');
+              ffi.Pointer<wire_list_wasm_val>)>>('wire_run_wasm_func_void');
   late final _wire_run_wasm_func_void = _wire_run_wasm_func_voidPtr.asFunction<
-      WireSyncReturn Function(int, ffi.Pointer<wire_list_value_2>)>();
+      WireSyncReturn Function(int, ffi.Pointer<wire_list_wasm_val>)>();
 
   void wire_compile_wasm(
     int port_,
@@ -918,81 +914,6 @@ class WasmiDartWire implements FlutterRustBridgeWireBase {
   late final _wire_add =
       _wire_addPtr.asFunction<void Function(int, int, int)>();
 
-  void wire_call_function__method__WasmiInstanceId(
-    int port_,
-    ffi.Pointer<wire_WasmiInstanceId> that,
-    ffi.Pointer<wire_uint_8_list> name,
-  ) {
-    return _wire_call_function__method__WasmiInstanceId(
-      port_,
-      that,
-      name,
-    );
-  }
-
-  late final _wire_call_function__method__WasmiInstanceIdPtr = _lookup<
-          ffi.NativeFunction<
-              ffi.Void Function(ffi.Int64, ffi.Pointer<wire_WasmiInstanceId>,
-                  ffi.Pointer<wire_uint_8_list>)>>(
-      'wire_call_function__method__WasmiInstanceId');
-  late final _wire_call_function__method__WasmiInstanceId =
-      _wire_call_function__method__WasmiInstanceIdPtr.asFunction<
-          void Function(int, ffi.Pointer<wire_WasmiInstanceId>,
-              ffi.Pointer<wire_uint_8_list>)>();
-
-  WireSyncReturn wire_call_function_with_args_sync__method__WasmiInstanceId(
-    ffi.Pointer<wire_WasmiInstanceId> that,
-    ffi.Pointer<wire_uint_8_list> name,
-    ffi.Pointer<wire_list_value_2> args,
-  ) {
-    return _wire_call_function_with_args_sync__method__WasmiInstanceId(
-      that,
-      name,
-      args,
-    );
-  }
-
-  late final _wire_call_function_with_args_sync__method__WasmiInstanceIdPtr =
-      _lookup<
-              ffi.NativeFunction<
-                  WireSyncReturn Function(
-                      ffi.Pointer<wire_WasmiInstanceId>,
-                      ffi.Pointer<wire_uint_8_list>,
-                      ffi.Pointer<wire_list_value_2>)>>(
-          'wire_call_function_with_args_sync__method__WasmiInstanceId');
-  late final _wire_call_function_with_args_sync__method__WasmiInstanceId =
-      _wire_call_function_with_args_sync__method__WasmiInstanceIdPtr.asFunction<
-          WireSyncReturn Function(ffi.Pointer<wire_WasmiInstanceId>,
-              ffi.Pointer<wire_uint_8_list>, ffi.Pointer<wire_list_value_2>)>();
-
-  void wire_call_function_with_args__method__WasmiInstanceId(
-    int port_,
-    ffi.Pointer<wire_WasmiInstanceId> that,
-    ffi.Pointer<wire_uint_8_list> name,
-    ffi.Pointer<wire_list_value_2> args,
-  ) {
-    return _wire_call_function_with_args__method__WasmiInstanceId(
-      port_,
-      that,
-      name,
-      args,
-    );
-  }
-
-  late final _wire_call_function_with_args__method__WasmiInstanceIdPtr =
-      _lookup<
-              ffi.NativeFunction<
-                  ffi.Void Function(
-                      ffi.Int64,
-                      ffi.Pointer<wire_WasmiInstanceId>,
-                      ffi.Pointer<wire_uint_8_list>,
-                      ffi.Pointer<wire_list_value_2>)>>(
-          'wire_call_function_with_args__method__WasmiInstanceId');
-  late final _wire_call_function_with_args__method__WasmiInstanceId =
-      _wire_call_function_with_args__method__WasmiInstanceIdPtr.asFunction<
-          void Function(int, ffi.Pointer<wire_WasmiInstanceId>,
-              ffi.Pointer<wire_uint_8_list>, ffi.Pointer<wire_list_value_2>)>();
-
   WireSyncReturn wire_exports__method__WasmiInstanceId(
     ffi.Pointer<wire_WasmiInstanceId> that,
   ) {
@@ -1063,6 +984,26 @@ class WasmiDartWire implements FlutterRustBridgeWireBase {
           WireSyncReturn Function(ffi.Pointer<wire_WasmiModuleId>,
               ffi.Pointer<wire_list_module_import>)>();
 
+  void wire_stdio_stream__method__WasmiModuleId(
+    int port_,
+    ffi.Pointer<wire_WasmiModuleId> that,
+    int kind,
+  ) {
+    return _wire_stdio_stream__method__WasmiModuleId(
+      port_,
+      that,
+      kind,
+    );
+  }
+
+  late final _wire_stdio_stream__method__WasmiModuleIdPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(ffi.Int64, ffi.Pointer<wire_WasmiModuleId>,
+              ffi.Int32)>>('wire_stdio_stream__method__WasmiModuleId');
+  late final _wire_stdio_stream__method__WasmiModuleId =
+      _wire_stdio_stream__method__WasmiModuleIdPtr.asFunction<
+          void Function(int, ffi.Pointer<wire_WasmiModuleId>, int)>();
+
   void wire_dispose__method__WasmiModuleId(
     int port_,
     ffi.Pointer<wire_WasmiModuleId> that,
@@ -1084,7 +1025,7 @@ class WasmiDartWire implements FlutterRustBridgeWireBase {
   WireSyncReturn wire_call_function_handle_sync__method__WasmiModuleId(
     ffi.Pointer<wire_WasmiModuleId> that,
     wire_Func func,
-    ffi.Pointer<wire_list_value_2> args,
+    ffi.Pointer<wire_list_wasm_val> args,
   ) {
     return _wire_call_function_handle_sync__method__WasmiModuleId(
       that,
@@ -1097,18 +1038,18 @@ class WasmiDartWire implements FlutterRustBridgeWireBase {
       _lookup<
               ffi.NativeFunction<
                   WireSyncReturn Function(ffi.Pointer<wire_WasmiModuleId>,
-                      wire_Func, ffi.Pointer<wire_list_value_2>)>>(
+                      wire_Func, ffi.Pointer<wire_list_wasm_val>)>>(
           'wire_call_function_handle_sync__method__WasmiModuleId');
   late final _wire_call_function_handle_sync__method__WasmiModuleId =
       _wire_call_function_handle_sync__method__WasmiModuleIdPtr.asFunction<
           WireSyncReturn Function(ffi.Pointer<wire_WasmiModuleId>, wire_Func,
-              ffi.Pointer<wire_list_value_2>)>();
+              ffi.Pointer<wire_list_wasm_val>)>();
 
   void wire_call_function_handle__method__WasmiModuleId(
     int port_,
     ffi.Pointer<wire_WasmiModuleId> that,
     wire_Func func,
-    ffi.Pointer<wire_list_value_2> args,
+    ffi.Pointer<wire_list_wasm_val> args,
   ) {
     return _wire_call_function_handle__method__WasmiModuleId(
       port_,
@@ -1121,12 +1062,12 @@ class WasmiDartWire implements FlutterRustBridgeWireBase {
   late final _wire_call_function_handle__method__WasmiModuleIdPtr = _lookup<
           ffi.NativeFunction<
               ffi.Void Function(ffi.Int64, ffi.Pointer<wire_WasmiModuleId>,
-                  wire_Func, ffi.Pointer<wire_list_value_2>)>>(
+                  wire_Func, ffi.Pointer<wire_list_wasm_val>)>>(
       'wire_call_function_handle__method__WasmiModuleId');
   late final _wire_call_function_handle__method__WasmiModuleId =
       _wire_call_function_handle__method__WasmiModuleIdPtr.asFunction<
           void Function(int, ffi.Pointer<wire_WasmiModuleId>, wire_Func,
-              ffi.Pointer<wire_list_value_2>)>();
+              ffi.Pointer<wire_list_wasm_val>)>();
 
   WireSyncReturn wire_get_function_type__method__WasmiModuleId(
     ffi.Pointer<wire_WasmiModuleId> that,
@@ -1183,7 +1124,7 @@ class WasmiDartWire implements FlutterRustBridgeWireBase {
 
   WireSyncReturn wire_create_memory__method__WasmiModuleId(
     ffi.Pointer<wire_WasmiModuleId> that,
-    ffi.Pointer<wire_WasmMemoryType> memory_type,
+    ffi.Pointer<wire_MemoryTy> memory_type,
   ) {
     return _wire_create_memory__method__WasmiModuleId(
       that,
@@ -1194,16 +1135,16 @@ class WasmiDartWire implements FlutterRustBridgeWireBase {
   late final _wire_create_memory__method__WasmiModuleIdPtr = _lookup<
           ffi.NativeFunction<
               WireSyncReturn Function(ffi.Pointer<wire_WasmiModuleId>,
-                  ffi.Pointer<wire_WasmMemoryType>)>>(
+                  ffi.Pointer<wire_MemoryTy>)>>(
       'wire_create_memory__method__WasmiModuleId');
   late final _wire_create_memory__method__WasmiModuleId =
       _wire_create_memory__method__WasmiModuleIdPtr.asFunction<
-          WireSyncReturn Function(ffi.Pointer<wire_WasmiModuleId>,
-              ffi.Pointer<wire_WasmMemoryType>)>();
+          WireSyncReturn Function(
+              ffi.Pointer<wire_WasmiModuleId>, ffi.Pointer<wire_MemoryTy>)>();
 
   WireSyncReturn wire_create_global__method__WasmiModuleId(
     ffi.Pointer<wire_WasmiModuleId> that,
-    ffi.Pointer<wire_Value2> value,
+    ffi.Pointer<wire_WasmVal> value,
     int mutability,
   ) {
     return _wire_create_global__method__WasmiModuleId(
@@ -1217,17 +1158,17 @@ class WasmiDartWire implements FlutterRustBridgeWireBase {
       ffi.NativeFunction<
           WireSyncReturn Function(
               ffi.Pointer<wire_WasmiModuleId>,
-              ffi.Pointer<wire_Value2>,
+              ffi.Pointer<wire_WasmVal>,
               ffi.Int32)>>('wire_create_global__method__WasmiModuleId');
   late final _wire_create_global__method__WasmiModuleId =
       _wire_create_global__method__WasmiModuleIdPtr.asFunction<
           WireSyncReturn Function(ffi.Pointer<wire_WasmiModuleId>,
-              ffi.Pointer<wire_Value2>, int)>();
+              ffi.Pointer<wire_WasmVal>, int)>();
 
   WireSyncReturn wire_create_table__method__WasmiModuleId(
     ffi.Pointer<wire_WasmiModuleId> that,
-    ffi.Pointer<wire_Value2> value,
-    ffi.Pointer<wire_TableType2> table_type,
+    ffi.Pointer<wire_WasmVal> value,
+    ffi.Pointer<wire_TableArgs> table_type,
   ) {
     return _wire_create_table__method__WasmiModuleId(
       that,
@@ -1239,12 +1180,12 @@ class WasmiDartWire implements FlutterRustBridgeWireBase {
   late final _wire_create_table__method__WasmiModuleIdPtr = _lookup<
           ffi.NativeFunction<
               WireSyncReturn Function(ffi.Pointer<wire_WasmiModuleId>,
-                  ffi.Pointer<wire_Value2>, ffi.Pointer<wire_TableType2>)>>(
+                  ffi.Pointer<wire_WasmVal>, ffi.Pointer<wire_TableArgs>)>>(
       'wire_create_table__method__WasmiModuleId');
   late final _wire_create_table__method__WasmiModuleId =
       _wire_create_table__method__WasmiModuleIdPtr.asFunction<
           WireSyncReturn Function(ffi.Pointer<wire_WasmiModuleId>,
-              ffi.Pointer<wire_Value2>, ffi.Pointer<wire_TableType2>)>();
+              ffi.Pointer<wire_WasmVal>, ffi.Pointer<wire_TableArgs>)>();
 
   WireSyncReturn wire_get_global_type__method__WasmiModuleId(
     ffi.Pointer<wire_WasmiModuleId> that,
@@ -1287,7 +1228,7 @@ class WasmiDartWire implements FlutterRustBridgeWireBase {
   WireSyncReturn wire_set_global_value__method__WasmiModuleId(
     ffi.Pointer<wire_WasmiModuleId> that,
     wire_Global global,
-    ffi.Pointer<wire_Value2> value,
+    ffi.Pointer<wire_WasmVal> value,
   ) {
     return _wire_set_global_value__method__WasmiModuleId(
       that,
@@ -1299,12 +1240,12 @@ class WasmiDartWire implements FlutterRustBridgeWireBase {
   late final _wire_set_global_value__method__WasmiModuleIdPtr = _lookup<
           ffi.NativeFunction<
               WireSyncReturn Function(ffi.Pointer<wire_WasmiModuleId>,
-                  wire_Global, ffi.Pointer<wire_Value2>)>>(
+                  wire_Global, ffi.Pointer<wire_WasmVal>)>>(
       'wire_set_global_value__method__WasmiModuleId');
   late final _wire_set_global_value__method__WasmiModuleId =
       _wire_set_global_value__method__WasmiModuleIdPtr.asFunction<
           WireSyncReturn Function(ffi.Pointer<wire_WasmiModuleId>, wire_Global,
-              ffi.Pointer<wire_Value2>)>();
+              ffi.Pointer<wire_WasmVal>)>();
 
   WireSyncReturn wire_get_memory_type__method__WasmiModuleId(
     ffi.Pointer<wire_WasmiModuleId> that,
@@ -1476,7 +1417,7 @@ class WasmiDartWire implements FlutterRustBridgeWireBase {
     ffi.Pointer<wire_WasmiModuleId> that,
     wire_Table table,
     int delta,
-    ffi.Pointer<wire_Value2> value,
+    ffi.Pointer<wire_WasmVal> value,
   ) {
     return _wire_grow_table__method__WasmiModuleId(
       that,
@@ -1489,12 +1430,12 @@ class WasmiDartWire implements FlutterRustBridgeWireBase {
   late final _wire_grow_table__method__WasmiModuleIdPtr = _lookup<
           ffi.NativeFunction<
               WireSyncReturn Function(ffi.Pointer<wire_WasmiModuleId>,
-                  wire_Table, ffi.Uint32, ffi.Pointer<wire_Value2>)>>(
+                  wire_Table, ffi.Uint32, ffi.Pointer<wire_WasmVal>)>>(
       'wire_grow_table__method__WasmiModuleId');
   late final _wire_grow_table__method__WasmiModuleId =
       _wire_grow_table__method__WasmiModuleIdPtr.asFunction<
           WireSyncReturn Function(ffi.Pointer<wire_WasmiModuleId>, wire_Table,
-              int, ffi.Pointer<wire_Value2>)>();
+              int, ffi.Pointer<wire_WasmVal>)>();
 
   WireSyncReturn wire_get_table__method__WasmiModuleId(
     ffi.Pointer<wire_WasmiModuleId> that,
@@ -1521,7 +1462,7 @@ class WasmiDartWire implements FlutterRustBridgeWireBase {
     ffi.Pointer<wire_WasmiModuleId> that,
     wire_Table table,
     int index,
-    ffi.Pointer<wire_Value2> value,
+    ffi.Pointer<wire_WasmVal> value,
   ) {
     return _wire_set_table__method__WasmiModuleId(
       that,
@@ -1534,18 +1475,18 @@ class WasmiDartWire implements FlutterRustBridgeWireBase {
   late final _wire_set_table__method__WasmiModuleIdPtr = _lookup<
           ffi.NativeFunction<
               WireSyncReturn Function(ffi.Pointer<wire_WasmiModuleId>,
-                  wire_Table, ffi.Uint32, ffi.Pointer<wire_Value2>)>>(
+                  wire_Table, ffi.Uint32, ffi.Pointer<wire_WasmVal>)>>(
       'wire_set_table__method__WasmiModuleId');
   late final _wire_set_table__method__WasmiModuleId =
       _wire_set_table__method__WasmiModuleIdPtr.asFunction<
           WireSyncReturn Function(ffi.Pointer<wire_WasmiModuleId>, wire_Table,
-              int, ffi.Pointer<wire_Value2>)>();
+              int, ffi.Pointer<wire_WasmVal>)>();
 
   WireSyncReturn wire_fill_table__method__WasmiModuleId(
     ffi.Pointer<wire_WasmiModuleId> that,
     wire_Table table,
     int index,
-    ffi.Pointer<wire_Value2> value,
+    ffi.Pointer<wire_WasmVal> value,
     int len,
   ) {
     return _wire_fill_table__method__WasmiModuleId(
@@ -1563,12 +1504,12 @@ class WasmiDartWire implements FlutterRustBridgeWireBase {
               ffi.Pointer<wire_WasmiModuleId>,
               wire_Table,
               ffi.Uint32,
-              ffi.Pointer<wire_Value2>,
+              ffi.Pointer<wire_WasmVal>,
               ffi.Uint32)>>('wire_fill_table__method__WasmiModuleId');
   late final _wire_fill_table__method__WasmiModuleId =
       _wire_fill_table__method__WasmiModuleIdPtr.asFunction<
           WireSyncReturn Function(ffi.Pointer<wire_WasmiModuleId>, wire_Table,
-              int, ffi.Pointer<wire_Value2>, int)>();
+              int, ffi.Pointer<wire_WasmVal>, int)>();
 
   WireSyncReturn wire_get_module_imports__method__CompiledModule(
     ffi.Pointer<wire_CompiledModule> that,
@@ -1693,6 +1634,16 @@ class WasmiDartWire implements FlutterRustBridgeWireBase {
       _new_box_autoadd_compiled_module_0Ptr
           .asFunction<ffi.Pointer<wire_CompiledModule> Function()>();
 
+  ffi.Pointer<wire_MemoryTy> new_box_autoadd_memory_ty_0() {
+    return _new_box_autoadd_memory_ty_0();
+  }
+
+  late final _new_box_autoadd_memory_ty_0Ptr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_MemoryTy> Function()>>(
+          'new_box_autoadd_memory_ty_0');
+  late final _new_box_autoadd_memory_ty_0 = _new_box_autoadd_memory_ty_0Ptr
+      .asFunction<ffi.Pointer<wire_MemoryTy> Function()>();
+
   ffi.Pointer<wire_ModuleConfig> new_box_autoadd_module_config_0() {
     return _new_box_autoadd_module_config_0();
   }
@@ -1728,16 +1679,15 @@ class WasmiDartWire implements FlutterRustBridgeWireBase {
       _new_box_autoadd_module_config_wasmtime_0Ptr
           .asFunction<ffi.Pointer<wire_ModuleConfigWasmtime> Function()>();
 
-  ffi.Pointer<wire_TableType2> new_box_autoadd_table_type_2_0() {
-    return _new_box_autoadd_table_type_2_0();
+  ffi.Pointer<wire_TableArgs> new_box_autoadd_table_args_0() {
+    return _new_box_autoadd_table_args_0();
   }
 
-  late final _new_box_autoadd_table_type_2_0Ptr =
-      _lookup<ffi.NativeFunction<ffi.Pointer<wire_TableType2> Function()>>(
-          'new_box_autoadd_table_type_2_0');
-  late final _new_box_autoadd_table_type_2_0 =
-      _new_box_autoadd_table_type_2_0Ptr
-          .asFunction<ffi.Pointer<wire_TableType2> Function()>();
+  late final _new_box_autoadd_table_args_0Ptr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_TableArgs> Function()>>(
+          'new_box_autoadd_table_args_0');
+  late final _new_box_autoadd_table_args_0 = _new_box_autoadd_table_args_0Ptr
+      .asFunction<ffi.Pointer<wire_TableArgs> Function()>();
 
   ffi.Pointer<ffi.Uint32> new_box_autoadd_u32_0(
     int value,
@@ -1781,16 +1731,6 @@ class WasmiDartWire implements FlutterRustBridgeWireBase {
   late final _new_box_autoadd_usize_0 = _new_box_autoadd_usize_0Ptr
       .asFunction<ffi.Pointer<ffi.UintPtr> Function(int)>();
 
-  ffi.Pointer<wire_Value2> new_box_autoadd_value_2_0() {
-    return _new_box_autoadd_value_2_0();
-  }
-
-  late final _new_box_autoadd_value_2_0Ptr =
-      _lookup<ffi.NativeFunction<ffi.Pointer<wire_Value2> Function()>>(
-          'new_box_autoadd_value_2_0');
-  late final _new_box_autoadd_value_2_0 = _new_box_autoadd_value_2_0Ptr
-      .asFunction<ffi.Pointer<wire_Value2> Function()>();
-
   ffi.Pointer<wire_WasiConfig> new_box_autoadd_wasi_config_0() {
     return _new_box_autoadd_wasi_config_0();
   }
@@ -1812,16 +1752,15 @@ class WasmiDartWire implements FlutterRustBridgeWireBase {
       _new_box_autoadd_wasi_stack_limits_0Ptr
           .asFunction<ffi.Pointer<wire_WasiStackLimits> Function()>();
 
-  ffi.Pointer<wire_WasmMemoryType> new_box_autoadd_wasm_memory_type_0() {
-    return _new_box_autoadd_wasm_memory_type_0();
+  ffi.Pointer<wire_WasmVal> new_box_autoadd_wasm_val_0() {
+    return _new_box_autoadd_wasm_val_0();
   }
 
-  late final _new_box_autoadd_wasm_memory_type_0Ptr =
-      _lookup<ffi.NativeFunction<ffi.Pointer<wire_WasmMemoryType> Function()>>(
-          'new_box_autoadd_wasm_memory_type_0');
-  late final _new_box_autoadd_wasm_memory_type_0 =
-      _new_box_autoadd_wasm_memory_type_0Ptr
-          .asFunction<ffi.Pointer<wire_WasmMemoryType> Function()>();
+  late final _new_box_autoadd_wasm_val_0Ptr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_WasmVal> Function()>>(
+          'new_box_autoadd_wasm_val_0');
+  late final _new_box_autoadd_wasm_val_0 = _new_box_autoadd_wasm_val_0Ptr
+      .asFunction<ffi.Pointer<wire_WasmVal> Function()>();
 
   ffi.Pointer<wire_WasmiInstanceId> new_box_autoadd_wasmi_instance_id_0() {
     return _new_box_autoadd_wasmi_instance_id_0();
@@ -1890,21 +1829,6 @@ class WasmiDartWire implements FlutterRustBridgeWireBase {
   late final _new_list_preopened_dir_0 = _new_list_preopened_dir_0Ptr
       .asFunction<ffi.Pointer<wire_list_preopened_dir> Function(int)>();
 
-  ffi.Pointer<wire_list_value_2> new_list_value_2_0(
-    int len,
-  ) {
-    return _new_list_value_2_0(
-      len,
-    );
-  }
-
-  late final _new_list_value_2_0Ptr = _lookup<
-      ffi.NativeFunction<
-          ffi.Pointer<wire_list_value_2> Function(
-              ffi.Int32)>>('new_list_value_2_0');
-  late final _new_list_value_2_0 = _new_list_value_2_0Ptr
-      .asFunction<ffi.Pointer<wire_list_value_2> Function(int)>();
-
   ffi.Pointer<wire_list_value_ty> new_list_value_ty_0(
     int len,
   ) {
@@ -1919,6 +1843,21 @@ class WasmiDartWire implements FlutterRustBridgeWireBase {
               ffi.Int32)>>('new_list_value_ty_0');
   late final _new_list_value_ty_0 = _new_list_value_ty_0Ptr
       .asFunction<ffi.Pointer<wire_list_value_ty> Function(int)>();
+
+  ffi.Pointer<wire_list_wasm_val> new_list_wasm_val_0(
+    int len,
+  ) {
+    return _new_list_wasm_val_0(
+      len,
+    );
+  }
+
+  late final _new_list_wasm_val_0Ptr = _lookup<
+      ffi.NativeFunction<
+          ffi.Pointer<wire_list_wasm_val> Function(
+              ffi.Int32)>>('new_list_wasm_val_0');
+  late final _new_list_wasm_val_0 = _new_list_wasm_val_0Ptr
+      .asFunction<ffi.Pointer<wire_list_wasm_val> Function(int)>();
 
   ffi.Pointer<wire_uint_8_list> new_uint_8_list_0(
     int len,
@@ -2122,65 +2061,65 @@ class WasmiDartWire implements FlutterRustBridgeWireBase {
   late final _inflate_ExternalValue_Memory = _inflate_ExternalValue_MemoryPtr
       .asFunction<ffi.Pointer<ExternalValueKind> Function()>();
 
-  ffi.Pointer<Value2Kind> inflate_Value2_I32() {
-    return _inflate_Value2_I32();
+  ffi.Pointer<WasmValKind> inflate_WasmVal_i32() {
+    return _inflate_WasmVal_i32();
   }
 
-  late final _inflate_Value2_I32Ptr =
-      _lookup<ffi.NativeFunction<ffi.Pointer<Value2Kind> Function()>>(
-          'inflate_Value2_I32');
-  late final _inflate_Value2_I32 =
-      _inflate_Value2_I32Ptr.asFunction<ffi.Pointer<Value2Kind> Function()>();
+  late final _inflate_WasmVal_i32Ptr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<WasmValKind> Function()>>(
+          'inflate_WasmVal_i32');
+  late final _inflate_WasmVal_i32 =
+      _inflate_WasmVal_i32Ptr.asFunction<ffi.Pointer<WasmValKind> Function()>();
 
-  ffi.Pointer<Value2Kind> inflate_Value2_I64() {
-    return _inflate_Value2_I64();
+  ffi.Pointer<WasmValKind> inflate_WasmVal_i64() {
+    return _inflate_WasmVal_i64();
   }
 
-  late final _inflate_Value2_I64Ptr =
-      _lookup<ffi.NativeFunction<ffi.Pointer<Value2Kind> Function()>>(
-          'inflate_Value2_I64');
-  late final _inflate_Value2_I64 =
-      _inflate_Value2_I64Ptr.asFunction<ffi.Pointer<Value2Kind> Function()>();
+  late final _inflate_WasmVal_i64Ptr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<WasmValKind> Function()>>(
+          'inflate_WasmVal_i64');
+  late final _inflate_WasmVal_i64 =
+      _inflate_WasmVal_i64Ptr.asFunction<ffi.Pointer<WasmValKind> Function()>();
 
-  ffi.Pointer<Value2Kind> inflate_Value2_F32() {
-    return _inflate_Value2_F32();
+  ffi.Pointer<WasmValKind> inflate_WasmVal_f32() {
+    return _inflate_WasmVal_f32();
   }
 
-  late final _inflate_Value2_F32Ptr =
-      _lookup<ffi.NativeFunction<ffi.Pointer<Value2Kind> Function()>>(
-          'inflate_Value2_F32');
-  late final _inflate_Value2_F32 =
-      _inflate_Value2_F32Ptr.asFunction<ffi.Pointer<Value2Kind> Function()>();
+  late final _inflate_WasmVal_f32Ptr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<WasmValKind> Function()>>(
+          'inflate_WasmVal_f32');
+  late final _inflate_WasmVal_f32 =
+      _inflate_WasmVal_f32Ptr.asFunction<ffi.Pointer<WasmValKind> Function()>();
 
-  ffi.Pointer<Value2Kind> inflate_Value2_F64() {
-    return _inflate_Value2_F64();
+  ffi.Pointer<WasmValKind> inflate_WasmVal_f64() {
+    return _inflate_WasmVal_f64();
   }
 
-  late final _inflate_Value2_F64Ptr =
-      _lookup<ffi.NativeFunction<ffi.Pointer<Value2Kind> Function()>>(
-          'inflate_Value2_F64');
-  late final _inflate_Value2_F64 =
-      _inflate_Value2_F64Ptr.asFunction<ffi.Pointer<Value2Kind> Function()>();
+  late final _inflate_WasmVal_f64Ptr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<WasmValKind> Function()>>(
+          'inflate_WasmVal_f64');
+  late final _inflate_WasmVal_f64 =
+      _inflate_WasmVal_f64Ptr.asFunction<ffi.Pointer<WasmValKind> Function()>();
 
-  ffi.Pointer<Value2Kind> inflate_Value2_FuncRef() {
-    return _inflate_Value2_FuncRef();
+  ffi.Pointer<WasmValKind> inflate_WasmVal_funcRef() {
+    return _inflate_WasmVal_funcRef();
   }
 
-  late final _inflate_Value2_FuncRefPtr =
-      _lookup<ffi.NativeFunction<ffi.Pointer<Value2Kind> Function()>>(
-          'inflate_Value2_FuncRef');
-  late final _inflate_Value2_FuncRef = _inflate_Value2_FuncRefPtr
-      .asFunction<ffi.Pointer<Value2Kind> Function()>();
+  late final _inflate_WasmVal_funcRefPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<WasmValKind> Function()>>(
+          'inflate_WasmVal_funcRef');
+  late final _inflate_WasmVal_funcRef = _inflate_WasmVal_funcRefPtr
+      .asFunction<ffi.Pointer<WasmValKind> Function()>();
 
-  ffi.Pointer<Value2Kind> inflate_Value2_ExternRef() {
-    return _inflate_Value2_ExternRef();
+  ffi.Pointer<WasmValKind> inflate_WasmVal_externRef() {
+    return _inflate_WasmVal_externRef();
   }
 
-  late final _inflate_Value2_ExternRefPtr =
-      _lookup<ffi.NativeFunction<ffi.Pointer<Value2Kind> Function()>>(
-          'inflate_Value2_ExternRef');
-  late final _inflate_Value2_ExternRef = _inflate_Value2_ExternRefPtr
-      .asFunction<ffi.Pointer<Value2Kind> Function()>();
+  late final _inflate_WasmVal_externRefPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<WasmValKind> Function()>>(
+          'inflate_WasmVal_externRef');
+  late final _inflate_WasmVal_externRef = _inflate_WasmVal_externRefPtr
+      .asFunction<ffi.Pointer<WasmValKind> Function()>();
 
   void free_WireSyncReturn(
     WireSyncReturn ptr,
@@ -2272,22 +2211,22 @@ class wire_WasiConfig extends ffi.Struct {
   external ffi.Pointer<wire_list_preopened_dir> preopened_dirs;
 }
 
-class wire_Value2_I32 extends ffi.Struct {
+class wire_WasmVal_i32 extends ffi.Struct {
   @ffi.Int32()
   external int field0;
 }
 
-class wire_Value2_I64 extends ffi.Struct {
+class wire_WasmVal_i64 extends ffi.Struct {
   @ffi.Int64()
   external int field0;
 }
 
-class wire_Value2_F32 extends ffi.Struct {
+class wire_WasmVal_f32 extends ffi.Struct {
   @ffi.Float()
   external double field0;
 }
 
-class wire_Value2_F64 extends ffi.Struct {
+class wire_WasmVal_f64 extends ffi.Struct {
   @ffi.Double()
   external double field0;
 }
@@ -2296,38 +2235,38 @@ class wire_Func extends ffi.Struct {
   external ffi.Pointer<ffi.Void> ptr;
 }
 
-class wire_Value2_FuncRef extends ffi.Struct {
+class wire_WasmVal_funcRef extends ffi.Struct {
   external ffi.Pointer<wire_Func> field0;
 }
 
-class wire_Value2_ExternRef extends ffi.Struct {
+class wire_WasmVal_externRef extends ffi.Struct {
   @ffi.Uint32()
   external int field0;
 }
 
-class Value2Kind extends ffi.Union {
-  external ffi.Pointer<wire_Value2_I32> I32;
+class WasmValKind extends ffi.Union {
+  external ffi.Pointer<wire_WasmVal_i32> i32;
 
-  external ffi.Pointer<wire_Value2_I64> I64;
+  external ffi.Pointer<wire_WasmVal_i64> i64;
 
-  external ffi.Pointer<wire_Value2_F32> F32;
+  external ffi.Pointer<wire_WasmVal_f32> f32;
 
-  external ffi.Pointer<wire_Value2_F64> F64;
+  external ffi.Pointer<wire_WasmVal_f64> f64;
 
-  external ffi.Pointer<wire_Value2_FuncRef> FuncRef;
+  external ffi.Pointer<wire_WasmVal_funcRef> funcRef;
 
-  external ffi.Pointer<wire_Value2_ExternRef> ExternRef;
+  external ffi.Pointer<wire_WasmVal_externRef> externRef;
 }
 
-class wire_Value2 extends ffi.Struct {
+class wire_WasmVal extends ffi.Struct {
   @ffi.Int32()
   external int tag;
 
-  external ffi.Pointer<Value2Kind> kind;
+  external ffi.Pointer<WasmValKind> kind;
 }
 
-class wire_list_value_2 extends ffi.Struct {
-  external ffi.Pointer<wire_Value2> ptr;
+class wire_list_wasm_val extends ffi.Struct {
+  external ffi.Pointer<wire_WasmVal> ptr;
 
   @ffi.Int32()
   external int len;
@@ -2483,14 +2422,14 @@ class wire_list_value_ty extends ffi.Struct {
   external int len;
 }
 
-class wire_WasmMemoryType extends ffi.Struct {
+class wire_MemoryTy extends ffi.Struct {
   @ffi.Uint32()
   external int initial_pages;
 
   external ffi.Pointer<ffi.Uint32> maximum_pages;
 }
 
-class wire_TableType2 extends ffi.Struct {
+class wire_TableArgs extends ffi.Struct {
   @ffi.Uint32()
   external int min;
 

@@ -22,7 +22,7 @@ mixin _$ExternalType {
     required TResult Function(FuncTy field0) func,
     required TResult Function(GlobalTy field0) global,
     required TResult Function(TableTy field0) table,
-    required TResult Function(WasmMemoryType field0) memory,
+    required TResult Function(MemoryTy field0) memory,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
@@ -30,7 +30,7 @@ mixin _$ExternalType {
     TResult? Function(FuncTy field0)? func,
     TResult? Function(GlobalTy field0)? global,
     TResult? Function(TableTy field0)? table,
-    TResult? Function(WasmMemoryType field0)? memory,
+    TResult? Function(MemoryTy field0)? memory,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
@@ -38,7 +38,7 @@ mixin _$ExternalType {
     TResult Function(FuncTy field0)? func,
     TResult Function(GlobalTy field0)? global,
     TResult Function(TableTy field0)? table,
-    TResult Function(WasmMemoryType field0)? memory,
+    TResult Function(MemoryTy field0)? memory,
     required TResult orElse(),
   }) =>
       throw _privateConstructorUsedError;
@@ -154,7 +154,7 @@ class _$ExternalType_Func implements ExternalType_Func {
     required TResult Function(FuncTy field0) func,
     required TResult Function(GlobalTy field0) global,
     required TResult Function(TableTy field0) table,
-    required TResult Function(WasmMemoryType field0) memory,
+    required TResult Function(MemoryTy field0) memory,
   }) {
     return func(field0);
   }
@@ -165,7 +165,7 @@ class _$ExternalType_Func implements ExternalType_Func {
     TResult? Function(FuncTy field0)? func,
     TResult? Function(GlobalTy field0)? global,
     TResult? Function(TableTy field0)? table,
-    TResult? Function(WasmMemoryType field0)? memory,
+    TResult? Function(MemoryTy field0)? memory,
   }) {
     return func?.call(field0);
   }
@@ -176,7 +176,7 @@ class _$ExternalType_Func implements ExternalType_Func {
     TResult Function(FuncTy field0)? func,
     TResult Function(GlobalTy field0)? global,
     TResult Function(TableTy field0)? table,
-    TResult Function(WasmMemoryType field0)? memory,
+    TResult Function(MemoryTy field0)? memory,
     required TResult orElse(),
   }) {
     if (func != null) {
@@ -301,7 +301,7 @@ class _$ExternalType_Global implements ExternalType_Global {
     required TResult Function(FuncTy field0) func,
     required TResult Function(GlobalTy field0) global,
     required TResult Function(TableTy field0) table,
-    required TResult Function(WasmMemoryType field0) memory,
+    required TResult Function(MemoryTy field0) memory,
   }) {
     return global(field0);
   }
@@ -312,7 +312,7 @@ class _$ExternalType_Global implements ExternalType_Global {
     TResult? Function(FuncTy field0)? func,
     TResult? Function(GlobalTy field0)? global,
     TResult? Function(TableTy field0)? table,
-    TResult? Function(WasmMemoryType field0)? memory,
+    TResult? Function(MemoryTy field0)? memory,
   }) {
     return global?.call(field0);
   }
@@ -323,7 +323,7 @@ class _$ExternalType_Global implements ExternalType_Global {
     TResult Function(FuncTy field0)? func,
     TResult Function(GlobalTy field0)? global,
     TResult Function(TableTy field0)? table,
-    TResult Function(WasmMemoryType field0)? memory,
+    TResult Function(MemoryTy field0)? memory,
     required TResult orElse(),
   }) {
     if (global != null) {
@@ -449,7 +449,7 @@ class _$ExternalType_Table implements ExternalType_Table {
     required TResult Function(FuncTy field0) func,
     required TResult Function(GlobalTy field0) global,
     required TResult Function(TableTy field0) table,
-    required TResult Function(WasmMemoryType field0) memory,
+    required TResult Function(MemoryTy field0) memory,
   }) {
     return table(field0);
   }
@@ -460,7 +460,7 @@ class _$ExternalType_Table implements ExternalType_Table {
     TResult? Function(FuncTy field0)? func,
     TResult? Function(GlobalTy field0)? global,
     TResult? Function(TableTy field0)? table,
-    TResult? Function(WasmMemoryType field0)? memory,
+    TResult? Function(MemoryTy field0)? memory,
   }) {
     return table?.call(field0);
   }
@@ -471,7 +471,7 @@ class _$ExternalType_Table implements ExternalType_Table {
     TResult Function(FuncTy field0)? func,
     TResult Function(GlobalTy field0)? global,
     TResult Function(TableTy field0)? table,
-    TResult Function(WasmMemoryType field0)? memory,
+    TResult Function(MemoryTy field0)? memory,
     required TResult orElse(),
   }) {
     if (table != null) {
@@ -534,7 +534,7 @@ abstract class _$$ExternalType_MemoryCopyWith<$Res> {
           $Res Function(_$ExternalType_Memory) then) =
       __$$ExternalType_MemoryCopyWithImpl<$Res>;
   @useResult
-  $Res call({WasmMemoryType field0});
+  $Res call({MemoryTy field0});
 }
 
 /// @nodoc
@@ -554,7 +554,7 @@ class __$$ExternalType_MemoryCopyWithImpl<$Res>
       null == field0
           ? _value.field0
           : field0 // ignore: cast_nullable_to_non_nullable
-              as WasmMemoryType,
+              as MemoryTy,
     ));
   }
 }
@@ -565,7 +565,7 @@ class _$ExternalType_Memory implements ExternalType_Memory {
   const _$ExternalType_Memory(this.field0);
 
   @override
-  final WasmMemoryType field0;
+  final MemoryTy field0;
 
   @override
   String toString() {
@@ -596,7 +596,7 @@ class _$ExternalType_Memory implements ExternalType_Memory {
     required TResult Function(FuncTy field0) func,
     required TResult Function(GlobalTy field0) global,
     required TResult Function(TableTy field0) table,
-    required TResult Function(WasmMemoryType field0) memory,
+    required TResult Function(MemoryTy field0) memory,
   }) {
     return memory(field0);
   }
@@ -607,7 +607,7 @@ class _$ExternalType_Memory implements ExternalType_Memory {
     TResult? Function(FuncTy field0)? func,
     TResult? Function(GlobalTy field0)? global,
     TResult? Function(TableTy field0)? table,
-    TResult? Function(WasmMemoryType field0)? memory,
+    TResult? Function(MemoryTy field0)? memory,
   }) {
     return memory?.call(field0);
   }
@@ -618,7 +618,7 @@ class _$ExternalType_Memory implements ExternalType_Memory {
     TResult Function(FuncTy field0)? func,
     TResult Function(GlobalTy field0)? global,
     TResult Function(TableTy field0)? table,
-    TResult Function(WasmMemoryType field0)? memory,
+    TResult Function(MemoryTy field0)? memory,
     required TResult orElse(),
   }) {
     if (memory != null) {
@@ -666,11 +666,11 @@ class _$ExternalType_Memory implements ExternalType_Memory {
 }
 
 abstract class ExternalType_Memory implements ExternalType {
-  const factory ExternalType_Memory(final WasmMemoryType field0) =
+  const factory ExternalType_Memory(final MemoryTy field0) =
       _$ExternalType_Memory;
 
   @override
-  WasmMemoryType get field0;
+  MemoryTy get field0;
   @JsonKey(ignore: true)
   _$$ExternalType_MemoryCopyWith<_$ExternalType_Memory> get copyWith =>
       throw _privateConstructorUsedError;
@@ -1340,7 +1340,7 @@ abstract class ExternalValue_Memory implements ExternalValue {
 }
 
 /// @nodoc
-mixin _$Value2 {
+mixin _$WasmVal {
   Object? get field0 => throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
@@ -1375,47 +1375,47 @@ mixin _$Value2 {
       throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult map<TResult extends Object?>({
-    required TResult Function(Value2_I32 value) i32,
-    required TResult Function(Value2_I64 value) i64,
-    required TResult Function(Value2_F32 value) f32,
-    required TResult Function(Value2_F64 value) f64,
-    required TResult Function(Value2_FuncRef value) funcRef,
-    required TResult Function(Value2_ExternRef value) externRef,
+    required TResult Function(WasmVal_i32 value) i32,
+    required TResult Function(WasmVal_i64 value) i64,
+    required TResult Function(WasmVal_f32 value) f32,
+    required TResult Function(WasmVal_f64 value) f64,
+    required TResult Function(WasmVal_funcRef value) funcRef,
+    required TResult Function(WasmVal_externRef value) externRef,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult? mapOrNull<TResult extends Object?>({
-    TResult? Function(Value2_I32 value)? i32,
-    TResult? Function(Value2_I64 value)? i64,
-    TResult? Function(Value2_F32 value)? f32,
-    TResult? Function(Value2_F64 value)? f64,
-    TResult? Function(Value2_FuncRef value)? funcRef,
-    TResult? Function(Value2_ExternRef value)? externRef,
+    TResult? Function(WasmVal_i32 value)? i32,
+    TResult? Function(WasmVal_i64 value)? i64,
+    TResult? Function(WasmVal_f32 value)? f32,
+    TResult? Function(WasmVal_f64 value)? f64,
+    TResult? Function(WasmVal_funcRef value)? funcRef,
+    TResult? Function(WasmVal_externRef value)? externRef,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult maybeMap<TResult extends Object?>({
-    TResult Function(Value2_I32 value)? i32,
-    TResult Function(Value2_I64 value)? i64,
-    TResult Function(Value2_F32 value)? f32,
-    TResult Function(Value2_F64 value)? f64,
-    TResult Function(Value2_FuncRef value)? funcRef,
-    TResult Function(Value2_ExternRef value)? externRef,
+    TResult Function(WasmVal_i32 value)? i32,
+    TResult Function(WasmVal_i64 value)? i64,
+    TResult Function(WasmVal_f32 value)? f32,
+    TResult Function(WasmVal_f64 value)? f64,
+    TResult Function(WasmVal_funcRef value)? funcRef,
+    TResult Function(WasmVal_externRef value)? externRef,
     required TResult orElse(),
   }) =>
       throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract class $Value2CopyWith<$Res> {
-  factory $Value2CopyWith(Value2 value, $Res Function(Value2) then) =
-      _$Value2CopyWithImpl<$Res, Value2>;
+abstract class $WasmValCopyWith<$Res> {
+  factory $WasmValCopyWith(WasmVal value, $Res Function(WasmVal) then) =
+      _$WasmValCopyWithImpl<$Res, WasmVal>;
 }
 
 /// @nodoc
-class _$Value2CopyWithImpl<$Res, $Val extends Value2>
-    implements $Value2CopyWith<$Res> {
-  _$Value2CopyWithImpl(this._value, this._then);
+class _$WasmValCopyWithImpl<$Res, $Val extends WasmVal>
+    implements $WasmValCopyWith<$Res> {
+  _$WasmValCopyWithImpl(this._value, this._then);
 
   // ignore: unused_field
   final $Val _value;
@@ -1424,20 +1424,20 @@ class _$Value2CopyWithImpl<$Res, $Val extends Value2>
 }
 
 /// @nodoc
-abstract class _$$Value2_I32CopyWith<$Res> {
-  factory _$$Value2_I32CopyWith(
-          _$Value2_I32 value, $Res Function(_$Value2_I32) then) =
-      __$$Value2_I32CopyWithImpl<$Res>;
+abstract class _$$WasmVal_i32CopyWith<$Res> {
+  factory _$$WasmVal_i32CopyWith(
+          _$WasmVal_i32 value, $Res Function(_$WasmVal_i32) then) =
+      __$$WasmVal_i32CopyWithImpl<$Res>;
   @useResult
   $Res call({int field0});
 }
 
 /// @nodoc
-class __$$Value2_I32CopyWithImpl<$Res>
-    extends _$Value2CopyWithImpl<$Res, _$Value2_I32>
-    implements _$$Value2_I32CopyWith<$Res> {
-  __$$Value2_I32CopyWithImpl(
-      _$Value2_I32 _value, $Res Function(_$Value2_I32) _then)
+class __$$WasmVal_i32CopyWithImpl<$Res>
+    extends _$WasmValCopyWithImpl<$Res, _$WasmVal_i32>
+    implements _$$WasmVal_i32CopyWith<$Res> {
+  __$$WasmVal_i32CopyWithImpl(
+      _$WasmVal_i32 _value, $Res Function(_$WasmVal_i32) _then)
       : super(_value, _then);
 
   @pragma('vm:prefer-inline')
@@ -1445,7 +1445,7 @@ class __$$Value2_I32CopyWithImpl<$Res>
   $Res call({
     Object? field0 = null,
   }) {
-    return _then(_$Value2_I32(
+    return _then(_$WasmVal_i32(
       null == field0
           ? _value.field0
           : field0 // ignore: cast_nullable_to_non_nullable
@@ -1456,22 +1456,22 @@ class __$$Value2_I32CopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$Value2_I32 implements Value2_I32 {
-  const _$Value2_I32(this.field0);
+class _$WasmVal_i32 implements WasmVal_i32 {
+  const _$WasmVal_i32(this.field0);
 
   @override
   final int field0;
 
   @override
   String toString() {
-    return 'Value2.i32(field0: $field0)';
+    return 'WasmVal.i32(field0: $field0)';
   }
 
   @override
   bool operator ==(dynamic other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$Value2_I32 &&
+            other is _$WasmVal_i32 &&
             (identical(other.field0, field0) || other.field0 == field0));
   }
 
@@ -1481,8 +1481,8 @@ class _$Value2_I32 implements Value2_I32 {
   @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
-  _$$Value2_I32CopyWith<_$Value2_I32> get copyWith =>
-      __$$Value2_I32CopyWithImpl<_$Value2_I32>(this, _$identity);
+  _$$WasmVal_i32CopyWith<_$WasmVal_i32> get copyWith =>
+      __$$WasmVal_i32CopyWithImpl<_$WasmVal_i32>(this, _$identity);
 
   @override
   @optionalTypeArgs
@@ -1530,12 +1530,12 @@ class _$Value2_I32 implements Value2_I32 {
   @override
   @optionalTypeArgs
   TResult map<TResult extends Object?>({
-    required TResult Function(Value2_I32 value) i32,
-    required TResult Function(Value2_I64 value) i64,
-    required TResult Function(Value2_F32 value) f32,
-    required TResult Function(Value2_F64 value) f64,
-    required TResult Function(Value2_FuncRef value) funcRef,
-    required TResult Function(Value2_ExternRef value) externRef,
+    required TResult Function(WasmVal_i32 value) i32,
+    required TResult Function(WasmVal_i64 value) i64,
+    required TResult Function(WasmVal_f32 value) f32,
+    required TResult Function(WasmVal_f64 value) f64,
+    required TResult Function(WasmVal_funcRef value) funcRef,
+    required TResult Function(WasmVal_externRef value) externRef,
   }) {
     return i32(this);
   }
@@ -1543,12 +1543,12 @@ class _$Value2_I32 implements Value2_I32 {
   @override
   @optionalTypeArgs
   TResult? mapOrNull<TResult extends Object?>({
-    TResult? Function(Value2_I32 value)? i32,
-    TResult? Function(Value2_I64 value)? i64,
-    TResult? Function(Value2_F32 value)? f32,
-    TResult? Function(Value2_F64 value)? f64,
-    TResult? Function(Value2_FuncRef value)? funcRef,
-    TResult? Function(Value2_ExternRef value)? externRef,
+    TResult? Function(WasmVal_i32 value)? i32,
+    TResult? Function(WasmVal_i64 value)? i64,
+    TResult? Function(WasmVal_f32 value)? f32,
+    TResult? Function(WasmVal_f64 value)? f64,
+    TResult? Function(WasmVal_funcRef value)? funcRef,
+    TResult? Function(WasmVal_externRef value)? externRef,
   }) {
     return i32?.call(this);
   }
@@ -1556,12 +1556,12 @@ class _$Value2_I32 implements Value2_I32 {
   @override
   @optionalTypeArgs
   TResult maybeMap<TResult extends Object?>({
-    TResult Function(Value2_I32 value)? i32,
-    TResult Function(Value2_I64 value)? i64,
-    TResult Function(Value2_F32 value)? f32,
-    TResult Function(Value2_F64 value)? f64,
-    TResult Function(Value2_FuncRef value)? funcRef,
-    TResult Function(Value2_ExternRef value)? externRef,
+    TResult Function(WasmVal_i32 value)? i32,
+    TResult Function(WasmVal_i64 value)? i64,
+    TResult Function(WasmVal_f32 value)? f32,
+    TResult Function(WasmVal_f64 value)? f64,
+    TResult Function(WasmVal_funcRef value)? funcRef,
+    TResult Function(WasmVal_externRef value)? externRef,
     required TResult orElse(),
   }) {
     if (i32 != null) {
@@ -1571,31 +1571,31 @@ class _$Value2_I32 implements Value2_I32 {
   }
 }
 
-abstract class Value2_I32 implements Value2 {
-  const factory Value2_I32(final int field0) = _$Value2_I32;
+abstract class WasmVal_i32 implements WasmVal {
+  const factory WasmVal_i32(final int field0) = _$WasmVal_i32;
 
   @override
   int get field0;
   @JsonKey(ignore: true)
-  _$$Value2_I32CopyWith<_$Value2_I32> get copyWith =>
+  _$$WasmVal_i32CopyWith<_$WasmVal_i32> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract class _$$Value2_I64CopyWith<$Res> {
-  factory _$$Value2_I64CopyWith(
-          _$Value2_I64 value, $Res Function(_$Value2_I64) then) =
-      __$$Value2_I64CopyWithImpl<$Res>;
+abstract class _$$WasmVal_i64CopyWith<$Res> {
+  factory _$$WasmVal_i64CopyWith(
+          _$WasmVal_i64 value, $Res Function(_$WasmVal_i64) then) =
+      __$$WasmVal_i64CopyWithImpl<$Res>;
   @useResult
   $Res call({int field0});
 }
 
 /// @nodoc
-class __$$Value2_I64CopyWithImpl<$Res>
-    extends _$Value2CopyWithImpl<$Res, _$Value2_I64>
-    implements _$$Value2_I64CopyWith<$Res> {
-  __$$Value2_I64CopyWithImpl(
-      _$Value2_I64 _value, $Res Function(_$Value2_I64) _then)
+class __$$WasmVal_i64CopyWithImpl<$Res>
+    extends _$WasmValCopyWithImpl<$Res, _$WasmVal_i64>
+    implements _$$WasmVal_i64CopyWith<$Res> {
+  __$$WasmVal_i64CopyWithImpl(
+      _$WasmVal_i64 _value, $Res Function(_$WasmVal_i64) _then)
       : super(_value, _then);
 
   @pragma('vm:prefer-inline')
@@ -1603,7 +1603,7 @@ class __$$Value2_I64CopyWithImpl<$Res>
   $Res call({
     Object? field0 = null,
   }) {
-    return _then(_$Value2_I64(
+    return _then(_$WasmVal_i64(
       null == field0
           ? _value.field0
           : field0 // ignore: cast_nullable_to_non_nullable
@@ -1614,22 +1614,22 @@ class __$$Value2_I64CopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$Value2_I64 implements Value2_I64 {
-  const _$Value2_I64(this.field0);
+class _$WasmVal_i64 implements WasmVal_i64 {
+  const _$WasmVal_i64(this.field0);
 
   @override
   final int field0;
 
   @override
   String toString() {
-    return 'Value2.i64(field0: $field0)';
+    return 'WasmVal.i64(field0: $field0)';
   }
 
   @override
   bool operator ==(dynamic other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$Value2_I64 &&
+            other is _$WasmVal_i64 &&
             (identical(other.field0, field0) || other.field0 == field0));
   }
 
@@ -1639,8 +1639,8 @@ class _$Value2_I64 implements Value2_I64 {
   @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
-  _$$Value2_I64CopyWith<_$Value2_I64> get copyWith =>
-      __$$Value2_I64CopyWithImpl<_$Value2_I64>(this, _$identity);
+  _$$WasmVal_i64CopyWith<_$WasmVal_i64> get copyWith =>
+      __$$WasmVal_i64CopyWithImpl<_$WasmVal_i64>(this, _$identity);
 
   @override
   @optionalTypeArgs
@@ -1688,12 +1688,12 @@ class _$Value2_I64 implements Value2_I64 {
   @override
   @optionalTypeArgs
   TResult map<TResult extends Object?>({
-    required TResult Function(Value2_I32 value) i32,
-    required TResult Function(Value2_I64 value) i64,
-    required TResult Function(Value2_F32 value) f32,
-    required TResult Function(Value2_F64 value) f64,
-    required TResult Function(Value2_FuncRef value) funcRef,
-    required TResult Function(Value2_ExternRef value) externRef,
+    required TResult Function(WasmVal_i32 value) i32,
+    required TResult Function(WasmVal_i64 value) i64,
+    required TResult Function(WasmVal_f32 value) f32,
+    required TResult Function(WasmVal_f64 value) f64,
+    required TResult Function(WasmVal_funcRef value) funcRef,
+    required TResult Function(WasmVal_externRef value) externRef,
   }) {
     return i64(this);
   }
@@ -1701,12 +1701,12 @@ class _$Value2_I64 implements Value2_I64 {
   @override
   @optionalTypeArgs
   TResult? mapOrNull<TResult extends Object?>({
-    TResult? Function(Value2_I32 value)? i32,
-    TResult? Function(Value2_I64 value)? i64,
-    TResult? Function(Value2_F32 value)? f32,
-    TResult? Function(Value2_F64 value)? f64,
-    TResult? Function(Value2_FuncRef value)? funcRef,
-    TResult? Function(Value2_ExternRef value)? externRef,
+    TResult? Function(WasmVal_i32 value)? i32,
+    TResult? Function(WasmVal_i64 value)? i64,
+    TResult? Function(WasmVal_f32 value)? f32,
+    TResult? Function(WasmVal_f64 value)? f64,
+    TResult? Function(WasmVal_funcRef value)? funcRef,
+    TResult? Function(WasmVal_externRef value)? externRef,
   }) {
     return i64?.call(this);
   }
@@ -1714,12 +1714,12 @@ class _$Value2_I64 implements Value2_I64 {
   @override
   @optionalTypeArgs
   TResult maybeMap<TResult extends Object?>({
-    TResult Function(Value2_I32 value)? i32,
-    TResult Function(Value2_I64 value)? i64,
-    TResult Function(Value2_F32 value)? f32,
-    TResult Function(Value2_F64 value)? f64,
-    TResult Function(Value2_FuncRef value)? funcRef,
-    TResult Function(Value2_ExternRef value)? externRef,
+    TResult Function(WasmVal_i32 value)? i32,
+    TResult Function(WasmVal_i64 value)? i64,
+    TResult Function(WasmVal_f32 value)? f32,
+    TResult Function(WasmVal_f64 value)? f64,
+    TResult Function(WasmVal_funcRef value)? funcRef,
+    TResult Function(WasmVal_externRef value)? externRef,
     required TResult orElse(),
   }) {
     if (i64 != null) {
@@ -1729,31 +1729,31 @@ class _$Value2_I64 implements Value2_I64 {
   }
 }
 
-abstract class Value2_I64 implements Value2 {
-  const factory Value2_I64(final int field0) = _$Value2_I64;
+abstract class WasmVal_i64 implements WasmVal {
+  const factory WasmVal_i64(final int field0) = _$WasmVal_i64;
 
   @override
   int get field0;
   @JsonKey(ignore: true)
-  _$$Value2_I64CopyWith<_$Value2_I64> get copyWith =>
+  _$$WasmVal_i64CopyWith<_$WasmVal_i64> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract class _$$Value2_F32CopyWith<$Res> {
-  factory _$$Value2_F32CopyWith(
-          _$Value2_F32 value, $Res Function(_$Value2_F32) then) =
-      __$$Value2_F32CopyWithImpl<$Res>;
+abstract class _$$WasmVal_f32CopyWith<$Res> {
+  factory _$$WasmVal_f32CopyWith(
+          _$WasmVal_f32 value, $Res Function(_$WasmVal_f32) then) =
+      __$$WasmVal_f32CopyWithImpl<$Res>;
   @useResult
   $Res call({double field0});
 }
 
 /// @nodoc
-class __$$Value2_F32CopyWithImpl<$Res>
-    extends _$Value2CopyWithImpl<$Res, _$Value2_F32>
-    implements _$$Value2_F32CopyWith<$Res> {
-  __$$Value2_F32CopyWithImpl(
-      _$Value2_F32 _value, $Res Function(_$Value2_F32) _then)
+class __$$WasmVal_f32CopyWithImpl<$Res>
+    extends _$WasmValCopyWithImpl<$Res, _$WasmVal_f32>
+    implements _$$WasmVal_f32CopyWith<$Res> {
+  __$$WasmVal_f32CopyWithImpl(
+      _$WasmVal_f32 _value, $Res Function(_$WasmVal_f32) _then)
       : super(_value, _then);
 
   @pragma('vm:prefer-inline')
@@ -1761,7 +1761,7 @@ class __$$Value2_F32CopyWithImpl<$Res>
   $Res call({
     Object? field0 = null,
   }) {
-    return _then(_$Value2_F32(
+    return _then(_$WasmVal_f32(
       null == field0
           ? _value.field0
           : field0 // ignore: cast_nullable_to_non_nullable
@@ -1772,22 +1772,22 @@ class __$$Value2_F32CopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$Value2_F32 implements Value2_F32 {
-  const _$Value2_F32(this.field0);
+class _$WasmVal_f32 implements WasmVal_f32 {
+  const _$WasmVal_f32(this.field0);
 
   @override
   final double field0;
 
   @override
   String toString() {
-    return 'Value2.f32(field0: $field0)';
+    return 'WasmVal.f32(field0: $field0)';
   }
 
   @override
   bool operator ==(dynamic other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$Value2_F32 &&
+            other is _$WasmVal_f32 &&
             (identical(other.field0, field0) || other.field0 == field0));
   }
 
@@ -1797,8 +1797,8 @@ class _$Value2_F32 implements Value2_F32 {
   @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
-  _$$Value2_F32CopyWith<_$Value2_F32> get copyWith =>
-      __$$Value2_F32CopyWithImpl<_$Value2_F32>(this, _$identity);
+  _$$WasmVal_f32CopyWith<_$WasmVal_f32> get copyWith =>
+      __$$WasmVal_f32CopyWithImpl<_$WasmVal_f32>(this, _$identity);
 
   @override
   @optionalTypeArgs
@@ -1846,12 +1846,12 @@ class _$Value2_F32 implements Value2_F32 {
   @override
   @optionalTypeArgs
   TResult map<TResult extends Object?>({
-    required TResult Function(Value2_I32 value) i32,
-    required TResult Function(Value2_I64 value) i64,
-    required TResult Function(Value2_F32 value) f32,
-    required TResult Function(Value2_F64 value) f64,
-    required TResult Function(Value2_FuncRef value) funcRef,
-    required TResult Function(Value2_ExternRef value) externRef,
+    required TResult Function(WasmVal_i32 value) i32,
+    required TResult Function(WasmVal_i64 value) i64,
+    required TResult Function(WasmVal_f32 value) f32,
+    required TResult Function(WasmVal_f64 value) f64,
+    required TResult Function(WasmVal_funcRef value) funcRef,
+    required TResult Function(WasmVal_externRef value) externRef,
   }) {
     return f32(this);
   }
@@ -1859,12 +1859,12 @@ class _$Value2_F32 implements Value2_F32 {
   @override
   @optionalTypeArgs
   TResult? mapOrNull<TResult extends Object?>({
-    TResult? Function(Value2_I32 value)? i32,
-    TResult? Function(Value2_I64 value)? i64,
-    TResult? Function(Value2_F32 value)? f32,
-    TResult? Function(Value2_F64 value)? f64,
-    TResult? Function(Value2_FuncRef value)? funcRef,
-    TResult? Function(Value2_ExternRef value)? externRef,
+    TResult? Function(WasmVal_i32 value)? i32,
+    TResult? Function(WasmVal_i64 value)? i64,
+    TResult? Function(WasmVal_f32 value)? f32,
+    TResult? Function(WasmVal_f64 value)? f64,
+    TResult? Function(WasmVal_funcRef value)? funcRef,
+    TResult? Function(WasmVal_externRef value)? externRef,
   }) {
     return f32?.call(this);
   }
@@ -1872,12 +1872,12 @@ class _$Value2_F32 implements Value2_F32 {
   @override
   @optionalTypeArgs
   TResult maybeMap<TResult extends Object?>({
-    TResult Function(Value2_I32 value)? i32,
-    TResult Function(Value2_I64 value)? i64,
-    TResult Function(Value2_F32 value)? f32,
-    TResult Function(Value2_F64 value)? f64,
-    TResult Function(Value2_FuncRef value)? funcRef,
-    TResult Function(Value2_ExternRef value)? externRef,
+    TResult Function(WasmVal_i32 value)? i32,
+    TResult Function(WasmVal_i64 value)? i64,
+    TResult Function(WasmVal_f32 value)? f32,
+    TResult Function(WasmVal_f64 value)? f64,
+    TResult Function(WasmVal_funcRef value)? funcRef,
+    TResult Function(WasmVal_externRef value)? externRef,
     required TResult orElse(),
   }) {
     if (f32 != null) {
@@ -1887,31 +1887,31 @@ class _$Value2_F32 implements Value2_F32 {
   }
 }
 
-abstract class Value2_F32 implements Value2 {
-  const factory Value2_F32(final double field0) = _$Value2_F32;
+abstract class WasmVal_f32 implements WasmVal {
+  const factory WasmVal_f32(final double field0) = _$WasmVal_f32;
 
   @override
   double get field0;
   @JsonKey(ignore: true)
-  _$$Value2_F32CopyWith<_$Value2_F32> get copyWith =>
+  _$$WasmVal_f32CopyWith<_$WasmVal_f32> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract class _$$Value2_F64CopyWith<$Res> {
-  factory _$$Value2_F64CopyWith(
-          _$Value2_F64 value, $Res Function(_$Value2_F64) then) =
-      __$$Value2_F64CopyWithImpl<$Res>;
+abstract class _$$WasmVal_f64CopyWith<$Res> {
+  factory _$$WasmVal_f64CopyWith(
+          _$WasmVal_f64 value, $Res Function(_$WasmVal_f64) then) =
+      __$$WasmVal_f64CopyWithImpl<$Res>;
   @useResult
   $Res call({double field0});
 }
 
 /// @nodoc
-class __$$Value2_F64CopyWithImpl<$Res>
-    extends _$Value2CopyWithImpl<$Res, _$Value2_F64>
-    implements _$$Value2_F64CopyWith<$Res> {
-  __$$Value2_F64CopyWithImpl(
-      _$Value2_F64 _value, $Res Function(_$Value2_F64) _then)
+class __$$WasmVal_f64CopyWithImpl<$Res>
+    extends _$WasmValCopyWithImpl<$Res, _$WasmVal_f64>
+    implements _$$WasmVal_f64CopyWith<$Res> {
+  __$$WasmVal_f64CopyWithImpl(
+      _$WasmVal_f64 _value, $Res Function(_$WasmVal_f64) _then)
       : super(_value, _then);
 
   @pragma('vm:prefer-inline')
@@ -1919,7 +1919,7 @@ class __$$Value2_F64CopyWithImpl<$Res>
   $Res call({
     Object? field0 = null,
   }) {
-    return _then(_$Value2_F64(
+    return _then(_$WasmVal_f64(
       null == field0
           ? _value.field0
           : field0 // ignore: cast_nullable_to_non_nullable
@@ -1930,22 +1930,22 @@ class __$$Value2_F64CopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$Value2_F64 implements Value2_F64 {
-  const _$Value2_F64(this.field0);
+class _$WasmVal_f64 implements WasmVal_f64 {
+  const _$WasmVal_f64(this.field0);
 
   @override
   final double field0;
 
   @override
   String toString() {
-    return 'Value2.f64(field0: $field0)';
+    return 'WasmVal.f64(field0: $field0)';
   }
 
   @override
   bool operator ==(dynamic other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$Value2_F64 &&
+            other is _$WasmVal_f64 &&
             (identical(other.field0, field0) || other.field0 == field0));
   }
 
@@ -1955,8 +1955,8 @@ class _$Value2_F64 implements Value2_F64 {
   @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
-  _$$Value2_F64CopyWith<_$Value2_F64> get copyWith =>
-      __$$Value2_F64CopyWithImpl<_$Value2_F64>(this, _$identity);
+  _$$WasmVal_f64CopyWith<_$WasmVal_f64> get copyWith =>
+      __$$WasmVal_f64CopyWithImpl<_$WasmVal_f64>(this, _$identity);
 
   @override
   @optionalTypeArgs
@@ -2004,12 +2004,12 @@ class _$Value2_F64 implements Value2_F64 {
   @override
   @optionalTypeArgs
   TResult map<TResult extends Object?>({
-    required TResult Function(Value2_I32 value) i32,
-    required TResult Function(Value2_I64 value) i64,
-    required TResult Function(Value2_F32 value) f32,
-    required TResult Function(Value2_F64 value) f64,
-    required TResult Function(Value2_FuncRef value) funcRef,
-    required TResult Function(Value2_ExternRef value) externRef,
+    required TResult Function(WasmVal_i32 value) i32,
+    required TResult Function(WasmVal_i64 value) i64,
+    required TResult Function(WasmVal_f32 value) f32,
+    required TResult Function(WasmVal_f64 value) f64,
+    required TResult Function(WasmVal_funcRef value) funcRef,
+    required TResult Function(WasmVal_externRef value) externRef,
   }) {
     return f64(this);
   }
@@ -2017,12 +2017,12 @@ class _$Value2_F64 implements Value2_F64 {
   @override
   @optionalTypeArgs
   TResult? mapOrNull<TResult extends Object?>({
-    TResult? Function(Value2_I32 value)? i32,
-    TResult? Function(Value2_I64 value)? i64,
-    TResult? Function(Value2_F32 value)? f32,
-    TResult? Function(Value2_F64 value)? f64,
-    TResult? Function(Value2_FuncRef value)? funcRef,
-    TResult? Function(Value2_ExternRef value)? externRef,
+    TResult? Function(WasmVal_i32 value)? i32,
+    TResult? Function(WasmVal_i64 value)? i64,
+    TResult? Function(WasmVal_f32 value)? f32,
+    TResult? Function(WasmVal_f64 value)? f64,
+    TResult? Function(WasmVal_funcRef value)? funcRef,
+    TResult? Function(WasmVal_externRef value)? externRef,
   }) {
     return f64?.call(this);
   }
@@ -2030,12 +2030,12 @@ class _$Value2_F64 implements Value2_F64 {
   @override
   @optionalTypeArgs
   TResult maybeMap<TResult extends Object?>({
-    TResult Function(Value2_I32 value)? i32,
-    TResult Function(Value2_I64 value)? i64,
-    TResult Function(Value2_F32 value)? f32,
-    TResult Function(Value2_F64 value)? f64,
-    TResult Function(Value2_FuncRef value)? funcRef,
-    TResult Function(Value2_ExternRef value)? externRef,
+    TResult Function(WasmVal_i32 value)? i32,
+    TResult Function(WasmVal_i64 value)? i64,
+    TResult Function(WasmVal_f32 value)? f32,
+    TResult Function(WasmVal_f64 value)? f64,
+    TResult Function(WasmVal_funcRef value)? funcRef,
+    TResult Function(WasmVal_externRef value)? externRef,
     required TResult orElse(),
   }) {
     if (f64 != null) {
@@ -2045,31 +2045,31 @@ class _$Value2_F64 implements Value2_F64 {
   }
 }
 
-abstract class Value2_F64 implements Value2 {
-  const factory Value2_F64(final double field0) = _$Value2_F64;
+abstract class WasmVal_f64 implements WasmVal {
+  const factory WasmVal_f64(final double field0) = _$WasmVal_f64;
 
   @override
   double get field0;
   @JsonKey(ignore: true)
-  _$$Value2_F64CopyWith<_$Value2_F64> get copyWith =>
+  _$$WasmVal_f64CopyWith<_$WasmVal_f64> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract class _$$Value2_FuncRefCopyWith<$Res> {
-  factory _$$Value2_FuncRefCopyWith(
-          _$Value2_FuncRef value, $Res Function(_$Value2_FuncRef) then) =
-      __$$Value2_FuncRefCopyWithImpl<$Res>;
+abstract class _$$WasmVal_funcRefCopyWith<$Res> {
+  factory _$$WasmVal_funcRefCopyWith(
+          _$WasmVal_funcRef value, $Res Function(_$WasmVal_funcRef) then) =
+      __$$WasmVal_funcRefCopyWithImpl<$Res>;
   @useResult
   $Res call({Func? field0});
 }
 
 /// @nodoc
-class __$$Value2_FuncRefCopyWithImpl<$Res>
-    extends _$Value2CopyWithImpl<$Res, _$Value2_FuncRef>
-    implements _$$Value2_FuncRefCopyWith<$Res> {
-  __$$Value2_FuncRefCopyWithImpl(
-      _$Value2_FuncRef _value, $Res Function(_$Value2_FuncRef) _then)
+class __$$WasmVal_funcRefCopyWithImpl<$Res>
+    extends _$WasmValCopyWithImpl<$Res, _$WasmVal_funcRef>
+    implements _$$WasmVal_funcRefCopyWith<$Res> {
+  __$$WasmVal_funcRefCopyWithImpl(
+      _$WasmVal_funcRef _value, $Res Function(_$WasmVal_funcRef) _then)
       : super(_value, _then);
 
   @pragma('vm:prefer-inline')
@@ -2077,7 +2077,7 @@ class __$$Value2_FuncRefCopyWithImpl<$Res>
   $Res call({
     Object? field0 = freezed,
   }) {
-    return _then(_$Value2_FuncRef(
+    return _then(_$WasmVal_funcRef(
       freezed == field0
           ? _value.field0
           : field0 // ignore: cast_nullable_to_non_nullable
@@ -2088,22 +2088,22 @@ class __$$Value2_FuncRefCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$Value2_FuncRef implements Value2_FuncRef {
-  const _$Value2_FuncRef([this.field0]);
+class _$WasmVal_funcRef implements WasmVal_funcRef {
+  const _$WasmVal_funcRef([this.field0]);
 
   @override
   final Func? field0;
 
   @override
   String toString() {
-    return 'Value2.funcRef(field0: $field0)';
+    return 'WasmVal.funcRef(field0: $field0)';
   }
 
   @override
   bool operator ==(dynamic other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$Value2_FuncRef &&
+            other is _$WasmVal_funcRef &&
             (identical(other.field0, field0) || other.field0 == field0));
   }
 
@@ -2113,8 +2113,8 @@ class _$Value2_FuncRef implements Value2_FuncRef {
   @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
-  _$$Value2_FuncRefCopyWith<_$Value2_FuncRef> get copyWith =>
-      __$$Value2_FuncRefCopyWithImpl<_$Value2_FuncRef>(this, _$identity);
+  _$$WasmVal_funcRefCopyWith<_$WasmVal_funcRef> get copyWith =>
+      __$$WasmVal_funcRefCopyWithImpl<_$WasmVal_funcRef>(this, _$identity);
 
   @override
   @optionalTypeArgs
@@ -2162,12 +2162,12 @@ class _$Value2_FuncRef implements Value2_FuncRef {
   @override
   @optionalTypeArgs
   TResult map<TResult extends Object?>({
-    required TResult Function(Value2_I32 value) i32,
-    required TResult Function(Value2_I64 value) i64,
-    required TResult Function(Value2_F32 value) f32,
-    required TResult Function(Value2_F64 value) f64,
-    required TResult Function(Value2_FuncRef value) funcRef,
-    required TResult Function(Value2_ExternRef value) externRef,
+    required TResult Function(WasmVal_i32 value) i32,
+    required TResult Function(WasmVal_i64 value) i64,
+    required TResult Function(WasmVal_f32 value) f32,
+    required TResult Function(WasmVal_f64 value) f64,
+    required TResult Function(WasmVal_funcRef value) funcRef,
+    required TResult Function(WasmVal_externRef value) externRef,
   }) {
     return funcRef(this);
   }
@@ -2175,12 +2175,12 @@ class _$Value2_FuncRef implements Value2_FuncRef {
   @override
   @optionalTypeArgs
   TResult? mapOrNull<TResult extends Object?>({
-    TResult? Function(Value2_I32 value)? i32,
-    TResult? Function(Value2_I64 value)? i64,
-    TResult? Function(Value2_F32 value)? f32,
-    TResult? Function(Value2_F64 value)? f64,
-    TResult? Function(Value2_FuncRef value)? funcRef,
-    TResult? Function(Value2_ExternRef value)? externRef,
+    TResult? Function(WasmVal_i32 value)? i32,
+    TResult? Function(WasmVal_i64 value)? i64,
+    TResult? Function(WasmVal_f32 value)? f32,
+    TResult? Function(WasmVal_f64 value)? f64,
+    TResult? Function(WasmVal_funcRef value)? funcRef,
+    TResult? Function(WasmVal_externRef value)? externRef,
   }) {
     return funcRef?.call(this);
   }
@@ -2188,12 +2188,12 @@ class _$Value2_FuncRef implements Value2_FuncRef {
   @override
   @optionalTypeArgs
   TResult maybeMap<TResult extends Object?>({
-    TResult Function(Value2_I32 value)? i32,
-    TResult Function(Value2_I64 value)? i64,
-    TResult Function(Value2_F32 value)? f32,
-    TResult Function(Value2_F64 value)? f64,
-    TResult Function(Value2_FuncRef value)? funcRef,
-    TResult Function(Value2_ExternRef value)? externRef,
+    TResult Function(WasmVal_i32 value)? i32,
+    TResult Function(WasmVal_i64 value)? i64,
+    TResult Function(WasmVal_f32 value)? f32,
+    TResult Function(WasmVal_f64 value)? f64,
+    TResult Function(WasmVal_funcRef value)? funcRef,
+    TResult Function(WasmVal_externRef value)? externRef,
     required TResult orElse(),
   }) {
     if (funcRef != null) {
@@ -2203,31 +2203,31 @@ class _$Value2_FuncRef implements Value2_FuncRef {
   }
 }
 
-abstract class Value2_FuncRef implements Value2 {
-  const factory Value2_FuncRef([final Func? field0]) = _$Value2_FuncRef;
+abstract class WasmVal_funcRef implements WasmVal {
+  const factory WasmVal_funcRef([final Func? field0]) = _$WasmVal_funcRef;
 
   @override
   Func? get field0;
   @JsonKey(ignore: true)
-  _$$Value2_FuncRefCopyWith<_$Value2_FuncRef> get copyWith =>
+  _$$WasmVal_funcRefCopyWith<_$WasmVal_funcRef> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract class _$$Value2_ExternRefCopyWith<$Res> {
-  factory _$$Value2_ExternRefCopyWith(
-          _$Value2_ExternRef value, $Res Function(_$Value2_ExternRef) then) =
-      __$$Value2_ExternRefCopyWithImpl<$Res>;
+abstract class _$$WasmVal_externRefCopyWith<$Res> {
+  factory _$$WasmVal_externRefCopyWith(
+          _$WasmVal_externRef value, $Res Function(_$WasmVal_externRef) then) =
+      __$$WasmVal_externRefCopyWithImpl<$Res>;
   @useResult
   $Res call({int field0});
 }
 
 /// @nodoc
-class __$$Value2_ExternRefCopyWithImpl<$Res>
-    extends _$Value2CopyWithImpl<$Res, _$Value2_ExternRef>
-    implements _$$Value2_ExternRefCopyWith<$Res> {
-  __$$Value2_ExternRefCopyWithImpl(
-      _$Value2_ExternRef _value, $Res Function(_$Value2_ExternRef) _then)
+class __$$WasmVal_externRefCopyWithImpl<$Res>
+    extends _$WasmValCopyWithImpl<$Res, _$WasmVal_externRef>
+    implements _$$WasmVal_externRefCopyWith<$Res> {
+  __$$WasmVal_externRefCopyWithImpl(
+      _$WasmVal_externRef _value, $Res Function(_$WasmVal_externRef) _then)
       : super(_value, _then);
 
   @pragma('vm:prefer-inline')
@@ -2235,7 +2235,7 @@ class __$$Value2_ExternRefCopyWithImpl<$Res>
   $Res call({
     Object? field0 = null,
   }) {
-    return _then(_$Value2_ExternRef(
+    return _then(_$WasmVal_externRef(
       null == field0
           ? _value.field0
           : field0 // ignore: cast_nullable_to_non_nullable
@@ -2246,22 +2246,22 @@ class __$$Value2_ExternRefCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$Value2_ExternRef implements Value2_ExternRef {
-  const _$Value2_ExternRef(this.field0);
+class _$WasmVal_externRef implements WasmVal_externRef {
+  const _$WasmVal_externRef(this.field0);
 
   @override
   final int field0;
 
   @override
   String toString() {
-    return 'Value2.externRef(field0: $field0)';
+    return 'WasmVal.externRef(field0: $field0)';
   }
 
   @override
   bool operator ==(dynamic other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$Value2_ExternRef &&
+            other is _$WasmVal_externRef &&
             (identical(other.field0, field0) || other.field0 == field0));
   }
 
@@ -2271,8 +2271,8 @@ class _$Value2_ExternRef implements Value2_ExternRef {
   @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
-  _$$Value2_ExternRefCopyWith<_$Value2_ExternRef> get copyWith =>
-      __$$Value2_ExternRefCopyWithImpl<_$Value2_ExternRef>(this, _$identity);
+  _$$WasmVal_externRefCopyWith<_$WasmVal_externRef> get copyWith =>
+      __$$WasmVal_externRefCopyWithImpl<_$WasmVal_externRef>(this, _$identity);
 
   @override
   @optionalTypeArgs
@@ -2320,12 +2320,12 @@ class _$Value2_ExternRef implements Value2_ExternRef {
   @override
   @optionalTypeArgs
   TResult map<TResult extends Object?>({
-    required TResult Function(Value2_I32 value) i32,
-    required TResult Function(Value2_I64 value) i64,
-    required TResult Function(Value2_F32 value) f32,
-    required TResult Function(Value2_F64 value) f64,
-    required TResult Function(Value2_FuncRef value) funcRef,
-    required TResult Function(Value2_ExternRef value) externRef,
+    required TResult Function(WasmVal_i32 value) i32,
+    required TResult Function(WasmVal_i64 value) i64,
+    required TResult Function(WasmVal_f32 value) f32,
+    required TResult Function(WasmVal_f64 value) f64,
+    required TResult Function(WasmVal_funcRef value) funcRef,
+    required TResult Function(WasmVal_externRef value) externRef,
   }) {
     return externRef(this);
   }
@@ -2333,12 +2333,12 @@ class _$Value2_ExternRef implements Value2_ExternRef {
   @override
   @optionalTypeArgs
   TResult? mapOrNull<TResult extends Object?>({
-    TResult? Function(Value2_I32 value)? i32,
-    TResult? Function(Value2_I64 value)? i64,
-    TResult? Function(Value2_F32 value)? f32,
-    TResult? Function(Value2_F64 value)? f64,
-    TResult? Function(Value2_FuncRef value)? funcRef,
-    TResult? Function(Value2_ExternRef value)? externRef,
+    TResult? Function(WasmVal_i32 value)? i32,
+    TResult? Function(WasmVal_i64 value)? i64,
+    TResult? Function(WasmVal_f32 value)? f32,
+    TResult? Function(WasmVal_f64 value)? f64,
+    TResult? Function(WasmVal_funcRef value)? funcRef,
+    TResult? Function(WasmVal_externRef value)? externRef,
   }) {
     return externRef?.call(this);
   }
@@ -2346,12 +2346,12 @@ class _$Value2_ExternRef implements Value2_ExternRef {
   @override
   @optionalTypeArgs
   TResult maybeMap<TResult extends Object?>({
-    TResult Function(Value2_I32 value)? i32,
-    TResult Function(Value2_I64 value)? i64,
-    TResult Function(Value2_F32 value)? f32,
-    TResult Function(Value2_F64 value)? f64,
-    TResult Function(Value2_FuncRef value)? funcRef,
-    TResult Function(Value2_ExternRef value)? externRef,
+    TResult Function(WasmVal_i32 value)? i32,
+    TResult Function(WasmVal_i64 value)? i64,
+    TResult Function(WasmVal_f32 value)? f32,
+    TResult Function(WasmVal_f64 value)? f64,
+    TResult Function(WasmVal_funcRef value)? funcRef,
+    TResult Function(WasmVal_externRef value)? externRef,
     required TResult orElse(),
   }) {
     if (externRef != null) {
@@ -2361,12 +2361,12 @@ class _$Value2_ExternRef implements Value2_ExternRef {
   }
 }
 
-abstract class Value2_ExternRef implements Value2 {
-  const factory Value2_ExternRef(final int field0) = _$Value2_ExternRef;
+abstract class WasmVal_externRef implements WasmVal {
+  const factory WasmVal_externRef(final int field0) = _$WasmVal_externRef;
 
   @override
   int get field0;
   @JsonKey(ignore: true)
-  _$$Value2_ExternRefCopyWith<_$Value2_ExternRef> get copyWith =>
+  _$$WasmVal_externRefCopyWith<_$WasmVal_externRef> get copyWith =>
       throw _privateConstructorUsedError;
 }
