@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
-import '../bridge_generated.dart' show ExternalType, WasiConfig;
+import '../bridge_generated.dart'
+    show ExternalType, U8Array16, ValueTy, WasiConfig;
 import '_wasm_interop_stub.dart'
     if (dart.library.io) '_wasm_interop_native.dart'
     if (dart.library.html) '_wasm_interop_web.dart' show isVoidReturn;
@@ -11,6 +12,7 @@ export '../bridge_generated.dart'
         // ModuleConfigWasmi,
         // WasiStackLimits,
         // ModuleConfigWasmtime,
+        U8Array16,
         ExternalType,
         WasiConfig,
         EnvVariable,
@@ -242,9 +244,7 @@ class WasmFunction extends WasmExternal {
   List<Object?> call([List<Object?>? args]) {
     // `?? const []` is required for dart2js
     final values = Function.apply(inner, args ?? const []);
-    // TODO: handle i128
-    // TODO: handle null refs
-    if (values is List) {
+    if (values is List && values is! U8Array16) {
       return values;
     } else if (isVoidReturn(values) ||
         values == null && (results?.isEmpty ?? false)) {
@@ -330,26 +330,9 @@ class WasmImport {
   String toString() => 'WasmImport($moduleName, $value, $value)';
 }
 
-enum WasmValueType {
-  /// Value of 32-bit signed or unsigned integer.
-  i32,
+typedef WasmValueType = ValueTy;
 
-  /// Value of 64-bit signed or unsigned integer.
-  i64,
-
-  /// Value of 32-bit IEEE 754-2008 floating point number.
-  f32,
-
-  /// Value of 64-bit IEEE 754-2008 floating point number.
-  f64,
-
-  /// A nullable [`Func`][`crate::Func`] reference, a.k.a. [`FuncRef`].
-  funcRef,
-
-  /// A nullable external object reference, a.k.a. [`ExternRef`].
-  externRef,
-}
-
+// TODO: separate into WasmValueRef
 class WasmValue {
   /// The Dart value.
   ///
@@ -358,6 +341,7 @@ class WasmValue {
   /// - [BigInt] for [WasmValueType.i64]
   /// - [double] for [WasmValueType.f32]
   /// - [double] for [WasmValueType.f64]
+  /// - [U8Array16] for [WasmValueType.v128]
   /// - [WasmFunction]? for [WasmValueType.funcRef]
   /// - [Object]? for [WasmValueType.externRef]
   ///
@@ -385,6 +369,10 @@ class WasmValue {
   const WasmValue.f64(
     double this.value,
   ) : type = WasmValueType.f64;
+
+  const WasmValue.v128(
+    U8Array16 this.value,
+  ) : type = WasmValueType.v128;
 
   /// A nullable [`Func`][`crate::Func`] reference, a.k.a. [`FuncRef`].
   const WasmValue.funcRef(
@@ -471,160 +459,4 @@ enum WasmExternalKind {
 
   /// [WasmTable]
   table
-}
-
-Function makeFunction(int numArgs, dynamic Function(List<Object?>) inner) {
-  switch (numArgs) {
-    case 0:
-      return () => inner([]);
-    case 1:
-      return (a0) => inner([a0]);
-    case 2:
-      return (a0, a1) => inner([a0, a1]);
-    case 3:
-      return (a0, a1, a2) => inner([a0, a1, a2]);
-    case 4:
-      return (a0, a1, a2, a3) => inner([a0, a1, a2, a3]);
-    case 5:
-      return (a0, a1, a2, a3, a4) => inner([a0, a1, a2, a3, a4]);
-    case 6:
-      return (a0, a1, a2, a3, a4, a5) => inner([a0, a1, a2, a3, a4, a5]);
-    case 7:
-      return (a0, a1, a2, a3, a4, a5, a6) =>
-          inner([a0, a1, a2, a3, a4, a5, a6]);
-    case 8:
-      return (a0, a1, a2, a3, a4, a5, a6, a7) =>
-          inner([a0, a1, a2, a3, a4, a5, a6, a7]);
-    case 9:
-      return (a0, a1, a2, a3, a4, a5, a6, a7, a8) =>
-          inner([a0, a1, a2, a3, a4, a5, a6, a7, a8]);
-    case 10:
-      return (a0, a1, a2, a3, a4, a5, a6, a7, a8, a9) =>
-          inner([a0, a1, a2, a3, a4, a5, a6, a7, a8, a9]);
-    case 11:
-      return (a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10) =>
-          inner([a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10]);
-    case 12:
-      return (a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11) =>
-          inner([a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11]);
-    case 13:
-      return (a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12) =>
-          inner([a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12]);
-    case 14:
-      return (a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13) =>
-          inner([a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13]);
-    case 15:
-      return (a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13,
-              a14) =>
-          inner([
-            a0,
-            a1,
-            a2,
-            a3,
-            a4,
-            a5,
-            a6,
-            a7,
-            a8,
-            a9,
-            a10,
-            a11,
-            a12,
-            a13,
-            a14
-          ]);
-    case 16:
-      return (a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14,
-              a15) =>
-          inner([
-            a0,
-            a1,
-            a2,
-            a3,
-            a4,
-            a5,
-            a6,
-            a7,
-            a8,
-            a9,
-            a10,
-            a11,
-            a12,
-            a13,
-            a14,
-            a15
-          ]);
-    case 17:
-      return (a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14,
-              a15, a16) =>
-          inner([
-            a0,
-            a1,
-            a2,
-            a3,
-            a4,
-            a5,
-            a6,
-            a7,
-            a8,
-            a9,
-            a10,
-            a11,
-            a12,
-            a13,
-            a14,
-            a15,
-            a16
-          ]);
-    case 18:
-      return (a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14,
-              a15, a16, a17) =>
-          inner([
-            a0,
-            a1,
-            a2,
-            a3,
-            a4,
-            a5,
-            a6,
-            a7,
-            a8,
-            a9,
-            a10,
-            a11,
-            a12,
-            a13,
-            a14,
-            a15,
-            a16,
-            a17
-          ]);
-    case 19:
-      return (a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14,
-              a15, a16, a17, a18) =>
-          inner([
-            a0,
-            a1,
-            a2,
-            a3,
-            a4,
-            a5,
-            a6,
-            a7,
-            a8,
-            a9,
-            a10,
-            a11,
-            a12,
-            a13,
-            a14,
-            a15,
-            a16,
-            a17,
-            a18
-          ]);
-
-    default:
-      throw StateError('Unsupported number of arguments: $numArgs');
-  }
 }

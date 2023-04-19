@@ -137,6 +137,9 @@ class _Builder extends WasmInstanceBuilder {
         return _Global(
           Global.f64(value: value.value! as double, mutable: mutable),
         );
+      case WasmValueType.v128:
+        // TODO:
+        throw UnsupportedError('v128 is not supported on web');
       case WasmValueType.externRef:
         return _Global(
           Global.externref(value: value.value, mutable: mutable),

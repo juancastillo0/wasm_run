@@ -4,6 +4,7 @@ import 'dart:typed_data' show Uint8List;
 import 'package:flutter_rust_bridge/flutter_rust_bridge.dart'
     show WireSyncReturn, wireSyncReturnIntoDart;
 import 'package:wasmi/src/bridge_generated.io.dart';
+import 'package:wasmi/src/wasm_bindings/make_function_num_args.dart';
 import 'package:wasmi/src/wasm_bindings/wasm_interface.dart';
 import 'package:wasmi/wasmi.dart' show defaultInstance;
 
@@ -78,23 +79,7 @@ class _WasmModule extends WasmModule {
 }
 
 WasmVal _fromWasmValue(WasmValue value, WasmiModuleId module) {
-  switch (value.type) {
-    case WasmValueType.i32:
-      return WasmVal.i32(value.value! as int);
-    case WasmValueType.i64:
-      return WasmVal.i64((value.value! as BigInt).toInt());
-    case WasmValueType.f32:
-      return WasmVal.f32(value.value! as double);
-    case WasmValueType.f64:
-      return WasmVal.f64(value.value! as double);
-    case WasmValueType.externRef:
-      return WasmVal.externRef(_References.getOrCreateId(value.value, module));
-    case WasmValueType.funcRef:
-      if (value.value == null) {
-        return const WasmVal.funcRef();
-      }
-      return _makeFunction(value.value! as WasmFunction, module);
-  }
+  return _fromWasmValueRaw(value.type, value.value, module);
 }
 
 WasmVal _fromWasmValueRaw(ValueTy ty, Object? value, WasmiModuleId module) {
@@ -107,6 +92,8 @@ WasmVal _fromWasmValueRaw(ValueTy ty, Object? value, WasmiModuleId module) {
       return WasmVal.f32(value! as double);
     case ValueTy.f64:
       return WasmVal.f64(value! as double);
+    case ValueTy.v128:
+      return WasmVal.v128(value! as U8Array16);
     case ValueTy.externRef:
       return WasmVal.externRef(_References.getOrCreateId(value, module));
     case ValueTy.funcRef:
@@ -122,8 +109,8 @@ WasmVal_funcRef _makeFunction(WasmFunction function, WasmiModuleId module) {
   final func = module.createFunction(
     functionPointer: _References.globalWasmFunctionPointer,
     functionId: functionId,
-    paramTypes: function.params.map((v) => _toValueTy(v!)).toList(),
-    resultTypes: function.results!.map((v) => _toValueTy(v)).toList(),
+    paramTypes: function.params.map((v) => v!).toList(),
+    resultTypes: function.results!,
   );
   return WasmVal_funcRef(func);
 }
@@ -137,14 +124,14 @@ WasmExternalKind _toImpExpKind(ExternalType kind) {
   );
 }
 
-WasmFunction _toWasmFunction(Func func, WasmiModuleId module) {
+WasmFunction _toWasmFunction(WFunc func, WasmiModuleId module) {
   final type = module.getFunctionType(func: func);
   final params = type.params;
 
   return WasmFunction(
-    params: params.map(_toWasmValueType).toList(),
-    results: type.results.map(_toWasmValueType).toList(),
-    makeFunction(
+    params: params,
+    results: type.results,
+    makeFunctionNumArgs(
       params.length,
       (args) {
         int i = 0;
@@ -164,40 +151,6 @@ WasmFunction _toWasmFunction(Func func, WasmiModuleId module) {
       },
     ),
   );
-}
-
-WasmValueType _toWasmValueType(ValueTy ty) {
-  switch (ty) {
-    case ValueTy.i32:
-      return WasmValueType.i32;
-    case ValueTy.i64:
-      return WasmValueType.i64;
-    case ValueTy.f32:
-      return WasmValueType.f32;
-    case ValueTy.f64:
-      return WasmValueType.f64;
-    case ValueTy.externRef:
-      return WasmValueType.externRef;
-    case ValueTy.funcRef:
-      return WasmValueType.funcRef;
-  }
-}
-
-ValueTy _toValueTy(WasmValueType ty) {
-  switch (ty) {
-    case WasmValueType.i32:
-      return ValueTy.i32;
-    case WasmValueType.i64:
-      return ValueTy.i64;
-    case WasmValueType.f32:
-      return ValueTy.f32;
-    case WasmValueType.f64:
-      return ValueTy.f64;
-    case WasmValueType.externRef:
-      return ValueTy.externRef;
-    case WasmValueType.funcRef:
-      return ValueTy.funcRef;
-  }
 }
 
 WasmExternal _toWasmExternal(ModuleExportValue value, _Instance instance) {
@@ -290,9 +243,8 @@ class _References {
     }
     final results = function.results!;
     int i = 0;
-    final mapped = output
-        .map((e) => _fromWasmValueRaw(_toValueTy(results[i++]), e, module))
-        .toList();
+    final mapped =
+        output.map((e) => _fromWasmValueRaw(results[i++], e, module)).toList();
     // ignore: invalid_use_of_protected_member
     final pointer = platform.api2wire_list_wasm_val(mapped);
     return pointer;
@@ -318,7 +270,7 @@ class _References {
         return WasmVal_funcRef(
           raw[1] == null
               ? null
-              : Func.fromRaw(raw[0] as int, raw[1] as int, defaultInstance()),
+              : WFunc.fromRaw(raw[0] as int, raw[1] as int, defaultInstance()),
         );
       case 5:
         return WasmVal_externRef(raw[1] as int);
@@ -333,6 +285,7 @@ class _References {
       i64: (value) => BigInt.from(value),
       f32: (value) => value,
       f64: (value) => value,
+      v128: (field0) => field0,
       funcRef: (func) {
         if (func == null) return null;
         return _toWasmFunction(func, module);
@@ -348,6 +301,7 @@ class _References {
       i64: (i64) => WasmValue.i64(BigInt.from(i64)),
       f32: WasmValue.f32,
       f64: WasmValue.f64,
+      v128: WasmValue.v128,
       funcRef: (func) {
         if (func == null) return const WasmValue.funcRef(null);
         return WasmValue.funcRef(_toWasmFunction(func, module));
@@ -368,7 +322,7 @@ class _Builder extends WasmInstanceBuilder {
   WasmGlobal createGlobal(WasmValue value, {required bool mutable}) {
     final global = module.createGlobal(
       value: _fromWasmValue(value, module),
-      mutability: mutable ? Mutability.Var : Mutability.Const,
+      mutability: mutable ? GlobalMutability.Var : GlobalMutability.Const,
     );
     return _Global(global, module);
   }
@@ -421,8 +375,7 @@ class _Builder extends WasmInstanceBuilder {
         if (type is! ExternalType_Func) {
           throw Exception("Expected function");
         }
-        final expectedParams =
-            type.field0.params.map(_toWasmValueType).toList();
+        final expectedParams = type.field0.params;
         {
           int i = 0;
           if (function.params.length != expectedParams.length ||
@@ -433,8 +386,7 @@ class _Builder extends WasmInstanceBuilder {
           }
         }
 
-        final expectedResults =
-            type.field0.results.map(_toWasmValueType).toList();
+        final expectedResults = type.field0.results;
         var functionToSave = function;
         if (function.results != null) {
           int i = 0;
