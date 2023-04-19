@@ -1,6 +1,6 @@
+/**
 use crate::bridge_generated::{wire_list_wasm_val, Wire2Api};
 use crate::config::*;
-pub use crate::external::*;
 use crate::types::*;
 use anyhow::{Ok, Result};
 use flutter_rust_bridge::{
@@ -14,12 +14,9 @@ use std::{
     sync::{Arc, RwLock},
 };
 use wasi_common::{file::FileCaps, pipe::WritePipe};
-use wasmtime::Trap;
-use wasmtime::*;
-pub use wasmtime::{Func, Global, GlobalType, Memory, Module, Table};
-
-type Value = wasmtime::Val;
-type ValueType = wasmtime::ValType;
+use wasmi::core::Trap;
+pub use wasmi::{core::Pages, Func, Global, GlobalType, Memory, Module, Table};
+use wasmi::{core::ValueType, *};
 
 static ARRAY: Lazy<RwLock<GlobalState>> = Lazy::new(|| RwLock::new(Default::default()));
 // TODO: make it module independent
@@ -30,18 +27,6 @@ static CALLER_STACK: Lazy<RwLock<Vec<RwLock<StoreContextMut<'_, StoreState>>>>> 
 struct GlobalState {
     map: HashMap<u32, WasmiModuleImpl>,
     last_id: u32,
-}
-
-fn default_val(ty: &ValueType) -> Value {
-    match ty {
-        ValueType::I32 => Value::I32(0),
-        ValueType::I64 => Value::I64(0),
-        ValueType::F32 => Value::F32(0),
-        ValueType::F64 => Value::F64(0),
-        ValueType::V128 => Value::V128(0),
-        ValueType::ExternRef => Value::ExternRef(None),
-        ValueType::FuncRef => Value::FuncRef(None),
-    }
 }
 
 struct WasmiModuleImpl {
@@ -90,8 +75,7 @@ pub fn module_builder(
     let id = arr.last_id;
     let mut wasi_ctx = None;
     if let Some(wasi_config) = wasi_config {
-        wasmtime_wasi::add_to_linker(&mut linker, |ctx| ctx.wasi_ctx.as_mut().unwrap())?;
-
+        wasmi_wasi::add_to_linker(&mut linker, |ctx| ctx.wasi_ctx.as_mut().unwrap())?;
         let mut wasi = wasi_config.to_wasi_ctx()?;
 
         if !wasi_config.preopened_files.is_empty() {
@@ -99,7 +83,7 @@ pub fn module_builder(
                 let file = fs::File::open(value)?;
                 // let vv = file.as_fd().as_raw_fd();
                 let wasm_file =
-                    wasmtime_wasi::file::File::from_cap_std(cap_std::fs::File::from_std(file));
+                    wasmi_wasi::file::File::from_cap_std(cap_std::fs::File::from_std(file));
                 let caps = FileCaps::all();
                 // let mut caps = FileCaps::empty();
                 // caps.extend([
@@ -183,15 +167,12 @@ impl Write for ModuleIOWriter {
 
 impl WasmiInstanceId {
     pub fn exports(&self) -> SyncReturn<Vec<ModuleExportValue>> {
-        let mut v = ARRAY.write().unwrap();
-        let value = v.map.get_mut(&self.0).unwrap();
-        let instance = value.instance.unwrap();
-        let l = instance
-            .exports(&mut value.store)
-            .map(|e| (e.name().to_owned(), e.into_extern()))
-            .collect::<Vec<(String, wasmtime::Extern)>>();
+        let value = &ARRAY.read().unwrap().map[&self.0];
         SyncReturn(
-            l.into_iter()
+            value
+                .instance
+                .unwrap()
+                .exports(&value.store)
                 .map(|e| ModuleExportValue::from_export(e, &value.store))
                 .collect(),
         )
@@ -210,7 +191,8 @@ impl WasmiModuleId {
         }
         let instance = module
             .linker
-            .instantiate(&mut module.store, &module.module.lock().unwrap())?;
+            .instantiate(&mut module.store, &module.module.lock().unwrap())?
+            .start(&mut module.store)?;
 
         module.instance = Some(instance);
         Ok(WasmiInstanceId(self.0))
@@ -253,23 +235,29 @@ impl WasmiModuleId {
 
     pub fn call_function_handle_sync(
         &self,
-        func: RustOpaque<WFunc>,
+        func: RustOpaque<Func>,
         args: Vec<WasmVal>,
     ) -> Result<SyncReturn<Vec<WasmVal>>> {
         self.call_function_handle(func, args).map(SyncReturn)
     }
     pub fn call_function_handle(
         &self,
-        func: RustOpaque<WFunc>,
+        func: RustOpaque<Func>,
         args: Vec<WasmVal>,
     ) -> Result<Vec<WasmVal>> {
-        let func: Func = func.func_wasmtime;
         self.with_module_mut(|mut store| {
-            let mut outputs: Vec<Value> =
-                func.ty(&store).results().map(|t| default_val(&t)).collect();
-            let inputs: Vec<Value> = args.into_iter().map(|v| v.to_val()).collect();
+            let mut outputs: Vec<Value> = func
+                .ty(&store)
+                .results()
+                .iter()
+                .map(|t| Value::default(*t))
+                .collect();
+            let inputs: Vec<Value> = args.into_iter().map(|v| v.to_value(&mut store)).collect();
             func.call(&mut store, inputs.as_slice(), &mut outputs)?;
-            Ok(outputs.into_iter().map(|a| WasmVal::from_val(a)).collect())
+            Ok(outputs
+                .into_iter()
+                .map(|a| WasmVal::from_value(&a, &store))
+                .collect())
         })
     }
 
@@ -307,8 +295,8 @@ impl WasmiModuleId {
         self.with_module_mut(|ctx| f(&ctx.as_context()))
     }
 
-    pub fn get_function_type(&self, func: RustOpaque<WFunc>) -> SyncReturn<FuncTy> {
-        SyncReturn(self.with_module(|store| (&func.func_wasmtime.ty(store)).into()))
+    pub fn get_function_type(&self, func: RustOpaque<Func>) -> SyncReturn<FuncTy> {
+        SyncReturn(self.with_module(|store| (&func.ty(store)).into()))
     }
 
     pub fn create_function(
@@ -317,7 +305,7 @@ impl WasmiModuleId {
         function_id: u32,
         param_types: Vec<ValueTy>,
         result_types: Vec<ValueTy>,
-    ) -> Result<SyncReturn<RustOpaque<WFunc>>> {
+    ) -> Result<SyncReturn<RustOpaque<Func>>> {
         self.with_module_mut(|store| {
             let f: WasmFunction = unsafe { std::mem::transmute(function_pointer) };
             let func = Func::new(
@@ -328,8 +316,8 @@ impl WasmiModuleId {
                 ),
                 move |mut caller, params, results| {
                     let mapped: Vec<WasmVal> = params
-                        .into_iter()
-                        .map(|a| WasmVal::from_val(a.clone()))
+                        .iter()
+                        .map(|a| WasmVal::from_value(a, &caller))
                         .collect();
                     let inputs = vec![mapped].into_dart();
                     {
@@ -352,16 +340,16 @@ impl WasmiModuleId {
                     } else if output.is_empty() {
                         return std::result::Result::Ok(());
                     }
-                    // let last_caller = last_caller.unwrap();
-                    // let mut caller = last_caller.write().unwrap();
+                    let last_caller = last_caller.unwrap();
+                    let mut caller = last_caller.write().unwrap();
                     let mut outputs = output.into_iter();
                     for value in results {
-                        *value = outputs.next().unwrap().to_val();
+                        *value = outputs.next().unwrap().to_value(caller.as_context_mut());
                     }
                     std::result::Result::Ok(())
                 },
             );
-            Ok(SyncReturn(RustOpaque::new(func.into())))
+            Ok(SyncReturn(RustOpaque::new(func)))
         })
     }
 
@@ -379,24 +367,19 @@ impl WasmiModuleId {
         mutability: GlobalMutability,
     ) -> Result<SyncReturn<RustOpaque<Global>>> {
         self.with_module_mut(|mut store| {
-            let mapped = value.to_val();
-            let global = Global::new(
-                &mut store,
-                GlobalType::new(mapped.ty(), mutability.into()),
-                mapped,
-            )?;
+            let mapped = value.to_value(&mut store);
+            let global = Global::new(&mut store, mapped, mutability);
             Ok(SyncReturn(RustOpaque::new(global)))
         })
     }
 
     pub fn create_table(
         &self,
-
         value: WasmVal,
         table_type: TableArgs,
     ) -> Result<SyncReturn<RustOpaque<Table>>> {
         self.with_module_mut(|mut store| {
-            let mapped_value = value.to_val();
+            let mapped_value = value.to_value(&mut store);
             let table = Table::new(
                 &mut store,
                 TableType::new(mapped_value.ty(), table_type.min, table_type.max),
@@ -414,7 +397,7 @@ impl WasmiModuleId {
     }
 
     pub fn get_global_value(&self, global: RustOpaque<Global>) -> SyncReturn<WasmVal> {
-        SyncReturn(self.with_module_mut(|store| WasmVal::from_val(global.get(store))))
+        SyncReturn(self.with_module(|store| WasmVal::from_value(&global.get(store), store)))
     }
 
     pub fn set_global_value(
@@ -423,7 +406,7 @@ impl WasmiModuleId {
         value: WasmVal,
     ) -> Result<SyncReturn<()>> {
         self.with_module_mut(|mut store| {
-            let mapped = value.to_val();
+            let mapped = value.to_value(&mut store);
             global
                 .set(&mut store, mapped)
                 .map(|_| SyncReturn(()))
@@ -455,7 +438,7 @@ impl WasmiModuleId {
         })
     }
     pub fn get_memory_pages(&self, memory: RustOpaque<Memory>) -> SyncReturn<u32> {
-        SyncReturn(self.with_module(|store| memory.size(store).try_into().unwrap()))
+        SyncReturn(self.with_module(|store| memory.current_pages(store).into()))
     }
 
     pub fn write_memory(
@@ -474,8 +457,11 @@ impl WasmiModuleId {
     pub fn grow_memory(&self, memory: RustOpaque<Memory>, pages: u32) -> Result<SyncReturn<u32>> {
         self.with_module_mut(|store| {
             memory
-                .grow(store, pages.into())
-                .map(|p| SyncReturn(p.try_into().unwrap()))
+                .grow(
+                    store,
+                    Pages::new(pages).ok_or(anyhow::anyhow!("Invalid pages"))?,
+                )
+                .map(|p| SyncReturn(p.into()))
                 .map_err(to_anyhow)
         })
     }
@@ -496,7 +482,7 @@ impl WasmiModuleId {
         value: WasmVal,
     ) -> Result<SyncReturn<u32>> {
         self.with_module_mut(|mut store| {
-            let mapped = value.to_val();
+            let mapped = value.to_value(&mut store);
             table
                 .grow(&mut store, delta, mapped)
                 .map(SyncReturn)
@@ -505,9 +491,11 @@ impl WasmiModuleId {
     }
 
     pub fn get_table(&self, table: RustOpaque<Table>, index: u32) -> SyncReturn<Option<WasmVal>> {
-        SyncReturn(
-            self.with_module_mut(|store| table.get(store, index).map(|v| WasmVal::from_val(v))),
-        )
+        SyncReturn(self.with_module(|store| {
+            table
+                .get(store, index)
+                .map(|v| WasmVal::from_value(&v, store))
+        }))
     }
 
     pub fn set_table(
@@ -517,7 +505,7 @@ impl WasmiModuleId {
         value: WasmVal,
     ) -> Result<SyncReturn<()>> {
         self.with_module_mut(|mut store| {
-            let mapped = value.to_val();
+            let mapped = value.to_value(&mut store);
             table
                 .set(&mut store, index, mapped)
                 .map(SyncReturn)
@@ -533,7 +521,7 @@ impl WasmiModuleId {
         len: u32,
     ) -> Result<SyncReturn<()>> {
         self.with_module_mut(|mut store| {
-            let mapped = value.to_val();
+            let mapped = value.to_value(&mut store);
             table
                 .fill(&mut store, index, mapped, len)
                 .map(|_| SyncReturn(()))
@@ -583,7 +571,7 @@ impl From<Module> for CompiledModule {
 
 pub fn compile_wasm(module_wasm: Vec<u8>, config: ModuleConfig) -> Result<CompiledModule> {
     let config: Config = config.into();
-    let engine = Engine::new(&config)?;
+    let engine = Engine::new(&config);
     let module = Module::new(&engine, &mut &module_wasm[..])?;
     Ok(module.into())
 }
@@ -594,3 +582,5 @@ pub fn compile_wasm_sync(
 ) -> Result<SyncReturn<CompiledModule>> {
     compile_wasm(module_wasm, config).map(SyncReturn)
 }
+
+*/
