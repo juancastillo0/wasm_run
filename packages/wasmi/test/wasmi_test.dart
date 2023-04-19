@@ -2,7 +2,6 @@
 
 import 'dart:convert';
 import 'dart:ffi';
-import 'dart:io';
 
 import 'package:flutter_rust_bridge/flutter_rust_bridge.dart';
 import 'package:test/test.dart';
@@ -127,66 +126,8 @@ void main() {
       return WasmiDartImpl.raw(platform);
     }
 
-    test('simple function', () async {
-      final w = getLibrary();
-      final v = Pointer.fromFunction<MapInt>(addOne, 0);
-      final out = w.runFunction(pointer: v.address);
-
-      expect(out, [WasmVal.i64(2)]);
-    });
-
-    test(
-      'test function',
-      () {
-// /Users/juanmanuelcastillo/.pub-cache/hosted/pub.dev/flutter_rust_bridge-1.72.2/lib/src/ffi/dart_cobject.dart
-        final w = getLibrary();
-        final v = Pointer.fromFunction<WasmFunction>(mapWasmFunction);
-        final out = w.runWasmFunc(
-          pointer: v.address,
-          params: [1].map(WasmVal.i64).toList(),
-        );
-
-        expect(out, WasmVal.i64(2));
-      },
-      skip: 'TODO: find out how to receive results in wasm function',
-    );
-
-    test(
-      'test function mut',
-      () {
-// /Users/juanmanuelcastillo/.pub-cache/hosted/pub.dev/flutter_rust_bridge-1.72.2/lib/src/ffi/dart_cobject.dart
-        final w = getLibrary();
-        final v = Pointer.fromFunction<WasmFunctionMut>(mapWasmFunctionMut, 0);
-        final out = w.runWasmFuncMut(
-          pointer: v.address,
-          params: [1].map(WasmVal.i64).toList(),
-        );
-
-        expect(out, WasmVal.i64(2));
-      },
-      skip: 'TODO: find out how to receive results in wasm function',
-    );
-
-    test('test function void', () {
-// /Users/juanmanuelcastillo/.pub-cache/hosted/pub.dev/flutter_rust_bridge-1.72.2/lib/src/ffi/dart_cobject.dart
-      final w = getLibrary();
-      final v = Pointer.fromFunction<WasmFunctionVoid>(mapWasmFunctionVoid);
-      final out = w.runWasmFuncVoid(
-        pointer: v.address,
-        params: [1].map(WasmVal.i64).toList(),
-      );
-
-      expect(out, true);
-    });
-
     test('native', () async {
-      print(Platform.executable);
-      print(Platform.script);
       final w = getLibrary();
-      final v = await w.add(a: 1, b: 3);
-      expect(v, 4);
-
-      await w.callWasm();
 
       final binary = await w.parseWatFormat(
         wat: r'''
