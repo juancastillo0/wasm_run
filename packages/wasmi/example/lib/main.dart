@@ -425,7 +425,7 @@ void testAll() {
 
     print(module);
     expect(
-      module.getExports().map((e) => e.toString()),
+      module.getExports().map((e) => e.toString()).toList()..sort(),
       [
         WasmModuleExport('alloc', WasmExternalKind.function),
         WasmModuleExport('current_time', WasmExternalKind.function),
@@ -438,7 +438,8 @@ void testAll() {
         WasmModuleExport('print_hello', WasmExternalKind.function),
         WasmModuleExport('read_file_size', WasmExternalKind.function),
         WasmModuleExport('stderr_log', WasmExternalKind.function),
-      ].map((e) => e.toString()),
+      ].map((e) => e.toString()).toList()
+        ..sort(),
     );
     expect(
       module.getImports().map((e) => e.toString()),
