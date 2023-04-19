@@ -17,6 +17,58 @@ pub struct WasiConfig {
 }
 
 #[derive(Debug)]
+#[allow(non_camel_case_types)]
+pub enum StdIOKind {
+    stdout,
+    stderr,
+}
+
+impl WasiConfig {
+    pub fn to_wasi_ctx(&self) -> anyhow::Result<wasi_common::WasiCtx> {
+        // add wasi to linker
+        let mut wasi_builder = wasmi_wasi::WasiCtxBuilder::new();
+        if self.inherit_args {
+            wasi_builder = wasi_builder.inherit_args()?;
+        }
+        if self.inherit_env {
+            wasi_builder = wasi_builder.inherit_env()?;
+        }
+        if self.inherit_stdin {
+            wasi_builder = wasi_builder.inherit_stdin();
+        }
+        if !self.capture_stdout {
+            wasi_builder = wasi_builder.inherit_stdout();
+        }
+        if !self.capture_stderr {
+            wasi_builder = wasi_builder.inherit_stderr();
+        }
+        if !self.args.is_empty() {
+            for value in &self.args {
+                wasi_builder = wasi_builder.arg(value)?;
+            }
+        }
+        if !self.env.is_empty() {
+            for EnvVariable { name, value } in &self.env {
+                wasi_builder = wasi_builder.env(name, value)?;
+            }
+        }
+        if !self.preopened_dirs.is_empty() {
+            for PreopenedDir {
+                wasm_guest_path,
+                host_path,
+            } in &self.preopened_dirs
+            {
+                let dir =
+                    wasmi_wasi::Dir::open_ambient_dir(host_path, wasmi_wasi::ambient_authority())?;
+                wasi_builder = wasi_builder.preopened_dir(dir, wasm_guest_path)?;
+            }
+        }
+
+        Ok(wasi_builder.build())
+    }
+}
+
+#[derive(Debug)]
 pub struct EnvVariable {
     pub name: String,
     pub value: String,
@@ -56,6 +108,7 @@ impl From<ModuleConfig> for wasmtime::Config {
             // wtc.enable_incremental_compilation.map(|v| config.enable_incremental_compilation(v));
             // wtc.async_support.map(|v| config.async_support(v));
             wtc.debug_info.map(|v| config.debug_info(v));
+            #[allow(deprecated)]
             wtc.wasm_backtrace.map(|v| config.wasm_backtrace(v));
             wtc.native_unwind_info.map(|v| config.native_unwind_info(v));
             wtc.epoch_interruption.map(|v| config.epoch_interruption(v));
