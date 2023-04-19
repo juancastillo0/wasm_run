@@ -25,11 +25,6 @@ class WasmiDartPlatform extends FlutterRustBridgeBase<WasmiDartWire>
   }
 
   @protected
-  Object api2wire_Func(Func raw) {
-    return raw.shareOrMove();
-  }
-
-  @protected
   Object api2wire_Global(Global raw) {
     return raw.shareOrMove();
   }
@@ -55,8 +50,13 @@ class WasmiDartPlatform extends FlutterRustBridgeBase<WasmiDartWire>
   }
 
   @protected
-  Object api2wire_box_autoadd_Func(Func raw) {
-    return api2wire_Func(raw);
+  Object api2wire_WFunc(WFunc raw) {
+    return raw.shareOrMove();
+  }
+
+  @protected
+  Object api2wire_box_autoadd_WFunc(WFunc raw) {
+    return api2wire_WFunc(raw);
   }
 
   @protected
@@ -149,7 +149,7 @@ class WasmiDartPlatform extends FlutterRustBridgeBase<WasmiDartWire>
   @protected
   List<dynamic> api2wire_external_value(ExternalValue raw) {
     if (raw is ExternalValue_Func) {
-      return [0, api2wire_Func(raw.field0)];
+      return [0, api2wire_WFunc(raw.field0)];
     }
     if (raw is ExternalValue_Global) {
       return [1, api2wire_Global(raw.field0)];
@@ -258,8 +258,8 @@ class WasmiDartPlatform extends FlutterRustBridgeBase<WasmiDartWire>
   }
 
   @protected
-  Object? api2wire_opt_box_autoadd_Func(Func? raw) {
-    return raw == null ? null : api2wire_box_autoadd_Func(raw);
+  Object? api2wire_opt_box_autoadd_WFunc(WFunc? raw) {
+    return raw == null ? null : api2wire_box_autoadd_WFunc(raw);
   }
 
   @protected
@@ -323,6 +323,11 @@ class WasmiDartPlatform extends FlutterRustBridgeBase<WasmiDartWire>
   }
 
   @protected
+  Uint8List api2wire_u8_array_16(U8Array16 raw) {
+    return Uint8List.fromList(raw);
+  }
+
+  @protected
   Uint8List api2wire_uint_8_list(Uint8List raw) {
     return raw;
   }
@@ -365,11 +370,14 @@ class WasmiDartPlatform extends FlutterRustBridgeBase<WasmiDartWire>
     if (raw is WasmVal_f64) {
       return [3, api2wire_f64(raw.field0)];
     }
+    if (raw is WasmVal_v128) {
+      return [4, api2wire_u8_array_16(raw.field0)];
+    }
     if (raw is WasmVal_funcRef) {
-      return [4, api2wire_opt_box_autoadd_Func(raw.field0)];
+      return [5, api2wire_opt_box_autoadd_WFunc(raw.field0)];
     }
     if (raw is WasmVal_externRef) {
-      return [5, api2wire_u32(raw.field0)];
+      return [6, api2wire_u32(raw.field0)];
     }
 
     throw Exception('unreachable');
@@ -390,9 +398,6 @@ class WasmiDartPlatform extends FlutterRustBridgeBase<WasmiDartWire>
       Finalizer<PlatformPointer>(inner.drop_opaque_ArcStdSyncMutexModule);
   Finalizer<PlatformPointer> get ArcStdSyncMutexModuleFinalizer =>
       _ArcStdSyncMutexModuleFinalizer;
-  late final Finalizer<PlatformPointer> _FuncFinalizer =
-      Finalizer<PlatformPointer>(inner.drop_opaque_Func);
-  Finalizer<PlatformPointer> get FuncFinalizer => _FuncFinalizer;
   late final Finalizer<PlatformPointer> _GlobalFinalizer =
       Finalizer<PlatformPointer>(inner.drop_opaque_Global);
   Finalizer<PlatformPointer> get GlobalFinalizer => _GlobalFinalizer;
@@ -402,6 +407,9 @@ class WasmiDartPlatform extends FlutterRustBridgeBase<WasmiDartWire>
   late final Finalizer<PlatformPointer> _TableFinalizer =
       Finalizer<PlatformPointer>(inner.drop_opaque_Table);
   Finalizer<PlatformPointer> get TableFinalizer => _TableFinalizer;
+  late final Finalizer<PlatformPointer> _WFuncFinalizer =
+      Finalizer<PlatformPointer>(inner.drop_opaque_WFunc);
+  Finalizer<PlatformPointer> get WFuncFinalizer => _WFuncFinalizer;
 }
 
 // Section: WASM wire module
@@ -423,27 +431,11 @@ class WasmiDartWasmModule implements WasmModule {
   external dynamic /* void */ wire_parse_wat_format(
       NativePortType port_, String wat);
 
-  external dynamic /* List<dynamic> */ wire_run_function(int pointer);
-
-  external dynamic /* List<dynamic> */ wire_run_wasm_func(
-      int pointer, List<dynamic> params);
-
-  external dynamic /* List<dynamic> */ wire_run_wasm_func_mut(
-      int pointer, List<dynamic> params);
-
-  external dynamic /* bool */ wire_run_wasm_func_void(
-      int pointer, List<dynamic> params);
-
   external dynamic /* void */ wire_compile_wasm(
       NativePortType port_, Uint8List module_wasm, List<dynamic> config);
 
   external dynamic /* List<dynamic> */ wire_compile_wasm_sync(
       Uint8List module_wasm, List<dynamic> config);
-
-  external dynamic /* void */ wire_call_wasm(NativePortType port_);
-
-  external dynamic /* void */ wire_add(
-      NativePortType port_, Object a, Object b);
 
   external dynamic /* List<dynamic> */ wire_exports__method__WasmiInstanceId(
       List<dynamic> that);
@@ -556,10 +548,6 @@ class WasmiDartWasmModule implements WasmModule {
 
   external int /* *const c_void */ share_opaque_ArcStdSyncMutexModule(ptr);
 
-  external dynamic /*  */ drop_opaque_Func(ptr);
-
-  external int /* *const c_void */ share_opaque_Func(ptr);
-
   external dynamic /*  */ drop_opaque_Global(ptr);
 
   external int /* *const c_void */ share_opaque_Global(ptr);
@@ -571,6 +559,10 @@ class WasmiDartWasmModule implements WasmModule {
   external dynamic /*  */ drop_opaque_Table(ptr);
 
   external int /* *const c_void */ share_opaque_Table(ptr);
+
+  external dynamic /*  */ drop_opaque_WFunc(ptr);
+
+  external int /* *const c_void */ share_opaque_WFunc(ptr);
 }
 
 // Section: WASM wire connector
@@ -589,21 +581,6 @@ class WasmiDartWire extends FlutterRustBridgeWasmWireBase<WasmiDartWasmModule> {
   void wire_parse_wat_format(NativePortType port_, String wat) =>
       wasmModule.wire_parse_wat_format(port_, wat);
 
-  dynamic /* List<dynamic> */ wire_run_function(int pointer) =>
-      wasmModule.wire_run_function(pointer);
-
-  dynamic /* List<dynamic> */ wire_run_wasm_func(
-          int pointer, List<dynamic> params) =>
-      wasmModule.wire_run_wasm_func(pointer, params);
-
-  dynamic /* List<dynamic> */ wire_run_wasm_func_mut(
-          int pointer, List<dynamic> params) =>
-      wasmModule.wire_run_wasm_func_mut(pointer, params);
-
-  dynamic /* bool */ wire_run_wasm_func_void(
-          int pointer, List<dynamic> params) =>
-      wasmModule.wire_run_wasm_func_void(pointer, params);
-
   void wire_compile_wasm(
           NativePortType port_, Uint8List module_wasm, List<dynamic> config) =>
       wasmModule.wire_compile_wasm(port_, module_wasm, config);
@@ -611,11 +588,6 @@ class WasmiDartWire extends FlutterRustBridgeWasmWireBase<WasmiDartWasmModule> {
   dynamic /* List<dynamic> */ wire_compile_wasm_sync(
           Uint8List module_wasm, List<dynamic> config) =>
       wasmModule.wire_compile_wasm_sync(module_wasm, config);
-
-  void wire_call_wasm(NativePortType port_) => wasmModule.wire_call_wasm(port_);
-
-  void wire_add(NativePortType port_, Object a, Object b) =>
-      wasmModule.wire_add(port_, a, b);
 
   dynamic /* List<dynamic> */ wire_exports__method__WasmiInstanceId(
           List<dynamic> that) =>
@@ -759,11 +731,6 @@ class WasmiDartWire extends FlutterRustBridgeWasmWireBase<WasmiDartWasmModule> {
   int /* *const c_void */ share_opaque_ArcStdSyncMutexModule(ptr) =>
       wasmModule.share_opaque_ArcStdSyncMutexModule(ptr);
 
-  dynamic /*  */ drop_opaque_Func(ptr) => wasmModule.drop_opaque_Func(ptr);
-
-  int /* *const c_void */ share_opaque_Func(ptr) =>
-      wasmModule.share_opaque_Func(ptr);
-
   dynamic /*  */ drop_opaque_Global(ptr) => wasmModule.drop_opaque_Global(ptr);
 
   int /* *const c_void */ share_opaque_Global(ptr) =>
@@ -778,4 +745,9 @@ class WasmiDartWire extends FlutterRustBridgeWasmWireBase<WasmiDartWasmModule> {
 
   int /* *const c_void */ share_opaque_Table(ptr) =>
       wasmModule.share_opaque_Table(ptr);
+
+  dynamic /*  */ drop_opaque_WFunc(ptr) => wasmModule.drop_opaque_WFunc(ptr);
+
+  int /* *const c_void */ share_opaque_WFunc(ptr) =>
+      wasmModule.share_opaque_WFunc(ptr);
 }
