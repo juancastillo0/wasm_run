@@ -10,7 +10,7 @@ crate-type = ["staticlib", "cdylib"]
 flutter_rust_bridge_codegen = "1.72.*"
 
 [dependencies]
-flutter_rust_bridge = "1.72.*"
+flutter_rust_bridge = "1.75.*"
 wasmi = "0.29.0"
 wasmi_wasi = "0.29.0"
 wasi-common = "2.0.0" # the latest is 7.0.0, but it's not compatible with wasmi_wasi
