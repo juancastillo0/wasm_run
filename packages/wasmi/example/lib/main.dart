@@ -406,15 +406,22 @@ void testAll() {
 
   test('wasi', () async {
     final startTimestamp = DateTime.now().millisecondsSinceEpoch;
-    Uint8List binary;
-    String wasmFile =
-        '../rust_wasi_example/target/wasm32-wasi/debug/rust_wasi_example.wasm';
-    try {
-      binary = await File(wasmFile).readAsBytes();
-    } catch (e) {
-      wasmFile =
-          '../../rust_wasi_example/target/wasm32-wasi/debug/rust_wasi_example.wasm';
-      binary = await File(wasmFile).readAsBytes();
+    Uint8List? binary;
+    final wasmFiles = [
+      '../rust_wasi_example/target/wasm32-wasi/debug/rust_wasi_example.wasm',
+      '../../rust_wasi_example/target/wasm32-wasi/debug/rust_wasi_example.wasm',
+      '../rust_wasi_example/target/wasm32-wasi/release/rust_wasi_example.wasm',
+      '../../rust_wasi_example/target/wasm32-wasi/release/rust_wasi_example.wasm',
+    ];
+    String wasmFile = wasmFiles.first;
+    for (final element in wasmFiles) {
+      try {
+        binary = await File(element).readAsBytes();
+        wasmFile = element;
+      } catch (_) {}
+    }
+    if (binary == null) {
+      throw Exception('Could not find wasm file');
     }
     final module = compileWasmModule(binary);
 

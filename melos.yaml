@@ -5,6 +5,12 @@ repository: https://github.com/juancastillo0/wasm_interpreter
 packages:
   - packages/**
 
+command:
+  bootstrap:
+    hooks:
+      pre: echo `melos bootstrap command is running...`
+      post: chmod +x scripts/config_api.dart
+
 scripts:
   analyze:
     exec: flutter analyze . --no-fatal-infos

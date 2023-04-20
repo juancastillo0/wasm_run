@@ -6,33 +6,9 @@ import 'dart:ffi';
 import 'package:flutter_rust_bridge/flutter_rust_bridge.dart';
 import 'package:test/test.dart';
 import 'package:wasmi/src/bridge_generated.io.dart';
+import 'package:wasmi/src/ffi.dart';
 
 int addOne(int v) => v + 1;
-
-final platform = WasmiDartPlatform(
-  DynamicLibrary.open('../../target/debug/libwasmi_dart.dylib'),
-);
-
-Pointer<wire_list_wasm_val> mapWasmFunction(WireSyncReturn value) {
-// List<dynamic> wireSyncReturnIntoDart(WireSyncReturn syncReturn) =>
-//     syncReturn.ref.intoDart();
-  print('dart value $value');
-  final l = wireSyncReturnIntoDart(value);
-  print('dart l $l');
-  final input = _wire2api_list_value_2(l.first);
-  print('dart input $input');
-  final output = [
-    WasmVal.i64((input.first.field0 as int) * 2),
-  ];
-
-  print('dart output $output');
-  print('dart after platform');
-  // TODO: this throws
-  // ignore: invalid_use_of_protected_member
-  final result = platform.api2wire_list_wasm_val(output);
-  print('dart result $result');
-  return result;
-}
 
 int mapWasmFunctionMut(
   WireSyncReturn value,
@@ -123,7 +99,7 @@ WasmVal _wire2api_value_2(dynamic raw) {
 void main() {
   group('A group of tests', () {
     WasmiDart getLibrary() {
-      return WasmiDartImpl.raw(platform);
+      return defaultInstance();
     }
 
     test('native', () async {
