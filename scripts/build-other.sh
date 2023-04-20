@@ -32,6 +32,9 @@ win_build () {
     cp "../target/$TARGET/$BUILD_PROFILE_PATH/$LIBNAME" "$PLATFORM_NAME/"
 }
 
+# Setup api files for wasmtime
+dart run config_api.dart --impl wasmtime
+
 # Build all the dynamic libraries
 LINUX_LIBNAME=libwasmi_dart.so
 zig_build aarch64-unknown-linux-gnu linux-arm64 $LINUX_LIBNAME
