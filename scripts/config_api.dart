@@ -28,6 +28,7 @@ void main(List<String> args) async {
       'native',
     ],
   );
+  print('config_api: using WASM runtime "$impl"');
 
   final cargoTomlFile = File(join([prefix, 'Cargo.toml']));
   final cargoTomlSourceFile = impl == 'wasmi'

@@ -45,7 +45,7 @@ scripts:
     description: Run all Dart & Flutter tests in this project.
 
   test:dart:
-    run: melos exec -c 1 --fail-fast -- "dart test test"
+    run: melos exec -c 1 --fail-fast -- "dart test test -c source"
     description: Run Dart tests for a specific package in this project.
     packageFilters:
       flutter: false

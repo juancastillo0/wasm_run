@@ -9,7 +9,7 @@ mkdir $BUILD_DIR
 cd $BUILD_DIR
 
 # By default use wasmtime
-dart run config_api.dart --impl wasmtime
+dart run scripts/config_api.dart --impl wasmtime
 
 # Build static libs
 for TARGET in \
@@ -20,9 +20,9 @@ do
     cargo build --profile $BUILD_PROFILE --target=$TARGET
     # if the exit code is not 0, build with wasmi instead of wasmtime
     if [[ $? != 0 ]]; then
-        dart run config_api.dart --impl wasmi
+        dart run scripts/config_api.dart --impl wasmi
         cargo build --profile $BUILD_PROFILE --target=$TARGET
-        dart run config_api.dart --impl wasmtime # revert wasmtime default
+        dart run scripts/config_api.dart --impl wasmtime # revert wasmtime default
     fi
 done
 

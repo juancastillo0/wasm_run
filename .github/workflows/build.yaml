@@ -91,16 +91,12 @@ jobs:
         run: ${CHROMEWEBDRIVER}/chromedriver --port=4445 &
         id: chromedriver
         if: always()
-      - name: Install and run Chrome Driver 2
-        run: /usr/local/share/chrome_driver/chromedriver --port=4445 &
-        id: chromedriver2
-        if: always() && steps.chromedriver.outcome == 'failure'
       - run: dart run test -p chrome
         working-directory: packages/wasmi
-        if: always() && steps.chromedriver.outcome == 'success' || steps.chromedriver2.outcome == 'success'
+        if: always() && steps.chromedriver.outcome == 'success'
       - run: flutter drive --driver=test_driver/integration_test.dart --target=integration_test/main_test.dart -d web-server --browser-name=chrome --driver-port=4445
         working-directory: packages/flutter_wasmi/example
-        if: always() && steps.chromedriver.outcome == 'success' || steps.chromedriver2.outcome == 'success'
+        if: always() && steps.chromedriver.outcome == 'success'
 
       # Firefox
       - name: Install and run Firefox Driver

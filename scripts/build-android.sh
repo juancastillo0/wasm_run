@@ -20,7 +20,7 @@ rustup target add \
         wasm32-wasi
 
 # By default use wasmtime
-dart run config_api.dart --impl wasmtime
+dart run scripts/config_api.dart --impl wasmtime
 
 # Build the android libraries in the jniLibs directory
 for TARGET in armeabi-v7a arm64-v8a x86 x86_64
@@ -29,10 +29,10 @@ do
                 -t $TARGET build --profile $BUILD_PROFILE
         # if the exit code is not 0, build with wasmi instead of wasmtime
         if [[ $? != 0 ]]; then
-                dart run config_api.dart --impl wasmi
+                dart run scripts/config_api.dart --impl wasmi
                 cargo ndk -o $JNI_DIR --manifest-path ../Cargo.toml \
                         -t $TARGET build --profile $BUILD_PROFILE
-                dart run config_api.dart --impl wasmtime # revert wasmtime default
+                dart run scripts/config_api.dart --impl wasmtime # revert wasmtime default
         fi
 done
 

@@ -522,6 +522,7 @@ void testAll() {
         ],
       ),
     );
+    print('allow directory: ${Directory.current.path}');
     builder1.addImport(
       'example_imports',
       'translate',
@@ -583,6 +584,7 @@ void testAll() {
 
     final readFileSize = instance1.lookupFunction('read_file_size')!;
     {
+      print('Wasm file ${fileToDelete.path}');
       // final bb = utf8.encode(File(wasmFile).absolute.path);
       final bb = utf8.encode(fileToDelete.path);
 
