@@ -1,4 +1,8 @@
-use std::any::Any;
+use std::{
+    any::Any,
+    fmt::Debug,
+    panic::{RefUnwindSafe, UnwindSafe},
+};
 
 #[derive(Debug)]
 pub struct WFunc {
@@ -79,6 +83,9 @@ impl From<WMemory> for wasmi::Memory {
 #[derive(Debug)]
 pub struct WGlobal(Box<dyn Any>);
 
+impl UnwindSafe for WGlobal {}
+impl RefUnwindSafe for WGlobal {}
+
 #[cfg(feature = "wasmtime")]
 impl From<wasmtime::Global> for WGlobal {
     fn from(func: wasmtime::Global) -> Self {
@@ -103,12 +110,15 @@ impl From<wasmi::Global> for WGlobal {
 #[cfg(not(feature = "wasmtime"))]
 impl From<WGlobal> for wasmi::Global {
     fn from(func: WGlobal) -> Self {
-        func.0.downcast::<wasmtime::Global>().unwrap()
+        *func.0.downcast::<wasmi::Global>().unwrap()
     }
 }
 
 #[derive(Debug)]
 pub struct WTable(Box<dyn Any>);
+
+impl UnwindSafe for WTable {}
+impl RefUnwindSafe for WTable {}
 
 #[cfg(feature = "wasmtime")]
 impl From<wasmtime::Table> for WTable {
@@ -134,6 +144,6 @@ impl From<wasmi::Table> for WTable {
 #[cfg(not(feature = "wasmtime"))]
 impl From<WTable> for wasmi::Table {
     fn from(func: WTable) -> Self {
-        func.0.downcast::<wasmtime::Table>().unwrap()
+        *func.0.downcast::<wasmi::Table>().unwrap()
     }
 }

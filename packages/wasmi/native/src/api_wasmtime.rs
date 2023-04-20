@@ -1,3 +1,4 @@
+/**
 use crate::bridge_generated::{wire_list_wasm_val, Wire2Api};
 use crate::config::*;
 pub use crate::external::*;
@@ -593,3 +594,5 @@ pub fn compile_wasm_sync(
 ) -> Result<SyncReturn<CompiledModule>> {
     compile_wasm(module_wasm, config).map(SyncReturn)
 }
+
+*/

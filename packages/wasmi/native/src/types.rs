@@ -2,10 +2,12 @@ use std::fmt::Display;
 
 use crate::bridge_generated::{wire_ExternalValue, NewWithNullPtr};
 use anyhow::Result;
-use flutter_rust_bridge::{ RustOpaque};
+use flutter_rust_bridge::RustOpaque;
 
 use crate::external::*;
+#[cfg(not(feature = "wasmtime"))]
 pub use wasmi::{core::Pages, Func, Global, GlobalType, Memory, Mutability, Table};
+#[cfg(not(feature = "wasmtime"))]
 use wasmi::{core::ValueType, *};
 
 #[allow(non_camel_case_types)]
@@ -40,8 +42,9 @@ impl WasmVal {
             WasmVal::i64(i) => Value::I64(i),
             WasmVal::f32(i) => Value::F32(i.to_bits().into()),
             WasmVal::f64(i) => Value::F64(i.to_bits().into()),
+            WasmVal::v128(_i) => panic!("v128 is not supported in wasmi"),
             WasmVal::funcRef(i) => {
-                let inner = i.map(|f| Func::clone(&f));
+                let inner = i.map(|f| Func::clone(&f.func_wasmi));
                 Value::FuncRef(FuncRef::new(inner))
             }
             WasmVal::externRef(i) => Value::ExternRef(ExternRef::new::<u32>(ctx, Some(i))),
@@ -55,7 +58,7 @@ impl WasmVal {
             Value::I64(i) => WasmVal::i64(*i),
             Value::F32(i) => WasmVal::f32(i.to_float()),
             Value::F64(i) => WasmVal::f64(i.to_float()),
-            Value::FuncRef(i) => WasmVal::funcRef(i.func().map(|f| RustOpaque::new(*f))), // NonZeroU32::new(1).unwrap()),
+            Value::FuncRef(i) => WasmVal::funcRef(i.func().map(|f| RustOpaque::new((*f).into()))), // NonZeroU32::new(1).unwrap()),
             Value::ExternRef(i) => {
                 WasmVal::externRef(*(i.data(ctx).unwrap().downcast_ref::<u32>().unwrap()))
             } // NonZeroU32::new(1).unwrap()),
@@ -100,6 +103,7 @@ pub struct GlobalTy {
     pub mutability: GlobalMutability,
 }
 
+#[cfg(not(feature = "wasmtime"))]
 impl From<&GlobalType> for GlobalTy {
     fn from(value: &GlobalType) -> Self {
         GlobalTy {
@@ -131,6 +135,7 @@ pub struct TableTy {
     pub max: Option<u32>,
 }
 
+#[cfg(not(feature = "wasmtime"))]
 impl From<&TableType> for TableTy {
     fn from(value: &TableType) -> Self {
         TableTy {
@@ -171,6 +176,7 @@ pub enum ValueTy {
     externRef,
 }
 
+#[cfg(not(feature = "wasmtime"))]
 impl From<&ValueType> for ValueTy {
     fn from(value: &ValueType) -> Self {
         match value {
@@ -199,6 +205,7 @@ impl From<wasmtime::ValType> for ValueTy {
     }
 }
 
+#[cfg(not(feature = "wasmtime"))]
 impl From<ValueTy> for ValueType {
     fn from(value: ValueTy) -> Self {
         match value {
@@ -243,6 +250,7 @@ pub enum GlobalMutability {
     Var,
 }
 
+#[cfg(not(feature = "wasmtime"))]
 impl From<Mutability> for GlobalMutability {
     fn from(value: Mutability) -> Self {
         match value {
@@ -252,6 +260,7 @@ impl From<Mutability> for GlobalMutability {
     }
 }
 
+#[cfg(not(feature = "wasmtime"))]
 impl From<GlobalMutability> for Mutability {
     fn from(value: GlobalMutability) -> Self {
         match value {
@@ -289,6 +298,7 @@ pub enum ExternalType {
     Memory(MemoryTy),
 }
 
+#[cfg(not(feature = "wasmtime"))]
 impl From<&ExternType> for ExternalType {
     fn from(import: &ExternType) -> Self {
         match import {
@@ -319,6 +329,7 @@ pub struct ModuleImportDesc {
     pub ty: ExternalType,
 }
 
+#[cfg(not(feature = "wasmtime"))]
 impl From<&ImportType<'_>> for ModuleImportDesc {
     fn from(import: &ImportType) -> Self {
         ModuleImportDesc {
@@ -348,6 +359,7 @@ pub struct FuncTy {
     pub results: Vec<ValueTy>,
 }
 
+#[cfg(not(feature = "wasmtime"))]
 impl From<&FuncType> for FuncTy {
     fn from(func: &FuncType) -> Self {
         FuncTy {
@@ -373,6 +385,7 @@ pub struct ModuleExportDesc {
     pub ty: ExternalType,
 }
 
+#[cfg(not(feature = "wasmtime"))]
 impl From<&ExportType<'_>> for ModuleExportDesc {
     fn from(export: &ExportType) -> Self {
         ModuleExportDesc {
@@ -453,7 +466,7 @@ impl Default for wire_ExternalValue {
 impl From<Extern> for ExternalValue {
     fn from(extern_: Extern) -> Self {
         match extern_ {
-            Extern::Func(f) => ExternalValue::Func(RustOpaque::new(f)),
+            Extern::Func(f) => ExternalValue::Func(RustOpaque::new(f.into())),
             Extern::Global(g) => ExternalValue::Global(RustOpaque::new(g)),
             Extern::Table(t) => ExternalValue::Table(RustOpaque::new(t)),
             Extern::Memory(m) => ExternalValue::Memory(RustOpaque::new(m)),
@@ -479,7 +492,7 @@ impl From<wasmtime::Extern> for ExternalValue {
 impl From<&ExternalValue> for Extern {
     fn from(e: &ExternalValue) -> Extern {
         match e {
-            ExternalValue::Func(f) => Extern::Func(**f),
+            ExternalValue::Func(f) => Extern::Func((*f).func_wasmi),
             ExternalValue::Global(g) => Extern::Global(**g),
             ExternalValue::Table(t) => Extern::Table(**t),
             ExternalValue::Memory(m) => Extern::Memory(**m),
@@ -559,6 +572,7 @@ impl MemoryTy {
     }
 }
 
+#[cfg(not(feature = "wasmtime"))]
 impl From<&MemoryType> for MemoryTy {
     fn from(memory_type: &MemoryType) -> Self {
         MemoryTy {

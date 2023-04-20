@@ -15,13 +15,12 @@ anyhow = "1.0.0"
 once_cell = "1.0.0"
 wat = "1.0.61"
 
-wasi-common = "7.0.0"
-cap-std = "1.0.13"
-wasmtime = "7.0.0"
-wasmtime-wasi = "7.0.0"
-# wasmtime-types = "7.0.0"
+wasi-common = "2.0.0" # the latest is 7.0.0, but it's not compatible with wasmi_wasi
+cap-std = "0.26.0"
+wasmi = "0.29.0"
+wasmi_wasi = "0.29.0"
 
 [features]
-default = ["wasmtime"]
+default = ["wasmi"]
 wasmi = []
 wasmtime = []

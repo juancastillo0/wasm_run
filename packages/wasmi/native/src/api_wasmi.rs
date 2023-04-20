@@ -1,6 +1,7 @@
 /**
 use crate::bridge_generated::{wire_list_wasm_val, Wire2Api};
 use crate::config::*;
+pub use crate::external::WFunc;
 use crate::types::*;
 use anyhow::{Ok, Result};
 use flutter_rust_bridge::{
@@ -235,16 +236,17 @@ impl WasmiModuleId {
 
     pub fn call_function_handle_sync(
         &self,
-        func: RustOpaque<Func>,
+        func: RustOpaque<WFunc>,
         args: Vec<WasmVal>,
     ) -> Result<SyncReturn<Vec<WasmVal>>> {
         self.call_function_handle(func, args).map(SyncReturn)
     }
     pub fn call_function_handle(
         &self,
-        func: RustOpaque<Func>,
+        func: RustOpaque<WFunc>,
         args: Vec<WasmVal>,
     ) -> Result<Vec<WasmVal>> {
+        let func = func.func_wasmi;
         self.with_module_mut(|mut store| {
             let mut outputs: Vec<Value> = func
                 .ty(&store)
@@ -295,8 +297,8 @@ impl WasmiModuleId {
         self.with_module_mut(|ctx| f(&ctx.as_context()))
     }
 
-    pub fn get_function_type(&self, func: RustOpaque<Func>) -> SyncReturn<FuncTy> {
-        SyncReturn(self.with_module(|store| (&func.ty(store)).into()))
+    pub fn get_function_type(&self, func: RustOpaque<WFunc>) -> SyncReturn<FuncTy> {
+        SyncReturn(self.with_module(|store| (&func.func_wasmi.ty(store)).into()))
     }
 
     pub fn create_function(
@@ -305,7 +307,7 @@ impl WasmiModuleId {
         function_id: u32,
         param_types: Vec<ValueTy>,
         result_types: Vec<ValueTy>,
-    ) -> Result<SyncReturn<RustOpaque<Func>>> {
+    ) -> Result<SyncReturn<RustOpaque<WFunc>>> {
         self.with_module_mut(|store| {
             let f: WasmFunction = unsafe { std::mem::transmute(function_pointer) };
             let func = Func::new(
@@ -349,7 +351,7 @@ impl WasmiModuleId {
                     std::result::Result::Ok(())
                 },
             );
-            Ok(SyncReturn(RustOpaque::new(func)))
+            Ok(SyncReturn(RustOpaque::new(func.into())))
         })
     }
 
@@ -368,7 +370,7 @@ impl WasmiModuleId {
     ) -> Result<SyncReturn<RustOpaque<Global>>> {
         self.with_module_mut(|mut store| {
             let mapped = value.to_value(&mut store);
-            let global = Global::new(&mut store, mapped, mutability);
+            let global = Global::new(&mut store, mapped, mutability.into());
             Ok(SyncReturn(RustOpaque::new(global)))
         })
     }

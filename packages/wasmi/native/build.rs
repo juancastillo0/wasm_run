@@ -37,7 +37,7 @@ fn main() {
         .unwrap();
 
     generated
-        .write(
+        .write_all(
             "
 extension WasmiDartImplPlatform on WasmiDartImpl {
     WasmiDartPlatform get platform => _platform;

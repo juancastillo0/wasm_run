@@ -1,7 +1,3 @@
-use crate::types::to_anyhow;
-use std::convert::{TryFrom, TryInto};
-use wasmi::StackLimits;
-
 #[derive(Debug)]
 pub struct WasiConfig {
     pub capture_stdout: bool,
@@ -25,8 +21,13 @@ pub enum StdIOKind {
 
 impl WasiConfig {
     pub fn to_wasi_ctx(&self) -> anyhow::Result<wasi_common::WasiCtx> {
+        #[cfg(not(feature = "wasmtime"))]
+        use wasmi_wasi::{ambient_authority, WasiCtxBuilder};
+        #[cfg(feature = "wasmtime")]
+        use wasmtime_wasi::{ambient_authority, WasiCtxBuilder};
+
         // add wasi to linker
-        let mut wasi_builder = wasmi_wasi::WasiCtxBuilder::new();
+        let mut wasi_builder = WasiCtxBuilder::new();
         if self.inherit_args {
             wasi_builder = wasi_builder.inherit_args()?;
         }
@@ -58,8 +59,7 @@ impl WasiConfig {
                 host_path,
             } in &self.preopened_dirs
             {
-                let dir =
-                    wasmi_wasi::Dir::open_ambient_dir(host_path, wasmi_wasi::ambient_authority())?;
+                let dir = cap_std::fs::Dir::open_ambient_dir(host_path, ambient_authority())?;
                 wasi_builder = wasi_builder.preopened_dir(dir, wasm_guest_path)?;
             }
         }
@@ -108,7 +108,6 @@ impl From<ModuleConfig> for wasmtime::Config {
             // wtc.enable_incremental_compilation.map(|v| config.enable_incremental_compilation(v));
             // wtc.async_support.map(|v| config.async_support(v));
             wtc.debug_info.map(|v| config.debug_info(v));
-            #[allow(deprecated)]
             wtc.wasm_backtrace.map(|v| config.wasm_backtrace(v));
             wtc.native_unwind_info.map(|v| config.native_unwind_info(v));
             wtc.epoch_interruption.map(|v| config.epoch_interruption(v));
@@ -135,6 +134,7 @@ impl From<ModuleConfig> for wasmtime::Config {
     }
 }
 
+#[cfg(not(feature = "wasmtime"))]
 impl From<ModuleConfig> for wasmi::Config {
     fn from(c: ModuleConfig) -> Self {
         let mut config = Self::default();
@@ -197,10 +197,13 @@ pub struct WasiStackLimits {
     pub maximum_recursion_depth: usize,
 }
 
-impl TryFrom<WasiStackLimits> for StackLimits {
+#[cfg(not(feature = "wasmtime"))]
+impl TryFrom<WasiStackLimits> for wasmi::StackLimits {
     type Error = anyhow::Error;
 
     fn try_from(value: WasiStackLimits) -> std::result::Result<Self, Self::Error> {
+        use crate::types::to_anyhow;
+
         Ok(Self::new(
             value.initial_value_stack_height,
             value.maximum_value_stack_height,
@@ -212,8 +215,6 @@ impl TryFrom<WasiStackLimits> for StackLimits {
 
 #[derive(Debug)]
 pub struct ModuleConfigWasmtime {
-    // WASMTIME
-    //
     // TODO: pub enable_incremental_compilation: Option<bool>, incremental-cache feature
     // TODO: pub async_support: Option<bool>,                  async feature
     /// Configures whether DWARF debug information will be emitted during
