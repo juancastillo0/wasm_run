@@ -269,7 +269,7 @@ impl WasmiModuleId {
                 func.ty(&store).results().map(|t| default_val(&t)).collect();
             let inputs: Vec<Value> = args.into_iter().map(|v| v.to_val()).collect();
             func.call(&mut store, inputs.as_slice(), &mut outputs)?;
-            Ok(outputs.into_iter().map(|a| WasmVal::from_val(a)).collect())
+            Ok(outputs.into_iter().map(WasmVal::from_val).collect())
         })
     }
 
@@ -328,7 +328,7 @@ impl WasmiModuleId {
                 ),
                 move |mut caller, params, results| {
                     let mapped: Vec<WasmVal> = params
-                        .into_iter()
+                        .iter()
                         .map(|a| WasmVal::from_val(a.clone()))
                         .collect();
                     let inputs = vec![mapped].into_dart();
@@ -447,7 +447,10 @@ impl WasmiModuleId {
     ) -> Result<SyncReturn<Vec<u8>>> {
         self.with_module(|store| {
             let mut buffer = Vec::with_capacity(bytes);
-            unsafe { buffer.set_len(bytes) };
+            #[allow(clippy::uninit_vec)]
+            unsafe {
+                buffer.set_len(bytes)
+            };
             memory
                 .read(store, offset, &mut buffer)
                 .map(|_| SyncReturn(buffer))
@@ -505,9 +508,7 @@ impl WasmiModuleId {
     }
 
     pub fn get_table(&self, table: RustOpaque<Table>, index: u32) -> SyncReturn<Option<WasmVal>> {
-        SyncReturn(
-            self.with_module_mut(|store| table.get(store, index).map(|v| WasmVal::from_val(v))),
-        )
+        SyncReturn(self.with_module_mut(|store| table.get(store, index).map(WasmVal::from_val)))
     }
 
     pub fn set_table(
@@ -584,7 +585,7 @@ impl From<Module> for CompiledModule {
 pub fn compile_wasm(module_wasm: Vec<u8>, config: ModuleConfig) -> Result<CompiledModule> {
     let config: Config = config.into();
     let engine = Engine::new(&config)?;
-    let module = Module::new(&engine, &mut &module_wasm[..])?;
+    let module = Module::new(&engine, &module_wasm[..])?;
     Ok(module.into())
 }
 

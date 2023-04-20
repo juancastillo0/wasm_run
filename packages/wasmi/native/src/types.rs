@@ -66,12 +66,13 @@ impl WasmVal {
     }
 
     #[cfg(feature = "wasmtime")]
+    #[allow(clippy::wrong_self_convention)]
     pub fn to_val(self) -> wasmtime::Val {
         match self {
             WasmVal::i32(i) => wasmtime::Val::I32(i),
             WasmVal::i64(i) => wasmtime::Val::I64(i),
-            WasmVal::f32(i) => wasmtime::Val::F32(i.to_bits().into()),
-            WasmVal::f64(i) => wasmtime::Val::F64(i.to_bits().into()),
+            WasmVal::f32(i) => wasmtime::Val::F32(i.to_bits()),
+            WasmVal::f64(i) => wasmtime::Val::F64(i.to_bits()),
             WasmVal::v128(i) => wasmtime::Val::V128(u128::from_be_bytes(i)),
             WasmVal::funcRef(i) => wasmtime::Val::FuncRef(i.map(|f| f.func_wasmtime)),
             WasmVal::externRef(i) => wasmtime::Val::ExternRef(Some(wasmtime::ExternRef::new(i))),
@@ -533,7 +534,7 @@ impl From<&ExternalValue> for Extern {
 impl From<&ExternalValue> for wasmtime::Extern {
     fn from(e: &ExternalValue) -> wasmtime::Extern {
         match e {
-            ExternalValue::Func(f) => wasmtime::Extern::Func((*f).func_wasmtime),
+            ExternalValue::Func(f) => wasmtime::Extern::Func(f.func_wasmtime),
             ExternalValue::Global(g) => wasmtime::Extern::Global(**g),
             ExternalValue::Table(t) => wasmtime::Extern::Table(**t),
             ExternalValue::Memory(m) => wasmtime::Extern::Memory(**m),
