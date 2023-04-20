@@ -11,6 +11,11 @@ and the Flutter guide for
 [developing packages and plugins](https://flutter.dev/developing-packages). 
 -->
 
+[![Code coverage Coveralls](https://coveralls.io/repos/github/juancastillo0/dart_interpreter/badge.svg?branch=main)](https://coveralls.io/github/juancastillo0/dart_interpreter?branch=main)
+[![Code coverage Codecov](https://codecov.io/gh/juancastillo0/dart_interpreter/branch/main/graph/badge.svg?token=QJLQSCIJ42)](https://codecov.io/gh/juancastillo0/dart_interpreter)
+[![Build & Test](https://github.com/juancastillo0/wasm_interpreter/actions/workflows/build.yaml/badge.svg)](https://github.com/juancastillo0/wasm_interpreter/actions/workflows/build.yaml)
+[![dart_interpreter is released under the MIT license.](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/juancastillo0/dart_interpreter/blob/main/LICENSE)
+[![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](#contributing)
 
 # Dart Wasm Interpreter
 

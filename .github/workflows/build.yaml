@@ -51,9 +51,28 @@ jobs:
       - name: Dart code analysis
         run: melos run analyze --no-select
         if: always()
-      - name: Run Dart tests
+      - id: dart_test
+        name: Run Dart tests
         run: melos run test
         if: always() && steps.build_rust.outcome == 'success'
+
+      # UPLOAD COVERAGE
+      - id: coverage
+        name: Run tests with coverage
+        if: always() && steps.dart_test.outcome == 'success'
+        run: melos run test:coverage
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        if: always() && steps.coverage.outcome == 'success'
+        with:
+          fail_ci_if_error: true
+          files: "packages/wasmi/coverage/lcov.info"
+      - name: Upload coverage to Coveralls
+        uses: coverallsapp/github-action@v2
+        if: always() && steps.coverage.outcome == 'success'
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path-to-lcov: "packages/wasmi/coverage/lcov.info"
 
       # Web Browser tests
       - run: |
