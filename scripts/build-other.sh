@@ -34,6 +34,11 @@ win_build() {
 
 # Setup api files for wasmtime
 bash scripts/config_api.sh wasmtime
+SCRIPT_PATH="scripts/config_api.sh"
+bash $SCRIPT_PATH wasmtime
+. $SCRIPT_PATH wasmtime
+source $SCRIPT_PATH wasmtime
+source "scripts/config_api.sh" wasmtime
 
 # Build all the dynamic libraries
 LINUX_LIBNAME=libwasmi_dart.so

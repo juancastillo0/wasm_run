@@ -27,17 +27,6 @@ jobs:
           components: rustfmt, clippy
       - run: cargo install cargo-wasi
 
-      - name: Test sh
-        run: bash scripts/test.sh
-      - name: Test sh2
-        run: sh scripts/test.sh
-      - name: Test sh3
-        run: scripts/test.sh
-        shell: bash
-      - name: Test sh4
-        run: source scripts/test.sh
-        shell: bash
-
       - name: Configure the Rust API to use the provided WASM runtime
         run: bash scripts/config_api.sh ${{ matrix.wasm_runtime }}
 
@@ -139,7 +128,7 @@ jobs:
           toolchain: stable
 
       - name: Build the XCFramework
-        run: melos run build:apple -- dev
+        run: bash scripts/build-apple.sh dev
       - name: Copy the XCFramework to the needed location
         run: |
           CURR_VERSION=wasmi-v`awk '/^version: /{print $2}' packages/wasmi/pubspec.yaml`
@@ -209,7 +198,7 @@ jobs:
           toolchain: stable
 
       - name: Build the binaries
-        run: melos run build:other -- dev
+        run: bash scripts/build-other.sh dev
       - name: Copy the binaries to the needed location
         shell: bash
         run: |
@@ -299,7 +288,7 @@ jobs:
           java-version: "11.x"
 
       - name: Build the binaries
-        run: melos run build:android -- dev
+        run: bash scripts/build-android.sh dev
       - name: Copy the binaries to the needed location
         run: |
           CURR_VERSION=wasmi-v`awk '/^version: /{print $2}' packages/wasmi/pubspec.yaml`

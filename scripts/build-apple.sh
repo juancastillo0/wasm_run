@@ -9,7 +9,7 @@ mkdir $BUILD_DIR
 cd $BUILD_DIR
 
 # By default use wasmtime
-bash "scripts/config_api.sh" wasmtime
+. "scripts/config_api.sh" wasmtime
 
 # Build static libs
 for TARGET in \
@@ -19,9 +19,9 @@ for TARGET in \
         cargo build --profile $BUILD_PROFILE --target=$TARGET
         # if the exit code is not 0, build with wasmi instead of wasmtime
         if [[ $? != 0 ]]; then
-                bash "scripts/config_api.sh" wasmi
+                . "scripts/config_api.sh" wasmi
                 cargo build --profile $BUILD_PROFILE --target=$TARGET
-                bash "scripts/config_api.sh" wasmtime # revert wasmtime default
+                . "scripts/config_api.sh" wasmtime # revert wasmtime default
         fi
 done
 
