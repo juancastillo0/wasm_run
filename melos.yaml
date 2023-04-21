@@ -8,7 +8,7 @@ packages:
 command:
   bootstrap:
     hooks:
-      pre: dart compile exe "scripts/config_api.dart" && chmod +x "scripts/config_api.exe"
+      pre: dart compile exe "scripts/config_api.dart" && chmod +x "scripts/config_api.exe" && chmod +x "scripts/config_api.sh"
 
 scripts:
   analyze:

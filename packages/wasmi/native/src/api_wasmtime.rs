@@ -1,4 +1,3 @@
-/**
 use crate::bridge_generated::{wire_list_wasm_val, Wire2Api};
 use crate::config::*;
 pub use crate::external::*;
@@ -607,5 +606,3 @@ pub fn supported_wasm_features() -> SyncReturn<WasmFeatures> {
 pub fn wasm_features_for_config(config: ModuleConfig) -> SyncReturn<WasmFeatures> {
     SyncReturn(config.wasm_features())
 }
-
-*/

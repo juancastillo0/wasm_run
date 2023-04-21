@@ -9,25 +9,23 @@ mkdir $BUILD_DIR
 cd $BUILD_DIR
 
 # By default use wasmtime
-"./config_api.exe" --impl wasmtime
+bash "scripts/config_api.sh" wasmtime
 
 # Build static libs
 for TARGET in \
         aarch64-apple-ios x86_64-apple-ios aarch64-apple-ios-sim \
-        x86_64-apple-darwin aarch64-apple-darwin
-do
-    rustup target add $TARGET
-    cargo build --profile $BUILD_PROFILE --target=$TARGET
-    # if the exit code is not 0, build with wasmi instead of wasmtime
-    if [[ $? != 0 ]]; then
-        "./config_api.exe" --impl wasmi
+        x86_64-apple-darwin aarch64-apple-darwin; do
+        rustup target add $TARGET
         cargo build --profile $BUILD_PROFILE --target=$TARGET
-        "./config_api.exe" --impl wasmtime # revert wasmtime default
-    fi
+        # if the exit code is not 0, build with wasmi instead of wasmtime
+        if [[ $? != 0 ]]; then
+                bash "scripts/config_api.sh" wasmi
+                cargo build --profile $BUILD_PROFILE --target=$TARGET
+                bash "scripts/config_api.sh" wasmtime # revert wasmtime default
+        fi
 done
 
-if [[ $WASM_BUILD_RUST_WASI_EXAMPLE != false ]]
-then
+if [[ $WASM_BUILD_RUST_WASI_EXAMPLE != false ]]; then
         rustup target add wasm32-wasi
         cargo build --target wasm32-wasi --profile $BUILD_PROFILE \
                 --manifest-path ../packages/rust_wasi_example/Cargo.toml
