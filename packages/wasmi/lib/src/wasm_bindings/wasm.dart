@@ -17,6 +17,17 @@ export '../bridge_generated.dart'
         EnvVariable,
         PreopenedDir;
 
+// TODO: The default [ModuleConfig] used by [compileWasmModule].
+
+/// The default [WasmFeatures] used when compiling a Wasm module.
+Future<WasmFeatures> wasmFeaturesDefault() =>
+    platform_impl.wasmFeaturesDefault();
+
+/// The supported [WasmFeatures] used when compiling a Wasm module.
+Future<WasmFeatures> wasmFeaturesSupported() =>
+    platform_impl.wasmFeaturesSupported();
+
+/// Compiles a Wasm module asynchronously.
 Future<WasmModule> compileAsyncWasmModule(
   Uint8List bytes, {
   ModuleConfig? config,
@@ -24,6 +35,8 @@ Future<WasmModule> compileAsyncWasmModule(
   return platform_impl.compileAsyncWasmModule(bytes, config: config);
 }
 
+/// Compiles a Wasm module synchronously.
+/// You should use [compileAsyncWasmModule], unless the module is small.
 WasmModule compileWasmModule(
   Uint8List bytes, {
   ModuleConfig? config,

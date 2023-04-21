@@ -12,32 +12,45 @@ final _noReturnPlaceholder = Object();
 
 bool isVoidReturn(dynamic value) => identical(value, _noReturnPlaceholder);
 
+Future<WasmFeatures> wasmFeaturesDefault() async =>
+    defaultInstance().defaultWasmFeatures();
+Future<WasmFeatures> wasmFeaturesSupported() async =>
+    defaultInstance().supportedWasmFeatures();
+
 Future<WasmModule> compileAsyncWasmModule(
   Uint8List bytes, {
   ModuleConfig? config,
 }) async {
+  final config_ = config ?? const ModuleConfig();
   final module = await defaultInstance().compileWasm(
     moduleWasm: bytes,
-    config: config ?? const ModuleConfig(),
+    config: config_,
   );
-  return _WasmModule._(module);
+  return _WasmModule._(module, config_);
 }
 
 WasmModule compileWasmModule(
   Uint8List bytes, {
   ModuleConfig? config,
 }) {
+  final config_ = config ?? const ModuleConfig();
   final module = defaultInstance().compileWasmSync(
     moduleWasm: bytes,
-    config: config ?? const ModuleConfig(),
+    config: config_,
   );
-  return _WasmModule._(module);
+  return _WasmModule._(module, config_);
 }
 
 class _WasmModule extends WasmModule {
   final CompiledModule module;
+  final ModuleConfig config;
+  final WasmFeatures _features;
 
-  _WasmModule._(this.module);
+  _WasmModule._(this.module, this.config)
+      : _features = defaultInstance().wasmFeaturesForConfig(config: config);
+
+  @override
+  Future<WasmFeatures> features() async => _features;
 
   @override
   WasmMemory createSharedMemory(int pages, {int? maxPages}) {

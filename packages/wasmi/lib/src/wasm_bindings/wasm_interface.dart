@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 
 import '../bridge_generated.dart'
-    show ExternalType, U8Array16, ValueTy, WasiConfig;
+    show ExternalType, U8Array16, ValueTy, WasiConfig, WasmFeatures;
 import '_wasm_interop_stub.dart'
     if (dart.library.io) '_wasm_interop_native.dart'
     if (dart.library.html) '_wasm_interop_web.dart' show isVoidReturn;
@@ -12,6 +12,7 @@ export '../bridge_generated.dart'
         // ModuleConfigWasmi,
         // WasiStackLimits,
         // ModuleConfigWasmtime,
+        WasmFeatures,
         U8Array16,
         ExternalType,
         WasiConfig,
@@ -29,6 +30,8 @@ abstract class WasmModule {
   /// It configures the imports and definitions of the instance.
   /// [wasiConfig] is not supported in the browser executor.
   WasmInstanceBuilder builder({WasiConfig? wasiConfig});
+
+  Future<WasmFeatures> features();
 
   /// Creates a new memory with [pages] and [maxPages] pages.
   /// Not supported in the wasmi executor.

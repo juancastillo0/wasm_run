@@ -40,6 +40,47 @@ Future<Uint8List> getBinary({
 }
 
 void testAll() {
+  test('WasmFeature', () async {
+    final defaultFeatures = await wasmFeaturesDefault();
+    final supportedFeatures = await wasmFeaturesSupported();
+
+    expect(defaultFeatures.wasiFeatures, isLibrary ? isNotNull : isNull);
+    expect(supportedFeatures.wasiFeatures, isLibrary ? isNotNull : isNull);
+
+    final alwaysTrue = [
+      supportedFeatures.mutableGlobal,
+      supportedFeatures.saturatingFloatToInt,
+      supportedFeatures.signExtension,
+      supportedFeatures.referenceTypes,
+      supportedFeatures.multiValue,
+      supportedFeatures.bulkMemory,
+      supportedFeatures.floats,
+      defaultFeatures.mutableGlobal,
+      defaultFeatures.saturatingFloatToInt,
+      defaultFeatures.signExtension,
+      defaultFeatures.referenceTypes,
+      defaultFeatures.multiValue,
+      defaultFeatures.bulkMemory,
+      defaultFeatures.floats,
+    ];
+    expect(alwaysTrue, Iterable.generate(alwaysTrue.length, (_) => true));
+
+    final alwaysFalse = [
+      supportedFeatures.componentModel,
+      supportedFeatures.memoryControl,
+      supportedFeatures.garbageCollection,
+      defaultFeatures.componentModel,
+      defaultFeatures.memoryControl,
+      defaultFeatures.garbageCollection,
+    ];
+    expect(alwaysFalse, Iterable.generate(alwaysFalse.length, (_) => false));
+
+    expect(supportedFeatures.exceptions, !isLibrary);
+    if (!isLibrary) {
+      expect(defaultFeatures, supportedFeatures);
+    }
+  });
+
   test('simple add', () async {
     final Uint8List binary = await getBinary(
       wat: r'''

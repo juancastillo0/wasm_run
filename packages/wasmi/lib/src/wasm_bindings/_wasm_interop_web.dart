@@ -5,6 +5,7 @@ import 'dart:typed_data' show Uint8List;
 import 'package:wasm_interop/wasm_interop.dart';
 
 import '../bridge_generated.dart' show ModuleConfig;
+import '_wasm_feature_detect_web.dart';
 import 'wasm_interface.dart';
 
 bool isVoidReturn(dynamic value) {
@@ -15,6 +16,61 @@ bool isVoidReturn(dynamic value) {
       return value == null;
   }
 }
+
+Future<WasmFeatures> _calculateFeatures() async {
+  final wfd = wasmFeatureDetect;
+  final features = await Future.wait([
+    js_util.promiseToFuture<bool>(wfd.bigInt()), // 0 TODO: left
+    js_util.promiseToFuture<bool>(wfd.bulkMemory()), // 1
+    js_util.promiseToFuture<bool>(wfd.exceptions()), // 2
+    js_util.promiseToFuture<bool>(wfd.extendedConst()), // 3
+    js_util.promiseToFuture<bool>(wfd.gc()), // 4
+    // TODO:  js_util.promiseToFuture<bool>(wfd.jspi()), // 5 left
+    Future.value(false),
+    js_util.promiseToFuture<bool>(wfd.memory64()), // 6
+    js_util.promiseToFuture<bool>(wfd.multiValue()), // 7
+    js_util.promiseToFuture<bool>(wfd.mutableGlobals()), // 8
+    js_util.promiseToFuture<bool>(wfd.referenceTypes()), // 9
+    js_util.promiseToFuture<bool>(wfd.relaxedSimd()), // 10
+    js_util.promiseToFuture<bool>(wfd.saturatedFloatToInt()), // 11
+    js_util.promiseToFuture<bool>(wfd.signExtensions()), // 12
+    js_util.promiseToFuture<bool>(wfd.simd()), // 13
+    js_util.promiseToFuture<bool>(wfd.streamingCompilation()), // 14
+    js_util.promiseToFuture<bool>(wfd.tailCall()), // 15
+    js_util.promiseToFuture<bool>(wfd.threads()), // 16
+  ]);
+
+  return WasmFeatures(
+    mutableGlobal: features[8],
+    saturatingFloatToInt: features[11],
+    signExtension: features[12],
+    referenceTypes: features[9],
+    multiValue: features[7],
+    bulkMemory: features[1],
+    floats: true,
+    threads: features[16],
+    exceptions: features[2], // not in firefox
+    simd: features[13], //  not in safari
+
+    relaxedSimd: features[10], // TODO: check
+    tailCall: features[15], // TODO: check
+    multiMemory: false, // TODO: check
+    memory64: features[6], // TODO: check
+    extendedConst: features[3],
+    componentModel: false, // TODO: check
+    memoryControl: false, // TODO: check
+    garbageCollection: features[4], // TODO: check
+    wasiFeatures: null,
+    // TODO: moduleLinking
+  );
+}
+
+Future<WasmFeatures>? _features;
+Future<WasmFeatures> wasmFeaturesSupported() {
+  return _features ??= _calculateFeatures();
+}
+
+Future<WasmFeatures> wasmFeaturesDefault() => wasmFeaturesSupported();
 
 Future<WasmModule> compileAsyncWasmModule(
   Uint8List bytes,
@@ -41,6 +97,9 @@ class _WasmModule extends WasmModule {
     final module = await Module.fromBytesAsync(bytes);
     return _WasmModule._(module);
   }
+
+  @override
+  Future<WasmFeatures> features() => wasmFeaturesSupported();
 
   @override
   WasmMemory createSharedMemory(int pages, {int? maxPages}) {

@@ -18,3 +18,6 @@ WasmModule compileWasmModule(
 }) {
   throw UnimplementedError();
 }
+
+Future<WasmFeatures> wasmFeaturesDefault() => throw UnimplementedError();
+Future<WasmFeatures> wasmFeaturesSupported() => throw UnimplementedError();
