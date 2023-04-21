@@ -8,7 +8,7 @@ packages:
 command:
   bootstrap:
     hooks:
-      pre: dart compile exe "scripts/config_api.dart"
+      pre: dart compile exe "scripts/config_api.dart" && chmod +x "scripts/config_api.exe"
 
 scripts:
   analyze:
@@ -50,11 +50,8 @@ scripts:
     description: Run all Dart & Flutter tests in this project.
 
   test:dart:
-    run: melos exec -c 1 --fail-fast -- "dart test test -c source"
+    run: cd packages/wasmi && dart test test -c source
     description: Run Dart tests for a specific package in this project.
-    packageFilters:
-      flutter: false
-      dir-exists: test
 
   test:flutter:
     run: melos exec -c 1 --fail-fast -- "flutter test test"

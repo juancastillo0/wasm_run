@@ -36,6 +36,7 @@ pub enum WasmVal {
 
 impl WasmVal {
     #[cfg(not(feature = "wasmtime"))]
+    #[allow(clippy::wrong_self_convention)]
     pub fn to_value(self, ctx: impl AsContextMut) -> Value {
         match self {
             WasmVal::i32(i) => Value::I32(i),
@@ -118,7 +119,7 @@ impl From<&GlobalType> for GlobalTy {
 impl From<&wasmtime::GlobalType> for GlobalTy {
     fn from(value: &wasmtime::GlobalType) -> Self {
         GlobalTy {
-            content: value.content().clone().into(),
+            content: (*value.content()).into(),
             mutability: value.mutability().into(),
         }
     }
@@ -493,7 +494,7 @@ impl From<wasmtime::Extern> for ExternalValue {
 impl From<&ExternalValue> for Extern {
     fn from(e: &ExternalValue) -> Extern {
         match e {
-            ExternalValue::Func(f) => Extern::Func((*f).func_wasmi),
+            ExternalValue::Func(f) => Extern::Func(f.func_wasmi),
             ExternalValue::Global(g) => Extern::Global(**g),
             ExternalValue::Table(t) => Extern::Table(**t),
             ExternalValue::Memory(m) => Extern::Memory(**m),

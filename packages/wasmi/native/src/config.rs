@@ -206,12 +206,12 @@ impl TryFrom<WasiStackLimits> for wasmi::StackLimits {
     fn try_from(value: WasiStackLimits) -> std::result::Result<Self, Self::Error> {
         use crate::types::to_anyhow;
 
-        Ok(Self::new(
+        Self::new(
             value.initial_value_stack_height,
             value.maximum_value_stack_height,
             value.maximum_recursion_depth,
         )
-        .map_err(to_anyhow)?)
+        .map_err(to_anyhow)
     }
 }
 

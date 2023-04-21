@@ -432,6 +432,7 @@ impl WasmiModuleId {
     ) -> Result<SyncReturn<Vec<u8>>> {
         self.with_module(|store| {
             let mut buffer = Vec::with_capacity(bytes);
+            #[allow(clippy::uninit_vec)]
             unsafe { buffer.set_len(bytes) };
             memory
                 .read(store, offset, &mut buffer)
