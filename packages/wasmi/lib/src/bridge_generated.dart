@@ -48,6 +48,19 @@ abstract class WasmiDart {
 
   FlutterRustBridgeTaskConstMeta get kCompileWasmSyncConstMeta;
 
+  WasmFeatures defaultWasmFeatures({dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kDefaultWasmFeaturesConstMeta;
+
+  WasmFeatures supportedWasmFeatures({dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kSupportedWasmFeaturesConstMeta;
+
+  WasmFeatures wasmFeaturesForConfig(
+      {required ModuleConfig config, dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kWasmFeaturesForConfigConstMeta;
+
   List<ModuleExportValue> exportsMethodWasmiInstanceId(
       {required WasmiInstanceId that, dynamic hint});
 
@@ -470,7 +483,11 @@ class ModuleConfig {
 
   /// Is `true` if `wasmi` executions shall consume fuel.
   final bool? consumeFuel;
+
+  /// Wasmi config
   final ModuleConfigWasmi? wasmi;
+
+  /// Wasmtime config
   final ModuleConfigWasmtime? wasmtime;
 
   const ModuleConfig({
@@ -538,6 +555,7 @@ class ModuleConfigWasmtime {
   final int? staticMemoryGuardSize;
   final bool? parallelCompilation;
   final bool? generateAddressMap;
+  final bool? wasmRelaxedSimd;
 
   const ModuleConfigWasmtime({
     this.debugInfo,
@@ -554,6 +572,7 @@ class ModuleConfigWasmtime {
     this.staticMemoryGuardSize,
     this.parallelCompilation,
     this.generateAddressMap,
+    this.wasmRelaxedSimd,
   });
 }
 
@@ -724,6 +743,98 @@ class WasiStackLimits {
   });
 }
 
+/// https://docs.wasmtime.dev/stability-wasm-proposals-support.html
+class WasmFeatures {
+  /// The WebAssembly `mutable-global` proposal (enabled by default)
+  final bool mutableGlobal;
+
+  /// The WebAssembly `nontrapping-float-to-int-conversions` proposal (enabled by default)
+  final bool saturatingFloatToInt;
+
+  /// The WebAssembly `sign-extension-ops` proposal (enabled by default)
+  final bool signExtension;
+
+  /// The WebAssembly reference types proposal (enabled by default)
+  final bool referenceTypes;
+
+  /// The WebAssembly multi-value proposal (enabled by default)
+  final bool multiValue;
+
+  /// The WebAssembly bulk memory operations proposal (enabled by default)
+  final bool bulkMemory;
+
+  /// The WebAssembly SIMD proposal
+  final bool simd;
+
+  /// The WebAssembly Relaxed SIMD proposal
+  final bool relaxedSimd;
+
+  /// The WebAssembly threads proposal, shared memory and atomics
+  /// https://docs.rs/wasmtime/8.0.0/wasmtime/struct.Config.html#method.wasm_threads
+  final bool threads;
+
+  /// The WebAssembly tail-call proposal
+  final bool tailCall;
+
+  /// Whether or not floating-point instructions are enabled.
+  ///
+  /// This is enabled by default can be used to disallow floating-point
+  /// operators and types.
+  ///
+  /// This does not correspond to a WebAssembly proposal but is instead
+  /// intended for embeddings which have stricter-than-usual requirements
+  /// about execution. Floats in WebAssembly can have different NaN patterns
+  /// across hosts which can lead to host-dependent execution which some
+  /// runtimes may not desire.
+  final bool floats;
+
+  /// The WebAssembly multi memory proposal
+  final bool multiMemory;
+
+  /// The WebAssembly exception handling proposal
+  final bool exceptions;
+
+  /// The WebAssembly memory64 proposal
+  final bool memory64;
+
+  /// The WebAssembly extended_const proposal
+  final bool extendedConst;
+
+  /// The WebAssembly component model proposal
+  final bool componentModel;
+
+  /// The WebAssembly memory control proposal
+  final bool memoryControl;
+
+  /// The WebAssembly System Interface proposal
+  final WasmWasiFeatures? wasiFeatures;
+
+  /// The WebAssembly garbage collection (GC) proposal
+  final bool garbageCollection;
+
+  const WasmFeatures({
+    required this.mutableGlobal,
+    required this.saturatingFloatToInt,
+    required this.signExtension,
+    required this.referenceTypes,
+    required this.multiValue,
+    required this.bulkMemory,
+    required this.simd,
+    required this.relaxedSimd,
+    required this.threads,
+    required this.tailCall,
+    required this.floats,
+    required this.multiMemory,
+    required this.exceptions,
+    required this.memory64,
+    required this.extendedConst,
+    required this.componentModel,
+    required this.memoryControl,
+    this.wasiFeatures,
+    required this.garbageCollection,
+  });
+}
+
 @freezed
 class WasmVal with _$WasmVal {
   /// Value of 32-bit signed or unsigned integer.
@@ -760,6 +871,36 @@ class WasmVal with _$WasmVal {
   const factory WasmVal.externRef(
     int field0,
   ) = WasmVal_externRef;
+}
+
+/// https://docs.wasmtime.dev/stability-wasi-proposals-support.html
+class WasmWasiFeatures {
+  final bool io;
+  final bool filesystem;
+  final bool clocks;
+  final bool random;
+  final bool poll;
+
+  /// wasi-nn
+  final bool machineLearning;
+
+  /// wasi-crypto
+  final bool crypto;
+
+  /// WASM threads with ability to spawn
+  /// https://github.com/WebAssembly/wasi-threads
+  final bool threads;
+
+  const WasmWasiFeatures({
+    required this.io,
+    required this.filesystem,
+    required this.clocks,
+    required this.random,
+    required this.poll,
+    required this.machineLearning,
+    required this.crypto,
+    required this.threads,
+  });
 }
 
 class WasmiInstanceId {
@@ -1103,6 +1244,56 @@ class WasmiDartImpl implements WasmiDart {
       const FlutterRustBridgeTaskConstMeta(
         debugName: "compile_wasm_sync",
         argNames: ["moduleWasm", "config"],
+      );
+
+  WasmFeatures defaultWasmFeatures({dynamic hint}) {
+    return _platform.executeSync(FlutterRustBridgeSyncTask(
+      callFfi: () => _platform.inner.wire_default_wasm_features(),
+      parseSuccessData: _wire2api_wasm_features,
+      constMeta: kDefaultWasmFeaturesConstMeta,
+      argValues: [],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta get kDefaultWasmFeaturesConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "default_wasm_features",
+        argNames: [],
+      );
+
+  WasmFeatures supportedWasmFeatures({dynamic hint}) {
+    return _platform.executeSync(FlutterRustBridgeSyncTask(
+      callFfi: () => _platform.inner.wire_supported_wasm_features(),
+      parseSuccessData: _wire2api_wasm_features,
+      constMeta: kSupportedWasmFeaturesConstMeta,
+      argValues: [],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta get kSupportedWasmFeaturesConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "supported_wasm_features",
+        argNames: [],
+      );
+
+  WasmFeatures wasmFeaturesForConfig(
+      {required ModuleConfig config, dynamic hint}) {
+    var arg0 = _platform.api2wire_box_autoadd_module_config(config);
+    return _platform.executeSync(FlutterRustBridgeSyncTask(
+      callFfi: () => _platform.inner.wire_wasm_features_for_config(arg0),
+      parseSuccessData: _wire2api_wasm_features,
+      constMeta: kWasmFeaturesForConfigConstMeta,
+      argValues: [config],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta get kWasmFeaturesForConfigConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "wasm_features_for_config",
+        argNames: ["config"],
       );
 
   List<ModuleExportValue> exportsMethodWasmiInstanceId(
@@ -1849,6 +2040,10 @@ class WasmiDartImpl implements WasmiDart {
     return WFunc.fromRaw(raw[0], raw[1], this);
   }
 
+  bool _wire2api_bool(dynamic raw) {
+    return raw as bool;
+  }
+
   WFunc _wire2api_box_autoadd_WFunc(dynamic raw) {
     return _wire2api_WFunc(raw);
   }
@@ -1875,6 +2070,10 @@ class WasmiDartImpl implements WasmiDart {
 
   WasmVal _wire2api_box_autoadd_wasm_val(dynamic raw) {
     return _wire2api_wasm_val(raw);
+  }
+
+  WasmWasiFeatures _wire2api_box_autoadd_wasm_wasi_features(dynamic raw) {
+    return _wire2api_wasm_wasi_features(raw);
   }
 
   CompiledModule _wire2api_compiled_module(dynamic raw) {
@@ -2046,6 +2245,10 @@ class WasmiDartImpl implements WasmiDart {
     return raw == null ? null : _wire2api_box_autoadd_wasm_val(raw);
   }
 
+  WasmWasiFeatures? _wire2api_opt_box_autoadd_wasm_wasi_features(dynamic raw) {
+    return raw == null ? null : _wire2api_box_autoadd_wasm_wasi_features(raw);
+  }
+
   TableTy _wire2api_table_ty(dynamic raw) {
     final arr = raw as List<dynamic>;
     if (arr.length != 3)
@@ -2081,6 +2284,33 @@ class WasmiDartImpl implements WasmiDart {
     return ValueTy.values[raw];
   }
 
+  WasmFeatures _wire2api_wasm_features(dynamic raw) {
+    final arr = raw as List<dynamic>;
+    if (arr.length != 19)
+      throw Exception('unexpected arr length: expect 19 but see ${arr.length}');
+    return WasmFeatures(
+      mutableGlobal: _wire2api_bool(arr[0]),
+      saturatingFloatToInt: _wire2api_bool(arr[1]),
+      signExtension: _wire2api_bool(arr[2]),
+      referenceTypes: _wire2api_bool(arr[3]),
+      multiValue: _wire2api_bool(arr[4]),
+      bulkMemory: _wire2api_bool(arr[5]),
+      simd: _wire2api_bool(arr[6]),
+      relaxedSimd: _wire2api_bool(arr[7]),
+      threads: _wire2api_bool(arr[8]),
+      tailCall: _wire2api_bool(arr[9]),
+      floats: _wire2api_bool(arr[10]),
+      multiMemory: _wire2api_bool(arr[11]),
+      exceptions: _wire2api_bool(arr[12]),
+      memory64: _wire2api_bool(arr[13]),
+      extendedConst: _wire2api_bool(arr[14]),
+      componentModel: _wire2api_bool(arr[15]),
+      memoryControl: _wire2api_bool(arr[16]),
+      wasiFeatures: _wire2api_opt_box_autoadd_wasm_wasi_features(arr[17]),
+      garbageCollection: _wire2api_bool(arr[18]),
+    );
+  }
+
   WasmVal _wire2api_wasm_val(dynamic raw) {
     switch (raw[0]) {
       case 0:
@@ -2114,6 +2344,22 @@ class WasmiDartImpl implements WasmiDart {
       default:
         throw Exception("unreachable");
     }
+  }
+
+  WasmWasiFeatures _wire2api_wasm_wasi_features(dynamic raw) {
+    final arr = raw as List<dynamic>;
+    if (arr.length != 8)
+      throw Exception('unexpected arr length: expect 8 but see ${arr.length}');
+    return WasmWasiFeatures(
+      io: _wire2api_bool(arr[0]),
+      filesystem: _wire2api_bool(arr[1]),
+      clocks: _wire2api_bool(arr[2]),
+      random: _wire2api_bool(arr[3]),
+      poll: _wire2api_bool(arr[4]),
+      machineLearning: _wire2api_bool(arr[5]),
+      crypto: _wire2api_bool(arr[6]),
+      threads: _wire2api_bool(arr[7]),
+    );
   }
 
   WasmiInstanceId _wire2api_wasmi_instance_id(dynamic raw) {

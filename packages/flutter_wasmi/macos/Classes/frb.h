@@ -93,6 +93,7 @@ typedef struct wire_ModuleConfigWasmtime {
   uint64_t *static_memory_guard_size;
   bool *parallel_compilation;
   bool *generate_address_map;
+  bool *wasm_relaxed_simd;
 } wire_ModuleConfigWasmtime;
 
 typedef struct wire_ModuleConfig {
@@ -253,6 +254,12 @@ void wire_compile_wasm(int64_t port_,
 
 WireSyncReturn wire_compile_wasm_sync(struct wire_uint_8_list *module_wasm,
                                       struct wire_ModuleConfig *config);
+
+WireSyncReturn wire_default_wasm_features(void);
+
+WireSyncReturn wire_supported_wasm_features(void);
+
+WireSyncReturn wire_wasm_features_for_config(struct wire_ModuleConfig *config);
 
 WireSyncReturn wire_exports__method__WasmiInstanceId(struct wire_WasmiInstanceId *that);
 
@@ -468,6 +475,9 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) wire_parse_wat_format);
     dummy_var ^= ((int64_t) (void*) wire_compile_wasm);
     dummy_var ^= ((int64_t) (void*) wire_compile_wasm_sync);
+    dummy_var ^= ((int64_t) (void*) wire_default_wasm_features);
+    dummy_var ^= ((int64_t) (void*) wire_supported_wasm_features);
+    dummy_var ^= ((int64_t) (void*) wire_wasm_features_for_config);
     dummy_var ^= ((int64_t) (void*) wire_exports__method__WasmiInstanceId);
     dummy_var ^= ((int64_t) (void*) wire_instantiate_sync__method__WasmiModuleId);
     dummy_var ^= ((int64_t) (void*) wire_instantiate__method__WasmiModuleId);

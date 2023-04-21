@@ -511,6 +511,8 @@ class WasmiDartPlatform extends FlutterRustBridgeBase<WasmiDartWire> {
         api2wire_opt_box_autoadd_bool(apiObj.parallelCompilation);
     wireObj.generate_address_map =
         api2wire_opt_box_autoadd_bool(apiObj.generateAddressMap);
+    wireObj.wasm_relaxed_simd =
+        api2wire_opt_box_autoadd_bool(apiObj.wasmRelaxedSimd);
   }
 
   void _api_fill_to_wire_module_import(
@@ -830,6 +832,41 @@ class WasmiDartWire implements FlutterRustBridgeWireBase {
   late final _wire_compile_wasm_sync = _wire_compile_wasm_syncPtr.asFunction<
       WireSyncReturn Function(
           ffi.Pointer<wire_uint_8_list>, ffi.Pointer<wire_ModuleConfig>)>();
+
+  WireSyncReturn wire_default_wasm_features() {
+    return _wire_default_wasm_features();
+  }
+
+  late final _wire_default_wasm_featuresPtr =
+      _lookup<ffi.NativeFunction<WireSyncReturn Function()>>(
+          'wire_default_wasm_features');
+  late final _wire_default_wasm_features =
+      _wire_default_wasm_featuresPtr.asFunction<WireSyncReturn Function()>();
+
+  WireSyncReturn wire_supported_wasm_features() {
+    return _wire_supported_wasm_features();
+  }
+
+  late final _wire_supported_wasm_featuresPtr =
+      _lookup<ffi.NativeFunction<WireSyncReturn Function()>>(
+          'wire_supported_wasm_features');
+  late final _wire_supported_wasm_features =
+      _wire_supported_wasm_featuresPtr.asFunction<WireSyncReturn Function()>();
+
+  WireSyncReturn wire_wasm_features_for_config(
+    ffi.Pointer<wire_ModuleConfig> config,
+  ) {
+    return _wire_wasm_features_for_config(
+      config,
+    );
+  }
+
+  late final _wire_wasm_features_for_configPtr = _lookup<
+          ffi.NativeFunction<
+              WireSyncReturn Function(ffi.Pointer<wire_ModuleConfig>)>>(
+      'wire_wasm_features_for_config');
+  late final _wire_wasm_features_for_config = _wire_wasm_features_for_configPtr
+      .asFunction<WireSyncReturn Function(ffi.Pointer<wire_ModuleConfig>)>();
 
   WireSyncReturn wire_exports__method__WasmiInstanceId(
     ffi.Pointer<wire_WasmiInstanceId> that,
@@ -2195,6 +2232,8 @@ class wire_ModuleConfigWasmtime extends ffi.Struct {
   external ffi.Pointer<ffi.Bool> parallel_compilation;
 
   external ffi.Pointer<ffi.Bool> generate_address_map;
+
+  external ffi.Pointer<ffi.Bool> wasm_relaxed_simd;
 }
 
 class wire_ModuleConfig extends ffi.Struct {

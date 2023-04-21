@@ -244,7 +244,8 @@ class WasmiDartPlatform extends FlutterRustBridgeBase<WasmiDartWire>
       api2wire_opt_box_autoadd_bool(raw.staticMemoryForced),
       api2wire_opt_box_autoadd_u64(raw.staticMemoryGuardSize),
       api2wire_opt_box_autoadd_bool(raw.parallelCompilation),
-      api2wire_opt_box_autoadd_bool(raw.generateAddressMap)
+      api2wire_opt_box_autoadd_bool(raw.generateAddressMap),
+      api2wire_opt_box_autoadd_bool(raw.wasmRelaxedSimd)
     ];
   }
 
@@ -437,6 +438,13 @@ class WasmiDartWasmModule implements WasmModule {
   external dynamic /* List<dynamic> */ wire_compile_wasm_sync(
       Uint8List module_wasm, List<dynamic> config);
 
+  external dynamic /* List<dynamic> */ wire_default_wasm_features();
+
+  external dynamic /* List<dynamic> */ wire_supported_wasm_features();
+
+  external dynamic /* List<dynamic> */ wire_wasm_features_for_config(
+      List<dynamic> config);
+
   external dynamic /* List<dynamic> */ wire_exports__method__WasmiInstanceId(
       List<dynamic> that);
 
@@ -588,6 +596,16 @@ class WasmiDartWire extends FlutterRustBridgeWasmWireBase<WasmiDartWasmModule> {
   dynamic /* List<dynamic> */ wire_compile_wasm_sync(
           Uint8List module_wasm, List<dynamic> config) =>
       wasmModule.wire_compile_wasm_sync(module_wasm, config);
+
+  dynamic /* List<dynamic> */ wire_default_wasm_features() =>
+      wasmModule.wire_default_wasm_features();
+
+  dynamic /* List<dynamic> */ wire_supported_wasm_features() =>
+      wasmModule.wire_supported_wasm_features();
+
+  dynamic /* List<dynamic> */ wire_wasm_features_for_config(
+          List<dynamic> config) =>
+      wasmModule.wire_wasm_features_for_config(config);
 
   dynamic /* List<dynamic> */ wire_exports__method__WasmiInstanceId(
           List<dynamic> that) =>
