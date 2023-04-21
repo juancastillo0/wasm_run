@@ -27,8 +27,19 @@ jobs:
           components: rustfmt, clippy
       - run: cargo install cargo-wasi
 
+      - name: Test sh
+        run: bash scripts/test.sh
+      - name: Test sh2
+        run: sh scripts/test.sh
+      - name: Test sh3
+        run: scripts/test.sh
+        shell: bash
+      - name: Test sh4
+        run: source scripts/test.sh
+        shell: bash
+
       - name: Configure the Rust API to use the provided WASM runtime
-        run: scripts/config_api.exe --impl ${{ matrix.wasm_runtime }}
+        run: bash scripts/config_api.sh ${{ matrix.wasm_runtime }}
 
       # Rust
       - name: Check Rust format
