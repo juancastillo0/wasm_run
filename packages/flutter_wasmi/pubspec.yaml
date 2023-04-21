@@ -11,12 +11,13 @@ dependencies:
   flutter:
     sdk: flutter
   plugin_platform_interface: ^2.0.2
+  flutter_web_plugins:
+    sdk: flutter
   wasmi: 0.0.1
 
 dev_dependencies:
   ffi: ^2.0.1
   ffigen: ^6.1.2
-  flutter_lints: ^2.0.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -47,6 +48,9 @@ flutter:
         ffiPlugin: true
       windows:
         ffiPlugin: true
+      web:
+        pluginClass: FlutterWasmiWeb
+        fileName: flutter_wasmi_web.dart
 
   # To add assets to your plugin package, add an assets section, like this:
   # assets:
