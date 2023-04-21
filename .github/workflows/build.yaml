@@ -28,7 +28,7 @@ jobs:
       - run: cargo install cargo-wasi
 
       - name: Configure the Rust API to use the provided WASM runtime
-        run: dart run scripts/config_api.dart --impl ${{ matrix.wasm_runtime }}
+        run: scripts/config_api.exe --impl ${{ matrix.wasm_runtime }}
 
       # Rust
       - name: Check Rust format

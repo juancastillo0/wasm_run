@@ -33,7 +33,7 @@ win_build () {
 }
 
 # Setup api files for wasmtime
-dart run scripts/config_api.dart --impl wasmtime
+dart run "scripts/config_api.dart" --impl wasmtime
 
 # Build all the dynamic libraries
 LINUX_LIBNAME=libwasmi_dart.so

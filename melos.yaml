@@ -8,8 +8,7 @@ packages:
 command:
   bootstrap:
     hooks:
-      pre: echo `melos bootstrap command is running...`
-      post: chmod +x scripts/config_api.dart
+      pre: dart compile exe "scripts/config_api.dart"
 
 scripts:
   analyze:
