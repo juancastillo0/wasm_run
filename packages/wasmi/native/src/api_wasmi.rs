@@ -585,4 +585,16 @@ pub fn compile_wasm_sync(
     compile_wasm(module_wasm, config).map(SyncReturn)
 }
 
+pub fn default_wasm_features() -> SyncReturn<WasmFeatures> {
+    SyncReturn(WasmFeatures::default())
+}
+
+pub fn supported_wasm_features() -> SyncReturn<WasmFeatures> {
+    SyncReturn(WasmFeatures::supported())
+}
+
+pub fn wasm_features_for_config(config: ModuleConfig) -> SyncReturn<WasmFeatures> {
+    SyncReturn(config.wasm_features())
+}
+
 */

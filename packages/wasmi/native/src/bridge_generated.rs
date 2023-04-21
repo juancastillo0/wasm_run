@@ -27,6 +27,8 @@ use crate::config::PreopenedDir;
 use crate::config::StdIOKind;
 use crate::config::WasiConfig;
 use crate::config::WasiStackLimits;
+use crate::config::WasmFeatures;
+use crate::config::WasmWasiFeatures;
 use crate::types::ExternalType;
 use crate::types::ExternalValue;
 use crate::types::FuncTy;
@@ -121,6 +123,41 @@ fn wire_compile_wasm_sync_impl(
             let api_module_wasm = module_wasm.wire2api();
             let api_config = config.wire2api();
             compile_wasm_sync(api_module_wasm, api_config)
+        },
+    )
+}
+fn wire_default_wasm_features_impl() -> support::WireSyncReturn {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
+        WrapInfo {
+            debug_name: "default_wasm_features",
+            port: None,
+            mode: FfiCallMode::Sync,
+        },
+        move || Ok(default_wasm_features()),
+    )
+}
+fn wire_supported_wasm_features_impl() -> support::WireSyncReturn {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
+        WrapInfo {
+            debug_name: "supported_wasm_features",
+            port: None,
+            mode: FfiCallMode::Sync,
+        },
+        move || Ok(supported_wasm_features()),
+    )
+}
+fn wire_wasm_features_for_config_impl(
+    config: impl Wire2Api<ModuleConfig> + UnwindSafe,
+) -> support::WireSyncReturn {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
+        WrapInfo {
+            debug_name: "wasm_features_for_config",
+            port: None,
+            mode: FfiCallMode::Sync,
+        },
+        move || {
+            let api_config = config.wire2api();
+            Ok(wasm_features_for_config(api_config))
         },
     )
 }
@@ -903,6 +940,34 @@ impl support::IntoDart for ValueTy {
     }
 }
 impl support::IntoDartExceptPrimitive for ValueTy {}
+impl support::IntoDart for WasmFeatures {
+    fn into_dart(self) -> support::DartAbi {
+        vec![
+            self.mutable_global.into_dart(),
+            self.saturating_float_to_int.into_dart(),
+            self.sign_extension.into_dart(),
+            self.reference_types.into_dart(),
+            self.multi_value.into_dart(),
+            self.bulk_memory.into_dart(),
+            self.simd.into_dart(),
+            self.relaxed_simd.into_dart(),
+            self.threads.into_dart(),
+            self.tail_call.into_dart(),
+            self.floats.into_dart(),
+            self.multi_memory.into_dart(),
+            self.exceptions.into_dart(),
+            self.memory64.into_dart(),
+            self.extended_const.into_dart(),
+            self.component_model.into_dart(),
+            self.memory_control.into_dart(),
+            self.wasi_features.into_dart(),
+            self.garbage_collection.into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl support::IntoDartExceptPrimitive for WasmFeatures {}
+
 impl support::IntoDart for WasmVal {
     fn into_dart(self) -> support::DartAbi {
         match self {
@@ -918,6 +983,23 @@ impl support::IntoDart for WasmVal {
     }
 }
 impl support::IntoDartExceptPrimitive for WasmVal {}
+impl support::IntoDart for WasmWasiFeatures {
+    fn into_dart(self) -> support::DartAbi {
+        vec![
+            self.io.into_dart(),
+            self.filesystem.into_dart(),
+            self.clocks.into_dart(),
+            self.random.into_dart(),
+            self.poll.into_dart(),
+            self.machine_learning.into_dart(),
+            self.crypto.into_dart(),
+            self.threads.into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl support::IntoDartExceptPrimitive for WasmWasiFeatures {}
+
 impl support::IntoDart for WasmiInstanceId {
     fn into_dart(self) -> support::DartAbi {
         vec![self.0.into_dart()].into_dart()
@@ -970,6 +1052,21 @@ mod web {
         config: JsValue,
     ) -> support::WireSyncReturn {
         wire_compile_wasm_sync_impl(module_wasm, config)
+    }
+
+    #[wasm_bindgen]
+    pub fn wire_default_wasm_features() -> support::WireSyncReturn {
+        wire_default_wasm_features_impl()
+    }
+
+    #[wasm_bindgen]
+    pub fn wire_supported_wasm_features() -> support::WireSyncReturn {
+        wire_supported_wasm_features_impl()
+    }
+
+    #[wasm_bindgen]
+    pub fn wire_wasm_features_for_config(config: JsValue) -> support::WireSyncReturn {
+        wire_wasm_features_for_config_impl(config)
     }
 
     #[wasm_bindgen]
@@ -1464,8 +1561,8 @@ mod web {
             let self_ = self.dyn_into::<JsArray>().unwrap();
             assert_eq!(
                 self_.length(),
-                14,
-                "Expected 14 elements, got {}",
+                15,
+                "Expected 15 elements, got {}",
                 self_.length()
             );
             ModuleConfigWasmtime {
@@ -1483,6 +1580,7 @@ mod web {
                 static_memory_guard_size: self_.get(11).wire2api(),
                 parallel_compilation: self_.get(12).wire2api(),
                 generate_address_map: self_.get(13).wire2api(),
+                wasm_relaxed_simd: self_.get(14).wire2api(),
             }
         }
     }
@@ -1842,6 +1940,23 @@ mod io {
         config: *mut wire_ModuleConfig,
     ) -> support::WireSyncReturn {
         wire_compile_wasm_sync_impl(module_wasm, config)
+    }
+
+    #[no_mangle]
+    pub extern "C" fn wire_default_wasm_features() -> support::WireSyncReturn {
+        wire_default_wasm_features_impl()
+    }
+
+    #[no_mangle]
+    pub extern "C" fn wire_supported_wasm_features() -> support::WireSyncReturn {
+        wire_supported_wasm_features_impl()
+    }
+
+    #[no_mangle]
+    pub extern "C" fn wire_wasm_features_for_config(
+        config: *mut wire_ModuleConfig,
+    ) -> support::WireSyncReturn {
+        wire_wasm_features_for_config_impl(config)
     }
 
     #[no_mangle]
@@ -2628,6 +2743,7 @@ mod io {
                 static_memory_guard_size: self.static_memory_guard_size.wire2api(),
                 parallel_compilation: self.parallel_compilation.wire2api(),
                 generate_address_map: self.generate_address_map.wire2api(),
+                wasm_relaxed_simd: self.wasm_relaxed_simd.wire2api(),
             }
         }
     }
@@ -2885,6 +3001,7 @@ mod io {
         static_memory_guard_size: *mut u64,
         parallel_compilation: *mut bool,
         generate_address_map: *mut bool,
+        wasm_relaxed_simd: *mut bool,
     }
 
     #[repr(C)]
@@ -3244,6 +3361,7 @@ mod io {
                 static_memory_guard_size: core::ptr::null_mut(),
                 parallel_compilation: core::ptr::null_mut(),
                 generate_address_map: core::ptr::null_mut(),
+                wasm_relaxed_simd: core::ptr::null_mut(),
             }
         }
     }

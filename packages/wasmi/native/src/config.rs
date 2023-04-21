@@ -90,8 +90,9 @@ pub struct ModuleConfig {
     pub reference_types: Option<bool>,
     /// Is `true` if `wasmi` executions shall consume fuel.
     pub consume_fuel: Option<bool>,
-
+    /// Wasmi config
     pub wasmi: Option<ModuleConfigWasmi>,
+    /// Wasmtime config
     pub wasmtime: Option<ModuleConfigWasmtime>,
 }
 
@@ -129,6 +130,7 @@ impl From<ModuleConfig> for wasmtime::Config {
                 .map(|v| config.parallel_compilation(v));
             wtc.generate_address_map
                 .map(|v| config.generate_address_map(v));
+            wtc.wasm_relaxed_simd.map(|v| config.wasm_relaxed_simd(v));
         }
         config
     }
@@ -241,29 +243,279 @@ pub struct ModuleConfigWasmtime {
     pub static_memory_guard_size: Option<u64>,
     pub parallel_compilation: Option<bool>,
     pub generate_address_map: Option<bool>,
+
+    pub wasm_relaxed_simd: Option<bool>,
 }
 
-// impl ModuleConfig {
-//     /// Returns the [`WasmFeatures`] represented by the [`Config`].
-//     pub fn wasm_features(&self) -> WasmFeatures {
-//         WasmFeatures {
-//             multi_value: self.multi_value,
-//             mutable_global: self.mutable_global,
-//             saturating_float_to_int: self.saturating_float_to_int,
-//             sign_extension: self.sign_extension,
-//             bulk_memory: self.bulk_memory,
-//             reference_types: self.reference_types,
-//             tail_call: self.tail_call,
-//             extended_const: self.extended_const,
-//             floats: self.floats,
-//             component_model: false,
-//             simd: false,
-//             relaxed_simd: false,
-//             threads: false,
-//             multi_memory: false,
-//             exceptions: false,
-//             memory64: false,
-//             memory_control: false,
-//         }
-//     }
-// }
+/// https://docs.wasmtime.dev/stability-wasm-proposals-support.html
+pub struct WasmFeatures {
+    /// The WebAssembly `mutable-global` proposal (enabled by default)
+    pub mutable_global: bool,
+    /// The WebAssembly `nontrapping-float-to-int-conversions` proposal (enabled by default)
+    pub saturating_float_to_int: bool,
+    /// The WebAssembly `sign-extension-ops` proposal (enabled by default)
+    pub sign_extension: bool,
+    /// The WebAssembly reference types proposal (enabled by default)
+    pub reference_types: bool,
+    /// The WebAssembly multi-value proposal (enabled by default)
+    pub multi_value: bool,
+    /// The WebAssembly bulk memory operations proposal (enabled by default)
+    pub bulk_memory: bool,
+    /// The WebAssembly SIMD proposal
+    pub simd: bool,
+    /// The WebAssembly Relaxed SIMD proposal
+    pub relaxed_simd: bool,
+    /// The WebAssembly threads proposal, shared memory and atomics
+    /// https://docs.rs/wasmtime/8.0.0/wasmtime/struct.Config.html#method.wasm_threads
+    pub threads: bool,
+    /// The WebAssembly tail-call proposal
+    pub tail_call: bool,
+    /// Whether or not floating-point instructions are enabled.
+    ///
+    /// This is enabled by default can be used to disallow floating-point
+    /// operators and types.
+    ///
+    /// This does not correspond to a WebAssembly proposal but is instead
+    /// intended for embeddings which have stricter-than-usual requirements
+    /// about execution. Floats in WebAssembly can have different NaN patterns
+    /// across hosts which can lead to host-dependent execution which some
+    /// runtimes may not desire.
+    pub floats: bool,
+    /// The WebAssembly multi memory proposal
+    pub multi_memory: bool,
+    /// The WebAssembly exception handling proposal
+    pub exceptions: bool,
+    /// The WebAssembly memory64 proposal
+    pub memory64: bool,
+    /// The WebAssembly extended_const proposal
+    pub extended_const: bool,
+    /// The WebAssembly component model proposal
+    pub component_model: bool,
+    /// The WebAssembly memory control proposal
+    pub memory_control: bool,
+    /// The WebAssembly System Interface proposal
+    pub wasi_features: Option<WasmWasiFeatures>,
+    /// The WebAssembly garbage collection (GC) proposal
+    pub garbage_collection: bool,
+    // TODO:
+    //   final bool moduleLinking;
+}
+
+/// https://docs.wasmtime.dev/stability-wasi-proposals-support.html
+pub struct WasmWasiFeatures {
+    // TODO: pub snapshot_preview1: bool,
+    pub io: bool,
+    pub filesystem: bool,
+    pub clocks: bool,
+    pub random: bool,
+    pub poll: bool,
+    /// wasi-nn
+    pub machine_learning: bool,
+    /// wasi-crypto
+    pub crypto: bool,
+    /// WASM threads with ability to spawn
+    /// https://github.com/WebAssembly/wasi-threads
+    pub threads: bool,
+}
+
+impl WasmWasiFeatures {
+    /// Returns the default set of Wasi features.
+    pub fn default() -> WasmWasiFeatures {
+        WasmWasiFeatures {
+            io: true,
+            filesystem: true,
+            clocks: true,
+            random: true,
+            poll: true,
+            // TODO: implement through separate libraries
+            machine_learning: false,
+            crypto: false,
+            // Unsupported
+            threads: false,
+        }
+    }
+
+    pub fn supported() -> WasmWasiFeatures {
+        WasmWasiFeatures::default()
+    }
+}
+
+impl WasmFeatures {
+    /// Returns the default set of Wasm features.
+    pub fn default() -> WasmFeatures {
+        #[cfg(feature = "wasmtime")]
+        {
+            return WasmFeatures {
+                multi_value: true,
+                bulk_memory: true,
+                reference_types: true,
+                mutable_global: true,
+                saturating_float_to_int: true,
+                sign_extension: true,
+                extended_const: true,
+                floats: true,
+                simd: true,
+                relaxed_simd: false,
+                threads: false,      // Default false
+                multi_memory: false, // Default false
+                memory64: false,     // Default false
+                // Unsupported
+                component_model: false, // Feature
+                garbage_collection: false,
+                tail_call: false,
+                exceptions: false,
+                memory_control: false,
+                wasi_features: Some(WasmWasiFeatures::default()),
+            };
+        }
+        // TODO: use features crate
+        #[allow(unreachable_code)]
+        WasmFeatures {
+            multi_value: true,
+            bulk_memory: true,
+            reference_types: true,
+            mutable_global: true,
+            saturating_float_to_int: true,
+            sign_extension: true,
+            tail_call: false,      // Default false
+            extended_const: false, // Default false
+            floats: true,
+            // Unsupported
+            component_model: false,
+            garbage_collection: false,
+            simd: false,
+            relaxed_simd: false,
+            threads: false,
+            multi_memory: false,
+            exceptions: false,
+            memory64: false,
+            memory_control: false,
+            wasi_features: Some(WasmWasiFeatures::default()),
+        }
+    }
+
+    pub fn supported() -> WasmFeatures {
+        #[cfg(feature = "wasmtime")]
+        {
+            return WasmFeatures {
+                multi_value: true,
+                bulk_memory: true,
+                reference_types: true,
+                mutable_global: true,
+                saturating_float_to_int: true,
+                sign_extension: true,
+                extended_const: true,
+                floats: true,
+                simd: true,
+                relaxed_simd: true,
+                threads: true,
+                multi_memory: true,
+                memory64: true,
+                // Unsupported
+                component_model: false, // Feature
+                garbage_collection: false,
+                exceptions: false,
+                tail_call: false,
+                memory_control: false,
+                wasi_features: Some(WasmWasiFeatures::supported()),
+            };
+        }
+        // TODO: use features crate
+        #[allow(unreachable_code)]
+        WasmFeatures {
+            multi_value: true,
+            bulk_memory: true,
+            reference_types: true,
+            mutable_global: true,
+            saturating_float_to_int: true,
+            sign_extension: true,
+            tail_call: true,
+            extended_const: true,
+            floats: true,
+            // Unsupported
+            component_model: false,
+            garbage_collection: false,
+            simd: false,
+            relaxed_simd: false,
+            threads: false,
+            multi_memory: false,
+            exceptions: false,
+            memory64: false,
+            memory_control: false,
+            wasi_features: Some(WasmWasiFeatures::supported()),
+        }
+    }
+}
+
+impl ModuleConfig {
+    /// Returns the [`WasmFeatures`] represented by the [`ModuleConfig`].
+    // TODO: use features crate
+    #[allow(unreachable_code)]
+    pub fn wasm_features(&self) -> WasmFeatures {
+        #[cfg(feature = "wasmtime")]
+        {
+            let w = self.wasmtime.as_ref();
+            let def = WasmFeatures::default();
+            return WasmFeatures {
+                multi_value: self.multi_value.unwrap_or(def.multi_value),
+                bulk_memory: self.bulk_memory.unwrap_or(def.bulk_memory),
+                reference_types: self.reference_types.unwrap_or(def.reference_types),
+                // True by default, can't be configured
+                mutable_global: true,
+                saturating_float_to_int: true,
+                sign_extension: true,
+                extended_const: true,
+                floats: true,
+
+                simd: w.and_then(|w| w.wasm_simd).unwrap_or(def.simd),
+                threads: w.and_then(|w| w.wasm_threads).unwrap_or(def.threads),
+                multi_memory: w
+                    .and_then(|w| w.wasm_multi_memory)
+                    .unwrap_or(def.multi_memory),
+                memory64: w.and_then(|w| w.wasm_memory64).unwrap_or(def.memory64),
+                relaxed_simd: w
+                    .and_then(|w| w.wasm_relaxed_simd)
+                    .unwrap_or(def.relaxed_simd),
+                // Unsupported
+                component_model: false, // Feature
+                garbage_collection: false,
+                tail_call: false,
+                exceptions: false,
+                memory_control: false,
+                wasi_features: Some(WasmWasiFeatures::default()),
+            };
+        }
+        let w = self.wasmi.as_ref();
+        let def = WasmFeatures::default();
+        WasmFeatures {
+            multi_value: self.multi_value.unwrap_or(def.multi_value),
+            bulk_memory: self.bulk_memory.unwrap_or(def.bulk_memory),
+            reference_types: self.reference_types.unwrap_or(def.reference_types),
+            mutable_global: w
+                .and_then(|w| w.mutable_global)
+                .unwrap_or(def.mutable_global),
+            saturating_float_to_int: w
+                .and_then(|w| w.saturating_float_to_int)
+                .unwrap_or(def.saturating_float_to_int),
+            sign_extension: w
+                .and_then(|w| w.sign_extension)
+                .unwrap_or(def.sign_extension),
+            tail_call: w.and_then(|w| w.tail_call).unwrap_or(def.tail_call),
+            extended_const: w
+                .and_then(|w| w.extended_const)
+                .unwrap_or(def.extended_const),
+            floats: w.and_then(|w| w.floats).unwrap_or(def.floats),
+            // Unsupported
+            garbage_collection: false,
+            component_model: false,
+            simd: false,
+            relaxed_simd: false,
+            threads: false,
+            multi_memory: false,
+            exceptions: false,
+            memory64: false,
+            memory_control: false,
+            wasi_features: Some(WasmWasiFeatures::default()),
+        }
+    }
+}

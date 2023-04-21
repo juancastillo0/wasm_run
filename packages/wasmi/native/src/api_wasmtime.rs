@@ -72,7 +72,7 @@ pub struct WasmiInstanceId(pub u32);
 
 pub fn create_shared_memory(_module: CompiledModule) -> Result<SyncReturn<RustOpaque<Memory>>> {
     Err(anyhow::Error::msg(
-        "shared_memory is not supported for wasmi",
+        "shared_memory is not implemented for wasmtime at this moment",
     ))
 }
 
@@ -594,6 +594,18 @@ pub fn compile_wasm_sync(
     config: ModuleConfig,
 ) -> Result<SyncReturn<CompiledModule>> {
     compile_wasm(module_wasm, config).map(SyncReturn)
+}
+
+pub fn default_wasm_features() -> SyncReturn<WasmFeatures> {
+    SyncReturn(WasmFeatures::default())
+}
+
+pub fn supported_wasm_features() -> SyncReturn<WasmFeatures> {
+    SyncReturn(WasmFeatures::supported())
+}
+
+pub fn wasm_features_for_config(config: ModuleConfig) -> SyncReturn<WasmFeatures> {
+    SyncReturn(config.wasm_features())
 }
 
 */
