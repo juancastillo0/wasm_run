@@ -17,7 +17,7 @@ bool isVoidReturn(dynamic value) {
   }
 }
 
-Future<WasmFeatures> _calculateFeatures() async {
+Future<WasmRuntimeFeatures> _calculateFeatures() async {
   final wfd = wasmFeatureDetect;
   final features = await Future.wait([
     js_util.promiseToFuture<bool>(wfd.bigInt()), // 0 TODO: left
@@ -40,7 +40,7 @@ Future<WasmFeatures> _calculateFeatures() async {
     js_util.promiseToFuture<bool>(wfd.threads()), // 16
   ]);
 
-  return WasmFeatures(
+  final wasmFeatures = WasmFeatures(
     mutableGlobal: features[8],
     saturatingFloatToInt: features[11],
     signExtension: features[12],
@@ -63,19 +63,23 @@ Future<WasmFeatures> _calculateFeatures() async {
     wasiFeatures: null,
     // TODO: moduleLinking
   );
+
+  return WasmRuntimeFeatures(
+    name: 'browser',
+    version: '0.0.1',
+    isBrowser: true,
+    supportedFeatures: wasmFeatures,
+    defaultFeatures: wasmFeatures,
+  );
 }
 
-Future<WasmFeatures>? _features;
-Future<WasmFeatures> wasmFeaturesSupported() {
+Future<WasmRuntimeFeatures>? _features;
+Future<WasmRuntimeFeatures> wasmRuntimeFeatures() {
   return _features ??= _calculateFeatures();
 }
 
-Future<WasmFeatures> wasmFeaturesDefault() => wasmFeaturesSupported();
-
 Future<WasmModule> compileAsyncWasmModule(
-  Uint8List bytes,
-  // TODO: use ModuleConfig
-  {
+  Uint8List bytes, {
   ModuleConfig? config,
 }) async {
   return _WasmModule.compileAsync(bytes);
@@ -99,7 +103,10 @@ class _WasmModule extends WasmModule {
   }
 
   @override
-  Future<WasmFeatures> features() => wasmFeaturesSupported();
+  Future<WasmFeatures> features() async {
+    final f = await wasmRuntimeFeatures();
+    return f.defaultFeatures;
+  }
 
   @override
   WasmMemory createSharedMemory(int pages, {int? maxPages}) {
@@ -228,13 +235,7 @@ class _Builder extends WasmInstanceBuilder {
   }
 
   @override
-  WasmInstanceBuilder enableWasi({
-    bool captureStdout = false,
-    bool captureStderr = false,
-  }) {
-    // TODO: implement enableWasi
-    return this;
-  }
+  WasmInstanceFuel? fuel() => null;
 
   @override
   WasmInstance build() {
@@ -299,6 +300,9 @@ class _Instance extends WasmInstance {
       ),
     );
   }
+
+  @override
+  WasmInstanceFuel? fuel() => null;
 
   @override
   // TODO: implement stderr

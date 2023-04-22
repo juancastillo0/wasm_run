@@ -12,6 +12,7 @@ export '../bridge_generated.dart'
         // ModuleConfigWasmi,
         // WasiStackLimits,
         // ModuleConfigWasmtime,
+        WasmRuntimeFeatures,
         WasmFeatures,
         U8Array16,
         ExternalType,
@@ -80,11 +81,8 @@ abstract class WasmInstanceBuilder {
     return this;
   }
 
-  /// Whether to enable Web Assembly System Interface (WASI)
-  WasmInstanceBuilder enableWasi({
-    bool captureStdout = false,
-    bool captureStderr = false,
-  });
+  /// Returns the fuel that can be used to limit the execution time of the instance.
+  WasmInstanceFuel? fuel();
 
   /// Builds the instance synchronously.
   /// May throw if some required imports where not supplied.
@@ -112,6 +110,9 @@ abstract class WasmInstance {
     final export = exports[name];
     return export is T ? export : null;
   }
+
+  /// Returns the fuel that can be used to limit the execution time of the instance.
+  WasmInstanceFuel? fuel();
 
   /// The exports of this instance.
   Map<String, WasmExternal> get exports;
@@ -403,6 +404,18 @@ class WasmValue {
   int get hashCode => Object.hash(runtimeType, value, type);
 }
 
+abstract class WasmInstanceFuel {
+  /// Adds [delta] quantity of fuel to the remaining fuel.
+  void addFuel(int delta);
+
+  /// Returns the fuel consumed so far.
+  int fuelConsumed();
+
+  /// Consumes [delta] quantity of fuel from the remaining fuel.
+  /// Returns the remaining fuel after the operation.
+  int consumeFuel(int delta);
+}
+
 /// [WasmModule] import entry.
 class WasmModuleImport {
   /// Name of imports module, not to confuse with [Module].
@@ -417,6 +430,7 @@ class WasmModuleImport {
   /// Type of import entry.
   final ExternalType? type;
 
+  /// [WasmModule] import entry.
   const WasmModuleImport(
     this.module,
     this.name,
@@ -439,6 +453,7 @@ class WasmModuleExport {
   /// Type of export entry.
   final ExternalType? type;
 
+  /// [WasmModule] exports entry.
   const WasmModuleExport(
     this.name,
     this.kind, {

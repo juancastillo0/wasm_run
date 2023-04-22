@@ -12,10 +12,8 @@ final _noReturnPlaceholder = Object();
 
 bool isVoidReturn(dynamic value) => identical(value, _noReturnPlaceholder);
 
-Future<WasmFeatures> wasmFeaturesDefault() async =>
-    defaultInstance().defaultWasmFeatures();
-Future<WasmFeatures> wasmFeaturesSupported() async =>
-    defaultInstance().supportedWasmFeatures();
+Future<WasmRuntimeFeatures> wasmRuntimeFeatures() async =>
+    defaultInstance().wasmRuntimeFeatures();
 
 Future<WasmModule> compileAsyncWasmModule(
   Uint8List bytes, {
@@ -351,8 +349,12 @@ class _Builder extends WasmInstanceBuilder {
   final _WasmModule compiledModule;
   final WasmiModuleId module;
   final WasiConfig? wasiConfig;
+  final _WasmInstanceFuel? _fuel;
 
-  _Builder(this.compiledModule, this.module, this.wasiConfig);
+  _Builder(this.compiledModule, this.module, this.wasiConfig)
+      : _fuel = compiledModule.config.consumeFuel == true
+            ? _WasmInstanceFuel(module)
+            : null;
 
   @override
   WasmGlobal createGlobal(WasmValue value, {required bool mutable}) {
@@ -461,13 +463,7 @@ class _Builder extends WasmInstanceBuilder {
   }
 
   @override
-  WasmInstanceBuilder enableWasi({
-    bool captureStdout = false,
-    bool captureStderr = false,
-  }) {
-    // TODO: implement enableWasi
-    throw UnimplementedError();
-  }
+  WasmInstanceFuel? fuel() => _fuel;
 
   @override
   WasmInstance build() {
@@ -479,6 +475,27 @@ class _Builder extends WasmInstanceBuilder {
   Future<WasmInstance> buildAsync() async {
     final instance = await module.instantiate();
     return _Instance(instance, this);
+  }
+}
+
+class _WasmInstanceFuel extends WasmInstanceFuel {
+  final WasmiModuleId module;
+
+  _WasmInstanceFuel(this.module);
+
+  @override
+  void addFuel(int delta) {
+    return module.addFuel(delta: delta);
+  }
+
+  @override
+  int consumeFuel(int delta) {
+    return module.consumeFuel(delta: delta);
+  }
+
+  @override
+  int fuelConsumed() {
+    return module.fuelConsumed()!;
   }
 }
 
@@ -515,6 +532,9 @@ class _Instance extends WasmInstance {
       _stdout!.first;
     }
   }
+
+  @override
+  WasmInstanceFuel? fuel() => builder.fuel();
 
   @override
   Stream<Uint8List> get stderr {

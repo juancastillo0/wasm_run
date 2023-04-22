@@ -42,8 +42,9 @@ Future<Uint8List> getBinary({
 
 void testAll() {
   test('WasmFeature', () async {
-    final defaultFeatures = await wasmFeaturesDefault();
-    final supportedFeatures = await wasmFeaturesSupported();
+    final runtime = await wasmRuntimeFeatures();
+    final defaultFeatures = runtime.defaultFeatures;
+    final supportedFeatures = runtime.supportedFeatures;
 
     expect(defaultFeatures.wasiFeatures, isLibrary ? isNotNull : isNull);
     expect(supportedFeatures.wasiFeatures, isLibrary ? isNotNull : isNull);
@@ -79,6 +80,23 @@ void testAll() {
     expect(supportedFeatures.exceptions, !isLibrary);
     if (!isLibrary) {
       expect(defaultFeatures, supportedFeatures);
+    }
+    expect(runtime.name, isIn(['wasmi', 'wasmtime', 'browser']));
+    switch (runtime.name) {
+      case 'wasmi':
+        expect(runtime.version, '0.29.0');
+        expect(runtime.isBrowser, false);
+        break;
+      case 'wasmtime':
+        expect(runtime.version, '8.0.0');
+        expect(runtime.isBrowser, false);
+        break;
+      case 'browser':
+        expect(runtime.version, '0.0.1');
+        expect(runtime.isBrowser, true);
+        break;
+      default:
+        throw StateError('Unknown runtime: ${runtime.name}');
     }
   });
 
@@ -810,6 +828,95 @@ void testAll() {
     final l = ['2'];
     table.set(1, WasmValue.externRef(l));
     expect(identical(l, table.get(1)), true);
+  });
+
+  /// https://github.com/bytecodealliance/wasmtime/blob/main/examples/fuel.rs
+  test('fueling instance execution limit', () async {
+    final binary0 = await getBinary(
+      wat: r'''
+(module
+  (func $fibonacci (param $n i32) (result i32)
+    (if
+      (i32.lt_s (local.get $n) (i32.const 2))
+      (return (local.get $n))
+    )
+    (i32.add
+      (call $fibonacci (i32.sub (local.get $n) (i32.const 1)))
+      (call $fibonacci (i32.sub (local.get $n) (i32.const 2)))
+    )
+  )
+  (export "fibonacci" (func $fibonacci))
+)
+''',
+      base64Binary:
+          'AGFzbQEAAAABBgFgAX8BfwMCAQAHDQEJZmlib25hY2NpAAAKHgEcACAAQQJIBEAgAA8LIABBAWsQACAAQQJrEABqCwAbBG5hbWUBDAEACWZpYm9uYWNjaQIGAQABAAFu',
+    );
+
+    final module = compileWasmModule(
+      binary0,
+      config: ModuleConfig(consumeFuel: true),
+    );
+    final builder = module.builder();
+
+    final runtime = await wasmRuntimeFeatures();
+
+    final WasmInstanceFuel? fuel = builder.fuel();
+    if (!isLibrary) {
+      expect(fuel, isNull);
+      return;
+    }
+    expect(fuel, isNotNull);
+    expect(fuel!.fuelConsumed(), 0);
+    expect(fuel.consumeFuel(0), 0);
+    fuel.addFuel(1);
+    expect(fuel.consumeFuel(0), 1);
+    expect(fuel.fuelConsumed(), 0);
+    expect(fuel.consumeFuel(1), 0);
+    expect(fuel.fuelConsumed(), 1);
+
+    final instance = await builder.buildAsync();
+    expect(fuel, instance.fuel());
+
+    fuel.addFuel(10000);
+
+    final fibonacci = instance.lookupFunction('fibonacci')!;
+
+    final List<int> values = [];
+    final List<int> fuelConsumed = [];
+    int n = 0;
+    while (true) {
+      try {
+        fuelConsumed.add(fuel.fuelConsumed());
+        values.add(fibonacci.inner(n) as int);
+        n++;
+      } catch (e) {
+        expect(e.toString(), contains('fuel'));
+        break;
+      }
+    }
+    final isWasmtime = runtime.name == 'wasmtime';
+    expect(values, [
+      0,
+      1,
+      1,
+      2,
+      3,
+      5,
+      8,
+      13,
+      21,
+      34,
+      55,
+      // TODO: try to make fueling similar between runtimes
+      if (isWasmtime) 89
+    ]);
+
+    final runtimeFuel = (isWasmtime)
+        ? [1, 7, 13, 39, 85, 171, 317, 563, 969, 1635, 2721, 4487, 7353]
+        : [1, 19, 37, 88, 172, 322, 571, 985, 1663, 2770, 4570, 7492];
+    expect(fuelConsumed, runtimeFuel);
+    fuel.addFuel(100);
+    expect(fuel.consumeFuel(0), isWasmtime ? 94 : 104);
   });
 }
 
