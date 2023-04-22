@@ -66,18 +66,18 @@ jobs:
         name: Run tests with coverage
         if: always() && steps.dart_test.outcome == 'success' && matrix.wasm_runtime == 'wasmtime'
         run: melos run test:coverage
+      - name: Upload coverage to Coveralls
+        uses: coverallsapp/github-action@v2
+        if: always() && steps.coverage.outcome == 'success'
+        with:
+          path-to-lcov: "packages/wasmi/coverage/lcov.info"
+          base-path: "packages/wasmi"
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
         if: always() && steps.coverage.outcome == 'success'
         with:
           fail_ci_if_error: true
-          files: "packages/wasmi/coverage/lcov.info"
-      - name: Upload coverage to Coveralls
-        uses: coverallsapp/github-action@v2
-        if: always() && steps.coverage.outcome == 'success'
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          path-to-lcov: "packages/wasmi/coverage/lcov.info"
+          verbose: true
 
       # Web Browser tests
       - run: |
@@ -128,7 +128,7 @@ jobs:
           toolchain: stable
 
       - name: Build the XCFramework
-        run: bash scripts/build-apple.sh dev
+        run: melos run build:apple -- dev
       - name: Copy the XCFramework to the needed location
         run: |
           CURR_VERSION=wasmi-v`awk '/^version: /{print $2}' packages/wasmi/pubspec.yaml`
@@ -198,7 +198,7 @@ jobs:
           toolchain: stable
 
       - name: Build the binaries
-        run: bash scripts/build-other.sh dev
+        run: melos run build:other -- dev
       - name: Copy the binaries to the needed location
         shell: bash
         run: |
@@ -288,7 +288,7 @@ jobs:
           java-version: "11.x"
 
       - name: Build the binaries
-        run: bash scripts/build-android.sh dev
+        run: melos run build:android -- dev
       - name: Copy the binaries to the needed location
         run: |
           CURR_VERSION=wasmi-v`awk '/^version: /{print $2}' packages/wasmi/pubspec.yaml`

@@ -1,5 +1,8 @@
 #!/bin/bash
 
+SCRIPT_DIR="$(cd -P -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
+cd $SCRIPT_DIR/.. # Go to the root of the project
+
 IMPL=${1:-wasmtime} # wasmtime or wasmi
 if [[ $IMPL != "wasmtime" && $IMPL != "wasmi" ]]; then
     echo "Invalid WASM runtime: $IMPL"

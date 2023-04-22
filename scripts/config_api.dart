@@ -32,8 +32,8 @@ void main(List<String> args) async {
 
   final cargoTomlFile = File(join([prefix, 'Cargo.toml']));
   final cargoTomlSourceFile = impl == 'wasmi'
-      ? File(join([prefix, 'WasmiCargo.toml']))
-      : File(join([prefix, 'WasmtimeCargo.toml']));
+      ? File(join([prefix, 'Cargo.wasmi.toml']))
+      : File(join([prefix, 'Cargo.wasmtime.toml']));
 
   final apiFile = File(join([prefix, 'src', 'api.rs']));
   final apiSourceFile = impl == 'wasmi'
@@ -41,12 +41,7 @@ void main(List<String> args) async {
       : File(join([prefix, 'src', 'api_wasmtime.rs']));
 
   final content = apiSourceFile.readAsStringSync();
-  apiFile.writeAsStringSync(
-    content.substring(
-      content.indexOf('/**\n') + 4,
-      content.lastIndexOf('\n*/'),
-    ),
-  );
+  apiFile.writeAsStringSync(content);
 
   final cargoTomlContent = cargoTomlSourceFile.readAsStringSync();
   cargoTomlFile.writeAsStringSync(cargoTomlContent);
