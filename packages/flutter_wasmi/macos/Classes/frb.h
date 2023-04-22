@@ -82,10 +82,11 @@ typedef struct wire_ModuleConfigWasmtime {
   bool *debug_info;
   bool *wasm_backtrace;
   bool *native_unwind_info;
-  bool *epoch_interruption;
   uintptr_t *max_wasm_stack;
   bool *wasm_threads;
   bool *wasm_simd;
+  bool *wasm_relaxed_simd;
+  bool *relaxed_simd_deterministic;
   bool *wasm_multi_memory;
   bool *wasm_memory64;
   uint64_t *static_memory_maximum_size;
@@ -93,7 +94,6 @@ typedef struct wire_ModuleConfigWasmtime {
   uint64_t *static_memory_guard_size;
   bool *parallel_compilation;
   bool *generate_address_map;
-  bool *wasm_relaxed_simd;
 } wire_ModuleConfigWasmtime;
 
 typedef struct wire_ModuleConfig {
@@ -193,7 +193,7 @@ typedef struct wire_WasmVal_funcRef {
 } wire_WasmVal_funcRef;
 
 typedef struct wire_WasmVal_externRef {
-  uint32_t field0;
+  uint32_t *field0;
 } wire_WasmVal_externRef;
 
 typedef union WasmValKind {
@@ -255,11 +255,9 @@ void wire_compile_wasm(int64_t port_,
 WireSyncReturn wire_compile_wasm_sync(struct wire_uint_8_list *module_wasm,
                                       struct wire_ModuleConfig *config);
 
-WireSyncReturn wire_default_wasm_features(void);
-
-WireSyncReturn wire_supported_wasm_features(void);
-
 WireSyncReturn wire_wasm_features_for_config(struct wire_ModuleConfig *config);
+
+WireSyncReturn wire_wasm_runtime_features(void);
 
 WireSyncReturn wire_exports__method__WasmiInstanceId(struct wire_WasmiInstanceId *that);
 
@@ -363,6 +361,14 @@ WireSyncReturn wire_fill_table__method__WasmiModuleId(struct wire_WasmiModuleId 
                                                       uint32_t index,
                                                       struct wire_WasmVal *value,
                                                       uint32_t len);
+
+WireSyncReturn wire_add_fuel__method__WasmiModuleId(struct wire_WasmiModuleId *that,
+                                                    uint64_t delta);
+
+WireSyncReturn wire_fuel_consumed__method__WasmiModuleId(struct wire_WasmiModuleId *that);
+
+WireSyncReturn wire_consume_fuel__method__WasmiModuleId(struct wire_WasmiModuleId *that,
+                                                        uint64_t delta);
 
 WireSyncReturn wire_get_module_imports__method__CompiledModule(struct wire_CompiledModule *that);
 
@@ -475,9 +481,8 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) wire_parse_wat_format);
     dummy_var ^= ((int64_t) (void*) wire_compile_wasm);
     dummy_var ^= ((int64_t) (void*) wire_compile_wasm_sync);
-    dummy_var ^= ((int64_t) (void*) wire_default_wasm_features);
-    dummy_var ^= ((int64_t) (void*) wire_supported_wasm_features);
     dummy_var ^= ((int64_t) (void*) wire_wasm_features_for_config);
+    dummy_var ^= ((int64_t) (void*) wire_wasm_runtime_features);
     dummy_var ^= ((int64_t) (void*) wire_exports__method__WasmiInstanceId);
     dummy_var ^= ((int64_t) (void*) wire_instantiate_sync__method__WasmiModuleId);
     dummy_var ^= ((int64_t) (void*) wire_instantiate__method__WasmiModuleId);
@@ -506,6 +511,9 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) wire_get_table__method__WasmiModuleId);
     dummy_var ^= ((int64_t) (void*) wire_set_table__method__WasmiModuleId);
     dummy_var ^= ((int64_t) (void*) wire_fill_table__method__WasmiModuleId);
+    dummy_var ^= ((int64_t) (void*) wire_add_fuel__method__WasmiModuleId);
+    dummy_var ^= ((int64_t) (void*) wire_fuel_consumed__method__WasmiModuleId);
+    dummy_var ^= ((int64_t) (void*) wire_consume_fuel__method__WasmiModuleId);
     dummy_var ^= ((int64_t) (void*) wire_get_module_imports__method__CompiledModule);
     dummy_var ^= ((int64_t) (void*) wire_get_module_exports__method__CompiledModule);
     dummy_var ^= ((int64_t) (void*) new_ArcStdSyncMutexModule);

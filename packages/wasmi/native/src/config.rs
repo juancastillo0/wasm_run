@@ -80,6 +80,38 @@ pub struct PreopenedDir {
     pub host_path: String,
 }
 
+pub struct WasmRuntimeFeatures {
+    pub name: String,
+    pub version: String,
+    pub is_browser: bool,
+    pub supported_features: WasmFeatures,
+    pub default_features: WasmFeatures,
+}
+
+impl Default for WasmRuntimeFeatures {
+    #[cfg(not(feature = "wasmtime"))]
+    fn default() -> Self {
+        WasmRuntimeFeatures {
+            name: "wasmi".to_string(),
+            version: "0.29.0".to_string(),
+            is_browser: false,
+            supported_features: WasmFeatures::supported(),
+            default_features: WasmFeatures::default(),
+        }
+    }
+
+    #[cfg(feature = "wasmtime")]
+    fn default() -> Self {
+        WasmRuntimeFeatures {
+            name: "wasmtime".to_string(),
+            version: "8.0.0".to_string(),
+            is_browser: false,
+            supported_features: WasmFeatures::supported(),
+            default_features: WasmFeatures::default(),
+        }
+    }
+}
+
 #[derive(Debug)]
 pub struct ModuleConfig {
     /// Is `true` if the [`multi-value`] Wasm proposal is enabled.
@@ -115,7 +147,8 @@ impl From<ModuleConfig> for wasmtime::Config {
             wtc.max_wasm_stack.map(|v| config.max_wasm_stack(v));
             wtc.wasm_simd.map(|v| config.wasm_simd(v));
             wtc.wasm_relaxed_simd.map(|v| config.wasm_relaxed_simd(v));
-            wtc.relaxed_simd_deterministic.map(|v| config.relaxed_simd_deterministic(v));
+            wtc.relaxed_simd_deterministic
+                .map(|v| config.relaxed_simd_deterministic(v));
             wtc.wasm_threads.map(|v| config.wasm_threads(v));
             wtc.wasm_multi_memory.map(|v| config.wasm_multi_memory(v));
             // TODO: wtc.tail_call.map(|v| config.wasm_tail_call(v));
@@ -232,10 +265,10 @@ pub struct ModuleConfigWasmtime {
     //
     pub wasm_threads: Option<bool>, // false
     pub wasm_simd: Option<bool>,
-    pub wasm_relaxed_simd: Option<bool>, // false
+    pub wasm_relaxed_simd: Option<bool>,          // false
     pub relaxed_simd_deterministic: Option<bool>, // false
-    pub wasm_multi_memory: Option<bool>, // false
-    pub wasm_memory64: Option<bool>,     // false
+    pub wasm_multi_memory: Option<bool>,          // false
+    pub wasm_memory64: Option<bool>,              // false
     // TODO: pub wasm_component_model: Option<bool>, // false component-model feature
     //
     // pub strategy: Strategy,

@@ -234,18 +234,18 @@ class WasmiDartPlatform extends FlutterRustBridgeBase<WasmiDartWire>
       api2wire_opt_box_autoadd_bool(raw.debugInfo),
       api2wire_opt_box_autoadd_bool(raw.wasmBacktrace),
       api2wire_opt_box_autoadd_bool(raw.nativeUnwindInfo),
-      api2wire_opt_box_autoadd_bool(raw.epochInterruption),
       api2wire_opt_box_autoadd_usize(raw.maxWasmStack),
       api2wire_opt_box_autoadd_bool(raw.wasmThreads),
       api2wire_opt_box_autoadd_bool(raw.wasmSimd),
+      api2wire_opt_box_autoadd_bool(raw.wasmRelaxedSimd),
+      api2wire_opt_box_autoadd_bool(raw.relaxedSimdDeterministic),
       api2wire_opt_box_autoadd_bool(raw.wasmMultiMemory),
       api2wire_opt_box_autoadd_bool(raw.wasmMemory64),
       api2wire_opt_box_autoadd_u64(raw.staticMemoryMaximumSize),
       api2wire_opt_box_autoadd_bool(raw.staticMemoryForced),
       api2wire_opt_box_autoadd_u64(raw.staticMemoryGuardSize),
       api2wire_opt_box_autoadd_bool(raw.parallelCompilation),
-      api2wire_opt_box_autoadd_bool(raw.generateAddressMap),
-      api2wire_opt_box_autoadd_bool(raw.wasmRelaxedSimd)
+      api2wire_opt_box_autoadd_bool(raw.generateAddressMap)
     ];
   }
 
@@ -378,7 +378,7 @@ class WasmiDartPlatform extends FlutterRustBridgeBase<WasmiDartWire>
       return [5, api2wire_opt_box_autoadd_WFunc(raw.field0)];
     }
     if (raw is WasmVal_externRef) {
-      return [6, api2wire_u32(raw.field0)];
+      return [6, api2wire_opt_box_autoadd_u32(raw.field0)];
     }
 
     throw Exception('unreachable');
@@ -438,12 +438,10 @@ class WasmiDartWasmModule implements WasmModule {
   external dynamic /* List<dynamic> */ wire_compile_wasm_sync(
       Uint8List module_wasm, List<dynamic> config);
 
-  external dynamic /* List<dynamic> */ wire_default_wasm_features();
-
-  external dynamic /* List<dynamic> */ wire_supported_wasm_features();
-
   external dynamic /* List<dynamic> */ wire_wasm_features_for_config(
       List<dynamic> config);
+
+  external dynamic /* List<dynamic> */ wire_wasm_runtime_features();
 
   external dynamic /* List<dynamic> */ wire_exports__method__WasmiInstanceId(
       List<dynamic> that);
@@ -546,6 +544,15 @@ class WasmiDartWasmModule implements WasmModule {
       List<dynamic> value,
       int len);
 
+  external dynamic /* void */ wire_add_fuel__method__WasmiModuleId(
+      List<dynamic> that, Object delta);
+
+  external dynamic /* Object? */ wire_fuel_consumed__method__WasmiModuleId(
+      List<dynamic> that);
+
+  external dynamic /* Object */ wire_consume_fuel__method__WasmiModuleId(
+      List<dynamic> that, Object delta);
+
   external dynamic /* List<dynamic> */
       wire_get_module_imports__method__CompiledModule(List<dynamic> that);
 
@@ -597,15 +604,12 @@ class WasmiDartWire extends FlutterRustBridgeWasmWireBase<WasmiDartWasmModule> {
           Uint8List module_wasm, List<dynamic> config) =>
       wasmModule.wire_compile_wasm_sync(module_wasm, config);
 
-  dynamic /* List<dynamic> */ wire_default_wasm_features() =>
-      wasmModule.wire_default_wasm_features();
-
-  dynamic /* List<dynamic> */ wire_supported_wasm_features() =>
-      wasmModule.wire_supported_wasm_features();
-
   dynamic /* List<dynamic> */ wire_wasm_features_for_config(
           List<dynamic> config) =>
       wasmModule.wire_wasm_features_for_config(config);
+
+  dynamic /* List<dynamic> */ wire_wasm_runtime_features() =>
+      wasmModule.wire_wasm_runtime_features();
 
   dynamic /* List<dynamic> */ wire_exports__method__WasmiInstanceId(
           List<dynamic> that) =>
@@ -734,6 +738,18 @@ class WasmiDartWire extends FlutterRustBridgeWasmWireBase<WasmiDartWasmModule> {
           Object table, int index, List<dynamic> value, int len) =>
       wasmModule.wire_fill_table__method__WasmiModuleId(
           that, table, index, value, len);
+
+  dynamic /* void */ wire_add_fuel__method__WasmiModuleId(
+          List<dynamic> that, Object delta) =>
+      wasmModule.wire_add_fuel__method__WasmiModuleId(that, delta);
+
+  dynamic /* Object? */ wire_fuel_consumed__method__WasmiModuleId(
+          List<dynamic> that) =>
+      wasmModule.wire_fuel_consumed__method__WasmiModuleId(that);
+
+  dynamic /* Object */ wire_consume_fuel__method__WasmiModuleId(
+          List<dynamic> that, Object delta) =>
+      wasmModule.wire_consume_fuel__method__WasmiModuleId(that, delta);
 
   dynamic /* List<dynamic> */ wire_get_module_imports__method__CompiledModule(
           List<dynamic> that) =>

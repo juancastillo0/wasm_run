@@ -23,6 +23,9 @@ static ARRAY: Lazy<RwLock<GlobalState>> = Lazy::new(|| RwLock::new(Default::defa
 static CALLER_STACK: Lazy<RwLock<Vec<RwLock<StoreContextMut<'_, StoreState>>>>> =
     Lazy::new(|| RwLock::new(Default::default()));
 
+static CALLER_STACK2: Lazy<RwLock<Vec<RwLock<&mut Store<StoreState>>>>> =
+    Lazy::new(|| RwLock::new(Default::default()));
+
 #[derive(Default)]
 struct GlobalState {
     map: HashMap<u32, WasmiModuleImpl>,
@@ -282,6 +285,26 @@ impl WasmiModuleId {
         result
     }
 
+    fn with_module_mut2<T>(&self, f: impl FnOnce(&mut Store<StoreState>) -> T) -> T {
+        {
+            let stack = CALLER_STACK2.read().unwrap();
+            if let Some(caller) = stack.last() {
+                return f(&mut caller.write().unwrap());
+            }
+        }
+        let mut arr = ARRAY.write().unwrap();
+        let value = arr.map.get_mut(&self.0).unwrap();
+
+        let ctx = &mut value.store;
+        {
+            let v = RwLock::new(unsafe { std::mem::transmute(&mut *ctx) });
+            CALLER_STACK2.write().unwrap().push(v);
+        }
+        let result = f(ctx);
+        CALLER_STACK2.write().unwrap().pop();
+        result
+    }
+
     fn with_module<T>(&self, f: impl FnOnce(&StoreContext<'_, StoreState>) -> T) -> T {
         // TODO: Only read
         // {
@@ -432,7 +455,9 @@ impl WasmiModuleId {
         self.with_module(|store| {
             let mut buffer = Vec::with_capacity(bytes);
             #[allow(clippy::uninit_vec)]
-            unsafe { buffer.set_len(bytes) };
+            unsafe {
+                buffer.set_len(bytes)
+            };
             memory
                 .read(store, offset, &mut buffer)
                 .map(|_| SyncReturn(buffer))
@@ -530,6 +555,19 @@ impl WasmiModuleId {
                 .map_err(to_anyhow)
         })
     }
+
+    // FUEL
+    //
+
+    pub fn add_fuel(&self, delta: u64) -> Result<SyncReturn<()>> {
+        self.with_module_mut2(|store| store.add_fuel(delta).map(SyncReturn).map_err(to_anyhow))
+    }
+    pub fn fuel_consumed(&self) -> SyncReturn<Option<u64>> {
+        self.with_module_mut2(|store| SyncReturn(store.fuel_consumed()))
+    }
+    pub fn consume_fuel(&self, delta: u64) -> Result<SyncReturn<u64>> {
+        self.with_module_mut2(|store| store.consume_fuel(delta).map(SyncReturn).map_err(to_anyhow))
+    }
 }
 
 pub fn parse_wat_format(wat: String) -> Result<Vec<u8>> {
@@ -585,15 +623,10 @@ pub fn compile_wasm_sync(
     compile_wasm(module_wasm, config).map(SyncReturn)
 }
 
-pub fn default_wasm_features() -> SyncReturn<WasmFeatures> {
-    SyncReturn(WasmFeatures::default())
-}
-
-pub fn supported_wasm_features() -> SyncReturn<WasmFeatures> {
-    SyncReturn(WasmFeatures::supported())
-}
-
 pub fn wasm_features_for_config(config: ModuleConfig) -> SyncReturn<WasmFeatures> {
     SyncReturn(config.wasm_features())
 }
 
+pub fn wasm_runtime_features() -> SyncReturn<WasmRuntimeFeatures> {
+    SyncReturn(WasmRuntimeFeatures::default())
+}

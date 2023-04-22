@@ -48,18 +48,14 @@ abstract class WasmiDart {
 
   FlutterRustBridgeTaskConstMeta get kCompileWasmSyncConstMeta;
 
-  WasmFeatures defaultWasmFeatures({dynamic hint});
-
-  FlutterRustBridgeTaskConstMeta get kDefaultWasmFeaturesConstMeta;
-
-  WasmFeatures supportedWasmFeatures({dynamic hint});
-
-  FlutterRustBridgeTaskConstMeta get kSupportedWasmFeaturesConstMeta;
-
   WasmFeatures wasmFeaturesForConfig(
       {required ModuleConfig config, dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kWasmFeaturesForConfigConstMeta;
+
+  WasmRuntimeFeatures wasmRuntimeFeatures({dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kWasmRuntimeFeaturesConstMeta;
 
   List<ModuleExportValue> exportsMethodWasmiInstanceId(
       {required WasmiInstanceId that, dynamic hint});
@@ -259,6 +255,21 @@ abstract class WasmiDart {
       dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kFillTableMethodWasmiModuleIdConstMeta;
+
+  void addFuelMethodWasmiModuleId(
+      {required WasmiModuleId that, required int delta, dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kAddFuelMethodWasmiModuleIdConstMeta;
+
+  int? fuelConsumedMethodWasmiModuleId(
+      {required WasmiModuleId that, dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kFuelConsumedMethodWasmiModuleIdConstMeta;
+
+  int consumeFuelMethodWasmiModuleId(
+      {required WasmiModuleId that, required int delta, dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kConsumeFuelMethodWasmiModuleIdConstMeta;
 
   List<ModuleImportDesc> getModuleImportsMethodCompiledModule(
       {required CompiledModule that, dynamic hint});
@@ -544,10 +555,11 @@ class ModuleConfigWasmtime {
   final bool? debugInfo;
   final bool? wasmBacktrace;
   final bool? nativeUnwindInfo;
-  final bool? epochInterruption;
   final int? maxWasmStack;
   final bool? wasmThreads;
   final bool? wasmSimd;
+  final bool? wasmRelaxedSimd;
+  final bool? relaxedSimdDeterministic;
   final bool? wasmMultiMemory;
   final bool? wasmMemory64;
   final int? staticMemoryMaximumSize;
@@ -555,16 +567,16 @@ class ModuleConfigWasmtime {
   final int? staticMemoryGuardSize;
   final bool? parallelCompilation;
   final bool? generateAddressMap;
-  final bool? wasmRelaxedSimd;
 
   const ModuleConfigWasmtime({
     this.debugInfo,
     this.wasmBacktrace,
     this.nativeUnwindInfo,
-    this.epochInterruption,
     this.maxWasmStack,
     this.wasmThreads,
     this.wasmSimd,
+    this.wasmRelaxedSimd,
+    this.relaxedSimdDeterministic,
     this.wasmMultiMemory,
     this.wasmMemory64,
     this.staticMemoryMaximumSize,
@@ -572,7 +584,6 @@ class ModuleConfigWasmtime {
     this.staticMemoryGuardSize,
     this.parallelCompilation,
     this.generateAddressMap,
-    this.wasmRelaxedSimd,
   });
 }
 
@@ -835,6 +846,22 @@ class WasmFeatures {
   });
 }
 
+class WasmRuntimeFeatures {
+  final String name;
+  final String version;
+  final bool isBrowser;
+  final WasmFeatures supportedFeatures;
+  final WasmFeatures defaultFeatures;
+
+  const WasmRuntimeFeatures({
+    required this.name,
+    required this.version,
+    required this.isBrowser,
+    required this.supportedFeatures,
+    required this.defaultFeatures,
+  });
+}
+
 @freezed
 class WasmVal with _$WasmVal {
   /// Value of 32-bit signed or unsigned integer.
@@ -868,9 +895,9 @@ class WasmVal with _$WasmVal {
   ]) = WasmVal_funcRef;
 
   /// A nullable external object reference, a.k.a. [`ExternRef`].
-  const factory WasmVal.externRef(
-    int field0,
-  ) = WasmVal_externRef;
+  const factory WasmVal.externRef([
+    int? field0,
+  ]) = WasmVal_externRef;
 }
 
 /// https://docs.wasmtime.dev/stability-wasi-proposals-support.html
@@ -1140,6 +1167,22 @@ class WasmiModuleId {
         value: value,
         len: len,
       );
+
+  void addFuel({required int delta, dynamic hint}) =>
+      bridge.addFuelMethodWasmiModuleId(
+        that: this,
+        delta: delta,
+      );
+
+  int? fuelConsumed({dynamic hint}) => bridge.fuelConsumedMethodWasmiModuleId(
+        that: this,
+      );
+
+  int consumeFuel({required int delta, dynamic hint}) =>
+      bridge.consumeFuelMethodWasmiModuleId(
+        that: this,
+        delta: delta,
+      );
 }
 
 class WasmiDartImpl implements WasmiDart {
@@ -1246,38 +1289,6 @@ class WasmiDartImpl implements WasmiDart {
         argNames: ["moduleWasm", "config"],
       );
 
-  WasmFeatures defaultWasmFeatures({dynamic hint}) {
-    return _platform.executeSync(FlutterRustBridgeSyncTask(
-      callFfi: () => _platform.inner.wire_default_wasm_features(),
-      parseSuccessData: _wire2api_wasm_features,
-      constMeta: kDefaultWasmFeaturesConstMeta,
-      argValues: [],
-      hint: hint,
-    ));
-  }
-
-  FlutterRustBridgeTaskConstMeta get kDefaultWasmFeaturesConstMeta =>
-      const FlutterRustBridgeTaskConstMeta(
-        debugName: "default_wasm_features",
-        argNames: [],
-      );
-
-  WasmFeatures supportedWasmFeatures({dynamic hint}) {
-    return _platform.executeSync(FlutterRustBridgeSyncTask(
-      callFfi: () => _platform.inner.wire_supported_wasm_features(),
-      parseSuccessData: _wire2api_wasm_features,
-      constMeta: kSupportedWasmFeaturesConstMeta,
-      argValues: [],
-      hint: hint,
-    ));
-  }
-
-  FlutterRustBridgeTaskConstMeta get kSupportedWasmFeaturesConstMeta =>
-      const FlutterRustBridgeTaskConstMeta(
-        debugName: "supported_wasm_features",
-        argNames: [],
-      );
-
   WasmFeatures wasmFeaturesForConfig(
       {required ModuleConfig config, dynamic hint}) {
     var arg0 = _platform.api2wire_box_autoadd_module_config(config);
@@ -1294,6 +1305,22 @@ class WasmiDartImpl implements WasmiDart {
       const FlutterRustBridgeTaskConstMeta(
         debugName: "wasm_features_for_config",
         argNames: ["config"],
+      );
+
+  WasmRuntimeFeatures wasmRuntimeFeatures({dynamic hint}) {
+    return _platform.executeSync(FlutterRustBridgeSyncTask(
+      callFfi: () => _platform.inner.wire_wasm_runtime_features(),
+      parseSuccessData: _wire2api_wasm_runtime_features,
+      constMeta: kWasmRuntimeFeaturesConstMeta,
+      argValues: [],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta get kWasmRuntimeFeaturesConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "wasm_runtime_features",
+        argNames: [],
       );
 
   List<ModuleExportValue> exportsMethodWasmiInstanceId(
@@ -1948,6 +1975,66 @@ class WasmiDartImpl implements WasmiDart {
         argNames: ["that", "table", "index", "value", "len"],
       );
 
+  void addFuelMethodWasmiModuleId(
+      {required WasmiModuleId that, required int delta, dynamic hint}) {
+    var arg0 = _platform.api2wire_box_autoadd_wasmi_module_id(that);
+    var arg1 = _platform.api2wire_u64(delta);
+    return _platform.executeSync(FlutterRustBridgeSyncTask(
+      callFfi: () =>
+          _platform.inner.wire_add_fuel__method__WasmiModuleId(arg0, arg1),
+      parseSuccessData: _wire2api_unit,
+      constMeta: kAddFuelMethodWasmiModuleIdConstMeta,
+      argValues: [that, delta],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta get kAddFuelMethodWasmiModuleIdConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "add_fuel__method__WasmiModuleId",
+        argNames: ["that", "delta"],
+      );
+
+  int? fuelConsumedMethodWasmiModuleId(
+      {required WasmiModuleId that, dynamic hint}) {
+    var arg0 = _platform.api2wire_box_autoadd_wasmi_module_id(that);
+    return _platform.executeSync(FlutterRustBridgeSyncTask(
+      callFfi: () =>
+          _platform.inner.wire_fuel_consumed__method__WasmiModuleId(arg0),
+      parseSuccessData: _wire2api_opt_box_autoadd_u64,
+      constMeta: kFuelConsumedMethodWasmiModuleIdConstMeta,
+      argValues: [that],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta
+      get kFuelConsumedMethodWasmiModuleIdConstMeta =>
+          const FlutterRustBridgeTaskConstMeta(
+            debugName: "fuel_consumed__method__WasmiModuleId",
+            argNames: ["that"],
+          );
+
+  int consumeFuelMethodWasmiModuleId(
+      {required WasmiModuleId that, required int delta, dynamic hint}) {
+    var arg0 = _platform.api2wire_box_autoadd_wasmi_module_id(that);
+    var arg1 = _platform.api2wire_u64(delta);
+    return _platform.executeSync(FlutterRustBridgeSyncTask(
+      callFfi: () =>
+          _platform.inner.wire_consume_fuel__method__WasmiModuleId(arg0, arg1),
+      parseSuccessData: _wire2api_u64,
+      constMeta: kConsumeFuelMethodWasmiModuleIdConstMeta,
+      argValues: [that, delta],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta get kConsumeFuelMethodWasmiModuleIdConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "consume_fuel__method__WasmiModuleId",
+        argNames: ["that", "delta"],
+      );
+
   List<ModuleImportDesc> getModuleImportsMethodCompiledModule(
       {required CompiledModule that, dynamic hint}) {
     var arg0 = _platform.api2wire_box_autoadd_compiled_module(that);
@@ -2066,6 +2153,10 @@ class WasmiDartImpl implements WasmiDart {
 
   int _wire2api_box_autoadd_u32(dynamic raw) {
     return raw as int;
+  }
+
+  int _wire2api_box_autoadd_u64(dynamic raw) {
+    return _wire2api_u64(raw);
   }
 
   WasmVal _wire2api_box_autoadd_wasm_val(dynamic raw) {
@@ -2241,6 +2332,10 @@ class WasmiDartImpl implements WasmiDart {
     return raw == null ? null : _wire2api_box_autoadd_u32(raw);
   }
 
+  int? _wire2api_opt_box_autoadd_u64(dynamic raw) {
+    return raw == null ? null : _wire2api_box_autoadd_u64(raw);
+  }
+
   WasmVal? _wire2api_opt_box_autoadd_wasm_val(dynamic raw) {
     return raw == null ? null : _wire2api_box_autoadd_wasm_val(raw);
   }
@@ -2262,6 +2357,10 @@ class WasmiDartImpl implements WasmiDart {
 
   int _wire2api_u32(dynamic raw) {
     return raw as int;
+  }
+
+  int _wire2api_u64(dynamic raw) {
+    return castInt(raw);
   }
 
   int _wire2api_u8(dynamic raw) {
@@ -2311,6 +2410,19 @@ class WasmiDartImpl implements WasmiDart {
     );
   }
 
+  WasmRuntimeFeatures _wire2api_wasm_runtime_features(dynamic raw) {
+    final arr = raw as List<dynamic>;
+    if (arr.length != 5)
+      throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
+    return WasmRuntimeFeatures(
+      name: _wire2api_String(arr[0]),
+      version: _wire2api_String(arr[1]),
+      isBrowser: _wire2api_bool(arr[2]),
+      supportedFeatures: _wire2api_wasm_features(arr[3]),
+      defaultFeatures: _wire2api_wasm_features(arr[4]),
+    );
+  }
+
   WasmVal _wire2api_wasm_val(dynamic raw) {
     switch (raw[0]) {
       case 0:
@@ -2339,7 +2451,7 @@ class WasmiDartImpl implements WasmiDart {
         );
       case 6:
         return WasmVal_externRef(
-          _wire2api_u32(raw[1]),
+          _wire2api_opt_box_autoadd_u32(raw[1]),
         );
       default:
         throw Exception("unreachable");

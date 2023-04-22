@@ -540,6 +540,19 @@ impl WasmiModuleId {
                 .map_err(to_anyhow)
         })
     }
+
+    // FUEL
+    //
+
+    pub fn add_fuel(&self, delta: u64) -> Result<SyncReturn<()>> {
+        self.with_module_mut(|mut store| store.add_fuel(delta).map(SyncReturn))
+    }
+    pub fn fuel_consumed(&self) -> SyncReturn<Option<u64>> {
+        self.with_module_mut(|store| SyncReturn(store.fuel_consumed()))
+    }
+    pub fn consume_fuel(&self, delta: u64) -> Result<SyncReturn<u64>> {
+        self.with_module_mut(|mut store| store.consume_fuel(delta).map(SyncReturn))
+    }
 }
 
 pub fn parse_wat_format(wat: String) -> Result<Vec<u8>> {
@@ -595,14 +608,10 @@ pub fn compile_wasm_sync(
     compile_wasm(module_wasm, config).map(SyncReturn)
 }
 
-pub fn default_wasm_features() -> SyncReturn<WasmFeatures> {
-    SyncReturn(WasmFeatures::default())
-}
-
-pub fn supported_wasm_features() -> SyncReturn<WasmFeatures> {
-    SyncReturn(WasmFeatures::supported())
-}
-
 pub fn wasm_features_for_config(config: ModuleConfig) -> SyncReturn<WasmFeatures> {
     SyncReturn(config.wasm_features())
+}
+
+pub fn wasm_runtime_features() -> SyncReturn<WasmRuntimeFeatures> {
+    SyncReturn(WasmRuntimeFeatures::default())
 }

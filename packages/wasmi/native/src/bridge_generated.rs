@@ -28,6 +28,7 @@ use crate::config::StdIOKind;
 use crate::config::WasiConfig;
 use crate::config::WasiStackLimits;
 use crate::config::WasmFeatures;
+use crate::config::WasmRuntimeFeatures;
 use crate::config::WasmWasiFeatures;
 use crate::types::ExternalType;
 use crate::types::ExternalValue;
@@ -126,26 +127,6 @@ fn wire_compile_wasm_sync_impl(
         },
     )
 }
-fn wire_default_wasm_features_impl() -> support::WireSyncReturn {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
-        WrapInfo {
-            debug_name: "default_wasm_features",
-            port: None,
-            mode: FfiCallMode::Sync,
-        },
-        move || Ok(default_wasm_features()),
-    )
-}
-fn wire_supported_wasm_features_impl() -> support::WireSyncReturn {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
-        WrapInfo {
-            debug_name: "supported_wasm_features",
-            port: None,
-            mode: FfiCallMode::Sync,
-        },
-        move || Ok(supported_wasm_features()),
-    )
-}
 fn wire_wasm_features_for_config_impl(
     config: impl Wire2Api<ModuleConfig> + UnwindSafe,
 ) -> support::WireSyncReturn {
@@ -159,6 +140,16 @@ fn wire_wasm_features_for_config_impl(
             let api_config = config.wire2api();
             Ok(wasm_features_for_config(api_config))
         },
+    )
+}
+fn wire_wasm_runtime_features_impl() -> support::WireSyncReturn {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
+        WrapInfo {
+            debug_name: "wasm_runtime_features",
+            port: None,
+            mode: FfiCallMode::Sync,
+        },
+        move || Ok(wasm_runtime_features()),
     )
 }
 fn wire_exports__method__WasmiInstanceId_impl(
@@ -683,6 +674,55 @@ fn wire_fill_table__method__WasmiModuleId_impl(
         },
     )
 }
+fn wire_add_fuel__method__WasmiModuleId_impl(
+    that: impl Wire2Api<WasmiModuleId> + UnwindSafe,
+    delta: impl Wire2Api<u64> + UnwindSafe,
+) -> support::WireSyncReturn {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
+        WrapInfo {
+            debug_name: "add_fuel__method__WasmiModuleId",
+            port: None,
+            mode: FfiCallMode::Sync,
+        },
+        move || {
+            let api_that = that.wire2api();
+            let api_delta = delta.wire2api();
+            WasmiModuleId::add_fuel(&api_that, api_delta)
+        },
+    )
+}
+fn wire_fuel_consumed__method__WasmiModuleId_impl(
+    that: impl Wire2Api<WasmiModuleId> + UnwindSafe,
+) -> support::WireSyncReturn {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
+        WrapInfo {
+            debug_name: "fuel_consumed__method__WasmiModuleId",
+            port: None,
+            mode: FfiCallMode::Sync,
+        },
+        move || {
+            let api_that = that.wire2api();
+            Ok(WasmiModuleId::fuel_consumed(&api_that))
+        },
+    )
+}
+fn wire_consume_fuel__method__WasmiModuleId_impl(
+    that: impl Wire2Api<WasmiModuleId> + UnwindSafe,
+    delta: impl Wire2Api<u64> + UnwindSafe,
+) -> support::WireSyncReturn {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
+        WrapInfo {
+            debug_name: "consume_fuel__method__WasmiModuleId",
+            port: None,
+            mode: FfiCallMode::Sync,
+        },
+        move || {
+            let api_that = that.wire2api();
+            let api_delta = delta.wire2api();
+            WasmiModuleId::consume_fuel(&api_that, api_delta)
+        },
+    )
+}
 fn wire_get_module_imports__method__CompiledModule_impl(
     that: impl Wire2Api<CompiledModule> + UnwindSafe,
 ) -> support::WireSyncReturn {
@@ -968,6 +1008,20 @@ impl support::IntoDart for WasmFeatures {
 }
 impl support::IntoDartExceptPrimitive for WasmFeatures {}
 
+impl support::IntoDart for WasmRuntimeFeatures {
+    fn into_dart(self) -> support::DartAbi {
+        vec![
+            self.name.into_dart(),
+            self.version.into_dart(),
+            self.is_browser.into_dart(),
+            self.supported_features.into_dart(),
+            self.default_features.into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl support::IntoDartExceptPrimitive for WasmRuntimeFeatures {}
+
 impl support::IntoDart for WasmVal {
     fn into_dart(self) -> support::DartAbi {
         match self {
@@ -1055,18 +1109,13 @@ mod web {
     }
 
     #[wasm_bindgen]
-    pub fn wire_default_wasm_features() -> support::WireSyncReturn {
-        wire_default_wasm_features_impl()
-    }
-
-    #[wasm_bindgen]
-    pub fn wire_supported_wasm_features() -> support::WireSyncReturn {
-        wire_supported_wasm_features_impl()
-    }
-
-    #[wasm_bindgen]
     pub fn wire_wasm_features_for_config(config: JsValue) -> support::WireSyncReturn {
         wire_wasm_features_for_config_impl(config)
+    }
+
+    #[wasm_bindgen]
+    pub fn wire_wasm_runtime_features() -> support::WireSyncReturn {
+        wire_wasm_runtime_features_impl()
     }
 
     #[wasm_bindgen]
@@ -1304,6 +1353,27 @@ mod web {
         len: u32,
     ) -> support::WireSyncReturn {
         wire_fill_table__method__WasmiModuleId_impl(that, table, index, value, len)
+    }
+
+    #[wasm_bindgen]
+    pub fn wire_add_fuel__method__WasmiModuleId(
+        that: JsValue,
+        delta: u64,
+    ) -> support::WireSyncReturn {
+        wire_add_fuel__method__WasmiModuleId_impl(that, delta)
+    }
+
+    #[wasm_bindgen]
+    pub fn wire_fuel_consumed__method__WasmiModuleId(that: JsValue) -> support::WireSyncReturn {
+        wire_fuel_consumed__method__WasmiModuleId_impl(that)
+    }
+
+    #[wasm_bindgen]
+    pub fn wire_consume_fuel__method__WasmiModuleId(
+        that: JsValue,
+        delta: u64,
+    ) -> support::WireSyncReturn {
+        wire_consume_fuel__method__WasmiModuleId_impl(that, delta)
     }
 
     #[wasm_bindgen]
@@ -1569,18 +1639,18 @@ mod web {
                 debug_info: self_.get(0).wire2api(),
                 wasm_backtrace: self_.get(1).wire2api(),
                 native_unwind_info: self_.get(2).wire2api(),
-                epoch_interruption: self_.get(3).wire2api(),
-                max_wasm_stack: self_.get(4).wire2api(),
-                wasm_threads: self_.get(5).wire2api(),
-                wasm_simd: self_.get(6).wire2api(),
-                wasm_multi_memory: self_.get(7).wire2api(),
-                wasm_memory64: self_.get(8).wire2api(),
-                static_memory_maximum_size: self_.get(9).wire2api(),
-                static_memory_forced: self_.get(10).wire2api(),
-                static_memory_guard_size: self_.get(11).wire2api(),
-                parallel_compilation: self_.get(12).wire2api(),
-                generate_address_map: self_.get(13).wire2api(),
-                wasm_relaxed_simd: self_.get(14).wire2api(),
+                max_wasm_stack: self_.get(3).wire2api(),
+                wasm_threads: self_.get(4).wire2api(),
+                wasm_simd: self_.get(5).wire2api(),
+                wasm_relaxed_simd: self_.get(6).wire2api(),
+                relaxed_simd_deterministic: self_.get(7).wire2api(),
+                wasm_multi_memory: self_.get(8).wire2api(),
+                wasm_memory64: self_.get(9).wire2api(),
+                static_memory_maximum_size: self_.get(10).wire2api(),
+                static_memory_forced: self_.get(11).wire2api(),
+                static_memory_guard_size: self_.get(12).wire2api(),
+                parallel_compilation: self_.get(13).wire2api(),
+                generate_address_map: self_.get(14).wire2api(),
             }
         }
     }
@@ -1943,20 +2013,15 @@ mod io {
     }
 
     #[no_mangle]
-    pub extern "C" fn wire_default_wasm_features() -> support::WireSyncReturn {
-        wire_default_wasm_features_impl()
-    }
-
-    #[no_mangle]
-    pub extern "C" fn wire_supported_wasm_features() -> support::WireSyncReturn {
-        wire_supported_wasm_features_impl()
-    }
-
-    #[no_mangle]
     pub extern "C" fn wire_wasm_features_for_config(
         config: *mut wire_ModuleConfig,
     ) -> support::WireSyncReturn {
         wire_wasm_features_for_config_impl(config)
+    }
+
+    #[no_mangle]
+    pub extern "C" fn wire_wasm_runtime_features() -> support::WireSyncReturn {
+        wire_wasm_runtime_features_impl()
     }
 
     #[no_mangle]
@@ -2208,6 +2273,29 @@ mod io {
         len: u32,
     ) -> support::WireSyncReturn {
         wire_fill_table__method__WasmiModuleId_impl(that, table, index, value, len)
+    }
+
+    #[no_mangle]
+    pub extern "C" fn wire_add_fuel__method__WasmiModuleId(
+        that: *mut wire_WasmiModuleId,
+        delta: u64,
+    ) -> support::WireSyncReturn {
+        wire_add_fuel__method__WasmiModuleId_impl(that, delta)
+    }
+
+    #[no_mangle]
+    pub extern "C" fn wire_fuel_consumed__method__WasmiModuleId(
+        that: *mut wire_WasmiModuleId,
+    ) -> support::WireSyncReturn {
+        wire_fuel_consumed__method__WasmiModuleId_impl(that)
+    }
+
+    #[no_mangle]
+    pub extern "C" fn wire_consume_fuel__method__WasmiModuleId(
+        that: *mut wire_WasmiModuleId,
+        delta: u64,
+    ) -> support::WireSyncReturn {
+        wire_consume_fuel__method__WasmiModuleId_impl(that, delta)
     }
 
     #[no_mangle]
@@ -2732,10 +2820,11 @@ mod io {
                 debug_info: self.debug_info.wire2api(),
                 wasm_backtrace: self.wasm_backtrace.wire2api(),
                 native_unwind_info: self.native_unwind_info.wire2api(),
-                epoch_interruption: self.epoch_interruption.wire2api(),
                 max_wasm_stack: self.max_wasm_stack.wire2api(),
                 wasm_threads: self.wasm_threads.wire2api(),
                 wasm_simd: self.wasm_simd.wire2api(),
+                wasm_relaxed_simd: self.wasm_relaxed_simd.wire2api(),
+                relaxed_simd_deterministic: self.relaxed_simd_deterministic.wire2api(),
                 wasm_multi_memory: self.wasm_multi_memory.wire2api(),
                 wasm_memory64: self.wasm_memory64.wire2api(),
                 static_memory_maximum_size: self.static_memory_maximum_size.wire2api(),
@@ -2743,7 +2832,6 @@ mod io {
                 static_memory_guard_size: self.static_memory_guard_size.wire2api(),
                 parallel_compilation: self.parallel_compilation.wire2api(),
                 generate_address_map: self.generate_address_map.wire2api(),
-                wasm_relaxed_simd: self.wasm_relaxed_simd.wire2api(),
             }
         }
     }
@@ -2990,10 +3078,11 @@ mod io {
         debug_info: *mut bool,
         wasm_backtrace: *mut bool,
         native_unwind_info: *mut bool,
-        epoch_interruption: *mut bool,
         max_wasm_stack: *mut usize,
         wasm_threads: *mut bool,
         wasm_simd: *mut bool,
+        wasm_relaxed_simd: *mut bool,
+        relaxed_simd_deterministic: *mut bool,
         wasm_multi_memory: *mut bool,
         wasm_memory64: *mut bool,
         static_memory_maximum_size: *mut u64,
@@ -3001,7 +3090,6 @@ mod io {
         static_memory_guard_size: *mut u64,
         parallel_compilation: *mut bool,
         generate_address_map: *mut bool,
-        wasm_relaxed_simd: *mut bool,
     }
 
     #[repr(C)]
@@ -3163,7 +3251,7 @@ mod io {
     #[repr(C)]
     #[derive(Clone)]
     pub struct wire_WasmVal_externRef {
-        field0: u32,
+        field0: *mut u32,
     }
 
     // Section: impl NewWithNullPtr
@@ -3350,10 +3438,11 @@ mod io {
                 debug_info: core::ptr::null_mut(),
                 wasm_backtrace: core::ptr::null_mut(),
                 native_unwind_info: core::ptr::null_mut(),
-                epoch_interruption: core::ptr::null_mut(),
                 max_wasm_stack: core::ptr::null_mut(),
                 wasm_threads: core::ptr::null_mut(),
                 wasm_simd: core::ptr::null_mut(),
+                wasm_relaxed_simd: core::ptr::null_mut(),
+                relaxed_simd_deterministic: core::ptr::null_mut(),
                 wasm_multi_memory: core::ptr::null_mut(),
                 wasm_memory64: core::ptr::null_mut(),
                 static_memory_maximum_size: core::ptr::null_mut(),
@@ -3361,7 +3450,6 @@ mod io {
                 static_memory_guard_size: core::ptr::null_mut(),
                 parallel_compilation: core::ptr::null_mut(),
                 generate_address_map: core::ptr::null_mut(),
-                wasm_relaxed_simd: core::ptr::null_mut(),
             }
         }
     }
@@ -3523,7 +3611,7 @@ mod io {
     pub extern "C" fn inflate_WasmVal_externRef() -> *mut WasmValKind {
         support::new_leak_box_ptr(WasmValKind {
             externRef: support::new_leak_box_ptr(wire_WasmVal_externRef {
-                field0: Default::default(),
+                field0: core::ptr::null_mut(),
             }),
         })
     }

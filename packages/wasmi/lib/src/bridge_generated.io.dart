@@ -492,12 +492,14 @@ class WasmiDartPlatform extends FlutterRustBridgeBase<WasmiDartWire> {
         api2wire_opt_box_autoadd_bool(apiObj.wasmBacktrace);
     wireObj.native_unwind_info =
         api2wire_opt_box_autoadd_bool(apiObj.nativeUnwindInfo);
-    wireObj.epoch_interruption =
-        api2wire_opt_box_autoadd_bool(apiObj.epochInterruption);
     wireObj.max_wasm_stack =
         api2wire_opt_box_autoadd_usize(apiObj.maxWasmStack);
     wireObj.wasm_threads = api2wire_opt_box_autoadd_bool(apiObj.wasmThreads);
     wireObj.wasm_simd = api2wire_opt_box_autoadd_bool(apiObj.wasmSimd);
+    wireObj.wasm_relaxed_simd =
+        api2wire_opt_box_autoadd_bool(apiObj.wasmRelaxedSimd);
+    wireObj.relaxed_simd_deterministic =
+        api2wire_opt_box_autoadd_bool(apiObj.relaxedSimdDeterministic);
     wireObj.wasm_multi_memory =
         api2wire_opt_box_autoadd_bool(apiObj.wasmMultiMemory);
     wireObj.wasm_memory64 = api2wire_opt_box_autoadd_bool(apiObj.wasmMemory64);
@@ -511,8 +513,6 @@ class WasmiDartPlatform extends FlutterRustBridgeBase<WasmiDartWire> {
         api2wire_opt_box_autoadd_bool(apiObj.parallelCompilation);
     wireObj.generate_address_map =
         api2wire_opt_box_autoadd_bool(apiObj.generateAddressMap);
-    wireObj.wasm_relaxed_simd =
-        api2wire_opt_box_autoadd_bool(apiObj.wasmRelaxedSimd);
   }
 
   void _api_fill_to_wire_module_import(
@@ -630,7 +630,7 @@ class WasmiDartPlatform extends FlutterRustBridgeBase<WasmiDartWire> {
       return;
     }
     if (apiObj is WasmVal_externRef) {
-      var pre_field0 = api2wire_u32(apiObj.field0);
+      var pre_field0 = api2wire_opt_box_autoadd_u32(apiObj.field0);
       wireObj.tag = 6;
       wireObj.kind = inner.inflate_WasmVal_externRef();
       wireObj.kind.ref.externRef.ref.field0 = pre_field0;
@@ -833,26 +833,6 @@ class WasmiDartWire implements FlutterRustBridgeWireBase {
       WireSyncReturn Function(
           ffi.Pointer<wire_uint_8_list>, ffi.Pointer<wire_ModuleConfig>)>();
 
-  WireSyncReturn wire_default_wasm_features() {
-    return _wire_default_wasm_features();
-  }
-
-  late final _wire_default_wasm_featuresPtr =
-      _lookup<ffi.NativeFunction<WireSyncReturn Function()>>(
-          'wire_default_wasm_features');
-  late final _wire_default_wasm_features =
-      _wire_default_wasm_featuresPtr.asFunction<WireSyncReturn Function()>();
-
-  WireSyncReturn wire_supported_wasm_features() {
-    return _wire_supported_wasm_features();
-  }
-
-  late final _wire_supported_wasm_featuresPtr =
-      _lookup<ffi.NativeFunction<WireSyncReturn Function()>>(
-          'wire_supported_wasm_features');
-  late final _wire_supported_wasm_features =
-      _wire_supported_wasm_featuresPtr.asFunction<WireSyncReturn Function()>();
-
   WireSyncReturn wire_wasm_features_for_config(
     ffi.Pointer<wire_ModuleConfig> config,
   ) {
@@ -867,6 +847,16 @@ class WasmiDartWire implements FlutterRustBridgeWireBase {
       'wire_wasm_features_for_config');
   late final _wire_wasm_features_for_config = _wire_wasm_features_for_configPtr
       .asFunction<WireSyncReturn Function(ffi.Pointer<wire_ModuleConfig>)>();
+
+  WireSyncReturn wire_wasm_runtime_features() {
+    return _wire_wasm_runtime_features();
+  }
+
+  late final _wire_wasm_runtime_featuresPtr =
+      _lookup<ffi.NativeFunction<WireSyncReturn Function()>>(
+          'wire_wasm_runtime_features');
+  late final _wire_wasm_runtime_features =
+      _wire_wasm_runtime_featuresPtr.asFunction<WireSyncReturn Function()>();
 
   WireSyncReturn wire_exports__method__WasmiInstanceId(
     ffi.Pointer<wire_WasmiInstanceId> that,
@@ -1464,6 +1454,58 @@ class WasmiDartWire implements FlutterRustBridgeWireBase {
       _wire_fill_table__method__WasmiModuleIdPtr.asFunction<
           WireSyncReturn Function(ffi.Pointer<wire_WasmiModuleId>, wire_Table,
               int, ffi.Pointer<wire_WasmVal>, int)>();
+
+  WireSyncReturn wire_add_fuel__method__WasmiModuleId(
+    ffi.Pointer<wire_WasmiModuleId> that,
+    int delta,
+  ) {
+    return _wire_add_fuel__method__WasmiModuleId(
+      that,
+      delta,
+    );
+  }
+
+  late final _wire_add_fuel__method__WasmiModuleIdPtr = _lookup<
+      ffi.NativeFunction<
+          WireSyncReturn Function(ffi.Pointer<wire_WasmiModuleId>,
+              ffi.Uint64)>>('wire_add_fuel__method__WasmiModuleId');
+  late final _wire_add_fuel__method__WasmiModuleId =
+      _wire_add_fuel__method__WasmiModuleIdPtr.asFunction<
+          WireSyncReturn Function(ffi.Pointer<wire_WasmiModuleId>, int)>();
+
+  WireSyncReturn wire_fuel_consumed__method__WasmiModuleId(
+    ffi.Pointer<wire_WasmiModuleId> that,
+  ) {
+    return _wire_fuel_consumed__method__WasmiModuleId(
+      that,
+    );
+  }
+
+  late final _wire_fuel_consumed__method__WasmiModuleIdPtr = _lookup<
+          ffi.NativeFunction<
+              WireSyncReturn Function(ffi.Pointer<wire_WasmiModuleId>)>>(
+      'wire_fuel_consumed__method__WasmiModuleId');
+  late final _wire_fuel_consumed__method__WasmiModuleId =
+      _wire_fuel_consumed__method__WasmiModuleIdPtr.asFunction<
+          WireSyncReturn Function(ffi.Pointer<wire_WasmiModuleId>)>();
+
+  WireSyncReturn wire_consume_fuel__method__WasmiModuleId(
+    ffi.Pointer<wire_WasmiModuleId> that,
+    int delta,
+  ) {
+    return _wire_consume_fuel__method__WasmiModuleId(
+      that,
+      delta,
+    );
+  }
+
+  late final _wire_consume_fuel__method__WasmiModuleIdPtr = _lookup<
+      ffi.NativeFunction<
+          WireSyncReturn Function(ffi.Pointer<wire_WasmiModuleId>,
+              ffi.Uint64)>>('wire_consume_fuel__method__WasmiModuleId');
+  late final _wire_consume_fuel__method__WasmiModuleId =
+      _wire_consume_fuel__method__WasmiModuleIdPtr.asFunction<
+          WireSyncReturn Function(ffi.Pointer<wire_WasmiModuleId>, int)>();
 
   WireSyncReturn wire_get_module_imports__method__CompiledModule(
     ffi.Pointer<wire_CompiledModule> that,
@@ -2211,13 +2253,15 @@ class wire_ModuleConfigWasmtime extends ffi.Struct {
 
   external ffi.Pointer<ffi.Bool> native_unwind_info;
 
-  external ffi.Pointer<ffi.Bool> epoch_interruption;
-
   external ffi.Pointer<ffi.UintPtr> max_wasm_stack;
 
   external ffi.Pointer<ffi.Bool> wasm_threads;
 
   external ffi.Pointer<ffi.Bool> wasm_simd;
+
+  external ffi.Pointer<ffi.Bool> wasm_relaxed_simd;
+
+  external ffi.Pointer<ffi.Bool> relaxed_simd_deterministic;
 
   external ffi.Pointer<ffi.Bool> wasm_multi_memory;
 
@@ -2232,8 +2276,6 @@ class wire_ModuleConfigWasmtime extends ffi.Struct {
   external ffi.Pointer<ffi.Bool> parallel_compilation;
 
   external ffi.Pointer<ffi.Bool> generate_address_map;
-
-  external ffi.Pointer<ffi.Bool> wasm_relaxed_simd;
 }
 
 class wire_ModuleConfig extends ffi.Struct {
@@ -2353,8 +2395,7 @@ class wire_WasmVal_funcRef extends ffi.Struct {
 }
 
 class wire_WasmVal_externRef extends ffi.Struct {
-  @ffi.Uint32()
-  external int field0;
+  external ffi.Pointer<ffi.Uint32> field0;
 }
 
 class WasmValKind extends ffi.Union {
