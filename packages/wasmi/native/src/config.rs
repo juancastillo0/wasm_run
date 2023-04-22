@@ -111,9 +111,11 @@ impl From<ModuleConfig> for wasmtime::Config {
             wtc.debug_info.map(|v| config.debug_info(v));
             wtc.wasm_backtrace.map(|v| config.wasm_backtrace(v));
             wtc.native_unwind_info.map(|v| config.native_unwind_info(v));
-            wtc.epoch_interruption.map(|v| config.epoch_interruption(v));
+            // wtc.epoch_interruption.map(|v| config.epoch_interruption(v));
             wtc.max_wasm_stack.map(|v| config.max_wasm_stack(v));
             wtc.wasm_simd.map(|v| config.wasm_simd(v));
+            wtc.wasm_relaxed_simd.map(|v| config.wasm_relaxed_simd(v));
+            wtc.relaxed_simd_deterministic.map(|v| config.relaxed_simd_deterministic(v));
             wtc.wasm_threads.map(|v| config.wasm_threads(v));
             wtc.wasm_multi_memory.map(|v| config.wasm_multi_memory(v));
             // TODO: wtc.tail_call.map(|v| config.wasm_tail_call(v));
@@ -130,7 +132,6 @@ impl From<ModuleConfig> for wasmtime::Config {
                 .map(|v| config.parallel_compilation(v));
             wtc.generate_address_map
                 .map(|v| config.generate_address_map(v));
-            wtc.wasm_relaxed_simd.map(|v| config.wasm_relaxed_simd(v));
         }
         config
     }
@@ -226,14 +227,16 @@ pub struct ModuleConfigWasmtime {
     pub native_unwind_info: Option<bool>,
     // TODO: pub wasm_backtrace_details: WasmBacktraceDetails, // Or WASMTIME_BACKTRACE_DETAILS env var
     //
-    pub epoch_interruption: Option<bool>, // vs consume_fuel
+    // TODO: pub epoch_interruption: Option<bool>, // vs consume_fuel
     pub max_wasm_stack: Option<usize>,
     //
     pub wasm_threads: Option<bool>, // false
     pub wasm_simd: Option<bool>,
+    pub wasm_relaxed_simd: Option<bool>, // false
+    pub relaxed_simd_deterministic: Option<bool>, // false
     pub wasm_multi_memory: Option<bool>, // false
     pub wasm_memory64: Option<bool>,     // false
-    // TODO: pub wasm_component_model: Option<bool>, // false
+    // TODO: pub wasm_component_model: Option<bool>, // false component-model feature
     //
     // pub strategy: Strategy,
     // TODO: pub profiler: ProfilingStrategy,
@@ -243,8 +246,6 @@ pub struct ModuleConfigWasmtime {
     pub static_memory_guard_size: Option<u64>,
     pub parallel_compilation: Option<bool>,
     pub generate_address_map: Option<bool>,
-
-    pub wasm_relaxed_simd: Option<bool>,
 }
 
 /// https://docs.wasmtime.dev/stability-wasm-proposals-support.html
