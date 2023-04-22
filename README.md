@@ -85,16 +85,17 @@ We provide [`package:flutter_wasi`](./packages/flutter_wasmi/) to bundle the rig
 
 ##### Runtime for Platform
 
-| Platform | Architecture                     | Runtime<sup>[1]</sup> |
-| -------- | -------------------------------- | --------------------- |
-| Linux    | aarch64 x86_64                   | Wasmtime 8.0          |
-| MacOS    | x86_64 aarch64                   | Wasmtime 8.0          |
-| Windows  | aarch64 x86_64                   | Wasmtime 8.0          |
-| iOS      | aarch64 x86_64 aarch64-sim       | Wasmi 0.29            |
-| Android  | armeabi-v7a arm64-v8a x86 x86_64 | Wasmi 0.29            |
-| Web      | N/A                              | Browser/Wasmi 0.29    |
+| Platform | Architecture               | Runtime<sup>[1]</sup> |
+| -------- | -------------------------- | --------------------- |
+| Linux    | aarch64 x86_64             | Wasmtime 8.0          |
+| MacOS    | x86_64 aarch64             | Wasmtime 8.0          |
+| Windows  | aarch64 x86_64             | Wasmtime 8.0          |
+| iOS      | aarch64 x86_64 aarch64-sim | Wasmi 0.29            |
+| Android  | armeabi-v7a x86 x86_64     | Wasmi 0.29            |
+| Android  | arm64-v8a                  | Wasmtime 8.0          |
+| Web      | N/A                        | Browser/Wasmi 0.29    |
 
-- [1]: Wasmi 0.29 supports any runtime that Rust could be compiled to.
+- [1]: Wasmi 0.29 supports any platform that Rust could be compiled to.
 
 #### Pure Dart (CLI/Backend/Web)
 

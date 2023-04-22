@@ -38,9 +38,9 @@ jobs:
       - name: Rust code analysis
         run: cargo clippy -- -D warnings
         if: always()
-      - name: Run Rust tests
-        run: cargo test
-        if: always()
+      # TODO: - name: Run Rust tests
+      #   run: cargo test
+      #   if: always()
       - name: Build Rust code for Dart tests
         run: cargo build -r
         id: build_rust

@@ -20,12 +20,8 @@ export '../bridge_generated.dart'
 // TODO: The default [ModuleConfig] used by [compileWasmModule].
 
 /// The default [WasmFeatures] used when compiling a Wasm module.
-Future<WasmFeatures> wasmFeaturesDefault() =>
-    platform_impl.wasmFeaturesDefault();
-
-/// The supported [WasmFeatures] used when compiling a Wasm module.
-Future<WasmFeatures> wasmFeaturesSupported() =>
-    platform_impl.wasmFeaturesSupported();
+Future<WasmRuntimeFeatures> wasmRuntimeFeatures() async =>
+    platform_impl.wasmRuntimeFeatures();
 
 /// Compiles a Wasm module asynchronously.
 Future<WasmModule> compileAsyncWasmModule(

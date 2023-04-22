@@ -61,5 +61,5 @@ scripts:
       dir-exists: test
 
   test:coverage:
-    run: cd packages/wasmi && dart pub global activate coverage && dart pub global run coverage:test_with_coverage -- -c source
+    run: cd packages/wasmi && dart pub global activate coverage && dart pub global run coverage:test_with_coverage --branch-coverage --function-coverage -- -c source
     description: Run all Dart & Flutter tests in this project and collect coverage.
