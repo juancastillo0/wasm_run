@@ -6,6 +6,7 @@ import 'package:test/test.dart';
 import 'package:wasmi/src/ffi.dart';
 import 'package:wasmi/src/wasm_bindings/wasm.dart';
 import 'package:wasmi/src/wasm_bindings/wasm_interface.dart';
+import 'package:wasmi_example/simd_test.dart';
 
 const isWeb = identical(0, 0.0);
 const compiledWasmLibraryPath =
@@ -769,6 +770,46 @@ void testAll() {
     final params = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(BigInt.from).toList();
     expect(roundTripMany(params), params);
     expect(Function.apply(roundTripMany.inner, params), params);
+  });
+
+  /// SIMD v128 tests
+  simdTests();
+
+  test('Reference types', () async {
+    final binary = await getBinary(
+      wat: r'''
+(module
+  (table $table (export "table") 10 externref)
+  (global $global (export "global") (mut externref) (ref.null extern))
+  (func (export "func") (param externref) (result externref)
+    local.get 0
+  )
+)
+''',
+      base64Binary:
+          'AGFzbQEAAAABBgFgAW8BbwMCAQAEBAFvAAoGBgFvAdBvCwcZAwV0YWJsZQEABmdsb2JhbAMABGZ1bmMAAAoGAQQAIAALABoEbmFtZQUIAQAFdGFibGUHCQEABmdsb2JhbA==',
+    );
+    final module = compileWasmModule(binary);
+    final instance = module.builder().build();
+
+    final table = instance.lookupTable('table')!;
+    final global = instance.lookupGlobal('global')!;
+    final func = instance.lookupFunction('func')!;
+
+    expect(table.length, 10);
+    expect(table[0], isNull);
+    table[0] = WasmValue.externRef(1);
+    expect(table[0], 1);
+
+    expect(global.get(), isNull);
+    global.set(WasmValue.externRef(2));
+    expect(global.get(), 2);
+
+    expect(func.inner('3'), '3');
+
+    final l = ['2'];
+    table.set(1, WasmValue.externRef(l));
+    expect(identical(l, table.get(1)), true);
   });
 }
 

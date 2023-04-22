@@ -30,8 +30,7 @@ pub enum WasmVal {
     // funcRef(Option<RustOpaque<wasmtime::Func>>),
     funcRef(Option<RustOpaque<WFunc>>),
     /// A nullable external object reference, a.k.a. [`ExternRef`].
-    // TODO: use Dart Opaque
-    externRef(u32), // NonZeroU32
+    externRef(Option<u32>), // NonZeroU32
 }
 
 impl WasmVal {
@@ -48,7 +47,7 @@ impl WasmVal {
                 let inner = i.map(|f| Func::clone(&f.func_wasmi));
                 Value::FuncRef(FuncRef::new(inner))
             }
-            WasmVal::externRef(i) => Value::ExternRef(ExternRef::new::<u32>(ctx, Some(i))),
+            WasmVal::externRef(i) => Value::ExternRef(ExternRef::new::<u32>(ctx, i)),
         }
     }
 
@@ -61,7 +60,7 @@ impl WasmVal {
             Value::F64(i) => WasmVal::f64(i.to_float()),
             Value::FuncRef(i) => WasmVal::funcRef(i.func().map(|f| RustOpaque::new((*f).into()))), // NonZeroU32::new(1).unwrap()),
             Value::ExternRef(i) => {
-                WasmVal::externRef(*(i.data(ctx).unwrap().downcast_ref::<u32>().unwrap()))
+                WasmVal::externRef(i.data(ctx).map(|i| *i.downcast_ref::<u32>().unwrap()))
             } // NonZeroU32::new(1).unwrap()),
         }
     }
@@ -74,9 +73,9 @@ impl WasmVal {
             WasmVal::i64(i) => wasmtime::Val::I64(i),
             WasmVal::f32(i) => wasmtime::Val::F32(i.to_bits()),
             WasmVal::f64(i) => wasmtime::Val::F64(i.to_bits()),
-            WasmVal::v128(i) => wasmtime::Val::V128(u128::from_be_bytes(i)),
+            WasmVal::v128(i) => wasmtime::Val::V128(u128::from_ne_bytes(i)),
             WasmVal::funcRef(i) => wasmtime::Val::FuncRef(i.map(|f| f.func_wasmtime)),
-            WasmVal::externRef(i) => wasmtime::Val::ExternRef(Some(wasmtime::ExternRef::new(i))),
+            WasmVal::externRef(i) => wasmtime::Val::ExternRef(i.map(wasmtime::ExternRef::new)),
         }
     }
 
@@ -85,13 +84,12 @@ impl WasmVal {
         match val {
             wasmtime::Val::I32(i) => WasmVal::i32(i),
             wasmtime::Val::I64(i) => WasmVal::i64(i),
-            wasmtime::Val::V128(i) => WasmVal::v128(i.to_be_bytes()),
+            wasmtime::Val::V128(i) => WasmVal::v128(i.to_ne_bytes()),
             wasmtime::Val::F32(i) => WasmVal::f32(f32::from_bits(i)),
             wasmtime::Val::F64(i) => WasmVal::f64(f64::from_bits(i)),
             wasmtime::Val::FuncRef(i) => WasmVal::funcRef(i.map(|f| RustOpaque::new(f.into()))),
             wasmtime::Val::ExternRef(i) => {
-                // TODO: improve
-                WasmVal::externRef(*i.unwrap().data().downcast_ref::<u32>().unwrap())
+                WasmVal::externRef(i.map(|i| *i.data().downcast_ref::<u32>().unwrap()))
             }
         }
     }

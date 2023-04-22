@@ -108,7 +108,9 @@ WasmVal _fromWasmValueRaw(ValueTy ty, Object? value, WasmiModuleId module) {
     case ValueTy.v128:
       return WasmVal.v128(value! as U8Array16);
     case ValueTy.externRef:
-      return WasmVal.externRef(_References.getOrCreateId(value, module));
+      return WasmVal.externRef(
+        value == null ? null : _References.getOrCreateId(value, module),
+      );
     case ValueTy.funcRef:
       if (value == null) {
         return const WasmVal.funcRef();
@@ -187,6 +189,27 @@ WasmExternal _toWasmExternal(ModuleExportValue value, _Instance instance) {
   // }
 }
 
+class ModuleObjectReference {
+  final WasmiModuleId module;
+  final Object value;
+
+  ModuleObjectReference(this.module, this.value);
+
+  @override
+  bool operator ==(Object other) =>
+      other is ModuleObjectReference &&
+      other.module.field0 == module.field0 &&
+      other.value == value;
+
+  @override
+  int get hashCode => module.field0.hashCode ^ value.hashCode;
+
+  @override
+  String toString() {
+    return 'ReferenceModule(${module.field0}, $value)';
+  }
+}
+
 typedef GlobalWasmFunction = ffi.Pointer<wire_list_wasm_val> Function(
   ffi.Int64 functionId,
   WireSyncReturn wasmArguments,
@@ -197,33 +220,28 @@ class _References {
   const _References._();
 
   static int _lastId = 1;
-  static final Map<int, WasmiModuleId> _idToModule = {};
-  static final Map<int, Object?> _idToReference = {};
-  static final Map<Object?, int> _referenceToId = {};
+  static final Map<int, ModuleObjectReference> _idToReference = {};
+  static final Map<ModuleObjectReference, int> _referenceToId = {};
 
-  static int getOrCreateId(Object? reference, WasmiModuleId module) {
-    final id = _referenceToId.putIfAbsent(reference, () {
+  static int getOrCreateId(Object reference, WasmiModuleId module) {
+    final ref = ModuleObjectReference(module, reference);
+    final id = _referenceToId.putIfAbsent(ref, () {
       final id = _lastId++;
-      _idToReference[id] = reference;
+      _idToReference[id] = ref;
       return id;
     });
-
-    _idToModule.update(
-      id,
-      // TODO: Make the key dependent on the module id
-      (value) => value.field0 != module.field0
-          ? throw Exception(
-              'Multiple modules for same reference id $reference $id.'
-              ' ${value.field0} !+ ${module.field0}',
-            )
-          : value,
-      ifAbsent: () => module,
-    );
     return id;
   }
 
-  static Object? getReference(int id) {
-    return _idToReference[id];
+  static Object? getReference(int? id, WasmiModuleId module) {
+    if (id == null) return null;
+    final ref = _idToReference[id];
+    assert(ref != null, 'Invalid reference: id $id module ${module.field0}');
+    assert(
+      module.field0 == ref?.module.field0,
+      'Invalid module: reference id $id module ${module.field0}',
+    );
+    return ref?.value;
   }
 
   static int get globalWasmFunctionPointer =>
@@ -233,15 +251,16 @@ class _References {
     WireSyncReturn value,
   ) {
     final l = wireSyncReturnIntoDart(value);
-    final input = _wire2api_list_value_2(l.first);
-    final function = getReference(functionId);
+    final input = _wire2api_list_wasm_val(l.first);
+    final ref = _idToReference[functionId]!;
+    final module = ref.module;
+    final function = ref.value;
     if (function is! WasmFunction) {
       throw Exception('Invalid function reference $functionId');
     } else if (function.results == null) {
       throw Exception('Function $functionId has no return values');
     }
 
-    final module = _References._idToModule[functionId]!;
     final args = input.map((v) => dartValueFromWasm(v, module)).toList();
 
     final platform = (defaultInstance() as WasmiDartImpl).platform;
@@ -263,12 +282,14 @@ class _References {
     return pointer;
   }
 
-  static List<WasmVal> _wire2api_list_value_2(dynamic raw) {
+  // ignore: non_constant_identifier_names
+  static List<WasmVal> _wire2api_list_wasm_val(dynamic raw) {
     final list = raw as List;
-    return list.map(_wire2api_value_2).toList();
+    return list.map(_wire2api_wasm_val).toList();
   }
 
-  static WasmVal _wire2api_value_2(dynamic raw_) {
+  // ignore: non_constant_identifier_names
+  static WasmVal _wire2api_wasm_val(dynamic raw_) {
     final raw = raw_ as List;
     switch (raw[0]) {
       case 0:
@@ -280,12 +301,14 @@ class _References {
       case 3:
         return WasmVal_f64(raw[1] as double);
       case 4:
+        return WasmVal_v128(U8Array16(raw[1] as Uint8List));
+      case 5:
         return WasmVal_funcRef(
           raw[1] == null
               ? null
               : WFunc.fromRaw(raw[0] as int, raw[1] as int, defaultInstance()),
         );
-      case 5:
+      case 6:
         return WasmVal_externRef(raw[1] as int);
       default:
         throw Exception("unreachable");
@@ -303,7 +326,7 @@ class _References {
         if (func == null) return null;
         return _toWasmFunction(func, module);
       },
-      externRef: getReference,
+      externRef: (id) => getReference(id, module),
     );
   }
 
@@ -319,7 +342,7 @@ class _References {
         if (func == null) return const WasmValue.funcRef(null);
         return WasmValue.funcRef(_toWasmFunction(func, module));
       },
-      externRef: (id) => WasmValue.externRef(getReference(id)),
+      externRef: (id) => WasmValue.externRef(getReference(id, module)),
     );
   }
 }
