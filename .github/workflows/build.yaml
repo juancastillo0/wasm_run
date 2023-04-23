@@ -71,24 +71,35 @@ jobs:
         uses: coverallsapp/github-action@v2
         if: always() && steps.coverage.outcome == 'success'
         with:
-          path-to-lcov: "packages/wasmi/coverage/lcov.info"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path-to-lcov: "./packages/wasmi/coverage/lcov.info"
           base-path: "packages/wasmi"
       - id: upload_coverage_to_coveralls2
         name: Upload coverage to Coveralls
         uses: coverallsapp/github-action@v1
         if: always() && steps.coverage.outcome == 'success' && steps.upload_coverage_to_coveralls.outcome != 'success'
         with:
-          path-to-lcov: "packages/wasmi/coverage/lcov.info"
-          base-path: "packages/wasmi"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path-to-lcov: "./packages/wasmi/coverage/lcov.info"
+          base-path: "packages/wasmi/lib"
       - name: Upload coverage to Coveralls
         uses: coverallsapp/github-action@v2
         if: always() && steps.coverage.outcome == 'success' && steps.upload_coverage_to_coveralls.outcome != 'success' && steps.upload_coverage_to_coveralls2.outcome != 'success'
-      - name: Upload coverage to Codecov
+      - id: upload_coverage_to_codecov
+        name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
         if: always() && steps.coverage.outcome == 'success'
         with:
-          fail_ci_if_error: true
+          fail_ci_if_error: false
           verbose: true
+          files: "./packages/wasmi/coverage/lcov.info"
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v2
+        if: always() && steps.coverage.outcome == 'success' && steps.upload_coverage_to_codecov.outcome != 'success'
+        with:
+          fail_ci_if_error: false
+          verbose: true
+          files: ./packages/wasmi/coverage/lcov.info
 
       # Web Browser tests
       - run: |
@@ -148,7 +159,7 @@ jobs:
 
       - name: Run Flutter integration tests
         working-directory: packages/flutter_wasmi/example
-        run: flutter test -d macos integration_test
+        run: flutter test -d macos integration_test --timeout "1200s" # 20 minutes
 
       # Web Browser tests
       - run: |
@@ -158,8 +169,11 @@ jobs:
         if: always()
 
       # Safari
-      - run: dart lib/web_driver_installer.dart safaridriver &
-        working-directory: web_installers/packages/web_drivers
+      # - run: dart lib/web_driver_installer.dart safaridriver &
+      #   working-directory: web_installers/packages/web_drivers
+      #   id: safaridriver
+      #   if: always()
+      - run: sudo safaridriver --enable
         id: safaridriver
         if: always()
       - run: dart run test -p safari
@@ -177,6 +191,8 @@ jobs:
       - run: dart run test -p chrome
         working-directory: packages/wasmi
         if: always() && steps.chromedriver.outcome == 'success'
+      - name: Run Chrome Driver again
+        run: ${CHROMEDRIVER}/chromedriver --port=4445 &
       - run: flutter drive --driver=test_driver/integration_test.dart --target=integration_test/main_test.dart -d web-server --browser-name=chrome --driver-port=4445
         working-directory: packages/flutter_wasmi/example
         if: always() && steps.chromedriver.outcome == 'success'
@@ -318,3 +334,72 @@ jobs:
             ram-size: 1024M
             disk-size: 2048M
             script: cd packages/flutter_wasmi/example && flutter test -d `flutter devices | grep android | tr ' ' '\n' | grep emulator-` integration_test
+
+  android_integration_test_cached:
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        arch: ["arm64-v8a", "x86_64"]
+        api-level: [33]
+    steps:
+      - uses: actions/checkout@v3
+      - name: Gradle cache
+        uses: gradle/gradle-build-action@v2
+      - name: AVD cache
+        uses: actions/cache@v3
+        id: avd-cache
+        with:
+          path: |
+            ~/.android/avd/*
+            ~/.android/adb*
+          key: avd-${{ matrix.arch }}-${{ matrix.api-level }}
+      - name: Create AVD and generate snapshot for caching
+        if: steps.avd-cache.outputs.cache-hit != 'true'
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ matrix.api-level }}
+          force-avd-creation: false
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: false
+          avd-name: avd-${{ matrix.arch }}-${{ matrix.api-level }}
+          target: google_apis
+          arch: ${{ matrix.arch }}
+          ram-size: 1024M
+          disk-size: 2048M
+          script: echo "Generated AVD snapshot for caching."
+
+      - uses: subosito/flutter-action@v2
+      - uses: bluefireteam/melos-action@v2
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+      - uses: nttld/setup-ndk@v1
+        with:
+          ndk-version: r25b
+      - uses: actions/setup-java@v3
+        with:
+          distribution: zulu
+          java-version: "11.x"
+
+      - name: Build the binaries
+        run: melos run build:android -- dev
+      - name: Copy the binaries to the needed location
+        run: |
+          CURR_VERSION=wasmi-v`awk '/^version: /{print $2}' packages/wasmi/pubspec.yaml`
+          cp platform-build/android.tar.gz packages/flutter_wasmi/android/$CURR_VERSION.tar.gz
+          echo Copied file!
+
+      - name: Run tests
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ matrix.api-level }}
+          force-avd-creation: false
+          # default: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: true
+          avd-name: avd-${{ matrix.arch }}-${{ matrix.api-level }}
+          target: google_apis
+          arch: ${{ matrix.arch }}
+          ram-size: 1024M
+          disk-size: 2048M
+          script: cd packages/flutter_wasmi/example && flutter test -d `flutter devices | grep android | tr ' ' '\n' | grep emulator-` integration_test

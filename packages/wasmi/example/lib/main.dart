@@ -658,6 +658,12 @@ void testAll({
       return result;
     }
 
+    final List<String> stderr1 = [];
+    final stderr = await instance1.stderr;
+    stderr.listen((event) {
+      stderr1.add(utf8.decode(event));
+    });
+
     final readFileSize = instance1.lookupFunction('read_file_size')!;
     {
       print('Wasm file ${fileToDelete.path}');
@@ -675,6 +681,8 @@ void testAll({
         size = (readFileSize([offset]).first as BigInt).toInt();
       } catch (e, s) {
         print('$e $s');
+        await Future<void>.delayed(const Duration(milliseconds: 10));
+        print(stderr1);
         rethrow;
       }
       dealloc(offset, buffer.length);
@@ -729,11 +737,6 @@ void testAll({
     expect(stdout1.last, 'Hello, world! 2\n');
 
     final stderrLog = instance1.lookupFunction('stderr_log')!;
-    final List<String> stderr1 = [];
-    final stderr = await instance1.stderr;
-    stderr.listen((event) {
-      stderr1.add(utf8.decode(event));
-    });
 
     final errMsg = 'error message';
     final buffer = Uint8List.sublistView(Uint16List.fromList(errMsg.codeUnits));

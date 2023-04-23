@@ -111,7 +111,7 @@ We use [package:wasm_interop](https://pub.dev/packages/wasm_interop) to implemen
 
 However, in web browsers there is no support for the [WAT](https://developer.mozilla.org/en-US/docs/WebAssembly/Understanding_the_text_format) format and other queries that you may perform over the WASM modules on native platforms. For example, WASM [function type definitions](https://github.com/WebAssembly/js-types/blob/main/proposals/js-types/Overview.md) (arguments and results) are not provided in most browsers. If you what these features, you may use the compiled WASM module.
 
-We use the [wasm-feature-detect JavaScript library](https://github.com/GoogleChromeLabs/wasm-feature-detect) for feature detection in the browser. To use this functionality in Dart web applications you will need to add the following script (not necessary for Flutter):
+We use the [wasm-feature-detect JavaScript library](https://github.com/GoogleChromeLabs/wasm-feature-detect) for feature detection in the browser. To use this functionality in Dart web applications you will need to add the following script to your html (not necessary for Flutter):
 
 ```html
 <script src="https://unpkg.com/wasm-feature-detect/dist/umd/index.js"></script>
@@ -123,6 +123,8 @@ We use the [wasm-feature-detect JavaScript library](https://github.com/GoogleChr
 Support for compiling modules in [WAT format](https://developer.mozilla.org/en-US/docs/WebAssembly/Understanding_the_text_format). At the moment this is only supported in native platforms.
 
 ## Parse and Introspect WASM Modules
+
+Parsing WASM and WAT modules to explore the exposed interface.
 
 ### Imports and Exports
 
@@ -138,7 +140,7 @@ In the web platform we do not automatically support modules with WASI imports. H
 
 Usage within Dart can be found in the [main test](./packages/wasmi/example/lib/main.dart).
 
-The WASI module used to execute the test is compiled from the [`rust_wasi_example` Rust project](./packages/rust_wasi_example/src/lib.rs).
+The WASI module used to execute the test is compiled from the [`rust_wasi_example` Rust project](./packages/rust_wasi_example/src/lib.rs) within this repo.
 
 You may compile it with the following commands inside the project's directory:
 
