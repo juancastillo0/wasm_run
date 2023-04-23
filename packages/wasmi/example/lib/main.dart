@@ -577,6 +577,12 @@ void testAll({
       ].map((e) => e.toString()),
     );
 
+    final wasmGuestPath = Platform.isWindows
+        ? (directoryToAllow.path.split('\\')..[0] = '').join('/')
+        : directoryToAllow.path;
+    final wasmGuestFilePath = Platform.isWindows
+        ? '$wasmGuestPath/${fileToDelete.uri.pathSegments.last}'
+        : fileToDelete.path;
     final args = ['arg1'];
     final builder1 = module.builder(
       wasiConfig: WasiConfig(
@@ -592,13 +598,15 @@ void testAll({
         preopenedFiles: [],
         preopenedDirs: [
           PreopenedDir(
-            wasmGuestPath: directoryToAllow.path,
+            wasmGuestPath: wasmGuestPath,
             hostPath: directoryToAllow.path,
           ),
         ],
       ),
     );
-    print('allow directory: ${directoryToAllow.path}');
+    print(
+      'allow directory: ${directoryToAllow.path} wasmGuestPath: ${wasmGuestPath}',
+    );
     builder1.addImport(
       'example_imports',
       'translate',
@@ -666,9 +674,9 @@ void testAll({
 
     final readFileSize = instance1.lookupFunction('read_file_size')!;
     {
-      print('Wasm file ${fileToDelete.path}');
+      print('Wasm file ${wasmGuestFilePath}');
       // final bb = utf8.encode(File(wasmFile).absolute.path);
-      final bb = utf8.encode(fileToDelete.path);
+      final bb = utf8.encode(wasmGuestFilePath);
 
       final buffer = Uint8List(bb.length + 1);
       List.copyRange(buffer, 0, bb);
@@ -694,7 +702,7 @@ void testAll({
     final fileData = instance1.lookupFunction('file_data_raw')!;
 
     {
-      final buffer = Uint8List.fromList(utf8.encode(fileToDelete.path));
+      final buffer = Uint8List.fromList(utf8.encode(wasmGuestFilePath));
       final dataOffset = withBufferOffset(
         buffer,
         // utf8 with length
