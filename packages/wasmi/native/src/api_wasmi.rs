@@ -13,6 +13,7 @@ use std::{
     fs,
     sync::{Arc, RwLock},
 };
+#[cfg(feature = "wasi")]
 use wasi_common::{file::FileCaps, pipe::WritePipe};
 use wasmi::core::Trap;
 pub use wasmi::{core::Pages, Func, Global, GlobalType, Memory, Module, Table};
@@ -46,6 +47,7 @@ struct WasmiModuleImpl {
 // }
 
 struct StoreState {
+    #[cfg(feature = "wasi")]
     wasi_ctx: Option<wasi_common::WasiCtx>,
     stdout: Option<StreamSink<Vec<u8>>>,
     stderr: Option<StreamSink<Vec<u8>>>,
@@ -68,6 +70,12 @@ pub fn module_builder(
     module: CompiledModule,
     wasi_config: Option<WasiConfig>,
 ) -> Result<SyncReturn<WasmiModuleId>> {
+    if wasi_config.is_some() && !cfg!(feature = "wasi") {
+        return Err(anyhow::Error::msg(
+            "WASI feature is not enabled. Please enable it by adding `--features wasi` when building.",
+        ));
+    }
+
     let guard = module.0.lock().unwrap();
     let engine = guard.engine();
     let mut linker = <Linker<StoreState>>::new(engine);
@@ -76,7 +84,9 @@ pub fn module_builder(
     arr.last_id += 1;
 
     let id = arr.last_id;
+    #[cfg(feature = "wasi")]
     let mut wasi_ctx = None;
+    #[cfg(feature = "wasi")]
     if let Some(wasi_config) = wasi_config {
         wasmi_wasi::add_to_linker(&mut linker, |ctx| ctx.wasi_ctx.as_mut().unwrap())?;
         let mut wasi = wasi_config.to_wasi_ctx()?;
@@ -122,6 +132,7 @@ pub fn module_builder(
     let store = Store::new(
         engine,
         StoreState {
+            #[cfg(feature = "wasi")]
             wasi_ctx,
             stdout: None,
             stderr: None,
@@ -211,6 +222,11 @@ impl WasmiModuleId {
     }
 
     pub fn stdio_stream(&self, sink: StreamSink<Vec<u8>>, kind: StdIOKind) -> Result<()> {
+        if !cfg!(feature = "wasi") {
+            return Err(anyhow::anyhow!(
+                "Stdio is not supported without the 'wasi' feature"
+            ));
+        }
         self.with_module_mut(|mut store| {
             let store_state = store.data_mut();
             {

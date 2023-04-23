@@ -19,6 +19,7 @@ pub enum StdIOKind {
     stderr,
 }
 
+#[cfg(feature = "wasi")]
 impl WasiConfig {
     pub fn to_wasi_ctx(&self) -> anyhow::Result<wasi_common::WasiCtx> {
         #[cfg(not(feature = "wasmtime"))]
@@ -327,10 +328,10 @@ pub struct WasmFeatures {
     pub component_model: bool,
     /// The WebAssembly memory control proposal
     pub memory_control: bool,
-    /// The WebAssembly System Interface proposal
-    pub wasi_features: Option<WasmWasiFeatures>,
     /// The WebAssembly garbage collection (GC) proposal
     pub garbage_collection: bool,
+    /// The WebAssembly System Interface proposal
+    pub wasi_features: Option<WasmWasiFeatures>,
     // TODO:
     //   final bool moduleLinking;
 }
@@ -399,7 +400,11 @@ impl WasmFeatures {
                 tail_call: false,
                 exceptions: false,
                 memory_control: false,
-                wasi_features: Some(WasmWasiFeatures::default()),
+                wasi_features: if cfg!(feature = "wasi") {
+                    Some(WasmWasiFeatures::default())
+                } else {
+                    None
+                },
             };
         }
         // TODO: use features crate
@@ -424,7 +429,11 @@ impl WasmFeatures {
             exceptions: false,
             memory64: false,
             memory_control: false,
-            wasi_features: Some(WasmWasiFeatures::default()),
+            wasi_features: if cfg!(feature = "wasi") {
+                Some(WasmWasiFeatures::default())
+            } else {
+                None
+            },
         }
     }
 
@@ -451,7 +460,11 @@ impl WasmFeatures {
                 exceptions: false,
                 tail_call: false,
                 memory_control: false,
-                wasi_features: Some(WasmWasiFeatures::supported()),
+                wasi_features: if cfg!(feature = "wasi") {
+                    Some(WasmWasiFeatures::supported())
+                } else {
+                    None
+                },
             };
         }
         // TODO: use features crate
@@ -476,7 +489,11 @@ impl WasmFeatures {
             exceptions: false,
             memory64: false,
             memory_control: false,
-            wasi_features: Some(WasmWasiFeatures::supported()),
+            wasi_features: if cfg!(feature = "wasi") {
+                Some(WasmWasiFeatures::supported())
+            } else {
+                None
+            },
         }
     }
 }
@@ -516,7 +533,11 @@ impl ModuleConfig {
                 tail_call: false,
                 exceptions: false,
                 memory_control: false,
-                wasi_features: Some(WasmWasiFeatures::default()),
+                wasi_features: if cfg!(feature = "wasi") {
+                    Some(WasmWasiFeatures::default())
+                } else {
+                    None
+                },
             };
         }
         let w = self.wasmi.as_ref();
@@ -549,7 +570,11 @@ impl ModuleConfig {
             exceptions: false,
             memory64: false,
             memory_control: false,
-            wasi_features: Some(WasmWasiFeatures::default()),
+            wasi_features: if cfg!(feature = "wasi") {
+                Some(WasmWasiFeatures::default())
+            } else {
+                None
+            },
         }
     }
 }

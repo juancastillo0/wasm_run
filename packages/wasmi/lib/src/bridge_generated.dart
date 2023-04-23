@@ -817,11 +817,11 @@ class WasmFeatures {
   /// The WebAssembly memory control proposal
   final bool memoryControl;
 
-  /// The WebAssembly System Interface proposal
-  final WasmWasiFeatures? wasiFeatures;
-
   /// The WebAssembly garbage collection (GC) proposal
   final bool garbageCollection;
+
+  /// The WebAssembly System Interface proposal
+  final WasmWasiFeatures? wasiFeatures;
 
   const WasmFeatures({
     required this.mutableGlobal,
@@ -841,8 +841,8 @@ class WasmFeatures {
     required this.extendedConst,
     required this.componentModel,
     required this.memoryControl,
-    this.wasiFeatures,
     required this.garbageCollection,
+    this.wasiFeatures,
   });
 }
 
@@ -2405,8 +2405,8 @@ class WasmiDartImpl implements WasmiDart {
       extendedConst: _wire2api_bool(arr[14]),
       componentModel: _wire2api_bool(arr[15]),
       memoryControl: _wire2api_bool(arr[16]),
-      wasiFeatures: _wire2api_opt_box_autoadd_wasm_wasi_features(arr[17]),
-      garbageCollection: _wire2api_bool(arr[18]),
+      garbageCollection: _wire2api_bool(arr[17]),
+      wasiFeatures: _wire2api_opt_box_autoadd_wasm_wasi_features(arr[18]),
     );
   }
 

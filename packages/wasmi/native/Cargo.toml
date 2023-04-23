@@ -22,6 +22,7 @@ wasmtime-wasi = "8.0.0"
 # wasmtime-types = "8.0.0"
 
 [features]
-default = ["wasmtime"]
+default = ["wasmtime", "wasi"]
+wasi = []
 wasmi = []
 wasmtime = []

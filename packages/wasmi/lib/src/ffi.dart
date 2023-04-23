@@ -27,10 +27,11 @@ WasmiDart defaultInstance() {
     return _wrapper!;
   }
   try {
-    return createLib();
+    final externalLib = localTestingLibraryImpl();
+    return createWrapper(externalLib);
   } catch (_) {
     try {
-      return createWrapper(localTestingLibraryImpl());
+      return createLib();
     } catch (_) {
       developer.log(
         'When building a pure Dart application (backend or cli, for example),'
