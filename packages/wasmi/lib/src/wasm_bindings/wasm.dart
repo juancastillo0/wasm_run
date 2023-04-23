@@ -1,10 +1,10 @@
 import 'dart:typed_data';
 
-import '../bridge_generated.dart';
-import '_wasm_interop_stub.dart'
+import 'package:wasmi/src/bridge_generated.dart';
+import 'package:wasmi/src/wasm_bindings/_wasm_interop_stub.dart'
     if (dart.library.io) '_wasm_interop_native.dart'
     if (dart.library.html) '_wasm_interop_web.dart' as platform_impl;
-import 'wasm_interface.dart';
+import 'package:wasmi/src/wasm_bindings/wasm_interface.dart';
 
 export '../bridge_generated.dart'
     show

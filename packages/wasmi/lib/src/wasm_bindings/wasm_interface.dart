@@ -1,8 +1,8 @@
 import 'dart:typed_data';
 
-import '../bridge_generated.dart'
+import 'package:wasmi/src/bridge_generated.dart'
     show ExternalType, U8Array16, ValueTy, WasiConfig, WasmFeatures;
-import '_wasm_interop_stub.dart'
+import 'package:wasmi/src/wasm_bindings/_wasm_interop_stub.dart'
     if (dart.library.io) '_wasm_interop_native.dart'
     if (dart.library.html) '_wasm_interop_web.dart' show isVoidReturn;
 
@@ -478,3 +478,6 @@ enum WasmExternalKind {
   /// [WasmTable]
   table
 }
+
+// TODO: https://developer.mozilla.org/en-US/docs/WebAssembly/JavaScript_interface/Global/Global
+// anyfunc: A function reference.

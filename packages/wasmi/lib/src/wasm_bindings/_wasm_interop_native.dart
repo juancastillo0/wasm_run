@@ -4,9 +4,9 @@ import 'dart:typed_data' show Uint8List;
 import 'package:flutter_rust_bridge/flutter_rust_bridge.dart'
     show WireSyncReturn, wireSyncReturnIntoDart;
 import 'package:wasmi/src/bridge_generated.io.dart';
+import 'package:wasmi/src/ffi.dart' show defaultInstance;
 import 'package:wasmi/src/wasm_bindings/make_function_num_args.dart';
 import 'package:wasmi/src/wasm_bindings/wasm_interface.dart';
-import 'package:wasmi/wasmi.dart' show defaultInstance;
 
 final _noReturnPlaceholder = Object();
 

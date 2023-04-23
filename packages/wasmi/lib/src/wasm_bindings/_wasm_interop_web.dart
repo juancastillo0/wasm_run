@@ -4,9 +4,9 @@ import 'dart:typed_data' show Uint8List;
 
 import 'package:wasm_interop/wasm_interop.dart';
 
-import '../bridge_generated.dart' show ModuleConfig;
-import '_wasm_feature_detect_web.dart';
-import 'wasm_interface.dart';
+import 'package:wasmi/src/bridge_generated.dart' show ModuleConfig;
+import 'package:wasmi/src/wasm_bindings/_wasm_feature_detect_web.dart';
+import 'package:wasmi/src/wasm_bindings/wasm_interface.dart';
 
 bool isVoidReturn(dynamic value) {
   switch (value) {
