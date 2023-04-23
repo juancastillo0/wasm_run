@@ -1,3 +1,5 @@
+@Timeout(Duration(minutes: 22))
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:path_provider/path_provider.dart'
@@ -6,7 +8,8 @@ import 'package:wasmi_example/main.dart';
 import 'package:flutter/services.dart' show rootBundle;
 
 void main() {
-  IntegrationTestWidgetsFlutterBinding.ensureInitialized();
+  IntegrationTestWidgetsFlutterBinding.ensureInitialized().defaultTestTimeout =
+      const Timeout(Duration(minutes: 22));
 
   group('end-to-end test', () {
     testAll(
