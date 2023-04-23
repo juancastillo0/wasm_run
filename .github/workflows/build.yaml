@@ -66,12 +66,23 @@ jobs:
         name: Run tests with coverage
         if: always() && steps.dart_test.outcome == 'success' && matrix.wasm_runtime == 'wasmtime'
         run: melos run test:coverage
-      - name: Upload coverage to Coveralls
+      - id: upload_coverage_to_coveralls
+        name: Upload coverage to Coveralls
         uses: coverallsapp/github-action@v2
         if: always() && steps.coverage.outcome == 'success'
         with:
           path-to-lcov: "packages/wasmi/coverage/lcov.info"
           base-path: "packages/wasmi"
+      - id: upload_coverage_to_coveralls2
+        name: Upload coverage to Coveralls
+        uses: coverallsapp/github-action@v1
+        if: always() && steps.coverage.outcome == 'success' && steps.upload_coverage_to_coveralls.outcome != 'success'
+        with:
+          path-to-lcov: "packages/wasmi/coverage/lcov.info"
+          base-path: "packages/wasmi"
+      - name: Upload coverage to Coveralls
+        uses: coverallsapp/github-action@v2
+        if: always() && steps.coverage.outcome == 'success' && steps.upload_coverage_to_coveralls.outcome != 'success' && steps.upload_coverage_to_coveralls2.outcome != 'success'
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
         if: always() && steps.coverage.outcome == 'success'

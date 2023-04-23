@@ -40,7 +40,10 @@ Future<Uint8List> getBinary({
   return binary;
 }
 
-void testAll() {
+void testAll({
+  Future<Uint8List> Function()? getWasiExampleBytes,
+  Future<Directory> Function()? getDirectory,
+}) {
   test('WasmFeature', () async {
     final runtime = await wasmRuntimeFeatures();
     final defaultFeatures = runtime.defaultFeatures;
@@ -467,26 +470,31 @@ void testAll() {
   test('wasi', () async {
     final startTimestamp = DateTime.now().millisecondsSinceEpoch;
     Uint8List? binary;
-    final wasmFiles = [
-      '../rust_wasi_example/target/wasm32-wasi/debug/rust_wasi_example.wasm',
-      '../../rust_wasi_example/target/wasm32-wasi/debug/rust_wasi_example.wasm',
-      '../rust_wasi_example/target/wasm32-wasi/release/rust_wasi_example.wasm',
-      '../../rust_wasi_example/target/wasm32-wasi/release/rust_wasi_example.wasm',
-    ];
-    String wasmFile = wasmFiles.first;
-    for (final element in wasmFiles) {
-      try {
-        binary = await File(element).readAsBytes();
-        wasmFile = element;
-      } catch (_) {}
-    }
-    if (binary == null) {
-      throw Exception('Could not find wasm file');
+    if (getWasiExampleBytes != null) {
+      binary = await getWasiExampleBytes();
+    } else {
+      final wasmFiles = [
+        '../rust_wasi_example/target/wasm32-wasi/debug/rust_wasi_example.wasm',
+        '../../rust_wasi_example/target/wasm32-wasi/debug/rust_wasi_example.wasm',
+        '../rust_wasi_example/target/wasm32-wasi/release/rust_wasi_example.wasm',
+        '../../rust_wasi_example/target/wasm32-wasi/release/rust_wasi_example.wasm',
+      ];
+      for (final element in wasmFiles) {
+        try {
+          binary = await File(element).readAsBytes();
+        } catch (_) {}
+      }
+      if (binary == null) {
+        throw Exception('Could not find wasm file');
+      }
     }
     final module = compileWasmModule(binary);
 
+    final directoryToAllow =
+        getDirectory != null ? await getDirectory() : Directory.current;
+
     final fileToDelete =
-        File('${Directory.current.path}${Platform.pathSeparator}wasi.wasm')
+        File('${directoryToAllow.path}${Platform.pathSeparator}wasi.wasm')
           ..writeAsBytesSync(binary);
     addTearDown(() => fileToDelete.deleteSync());
 
@@ -580,16 +588,17 @@ void testAll() {
         args: args,
         env: [EnvVariable(name: 'name', value: 'value')],
         // TODO: this doesn't work
-        preopenedFiles: [File(wasmFile).absolute.path],
+        // preopenedFiles: [File(wasmFile).absolute.path],
+        preopenedFiles: [],
         preopenedDirs: [
           PreopenedDir(
-            wasmGuestPath: Directory.current.path,
-            hostPath: Directory.current.path,
+            wasmGuestPath: directoryToAllow.path,
+            hostPath: directoryToAllow.path,
           ),
         ],
       ),
     );
-    print('allow directory: ${Directory.current.path}');
+    print('allow directory: ${directoryToAllow.path}');
     builder1.addImport(
       'example_imports',
       'translate',
@@ -661,7 +670,13 @@ void testAll() {
 
       final offset = alloc(buffer.length);
       memory.write(offset: offset, buffer: buffer);
-      final size = (readFileSize([offset]).first as BigInt).toInt();
+      int size;
+      try {
+        size = (readFileSize([offset]).first as BigInt).toInt();
+      } catch (e, s) {
+        print('$e $s');
+        rethrow;
+      }
       dealloc(offset, buffer.length);
 
       expect(size, binary.lengthInBytes);

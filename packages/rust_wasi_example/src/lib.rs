@@ -19,12 +19,13 @@ pub extern "C" fn stderr_log(msg_utf16: *const u16, msg_utf16_length: u32) {
 
 #[no_mangle]
 pub extern "C" fn read_file_size(path: *const c_char) -> u64 {
-    // String::from_raw_parts(buf, length, capacity);
     let path = unsafe { std::ffi::CStr::from_ptr(path) };
-    // let path = String::from_utf16(path).unwrap();
-    let metadata = std::fs::metadata(path.to_str().unwrap()).unwrap();
+    let metadata = std::fs::metadata(path.to_str().unwrap());
 
-    metadata.len()
+    if let Err(err) = &metadata {
+        eprintln!("Error: {:?} {:?}", path, err);
+    }
+    metadata.unwrap().len()
 }
 
 // TODO: test default -> Rust FileData -> memory bytes pointer -> Dart FileData
