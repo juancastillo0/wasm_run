@@ -22,29 +22,31 @@ and the Flutter guide for
 A Web Assembly executor for the Dart programming language. Currently it uses the [`wasmtime 8.0`](https://github.com/bytecodealliance/wasmtime) or [`wasmi 0.29`](https://github.com/paritytech/wasmi) Rust crates for parsing and executing WASM modules. Bindings are created using [`package:flutter_rust_bridge`](https://github.com/fzyzcjy/flutter_rust_bridge).
 
 - [Dart Wasm Interpreter](#dart-wasm-interpreter)
-  - [Features](#features)
-    - [Supported Wasm Features](#supported-wasm-features)
-    - [Execute WASM on any platform](#execute-wasm-on-any-platform)
-      - [Flutter](#flutter)
-        - [Runtime for Platform](#runtime-for-platform)
-      - [Pure Dart (CLI/Backend/Web)](#pure-dart-clibackendweb)
-      - [WASM Web bindings](#wasm-web-bindings)
-    - [Parse Web Assembly Text Format (WAT)](#parse-web-assembly-text-format-wat)
-    - [Parse and Introspect WASM Modules](#parse-and-introspect-wasm-modules)
-      - [Imports and Exports](#imports-and-exports)
-    - [Web Assembly System Interface (WASI)](#web-assembly-system-interface-wasi)
-      - [stdio (stdin, stdout, stderr)](#stdio-stdin-stdout-stderr)
-      - [Files and Directories](#files-and-directories)
-      - [Environment and Arguments](#environment-and-arguments)
+- [Features](#features)
+  - [Supported Wasm Features](#supported-wasm-features)
+  - [Execute WASM on any platform](#execute-wasm-on-any-platform)
+    - [Flutter](#flutter)
+      - [Runtime for Platform](#runtime-for-platform)
+    - [Pure Dart (CLI/Backend/Web)](#pure-dart-clibackendweb)
+    - [WASM Web bindings](#wasm-web-bindings)
+  - [Parse Web Assembly Text Format (WAT)](#parse-web-assembly-text-format-wat)
+  - [Parse and Introspect WASM Modules](#parse-and-introspect-wasm-modules)
+    - [Imports and Exports](#imports-and-exports)
+  - [Web Assembly System Interface (WASI)](#web-assembly-system-interface-wasi)
+    - [Examples](#examples)
+    - [Stdio (stdin, stdout, stderr)](#stdio-stdin-stdout-stderr)
+    - [Directories](#directories)
+    - [Environment and Arguments](#environment-and-arguments)
+    - [Clocks and Random](#clocks-and-random)
   - [Getting started](#getting-started)
   - [Usage](#usage)
   - [Additional information](#additional-information)
 
 
 
-## Features
+# Features
 
-### Supported Wasm Features
+## Supported Wasm Features
 
 | Feature\Runtime               | Wasmtime 8.0    | Wasmi 0.29 | Chrome<sup>[1]</sup> |
 | ----------------------------- | --------------- | ---------- | -------------------- |
@@ -77,13 +79,13 @@ A Web Assembly executor for the Dart programming language. Currently it uses the
 - [2]: Supported, but not implemented.
 
 
-### Execute WASM on any platform
+## Execute WASM on any platform
 
-#### Flutter
+### Flutter
 
 We provide [`package:flutter_wasi`](./packages/flutter_wasmi/) to bundle the right binaries for your platform compilation targets.
 
-##### Runtime for Platform
+#### Runtime for Platform
 
 | Platform | Architecture               | Runtime<sup>[1]</sup> |
 | -------- | -------------------------- | --------------------- |
@@ -97,13 +99,13 @@ We provide [`package:flutter_wasi`](./packages/flutter_wasmi/) to bundle the rig
 
 - [1]: Wasmi 0.29 supports any platform that Rust could be compiled to.
 
-#### Pure Dart (CLI/Backend/Web)
+### Pure Dart (CLI/Backend/Web)
 
 For other platforms, you may download the executables for each platform and specify the `DynamicLibrary` in non-web platforms.
 
 For the web platform we provide the same interface for the WASM runtime provided by the browser (you may also use the Wasmi WASM module).
 
-#### WASM Web bindings
+### WASM Web bindings
 
 We use [package:wasm_interop](https://pub.dev/packages/wasm_interop) to implement the browser web API. In this way, you won't need to provide a custom runtime, since the browser already provides it.
 
@@ -116,25 +118,51 @@ We use the [wasm-feature-detect JavaScript library](https://github.com/GoogleChr
 ```
 
 
-### Parse Web Assembly Text Format (WAT)
+## Parse Web Assembly Text Format (WAT)
 
 Support for compiling modules in [WAT format](https://developer.mozilla.org/en-US/docs/WebAssembly/Understanding_the_text_format). At the moment this is only supported in native platforms.
 
-### Parse and Introspect WASM Modules
+## Parse and Introspect WASM Modules
 
-#### Imports and Exports
+### Imports and Exports
 
 You may retrieve the names and types of each import and export defined in a WASM module.
 
-### Web Assembly System Interface (WASI)
+## Web Assembly System Interface (WASI)
 
-We support [WASI](https://github.com/WebAssembly/WASI) through the [wasmtime_wasi](https://docs.rs/wasmtime-wasi/8.0.0/wasmtime_wasi/) or [wasmi_wasi](https://docs.rs/wasmi_wasi/0.29.0/wasmi_wasi) Rust crates, [chosen depending on the target platform](#runtime-for-platform). 
+We support [WASI](https://github.com/WebAssembly/WASI) [wasi_snapshot_preview1](https://github.com/WebAssembly/WASI/blob/main/legacy/preview1/docs.md) through the [wasmtime_wasi](https://docs.rs/wasmtime-wasi/8.0.0/wasmtime_wasi/) or [wasmi_wasi](https://docs.rs/wasmi_wasi/0.29.0/wasmi_wasi) Rust crates, [chosen depending on the target platform](#runtime-for-platform). 
 
-#### stdio (stdin, stdout, stderr)
+In the web platform we do not automatically support modules with WASI imports. However, you may provide the imports manually. In the future we may provide an integration in a separate package, perhaps using [bjorn3/browser_wasi_shim](https://github.com/bjorn3/browser_wasi_shim).
 
-#### Files and Directories
+### Examples
 
-#### Environment and Arguments
+Usage within Dart can be found in the [main test](./packages/wasmi/example/lib/main.dart).
+
+The WASI module used to execute the test is compiled from the [`rust_wasi_example` Rust project](./packages/rust_wasi_example/src/lib.rs).
+
+You may compile it with the following commands inside the project's directory:
+
+`cargo build --target wasm32-wasi`
+
+or, if you have `cargo-wasi` installed:
+
+`cargo wasi build`
+
+### Stdio (stdin, stdout, stderr)
+
+You may choose to inherit stdin, stdout and stderr from the current process. Or capture stdout and stderr to execute some custom logic for the stdio exposed by the execution of the specific WASI module.
+
+### Directories
+
+You may provide a list of directories that the WASI module is allowed to access.
+
+### Environment and Arguments
+
+You can pass custom environment variable and program arguments to the WASI module or inherit them from the current process.
+
+### Clocks and Random
+
+The WASI modules can have access to the system clock and randomness.
 
 ## Getting started
 
