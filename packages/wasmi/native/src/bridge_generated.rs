@@ -1000,8 +1000,8 @@ impl support::IntoDart for WasmFeatures {
             self.extended_const.into_dart(),
             self.component_model.into_dart(),
             self.memory_control.into_dart(),
-            self.wasi_features.into_dart(),
             self.garbage_collection.into_dart(),
+            self.wasi_features.into_dart(),
         ]
         .into_dart()
     }
