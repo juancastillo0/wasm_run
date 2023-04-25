@@ -1,5 +1,3 @@
-import 'dart:developer' as developer;
-
 import 'package:wasmi/src/bridge_generated.dart';
 import 'package:wasmi/src/ffi/stub.dart'
     if (dart.library.io) 'ffi/io.dart'
@@ -16,8 +14,9 @@ WasmiDart createWrapper(ExternalLibrary lib) {
 ///
 /// When building a pure Dart application (backend or cli, for example),
 /// you must call `setDynamicLibrary(<nativeLibraryForYourPlatform>)`
-/// before using the library. The <nativeLibraryForYourPlatform> can be download
-/// from the releases of the github repository of the package.'
+/// before using the package. The <nativeLibraryForYourPlatform> can be downloaded
+/// from the releases of the Github repository of the package.
+/// https://github.com/juancastillo0/wasm_interpreter/releases
 void setDynamicLibrary(ExternalLibrary lib) {
   createWrapper(lib);
 }
@@ -27,13 +26,13 @@ WasmiDart defaultInstance() {
     return _wrapper!;
   }
   try {
-    final externalLib = localTestingLibraryImpl();
-    return createWrapper(externalLib);
+    return createLib();
   } catch (_) {
     try {
-      return createLib();
+      final externalLib = localTestingLibraryImpl();
+      return createWrapper(externalLib);
     } catch (_) {
-      developer.log(
+      print(
         'When building a pure Dart application (backend or cli, for example),'
         ' you must call `setDynamicLibrary(<nativeLibraryForYourPlatform>)`'
         ' before using the library. The <nativeLibraryForYourPlatform> can be download'
