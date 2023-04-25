@@ -4,7 +4,7 @@ import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 
 class FlutterWasmiWeb {
   static void registerWith(Registrar registrar) {
-    _injectSrcScript('https://unpkg.com/wasm-feature-detect/dist/umd/index.js');
+    _injectSrcScript('./packages/wasmi/assets/wasm-feature-detect.js');
   }
 
   /// Injects a `script` with a `src` dynamically into the head of the current

@@ -1,39 +1,23 @@
-<!-- 
-This README describes the package. If you publish this package to pub.dev,
-this README's contents appear on the landing page for your package.
+# wasmi
 
-For information about how to write a good package README, see the guide for
-[writing package pages](https://dart.dev/guides/libraries/writing-package-pages). 
+A Web Assembly executor for the Dart programming language. Currently it uses the [`wasmtime 8.0`](https://github.com/bytecodealliance/wasmtime) or [`wasmi 0.29`](https://github.com/paritytech/wasmi) Rust crates for parsing and executing WASM modules. Bindings are created using [`package:flutter_rust_bridge`](https://github.com/fzyzcjy/flutter_rust_bridge).
 
-For general information about developing packages, see the Dart guide for
-[creating packages](https://dart.dev/guides/libraries/create-library-packages)
-and the Flutter guide for
-[developing packages and plugins](https://flutter.dev/developing-packages). 
--->
+For more information on usage and documentation, please visit the main repository: https://github.com/juancastillo0/wasm_interpreter.
 
-TODO: Put a short description of the package here that helps potential users
-know whether this package might be useful for them.
+# Pure Dart (Native)
 
-## Features
+To use this library directly in pure Dart you will need to provide the `DynamicLibrary` using the `setDynamicLibrary` function. When building a pure Dart application (backend or cli, for example), you must call `setDynamicLibrary(<nativeLibraryForYourPlatform>)` before using the package. The `<nativeLibraryForYourPlatform>` is a `package:ffi`'s `DynamicLibrary` whose file can be downloaded from the [releases of the Github repository](https://github.com/juancastillo0/wasm_interpreter/releases/).
 
-TODO: List what your package can do. Maybe include images, gifs, or videos.
+# Flutter
 
-## Getting started
+When using it in a Flutter project you should use [`package:flutter_wasmi`](https://pub.dev/packages/flutter_wasmi) instead, since it will provide the right binaries for your platform.
 
-TODO: List prerequisites and provide or point to information on how to
-start using the package.
+# Dart Web (Not Flutter Web)
 
-## Usage
+We use the [wasm-feature-detect JavaScript library](https://github.com/GoogleChromeLabs/wasm-feature-detect) for feature detection in the browser. To use this functionality in Dart web applications you will need to add the following script to your html (not necessary for Flutter):
 
-TODO: Include short and useful examples for package users. Add longer examples
-to `/example` folder. 
-
-```dart
-const like = 'sample';
+```html
+<script src="./packages/wasmi/assets/wasm-feature-detect.js"></script>
 ```
 
-## Additional information
 
-TODO: Tell users more about the package: where to find more information, how to 
-contribute to the package, how to file issues, what response they can expect 
-from the package authors, and more.

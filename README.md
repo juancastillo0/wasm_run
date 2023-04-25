@@ -90,7 +90,7 @@ We provide [`package:flutter_wasi`](./packages/flutter_wasmi/) to bundle the rig
 | Platform | Architecture               | Runtime<sup>[1]</sup> |
 | -------- | -------------------------- | --------------------- |
 | Linux    | aarch64 x86_64             | Wasmtime 8.0          |
-| MacOS    | x86_64 aarch64             | Wasmtime 8.0          |
+| MacOS    | aarch64 x86_64             | Wasmtime 8.0          |
 | Windows  | aarch64 x86_64             | Wasmtime 8.0          |
 | iOS      | aarch64 x86_64 aarch64-sim | Wasmi 0.29            |
 | Android  | armeabi-v7a x86 x86_64     | Wasmi 0.29            |
@@ -114,7 +114,7 @@ However, in web browsers there is no support for the [WAT](https://developer.moz
 We use the [wasm-feature-detect JavaScript library](https://github.com/GoogleChromeLabs/wasm-feature-detect) for feature detection in the browser. To use this functionality in Dart web applications you will need to add the following script to your html (not necessary for Flutter):
 
 ```html
-<script src="https://unpkg.com/wasm-feature-detect/dist/umd/index.js"></script>
+<script src="./packages/wasmi/assets/wasm-feature-detect.js"></script>
 ```
 
 
