@@ -6,19 +6,18 @@ import 'package:wasmi/src/wasm_bindings/_wasm_interop_stub.dart'
     if (dart.library.io) '_wasm_interop_native.dart'
     if (dart.library.html) '_wasm_interop_web.dart' show isVoidReturn;
 
-export '../bridge_generated.dart'
+export 'package:wasmi/src/bridge_generated.dart'
     show
-        // ModuleConfig,
-        // ModuleConfigWasmi,
-        // WasiStackLimits,
-        // ModuleConfigWasmtime,
-        WasmRuntimeFeatures,
-        WasmFeatures,
         U8Array16,
-        ExternalType,
         WasiConfig,
-        EnvVariable,
-        PreopenedDir;
+        WasmFeatures,
+        // Types
+        ExternalType,
+        GlobalMutability,
+        FuncTy,
+        GlobalTy,
+        TableTy,
+        MemoryTy;
 
 abstract class WasmModule {
   // TODO: initial instead of pages, shared: true
@@ -97,13 +96,17 @@ abstract class WasmInstance {
   /// The module that was used to create this instance.
   WasmModule get module;
 
-  WasmFunction? lookupFunction(String name) => getExportTyped(name);
+  /// Returns the function with [name] if it exists.
+  WasmFunction? getFunction(String name) => getExportTyped(name);
 
-  WasmGlobal? lookupGlobal(String name) => getExportTyped(name);
+  /// Returns the global with [name] if it exists.
+  WasmGlobal? getGlobal(String name) => getExportTyped(name);
 
-  WasmTable? lookupTable(String name) => getExportTyped(name);
+  /// Returns the table with [name] if it exists.
+  WasmTable? getTable(String name) => getExportTyped(name);
 
-  WasmMemory? lookupMemory(String name) => getExportTyped(name);
+  /// Returns the memory with [name] if it exists.
+  WasmMemory? getMemory(String name) => getExportTyped(name);
 
   /// Returns the export with [name] if it is of type [T].
   T? getExportTyped<T extends WasmExternal>(String name) {
@@ -117,11 +120,11 @@ abstract class WasmInstance {
   /// The exports of this instance.
   Map<String, WasmExternal> get exports;
 
-  /// When using WASI with [WasmInstanceBuilder.enableWasi],
+  /// When using WASI with [WasiConfig] in [WasmModule.builder],
   /// this is the stderr stream.
   Stream<Uint8List> get stderr;
 
-  /// When using WASI with [WasmInstanceBuilder.enableWasi],
+  /// When using WASI with [WasiConfig] in [WasmModule.builder],
   /// this is the stdout stream.
   Stream<Uint8List> get stdout;
 
@@ -154,6 +157,11 @@ abstract class WasmMemory extends WasmExternal {
   /// The maximum size of the memory in pages.
   /// [WasmMemory.bytesPerPage] = 65536 = 2^16 = 64KiB
   static const bytesPerPage = 65536;
+
+  @override
+  String toString() {
+    return 'WasmMemory(pages: $lengthInPages, bytes: $lengthInBytes)';
+  }
 }
 
 abstract class WasmTable extends WasmExternal {
@@ -174,6 +182,12 @@ abstract class WasmTable extends WasmExternal {
 
   /// Grows the table by [delta] elements and fills de new indexes with [fillValue].
   int grow(int delta, WasmValue fillValue);
+
+  @override
+  String toString() {
+    // TODO: type
+    return 'WasmTable(length: $length)';
+  }
 }
 
 abstract class WasmGlobal extends WasmExternal {
@@ -318,6 +332,8 @@ abstract class WasmExternal {
       );
 }
 
+/// A WASM import that can be used in [WasmInstanceBuilder.addImports]
+/// to construct a [WasmInstance].
 class WasmImport {
   /// The name of the module that this import is from.
   final String moduleName;
@@ -328,6 +344,8 @@ class WasmImport {
   /// The value of the import.
   final WasmExternal value;
 
+  /// A WASM import that can be used in [WasmInstanceBuilder.addImports]
+  /// to construct a [WasmInstance].
   WasmImport(this.moduleName, this.name, this.value);
 
   @override

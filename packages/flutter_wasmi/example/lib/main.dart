@@ -1,74 +1,66 @@
-import 'package:flutter/material.dart';
-import 'dart:async';
+import 'dart:convert' show base64Decode;
+import 'dart:typed_data' show Uint8List;
 
-import 'package:flutter_wasmi/flutter_wasmi.dart' as flutter_wasmi;
+import 'package:flutter_wasmi/flutter_wasmi.dart';
 
-void main() {
-  runApp(const MyApp());
-}
+Future<void> main() async {
+  /// WASM WAT source:
+  ///
+  /// ```wat
+  /// (module
+  ///     (func (export "add") (param $a i32) (param $b i32) (result i32)
+  ///         local.get $a
+  ///         local.get $b
+  ///         i32.add
+  ///     )
+  /// )
+  /// ```
+  const base64Binary =
+      'AGFzbQEAAAABBwFgAn9/AX8DAgEABwcBA2FkZAAACgkBBwAgACABagsAEARuYW1lAgkBAAIAAWEBAWI=';
+  final Uint8List binary = base64Decode(base64Binary);
+  final WasmModule module = await compileWasmModule(
+    binary,
+    config: const ModuleConfig(
+      wasmi: ModuleConfigWasmi(),
+      wasmtime: ModuleConfigWasmtime(),
+    ),
+  );
+  final List<WasmModuleExport> exports = module.getExports();
 
-class MyApp extends StatefulWidget {
-  const MyApp({super.key});
+  assert(
+    exports.first.toString() ==
+        const WasmModuleExport('add', WasmExternalKind.function).toString(),
+  );
+  final List<WasmModuleImport> imports = module.getImports();
+  assert(imports.isEmpty);
 
-  @override
-  State<MyApp> createState() => _MyAppState();
-}
+  final WasmInstanceBuilder builder = module.builder();
 
-class _MyAppState extends State<MyApp> {
-  late int sumResult;
-  late Future<int> sumAsyncResult;
+  // create external
+  // builder.createTable
+  // builder.createGlobal
+  // builder.createMemory
 
-  @override
-  void initState() {
-    super.initState();
-    sumResult = flutter_wasmi.sum(1, 2);
-    sumAsyncResult = flutter_wasmi.sumAsync(3, 4);
+  // Add imports
+  // builder.addImport(moduleName, name, value);
+
+  final WasmInstance instance = await builder.buildAsync();
+  final WasmFunction add = instance.getFunction('add')!;
+
+  final List<WasmValueType?> params = add.params;
+  assert(params.length == 2);
+
+  final WasmRuntimeFeatures runtime = await wasmRuntimeFeatures();
+  if (!runtime.isBrowser) {
+    assert(params.every((t) => t == WasmValueType.i32));
+    assert(add.results!.length == 1);
+    assert(add.results!.first == WasmValueType.i32);
   }
 
-  @override
-  Widget build(BuildContext context) {
-    const textStyle = TextStyle(fontSize: 25);
-    const spacerSmall = SizedBox(height: 10);
-    return MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(
-          title: const Text('Native Packages'),
-        ),
-        body: SingleChildScrollView(
-          child: Container(
-            padding: const EdgeInsets.all(10),
-            child: Column(
-              children: [
-                const Text(
-                  'This calls a native function through FFI that is shipped as source in the package. '
-                  'The native code is built as part of the Flutter Runner build.',
-                  style: textStyle,
-                  textAlign: TextAlign.center,
-                ),
-                spacerSmall,
-                Text(
-                  'sum(1, 2) = $sumResult',
-                  style: textStyle,
-                  textAlign: TextAlign.center,
-                ),
-                spacerSmall,
-                FutureBuilder<int>(
-                  future: sumAsyncResult,
-                  builder: (BuildContext context, AsyncSnapshot<int> value) {
-                    final displayValue =
-                        (value.hasData) ? value.data : 'loading';
-                    return Text(
-                      'await sumAsync(3, 4) = $displayValue',
-                      style: textStyle,
-                      textAlign: TextAlign.center,
-                    );
-                  },
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+  final List<Object?> result = add([1, 4]);
+  assert(result.length == 1);
+  assert(result.first == 5);
+
+  final resultInner = add.inner(-1, 8) as int;
+  assert(resultInner == 7);
 }

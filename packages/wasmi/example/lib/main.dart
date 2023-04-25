@@ -3,10 +3,9 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:test/test.dart';
-import 'package:wasmi/src/ffi.dart';
+import 'package:wasmi/src/ffi.dart' show defaultInstance;
 import 'package:wasmi/src/wasm_bindings/wasm.dart';
-import 'package:wasmi/src/wasm_bindings/wasm_interface.dart';
-import 'package:wasmi_example/simd_test.dart';
+import 'package:wasmi_example/simd_test.dart' show simdTests;
 
 const isWeb = identical(0, 0.0);
 const compiledWasmLibraryPath =
@@ -118,7 +117,7 @@ void testAll({
           'AGFzbQEAAAABBwFgAn9/AX8DAgEABwcBA2FkZAAACgkBBwAgACABagsAEARuYW1lAgkBAAIAAWEBAWI=',
     );
 
-    final module = compileWasmModule(binary);
+    final module = compileWasmModuleSync(binary);
 
     expect(
       module.getExports().map((e) => e.toString()),
@@ -129,7 +128,7 @@ void testAll({
     expect(module.getImports(), isEmpty);
 
     final instance = module.builder().build();
-    final add = instance.lookupFunction('add')!;
+    final add = instance.getFunction('add')!;
     expect(
       add.params,
       isLibrary ? [WasmValueType.i32, WasmValueType.i32] : [null, null],
@@ -154,7 +153,7 @@ void testAll({
           'AGFzbQEAAAABCAJgAX8AYAAAAg4BBGhvc3QFaGVsbG8AAAMCAQEHCQEFaGVsbG8AAQoIAQYAQQMQAAsAFARuYW1lAQ0BAApob3N0X2hlbGxv',
     );
 
-    final module = compileWasmModule(binary);
+    final module = compileWasmModuleSync(binary);
     expect(
       module.getExports().map((e) => e.toString()),
       [
@@ -185,7 +184,7 @@ void testAll({
         (module.builder()..addImport('host', 'hello', hostHello)).build();
 
     expect(argsList, isNull);
-    final hello = instance.lookupFunction('hello')!;
+    final hello = instance.getFunction('hello')!;
     hello.inner();
     final result = hello();
 
@@ -208,7 +207,7 @@ void testAll({
           'AGFzbQEAAAABCAJgAAF/YAAAAg4BAmpzBmdsb2JhbAN/AQMDAgABBxkCCWdldEdsb2JhbAAACWluY0dsb2JhbAABChACBAAjAAsJACMAQQFqJAALAAsEbmFtZQcEAQABZw==',
     );
 
-    final module = await compileAsyncWasmModule(binary);
+    final module = await compileWasmModule(binary);
     expect(
       module.getExports().map((e) => e.toString()),
       [
@@ -238,11 +237,11 @@ void testAll({
     final instance =
         builder.addImports([WasmImport('js', 'global', global)]).build();
 
-    final getGlobal = instance.lookupFunction('getGlobal')!;
+    final getGlobal = instance.getFunction('getGlobal')!;
     expect(getGlobal.params, <WasmValueType>[]);
     expect(getGlobal.results, isLibrary ? [WasmValueType.i32] : null);
 
-    final incGlobal = instance.lookupFunction('incGlobal')!;
+    final incGlobal = instance.getFunction('incGlobal')!;
     expect(incGlobal.params, <WasmValueType>[]);
     expect(incGlobal.results, isLibrary ? <WasmValueType>[] : null);
 
@@ -270,7 +269,7 @@ void testAll({
           'AGFzbQEAAAABCQJgAn9/AGAAAAIdAgdjb25zb2xlB2xvZ1V0ZjgAAAJqcwNtZW0CAAEDAgEBBwsBB3dyaXRlSGkAAQoKAQgAQQBBAhAACwsIAQBBAAsCSGkADQRuYW1lAQYBAANsb2c=',
     );
 
-    final module = await compileAsyncWasmModule(binary);
+    final module = await compileWasmModule(binary);
     expect(
       module.getExports().map((e) => e.toString()),
       [
@@ -315,7 +314,7 @@ void testAll({
     // expect(memory[1], utf8.encode('i').first);
     expect(memory.view[1], utf8.encode('i').first);
 
-    final writeHi = instance.lookupFunction('writeHi')!;
+    final writeHi = instance.getFunction('writeHi')!;
     expect(writeHi.params, <WasmValueType>[]);
     expect(writeHi.results, isLibrary ? <WasmValueType>[] : null);
 
@@ -355,7 +354,7 @@ void testAll({
           'AGFzbQEAAAABCgJgAAF/YAF/AX8DBAMAAAEEBAFwAAIHDwELY2FsbEJ5SW5kZXgAAgkIAQBBAAsCAAEKEwMEAEEqCwQAQQ0LBwAgABEAAAsAJwRuYW1lAQkCAAJmMQECZjICBgECAQABaQQNAQAKcmV0dXJuX2kzMg==',
     );
 
-    final module = compileWasmModule(binary);
+    final module = compileWasmModuleSync(binary);
 
     expect(
       module.getExports().map((e) => e.toString()),
@@ -371,7 +370,7 @@ void testAll({
 
     final instance = await module.builder().buildAsync();
 
-    final call = instance.lookupFunction('callByIndex')!;
+    final call = instance.getFunction('callByIndex')!;
 
     expect(call.params, [isLibrary ? WasmValueType.i32 : null]);
     expect(call.results, isLibrary ? [WasmValueType.i32] : null);
@@ -395,7 +394,7 @@ void testAll({
           'AGFzbQEAAAABBQFgAAF/AgwBAmpzA3RibAFwAAIDAwIAAAkIAQBBAAsCAAEKDAIEAEEqCwUAQdMACwASBG5hbWUBCwIAA2Y0MgEDZjgz',
     );
 
-    final module = compileWasmModule(binary);
+    final module = compileWasmModuleSync(binary);
 
     expect(
       module.getExports().map((e) => e.toString()),
@@ -488,7 +487,7 @@ void testAll({
         throw Exception('Could not find wasm file');
       }
     }
-    final module = compileWasmModule(binary);
+    final module = compileWasmModuleSync(binary);
 
     final directoryToAllow =
         getDirectory != null ? await getDirectory() : Directory.current;
@@ -618,7 +617,7 @@ void testAll({
     );
     final instance1 = await builder1.buildAsync();
 
-    final currentTime = instance1.lookupFunction('current_time')!;
+    final currentTime = instance1.getFunction('current_time')!;
     final now1 = DateTime.now().millisecondsSinceEpoch;
     await Future<void>.delayed(const Duration(milliseconds: 1));
     final t = (currentTime().first as BigInt).toInt();
@@ -626,15 +625,15 @@ void testAll({
     await Future<void>.delayed(const Duration(milliseconds: 1));
     expect(DateTime.now().millisecondsSinceEpoch, greaterThan(t));
 
-    final memory = instance1.lookupMemory('memory')!;
-    final _alloc = instance1.lookupFunction('alloc')!.inner;
+    final memory = instance1.getMemory('memory')!;
+    final _alloc = instance1.getFunction('alloc')!.inner;
     final alloc = (int bytes) => _alloc(bytes) as int;
-    final dealloc = instance1.lookupFunction('dealloc')!.inner as void Function(
+    final dealloc = instance1.getFunction('dealloc')!.inner as void Function(
       int offset,
       int bytes,
     );
 
-    final getArgs = instance1.lookupFunction('get_args')!;
+    final getArgs = instance1.getFunction('get_args')!;
     final initialMemOffset = getArgs().first as int;
 
     final parsedArgs = Parser.parseList(
@@ -644,7 +643,7 @@ void testAll({
     );
     expect(parsedArgs, args);
 
-    final getEnvVars = instance1.lookupFunction('get_env_vars')!;
+    final getEnvVars = instance1.getFunction('get_env_vars')!;
     final Map<String, String> parsedEnvVars = {};
     final envVarsOffset = getEnvVars().first as int;
     Parser.parseList(
@@ -672,7 +671,7 @@ void testAll({
       stderr1.add(utf8.decode(event));
     });
 
-    final readFileSize = instance1.lookupFunction('read_file_size')!;
+    final readFileSize = instance1.getFunction('read_file_size')!;
     {
       print('Wasm file ${wasmGuestFilePath}');
       // final bb = utf8.encode(File(wasmFile).absolute.path);
@@ -699,7 +698,7 @@ void testAll({
     }
 
     // TODO: explore file_data
-    final fileData = instance1.lookupFunction('file_data_raw')!;
+    final fileData = instance1.getFunction('file_data_raw')!;
 
     {
       final buffer = Uint8List.fromList(utf8.encode(wasmGuestFilePath));
@@ -734,7 +733,7 @@ void testAll({
 
     /// IO
 
-    final printHello = instance1.lookupFunction('print_hello')!;
+    final printHello = instance1.getFunction('print_hello')!;
     final List<String> stdout1 = [];
     final stdout = instance1.stdout;
     stdout.listen((event) {
@@ -744,7 +743,7 @@ void testAll({
     await Future<void>.delayed(Duration.zero);
     expect(stdout1.last, 'Hello, world! 2\n');
 
-    final stderrLog = instance1.lookupFunction('stderr_log')!;
+    final stderrLog = instance1.getFunction('stderr_log')!;
 
     final errMsg = 'error message';
     final buffer = Uint8List.sublistView(Uint16List.fromList(errMsg.codeUnits));
@@ -786,7 +785,7 @@ void testAll({
           'AGFzbQEAAAABHwJgAn99An1/YAp+fn5+fn5+fn5+Cn5+fn5+fn5+fn4CBgEAAWYAAAMDAgABBxcCAWcAAQ9yb3VuZF90cmlwX21hbnkAAgohAggAIAAgARAACxYAIAAgASACIAMgBCAFIAYgByAIIAkLAB8EbmFtZQEYAwABZgEBZwIPcm91bmRfdHJpcF9tYW55',
     );
 
-    final module = compileWasmModule(binary);
+    final module = compileWasmModuleSync(binary);
 
     final instance = module
         .builder()
@@ -803,8 +802,8 @@ void testAll({
         )
         .build();
 
-    final g = instance.lookupFunction('g')!;
-    final roundTripMany = instance.lookupFunction('round_trip_many')!;
+    final g = instance.getFunction('g')!;
+    final roundTripMany = instance.getFunction('round_trip_many')!;
 
     expect(g([42, 409.32000732421875]), [(409.32000732421875), 42]);
     expect(g.inner(42, 3.240000009536743), [3.240000009536743, 42]);
@@ -833,12 +832,12 @@ void testAll({
       base64Binary:
           'AGFzbQEAAAABBgFgAW8BbwMCAQAEBAFvAAoGBgFvAdBvCwcZAwV0YWJsZQEABmdsb2JhbAMABGZ1bmMAAAoGAQQAIAALABoEbmFtZQUIAQAFdGFibGUHCQEABmdsb2JhbA==',
     );
-    final module = compileWasmModule(binary);
+    final module = compileWasmModuleSync(binary);
     final instance = module.builder().build();
 
-    final table = instance.lookupTable('table')!;
-    final global = instance.lookupGlobal('global')!;
-    final func = instance.lookupFunction('func')!;
+    final table = instance.getTable('table')!;
+    final global = instance.getGlobal('global')!;
+    final func = instance.getFunction('func')!;
 
     expect(table.length, 10);
     expect(table[0], isNull);
@@ -878,7 +877,7 @@ void testAll({
           'AGFzbQEAAAABBgFgAX8BfwMCAQAHDQEJZmlib25hY2NpAAAKHgEcACAAQQJIBEAgAA8LIABBAWsQACAAQQJrEABqCwAbBG5hbWUBDAEACWZpYm9uYWNjaQIGAQABAAFu',
     );
 
-    final module = compileWasmModule(
+    final module = compileWasmModuleSync(
       binary0,
       config: ModuleConfig(consumeFuel: true),
     );
@@ -905,7 +904,7 @@ void testAll({
 
     fuel.addFuel(10000);
 
-    final fibonacci = instance.lookupFunction('fibonacci')!;
+    final fibonacci = instance.getFunction('fibonacci')!;
 
     final List<int> values = [];
     final List<int> fuelConsumed = [];

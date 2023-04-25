@@ -2,7 +2,6 @@ import 'dart:typed_data';
 
 import 'package:test/test.dart';
 import 'package:wasmi/src/wasm_bindings/wasm.dart';
-import 'package:wasmi/src/wasm_bindings/wasm_interface.dart';
 
 import 'main.dart';
 
@@ -25,10 +24,10 @@ void simdTests() {
           'AGFzbQEAAAABBQFgAAF7AwIBAAcFAQFnAAAKCgEIAEED/Q/9YgsACwRuYW1lAQQBAAFn',
     );
 
-    final module = compileWasmModule(binary);
+    final module = compileWasmModuleSync(binary);
     final instance = module.builder().build();
 
-    final g = instance.lookupFunction('g')!;
+    final g = instance.getFunction('g')!;
 
     // TODO: improve test for browser
     if (!isLibrary) return;
@@ -57,9 +56,9 @@ void simdTests() {
           'AGFzbQEAAAABBwFgAnt/AXsDAgEABwUBAWcAAAoNAQsAIAH9ESAA/a4BCwALBG5hbWUBBAEAAWc=',
     );
 
-    final module = compileWasmModule(binary);
+    final module = compileWasmModuleSync(binary);
     final instance = module.builder().build();
-    final g = instance.lookupFunction('g')!;
+    final g = instance.getFunction('g')!;
     final values = Int32x4(1, 20, 300, 4000);
     final param =
         U8Array16(Uint8List.sublistView(Int32x4List.fromList([values])));
@@ -96,7 +95,7 @@ void simdTests() {
       base64Binary:
           'AGFzbQEAAAABDwJgAnt9Ant9YAJ9ewJ7fQIGAQABZgAAAwIBAQcFAQFnAAEKEQEPACAA/RMgAf3mASAAEAALAA4EbmFtZQEHAgABZgEBZw==',
     );
-    final module = compileWasmModule(
+    final module = compileWasmModuleSync(
       binary,
       config: ModuleConfig(
         wasmtime: ModuleConfigWasmtime(wasmSimd: true),
@@ -114,7 +113,7 @@ void simdTests() {
           ),
         )
         .build();
-    final g = instance.lookupFunction('g')!;
+    final g = instance.getFunction('g')!;
     final values = Float32x4(1, 20, 300, 4000);
     final param =
         U8Array16(Uint8List.sublistView(Float32x4List.fromList([values])));
@@ -149,7 +148,7 @@ void simdTests() {
           'AGFzbQEAAAABBgFgAXsBewMCAQAHBQEBZwAACgkBBwAgAP2BAgsACwRuYW1lAQQBAAFn',
     );
 
-    final module = compileWasmModule(
+    final module = compileWasmModuleSync(
       binary,
       config: ModuleConfig(
         wasmtime: ModuleConfigWasmtime(wasmRelaxedSimd: true),
@@ -157,7 +156,7 @@ void simdTests() {
     );
     final instance = module.builder().build();
 
-    final result = instance.lookupFunction('g')!([
+    final result = instance.getFunction('g')!([
       U8Array16(
         Uint8List.sublistView(Float32List.fromList([2.3, 5, 10.90, 41.94])),
       )

@@ -4,9 +4,8 @@ import 'dart:typed_data' show Uint8List;
 
 import 'package:wasm_interop/wasm_interop.dart';
 
-import 'package:wasmi/src/bridge_generated.dart' show ModuleConfig;
 import 'package:wasmi/src/wasm_bindings/_wasm_feature_detect_web.dart';
-import 'package:wasmi/src/wasm_bindings/wasm_interface.dart';
+import 'package:wasmi/src/wasm_bindings/wasm.dart';
 
 bool isVoidReturn(dynamic value) {
   switch (value) {
@@ -52,14 +51,14 @@ Future<WasmRuntimeFeatures> _calculateFeatures() async {
     exceptions: features[2], // not in firefox
     simd: features[13], //  not in safari
 
-    relaxedSimd: features[10], // TODO: check
-    tailCall: features[15], // TODO: check
+    relaxedSimd: features[10],
+    tailCall: features[15],
     multiMemory: false, // TODO: check
-    memory64: features[6], // TODO: check
+    memory64: features[6],
     extendedConst: features[3],
     componentModel: false, // TODO: check
     memoryControl: false, // TODO: check
-    garbageCollection: features[4], // TODO: check
+    garbageCollection: features[4],
     wasiFeatures: null,
     // TODO: moduleLinking
   );
@@ -78,14 +77,14 @@ Future<WasmRuntimeFeatures> wasmRuntimeFeatures() {
   return _features ??= _calculateFeatures();
 }
 
-Future<WasmModule> compileAsyncWasmModule(
+Future<WasmModule> compileWasmModule(
   Uint8List bytes, {
   ModuleConfig? config,
 }) async {
   return _WasmModule.compileAsync(bytes);
 }
 
-WasmModule compileWasmModule(
+WasmModule compileWasmModuleSync(
   Uint8List bytes, {
   ModuleConfig? config,
 }) {

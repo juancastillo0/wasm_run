@@ -5,14 +5,14 @@ import 'package:wasmi/src/wasm_bindings/wasm_interface.dart';
 
 bool isVoidReturn(dynamic value) => throw UnimplementedError();
 
-Future<WasmModule> compileAsyncWasmModule(
+Future<WasmModule> compileWasmModule(
   Uint8List bytes, {
   ModuleConfig? config,
 }) async {
   throw UnimplementedError();
 }
 
-WasmModule compileWasmModule(
+WasmModule compileWasmModuleSync(
   Uint8List bytes, {
   ModuleConfig? config,
 }) {

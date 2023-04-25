@@ -15,7 +15,7 @@ bool isVoidReturn(dynamic value) => identical(value, _noReturnPlaceholder);
 Future<WasmRuntimeFeatures> wasmRuntimeFeatures() async =>
     defaultInstance().wasmRuntimeFeatures();
 
-Future<WasmModule> compileAsyncWasmModule(
+Future<WasmModule> compileWasmModule(
   Uint8List bytes, {
   ModuleConfig? config,
 }) async {
@@ -27,7 +27,7 @@ Future<WasmModule> compileAsyncWasmModule(
   return _WasmModule._(module, config_);
 }
 
-WasmModule compileWasmModule(
+WasmModule compileWasmModuleSync(
   Uint8List bytes, {
   ModuleConfig? config,
 }) {
@@ -254,9 +254,9 @@ class _References {
     final module = ref.module;
     final function = ref.value;
     if (function is! WasmFunction) {
-      throw Exception('Invalid function reference $functionId');
+      throw Exception('Invalid function reference $functionId $function');
     } else if (function.results == null) {
-      throw Exception('Function $functionId has no return values');
+      throw Exception('Function $functionId $function has no return values');
     }
 
     final args = input.map((v) => dartValueFromWasm(v, module)).toList();

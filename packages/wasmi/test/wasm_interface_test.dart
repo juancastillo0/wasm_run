@@ -29,7 +29,7 @@ void main() {
         );
       }
 
-      final module = compileWasmModule(binary);
+      final module = compileWasmModuleSync(binary);
 
       expect(
         module.getExports().map((e) => e.toString()),
@@ -41,7 +41,7 @@ void main() {
 
       final instance = module.builder().build();
 
-      final result = instance.lookupFunction('add')!.call([1, 4]);
+      final result = instance.getFunction('add')!.call([1, 4]);
       expect(result, [5]);
       print('result $result');
     });
