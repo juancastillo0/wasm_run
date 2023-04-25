@@ -11,6 +11,9 @@ cd $BUILD_DIR
 # By default use wasmtime
 bash "../scripts/config_api.sh" wasmtime
 
+export MACOSX_DEPLOYMENT_TARGET=10.11
+export IPHONEOS_DEPLOYMENT_TARGET=11.0
+
 # Build static libs
 for TARGET in \
         aarch64-apple-ios x86_64-apple-ios aarch64-apple-ios-sim \
@@ -35,6 +38,7 @@ fi
 # Create XCFramework zip
 FRAMEWORK="Wasmi.xcframework"
 LIBNAME=libwasmi_dart.a
+DYNAMIC_LIBNAME=libwasmi_dart.dylib
 mkdir mac-lipo ios-sim-lipo
 IOS_SIM_LIPO=ios-sim-lipo/$LIBNAME
 MAC_LIPO=mac-lipo/$LIBNAME
@@ -51,8 +55,8 @@ xcodebuild -create-xcframework \
         -output $FRAMEWORK
 zip -r $FRAMEWORK.zip $FRAMEWORK
 
-mkdir macos-arm64 && cp ../target/aarch64-apple-darwin/$BUILD_PROFILE_PATH/$LIBNAME macos-arm64/
-mkdir macos-x64 && cp ../target/x86_64-apple-darwin/$BUILD_PROFILE_PATH/$LIBNAME macos-x64/
+mkdir macos-arm64 && cp ../target/aarch64-apple-darwin/$BUILD_PROFILE_PATH/$DYNAMIC_LIBNAME macos-arm64/
+mkdir macos-x64 && cp ../target/x86_64-apple-darwin/$BUILD_PROFILE_PATH/$DYNAMIC_LIBNAME macos-x64/
 tar -czvf macos.tar.gz macos-*
 
 # Cleanup

@@ -344,7 +344,7 @@ jobs:
             ram-size: 1024M
             disk-size: 2048M
             arch: ${{ matrix.arch }}
-            script: cd packages/flutter_wasmi/example && flutter test -d `flutter devices | grep android | tr ' ' '\n' | grep emulator-` integration_test  --timeout "1200s"
+            script: cd packages/flutter_wasmi/example && flutter test -d `flutter devices | grep android | tr ' ' '\n' | grep emulator-` integration_test && echo "Finished Android integration tests"
 
   android_integration_test_cached:
     runs-on: macos-latest
@@ -412,4 +412,4 @@ jobs:
           arch: ${{ matrix.arch }}
           ram-size: 1024M
           disk-size: 2048M
-          script: cd packages/flutter_wasmi/example && flutter test -d `flutter devices | grep android | tr ' ' '\n' | grep emulator-` integration_test  --timeout "1200s"
+          script: cd packages/flutter_wasmi/example && flutter test -d `flutter devices | grep android | tr ' ' '\n' | grep emulator-` integration_test && echo "Finished Android integration tests"

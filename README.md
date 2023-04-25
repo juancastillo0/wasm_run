@@ -64,7 +64,7 @@ A Web Assembly executor for the Dart programming language. Currently it uses the
 | multi_memory                  | 🏳               | ❌          | ❌                    |
 | memory64                      | 🏳               | ❌          | 🏳                    |
 | component_model               | ❌<sup>[2]</sup> | ❌          | ❌                    |
-| tail_call                     | ❌               | ✅          | ✅                    |
+| tail_call                     | ❌               | 🏳          | ✅                    |
 | exceptions                    | ❌               | ❌          | ✅                    |
 | garbage_collection            | ❌               | ❌          | 🏳                    |
 | memory_control                | ❌               | ❌          | ❌                    |
@@ -101,15 +101,15 @@ We provide [`package:flutter_wasi`](./packages/flutter_wasmi/) to bundle the rig
 
 ### Pure Dart (CLI/Backend/Web)
 
-For other platforms, you may download the executables for each platform and specify the `DynamicLibrary` in non-web platforms.
+For other platforms, you may download the compiled dynamic libraries for each platform and specify the `ffi.DynamicLibrary` in non-web platforms. The compiled libraries can be found in the [release assets](https://github.com/juancastillo0/wasm_interpreter/releases) of this repository. You can also execute the [script](./packages/wasmi/bin/setup.dart) `dart run wasmi:setup` to download the right library for your current platform.
 
-For the web platform we provide the same interface for the WASM runtime provided by the browser (you may also use the Wasmi WASM module).
+For the web platform we provide the same interface but it uses the WASM runtime provided by the browser instead of the native library (you may also use the Wasmi WASM module).
 
 ### WASM Web bindings
 
 We use [package:wasm_interop](https://pub.dev/packages/wasm_interop) to implement the browser web API. In this way, you won't need to provide a custom runtime, since the browser already provides it.
 
-However, in web browsers there is no support for the [WAT](https://developer.mozilla.org/en-US/docs/WebAssembly/Understanding_the_text_format) format and other queries that you may perform over the WASM modules on native platforms. For example, WASM [function type definitions](https://github.com/WebAssembly/js-types/blob/main/proposals/js-types/Overview.md) (arguments and results) are not provided in most browsers. If you what these features, you may use the compiled WASM module.
+However, in web browsers there is no support for the [WAT](https://developer.mozilla.org/en-US/docs/WebAssembly/Understanding_the_text_format) format and other queries that you may perform over the WASM modules on native platforms. For example, WASM [function type definitions](https://github.com/WebAssembly/js-types/blob/main/proposals/js-types/Overview.md) of arguments and results are not provided in most browsers. If you need these features, you may use the compiled WASM module (TODO: Not implemented yet).
 
 We use the [wasm-feature-detect JavaScript library](https://github.com/GoogleChromeLabs/wasm-feature-detect) for feature detection in the browser. To use this functionality in Dart web applications you will need to add the following script to your html (not necessary for Flutter):
 

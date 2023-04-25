@@ -4,6 +4,9 @@ import 'package:wasmi/src/ffi/cpu_architecture.dart';
 import 'package:wasmi/src/ffi/library_locator.dart'
     show libBuildOutDir, getDesktopLibName;
 
+/// Downloads the native dynamic library for the current platform.
+/// The output file will be written to `{projectRoot}/.dart_tool/wasmi/{dynamicLibrary}`.
+/// This is used by the `WasmiDart` class to load the native library.
 Future<void> main() async {
   /// Get the CPU architecture.
   final cpuArchitecture = await CpuArchitecture.currentCpuArchitecture();
@@ -19,6 +22,7 @@ Future<void> main() async {
 
   Future<File> writeToFile(String filePath, Stream<List<int>> stream) async {
     final file = File(root.resolve(filePath).toFilePath());
+    await file.create(recursive: true);
     final sink = file.openWrite(mode: FileMode.writeOnly);
     await sink.addStream(stream);
     await sink.flush();
@@ -54,11 +58,14 @@ Future<void> main() async {
   }
 
   /// Copy library.
+  /// `temp/windows-x64/wasmi_dart.dll`, `temp/macos-arm64/libwasmi_dart.dylib`
   final inputFilePath =
       'temp/${Platform.operatingSystem}-${cpuArchitectureEnum.name}/$libName';
   final inputFile = File(root.resolve(inputFilePath).toFilePath());
   if (!inputFile.existsSync()) {
-    throw Exception('Could not find library: ${inputFile.path}');
+    throw Exception(
+      'Could not find library "${inputFile.path}" in archive "${archiveFile.path}" from ($archiveUrl)',
+    );
   }
   final outputFile = await writeToFile(libName, inputFile.openRead());
   print('Extracted library $inputFilePath to ${outputFile.path}');
