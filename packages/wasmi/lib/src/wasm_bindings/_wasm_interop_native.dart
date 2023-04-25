@@ -480,12 +480,14 @@ class _Builder extends WasmInstanceBuilder {
 
 class _WasmInstanceFuel extends WasmInstanceFuel {
   final WasmiModuleId module;
+  int _fuelAdded = 0;
 
   _WasmInstanceFuel(this.module);
 
   @override
   void addFuel(int delta) {
-    return module.addFuel(delta: delta);
+    module.addFuel(delta: delta);
+    _fuelAdded += delta;
   }
 
   @override
@@ -497,6 +499,9 @@ class _WasmInstanceFuel extends WasmInstanceFuel {
   int fuelConsumed() {
     return module.fuelConsumed()!;
   }
+
+  @override
+  int fuelAdded() => _fuelAdded;
 }
 
 class _Instance extends WasmInstance {

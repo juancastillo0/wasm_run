@@ -893,7 +893,9 @@ void testAll({
     expect(fuel, isNotNull);
     expect(fuel!.fuelConsumed(), 0);
     expect(fuel.consumeFuel(0), 0);
+    expect(fuel.fuelAdded(), 0);
     fuel.addFuel(1);
+    expect(fuel.fuelAdded(), 1);
     expect(fuel.consumeFuel(0), 1);
     expect(fuel.fuelConsumed(), 0);
     expect(fuel.consumeFuel(1), 0);
@@ -903,6 +905,7 @@ void testAll({
     expect(fuel, instance.fuel());
 
     fuel.addFuel(10000);
+    expect(fuel.fuelAdded(), 10001);
 
     final fibonacci = instance.getFunction('fibonacci')!;
 
@@ -940,8 +943,10 @@ void testAll({
         ? [1, 7, 13, 39, 85, 171, 317, 563, 969, 1635, 2721, 4487, 7353]
         : [1, 19, 37, 88, 172, 322, 571, 985, 1663, 2770, 4570, 7492];
     expect(fuelConsumed, runtimeFuel);
+    expect(fuel.fuelAdded(), 10001);
     fuel.addFuel(100);
     expect(fuel.consumeFuel(0), isWasmtime ? 94 : 104);
+    expect(fuel.fuelAdded(), 10101);
   });
 }
 

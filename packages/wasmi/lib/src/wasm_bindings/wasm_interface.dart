@@ -422,6 +422,7 @@ class WasmValue {
   int get hashCode => Object.hash(runtimeType, value, type);
 }
 
+/// Returns the fuel that can be used to limit the execution time of the instance.
 abstract class WasmInstanceFuel {
   /// Adds [delta] quantity of fuel to the remaining fuel.
   void addFuel(int delta);
@@ -429,9 +430,17 @@ abstract class WasmInstanceFuel {
   /// Returns the fuel consumed so far.
   int fuelConsumed();
 
+  /// Returns the fuel added so far.
+  int fuelAdded();
+
   /// Consumes [delta] quantity of fuel from the remaining fuel.
   /// Returns the remaining fuel after the operation.
   int consumeFuel(int delta);
+
+  @override
+  String toString() {
+    return 'WasmInstanceFuel(fuelConsumed: ${fuelConsumed()}, fuelAdded: ${fuelAdded()})';
+  }
 }
 
 /// [WasmModule] import entry.
