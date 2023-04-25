@@ -51,5 +51,9 @@ xcodebuild -create-xcframework \
         -output $FRAMEWORK
 zip -r $FRAMEWORK.zip $FRAMEWORK
 
+mkdir macos-arm64 && cp ../target/aarch64-apple-darwin/$BUILD_PROFILE_PATH/$LIBNAME macos-arm64/
+mkdir macos-x64 && cp ../target/x86_64-apple-darwin/$BUILD_PROFILE_PATH/$LIBNAME macos-x64/
+tar -czvf macos.tar.gz macos-*
+
 # Cleanup
-rm -rf ios-sim-lipo mac-lipo $FRAMEWORK
+rm -rf ios-sim-lipo mac-lipo $FRAMEWORK macos-*
