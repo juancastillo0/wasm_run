@@ -89,11 +89,11 @@ class _WasmModule extends WasmModule {
   }
 }
 
-WasmVal _fromWasmValue(WasmValue value, WasmiModuleId module) {
+WasmVal _fromWasmValue(WasmValue value, WasmitModuleId module) {
   return _fromWasmValueRaw(value.type, value.value, module);
 }
 
-WasmVal _fromWasmValueRaw(ValueTy ty, Object? value, WasmiModuleId module) {
+WasmVal _fromWasmValueRaw(ValueTy ty, Object? value, WasmitModuleId module) {
   switch (ty) {
     case ValueTy.i32:
       return WasmVal.i32(value! as int);
@@ -117,7 +117,7 @@ WasmVal _fromWasmValueRaw(ValueTy ty, Object? value, WasmiModuleId module) {
   }
 }
 
-WasmVal_funcRef _makeFunction(WasmFunction function, WasmiModuleId module) {
+WasmVal_funcRef _makeFunction(WasmFunction function, WasmitModuleId module) {
   final functionId = _References.getOrCreateId(function, module);
   final func = module.createFunction(
     functionPointer: _References.globalWasmFunctionPointer,
@@ -137,7 +137,7 @@ WasmExternalKind _toImpExpKind(ExternalType kind) {
   );
 }
 
-WasmFunction _toWasmFunction(WFunc func, WasmiModuleId module) {
+WasmFunction _toWasmFunction(WFunc func, WasmitModuleId module) {
   final type = module.getFunctionType(func: func);
   final params = type.params;
 
@@ -188,7 +188,7 @@ WasmExternal _toWasmExternal(ModuleExportValue value, _Instance instance) {
 }
 
 class ModuleObjectReference {
-  final WasmiModuleId module;
+  final WasmitModuleId module;
   final Object value;
 
   ModuleObjectReference(this.module, this.value);
@@ -221,7 +221,7 @@ class _References {
   static final Map<int, ModuleObjectReference> _idToReference = {};
   static final Map<ModuleObjectReference, int> _referenceToId = {};
 
-  static int getOrCreateId(Object reference, WasmiModuleId module) {
+  static int getOrCreateId(Object reference, WasmitModuleId module) {
     final ref = ModuleObjectReference(module, reference);
     final id = _referenceToId.putIfAbsent(ref, () {
       final id = _lastId++;
@@ -231,7 +231,7 @@ class _References {
     return id;
   }
 
-  static Object? getReference(int? id, WasmiModuleId module) {
+  static Object? getReference(int? id, WasmitModuleId module) {
     if (id == null) return null;
     final ref = _idToReference[id];
     assert(ref != null, 'Invalid reference: id $id module ${module.field0}');
@@ -261,7 +261,7 @@ class _References {
 
     final args = input.map((v) => dartValueFromWasm(v, module)).toList();
 
-    final platform = (defaultInstance() as WasmiDartImpl).platform;
+    final platform = (defaultInstance() as WasmitDartImpl).platform;
     // TODO: should it be a List argument?
     // Function.apply(function, args);
     final output = function.call(args);
@@ -313,7 +313,7 @@ class _References {
     }
   }
 
-  static Object? dartValueFromWasm(WasmVal raw, WasmiModuleId module) {
+  static Object? dartValueFromWasm(WasmVal raw, WasmitModuleId module) {
     return raw.when(
       i32: (value) => value,
       i64: (value) => BigInt.from(value),
@@ -328,7 +328,7 @@ class _References {
     );
   }
 
-  static WasmValue dartValueTypedFromWasm(WasmVal raw, WasmiModuleId module) {
+  static WasmValue dartValueTypedFromWasm(WasmVal raw, WasmitModuleId module) {
     return raw.when(
       i32: WasmValue.i32,
       // TODO: BigInt not necessary in native
@@ -347,7 +347,7 @@ class _References {
 
 class _Builder extends WasmInstanceBuilder {
   final _WasmModule compiledModule;
-  final WasmiModuleId module;
+  final WasmitModuleId module;
   final WasiConfig? wasiConfig;
   final _WasmInstanceFuel? _fuel;
 
@@ -479,7 +479,7 @@ class _Builder extends WasmInstanceBuilder {
 }
 
 class _WasmInstanceFuel extends WasmInstanceFuel {
-  final WasmiModuleId module;
+  final WasmitModuleId module;
   int _fuelAdded = 0;
 
   _WasmInstanceFuel(this.module);
@@ -505,7 +505,7 @@ class _WasmInstanceFuel extends WasmInstanceFuel {
 }
 
 class _Instance extends WasmInstance {
-  final WasmiInstanceId instance;
+  final WasmitInstanceId instance;
   final _Builder builder;
   @override
   _WasmModule get module => builder.compiledModule;
@@ -564,7 +564,7 @@ class _Instance extends WasmInstance {
 
 class _Memory extends WasmMemory {
   final Memory memory;
-  final WasmiModuleId module;
+  final WasmitModuleId module;
 
   _Memory(this.memory, this.module);
 
@@ -595,7 +595,7 @@ class _Memory extends WasmMemory {
 
 class _Global extends WasmGlobal {
   final Global global;
-  final WasmiModuleId module;
+  final WasmitModuleId module;
 
   _Global(this.global, this.module);
 
@@ -614,7 +614,7 @@ class _Global extends WasmGlobal {
 
 class _Table extends WasmTable {
   final Table table;
-  final WasmiModuleId module;
+  final WasmitModuleId module;
 
   _Table(this.table, this.module);
 

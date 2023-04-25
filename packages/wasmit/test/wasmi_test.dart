@@ -27,7 +27,7 @@ int mapWasmFunctionMut(
 
   print('dart output $output');
 
-  final platform = WasmiDartPlatform(
+  final platform = WasmitDartPlatform(
     DynamicLibrary.open('../../target/debug/libwasmit_dart.dylib'),
   );
   print('dart after platform $result');
@@ -98,7 +98,7 @@ WasmVal _wire2api_value_2(dynamic raw) {
 
 void main() {
   group('A group of tests', () {
-    WasmiDart getLibrary() {
+    WasmitDart getLibrary() {
       return defaultInstance();
     }
 

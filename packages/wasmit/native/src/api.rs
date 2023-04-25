@@ -64,10 +64,10 @@ struct StoreState {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub struct WasmiModuleId(pub u32);
+pub struct WasmitModuleId(pub u32);
 
 #[derive(Debug, Clone, Copy)]
-pub struct WasmiInstanceId(pub u32);
+pub struct WasmitInstanceId(pub u32);
 
 pub fn create_shared_memory(_module: CompiledModule) -> Result<SyncReturn<RustOpaque<Memory>>> {
     Err(anyhow::Error::msg(
@@ -78,7 +78,7 @@ pub fn create_shared_memory(_module: CompiledModule) -> Result<SyncReturn<RustOp
 pub fn module_builder(
     module: CompiledModule,
     wasi_config: Option<WasiConfig>,
-) -> Result<SyncReturn<WasmiModuleId>> {
+) -> Result<SyncReturn<WasmitModuleId>> {
     let guard = module.0.lock().unwrap();
     let engine = guard.engine();
     let mut linker = <Linker<StoreState>>::new(engine);
@@ -147,7 +147,7 @@ pub fn module_builder(
     };
     arr.map.insert(id, module_builder);
 
-    Ok(SyncReturn(WasmiModuleId(id)))
+    Ok(SyncReturn(WasmitModuleId(id)))
 }
 
 struct ModuleIOWriter {
@@ -157,7 +157,7 @@ struct ModuleIOWriter {
 
 impl Write for ModuleIOWriter {
     fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
-        WasmiModuleId(self.id).with_module(|store| {
+        WasmitModuleId(self.id).with_module(|store| {
             let data = store.data();
 
             let sink = if self.is_stdout {
@@ -180,7 +180,7 @@ impl Write for ModuleIOWriter {
     }
 }
 
-impl WasmiInstanceId {
+impl WasmitInstanceId {
     pub fn exports(&self) -> SyncReturn<Vec<ModuleExportValue>> {
         let mut v = ARRAY.write().unwrap();
         let value = v.map.get_mut(&self.0).unwrap();
@@ -197,11 +197,11 @@ impl WasmiInstanceId {
     }
 }
 
-impl WasmiModuleId {
-    pub fn instantiate_sync(&self) -> Result<SyncReturn<WasmiInstanceId>> {
+impl WasmitModuleId {
+    pub fn instantiate_sync(&self) -> Result<SyncReturn<WasmitInstanceId>> {
         Ok(SyncReturn(self.instantiate()?))
     }
-    pub fn instantiate(&self) -> Result<WasmiInstanceId> {
+    pub fn instantiate(&self) -> Result<WasmitInstanceId> {
         let mut state = ARRAY.write().unwrap();
         let mut module = state.map.get_mut(&self.0).unwrap();
         if module.instance.is_some() {
@@ -212,7 +212,7 @@ impl WasmiModuleId {
             .instantiate(&mut module.store, &module.module.lock().unwrap())?;
 
         module.instance = Some(instance);
-        Ok(WasmiInstanceId(self.0))
+        Ok(WasmitInstanceId(self.0))
     }
     pub fn link_imports(&self, imports: Vec<ModuleImport>) -> Result<SyncReturn<()>> {
         let mut arr = ARRAY.write().unwrap();

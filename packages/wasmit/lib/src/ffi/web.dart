@@ -3,8 +3,8 @@ import 'package:wasmit/src/bridge_generated.dart';
 
 typedef ExternalLibrary = WasmModule;
 
-WasmiDart createWrapperImpl(ExternalLibrary module) =>
-    WasmiDartImpl.wasm(module);
+WasmitDart createWrapperImpl(ExternalLibrary module) =>
+    WasmitDartImpl.wasm(module);
 
 ExternalLibrary localTestingLibraryImpl() => throw UnimplementedError();
 

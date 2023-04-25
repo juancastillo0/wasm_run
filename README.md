@@ -83,7 +83,7 @@ A Web Assembly executor for the Dart programming language. Currently it uses the
 
 ### Flutter
 
-We provide [`package:flutter_wasi`](./packages/flutter_wasmit/) to bundle the right binaries for your platform compilation targets.
+We provide [`package:flutter_wasmit`](./packages/flutter_wasmit/) to bundle the right binaries for your platform compilation targets.
 
 #### Runtime for Platform
 

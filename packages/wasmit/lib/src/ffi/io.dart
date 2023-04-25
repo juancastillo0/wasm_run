@@ -6,7 +6,7 @@ import 'package:wasmit/src/ffi/library_locator.dart';
 
 typedef ExternalLibrary = DynamicLibrary;
 
-WasmiDart createWrapperImpl(ExternalLibrary dylib) => WasmiDartImpl(dylib);
+WasmitDart createWrapperImpl(ExternalLibrary dylib) => WasmitDartImpl(dylib);
 
 ExternalLibrary localTestingLibraryImpl() {
   final filename = getDesktopLibName();

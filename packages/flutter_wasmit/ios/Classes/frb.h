@@ -105,13 +105,13 @@ typedef struct wire_ModuleConfig {
   struct wire_ModuleConfigWasmtime *wasmtime;
 } wire_ModuleConfig;
 
-typedef struct wire_WasmiInstanceId {
+typedef struct wire_WasmitInstanceId {
   uint32_t field0;
-} wire_WasmiInstanceId;
+} wire_WasmitInstanceId;
 
-typedef struct wire_WasmiModuleId {
+typedef struct wire_WasmitModuleId {
   uint32_t field0;
-} wire_WasmiModuleId;
+} wire_WasmitModuleId;
 
 typedef struct wire_WFunc {
   const void *ptr;
@@ -259,116 +259,116 @@ WireSyncReturn wire_wasm_features_for_config(struct wire_ModuleConfig *config);
 
 WireSyncReturn wire_wasm_runtime_features(void);
 
-WireSyncReturn wire_exports__method__WasmiInstanceId(struct wire_WasmiInstanceId *that);
+WireSyncReturn wire_exports__method__WasmitInstanceId(struct wire_WasmitInstanceId *that);
 
-WireSyncReturn wire_instantiate_sync__method__WasmiModuleId(struct wire_WasmiModuleId *that);
+WireSyncReturn wire_instantiate_sync__method__WasmitModuleId(struct wire_WasmitModuleId *that);
 
-void wire_instantiate__method__WasmiModuleId(int64_t port_, struct wire_WasmiModuleId *that);
+void wire_instantiate__method__WasmitModuleId(int64_t port_, struct wire_WasmitModuleId *that);
 
-WireSyncReturn wire_link_imports__method__WasmiModuleId(struct wire_WasmiModuleId *that,
-                                                        struct wire_list_module_import *imports);
+WireSyncReturn wire_link_imports__method__WasmitModuleId(struct wire_WasmitModuleId *that,
+                                                         struct wire_list_module_import *imports);
 
-void wire_stdio_stream__method__WasmiModuleId(int64_t port_,
-                                              struct wire_WasmiModuleId *that,
-                                              int32_t kind);
+void wire_stdio_stream__method__WasmitModuleId(int64_t port_,
+                                               struct wire_WasmitModuleId *that,
+                                               int32_t kind);
 
-void wire_dispose__method__WasmiModuleId(int64_t port_, struct wire_WasmiModuleId *that);
+void wire_dispose__method__WasmitModuleId(int64_t port_, struct wire_WasmitModuleId *that);
 
-WireSyncReturn wire_call_function_handle_sync__method__WasmiModuleId(struct wire_WasmiModuleId *that,
-                                                                     struct wire_WFunc func,
-                                                                     struct wire_list_wasm_val *args);
+WireSyncReturn wire_call_function_handle_sync__method__WasmitModuleId(struct wire_WasmitModuleId *that,
+                                                                      struct wire_WFunc func,
+                                                                      struct wire_list_wasm_val *args);
 
-void wire_call_function_handle__method__WasmiModuleId(int64_t port_,
-                                                      struct wire_WasmiModuleId *that,
-                                                      struct wire_WFunc func,
-                                                      struct wire_list_wasm_val *args);
+void wire_call_function_handle__method__WasmitModuleId(int64_t port_,
+                                                       struct wire_WasmitModuleId *that,
+                                                       struct wire_WFunc func,
+                                                       struct wire_list_wasm_val *args);
 
-WireSyncReturn wire_get_function_type__method__WasmiModuleId(struct wire_WasmiModuleId *that,
-                                                             struct wire_WFunc func);
+WireSyncReturn wire_get_function_type__method__WasmitModuleId(struct wire_WasmitModuleId *that,
+                                                              struct wire_WFunc func);
 
-WireSyncReturn wire_create_function__method__WasmiModuleId(struct wire_WasmiModuleId *that,
-                                                           uintptr_t function_pointer,
-                                                           uint32_t function_id,
-                                                           struct wire_list_value_ty *param_types,
-                                                           struct wire_list_value_ty *result_types);
+WireSyncReturn wire_create_function__method__WasmitModuleId(struct wire_WasmitModuleId *that,
+                                                            uintptr_t function_pointer,
+                                                            uint32_t function_id,
+                                                            struct wire_list_value_ty *param_types,
+                                                            struct wire_list_value_ty *result_types);
 
-WireSyncReturn wire_create_memory__method__WasmiModuleId(struct wire_WasmiModuleId *that,
-                                                         struct wire_MemoryTy *memory_type);
+WireSyncReturn wire_create_memory__method__WasmitModuleId(struct wire_WasmitModuleId *that,
+                                                          struct wire_MemoryTy *memory_type);
 
-WireSyncReturn wire_create_global__method__WasmiModuleId(struct wire_WasmiModuleId *that,
+WireSyncReturn wire_create_global__method__WasmitModuleId(struct wire_WasmitModuleId *that,
+                                                          struct wire_WasmVal *value,
+                                                          int32_t mutability);
+
+WireSyncReturn wire_create_table__method__WasmitModuleId(struct wire_WasmitModuleId *that,
                                                          struct wire_WasmVal *value,
-                                                         int32_t mutability);
+                                                         struct wire_TableArgs *table_type);
 
-WireSyncReturn wire_create_table__method__WasmiModuleId(struct wire_WasmiModuleId *that,
-                                                        struct wire_WasmVal *value,
-                                                        struct wire_TableArgs *table_type);
-
-WireSyncReturn wire_get_global_type__method__WasmiModuleId(struct wire_WasmiModuleId *that,
-                                                           struct wire_Global global);
-
-WireSyncReturn wire_get_global_value__method__WasmiModuleId(struct wire_WasmiModuleId *that,
+WireSyncReturn wire_get_global_type__method__WasmitModuleId(struct wire_WasmitModuleId *that,
                                                             struct wire_Global global);
 
-WireSyncReturn wire_set_global_value__method__WasmiModuleId(struct wire_WasmiModuleId *that,
-                                                            struct wire_Global global,
-                                                            struct wire_WasmVal *value);
+WireSyncReturn wire_get_global_value__method__WasmitModuleId(struct wire_WasmitModuleId *that,
+                                                             struct wire_Global global);
 
-WireSyncReturn wire_get_memory_type__method__WasmiModuleId(struct wire_WasmiModuleId *that,
-                                                           struct wire_Memory memory);
+WireSyncReturn wire_set_global_value__method__WasmitModuleId(struct wire_WasmitModuleId *that,
+                                                             struct wire_Global global,
+                                                             struct wire_WasmVal *value);
 
-WireSyncReturn wire_get_memory_data__method__WasmiModuleId(struct wire_WasmiModuleId *that,
-                                                           struct wire_Memory memory);
-
-WireSyncReturn wire_read_memory__method__WasmiModuleId(struct wire_WasmiModuleId *that,
-                                                       struct wire_Memory memory,
-                                                       uintptr_t offset,
-                                                       uintptr_t bytes);
-
-WireSyncReturn wire_get_memory_pages__method__WasmiModuleId(struct wire_WasmiModuleId *that,
+WireSyncReturn wire_get_memory_type__method__WasmitModuleId(struct wire_WasmitModuleId *that,
                                                             struct wire_Memory memory);
 
-WireSyncReturn wire_write_memory__method__WasmiModuleId(struct wire_WasmiModuleId *that,
+WireSyncReturn wire_get_memory_data__method__WasmitModuleId(struct wire_WasmitModuleId *that,
+                                                            struct wire_Memory memory);
+
+WireSyncReturn wire_read_memory__method__WasmitModuleId(struct wire_WasmitModuleId *that,
                                                         struct wire_Memory memory,
                                                         uintptr_t offset,
-                                                        struct wire_uint_8_list *buffer);
+                                                        uintptr_t bytes);
 
-WireSyncReturn wire_grow_memory__method__WasmiModuleId(struct wire_WasmiModuleId *that,
-                                                       struct wire_Memory memory,
-                                                       uint32_t pages);
+WireSyncReturn wire_get_memory_pages__method__WasmitModuleId(struct wire_WasmitModuleId *that,
+                                                             struct wire_Memory memory);
 
-WireSyncReturn wire_get_table_size__method__WasmiModuleId(struct wire_WasmiModuleId *that,
-                                                          struct wire_Table table);
+WireSyncReturn wire_write_memory__method__WasmitModuleId(struct wire_WasmitModuleId *that,
+                                                         struct wire_Memory memory,
+                                                         uintptr_t offset,
+                                                         struct wire_uint_8_list *buffer);
 
-WireSyncReturn wire_get_table_type__method__WasmiModuleId(struct wire_WasmiModuleId *that,
-                                                          struct wire_Table table);
+WireSyncReturn wire_grow_memory__method__WasmitModuleId(struct wire_WasmitModuleId *that,
+                                                        struct wire_Memory memory,
+                                                        uint32_t pages);
 
-WireSyncReturn wire_grow_table__method__WasmiModuleId(struct wire_WasmiModuleId *that,
+WireSyncReturn wire_get_table_size__method__WasmitModuleId(struct wire_WasmitModuleId *that,
+                                                           struct wire_Table table);
+
+WireSyncReturn wire_get_table_type__method__WasmitModuleId(struct wire_WasmitModuleId *that,
+                                                           struct wire_Table table);
+
+WireSyncReturn wire_grow_table__method__WasmitModuleId(struct wire_WasmitModuleId *that,
+                                                       struct wire_Table table,
+                                                       uint32_t delta,
+                                                       struct wire_WasmVal *value);
+
+WireSyncReturn wire_get_table__method__WasmitModuleId(struct wire_WasmitModuleId *that,
                                                       struct wire_Table table,
-                                                      uint32_t delta,
-                                                      struct wire_WasmVal *value);
+                                                      uint32_t index);
 
-WireSyncReturn wire_get_table__method__WasmiModuleId(struct wire_WasmiModuleId *that,
-                                                     struct wire_Table table,
-                                                     uint32_t index);
-
-WireSyncReturn wire_set_table__method__WasmiModuleId(struct wire_WasmiModuleId *that,
-                                                     struct wire_Table table,
-                                                     uint32_t index,
-                                                     struct wire_WasmVal *value);
-
-WireSyncReturn wire_fill_table__method__WasmiModuleId(struct wire_WasmiModuleId *that,
+WireSyncReturn wire_set_table__method__WasmitModuleId(struct wire_WasmitModuleId *that,
                                                       struct wire_Table table,
                                                       uint32_t index,
-                                                      struct wire_WasmVal *value,
-                                                      uint32_t len);
+                                                      struct wire_WasmVal *value);
 
-WireSyncReturn wire_add_fuel__method__WasmiModuleId(struct wire_WasmiModuleId *that,
-                                                    uint64_t delta);
+WireSyncReturn wire_fill_table__method__WasmitModuleId(struct wire_WasmitModuleId *that,
+                                                       struct wire_Table table,
+                                                       uint32_t index,
+                                                       struct wire_WasmVal *value,
+                                                       uint32_t len);
 
-WireSyncReturn wire_fuel_consumed__method__WasmiModuleId(struct wire_WasmiModuleId *that);
+WireSyncReturn wire_add_fuel__method__WasmitModuleId(struct wire_WasmitModuleId *that,
+                                                     uint64_t delta);
 
-WireSyncReturn wire_consume_fuel__method__WasmiModuleId(struct wire_WasmiModuleId *that,
-                                                        uint64_t delta);
+WireSyncReturn wire_fuel_consumed__method__WasmitModuleId(struct wire_WasmitModuleId *that);
+
+WireSyncReturn wire_consume_fuel__method__WasmitModuleId(struct wire_WasmitModuleId *that,
+                                                         uint64_t delta);
 
 WireSyncReturn wire_get_module_imports__method__CompiledModule(struct wire_CompiledModule *that);
 
@@ -414,9 +414,9 @@ struct wire_WasiStackLimits *new_box_autoadd_wasi_stack_limits_0(void);
 
 struct wire_WasmVal *new_box_autoadd_wasm_val_0(void);
 
-struct wire_WasmiInstanceId *new_box_autoadd_wasmi_instance_id_0(void);
+struct wire_WasmitInstanceId *new_box_autoadd_wasmit_instance_id_0(void);
 
-struct wire_WasmiModuleId *new_box_autoadd_wasmi_module_id_0(void);
+struct wire_WasmitModuleId *new_box_autoadd_wasmit_module_id_0(void);
 
 struct wire_list_env_variable *new_list_env_variable_0(int32_t len);
 
@@ -483,37 +483,37 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) wire_compile_wasm_sync);
     dummy_var ^= ((int64_t) (void*) wire_wasm_features_for_config);
     dummy_var ^= ((int64_t) (void*) wire_wasm_runtime_features);
-    dummy_var ^= ((int64_t) (void*) wire_exports__method__WasmiInstanceId);
-    dummy_var ^= ((int64_t) (void*) wire_instantiate_sync__method__WasmiModuleId);
-    dummy_var ^= ((int64_t) (void*) wire_instantiate__method__WasmiModuleId);
-    dummy_var ^= ((int64_t) (void*) wire_link_imports__method__WasmiModuleId);
-    dummy_var ^= ((int64_t) (void*) wire_stdio_stream__method__WasmiModuleId);
-    dummy_var ^= ((int64_t) (void*) wire_dispose__method__WasmiModuleId);
-    dummy_var ^= ((int64_t) (void*) wire_call_function_handle_sync__method__WasmiModuleId);
-    dummy_var ^= ((int64_t) (void*) wire_call_function_handle__method__WasmiModuleId);
-    dummy_var ^= ((int64_t) (void*) wire_get_function_type__method__WasmiModuleId);
-    dummy_var ^= ((int64_t) (void*) wire_create_function__method__WasmiModuleId);
-    dummy_var ^= ((int64_t) (void*) wire_create_memory__method__WasmiModuleId);
-    dummy_var ^= ((int64_t) (void*) wire_create_global__method__WasmiModuleId);
-    dummy_var ^= ((int64_t) (void*) wire_create_table__method__WasmiModuleId);
-    dummy_var ^= ((int64_t) (void*) wire_get_global_type__method__WasmiModuleId);
-    dummy_var ^= ((int64_t) (void*) wire_get_global_value__method__WasmiModuleId);
-    dummy_var ^= ((int64_t) (void*) wire_set_global_value__method__WasmiModuleId);
-    dummy_var ^= ((int64_t) (void*) wire_get_memory_type__method__WasmiModuleId);
-    dummy_var ^= ((int64_t) (void*) wire_get_memory_data__method__WasmiModuleId);
-    dummy_var ^= ((int64_t) (void*) wire_read_memory__method__WasmiModuleId);
-    dummy_var ^= ((int64_t) (void*) wire_get_memory_pages__method__WasmiModuleId);
-    dummy_var ^= ((int64_t) (void*) wire_write_memory__method__WasmiModuleId);
-    dummy_var ^= ((int64_t) (void*) wire_grow_memory__method__WasmiModuleId);
-    dummy_var ^= ((int64_t) (void*) wire_get_table_size__method__WasmiModuleId);
-    dummy_var ^= ((int64_t) (void*) wire_get_table_type__method__WasmiModuleId);
-    dummy_var ^= ((int64_t) (void*) wire_grow_table__method__WasmiModuleId);
-    dummy_var ^= ((int64_t) (void*) wire_get_table__method__WasmiModuleId);
-    dummy_var ^= ((int64_t) (void*) wire_set_table__method__WasmiModuleId);
-    dummy_var ^= ((int64_t) (void*) wire_fill_table__method__WasmiModuleId);
-    dummy_var ^= ((int64_t) (void*) wire_add_fuel__method__WasmiModuleId);
-    dummy_var ^= ((int64_t) (void*) wire_fuel_consumed__method__WasmiModuleId);
-    dummy_var ^= ((int64_t) (void*) wire_consume_fuel__method__WasmiModuleId);
+    dummy_var ^= ((int64_t) (void*) wire_exports__method__WasmitInstanceId);
+    dummy_var ^= ((int64_t) (void*) wire_instantiate_sync__method__WasmitModuleId);
+    dummy_var ^= ((int64_t) (void*) wire_instantiate__method__WasmitModuleId);
+    dummy_var ^= ((int64_t) (void*) wire_link_imports__method__WasmitModuleId);
+    dummy_var ^= ((int64_t) (void*) wire_stdio_stream__method__WasmitModuleId);
+    dummy_var ^= ((int64_t) (void*) wire_dispose__method__WasmitModuleId);
+    dummy_var ^= ((int64_t) (void*) wire_call_function_handle_sync__method__WasmitModuleId);
+    dummy_var ^= ((int64_t) (void*) wire_call_function_handle__method__WasmitModuleId);
+    dummy_var ^= ((int64_t) (void*) wire_get_function_type__method__WasmitModuleId);
+    dummy_var ^= ((int64_t) (void*) wire_create_function__method__WasmitModuleId);
+    dummy_var ^= ((int64_t) (void*) wire_create_memory__method__WasmitModuleId);
+    dummy_var ^= ((int64_t) (void*) wire_create_global__method__WasmitModuleId);
+    dummy_var ^= ((int64_t) (void*) wire_create_table__method__WasmitModuleId);
+    dummy_var ^= ((int64_t) (void*) wire_get_global_type__method__WasmitModuleId);
+    dummy_var ^= ((int64_t) (void*) wire_get_global_value__method__WasmitModuleId);
+    dummy_var ^= ((int64_t) (void*) wire_set_global_value__method__WasmitModuleId);
+    dummy_var ^= ((int64_t) (void*) wire_get_memory_type__method__WasmitModuleId);
+    dummy_var ^= ((int64_t) (void*) wire_get_memory_data__method__WasmitModuleId);
+    dummy_var ^= ((int64_t) (void*) wire_read_memory__method__WasmitModuleId);
+    dummy_var ^= ((int64_t) (void*) wire_get_memory_pages__method__WasmitModuleId);
+    dummy_var ^= ((int64_t) (void*) wire_write_memory__method__WasmitModuleId);
+    dummy_var ^= ((int64_t) (void*) wire_grow_memory__method__WasmitModuleId);
+    dummy_var ^= ((int64_t) (void*) wire_get_table_size__method__WasmitModuleId);
+    dummy_var ^= ((int64_t) (void*) wire_get_table_type__method__WasmitModuleId);
+    dummy_var ^= ((int64_t) (void*) wire_grow_table__method__WasmitModuleId);
+    dummy_var ^= ((int64_t) (void*) wire_get_table__method__WasmitModuleId);
+    dummy_var ^= ((int64_t) (void*) wire_set_table__method__WasmitModuleId);
+    dummy_var ^= ((int64_t) (void*) wire_fill_table__method__WasmitModuleId);
+    dummy_var ^= ((int64_t) (void*) wire_add_fuel__method__WasmitModuleId);
+    dummy_var ^= ((int64_t) (void*) wire_fuel_consumed__method__WasmitModuleId);
+    dummy_var ^= ((int64_t) (void*) wire_consume_fuel__method__WasmitModuleId);
     dummy_var ^= ((int64_t) (void*) wire_get_module_imports__method__CompiledModule);
     dummy_var ^= ((int64_t) (void*) wire_get_module_exports__method__CompiledModule);
     dummy_var ^= ((int64_t) (void*) new_ArcStdSyncMutexModule);
@@ -536,8 +536,8 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) new_box_autoadd_wasi_config_0);
     dummy_var ^= ((int64_t) (void*) new_box_autoadd_wasi_stack_limits_0);
     dummy_var ^= ((int64_t) (void*) new_box_autoadd_wasm_val_0);
-    dummy_var ^= ((int64_t) (void*) new_box_autoadd_wasmi_instance_id_0);
-    dummy_var ^= ((int64_t) (void*) new_box_autoadd_wasmi_module_id_0);
+    dummy_var ^= ((int64_t) (void*) new_box_autoadd_wasmit_instance_id_0);
+    dummy_var ^= ((int64_t) (void*) new_box_autoadd_wasmit_module_id_0);
     dummy_var ^= ((int64_t) (void*) new_list_env_variable_0);
     dummy_var ^= ((int64_t) (void*) new_list_module_import_0);
     dummy_var ^= ((int64_t) (void*) new_list_preopened_dir_0);
