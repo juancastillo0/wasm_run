@@ -83,7 +83,7 @@ A Web Assembly executor for the Dart programming language. Currently it uses the
 
 ### Flutter
 
-We provide [`package:flutter_wasi`](./packages/flutter_wasmi/) to bundle the right binaries for your platform compilation targets.
+We provide [`package:flutter_wasi`](./packages/flutter_wasmit/) to bundle the right binaries for your platform compilation targets.
 
 #### Runtime for Platform
 
@@ -101,7 +101,7 @@ We provide [`package:flutter_wasi`](./packages/flutter_wasmi/) to bundle the rig
 
 ### Pure Dart (CLI/Backend/Web)
 
-For other platforms, you may download the compiled dynamic libraries for each platform and specify the `ffi.DynamicLibrary` in non-web platforms. The compiled libraries can be found in the [release assets](https://github.com/juancastillo0/wasm_interpreter/releases) of this repository. You can also execute the [script](./packages/wasmi/bin/setup.dart) `dart run wasmi:setup` to download the right library for your current platform.
+For other platforms, you may download the compiled dynamic libraries for each platform and specify the `ffi.DynamicLibrary` in non-web platforms. The compiled libraries can be found in the [release assets](https://github.com/juancastillo0/wasm_interpreter/releases) of this repository. You can also execute the [script](./packages/wasmit/bin/setup.dart) `dart run wasmit:setup` to download the right library for your current platform.
 
 For the web platform we provide the same interface but it uses the WASM runtime provided by the browser instead of the native library (you may also use the Wasmi WASM module).
 
@@ -114,7 +114,7 @@ However, in web browsers there is no support for the [WAT](https://developer.moz
 We use the [wasm-feature-detect JavaScript library](https://github.com/GoogleChromeLabs/wasm-feature-detect) for feature detection in the browser. To use this functionality in Dart web applications you will need to add the following script to your html (not necessary for Flutter):
 
 ```html
-<script src="./packages/wasmi/assets/wasm-feature-detect.js"></script>
+<script src="./packages/wasmit/assets/wasm-feature-detect.js"></script>
 ```
 
 
@@ -138,7 +138,7 @@ In the web platform we do not automatically support modules with WASI imports. H
 
 ### Examples
 
-Usage within Dart can be found in the [main test](./packages/wasmi/example/lib/main.dart).
+Usage within Dart can be found in the [main test](./packages/wasmit/example/lib/main.dart).
 
 The WASI module used to execute the test is compiled from the [`rust_wasi_example` Rust project](./packages/rust_wasi_example/src/lib.rs) within this repo.
 
@@ -173,7 +173,7 @@ start using the package.
 
 ```yaml
 dependencies:
-  wasmi: 0.0.1
+  wasmit: 0.0.1
 ```
 
 When using Flutter:
@@ -182,7 +182,7 @@ When using Flutter:
 dependencies:
   flutter:
     sdk: flutter
-  flutter_wasmi: 0.0.1
+  flutter_wasmit: 0.0.1
 ```
 
 ## Usage

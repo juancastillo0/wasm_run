@@ -1,4 +1,4 @@
-name: wasmi_workspace
+name: wasmit_workspace
 
 environment:
   sdk: '>=2.19.0 <3.0.0'

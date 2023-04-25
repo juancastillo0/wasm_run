@@ -32,13 +32,13 @@ if [[ $WASM_BUILD_RUST_WASI_EXAMPLE != false ]]; then
         rustup target add wasm32-wasi
         cargo build --target wasm32-wasi --profile $BUILD_PROFILE \
                 --manifest-path ../packages/rust_wasi_example/Cargo.toml
-        cp -fr ../packages/rust_wasi_example/target/wasm32-wasi/$BUILD_PROFILE_PATH/rust_wasi_example.wasm ../packages/flutter_wasmi/example/assets/rust_wasi_example.wasm
+        cp -fr ../packages/rust_wasi_example/target/wasm32-wasi/$BUILD_PROFILE_PATH/rust_wasi_example.wasm ../packages/flutter_wasmit/example/assets/rust_wasi_example.wasm
 fi
 
 # Create XCFramework zip
-FRAMEWORK="Wasmi.xcframework"
-LIBNAME=libwasmi_dart.a
-DYNAMIC_LIBNAME=libwasmi_dart.dylib
+FRAMEWORK="Wasmit.xcframework"
+LIBNAME=libwasmit_dart.a
+DYNAMIC_LIBNAME=libwasmit_dart.dylib
 mkdir mac-lipo ios-sim-lipo
 IOS_SIM_LIPO=ios-sim-lipo/$LIBNAME
 MAC_LIPO=mac-lipo/$LIBNAME

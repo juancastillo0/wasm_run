@@ -12,8 +12,8 @@ analyzer:
     strict-inference: true
     strict-raw-types: true
   exclude:
-    - 'packages/wasmi/lib/src/bridge_generated.dart'
-    - 'packages/wasmi/lib/src/bridge_generated.web.dart'
+    - 'packages/wasmit/lib/src/bridge_generated.dart'
+    - 'packages/wasmit/lib/src/bridge_generated.web.dart'
     #- '**.freezed.dart'
     #- '**.g.dart'
 

@@ -38,7 +38,7 @@ done
 if [[ $WASM_BUILD_RUST_WASI_EXAMPLE != false ]]; then
         cargo build --target wasm32-wasi --profile $BUILD_PROFILE \
                 --manifest-path ../packages/rust_wasi_example/Cargo.toml
-        cp -fr ../packages/rust_wasi_example/target/wasm32-wasi/$BUILD_PROFILE_PATH/rust_wasi_example.wasm ../packages/flutter_wasmi/example/assets/rust_wasi_example.wasm
+        cp -fr ../packages/rust_wasi_example/target/wasm32-wasi/$BUILD_PROFILE_PATH/rust_wasi_example.wasm ../packages/flutter_wasmit/example/assets/rust_wasi_example.wasm
 fi
 
 # Archive the dynamic libs

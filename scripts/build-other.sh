@@ -36,10 +36,10 @@ win_build() {
 bash ../scripts/config_api.sh wasmtime
 
 # Build all the dynamic libraries
-LINUX_LIBNAME=libwasmi_dart.so
+LINUX_LIBNAME=libwasmit_dart.so
 zig_build aarch64-unknown-linux-gnu linux-arm64 $LINUX_LIBNAME
 zig_build x86_64-unknown-linux-gnu linux-x64 $LINUX_LIBNAME
-WINDOWS_LIBNAME=wasmi_dart.dll
+WINDOWS_LIBNAME=wasmit_dart.dll
 win_build aarch64-pc-windows-msvc windows-arm64 $WINDOWS_LIBNAME
 win_build x86_64-pc-windows-msvc windows-x64 $WINDOWS_LIBNAME
 
@@ -47,7 +47,7 @@ if [[ $WASM_BUILD_RUST_WASI_EXAMPLE != false ]]; then
     rustup target add wasm32-wasi
     cargo build --target wasm32-wasi --profile $BUILD_PROFILE \
         --manifest-path ../packages/rust_wasi_example/Cargo.toml
-    cp -fr ../packages/rust_wasi_example/target/wasm32-wasi/$BUILD_PROFILE_PATH/rust_wasi_example.wasm ../packages/flutter_wasmi/example/assets/rust_wasi_example.wasm
+    cp -fr ../packages/rust_wasi_example/target/wasm32-wasi/$BUILD_PROFILE_PATH/rust_wasi_example.wasm ../packages/flutter_wasmit/example/assets/rust_wasi_example.wasm
 fi
 
 # Archive the dynamic libs
