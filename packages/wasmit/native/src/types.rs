@@ -23,13 +23,9 @@ pub enum WasmVal {
     f64(f64),
     /// A 128 bit number.
     v128([u8; 16]),
-    /// A nullable [`Func`][`crate::Func`] reference, a.k.a. [`FuncRef`].
-    // #[cfg(not(feature = "wasmtime"))]
-    // funcRef(Option<RustOpaque<Func>>), // NonZeroU32
-    // #[cfg(feature = "wasmtime")]
-    // funcRef(Option<RustOpaque<wasmtime::Func>>),
+    /// A nullable function.
     funcRef(Option<RustOpaque<WFunc>>),
-    /// A nullable external object reference, a.k.a. [`ExternRef`].
+    /// A nullable external object reference.
     externRef(Option<u32>), // NonZeroU32
 }
 
@@ -125,13 +121,13 @@ impl From<&wasmtime::GlobalType> for GlobalTy {
 
 #[derive(Debug)]
 pub struct TableTy {
-    /// The type of values stored in the [`Table`].
+    /// The type of values stored in the [WasmTable].
     pub element: ValueTy,
-    /// The minimum number of elements the [`Table`] must have.
+    /// The minimum number of elements the [WasmTable] must have.
     pub min: u32,
-    /// The optional maximum number of elements the [`Table`] can have.
+    /// The optional maximum number of elements the [WasmTable] can have.
     ///
-    /// If this is `None` then the [`Table`] is not limited in size.
+    /// If this is `None` then the [WasmTable] is not limited in size.
     pub max: Option<u32>,
 }
 
@@ -290,11 +286,16 @@ impl From<GlobalMutability> for wasmtime::Mutability {
     }
 }
 
+/// The type of an external (imported or exported) WASM value.
 #[derive(Debug)]
 pub enum ExternalType {
+    /// A [FuncTy].
     Func(FuncTy),
+    /// A [GlobalTy].
     Global(GlobalTy),
+    /// A [TableTy].
     Table(TableTy),
+    /// A [MemoryTy].
     Memory(MemoryTy),
 }
 
@@ -553,7 +554,9 @@ pub struct TableArgs {
 
 #[derive(Debug)]
 pub struct MemoryTy {
+    /// The number of initial pages associated with the memory.
     pub initial_pages: u32,
+    /// The maximum number of pages this memory can have.
     pub maximum_pages: Option<u32>,
 }
 

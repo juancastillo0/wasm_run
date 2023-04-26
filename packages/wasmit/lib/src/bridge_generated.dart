@@ -400,7 +400,10 @@ class CompiledModule {
 }
 
 class EnvVariable {
+  /// The name of the environment variable
   final String name;
+
+  /// The value of the environment variable
   final String value;
 
   const EnvVariable({
@@ -411,15 +414,22 @@ class EnvVariable {
 
 @freezed
 class ExternalType with _$ExternalType {
+  /// A [FuncTy].
   const factory ExternalType.func(
     FuncTy field0,
   ) = ExternalType_Func;
+
+  /// A [GlobalTy].
   const factory ExternalType.global(
     GlobalTy field0,
   ) = ExternalType_Global;
+
+  /// A [TableTy].
   const factory ExternalType.table(
     TableTy field0,
   ) = ExternalType_Table;
+
+  /// A [MemoryTy].
   const factory ExternalType.memory(
     MemoryTy field0,
   ) = ExternalType_Memory;
@@ -476,7 +486,10 @@ class GlobalTy {
 }
 
 class MemoryTy {
+  /// The number of initial pages associated with the memory.
   final int initialPages;
+
+  /// The maximum number of pages this memory can have.
   final int? maximumPages;
 
   const MemoryTy({
@@ -495,13 +508,13 @@ class ModuleConfig {
   /// Is `true` if the [`reference-types`] Wasm proposal is enabled.
   final bool? referenceTypes;
 
-  /// Is `true` if `wasmi` executions shall consume fuel.
+  /// Is `true` if executions shall consume fuel.
   final bool? consumeFuel;
 
-  /// Wasmi config
+  /// Configuration specific to the wasmi runtime
   final ModuleConfigWasmi? wasmi;
 
-  /// Wasmtime config
+  /// Configuration specific to the wasmtime runtime
   final ModuleConfigWasmtime? wasmtime;
 
   const ModuleConfig({
@@ -515,7 +528,6 @@ class ModuleConfig {
 }
 
 class ModuleConfigWasmi {
-  /// WASMI
   /// The limits set on the value stack and call stack.
   final WasiStackLimits? stackLimits;
 
@@ -559,11 +571,29 @@ class ModuleConfigWasmtime {
   final bool? wasmBacktrace;
   final bool? nativeUnwindInfo;
   final int? maxWasmStack;
+
+  /// Whether or not to enable the `threads` WebAssembly feature.
+  /// This includes atomics and shared memory as well.
+  /// This is not enabled by default.
   final bool? wasmThreads;
+
+  /// Whether or not to enable the `simd` WebAssembly feature.
   final bool? wasmSimd;
+
+  /// Whether or not to enable the `relaxed-simd` WebAssembly feature.
+  /// This is not enabled by default.
   final bool? wasmRelaxedSimd;
+
+  /// Whether [wasm_relaxed_simd] should be deterministic.
+  /// This is false by default.
   final bool? relaxedSimdDeterministic;
+
+  /// Whether or not to enable the `multi-memory` WebAssembly feature.
+  /// This is not enabled by default.
   final bool? wasmMultiMemory;
+
+  /// Whether or not to enable the `memory64` WebAssembly feature.
+  /// This is not enabled by default.
   final bool? wasmMemory64;
   final int? staticMemoryMaximumSize;
   final bool? staticMemoryForced;
@@ -634,8 +664,14 @@ class ModuleImportDesc {
   });
 }
 
+/// A preopened directory that the WASM module will be able to access
 class PreopenedDir {
+  /// The path inside the WASM module.
+  /// Should be "/" separated, if you are on windows, you will need to convert the path
   final String wasmGuestPath;
+
+  /// The path on the host that the WASM module will be able to access
+  /// and corresponds to the [wasm_guest_path]
   final String hostPath;
 
   const PreopenedDir({
@@ -665,15 +701,15 @@ class TableArgs {
 }
 
 class TableTy {
-  /// The type of values stored in the [`Table`].
+  /// The type of values stored in the [WasmTable].
   final ValueTy element;
 
-  /// The minimum number of elements the [`Table`] must have.
+  /// The minimum number of elements the [WasmTable] must have.
   final int min;
 
-  /// The optional maximum number of elements the [`Table`] can have.
+  /// The optional maximum number of elements the [WasmTable] can have.
   ///
-  /// If this is `None` then the [`Table`] is not limited in size.
+  /// If this is `None` then the [WasmTable] is not limited in size.
   final int? max;
 
   const TableTy({
@@ -716,14 +752,36 @@ enum ValueTy {
 }
 
 class WasiConfig {
+  /// Whether to capture stdout.
+  /// If this is true, you can use the [WasmInstance.stdout]
+  /// getter to retrieve a stream of the module's stdout.
   final bool captureStdout;
+
+  /// Whether to capture stderr
+  /// If this is true, you can use the [WasmInstance.stderr]
+  /// getter to retrieve a stream of the module's stderr.
   final bool captureStderr;
+
+  /// Whether to inherit stdin from the host process.
   final bool inheritStdin;
+
+  /// Whether to inherit environment variables from the host process.
   final bool inheritEnv;
+
+  /// Whether to inherit the process arguments from the host process.
   final bool inheritArgs;
+
+  /// Custom process arguments to pass to the WASM module
   final List<String> args;
+
+  /// Custom Environment variables to pass to the WASM module
   final List<EnvVariable> env;
+
+  /// Custom preopened files to pass to the WASM module
   final List<String> preopenedFiles;
+
+  /// Custom preopened directories to pass to the WASM module
+  /// The module will be able to access and edit these directories
   final List<PreopenedDir> preopenedDirs;
 
   const WasiConfig({
@@ -850,10 +908,24 @@ class WasmFeatures {
 }
 
 class WasmRuntimeFeatures {
+  /// The name of the runtime.
+  /// For example, "wasmi" or "wasmtime".
   final String name;
+
+  /// The version of the runtime.
+  /// For example, "0.29.0" or "8.0.0".
   final String version;
+
+  /// Is `true` if the runtime is the one provided by the browser.
   final bool isBrowser;
+
+  /// The features supported by the runtime.
   final WasmFeatures supportedFeatures;
+
+  /// The default features of the runtime.
+  /// If a feature is supported, but it is not enable by default,
+  /// then it must be enabled manually, perhaps with [ModuleConfig],
+  /// and it may be experimental.
   final WasmFeatures defaultFeatures;
 
   const WasmRuntimeFeatures({
@@ -892,12 +964,12 @@ class WasmVal with _$WasmVal {
     U8Array16 field0,
   ) = WasmVal_v128;
 
-  /// A nullable [`Func`][`crate::Func`] reference, a.k.a. [`FuncRef`].
+  /// A nullable function.
   const factory WasmVal.funcRef([
     WFunc? field0,
   ]) = WasmVal_funcRef;
 
-  /// A nullable external object reference, a.k.a. [`ExternRef`].
+  /// A nullable external object reference.
   const factory WasmVal.externRef([
     int? field0,
   ]) = WasmVal_externRef;
@@ -905,9 +977,16 @@ class WasmVal with _$WasmVal {
 
 /// https://docs.wasmtime.dev/stability-wasi-proposals-support.html
 class WasmWasiFeatures {
+  /// Access to standard input, output, and error streams
   final bool io;
+
+  /// Access to the filesystem
   final bool filesystem;
+
+  /// Access to clocks and the system time
   final bool clocks;
+
+  /// Access to random number generators
   final bool random;
   final bool poll;
 

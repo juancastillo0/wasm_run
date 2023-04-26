@@ -1,14 +1,28 @@
 #[derive(Debug)]
 pub struct WasiConfig {
+    /// Whether to capture stdout.
+    /// If this is true, you can use the [WasmInstance.stdout]
+    /// getter to retrieve a stream of the module's stdout.
     pub capture_stdout: bool,
+    /// Whether to capture stderr
+    /// If this is true, you can use the [WasmInstance.stderr]
+    /// getter to retrieve a stream of the module's stderr.
     pub capture_stderr: bool,
     // TODO: custom stdin
+    /// Whether to inherit stdin from the host process.
     pub inherit_stdin: bool,
+    /// Whether to inherit environment variables from the host process.
     pub inherit_env: bool,
+    /// Whether to inherit the process arguments from the host process.
     pub inherit_args: bool,
+    /// Custom process arguments to pass to the WASM module
     pub args: Vec<String>,
+    /// Custom Environment variables to pass to the WASM module
     pub env: Vec<EnvVariable>,
+    /// Custom preopened files to pass to the WASM module
     pub preopened_files: Vec<String>,
+    /// Custom preopened directories to pass to the WASM module
+    /// The module will be able to access and edit these directories
     pub preopened_dirs: Vec<PreopenedDir>,
 }
 
@@ -71,21 +85,38 @@ impl WasiConfig {
 
 #[derive(Debug)]
 pub struct EnvVariable {
+    /// The name of the environment variable
     pub name: String,
+    /// The value of the environment variable
     pub value: String,
 }
 
+/// A preopened directory that the WASM module will be able to access
 #[derive(Debug)]
 pub struct PreopenedDir {
+    /// The path inside the WASM module.
+    /// Should be "/" separated, if you are on windows, you will need to convert the path
     pub wasm_guest_path: String,
+    /// The path on the host that the WASM module will be able to access
+    /// and corresponds to the [wasm_guest_path]
     pub host_path: String,
 }
 
 pub struct WasmRuntimeFeatures {
+    /// The name of the runtime.
+    /// For example, "wasmi" or "wasmtime".
     pub name: String,
+    /// The version of the runtime.
+    /// For example, "0.29.0" or "8.0.0".
     pub version: String,
+    /// Is `true` if the runtime is the one provided by the browser.
     pub is_browser: bool,
+    /// The features supported by the runtime.
     pub supported_features: WasmFeatures,
+    /// The default features of the runtime.
+    /// If a feature is supported, but it is not enable by default,
+    /// then it must be enabled manually, perhaps with [ModuleConfig],
+    /// and it may be experimental.
     pub default_features: WasmFeatures,
 }
 
@@ -121,11 +152,11 @@ pub struct ModuleConfig {
     pub bulk_memory: Option<bool>,
     /// Is `true` if the [`reference-types`] Wasm proposal is enabled.
     pub reference_types: Option<bool>,
-    /// Is `true` if `wasmi` executions shall consume fuel.
+    /// Is `true` if executions shall consume fuel.
     pub consume_fuel: Option<bool>,
-    /// Wasmi config
+    /// Configuration specific to the wasmi runtime
     pub wasmi: Option<ModuleConfigWasmi>,
-    /// Wasmtime config
+    /// Configuration specific to the wasmtime runtime
     pub wasmtime: Option<ModuleConfigWasmtime>,
 }
 
@@ -198,9 +229,6 @@ impl From<ModuleConfig> for wasmi::Config {
 
 #[derive(Debug)]
 pub struct ModuleConfigWasmi {
-    /// WASMI
-    //
-
     /// The limits set on the value stack and call stack.
     pub stack_limits: Option<WasiStackLimits>,
     /// The amount of Wasm stacks to keep in cache at most.
@@ -263,13 +291,24 @@ pub struct ModuleConfigWasmtime {
     //
     // TODO: pub epoch_interruption: Option<bool>, // vs consume_fuel
     pub max_wasm_stack: Option<usize>,
-    //
-    pub wasm_threads: Option<bool>, // false
+    /// Whether or not to enable the `threads` WebAssembly feature.
+    /// This includes atomics and shared memory as well.
+    /// This is not enabled by default.
+    pub wasm_threads: Option<bool>,
+    /// Whether or not to enable the `simd` WebAssembly feature.
     pub wasm_simd: Option<bool>,
-    pub wasm_relaxed_simd: Option<bool>,          // false
-    pub relaxed_simd_deterministic: Option<bool>, // false
-    pub wasm_multi_memory: Option<bool>,          // false
-    pub wasm_memory64: Option<bool>,              // false
+    /// Whether or not to enable the `relaxed-simd` WebAssembly feature.
+    /// This is not enabled by default.
+    pub wasm_relaxed_simd: Option<bool>,
+    /// Whether [wasm_relaxed_simd] should be deterministic.
+    /// This is false by default.
+    pub relaxed_simd_deterministic: Option<bool>,
+    /// Whether or not to enable the `multi-memory` WebAssembly feature.
+    /// This is not enabled by default.
+    pub wasm_multi_memory: Option<bool>,
+    /// Whether or not to enable the `memory64` WebAssembly feature.
+    /// This is not enabled by default.
+    pub wasm_memory64: Option<bool>,
     // TODO: pub wasm_component_model: Option<bool>, // false component-model feature
     //
     // pub strategy: Strategy,
@@ -339,9 +378,13 @@ pub struct WasmFeatures {
 /// https://docs.wasmtime.dev/stability-wasi-proposals-support.html
 pub struct WasmWasiFeatures {
     // TODO: pub snapshot_preview1: bool,
+    /// Access to standard input, output, and error streams
     pub io: bool,
+    /// Access to the filesystem
     pub filesystem: bool,
+    /// Access to clocks and the system time
     pub clocks: bool,
+    /// Access to random number generators
     pub random: bool,
     pub poll: bool,
     /// wasi-nn
