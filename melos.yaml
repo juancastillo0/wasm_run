@@ -50,7 +50,7 @@ scripts:
     description: Run all Dart & Flutter tests in this project.
 
   test:dart:
-    run: cd packages/wasmit && dart test test -c source
+    run: cd packages/wasmit && dart test test
     description: Run Dart tests for a specific package in this project.
 
   test:flutter:
@@ -61,5 +61,5 @@ scripts:
       dir-exists: test
 
   test:coverage:
-    run: cd packages/wasmit && dart pub global activate coverage && dart pub global run coverage:test_with_coverage --branch-coverage --function-coverage -- -c source
+    run: cd packages/wasmit && dart pub global activate coverage && dart pub global run coverage:test_with_coverage --branch-coverage --function-coverage
     description: Run all Dart & Flutter tests in this project and collect coverage.

@@ -9,6 +9,10 @@ on:
     # runs the CI everyday at 10AM
     - cron: "0 10 * * *"
 
+env:
+  FLUTTER_CHANNEL: master
+  RUST_TOOLCHAIN: stable
+
 jobs:
   # General build, check, and test steps
   build_and_test:
@@ -20,10 +24,12 @@ jobs:
       # Setup
       - uses: actions/checkout@v3
       - uses: subosito/flutter-action@v2
-      - uses: bluefireteam/melos-action@v2
-      - uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: stable
+          channel: ${{ env.FLUTTER_CHANNEL }}
+      - uses: bluefireteam/melos-action@v2
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ env.RUST_TOOLCHAIN }}
           components: rustfmt, clippy
       - run: cargo install cargo-wasi
 
@@ -144,10 +150,12 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: subosito/flutter-action@v2
-      - uses: bluefireteam/melos-action@v2
-      - uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: stable
+          channel: ${{ env.FLUTTER_CHANNEL }}
+      - uses: bluefireteam/melos-action@v2
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ env.RUST_TOOLCHAIN }}
 
       - name: Build the XCFramework
         run: melos run build:apple -- dev
@@ -188,15 +196,12 @@ jobs:
 
       # Chrome
       - name: Install and run Chrome Driver
-        run: ${CHROMEDRIVER}/chromedriver --port=4445 &
+        run: ${CHROMEWEBDRIVER}/chromedriver --port=4445 &
         id: chromedriver
         if: always()
       - run: dart run test -p chrome
         working-directory: packages/wasmit
         if: always() && steps.chromedriver.outcome == 'success'
-      - name: Run Chrome Driver again
-        run: ${CHROMEDRIVER}/chromedriver --port=4445 &
-        if: always()
       - run: flutter drive --driver=test_driver/integration_test.dart --target=integration_test/main_test.dart -d web-server --browser-name=chrome --driver-port=4445
         working-directory: packages/flutter_wasmit/example
         if: always() && steps.chromedriver.outcome == 'success'
@@ -219,14 +224,16 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: subosito/flutter-action@v2
+        with:
+          channel: ${{ env.FLUTTER_CHANNEL }}
       - uses: bluefireteam/melos-action@v2
       - uses: goto-bus-stop/setup-zig@v2
       - uses: KyleMayes/install-llvm-action@v1
         with:
           version: "15"
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: stable
+          toolchain: ${{ env.RUST_TOOLCHAIN }}
 
       - name: Build the binaries
         run: melos run build:other -- dev
@@ -250,14 +257,16 @@ jobs:
         run: sudo apt update && sudo apt-get install -y libglu1-mesa ninja-build clang cmake pkg-config libgtk-3-dev liblzma-dev
       - uses: pyvista/setup-headless-display-action@v1
       - uses: subosito/flutter-action@v2
+        with:
+          channel: ${{ env.FLUTTER_CHANNEL }}
       - uses: bluefireteam/melos-action@v2
       - uses: goto-bus-stop/setup-zig@v2
       - uses: KyleMayes/install-llvm-action@v1
         with:
           version: "15"
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: stable
+          toolchain: ${{ env.RUST_TOOLCHAIN }}
 
       - name: Build the binaries
         run: melos run build:other -- dev
@@ -277,10 +286,12 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: subosito/flutter-action@v2
-      - uses: bluefireteam/melos-action@v2
-      - uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: stable
+          channel: ${{ env.FLUTTER_CHANNEL }}
+      - uses: bluefireteam/melos-action@v2
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ env.RUST_TOOLCHAIN }}
 
       - name: Start iOS Simulator
         run: |
@@ -309,10 +320,12 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: subosito/flutter-action@v2
-      - uses: bluefireteam/melos-action@v2
-      - uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: stable
+          channel: ${{ env.FLUTTER_CHANNEL }}
+      - uses: bluefireteam/melos-action@v2
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ env.RUST_TOOLCHAIN }}
       - uses: nttld/setup-ndk@v1
         with:
           ndk-version: r25b
@@ -344,7 +357,8 @@ jobs:
             ram-size: 1024M
             disk-size: 2048M
             arch: ${{ matrix.arch }}
-            script: cd packages/flutter_wasmit/example && flutter test -d `flutter devices | grep android | tr ' ' '\n' | grep emulator-` integration_test && echo "Finished Android integration tests"
+            working-directory: packages/flutter_wasmit/example
+            script: flutter test -d `flutter devices | grep android | tr ' ' '\n' | grep emulator-` integration_test
 
   android_integration_test_cached:
     runs-on: macos-latest
@@ -355,10 +369,12 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: subosito/flutter-action@v2
-      - uses: bluefireteam/melos-action@v2
-      - uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: stable
+          channel: ${{ env.FLUTTER_CHANNEL }}
+      - uses: bluefireteam/melos-action@v2
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ env.RUST_TOOLCHAIN }}
       - uses: nttld/setup-ndk@v1
         with:
           ndk-version: r25b
