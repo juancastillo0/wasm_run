@@ -8,23 +8,24 @@ import 'package:wasmit/src/wasm_bindings/wasm_interface.dart';
 
 export 'package:wasmit/src/bridge_generated.dart'
     show
-        WasmRuntimeFeatures,
-        WasmFeatures,
+        EnvVariable,
+        ExternalType,
         ModuleConfig,
         ModuleConfigWasmi,
-        WasiStackLimits,
         ModuleConfigWasmtime,
-        ExternalType,
+        PreopenedDir,
         WasiConfig,
-        EnvVariable,
-        PreopenedDir;
+        WasiStackLimits,
+        WasmFeatures,
+        WasmRuntimeFeatures;
 export 'package:wasmit/src/wasm_bindings/wasm_interface.dart';
 
-// TODO: The default [ModuleConfig] used by [compileWasmModule].
+// TODO(config): The default [ModuleConfig] used by [compileWasmModule].
 
 /// Information of the Wasm Runtime.
-/// Contains the default and supported [WasmFeatures] used when compiling a Wasm module,
-/// the name of the runtime, it's version and whether it is the browser's runtime or not.
+/// Contains the default and supported [WasmFeatures] used when compiling
+/// a WASM module, the name of the runtime, it's version and whether it is
+/// the browser's runtime or not.
 Future<WasmRuntimeFeatures> wasmRuntimeFeatures() async =>
     platform_impl.wasmRuntimeFeatures();
 

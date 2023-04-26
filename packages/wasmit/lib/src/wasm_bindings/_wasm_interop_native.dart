@@ -3,6 +3,7 @@ import 'dart:typed_data' show Uint8List;
 
 import 'package:flutter_rust_bridge/flutter_rust_bridge.dart'
     show WireSyncReturn, wireSyncReturnIntoDart;
+import 'package:meta/meta.dart';
 import 'package:wasmit/src/bridge_generated.io.dart';
 import 'package:wasmit/src/ffi.dart' show defaultInstance;
 import 'package:wasmit/src/wasm_bindings/make_function_num_args.dart';
@@ -54,7 +55,7 @@ class _WasmModule extends WasmModule {
   WasmMemory createSharedMemory(int pages, {int? maxPages}) {
     // final memory = defaultInstance().createSharedMemory(module: module);
     // return _Memory(memory, store);
-    // TODO: implement createSharedMemory
+    // TODO(threads): implement createSharedMemory
     throw UnimplementedError();
   }
 
@@ -187,15 +188,16 @@ WasmExternal _toWasmExternal(ModuleExportValue value, _Instance instance) {
   // }
 }
 
-class ModuleObjectReference {
+@immutable
+class _ModuleObjectReference {
   final WasmitModuleId module;
   final Object value;
 
-  ModuleObjectReference(this.module, this.value);
+  const _ModuleObjectReference(this.module, this.value);
 
   @override
   bool operator ==(Object other) =>
-      other is ModuleObjectReference &&
+      other is _ModuleObjectReference &&
       other.module.field0 == module.field0 &&
       other.value == value;
 
@@ -204,7 +206,7 @@ class ModuleObjectReference {
 
   @override
   String toString() {
-    return 'ReferenceModule(${module.field0}, $value)';
+    return '_ModuleObjectReference(${module.field0}, $value)';
   }
 }
 
@@ -218,11 +220,11 @@ class _References {
   const _References._();
 
   static int _lastId = 1;
-  static final Map<int, ModuleObjectReference> _idToReference = {};
-  static final Map<ModuleObjectReference, int> _referenceToId = {};
+  static final Map<int, _ModuleObjectReference> _idToReference = {};
+  static final Map<_ModuleObjectReference, int> _referenceToId = {};
 
   static int getOrCreateId(Object reference, WasmitModuleId module) {
-    final ref = ModuleObjectReference(module, reference);
+    final ref = _ModuleObjectReference(module, reference);
     final id = _referenceToId.putIfAbsent(ref, () {
       final id = _lastId++;
       _idToReference[id] = ref;
@@ -309,14 +311,14 @@ class _References {
       case 6:
         return WasmVal_externRef(raw[1] as int);
       default:
-        throw Exception("unreachable");
+        throw Exception('unreachable');
     }
   }
 
   static Object? dartValueFromWasm(WasmVal raw, WasmitModuleId module) {
     return raw.when(
       i32: (value) => value,
-      i64: (value) => BigInt.from(value),
+      i64: BigInt.from,
       f32: (value) => value,
       f64: (value) => value,
       v128: (field0) => field0,
@@ -331,7 +333,7 @@ class _References {
   static WasmValue dartValueTypedFromWasm(WasmVal raw, WasmitModuleId module) {
     return raw.when(
       i32: WasmValue.i32,
-      // TODO: BigInt not necessary in native
+      // TODO(compat): BigInt not necessary in native
       i64: (i64) => WasmValue.i64(BigInt.from(i64)),
       f32: WasmValue.f32,
       f64: WasmValue.f64,
@@ -411,7 +413,7 @@ class _Builder extends WasmInstanceBuilder {
             .firstWhere((e) => e.module == moduleName && e.name == name);
         final type = desc.ty;
         if (type is! ExternalType_Func) {
-          throw Exception("Expected function");
+          throw Exception('Expected function');
         }
         final expectedParams = type.field0.params;
         {
@@ -419,7 +421,8 @@ class _Builder extends WasmInstanceBuilder {
           if (function.params.length != expectedParams.length ||
               function.params.any((e) => expectedParams[i++] != e)) {
             throw Exception(
-              "WasmFunction.params != expectedParams. $function.params != $expectedParams",
+              'WasmFunction.params != expectedParams.'
+              ' $function.params != $expectedParams',
             );
           }
         }
@@ -431,7 +434,8 @@ class _Builder extends WasmInstanceBuilder {
           if (function.results!.length != expectedResults.length ||
               function.results!.any((e) => expectedResults[i++] != e)) {
             throw Exception(
-              "WasmFunction.results != expectedResults. $function.params != $expectedResults",
+              'WasmFunction.results != expectedResults.'
+              ' $function.params != $expectedResults',
             );
           }
         } else {
@@ -510,7 +514,6 @@ class _Instance extends WasmInstance {
   @override
   _WasmModule get module => builder.compiledModule;
 
-  late final Map<String, ModuleExportValue> _exports;
   @override
   late final Map<String, WasmExternal> exports;
 
@@ -519,10 +522,9 @@ class _Instance extends WasmInstance {
 
   _Instance(this.instance, this.builder) {
     final d = instance.exports();
-    // TODO: remove _exports
-    _exports = Map.fromIterables(d.map((e) => e.desc.name), d);
-    exports = _exports.map(
-      (key, value) => MapEntry(key, _toWasmExternal(value, this)),
+    exports = Map.fromIterables(
+      d.map((e) => e.desc.name),
+      d.map((value) => _toWasmExternal(value, this)),
     );
     if (builder.wasiConfig?.captureStderr == true) {
       _stderr ??= builder.module
@@ -544,9 +546,9 @@ class _Instance extends WasmInstance {
   @override
   Stream<Uint8List> get stderr {
     if (builder.wasiConfig == null) {
-      throw Exception("Wasi is not enabled");
+      throw Exception('Wasi is not enabled');
     } else if (builder.wasiConfig!.captureStderr == false) {
-      throw Exception("Wasi is not capturing stderr");
+      throw Exception('Wasi is not capturing stderr');
     }
     return _stderr!;
   }
@@ -554,9 +556,9 @@ class _Instance extends WasmInstance {
   @override
   Stream<Uint8List> get stdout {
     if (builder.wasiConfig == null) {
-      throw Exception("Wasi is not enabled");
+      throw Exception('Wasi is not enabled');
     } else if (builder.wasiConfig!.captureStdout == false) {
-      throw Exception("Wasi is not capturing stdout");
+      throw Exception('Wasi is not capturing stdout');
     }
     return _stdout!;
   }

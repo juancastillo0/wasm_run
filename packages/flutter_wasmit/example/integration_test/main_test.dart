@@ -1,15 +1,14 @@
-@Timeout(Duration(minutes: 22))
-
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:path_provider/path_provider.dart'
     show getApplicationDocumentsDirectory;
 import 'package:wasmit_example/main.dart';
-import 'package:flutter/services.dart' show rootBundle;
+import 'package:wasmit_example/runner_identity/runner_identity.dart';
 
 void main() {
-  IntegrationTestWidgetsFlutterBinding.ensureInitialized().defaultTestTimeout =
-      const Timeout(Duration(minutes: 22));
+  IntegrationTestWidgetsFlutterBinding.ensureInitialized();
+  print('INTEGRATION TEST IN ${getRunnerIdentity()}');
 
   group('end-to-end test', () {
     testAll(

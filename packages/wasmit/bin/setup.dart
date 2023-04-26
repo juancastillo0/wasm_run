@@ -1,8 +1,10 @@
+// ignore_for_file: avoid_print
+
 import 'dart:io';
 
 import 'package:wasmit/src/ffi/cpu_architecture.dart';
 import 'package:wasmit/src/ffi/library_locator.dart'
-    show libBuildOutDir, getDesktopLibName;
+    show getDesktopLibName, libBuildOutDir;
 
 /// Downloads the native dynamic library for the current platform.
 /// The output file will be written to `{projectRoot}/.dart_tool/wasmit/{dynamicLibrary}`.
@@ -43,7 +45,8 @@ Future<void> main() async {
   final response = await request.close();
   if (response.statusCode != 200) {
     throw Exception(
-      'Could not download archive "$archiveUrl": ${response.statusCode} ${response.reasonPhrase}',
+      'Could not download archive "$archiveUrl":'
+      ' ${response.statusCode} ${response.reasonPhrase}',
     );
   }
   final archiveFile = await writeToFile('temp/$archiveName', response);
@@ -64,7 +67,8 @@ Future<void> main() async {
   final inputFile = File(root.resolve(inputFilePath).toFilePath());
   if (!inputFile.existsSync()) {
     throw Exception(
-      'Could not find library "${inputFile.path}" in archive "${archiveFile.path}" from ($archiveUrl)',
+      'Could not find library "${inputFile.path}"'
+      ' in archive "${archiveFile.path}" from ($archiveUrl)',
     );
   }
   final outputFile = await writeToFile(libName, inputFile.openRead());

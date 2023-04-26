@@ -9,6 +9,9 @@ const linuxLib = 'libwasmit_dart.so';
 /// The expected name of the Wasmit library when compiled for Windows devices.
 const windowsLib = 'wasmit_dart.dll';
 
+/// Returns the name of the Wasmit library for the current platform.
+/// Throws an [UnsupportedError] if the current platform is not supported
+/// or is not a desktop platform.
 String getDesktopLibName() {
   if (Platform.isMacOS) {
     return appleLib;

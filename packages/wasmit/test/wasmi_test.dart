@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print
+
 @TestOn('!browser')
 
 import 'dart:convert';
@@ -22,7 +24,7 @@ int mapWasmFunctionMut(
   final input = _wire2api_list_value_2(l.first);
   print('dart input $input');
   final output = [
-    WasmVal.i64((input.first.field0 as int) * 2),
+    WasmVal.i64((input.first.field0! as int) * 2),
   ];
 
   print('dart output $output');
@@ -49,7 +51,7 @@ void mapWasmFunctionVoid(WireSyncReturn value) {
   final input = _wire2api_list_value_2(l.first);
   print('dart input $input');
   final output = [
-    WasmVal.i64((input.first.field0 as int) * 2),
+    WasmVal.i64((input.first.field0! as int) * 2),
   ];
 
   print('dart output $output');
@@ -65,7 +67,8 @@ List<WasmVal> _wire2api_list_value_2(dynamic raw) {
   return (raw as List<dynamic>).map(_wire2api_value_2).toList();
 }
 
-WasmVal _wire2api_value_2(dynamic raw) {
+WasmVal _wire2api_value_2(dynamic raw_) {
+  final raw = raw_ as List<dynamic>;
   switch (raw[0]) {
     // case 0:
     //   return WasmVal_I32(
@@ -92,7 +95,7 @@ WasmVal _wire2api_value_2(dynamic raw) {
     //     _wire2api_u32(raw[1]),
     //   );
     default:
-      throw Exception("unreachable");
+      throw Exception('unreachable');
   }
 }
 
@@ -153,7 +156,7 @@ void main() {
       );
       expect(
         addResult,
-        [WasmVal.i32(5)],
+        [const WasmVal.i32(5)],
       );
     });
   });

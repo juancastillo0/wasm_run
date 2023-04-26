@@ -1,3 +1,5 @@
+// ignore_for_file: prefer_asserts_with_message
+
 import 'dart:convert' show base64Decode;
 import 'dart:typed_data' show Uint8List;
 

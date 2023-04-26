@@ -1,5 +1,6 @@
 // ignore_for_file: inference_failure_on_untyped_parameter
 
+/// Creates a function that calls [inner] with the given number of arguments.
 Function makeFunctionNumArgs(
   int numArgs,
   dynamic Function(List<Object?>) inner,

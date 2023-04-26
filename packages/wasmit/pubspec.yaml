@@ -18,6 +18,6 @@ dev_dependencies:
   test: ^1.21.0
   build_runner: ^2.3.3
   freezed: ^2.3.2
-  lint: ^2.0.1
+  very_good_analysis: ^4.0.0
   wasmit_example:
     path: example

@@ -1,5 +1,6 @@
 import 'dart:io';
 
+/// The normalized CPU architecture.
 enum CpuArchitectureEnum {
   /// 32 bit (i386 or x86)
   i386,
@@ -11,9 +12,13 @@ enum CpuArchitectureEnum {
   x64,
 }
 
+/// A CPU architecture.
 class CpuArchitecture {
+  /// The raw value of the CPU architecture, may be uppercase.
+  /// Use [value] for a normalized value.
   final String rawValue;
 
+  /// A CPU architecture.
   const CpuArchitecture(this.rawValue);
 
   static const i386 = 'i386';
@@ -53,6 +58,7 @@ class CpuArchitecture {
     }
   }
 
+  /// A normalized CPU architecture.
   CpuArchitectureEnum get value {
     switch (rawValue.toLowerCase()) {
       case i386:

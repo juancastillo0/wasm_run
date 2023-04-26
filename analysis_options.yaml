@@ -15,7 +15,7 @@ analyzer:
 
   errors:
     unrelated_type_equality_checks: error
-    avoid_dynamic_calls: warning
+    # avoid_dynamic_calls: warning
     always_declare_return_types: warning
     await_only_futures: warning
     cast_nullable_to_non_nullable: warning
@@ -39,6 +39,7 @@ linter:
     avoid_redundant_argument_values: false
     omit_local_variable_types: false
     sort_constructors_first: false
+    unnecessary_brace_in_string_interps: false
 
     # Util classes are awesome!
     # avoid_classes_with_only_static_members: false

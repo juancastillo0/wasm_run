@@ -4,7 +4,6 @@ import 'dart:typed_data';
 import 'package:test/test.dart';
 import 'package:wasmit/src/ffi.dart';
 import 'package:wasmit/src/wasm_bindings/wasm.dart';
-import 'package:wasmit/src/wasm_bindings/wasm_interface.dart';
 
 void main() {
   group('wasm interface', () {

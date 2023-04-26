@@ -1,10 +1,15 @@
+// ignore_for_file: avoid_print
+
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:test/test.dart';
+// TODO(wat): implement wat in main api
+// ignore: implementation_imports
 import 'package:wasmit/src/ffi.dart' show defaultInstance;
-import 'package:wasmit/src/wasm_bindings/wasm.dart';
+import 'package:wasmit/wasmit.dart';
+import 'package:wasmit_example/runner_identity/runner_identity.dart';
 import 'package:wasmit_example/simd_test.dart' show simdTests;
 
 const isWeb = identical(0, 0.0);
@@ -43,6 +48,8 @@ void testAll({
   Future<Uint8List> Function()? getWasiExampleBytes,
   Future<Directory> Function()? getDirectory,
 }) {
+  print('RUNNING ALL TEST IN ${getRunnerIdentity()}');
+
   test('WasmFeature', () async {
     final runtime = await wasmRuntimeFeatures();
     final defaultFeatures = runtime.defaultFeatures;
@@ -422,11 +429,11 @@ void testAll({
 
     builder.addImports([WasmImport('js', 'tbl', table)]).build();
 
-    final f42 = table.get(0) as WasmFunction;
+    final f42 = table.get(0)! as WasmFunction;
     expect(f42.inner(), 42);
-    expect((table[1] as WasmFunction)(), [83]);
+    expect((table[1]! as WasmFunction)(), [83]);
 
-    // TODO: test web updates
+    // TODO(test): test web updates
 
     if (!isLibrary) return;
 
@@ -446,8 +453,8 @@ void testAll({
     expect(table[0], isNot(f42));
     expect(table[0], isNot(null));
 
-    expect((table.get(0) as WasmFunction).inner(), 43);
-    expect((table[1] as WasmFunction)(), [84.3]);
+    expect((table.get(0)! as WasmFunction).inner(), 43);
+    expect((table[1]! as WasmFunction)(), [84.3]);
 
     table.set(
       0,
@@ -458,10 +465,10 @@ void testAll({
       )),
     );
 
-    expect((table.get(0) as WasmFunction)([5]), [-1.4, BigInt.from(5)]);
+    expect((table.get(0)! as WasmFunction)([5]), [-1.4, BigInt.from(5)]);
     // TODO: should we allow this? 5 and BigInt.from(5) are both valid
     expect(
-      (table.get(0) as WasmFunction)([BigInt.from(5)]),
+      (table.get(0)! as WasmFunction)([BigInt.from(5)]),
       [-1.4, BigInt.from(5)],
     );
   });
@@ -517,7 +524,7 @@ void testAll({
     );
     expect(
       module.getImports().map((e) => e.toString()),
-      [
+      const [
         WasmModuleImport(
           'example_imports',
           'translate',
@@ -620,7 +627,7 @@ void testAll({
     final currentTime = instance1.getFunction('current_time')!;
     final now1 = DateTime.now().millisecondsSinceEpoch;
     await Future<void>.delayed(const Duration(milliseconds: 1));
-    final t = (currentTime().first as BigInt).toInt();
+    final t = (currentTime().first! as BigInt).toInt();
     expect(now1, lessThan(t));
     await Future<void>.delayed(const Duration(milliseconds: 1));
     expect(DateTime.now().millisecondsSinceEpoch, greaterThan(t));
@@ -634,7 +641,7 @@ void testAll({
     );
 
     final getArgs = instance1.getFunction('get_args')!;
-    final initialMemOffset = getArgs().first as int;
+    final initialMemOffset = getArgs().first! as int;
 
     final parsedArgs = Parser.parseList(
       Parser(memory.view, initialMemOffset),
@@ -645,7 +652,7 @@ void testAll({
 
     final getEnvVars = instance1.getFunction('get_env_vars')!;
     final Map<String, String> parsedEnvVars = {};
-    final envVarsOffset = getEnvVars().first as int;
+    final envVarsOffset = getEnvVars().first! as int;
     Parser.parseList(
       Parser(memory.view, envVarsOffset),
       (p) {
@@ -666,8 +673,8 @@ void testAll({
     }
 
     final List<String> stderr1 = [];
-    final stderr = await instance1.stderr;
-    stderr.listen((event) {
+    final stderr = instance1.stderr;
+    final stderrSubscription = stderr.listen((event) {
       stderr1.add(utf8.decode(event));
     });
 
@@ -685,7 +692,7 @@ void testAll({
       memory.write(offset: offset, buffer: buffer);
       int size;
       try {
-        size = (readFileSize([offset]).first as BigInt).toInt();
+        size = (readFileSize([offset]).first! as BigInt).toInt();
       } catch (e, s) {
         print('$e $s');
         await Future<void>.delayed(const Duration(milliseconds: 10));
@@ -736,7 +743,7 @@ void testAll({
     final printHello = instance1.getFunction('print_hello')!;
     final List<String> stdout1 = [];
     final stdout = instance1.stdout;
-    stdout.listen((event) {
+    final stdoutSubscription = stdout.listen((event) {
       stdout1.add(utf8.decode(event));
     });
     printHello.inner();
@@ -753,6 +760,9 @@ void testAll({
 
     await Future<void>.delayed(Duration.zero);
     expect(stderr1.last, '${errMsg.length + 0.5} $errMsg\n');
+
+    await stdoutSubscription.cancel();
+    await stderrSubscription.cancel();
   }, skip: isWeb);
 
   test('multi value', () async {
@@ -935,11 +945,11 @@ void testAll({
       21,
       34,
       55,
-      // TODO: try to make fueling similar between runtimes
+      // TODO(fueling): try to make fueling similar between runtimes
       if (isWasmtime) 89
     ]);
 
-    final runtimeFuel = (isWasmtime)
+    final runtimeFuel = isWasmtime
         ? [1, 7, 13, 39, 85, 171, 317, 563, 969, 1635, 2721, 4487, 7353]
         : [1, 19, 37, 88, 172, 322, 571, 985, 1663, 2770, 4570, 7492];
     expect(fuelConsumed, runtimeFuel);
@@ -948,6 +958,8 @@ void testAll({
     expect(fuel.consumeFuel(0), isWasmtime ? 94 : 104);
     expect(fuel.fuelAdded(), 10101);
   });
+
+  print('CONFIGURED ALL TEST IN ${getRunnerIdentity()}');
 }
 
 final endian = Endian.host;
@@ -960,8 +972,8 @@ class Parser {
   ByteData get byteData => memView.buffer.asByteData();
   bool _isDealloc = false;
 
-  // TODO: improve api, maybe pass WasmMemory
-  // TODO: improve api, only one method parses and it requires dealloc
+  // TODO(test-improve): improve api, maybe pass WasmMemory
+  // TODO(test-improve): improve api, only one method parses and it requires dealloc
   Parser(
     this.memView,
     this.initialMemOffset, {

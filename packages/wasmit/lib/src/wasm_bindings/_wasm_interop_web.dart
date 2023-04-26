@@ -53,11 +53,11 @@ Future<WasmRuntimeFeatures> _calculateFeatures() async {
 
     relaxedSimd: features[10],
     tailCall: features[15],
-    multiMemory: false, // TODO: check
+    multiMemory: false, // TODO(web-compat): check
     memory64: features[6],
     extendedConst: features[3],
-    componentModel: false, // TODO: check
-    memoryControl: false, // TODO: check
+    componentModel: false, // TODO(web-compat): check
+    memoryControl: false, // TODO(web-compat): check
     garbageCollection: features[4],
     wasiFeatures: null,
     // TODO: moduleLinking
@@ -203,7 +203,6 @@ class _Builder extends WasmInstanceBuilder {
           Global.f64(value: value.value! as double, mutable: mutable),
         );
       case WasmValueType.v128:
-        // TODO:
         throw UnsupportedError('v128 is not supported on web');
       case WasmValueType.externRef:
         return _Global(
@@ -211,7 +210,7 @@ class _Builder extends WasmInstanceBuilder {
         );
       case WasmValueType.funcRef:
         return _Global(
-          // TODO: Implement funcRef "anyfunc"
+          // TODO(web): Implement funcRef "anyfunc"
           Global.externref(value: value.value, mutable: mutable),
         );
     }
@@ -252,12 +251,11 @@ class _Builder extends WasmInstanceBuilder {
 class _Instance extends WasmInstance {
   final Instance instance;
   @override
-  late final _WasmModule module = _WasmModule._(instance.module);
-
+  final _WasmModule module;
   @override
   late final UnmodifiableMapView<String, WasmExternal> exports;
 
-  _Instance(this.instance) {
+  _Instance(this.instance) : module = _WasmModule._(instance.module) {
     exports = UnmodifiableMapView(
       Map.fromEntries(
         instance.functions.entries
@@ -271,6 +269,7 @@ class _Instance extends WasmInstance {
                   e.key,
                   // results is not supported on web https://github.com/WebAssembly/js-types/blob/main/proposals/js-types/Overview.md
                   WasmFunction(e.value, params: params, results: null),
+                  // TODO(web): callAsync,
                 );
                 // makeFunction(params.length, (args) {
                 //   // final result = Function.apply(
@@ -304,11 +303,9 @@ class _Instance extends WasmInstance {
   WasmInstanceFuel? fuel() => null;
 
   @override
-  // TODO: implement stderr
   Stream<Uint8List> get stderr => throw UnimplementedError();
 
   @override
-  // TODO: implement stdout
   Stream<Uint8List> get stdout => throw UnimplementedError();
 }
 
@@ -380,7 +377,7 @@ class _Table extends WasmTable {
       if (js_util.hasProperty(v, 'DartWasmFunction')) {
         return js_util.getProperty(v, 'DartWasmFunction');
       }
-      // TODO: test globals
+      // TODO(web/test): test globals
       return WasmFunction(
         v,
         params: List.filled(js_util.getProperty(v, 'length') as int, null),

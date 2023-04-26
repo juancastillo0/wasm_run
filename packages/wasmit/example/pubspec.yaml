@@ -10,3 +10,6 @@ dependencies:
   wasmit:
     path: ../
   test: ^1.21.0
+
+dev_dependencies:
+  very_good_analysis: ^4.0.0

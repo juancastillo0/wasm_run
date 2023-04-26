@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:meta/meta.dart';
 import 'package:wasmit/src/bridge_generated.dart'
     show ExternalType, U8Array16, ValueTy, WasiConfig, WasmFeatures;
 import 'package:wasmit/src/wasm_bindings/_wasm_interop_stub.dart'
@@ -8,20 +9,23 @@ import 'package:wasmit/src/wasm_bindings/_wasm_interop_stub.dart'
 
 export 'package:wasmit/src/bridge_generated.dart'
     show
+        ExternalType,
+        FuncTy,
+        GlobalMutability,
+        GlobalTy,
+        MemoryTy,
+        TableTy,
         U8Array16,
         WasiConfig,
-        WasmFeatures,
-        // Types
-        ExternalType,
-        GlobalMutability,
-        FuncTy,
-        GlobalTy,
-        TableTy,
-        MemoryTy;
+        WasmFeatures;
 
+/// A compiled WASM module.
+/// You may introspect it by using [getImports] and [getExports].
+/// You may use [builder] to create a [WasmInstance] from it to execute it
+/// or use its exports.
 abstract class WasmModule {
-  // TODO: initial instead of pages, shared: true
-  // TODO: initial instead of minSize
+  // TODO(names): initial instead of pages, shared: true
+  // TODO(names): initial instead of minSize
   // factory WasmModule(Uint8List bytes) {
   //   throw UnimplementedError();
   // }
@@ -47,7 +51,12 @@ abstract class WasmModule {
   String toString() => 'WasmModule(${getImports()}, ${getExports()})';
 }
 
-/// Constructs a new [WasmInstance] of a [WasmModule] by adding imports [addImport].
+/// Constructs a new [WasmInstance] from a [WasmModule]
+/// by adding imports with [addImport] and constructing other [WasmExternal]
+/// values ([createMemory], [createGlobal] or [createTable]).
+/// You may use [WasmModule.builder] to create a new [WasmInstanceBuilder].
+/// To instantiate this builder you may use [WasmInstanceBuilder.build]
+/// or [WasmInstanceBuilder.buildAsync].
 abstract class WasmInstanceBuilder {
   /// Creates a new memory with [pages] and [maxPages] pages.
   WasmMemory createMemory(int pages, {int? maxPages});
@@ -63,7 +72,8 @@ abstract class WasmInstanceBuilder {
   });
 
   /// Adds a new import to the module.
-  /// May throw if the import is not found or the type definition does not match [value].
+  /// May throw if the import is not found or the type definition
+  /// does not match [value].
   WasmInstanceBuilder addImport(
     String moduleName,
     String name,
@@ -80,7 +90,8 @@ abstract class WasmInstanceBuilder {
     return this;
   }
 
-  /// Returns the fuel that can be used to limit the execution time of the instance.
+  /// Returns the fuel that can be used to limit
+  /// the amount of computations performed by the instance.
   WasmInstanceFuel? fuel();
 
   /// Builds the instance synchronously.
@@ -92,6 +103,11 @@ abstract class WasmInstanceBuilder {
   Future<WasmInstance> buildAsync();
 }
 
+/// The module instance that was created from a [module] and can be used
+/// to call functions with [getFunction] or access any of the [exports].
+/// You can limit the execution of the module with [fuel].
+/// You may use [WasmModule.builder] to create a new [WasmInstanceBuilder] and
+/// then [WasmInstanceBuilder.build] to construct a [WasmInstance].
 abstract class WasmInstance {
   /// The module that was used to create this instance.
   WasmModule get module;
@@ -114,7 +130,8 @@ abstract class WasmInstance {
     return export is T ? export : null;
   }
 
-  /// Returns the fuel that can be used to limit the execution time of the instance.
+  /// Returns the fuel that can be used to limit
+  /// the amount of computations performed by the instance.
   WasmInstanceFuel? fuel();
 
   /// The exports of this instance.
@@ -132,10 +149,14 @@ abstract class WasmInstance {
   String toString() => 'WasmInstance($module, $exports)';
 }
 
+/// A linear memory (array of bytes) that can be used to share data
+/// with the WASM module.
 abstract class WasmMemory extends WasmExternal {
-  /// Reads [length] bytes starting from [offset] and returns them as a [Uint8List].
+  /// Reads [length] bytes starting from [offset]
+  /// and returns them as a [Uint8List].
   Uint8List read({required int offset, required int length});
 
+  // ignore: comment_references
   /// Writes [buffer] from [offset] to [buffer.length].
   void write({required int offset, required Uint8List buffer});
 
@@ -150,7 +171,7 @@ abstract class WasmMemory extends WasmExternal {
   int get lengthInPages;
 
   /// A view of the memory as a [Uint8List].
-  /// TODO: improve performance by using native pointer.
+  /// TODO(performance): improve performance by using native pointer.
   Uint8List get view;
 
   /// The number of bytes per page in a wasm memory.
@@ -164,6 +185,7 @@ abstract class WasmMemory extends WasmExternal {
   }
 }
 
+/// A Table that can be used to store object references and functions.
 abstract class WasmTable extends WasmExternal {
   /// Sets the value at [index] to [value].
   void set(int index, WasmValue value);
@@ -180,16 +202,19 @@ abstract class WasmTable extends WasmExternal {
   /// The amount of available positions in the table.
   int get length;
 
-  /// Grows the table by [delta] elements and fills de new indexes with [fillValue].
+  /// Grows the table by [delta] elements and populates the
+  /// new indexes with [fillValue].
   int grow(int delta, WasmValue fillValue);
 
   @override
   String toString() {
-    // TODO: type
+    // TODO(type): type
     return 'WasmTable(length: $length)';
   }
 }
 
+/// A global value that can be read with [get]
+/// and written with [set] when the global is mutable.
 abstract class WasmGlobal extends WasmExternal {
   /// Updates the value of the global.
   void set(WasmValue value);
@@ -211,6 +236,8 @@ abstract class WasmGlobal extends WasmExternal {
 /// final resultInner = wasmFunction.inner(1, 2);
 /// assert(resultInner, 3);
 /// ```
+
+@immutable
 class WasmFunction extends WasmExternal {
   /// Constructs a Wasm function.
   ///
@@ -229,17 +256,19 @@ class WasmFunction extends WasmExternal {
     this.inner, {
     required this.params,
     required this.results,
+    this.callAsync,
   });
 
   /// Constructs a Wasm function with no results.
   WasmFunction.voidReturn(
     this.inner, {
     required this.params,
+    this.callAsync,
   }) : results = const [];
 
   /// The parameters of the function.
-  /// The types may be null if the wasm runtime does not expose this information.
-  /// For example in web browsers.
+  /// The types may be null if the wasm runtime does not expose
+  /// this information. For example in web browsers.
   /// However, the length of the list is always the number of parameters.
   final List<WasmValueType?> params;
 
@@ -252,10 +281,18 @@ class WasmFunction extends WasmExternal {
   final List<WasmValueType>? results;
 
   /// The inner function that is called when this function is invoked.
-  /// It receives positional parameters and does not receive a list of values like [call].
-  /// If you execute it, you will need to pass the Dart values as positional parameters
-  /// as the expected [params] and the return type will not be cast to a [List].
+  /// It receives positional parameters and does not receive a list of values
+  /// like [call].
+  /// If you execute it, you will need to pass the Dart values as positional
+  /// parameters as the expected [params] and the return type will
+  /// not be cast to a [List].
   final Function inner;
+
+  /// Same a [call] but asynchronous.
+  /// Should be used for long running computations that may block
+  /// the main thread and may be used for other functions that do not
+  /// require synchronous execution.
+  final Future<List<Object?>> Function([List<Object?>? args])? callAsync;
 
   /// Invokes [inner] with the given [args]
   /// and casts the result to a [List] of Dart values.
@@ -354,7 +391,9 @@ class WasmImport {
 
 typedef WasmValueType = ValueTy;
 
-// TODO: separate into WasmValueRef
+// TODO(type): separate into WasmValueRef
+/// A WASM value.
+@immutable
 class WasmValue {
   /// The Dart value.
   ///
@@ -392,17 +431,17 @@ class WasmValue {
     double this.value,
   ) : type = WasmValueType.f64;
 
+  /// A 128 bit number.
   const WasmValue.v128(
     U8Array16 this.value,
   ) : type = WasmValueType.v128;
 
-  /// A nullable [`Func`][`crate::Func`] reference, a.k.a. [`FuncRef`].
+  /// A nullable function reference.
   const WasmValue.funcRef(
-    // TODO: should this be nullable?
     WasmFunction? this.value,
   ) : type = WasmValueType.funcRef;
 
-  /// A nullable external object reference, a.k.a. [`ExternRef`].
+  /// A nullable external object reference.
   const WasmValue.externRef(
     this.value,
   ) : type = WasmValueType.externRef;
@@ -422,7 +461,8 @@ class WasmValue {
   int get hashCode => Object.hash(runtimeType, value, type);
 }
 
-/// Returns the fuel that can be used to limit the execution time of the instance.
+/// Returns the fuel that can be used to limit the amount of
+/// computations performed by the instance.
 abstract class WasmInstanceFuel {
   /// Adds [delta] quantity of fuel to the remaining fuel.
   void addFuel(int delta);
@@ -439,13 +479,14 @@ abstract class WasmInstanceFuel {
 
   @override
   String toString() {
-    return 'WasmInstanceFuel(fuelConsumed: ${fuelConsumed()}, fuelAdded: ${fuelAdded()})';
+    return 'WasmInstanceFuel(fuelConsumed: ${fuelConsumed()},'
+        ' fuelAdded: ${fuelAdded()})';
   }
 }
 
 /// [WasmModule] import entry.
 class WasmModuleImport {
-  /// Name of imports module, not to confuse with [Module].
+  /// Name of the imports module.
   final String module;
 
   /// Name of imports entry.
@@ -471,13 +512,13 @@ class WasmModuleImport {
 
 /// [WasmModule] exports entry.
 class WasmModuleExport {
-  /// Name of exports entry.
+  /// Name of the exported entry.
   final String name;
 
-  /// Kind of export entry.
+  /// Kind of the exported entry.
   final WasmExternalKind kind;
 
-  /// Type of export entry.
+  /// Type of the exported entry.
   final ExternalType? type;
 
   /// [WasmModule] exports entry.
