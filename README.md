@@ -19,7 +19,9 @@ and the Flutter guide for
 
 # Dart Wasm Interpreter
 
-A Web Assembly executor for the Dart programming language. Currently it uses the [`wasmtime 8.0`](https://github.com/bytecodealliance/wasmtime) or [`wasmi 0.29`](https://github.com/paritytech/wasmi) Rust crates for parsing and executing WASM modules. Bindings are created using [`package:flutter_rust_bridge`](https://github.com/fzyzcjy/flutter_rust_bridge).
+A Web Assembly executor for the Dart programming language.
+
+Currently it uses the [`wasmtime 8.0`](https://github.com/bytecodealliance/wasmtime) or [`wasmi 0.29`](https://github.com/paritytech/wasmi) Rust crates for parsing and executing WASM modules. Bindings are created using [`package:flutter_rust_bridge`](https://github.com/fzyzcjy/flutter_rust_bridge).
 
 - [Dart Wasm Interpreter](#dart-wasm-interpreter)
 - [Features](#features)
@@ -101,13 +103,13 @@ We provide [`package:flutter_wasmit`](./packages/flutter_wasmit/) to bundle the 
 
 ### Pure Dart (CLI/Backend/Web)
 
-For other platforms, you may download the compiled dynamic libraries for each platform and specify the `ffi.DynamicLibrary` in non-web platforms. The compiled libraries can be found in the [release assets](https://github.com/juancastillo0/wasm_interpreter/releases) of this repository. You can also execute the [script](./packages/wasmit/bin/setup.dart) `dart run wasmit:setup` to download the right library for your current platform.
+For pure Dart application (backend or cli, for example), you may download the compiled dynamic libraries for each platform and specify the `ffi.DynamicLibrary` in the `setDynamicLibrary` function or execute the [script](./packages/wasmit/bin/setup.dart) `dart run wasmit:setup` to download the right library for your current platform and configure it so that you don't need to call `setDynamicLibrary` manually. The compiled libraries can be found in the [releases assets](https://github.com/juancastillo0/wasm_interpreter/releases) of this repository.
 
-For the web platform we provide the same interface but it uses the WASM runtime provided by the browser instead of the native library (you may also use the Wasmi WASM module).
+For the web platform we provide the same interface but it uses the WASM runtime provided by the browser instead of the native library (you may also use the Wasmi WASM module // TODO: not implemented yet).
 
 ### WASM Web bindings
 
-We use [package:wasm_interop](https://pub.dev/packages/wasm_interop) to implement the browser web API. In this way, you won't need to provide a custom runtime, since the browser already provides it.
+We use [package:wasm_interop](https://pub.dev/packages/wasm_interop) to implement the browser web API. We don't need to provide a custom runtime since the browser already has one.
 
 However, in web browsers there is no support for the [WAT](https://developer.mozilla.org/en-US/docs/WebAssembly/Understanding_the_text_format) format and other queries that you may perform over the WASM modules on native platforms. For example, WASM [function type definitions](https://github.com/WebAssembly/js-types/blob/main/proposals/js-types/Overview.md) of arguments and results are not provided in most browsers. If you need these features, you may use the compiled WASM module (TODO: Not implemented yet).
 

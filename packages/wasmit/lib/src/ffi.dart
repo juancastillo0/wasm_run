@@ -12,10 +12,15 @@ WasmitDart createWrapper(ExternalLibrary lib) {
 
 /// Sets the dynamic library to use for the native bindings.
 ///
+/// You may execute the script `dart run wasmit:setup`
+/// to download the right library for your current platform
+/// and configure it so that you don't need to call [setDynamicLibrary]
+/// manually.
+///
 /// When building a pure Dart application (backend or cli, for example),
 /// you must call `setDynamicLibrary(<nativeLibraryForYourPlatform>)`
-/// before using the package. The <nativeLibraryForYourPlatform> can be downloaded
-/// from the releases of the Github repository of the package.
+/// before using the package. The <nativeLibraryForYourPlatform> can be
+/// downloaded from the releases of the Github repository of the package:
 /// https://github.com/juancastillo0/wasm_interpreter/releases
 void setDynamicLibrary(ExternalLibrary lib) {
   createWrapper(lib);
