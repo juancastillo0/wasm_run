@@ -1,9 +1,4 @@
-# This file configures the analyzer to use the lint rule set from `package:lint`
-
-# include: package:lint/strict.yaml # For production apps
-# include: package:lint/casual.yaml # For code samples, hackathons and other non-production code
-include: package:lint/package.yaml # Use this for packages with public API
-
+include: package:very_good_analysis/analysis_options.4.0.0.yaml
 
 # You might want to exclude auto-generated files from dart analysis
 analyzer:
@@ -11,19 +6,43 @@ analyzer:
     strict-casts: true
     strict-inference: true
     strict-raw-types: true
+
   exclude:
-    - 'packages/wasmit/lib/src/bridge_generated.dart'
-    - 'packages/wasmit/lib/src/bridge_generated.web.dart'
+    - "packages/wasmit/lib/src/bridge_generated.dart"
+    - "packages/wasmit/lib/src/bridge_generated.web.dart"
     #- '**.freezed.dart'
     #- '**.g.dart'
+
+  errors:
+    unrelated_type_equality_checks: error
+    avoid_dynamic_calls: warning
+    always_declare_return_types: warning
+    await_only_futures: warning
+    cast_nullable_to_non_nullable: warning
+    collection_methods_unrelated_type: warning
+    exhaustive_cases: error
+    iterable_contains_unrelated_type: warning
+    library_private_types_in_public_api: warning
+    list_remove_unrelated_type: warning
+    prefer_typing_uninitialized_variables: warning
+    no_duplicate_case_values: error
+    type_annotate_public_apis: warning
+    unnecessary_late: warning
+    unnecessary_overrides: warning
+    valid_regexps: warning
+    use_super_parameters: warning
 
 # You can customize the lint rules set to your own liking. A list of all rules
 # can be found at https://dart-lang.github.io/linter/lints/options/options.html
 linter:
   rules:
+    avoid_redundant_argument_values: false
+    omit_local_variable_types: false
+    sort_constructors_first: false
+
     # Util classes are awesome!
     # avoid_classes_with_only_static_members: false
-    
+
     # Make constructors the first thing in every class
     # sort_constructors_first: true
 
