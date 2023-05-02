@@ -429,7 +429,15 @@ int num_i32_flags(List<String> labels) {
 
 class Context {
   final CanonicalOptions opts;
+
+  /// Represents the component instance that the currently-executing
+  /// canonical definition is defined to execute inside.
   final ComponentInstance inst;
+
+  /// TODO(generator): The lenders and borrow_count fields will be used below for dynamically enforcing
+  /// the rules of borrow handles. The one thing to mention here is that the lenders
+  /// list usually has a fixed size (in all cases except when a function signature
+  /// has borrows in lists) and thus can be stored inline in the native stack frame.
   final List<Handle> lenders = [];
   int borrow_count = 0;
 
@@ -441,8 +449,22 @@ class Context {
 class CanonicalOptions {
   final Uint8List memory;
   final StringEncoding string_encoding;
-  final int Function(int, int, int, int) realloc;
-  final void Function(ListValue results)? post_return;
+
+  /// "cabi_realloc" export
+  final int Function(
+    int ptr,
+    int size_initial,
+    int alignment,
+    int size_final,
+  ) realloc;
+
+  /// "cabi_post_<funcname>"
+  /// The (post-return ...) option may only be present in canon lift and specifies a
+  /// core function to be called with the original return values after they have
+  /// finished being read, allowing memory to be deallocated and destructors called.
+  /// This immediate is always optional but, if present, is validated to have parameters
+  /// matching the callee's return type and empty results.
+  final void Function(List<Value> flat_results)? post_return;
 
   CanonicalOptions(
     this.memory,
@@ -459,13 +481,18 @@ class CanonicalOptions {
 // #
 
 class ComponentInstance {
+  /// Indicates whether the instance may call out to an import
   bool may_leave = true;
+
+  /// Indicates whether the instance may be called from the outside world through an export.
   bool may_enter = true;
   final HandleTables handles = HandleTables();
 }
 
 // #
 
+/// The ResourceType class represents a resource type that has been defined by the
+/// specific component instance pointed to by impl with a particular function closure as the dtor.
 // @dataclass
 class ResourceType extends BaseType {
   final ComponentInstance impl;
@@ -475,8 +502,16 @@ class ResourceType extends BaseType {
 }
 // #
 
+/// Represent handle values referring to resources
 class Handle {
+  /// The rep field of Handle stores the representation value (currently fixed to i32)
+  /// pass to resource.new for the resource that this handle refers to.
   final int rep;
+
+  /// The lend_count field maintains a count of the outstanding handles that
+  /// were lent from this handle (by calls to borrow-taking functions).
+  /// This count is used below to dynamically enforce the invariant that a
+  /// handle cannot be dropped while it has currently lent out a borrow.
   int lend_count = 0;
 
   Handle(this.rep);
@@ -487,6 +522,11 @@ class OwnHandle extends Handle {
   OwnHandle(super.rep);
 }
 
+/// The BorrowHandle class additionally stores the Context of the call that
+/// created this borrow for the purposes of borrow_count bookkeeping below.
+/// Until async is added to the Component Model, because of the non-reentrancy
+/// of components, there is at most one callee Context alive for a given component
+/// and thus the [cx] field of BorrowHandle can be optimized away.
 // @dataclass
 class BorrowHandle extends Handle {
   Context? cx;
@@ -496,6 +536,15 @@ class BorrowHandle extends Handle {
 
 // #
 
+/// HandleTable (singular) encapsulates a single mutable, growable [array] of handles
+/// that all share the same [ResourceType]
+///
+/// The HandleTable class maintains a dense array of handles that can contain holes
+/// created by the transfer_or_drop method (defined below). These holes are kept in a
+/// separate Python list here, but an optimizing implementation could instead store the
+/// free list in the free elements of array. When adding a new handle, HandleTable first
+/// consults the free list, which is popped LIFO to better detect
+/// use-after-free bugs in the guest code.
 class HandleTable {
   final List<Handle?> array = [];
   final List<int> free = [];
@@ -514,16 +563,22 @@ class HandleTable {
     return i;
   }
 
-// #
-
+  /// uses dynamic guards to catch out-of-bounds and use-after-free
   Handle get(int i) {
     trap_if(i >= array.length);
     trap_if(array[i] == null);
     return array[i]!;
   }
-// #
 
-  Handle transfer_or_drop(int i, ValType t, {required bool drop}) {
+  /// Used to transfer or drop a handle out of the handle table.
+  /// transfer_or_drop adds the removed handle to the [free] list
+  /// for later recycling by [add]
+  ///
+  /// The lend_count guard ensures that no dangling borrows are created when
+  /// destroying a resource. The bookkeeping performed for borrowed handles
+  /// records the fulfillment of the obligation of the borrower to drop
+  /// the handle before the end of the call.
+  Handle transfer_or_drop(int i, Resource t, {required bool drop}) {
     final h = get(i);
     trap_if(h.lend_count != 0);
     switch (t) {
@@ -537,8 +592,6 @@ class HandleTable {
       case Borrow():
         trap_if(h is! BorrowHandle);
         (h as BorrowHandle).cx!.borrow_count -= 1;
-      default:
-        break;
     }
     array[i] = null;
     free.add(i);
@@ -548,6 +601,15 @@ class HandleTable {
 
 // #
 
+/// Simply a wrapper around a mutable mapping from [ResourceType] to [HandleTable]
+///
+/// TODO(generator): While this Python code performs a dynamic hash-table lookup on each handle table access,
+/// as we'll see below, the rt parameter is always statically known such that a normal
+/// implementation can statically enumerate all HandleTable objects at compile time and
+/// then route the calls to add, get and transfer_or_drop to the correct HandleTable at
+/// the callsite. The net result is that each component instance will contain one handle
+/// table per resource type used by the component, with each compiled adapter function
+/// accessing the correct handle table as-if it were a global variable.
 class HandleTables {
   final Map<ResourceType, HandleTable> rt_to_table = Map.identity();
 
@@ -566,6 +628,8 @@ class HandleTables {
 
 // ### Loading
 
+/// Defines how to read a value of a given value type [t] out of linear memory
+/// starting at offset [ptr], returning the value represented as a Dart value
 Object? load(Context cx, int ptr, ValType t) {
   assert(ptr == align_to(ptr, alignment(t)));
   assert(ptr + size(t) <= cx.opts.memory.length);
@@ -609,6 +673,8 @@ int load_int(Context cx, int ptr, int nbytes, {bool signed = false}) {
   };
 }
 
+/// Integers are loaded directly from memory, with their high-order
+/// bit interpreted according to the signedness of the type.
 int load_int_type(Context cx, int ptr, IntType type) {
   final data = cx.opts.memory.buffer.asByteData();
   return switch (type) {
@@ -625,12 +691,16 @@ int load_int_type(Context cx, int ptr, IntType type) {
 
 // #
 
+/// Integer-to-boolean conversions treats 0 as false and all other bit-patterns as true
 bool convert_int_to_bool(int i) {
   assert(i >= 0);
   return i != 0;
 }
 
 // #
+
+/// For reasons given in the explainer, floats are loaded from memory
+/// and then "canonicalized", mapping all Not-a-Number bit patterns to a single canonical nan value.
 
 /// return struct.unpack('!f', struct.pack('!I', i))[0] # f32.reinterpret_i32
 double reinterpret_i32_as_float(int i) => i.toDouble();
@@ -652,6 +722,9 @@ double canonicalize64(double f) {
 }
 // #
 
+/// An i32 is converted to a char (a Unicode Scalar Value) by dynamically testing
+/// that its unsigned integral value is in the valid
+/// Unicode Code Point range and not a Surrogate
 String convert_i32_to_char(Context cx, int i) {
   trap_if(i >= 0x110000);
   trap_if(0xD800 <= i || i <= 0xDFFF);
@@ -675,12 +748,26 @@ class ParsedString {
   ParsedString(this.value, this.encoding, this.tagged_code_units);
 }
 
+/// Strings are loaded from two i32 values: a pointer (offset in linear memory) and a number of bytes.
+/// There are three supported string encodings ([StringEncoding]) in canonopt:
+/// UTF-8, UTF-16 and latin1+utf16.
+/// This last options allows a dynamic choice between Latin-1 and UTF-16, indicated
+/// by the high bit of the second i32. String values include their original encoding
+/// and byte length as a "hint" that enables store_string (defined below) to make better
+/// up-front allocation size choices in many cases. Thus, the value produced by load_string
+/// isn't simply a Dart String, but a [ParsedString] containing a String, the original encoding
+/// and the original byte length.
 ParsedString load_string(Context cx, int ptr) {
   int begin = load_int(cx, ptr, 4);
   int tagged_code_units = load_int(cx, ptr + 4, 4);
   return load_string_from_range(cx, begin, tagged_code_units);
 }
 
+/// Used to indicate that the string is UTF-16 encoded.
+/// This is used to distinguish between Latin-1 and UTF-16
+/// in [StringEncoding.latin1utf16]
+///
+/// See [store_string_into_range].
 const int UTF16_TAG = 1 << 31;
 
 ParsedString load_string_from_range(
@@ -736,6 +823,7 @@ String decodeString(Uint8List bytes, StringEncoding encoding) {
   }
 }
 
+/// Lists are loaded by recursively loading their elements
 ListValue load_list(Context cx, int ptr, ValType elem_type) {
   int begin = load_int(cx, ptr, 4);
   int length = load_int(cx, ptr + 4, 4);
@@ -757,6 +845,7 @@ ListValue load_list_from_range(
   return a;
 }
 
+/// Records are loaded by recursively loading their fields
 RecordValue load_record(Context cx, int ptr, List<Field> fields) {
   final record = <String, Object?>{};
   for (final field in fields) {
@@ -771,6 +860,13 @@ RecordValue load_record(Context cx, int ptr, List<Field> fields) {
 
 // TODO: should we use ({String label, Object? value}) instead of RecordV for variant?
 
+/// TODO(generator): Variants are loaded using the order of the cases in the type to determine the case index,
+/// assigning 0 to the first case, 1 to the next case, etc. To support the subtyping allowed
+/// by refines, a lifted variant value semantically includes a full ordered list of its
+/// refines case labels so that the lowering code (defined below) can search this list
+/// to find a case label it knows about. While the code below appears to perform case-label
+/// lookup at runtime, a normal implementation can build the appropriate index tables
+/// at compile-time so that variant-passing is always O(1) and not involving string operations.
 VariantValue load_variant(
   Context cx,
   int ptr,
@@ -806,6 +902,9 @@ int find_case(String label, List<Case> cases) {
 
 // #
 
+/// Flags are converted from a bit-vector to a dictionary whose keys are
+/// derived from the ordered labels of the flags type. The code here
+/// takes advantage of Python's support for integers of arbitrary width.
 FlagsValue load_flags(Context cx, int ptr, List<String> labels) {
   final i = load_int(cx, ptr, size_flags(labels));
   return unpack_flags_from_int(i, labels);
@@ -821,12 +920,24 @@ FlagsValue unpack_flags_from_int(int i, List<String> labels) {
 }
 // #
 
+/// Next, own handles are lifted by extracting the [OwnHandle] from
+/// the current instance's handle table.
+/// This ensures that own handles are always uniquely referenced.
+///
+/// Note that [t] refers to an own type and thus [HandleTables.transfer] will,
+/// as shown above, ensure that the handle at index i is an [OwnHandle]
 Handle lift_own(Context cx, int i, Resource t) {
   return cx.inst.handles.transfer(i, t);
 }
 
 // #
 
+/// Lastly, borrow handles are lifted by handing out a BorrowHandle storing
+/// the same representation value as the lent handle.
+/// By incrementing [Handle.lend_count], lift_borrow ensures
+/// that the lent handle will not be dropped before the end of the call
+/// (see the matching decrement in [canon_lower])
+/// which transitively ensures that the lent resource will not be destroyed.
 BorrowHandle lift_borrow(Context cx, int i, Resource t) {
   final h = cx.inst.handles.get(i, t.rt);
   h.lend_count += 1;
@@ -837,6 +948,9 @@ BorrowHandle lift_borrow(Context cx, int i, Resource t) {
 
 int truthyInt(Object? v) => v == false || v == 0 || v == null ? 0 : 1;
 
+/// The store function defines how to write a value [v] of a given value type [t]
+/// into linear memory starting at offset [ptr].
+/// Presenting the definition of store piecewise, we start with the top-level case analysis:
 void store(Context cx, Object? v, ValType t, int ptr) {
   assert(ptr == align_to(ptr, alignment(t)));
   assert(ptr + size(t) <= cx.opts.memory.length);
@@ -867,6 +981,9 @@ void store(Context cx, Object? v, ValType t, int ptr) {
 }
 // #
 
+/// Integers are stored directly into memory. Because the input domain is exactly
+/// the integers in range for the given type, no extra range checks are necessary;
+/// the signed parameter is only present to ensure that the internal range checks of int.to_bytes are satisfied.
 void store_int(Context cx, int v, int ptr, int nbytes, {bool signed = false}) {
   final data = cx.opts.memory.buffer.asByteData();
   return switch ((nbytes, signed)) {
@@ -884,6 +1001,8 @@ void store_int(Context cx, int v, int ptr, int nbytes, {bool signed = false}) {
 
 // #
 
+/// Floats are stored directly into memory (in the case of NaNs, using the 32-/64-bit
+/// canonical NaN bit pattern selected by canonicalize32/canonicalize64):
 /// return struct.unpack('!I', struct.pack('!f', f))[0] # i32.reinterpret_f32
 int reinterpret_float_as_i32(double f) => f.truncate();
 
@@ -892,6 +1011,8 @@ int reinterpret_float_as_i64(double f) => f.truncate();
 
 // #
 
+/// The integral value of a char (a Unicode Scalar Value)
+/// is a valid unsigned i32 and thus no runtime conversion or checking is necessary:
 int char_to_i32(String c) {
   final i = c.runes.first;
   assert(0 <= i && i <= 0xD7FF || 0xD800 <= i && i <= 0x10FFFF);
@@ -902,12 +1023,27 @@ int char_to_i32(String c) {
 
 typedef PointerAndSize = (int, int);
 
+/// Storing strings is complicated by the goal of attempting to optimize the different transcoding cases.
+/// In particular, one challenge is choosing the linear memory allocation size before examining
+/// the contents of the string. The reason for this constraint is that, in some settings
+/// where single-pass iterators are involved (host calls and post-MVP adapter functions),
+/// examining the contents of a string more than once would require making an engine-internal
+/// temporary copy of the whole string, which the component model specifically aims not to do.
+/// To avoid multiple passes, the canonical ABI instead uses a realloc approach to update
+/// the allocation size during the single copy. A blind realloc approach would normally
+/// suffer from multiple reallocations per string (e.g., using the standard doubling-growth strategy).
+/// However, as already shown in load_string above, string values come with two useful hints:
+/// their original encoding and byte length. From this hint data, store_string can do a
+/// much better job minimizing the number of reallocations.
 void store_string(Context cx, ParsedString v, int ptr) {
   final (begin, tagged_code_units) = store_string_into_range(cx, v);
   store_int(cx, begin, ptr, 4);
   store_int(cx, tagged_code_units, ptr + 4, 4);
 }
 
+/// We start with a case analysis to enumerate all the meaningful encoding combinations,
+/// subdividing the latin1+utf16 encoding into either latin1 or utf16 based on the
+/// UTF16_BIT flag set by load_string
 PointerAndSize store_string_into_range(Context cx, ParsedString v) {
   final src = v.value;
   final src_encoding = v.encoding;
@@ -972,8 +1108,13 @@ PointerAndSize store_string_into_range(Context cx, ParsedString v) {
 }
 // #
 
-const MAX_STRING_BYTE_LENGTH = (1 << 31) - 1;
+/// The choice of MAX_STRING_BYTE_LENGTH constant ensures that the
+/// high bit of a string's byte length is never set, keeping it clear for [UTF16_TAG].
+const int MAX_STRING_BYTE_LENGTH = (1 << 31) - 1;
 
+/// The simplest 4 cases above can compute the exact destination size and
+/// then copy with a simply loop (that possibly inflates Latin-1 to UTF-16
+/// by injecting a 0 byte after every Latin-1 byte).
 PointerAndSize store_string_copy(
   Context cx,
   String src,
@@ -1030,6 +1171,10 @@ PointerAndSize store_latin1_to_utf8(
   return store_string_to_utf8(cx, src, src_code_units, worst_case_size);
 }
 
+/// The 2 cases of transcoding into UTF-8 share an algorithm that starts
+/// by optimistically assuming that each code unit of the source string fits
+/// in a single UTF-8 byte and then, failing that, reallocates to a worst-case size,
+/// finishes the copy, and then finishes with a shrinking reallocation.
 PointerAndSize store_string_to_utf8(
     Context cx, String src, int src_code_units, int worst_case_size) {
   assert(src_code_units <= MAX_STRING_BYTE_LENGTH);
@@ -1055,6 +1200,10 @@ PointerAndSize store_string_to_utf8(
 
 // #
 
+/// Converting from UTF-8 to UTF-16 performs an initial worst-case size allocation
+/// (assuming each UTF-8 byte encodes a whole code point that inflates into
+/// a two-byte UTF-16 code unit) and then does a shrinking reallocation at the
+/// end if multiple UTF-8 bytes were collapsed into a single 2-byte UTF-16 code unit
 PointerAndSize store_utf8_to_utf16(Context cx, String src, int src_code_units) {
   final worst_case_size = 2 * src_code_units;
   trap_if(worst_case_size > MAX_STRING_BYTE_LENGTH);
@@ -1074,6 +1223,15 @@ PointerAndSize store_utf8_to_utf16(Context cx, String src, int src_code_units) {
 }
 // #
 
+/// The next transcoding case handles latin1+utf16 encoding,
+/// where there general goal is to fit the incoming string into Latin-1
+/// if possible based on the code points of the incoming string.
+/// The algorithm speculates that all code points do fit into Latin-1
+/// and then falls back to a worst-case allocation size when
+/// a code point is found outside Latin-1. In this fallback case,
+/// the previously-copied Latin-1 bytes are inflated in place,
+/// inserting a 0 byte after every Latin-1 byte
+/// (iterating in reverse to avoid clobbering later bytes)
 PointerAndSize store_string_to_latin1_or_utf16(
     Context cx, String src, int src_code_units) {
   assert(src_code_units <= MAX_STRING_BYTE_LENGTH);
@@ -1117,6 +1275,17 @@ PointerAndSize store_string_to_latin1_or_utf16(
 }
 // #
 
+/// The final transcoding case takes advantage of the extra heuristic
+/// information that the incoming UTF-16 bytes were intentionally chosen
+/// over Latin-1 by the producer, indicating that they probably contain code
+/// points outside Latin-1 and thus probably require inflation.
+/// Based on this information, the transcoding algorithm pessimistically
+/// allocates storage for UTF-16, deflating at the end if
+/// indeed no non-Latin-1 code points were encountered.
+/// This Latin-1 deflation ensures that if a group of components
+/// are all using latin1+utf16 and one component over-uses UTF-16,
+/// other components can recover the Latin-1 compression.
+/// (The Latin-1 check can be inexpensively fused with the UTF-16 validate+copy loop.)
 PointerAndSize store_probably_utf16_to_latin1_or_utf16(
     Context cx, String src, int src_code_units) {
   final src_byte_length = 2 * src_code_units;
@@ -1140,6 +1309,11 @@ PointerAndSize store_probably_utf16_to_latin1_or_utf16(
 }
 // #
 
+/// Lists and records are stored by recursively storing their elements
+/// and are symmetric to the loading functions.
+///
+/// Unlike strings, lists can simply allocate based on the up-front
+/// knowledge of length and static element size.
 void store_list(Context cx, ListValue v, int ptr, ValType elem_type) {
   final (begin, length) = store_list_into_range(cx, v, elem_type);
   store_int(cx, begin, ptr, 4);
@@ -1157,6 +1331,8 @@ void store_list(Context cx, ListValue v, int ptr, ValType elem_type) {
   return (ptr, v.length);
 }
 
+/// Lists and records are stored by recursively storing their elements
+/// and are symmetric to the loading functions.
 void store_record(
   Context cx,
   RecordValue v,
@@ -1171,6 +1347,12 @@ void store_record(
 }
 // #
 
+/// TODO(generator): Variants are stored using the |-separated list of refines cases built
+/// by [case_label_with_refinements] (above) to iteratively find a matching
+/// case (which validation guarantees will succeed). While this code appears to do O(n)
+/// string matching, a normal implementation can statically fuse store_variant with
+/// its matching load_variant to ultimately build a dense array that maps
+/// producer's case indices to the consumer's case indices.
 void store_variant(Context cx, VariantValue v, int ptr, List<Case> cases) {
   final (case_index, case_value) = match_case(v, cases);
   final disc_size = size(discriminant_type(cases));
@@ -1193,6 +1375,12 @@ void store_variant(Context cx, VariantValue v, int ptr, List<Case> cases) {
 }
 // #
 
+/// TODO(generator): Flags are converted from a dictionary to a bit-vector by iterating
+/// through the case-labels of the variant in the order they were
+/// listed in the type definition and OR-ing all the bits together.
+/// Flag lifting/lowering can be statically fused into array/integer operations
+/// (with a simple byte copy when the case lists are the same) to avoid any
+/// string operations in a similar manner to variants.
 void store_flags(Context cx, FlagsValue v, int ptr, List<String> labels) {
   final i = pack_flags_into_int(v, labels);
   store_int(cx, i, ptr, size_flags(labels));
@@ -1209,11 +1397,21 @@ int pack_flags_into_int(FlagsValue v, List<String> labels) {
 }
 // #
 
+/// Finally, own and borrow handles are lowered by inserting them into the
+/// current component instance's [HandleTable]
 int lower_own(Context cx, Handle h, Resource t) {
   assert(h is OwnHandle);
   return cx.inst.handles.add(h, t);
 }
 
+/// Finally, own and borrow handles are lowered by inserting them into the
+/// current component instance's [HandleTable]
+///
+/// The special case in lower_borrow is an optimization, recognizing that,
+/// when a borrowed handle is passed to the component that implemented
+/// the resource type, the only thing the borrowed handle is good for
+/// is calling resource.rep, so lowering might as well avoid the overhead
+/// of creating an intermediate borrow handle.
 int lower_borrow(Context cx, Handle h, Resource t) {
   assert(h is BorrowHandle);
   // TODO: should it be identical?
@@ -1228,6 +1426,28 @@ const int MAX_FLAT_RESULTS = 1;
 
 enum FlattenContext { lift, lower }
 
+/// With only the definitions above, the Canonical ABI would be forced to place
+/// all parameters and results in linear memory. While this is necessary
+/// in the general case, in many cases performance can be improved
+/// by passing small-enough values in registers by using core function parameters and results.
+/// To support this optimization, the Canonical ABI defines flatten to map
+/// component function types to core function types by attempting to decompose
+/// all the non-dynamically-sized component value types into core value types.
+///
+/// For a variety of practical reasons, we need to limit the total number of
+/// flattened parameters and results, falling back to storing everything in linear memory.
+/// The number of flattened results is currently limited to 1 due to various parts of
+/// the toolchain (notably the C ABI) not yet being able to express multi-value returns.
+/// Hopefully this limitation is temporary and can be lifted before
+/// the Component Model is fully standardized.
+///
+/// When there are too many flat values, in general, a single i32 pointer can be
+/// passed instead (pointing to a tuple in linear memory). When lowering into linear memory,
+/// this requires the Canonical ABI to call [CanonicalOptions.realloc] (in lower below)
+/// to allocate space to put the tuple. As an optimization, when lowering the
+/// return value of an imported function (via [canon_lower]), the caller can have
+/// already allocated space for the return value (e.g., efficiently on the stack),
+/// passing in an i32 pointer as an parameter instead of returning an i32 as a return value.
 CoreFuncType flatten_functype(FuncType ft, FlattenContext context) {
   var flat_params = flatten_types(ft.param_types());
   if (flat_params.length > MAX_FLAT_PARAMS) flat_params = [FlattenType.i32];
@@ -1277,6 +1497,7 @@ List<FlattenType> flatten_type(ValType t) {
 }
 // #
 
+/// Record flattening simply flattens each field in sequence.
 List<FlattenType> flatten_record(List<Field> fields) {
   final List<FlattenType> flat = [];
   for (final f in fields) flat.addAll(flatten_type(f.t));
@@ -1284,6 +1505,14 @@ List<FlattenType> flatten_record(List<Field> fields) {
 }
 // #
 
+/// Variant flattening is more involved due to the fact that each case payload
+/// can have a totally different flattening. Rather than giving up when there
+/// is a type mismatch, the Canonical ABI relies on the fact that the 4 core
+/// value types can be easily bit-cast between each other and defines a [join]
+/// operator to pick the tightest approximation. What this means is that,
+/// regardless of the dynamic case, all flattened variants are passed with
+/// the same static set of core types, which may involve, e.g.,
+/// reinterpreting an f32 as an i32 or zero-extending an i32 into an i64.
 List<FlattenType> flatten_variant(List<Case> cases) {
   final List<FlattenType> flat = [];
   for (final c in cases)
@@ -1302,6 +1531,7 @@ FlattenType join(FlattenType a, FlattenType b) {
       (a == FlattenType.f32 && b == FlattenType.i32)) return FlattenType.i32;
   return FlattenType.i64;
 }
+
 // ### Flat Lifting
 
 // typedef Value = ({FlattenType t, num v});
@@ -1350,6 +1580,11 @@ class _ValueIter implements ValueIter {
   }
 }
 
+/// The lift_flat function defines how to convert zero or more core values
+/// into a single high-level value of type [t]. The values are given by a value
+/// iterator [vi] that iterates over a complete parameter or result list and asserts
+/// that the expected and actual types line up. Presenting the definition of
+/// lift_flat piecewise, we start with the top-level case analysis:
 Object? lift_flat(Context cx, ValueIter vi, ValType t) {
   final _t = despecialize(t);
   return switch (_t) {
@@ -1376,6 +1611,13 @@ Object? lift_flat(Context cx, ValueIter vi, ValType t) {
 }
 // #
 
+/// Integers are lifted from core i32 or i64 values using the signedness
+/// of the target type to interpret the high-order bit.
+/// When the target type is narrower than an i32,
+/// the Canonical ABI ignores the unused high bits (like load_int).
+/// The conversion logic here assumes that i32 values are always
+/// represented as unsigned Python ints and thus lifting to a signed
+/// type performs a manual 2s complement conversion in the Python (which would be a no-op in hardware).
 int lift_flat_unsigned(ValueIter vi, int core_width, int t_width) {
   final i = vi.nextInt(core_width == 32 ? FlattenType.i32 : FlattenType.i64);
   assert(0 <= i);
@@ -1393,19 +1635,27 @@ int lift_flat_signed(ValueIter vi, int core_width, int t_width) {
 }
 // #
 
+/// The contents of strings and lists are always stored in memory
+/// so lifting these types is essentially the same as loading them from memory;
+/// the only difference is that the pointer and length come from i32 values instead of from linear memory:
 ParsedString lift_flat_string(Context cx, ValueIter vi) {
   int ptr = vi.nextInt(FlattenType.i32);
   int packed_length = vi.nextInt(FlattenType.i32);
   return load_string_from_range(cx, ptr, packed_length);
 }
 
+/// The contents of strings and lists are always stored in memory
+/// so lifting these types is essentially the same as loading them from memory;
+/// the only difference is that the pointer and length come from i32 values instead of from linear memory:
 ListValue lift_flat_list(Context cx, ValueIter vi, ValType elem_type) {
   int ptr = vi.nextInt(FlattenType.i32);
   int length = vi.nextInt(FlattenType.i32);
   return load_list_from_range(cx, ptr, length, elem_type);
 }
+
 // #
 
+/// Records are lifted by recursively lifting their fields:
 RecordValue lift_flat_record(Context cx, ValueIter vi, List<Field> fields) {
   final RecordValue record = {};
   for (final f in fields) record[f.label] = lift_flat(cx, vi, f.t);
@@ -1437,6 +1687,12 @@ class CoerceValueIter implements ValueIter {
   }
 }
 
+/// Variants are also lifted recursively. Lifting a variant must carefully
+/// follow the definition of [flatten_variant] above, consuming the exact same core
+/// types regardless of the dynamic case payload being lifted.
+/// Because of the [join] performed by [flatten_variant], we need a
+/// more-permissive value iterator ([CoerceValueIter]) that reinterprets between the different
+/// types appropriately and also traps if the high bits of an i64 are set for a 32-bit type:
 VariantValue lift_flat_variant(Context cx, ValueIter vi, List<Case> cases) {
   final flat_types = flatten_variant(cases);
   assert(flat_types.removeAt(0) == FlattenType.i32);
@@ -1461,6 +1717,8 @@ int wrap_i64_to_i32(int i) {
 
 // #
 
+/// Finally, flags are lifted by OR-ing together all the flattened i32 values
+/// and then lifting to a record the same way as when loading flags from linear memory.
 FlagsValue lift_flat_flags(ValueIter vi, List<String> labels) {
   int i = 0;
   int shift = 0;
@@ -1472,6 +1730,9 @@ FlagsValue lift_flat_flags(ValueIter vi, List<String> labels) {
 }
 // ### Flat Lowering
 
+/// The lower_flat function defines how to convert a value [v]
+/// of a given type [t] into zero or more core [Value]s.
+/// Presenting the definition of lower_flat piecewise, we start with the top-level case analysis:
 List<Value> lower_flat(Context cx, Object? v, ValType t) {
   final _t = despecialize(t);
   return switch (_t) {
@@ -1498,23 +1759,33 @@ List<Value> lower_flat(Context cx, Object? v, ValType t) {
 }
 // #
 
+/// Since component-level values are assumed in-range and, as previously stated,
+/// core i32 values are always internally represented as unsigned ints,
+/// unsigned integer values need no extra conversion.
+/// Signed integer values are converted to unsigned core i32s
+/// by 2s complement arithmetic (which again would be a no-op in hardware)
 List<Value> lower_flat_signed(int i, int core_bits) {
   if (i < 0) i += (1 << core_bits);
   return [Value(core_bits == 32 ? FlattenType.i32 : FlattenType.i64, i)];
 }
 // #
 
+/// Since strings and lists are stored in linear memory, lifting can reuse the previous definitions;
+/// only the resulting pointers are returned differently (as i32 values instead of as a pair in linear memory)
 List<Value> lower_flat_string(Context cx, ParsedString v) {
   final (ptr, packed_length) = store_string_into_range(cx, v);
   return [Value(FlattenType.i32, ptr), Value(FlattenType.i32, packed_length)];
 }
 
+/// Since strings and lists are stored in linear memory, lifting can reuse the previous definitions;
+/// only the resulting pointers are returned differently (as i32 values instead of as a pair in linear memory)
 List<Value> lower_flat_list(Context cx, ListValue v, ValType elem_type) {
   final (ptr, length) = store_list_into_range(cx, v, elem_type);
   return [Value(FlattenType.i32, ptr), Value(FlattenType.i32, length)];
 }
 // #
 
+/// Records are lowered by recursively lowering their fields
 List<Value> lower_flat_record(Context cx, RecordValue v, List<Field> fields) {
   final List<Value> flat = [];
   for (final f in fields) flat.addAll(lower_flat(cx, v[f.label], f.t));
@@ -1522,6 +1793,9 @@ List<Value> lower_flat_record(Context cx, RecordValue v, List<Field> fields) {
 }
 // #
 
+/// Variants are also lowered recursively. Symmetric to [lift_flat_variant] above,
+/// lower_flat_variant must consume all flattened types of [flatten_variant],
+/// manually coercing the otherwise-incompatible type pairings allowed by [join]
 List<Value> lower_flat_variant(Context cx, VariantValue v, List<Case> cases) {
   final (case_index, case_value) = match_case(v, cases);
   final flat_types = flatten_variant(cases);
@@ -1555,6 +1829,7 @@ List<Value> lower_flat_variant(Context cx, VariantValue v, List<Case> cases) {
 }
 // #
 
+/// Finally, flags are lowered by slicing the bit vector into i32 chunks:
 List<Value> lower_flat_flags(FlagsValue v, List<String> labels) {
   int i = pack_flags_into_int(v, labels);
   final List<Value> flat = [];
@@ -1568,6 +1843,9 @@ List<Value> lower_flat_flags(FlagsValue v, List<String> labels) {
 
 // ### Lifting and Lowering Values
 
+/// The lift_values function defines how to lift a list of at most
+/// [max_flat] core parameters or results given by the ValueIter [vi]
+/// into a tuple of values with types [ts]
 ListValue lift_values(
   Context cx,
   int max_flat,
@@ -1589,6 +1867,12 @@ ListValue lift_values(
 }
 // #
 
+/// The lower_values function defines how to lower a list of
+/// component-level values [vs] of types [ts] into a list of at
+/// most [max_flat] core values. As already described for [flatten_functype] above,
+/// lowering handles the greater-than-[max_flat] case by either
+/// allocating storage with [CanonicalOptions.realloc] or accepting a
+/// caller-allocated buffer as an [out_param].
 List<Value> lower_values(
   Context cx,
   int max_flat,
@@ -1621,6 +1905,47 @@ List<Value> lower_values(
 }
 // ### `lift`
 
+/// Using the above supporting definitions, we can describe the static and dynamic semantics
+/// of component-level canon definitions.
+/// The following subsections cover each of these canon cases.
+
+/// For a canonical definition:
+///
+/// (canon lift $callee:<funcidx> $opts:<canonopt>* (func $f (type $ft)))
+/// validation specifies:
+///
+/// - $callee must have type flatten($ft, 'lift')
+/// - $f is given type $ft
+/// - a memory is present if required by lifting and is a subtype of (memory 1)
+/// - a realloc is present if required by lifting and has type (func (param i32 i32 i32 i32) (result i32))
+/// - if a post-return is present, it has type (func (param flatten($ft)['results']))
+///
+/// When instantiating component instance $inst:
+/// - Define $f to be the closure lambda call, args: canon_lift(Context($opts, $inst), $callee, $ft, call, args)
+///
+/// Thus, $f captures $opts, $inst, $callee and $ft in a closure which can be subsequently exported
+/// or passed into a child instance (via with). If $f ends up being called by the host,
+/// the host is responsible for, in a host-defined manner, conjuring up component
+/// values suitable for passing into lower and, conversely, consuming the component
+/// values produced by lift. For example, if the host is a native JS runtime,
+/// the JavaScript embedding would specify how native JavaScript values are converted
+/// to and from component values. Alternatively, if the host is a Unix CLI that
+/// invokes component exports directly from the command line, the CLI could choose
+/// to automatically parse argv into component-level values according to the declared
+/// types of the export. In any case, canon lift specifies how these variously-produced
+/// values are consumed as parameters (and produced as results) by a single host-agnostic component.
+///
+/// Given the above closure arguments, canon_lift is defined.
+///
+/// Uncaught Core WebAssembly exceptions result in a trap at component boundaries.
+/// Thus, if a component wishes to signal an error, it must use some sort of
+/// explicit type such as result (whose error case particular language bindings
+/// may choose to map to and from exceptions).
+///
+/// The contract assumed by canon_lift (and ensured by [canon_lower] below) is that the
+/// caller of [canon_lift] must call post_return right after lowering result.
+/// This ensures that [CanonicalOptions.post_return] can be used to perform
+/// cleanup actions after the lowering is complete.
 (ListValue, void Function()) canon_lift(
   CanonicalOptions opts,
   ComponentInstance inst,
@@ -1661,6 +1986,65 @@ List<Value> lower_values(
 }
 // ### `lower`
 
+/// For a canonical definition:
+///
+/// (canon lower $callee:<funcidx> $opts:<canonopt>* (core func $f))
+/// where $callee has type $ft, validation specifies:
+///
+/// - $f is given type flatten($ft, 'lower')
+/// - a memory is present if required by lifting and is a subtype of (memory 1)
+/// - a realloc is present if required by lifting and has type (func (param i32 i32 i32 i32) (result i32))
+/// - there is no post-return in $opts
+///
+/// When instantiating component instance $inst:
+/// - Define $f to be the closure: lambda call, args: canon_lower(Context($opts, $inst), $callee, $ft, call, args)
+///
+/// Thus, from the perspective of Core WebAssembly, $f is a function instance
+/// containing a hostfunc that closes over $opts, $inst, $callee and $ft and,
+/// when called from Core WebAssembly code, calls canon_lower, which is defined as.
+///
+/// The definitions of canon_lift and canon_lower are mostly symmetric (swapping lifting and lowering),
+/// with a few exceptions:
+///
+/// - TODO(generator): The caller does not need a post-return function since the Core WebAssembly
+///   caller simply regains control when [canon_lower] returns, allowing it to free
+///   (or not) any memory passed as [flat_args].
+/// - When handling the too-many-flat-values case, instead of relying on realloc,
+///   the caller pass in a pointer to caller-allocated memory as a final i32 parameter.
+///
+/// TODO(generator): Since any cross-component call necessarily transits through a
+/// statically-known canon_lower+canon_lift call pair, an AOT compiler can fuse
+/// [canon_lift] and [canon_lower] into a single, efficient trampoline.
+/// This allows efficient compilation of the permissive subtyping
+/// allowed between components (including the elimination of string
+/// operations on the labels of records and variants) as well as post-MVP adapter functions.
+///
+/// By clearing [ComponentInstance.may_enter] for the duration of calls to imports,
+/// the may_enter guard in canon_lift ensures that components
+/// cannot be externally reentered, which is part of the component invariants.
+/// The [calling_import] condition allows a parent component to call
+/// into a child component (which is, by definition, not a call to an import)
+/// and for the child to then reenter the parent through a function the
+/// parent explicitly supplied to the child's instantiate.
+/// This form of internal reentrance allows the parent to fully virtualize the child's imports.
+///
+/// Because [ComponentInstance.may_enter] is not cleared on the exceptional exit path taken by trap(),
+/// if there is a trap during Core WebAssembly execution of lifting or lowering,
+/// the component is left permanently un-enterable, ensuring the lockdown-after-trap component invariant.
+///
+/// The [ComponentInstance.may_leave] flag set during lowering in [canon_lift] and [canon_lower]
+/// ensures that the relative ordering of the side effects of lift and
+/// lower cannot be observed via import calls and thus an implementation
+/// may reliably interleave lift and lower whenever making a cross-component
+/// call to avoid the intermediate copy performed by lift.
+/// This unobservability of interleaving depends on the shared-nothing property
+/// of components which guarantees that all the low-level state touched by
+/// lift and lower are disjoint. Though it should be rare,
+/// same-component-instance canon_lift+canon_lower call pairs are technically
+/// allowed by the above rules (and may arise unintentionally in
+/// component reexport scenarios). Such cases can be statically
+/// distinguished by the AOT compiler as requiring an intermediate copy
+/// to implement the above lift-then-lower semantics.
 List<Value> canon_lower(
   CanonicalOptions opts,
   ComponentInstance inst,
