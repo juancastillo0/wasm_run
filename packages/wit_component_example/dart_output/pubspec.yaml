@@ -1,0 +1,7 @@
+name: dart_output
+environment:
+  sdk: ">=3.0.0-417.3.beta <4.0.0"
+
+dependencies:
+  ffi: ^2.0.1
+  wasmit: ^0.0.1

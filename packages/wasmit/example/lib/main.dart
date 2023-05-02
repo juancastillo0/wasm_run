@@ -336,7 +336,7 @@ void testAll({
     m.setRange(0, 2, utf8.encode('Hi'));
     expect(memory.view, m);
 
-    memory.write(offset: 1, buffer: Uint8List.fromList(utf8.encode('o')));
+    memory.write(offset: 1, buffer: utf8.encoder.convert('o'));
     // memory[1] = utf8.encode('o').first;
     expect(writeHi([]), <dynamic>[]);
     expect(result, 'Ho');
@@ -708,7 +708,7 @@ void testAll({
     final fileData = instance1.getFunction('file_data_raw')!;
 
     {
-      final buffer = Uint8List.fromList(utf8.encode(wasmGuestFilePath));
+      final buffer = utf8.encoder.convert(wasmGuestFilePath);
       final dataOffset = withBufferOffset(
         buffer,
         // utf8 with length

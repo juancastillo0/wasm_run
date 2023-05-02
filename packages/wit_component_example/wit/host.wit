@@ -1,0 +1,15 @@
+default world host {
+  import print: func(msg: string)
+
+  record record-test {
+    a: u32,
+    b: string,
+    c: float64,
+  }
+
+  export run: func()
+  export get: func() -> record-test
+  export map: func(rec: record-test) -> record-test
+  export map-i: func(rec: record-test, i: float32) -> record-test
+  export receive-i: func(rec: record-test, i: float32)
+}
