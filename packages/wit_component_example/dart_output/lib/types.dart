@@ -2,6 +2,9 @@ library types;
 
 // FILE GENERATED FROM WIT
 
+import 'package:dart_output/canonical_abi.dart';
+import 'package:wasmit/wasmit.dart';
+
 import 'component.dart';
 
 class R {
@@ -75,7 +78,7 @@ class Types {}
 class TypesWorld {
   final TypesWorldImports imports;
   final Types types;
-  final Library library;
+  final WasmLibrary library;
 
   TypesWorld({
     required this.imports,
@@ -83,8 +86,51 @@ class TypesWorld {
     required this.library,
   });
 
-  late final _run = library.lookupFunction('run');
+  static Future<TypesWorld> init(
+    WasmInstanceBuilder builder, {
+    required TypesWorldImports imports,
+  }) async {
+    late final WasmLibrary library;
+    WasmLibrary getLib() => library;
+
+    final _importFt = FuncType([('s', StringType())], []);
+    (ListValue, void Function()) _execPrint(ListValue p0) {
+      imports.print((p0[0] as ParsedString).value);
+      return (const [], () {});
+    }
+
+    final _printLowered = loweredImportFunction(_importFt, _execPrint, getLib);
+    builder.addImport(r'$root', 'print', _printLowered);
+
+    final instance = await builder.build();
+
+    library = WasmLibrary(instance);
+    return TypesWorld(imports: imports, types: Types(), library: library);
+  }
+
+  late final _run = library.lookupFunction('run')!;
   void run() {
     _run();
+  }
+
+  /// record record-test {
+  ///   a: u32,
+  ///   b: string,
+  ///   c: float64,
+  /// }
+  static final _recordTest = Record([
+    (label: 'a', t: U32()),
+    (label: 'b', t: StringType()),
+    (label: 'c', t: Float64())
+  ]);
+
+  late final _get = library.lookupComponentFunction(
+    'get',
+    FuncType([], [('record-test', _recordTest)]),
+  )!;
+
+  RecordValue get() {
+    final result = _get(const []);
+    return result[0] as RecordValue;
   }
 }
