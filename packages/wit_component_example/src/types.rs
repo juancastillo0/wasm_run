@@ -69,6 +69,196 @@ impl Parsed<'_> {
         }
     }
 
+    pub fn type_to_spec(&self, ty: &Type) -> String {
+        match ty {
+            Type::Id(ty_id) => {
+                let ty_def = self.0.types.get(*ty_id).unwrap();
+                self.type_def_to_spec(ty_def)
+            }
+            Type::Bool => "Bool()".to_string(),
+            Type::String => "StringType()".to_string(),
+            Type::Char => "Char()".to_string(),
+            Type::Float32 => "Float32()".to_string(),
+            Type::Float64 => "Float64()".to_string(),
+            Type::S8 => "S8()".to_string(),
+            Type::S16 => "S16()".to_string(),
+            Type::S32 => "S32()".to_string(),
+            Type::S64 => "S64()".to_string(),
+            Type::U8 => "U8()".to_string(),
+            Type::U16 => "U16()".to_string(),
+            Type::U32 => "U32()".to_string(),
+            Type::U64 => "U64()".to_string(),
+        }
+    }
+
+    pub fn type_def_to_spec_option(&self, r: Option<Type>) -> String {
+        r.map(|ty| self.type_to_spec(&ty))
+            .unwrap_or("null".to_string())
+    }
+
+    pub fn type_def_to_spec(&self, ty: &TypeDef) -> String {
+        let name = ty.name.as_ref().map(heck::AsPascalCase);
+        match &ty.kind {
+            TypeDefKind::Record(record) => format!(
+                "Record([{}])",
+                record
+                    .fields
+                    .iter()
+                    .map(|t| format!("(label: '{}', t: {})", t.name, self.type_to_spec(&t.ty)))
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            ),
+            TypeDefKind::Enum(enum_) => format!(
+                "EnumType(['{}'])",
+                enum_
+                    .cases
+                    .iter()
+                    .map(|t| t.name.clone())
+                    .collect::<Vec<_>>()
+                    .join("', '")
+            ),
+            TypeDefKind::Union(union) => format!(
+                "Union([{}])",
+                union
+                    .cases
+                    .iter()
+                    .map(|t| self.type_to_spec(&t.ty))
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            ),
+            TypeDefKind::Flags(flags) => format!(
+                "Flags(['{}'])",
+                flags
+                    .flags
+                    .iter()
+                    .map(|t| t.name.clone())
+                    .collect::<Vec<_>>()
+                    .join("', '")
+            ),
+            TypeDefKind::Variant(variant) => format!(
+                "Variant([{}])",
+                variant
+                    .cases
+                    .iter()
+                    .map(|t| format!("Case('{}', {})", t.name, self.type_def_to_spec_option(t.ty)))
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            ),
+            TypeDefKind::Tuple(t) => {
+                format!(
+                    "Tuple([{}])",
+                    t.types
+                        .iter()
+                        .map(|t| self.type_to_spec(t))
+                        .collect::<Vec<_>>()
+                        .join(", ")
+                )
+            }
+            TypeDefKind::Option(ty) => format!("OptionType({})", self.type_to_spec(&ty)),
+            TypeDefKind::Result(r) => format!(
+                "ResultType({}, {})",
+                self.type_def_to_spec_option(r.ok),
+                self.type_def_to_spec_option(r.err),
+            ),
+            TypeDefKind::List(ty) => format!("ListType({})", self.type_to_spec(&ty)),
+            TypeDefKind::Future(ty) => format!("FutureType({})", self.type_def_to_spec_option(*ty)),
+            TypeDefKind::Stream(s) => format!(
+                "StreamType({})",
+                // TODO: stream.end
+                self.type_def_to_spec_option(s.element),
+            ),
+            TypeDefKind::Type(ty) => self.type_to_spec(&ty),
+            TypeDefKind::Unknown => unimplemented!("Unknown type"),
+        }
+    }
+
+    pub fn type_from_json(&self, getter: &str, ty: &Type) -> String {
+        match ty {
+            Type::Id(ty_id) => {
+                let ty_def = self.0.types.get(*ty_id).unwrap();
+                self.type_def_from_json(getter, ty_def)
+            }
+            Type::Bool => format!("{getter} as bool"),
+            Type::String => {
+                format!("{getter} is String ? {getter} : ({getter} as ParsedString).value")
+            }
+            Type::Char => format!("{getter} as String"),
+            Type::Float32 => format!("{getter} as double"),
+            Type::Float64 => format!("{getter} as double"),
+            Type::S8 => format!("{getter} as int"),
+            Type::S16 => format!("{getter} as int"),
+            Type::S32 => format!("{getter} as int"),
+            Type::S64 => format!("{getter} as int"),
+            Type::U8 => format!("{getter} as int"),
+            Type::U16 => format!("{getter} as int"),
+            Type::U32 => format!("{getter} as int"),
+            Type::U64 => format!("{getter} as int"),
+        }
+    }
+
+    pub fn type_def_from_json_option(&self, getter: &str, r: Option<Type>) -> String {
+        r.map(|ty| self.type_from_json(getter, &ty))
+            .unwrap_or("null".to_string())
+    }
+
+    pub fn type_def_from_json(&self, getter: &str, ty: &TypeDef) -> String {
+        let name = ty.name.as_ref().map(heck::AsPascalCase);
+        match &ty.kind {
+            TypeDefKind::Record(record) => format!("{}.fromJson({getter})", name.unwrap()),
+            TypeDefKind::Enum(enum_) => format!("{}.fromJson({getter})", name.unwrap()),
+            TypeDefKind::Union(union) => format!("{}.fromJson({getter})", name.unwrap()),
+            TypeDefKind::Flags(flags) => format!("{}.fromJson({getter})", name.unwrap()),
+            TypeDefKind::Variant(variant) => format!("{}.fromJson({getter})", name.unwrap()),
+            TypeDefKind::Tuple(t) => {
+                format!(
+                    "(() {{final l = {getter} is Map ? Iterable.generate({getter}.length, (i) => {getter}[i.toString()]) : {getter} as Iterable;\n{} return {};}})()",
+                    (0..t.types.len())
+                        .map(|i| format!("final v{i} = l..moveNext().current;\n"))
+                        .collect::<String>(),
+                    t.types
+                        .iter().enumerate()
+                        .map(|(i, t)| self.type_from_json(&format!("v{i},"), t))
+                        .collect::<String>(),
+                )
+            }
+            TypeDefKind::Option(ty) => format!(
+                "Option.fromJson({getter}, (some) => {})",
+                self.type_from_json("some", &ty)
+            ),
+            TypeDefKind::Result(r) => format!(
+                "Result.fromJson({getter}, (ok) => {}, (error) => {})",
+                self.type_def_from_json_option("ok", r.ok),
+                self.type_def_from_json_option("error", r.err),
+            ),
+            // TypeDefKind::Option(ty) => format!(
+            //     "{getter} == null ? none : {}",
+            //     self.type_from_json(getter, &ty)
+            // ),
+            // TypeDefKind::Result(r) => format!(
+            //     "({getter} as Map).containsKey('ok') ? Ok({}) : Err({})",
+            //     self.type_def_from_json_option(&format!("({getter} as Map)['ok']"), r.ok),
+            //     self.type_def_from_json_option(&format!("({getter} as Map)['error']"), r.err),
+            // ),
+            TypeDefKind::List(ty) => format!(
+                "({getter} as Iterable).map((e) => {}).toList()",
+                self.type_from_json("e", &ty)
+            ),
+            TypeDefKind::Future(ty) => {
+                format!(
+                    "FutureType({})",
+                    self.type_def_from_json_option(getter, *ty)
+                )
+            }
+            TypeDefKind::Stream(s) => format!(
+                "StreamType({})",
+                // TODO: stream.end
+                self.type_def_from_json_option(getter, s.element),
+            ),
+            TypeDefKind::Type(ty) => self.type_from_json(getter, &ty),
+            TypeDefKind::Unknown => unimplemented!("Unknown type"),
+        }
+    }
+
     pub fn type_to_dart_definition(&self, ty: &Type) -> String {
         match ty {
             Type::Id(ty_id) => {
@@ -144,30 +334,71 @@ impl Parsed<'_> {
         match &ty.kind {
             TypeDefKind::Record(r) => {
                 let name = name.unwrap();
-                s.push_str(&format!("class {} {{", name));
+                s.push_str(&format!("class {name} {{"));
                 r.fields.iter().for_each(|f| {
                     add_docs(&mut s, &f.docs);
                     s.push_str(&format!("final {} {};", self.type_to_str(&f.ty), f.name));
                 });
-                s.push_str(&format!("const {}({{", name));
+                s.push_str(&format!("const {name}({{", ));
                 r.fields.iter().for_each(|f| {
                     s.push_str(&format!("required this.{},", f.name));
                 });
-                s.push_str("});}");
+                s.push_str("});");
+                s.push_str(&format!(
+                    "factory {name}.fromJson(Object? json_) {{ final json = json_ as Map; return {name}({});}}",
+                    r.fields.iter().map(|f| 
+                        format!("{}: {},", f.name, self.type_from_json(&format!("json['{}']", f.name) ,&f.ty))
+                    ).collect::<String>()),
+                );
+
+                s.push_str(&format!("static final _spec = {};", self.type_def_to_spec(&ty)));
+                s.push_str("}");
                 s
             }
             TypeDefKind::Enum(e) => {
-                s.push_str(&format!("enum {} {{", name.unwrap()));
-                e.cases.iter().for_each(|v| {
+                let name = name.unwrap();
+                s.push_str(&format!("enum {name} {{"));
+                e.cases.iter().enumerate().for_each(|(i, v)| {
                     add_docs(&mut s, &v.docs);
-                    s.push_str(&format!("{},", heck::AsLowerCamelCase(&v.name)));
+                    s.push_str(&format!(
+                        "{}{}", 
+                        heck::AsLowerCamelCase(&v.name), 
+                        if i == e.cases.len() - 1 { ";" } else { "," }
+                    ));
                 });
+
+                s.push_str(
+                    &format!(
+                    "factory {name}.fromJson(Object? json) {{
+                        if (json is String) return values.byName(json); 
+                        if (json is int) return values[json];
+                        return values.byName((json as Map).keys.first as String);}}",
+                ),
+                );
+
+                s.push_str(&format!("static final _spec = {};", self.type_def_to_spec(&ty)));
                 s.push_str("}");
                 s
             }
             TypeDefKind::Union(u) => {
                 let name = name.unwrap();
-                s.push_str(&format!("sealed class {} {{}}", name));
+                s.push_str(
+                    &format!("sealed class {name} {{ factory {name}.fromJson(Object? json_) {{
+                    Object? json = json_;
+                    if (json is Map) json = (int.parse(json.keys.first as String), json.values.first);
+                    return switch (json) {{ {} _ => throw Exception('Invalid JSON'), }};
+                    }}", 
+                    u.cases.iter().enumerate().map(|(i, v)| {
+                        let ty = self.type_to_str(&v.ty);
+                        let inner_name = heck::AsPascalCase(&ty);
+                        format!(
+                            "({i}, Object? json) => {name}{inner_name}({}),",
+                            self.type_from_json("json", &v.ty),
+                        )
+                    }).collect::<String>()),
+                );
+                 s.push_str(&format!("static final _spec = {};", self.type_def_to_spec(&ty)));
+                 s.push_str("}");
 
                 u.cases.iter().for_each(|v| {
                     add_docs(&mut s, &v.docs);
@@ -182,7 +413,9 @@ impl Parsed<'_> {
             }
             TypeDefKind::Variant(a) => {
                 let name = name.unwrap();
-                s.push_str(&format!("sealed class {} {{}}", name));
+                s.push_str(&format!("sealed class {name} {{"));
+                s.push_str(&format!("static final _spec = {};", self.type_def_to_spec(&ty)));
+                s.push_str("}");
                 a.cases.iter().for_each(|v| {
                     add_docs(&mut s, &v.docs);
                     let inner_name =  heck::AsPascalCase(&v.name);
@@ -209,6 +442,7 @@ impl Parsed<'_> {
                     // TODO: proper representation of flags
                     s.push_str(&format!("static const {} = {};", v.name, i));
                 });
+                s.push_str(&format!("static final _spec = {};", self.type_def_to_spec(&ty)));
                 s.push_str("}");
                 s
             }

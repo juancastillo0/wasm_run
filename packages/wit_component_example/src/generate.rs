@@ -100,6 +100,7 @@ const HEADER: &str = "
 // FILE GENERATED FROM WIT
 
 import 'component.dart';
+import 'canonical_abi.dart';
 ";
 
 const PACKAGE_DIR: &str = env!("CARGO_MANIFEST_DIR");
@@ -130,7 +131,7 @@ pub fn parse_wit_types() {
     let s = document_to_dart(&parsed);
     println!("{}", s);
 
-    let output_path = format!("{}/dart_output/lib/types.dart", PACKAGE_DIR);
+    let output_path = format!("{}/dart_output/lib/types_gen.dart", PACKAGE_DIR);
     File::create(&output_path)
         .unwrap()
         .write(s.as_bytes())
