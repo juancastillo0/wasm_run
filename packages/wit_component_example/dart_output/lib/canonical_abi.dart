@@ -2,7 +2,7 @@
 
 import 'dart:convert' show utf8, latin1;
 import 'dart:math' as math;
-import 'dart:typed_data' show Uint8List, Endian;
+import 'dart:typed_data' show ByteData, Endian, Uint8List;
 
 class Trap implements Exception {}
 
@@ -87,7 +87,7 @@ class FuncType extends ExternType {
   List<ValType> param_types() => extract_types(params);
   List<ValType> result_types() => extract_types(results);
 
-  List<ValType> extract_types(List<(String, ValType)> vec) {
+  static List<ValType> extract_types(List<(String, ValType)> vec) {
     if (vec.isEmpty) return [];
     // if (vec[0] is ValType)
     //   return vec;
@@ -260,8 +260,8 @@ class Borrow extends Resource {
 /// [Char]
 /// [StringType]
 /// [ListType]
-/// [Record]
-/// [Variant]
+/// [Record] : [Tuple]
+/// [Variant] : [Union], [EnumType], [OptionType], [ResultType]
 /// [Flags]
 /// [Own]
 /// [Borrow]
@@ -324,25 +324,22 @@ int alignment_record(List<Field> fields) {
 
 int alignment_variant(List<Case> cases) {
   return math.max(
-      alignment(discriminant_type(cases)), max_case_alignment(cases));
+    alignment(discriminant_type(cases)),
+    max_case_alignment(cases),
+  );
 }
 
 ValType discriminant_type(List<Case> cases) {
   int n = cases.length;
   assert(0 < n);
   assert(n < (1 << 32));
-  switch (((math.log(n) / math.ln2) / 8).ceil()) {
-    case 0:
-      return U8();
-    case 1:
-      return U8();
-    case 2:
-      return U16();
-    case 3:
-      return U32();
-    default:
-      throw "unreachable";
-  }
+  return switch (((math.log(n) / math.ln2) / 8).ceil()) {
+    0 => U8(),
+    1 => U8(),
+    2 => U16(),
+    3 => U32(),
+    _ => throw "unreachable",
+  };
 }
 
 int max_case_alignment(List<Case> cases) {
@@ -663,12 +660,12 @@ int load_int(Context cx, int ptr, int nbytes, {bool signed = false}) {
   return switch ((nbytes, signed)) {
     (1, false) => data.getUint8(ptr),
     (2, false) => data.getUint16(ptr, Endian.little),
-    (3, false) => data.getUint32(ptr, Endian.little),
-    (4, false) => data.getUint64(ptr, Endian.little),
+    (4, false) => data.getUint32(ptr, Endian.little),
+    (8, false) => data.getUint64(ptr, Endian.little),
     (1, true) => data.getInt8(ptr),
     (2, true) => data.getInt16(ptr, Endian.little),
-    (3, true) => data.getInt32(ptr, Endian.little),
-    (4, true) => data.getInt64(ptr, Endian.little),
+    (4, true) => data.getInt32(ptr, Endian.little),
+    (8, true) => data.getInt64(ptr, Endian.little),
     _ => throw 'unreachable',
   };
 }
@@ -703,10 +700,16 @@ bool convert_int_to_bool(int i) {
 /// and then "canonicalized", mapping all Not-a-Number bit patterns to a single canonical nan value.
 
 /// return struct.unpack('!f', struct.pack('!I', i))[0] # f32.reinterpret_i32
-double reinterpret_i32_as_float(int i) => i.toDouble();
+double reinterpret_i32_as_float(int i) {
+  final data = ByteData(4)..setInt32(0, i, Endian.little);
+  return data.getFloat32(0, Endian.little);
+}
 
 /// return struct.unpack('!d', struct.pack('!Q', i))[0] # f64.reinterpret_i64
-double reinterpret_i64_as_float(int i) => i.toDouble();
+double reinterpret_i64_as_float(int i) {
+  final data = ByteData(8)..setInt64(0, i, Endian.little);
+  return data.getFloat64(0, Endian.little);
+}
 
 const int CANONICAL_FLOAT32_NAN = 0x7fc00000;
 const int CANONICAL_FLOAT64_NAN = 0x7ff8000000000000;
@@ -737,6 +740,7 @@ typedef ListValue = List<Object?>;
 typedef RecordValue = Map<String, Object?>;
 typedef VariantValue = RecordValue;
 typedef FlagsValue = RecordValue;
+typedef TupleValue = RecordValue;
 
 enum StringEncoding { utf8, utf16, latin1utf16 }
 
@@ -746,6 +750,9 @@ class ParsedString {
   final int tagged_code_units;
 
   ParsedString(this.value, this.encoding, this.tagged_code_units);
+
+  @override
+  String toString() => value;
 }
 
 /// Strings are loaded from two i32 values: a pointer (offset in linear memory) and a number of bytes.
@@ -904,7 +911,7 @@ int find_case(String label, List<Case> cases) {
 
 /// Flags are converted from a bit-vector to a dictionary whose keys are
 /// derived from the ordered labels of the flags type. The code here
-/// takes advantage of Python's support for integers of arbitrary width.
+/// TODO: takes advantage of Python's support for integers of arbitrary width.
 FlagsValue load_flags(Context cx, int ptr, List<String> labels) {
   final i = load_int(cx, ptr, size_flags(labels));
   return unpack_flags_from_int(i, labels);
@@ -955,29 +962,48 @@ void store(Context cx, Object? v, ValType t, int ptr) {
   assert(ptr == align_to(ptr, alignment(t)));
   assert(ptr + size(t) <= cx.opts.memory.length);
   final _t = despecialize(t);
-  return switch (_t) {
-    Bool() => store_int(cx, truthyInt(v), ptr, 1),
-    U8() => store_int(cx, v as int, ptr, 1),
-    U16() => store_int(cx, v as int, ptr, 2),
-    U32() => store_int(cx, v as int, ptr, 4),
-    U64() => store_int(cx, v as int, ptr, 8),
-    S8() => store_int(cx, v as int, ptr, 1, signed: true),
-    S16() => store_int(cx, v as int, ptr, 2, signed: true),
-    S32() => store_int(cx, v as int, ptr, 4, signed: true),
-    S64() => store_int(cx, v as int, ptr, 8, signed: true),
-    Float32() => store_int(
-        cx, reinterpret_float_as_i32(canonicalize32(v as double)), ptr, 4),
-    Float64() => store_int(
-        cx, reinterpret_float_as_i64(canonicalize64(v as double)), ptr, 8),
-    Char() => store_int(cx, char_to_i32(v as String), ptr, 4),
-    StringType() => store_string(cx, v as ParsedString, ptr),
-    ListType(:var t) => store_list(cx, v as ListValue, ptr, t),
-    Record(:var fields) => store_record(cx, v as RecordValue, ptr, fields),
-    Variant(:var cases) => store_variant(cx, v as VariantValue, ptr, cases),
-    Flags(:var labels) => store_flags(cx, v as FlagsValue, ptr, labels),
-    Own() => store_int(cx, lower_own(cx, v as Handle, _t), ptr, 4),
-    Borrow() => store_int(cx, lower_borrow(cx, v as Handle, _t), ptr, 4),
-  };
+  switch (_t) {
+    case Bool():
+      store_int(cx, truthyInt(v), ptr, 1);
+    case U8():
+      store_int(cx, v as int, ptr, 1);
+    case U16():
+      store_int(cx, v as int, ptr, 2);
+    case U32():
+      store_int(cx, v as int, ptr, 4);
+    case U64():
+      store_int(cx, v as int, ptr, 8);
+    case S8():
+      store_int(cx, v as int, ptr, 1, signed: true);
+    case S16():
+      store_int(cx, v as int, ptr, 2, signed: true);
+    case S32():
+      store_int(cx, v as int, ptr, 4, signed: true);
+    case S64():
+      store_int(cx, v as int, ptr, 8, signed: true);
+    case Float32():
+      store_int(
+          cx, reinterpret_float_as_i32(canonicalize32(v as double)), ptr, 4);
+    case Float64():
+      store_int(
+          cx, reinterpret_float_as_i64(canonicalize64(v as double)), ptr, 8);
+    case Char():
+      store_int(cx, char_to_i32(v as String), ptr, 4);
+    case StringType():
+      store_string(cx, v as ParsedString, ptr);
+    case ListType(:var t):
+      store_list(cx, v as ListValue, ptr, t);
+    case Record(:var fields):
+      store_record(cx, v as RecordValue, ptr, fields);
+    case Variant(:var cases):
+      store_variant(cx, v as VariantValue, ptr, cases);
+    case Flags(:var labels):
+      store_flags(cx, v as FlagsValue, ptr, labels);
+    case Own():
+      store_int(cx, lower_own(cx, v as Handle, _t), ptr, 4);
+    case Borrow():
+      store_int(cx, lower_borrow(cx, v as Handle, _t), ptr, 4);
+  }
 }
 // #
 
@@ -986,17 +1012,27 @@ void store(Context cx, Object? v, ValType t, int ptr) {
 /// the signed parameter is only present to ensure that the internal range checks of int.to_bytes are satisfied.
 void store_int(Context cx, int v, int ptr, int nbytes, {bool signed = false}) {
   final data = cx.opts.memory.buffer.asByteData();
-  return switch ((nbytes, signed)) {
-    (1, false) => data.setUint8(ptr, v),
-    (2, false) => data.setUint16(ptr, v, Endian.little),
-    (3, false) => data.setUint32(ptr, v, Endian.little),
-    (4, false) => data.setUint64(ptr, v, Endian.little),
-    (1, true) => data.setInt8(ptr, v),
-    (2, true) => data.setInt16(ptr, v, Endian.little),
-    (3, true) => data.setInt32(ptr, v, Endian.little),
-    (4, true) => data.setInt64(ptr, v, Endian.little),
-    _ => throw 'unreachable',
-  };
+  switch ((nbytes, signed)) {
+    case (1, false):
+      data.setUint8(ptr, v);
+    case (2, false):
+      data.setUint16(ptr, v, Endian.little);
+    case (4, false):
+      data.setUint32(ptr, v, Endian.little);
+    case (8, false):
+      data.setUint64(ptr, v, Endian.little);
+    case (1, true):
+      data.setInt8(ptr, v);
+    case (2, true):
+      data.setInt16(ptr, v, Endian.little);
+    case (4, true):
+      data.setInt32(ptr, v, Endian.little);
+    case (8, true):
+      data.setInt64(ptr, v, Endian.little);
+    case _:
+      throw 'unreachable';
+  }
+  ;
 }
 
 // #
@@ -1459,7 +1495,6 @@ CoreFuncType flatten_functype(FuncType ft, FlattenContext context) {
         flat_results = [FlattenType.i32];
       case FlattenContext.lower:
         flat_params += [FlattenType.i32];
-
         flat_results = [];
     }
 
@@ -1858,7 +1893,7 @@ ListValue lift_values(
     final tuple_type = Tuple(ts);
     trap_if(ptr != align_to(ptr, alignment(tuple_type)));
     trap_if(ptr + size(tuple_type) > cx.opts.memory.length);
-    final tuple_value = load(cx, ptr, tuple_type) as RecordValue;
+    final tuple_value = load(cx, ptr, tuple_type) as TupleValue;
 
     return tuple_value.values.toList();
   } else {
@@ -1883,7 +1918,7 @@ List<Value> lower_values(
   final flat_types = flatten_types(ts);
   if (flat_types.length > max_flat) {
     final tuple_type = Tuple(ts);
-    final RecordValue tuple_value = Map.fromIterables(
+    final TupleValue tuple_value = Map.fromIterables(
       Iterable.generate(vs.length, (i) => i.toString()),
       vs,
     );
@@ -2087,6 +2122,10 @@ List<Value> canon_lower(
 
   return flat_results;
 }
+
+typedef CanonLowerCallee = (ListValue, void Function()) Function(
+    ListValue args);
+
 // ### `resource.new`
 
 int canon_resource_new(ComponentInstance inst, ResourceType rt, int rep) {
