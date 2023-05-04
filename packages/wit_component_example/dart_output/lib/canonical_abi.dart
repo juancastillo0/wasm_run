@@ -14,13 +14,21 @@ void trap_if(bool cond) {
   if (cond) throw Trap();
 }
 
-sealed class BaseType {}
+sealed class BaseType {
+  const BaseType();
+}
 
-sealed class ValType extends BaseType {}
+sealed class ValType extends BaseType {
+  const ValType();
+}
 
-sealed class ExternType extends BaseType {}
+sealed class ExternType extends BaseType {
+  const ExternType();
+}
 
-sealed class CoreExternType extends BaseType {}
+sealed class CoreExternType extends BaseType {
+  const CoreExternType();
+}
 
 typedef CoreImportDecl = ({
   String module,
@@ -38,7 +46,7 @@ class ModuleType extends ExternType {
   final List<CoreImportDecl> imports;
   final List<CoreExportDecl> exports;
 
-  ModuleType(this.imports, this.exports);
+  const ModuleType(this.imports, this.exports);
 }
 
 // @dataclass
@@ -46,7 +54,7 @@ class CoreFuncType extends CoreExternType {
   final List<FlattenType> params;
   final List<FlattenType> results;
 
-  CoreFuncType(this.params, this.results);
+  const CoreFuncType(this.params, this.results);
 }
 
 // @dataclass
@@ -54,7 +62,7 @@ class CoreMemoryType extends CoreExternType {
   final int initial;
   final int? maximum;
 
-  CoreMemoryType(this.initial, this.maximum);
+  const CoreMemoryType(this.initial, this.maximum);
 }
 
 // @dataclass
@@ -68,14 +76,14 @@ class ComponentType extends ExternType {
   final List<ExternDecl> imports;
   final List<ExternDecl> exports;
 
-  ComponentType(this.imports, this.exports);
+  const ComponentType(this.imports, this.exports);
 }
 
 // @dataclass
 class InstanceType extends ExternType {
   final List<ExternDecl> exports;
 
-  InstanceType(this.exports);
+  const InstanceType(this.exports);
 }
 
 // @dataclass
@@ -99,58 +107,88 @@ class FuncType extends ExternType {
 class ValueType extends ExternType {
   final ValType t;
 
-  ValueType(this.t);
+  const ValueType(this.t);
 }
 
-class Bounds {}
+class Bounds {
+  const Bounds();
+}
 
 // @dataclass
 class Eq extends Bounds {
   final BaseType t;
 
-  Eq(this.t);
+  const Eq(this.t);
 }
 
 // @dataclass
 class TypeType extends ExternType {
   final Bounds bounds;
 
-  TypeType(this.bounds);
+  const TypeType(this.bounds);
 }
 
-class Bool extends DespecializedValType {}
+class Bool extends DespecializedValType {
+  const Bool();
+}
 
-sealed class IntType extends DespecializedValType {}
+sealed class IntType extends DespecializedValType {
+  const IntType();
+}
 
-class S8 extends IntType {}
+class S8 extends IntType {
+  const S8();
+}
 
-class U8 extends IntType {}
+class U8 extends IntType {
+  const U8();
+}
 
-class S16 extends IntType {}
+class S16 extends IntType {
+  const S16();
+}
 
-class U16 extends IntType {}
+class U16 extends IntType {
+  const U16();
+}
 
-class S32 extends IntType {}
+class S32 extends IntType {
+  const S32();
+}
 
-class U32 extends IntType {}
+class U32 extends IntType {
+  const U32();
+}
 
-class S64 extends IntType {}
+class S64 extends IntType {
+  const S64();
+}
 
-class U64 extends IntType {}
+class U64 extends IntType {
+  const U64();
+}
 
-class Float32 extends DespecializedValType {}
+class Float32 extends DespecializedValType {
+  const Float32();
+}
 
-class Float64 extends DespecializedValType {}
+class Float64 extends DespecializedValType {
+  const Float64();
+}
 
-class Char extends DespecializedValType {}
+class Char extends DespecializedValType {
+  const Char();
+}
 
-class StringType extends DespecializedValType {}
+class StringType extends DespecializedValType {
+  const StringType();
+}
 
 // @dataclass
 class ListType extends DespecializedValType {
   final ValType t;
 
-  ListType(this.t);
+  const ListType(this.t);
 }
 
 // @dataclass
@@ -163,14 +201,14 @@ typedef Field = ({
 class Record extends DespecializedValType {
   final List<Field> fields;
 
-  Record(this.fields);
+  const Record(this.fields);
 }
 
 // @dataclass
 class Tuple extends ValType {
   final List<ValType> ts;
 
-  Tuple(this.ts);
+  const Tuple(this.ts);
 }
 
 // @dataclass
@@ -179,35 +217,35 @@ class Case {
   final ValType? t;
   final String? refines;
 
-  Case(this.label, this.t, [this.refines]);
+  const Case(this.label, this.t, [this.refines]);
 }
 
 // @dataclass
 class Variant extends DespecializedValType {
   final List<Case> cases;
 
-  Variant(this.cases);
+  const Variant(this.cases);
 }
 
 // @dataclass
 class EnumType extends ValType {
   final List<String> labels;
 
-  EnumType(this.labels);
+  const EnumType(this.labels);
 }
 
 // @dataclass
 class Union extends ValType {
   final List<ValType> ts;
 
-  Union(this.ts);
+  const Union(this.ts);
 }
 
 // @dataclass
 class OptionType extends ValType {
   final ValType t;
 
-  OptionType(this.t);
+  const OptionType(this.t);
 }
 
 // @dataclass
@@ -215,17 +253,18 @@ class ResultType extends ValType {
   final ValType? ok;
   final ValType? error;
 
-  ResultType(this.ok, this.error);
+  const ResultType(this.ok, this.error);
 }
 
 // @dataclass
 class Flags extends DespecializedValType {
   final List<String> labels;
 
-  Flags(this.labels);
+  const Flags(this.labels);
 }
 
 sealed class Resource extends DespecializedValType {
+  const Resource();
   ResourceType get rt;
 }
 
@@ -234,7 +273,7 @@ class Own extends Resource {
   @override
   final ResourceType rt;
 
-  Own(this.rt);
+  const Own(this.rt);
 }
 
 // @dataclass
@@ -242,7 +281,7 @@ class Borrow extends Resource {
   @override
   final ResourceType rt;
 
-  Borrow(this.rt);
+  const Borrow(this.rt);
 }
 // ### Despecialization
 
@@ -265,7 +304,9 @@ class Borrow extends Resource {
 /// [Flags]
 /// [Own]
 /// [Borrow]
-sealed class DespecializedValType extends ValType {}
+sealed class DespecializedValType extends ValType {
+  const DespecializedValType();
+}
 
 DespecializedValType despecialize(ValType t) {
   return switch (t) {
@@ -1590,7 +1631,7 @@ class Value {
 // typedef IteratorValues = Iterator<Value>;
 
 abstract class ValueIter {
-  factory ValueIter(List<Value> value) = _ValueIter;
+  factory ValueIter(List<Value> values) = _ValueIter;
 
   num next(FlattenType t);
 }
