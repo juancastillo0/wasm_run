@@ -339,19 +339,35 @@ impl Parsed<'_> {
                     add_docs(&mut s, &f.docs);
                     s.push_str(&format!("final {} {};", self.type_to_str(&f.ty), f.name));
                 });
-                s.push_str(&format!("const {name}({{", ));
+                s.push_str(&format!("\n\nconst {name}({{",));
                 r.fields.iter().for_each(|f| {
                     s.push_str(&format!("required this.{},", f.name));
                 });
                 s.push_str("});");
                 s.push_str(&format!(
-                    "factory {name}.fromJson(Object? json_) {{ final json = json_ as Map; return {name}({});}}",
-                    r.fields.iter().map(|f| 
-                        format!("{}: {},", f.name, self.type_from_json(&format!("json['{}']", f.name) ,&f.ty))
-                    ).collect::<String>()),
-                );
+                    "\n\nfactory {name}.fromJson(Object? json) {{
+                        final _json = json as Map; {} return {name}({});}}",
+                    r.fields
+                        .iter()
+                        .map(|f| format!("final {} = _json['{}'];", f.name, f.name))
+                        .collect::<String>(),
+                    r.fields
+                        .iter()
+                        .map(|f| format!("{}: {},", f.name, self.type_from_json(&f.name, &f.ty)))
+                        .collect::<String>()
+                ));
+                s.push_str(&format!(
+                    "\nObject? toJson() => {{{}}};\n",
+                    r.fields
+                        .iter()
+                        .map(|f| format!("'{}': {},", f.name, f.name))
+                        .collect::<String>()
+                ));
 
-                s.push_str(&format!("static final _spec = {};", self.type_def_to_spec(&ty)));
+                s.push_str(&format!(
+                    "static const _spec = {};",
+                    self.type_def_to_spec(&ty)
+                ));
                 s.push_str("}");
                 s
             }
@@ -361,88 +377,168 @@ impl Parsed<'_> {
                 e.cases.iter().enumerate().for_each(|(i, v)| {
                     add_docs(&mut s, &v.docs);
                     s.push_str(&format!(
-                        "{}{}", 
-                        heck::AsLowerCamelCase(&v.name), 
+                        "{}{}",
+                        heck::AsLowerCamelCase(&v.name),
                         if i == e.cases.len() - 1 { ";" } else { "," }
                     ));
                 });
 
-                s.push_str(
-                    &format!(
-                    "factory {name}.fromJson(Object? json) {{
-                        if (json is String) return values.byName(json); 
-                        if (json is int) return values[json];
-                        return values.byName((json as Map).keys.first as String);}}",
-                ),
-                );
+                s.push_str(&format!(
+                    "factory {name}.fromJson(Object? json_) {{
+                        final json = json_ is Map ? json_.keys.first : json_;
+                        if (json is String) {{
+                            final index = _spec.labels.indexOf(json);
+                            return index != -1 ? values[index] : values.byName(json);
+                        }}
+                        return values[json as int];}}",
+                ));
+                s.push_str("\nObject? toJson() => _spec.labels[index];\n");
 
-                s.push_str(&format!("static final _spec = {};", self.type_def_to_spec(&ty)));
+                s.push_str(&format!(
+                    "static const _spec = {};",
+                    self.type_def_to_spec(&ty)
+                ));
                 s.push_str("}");
                 s
             }
             TypeDefKind::Union(u) => {
                 let name = name.unwrap();
                 s.push_str(
-                    &format!("sealed class {name} {{ factory {name}.fromJson(Object? json_) {{
-                    Object? json = json_;
-                    if (json is Map) json = (int.parse(json.keys.first as String), json.values.first);
-                    return switch (json) {{ {} _ => throw Exception('Invalid JSON'), }};
+                    &format!("sealed class {name} {{
+                    factory {name}.fromJson(Object? json_) {{
+                        Object? json = json_;
+                        if (json is Map) json = (int.parse(json.keys.first as String), json.values.first);
+                        return switch (json) {{ {} _ => throw Exception('Invalid JSON $json_'), }};
                     }}", 
                     u.cases.iter().enumerate().map(|(i, v)| {
                         let ty = self.type_to_str(&v.ty);
                         let inner_name = heck::AsPascalCase(&ty);
                         format!(
-                            "({i}, Object? json) => {name}{inner_name}({}),",
-                            self.type_from_json("json", &v.ty),
+                            "({i}, Object? value) => {name}{inner_name}({}),",
+                            self.type_from_json("value", &v.ty),
                         )
                     }).collect::<String>()),
                 );
-                 s.push_str(&format!("static final _spec = {};", self.type_def_to_spec(&ty)));
-                 s.push_str("}");
 
-                u.cases.iter().for_each(|v| {
-                    add_docs(&mut s, &v.docs);
+                let mut cases_string = String::new();
+                u.cases.iter().enumerate().for_each(|(i, v)| {
+                    add_docs(&mut cases_string, &v.docs);
                     let ty = self.type_to_str(&v.ty);
                     let inner_name = heck::AsPascalCase(&ty);
-                    s.push_str(&format!(
-                        "class {}{} implements {} {{ final {} value; const {}{}(this.value); }}",
-                        name, inner_name, name, ty, name, inner_name
+                    let class_name = format!("{name}{inner_name}");
+                    cases_string.push_str(&format!(
+                        "class {class_name} implements {name} {{ final {ty} value; const {class_name}(this.value);
+                         @override\nObject? toJson() => {{'{i}': value}}; }}",
                     ));
+                    s.push_str(&format!("const factory {name}.{}({ty} value) = {class_name};", heck::AsLowerCamelCase(&ty)));
                 });
+
+                s.push_str("\nObject? toJson();\n");
+
+                s.push_str(&format!(
+                    "static const _spec = {};",
+                    self.type_def_to_spec(&ty)
+                ));
+                s.push_str("}"); // close sealed union class
+                s.push_str(&cases_string);
                 s
             }
             TypeDefKind::Variant(a) => {
                 let name = name.unwrap();
-                s.push_str(&format!("sealed class {name} {{"));
-                s.push_str(&format!("static final _spec = {};", self.type_def_to_spec(&ty)));
-                s.push_str("}");
+                s.push_str(&format!(
+                    "sealed class {name} {{ factory {name}.fromJson(Object? json_) {{
+                    Object? json = json_;
+                    if (json is Map) {{
+                        final k = json.keys.first;
+                        if (k is int)
+                            json = (k, json.values.first);
+                        else
+                            json = (_spec.cases.indexWhere((c) => c.label == k), json.values.first);
+                    }}
+                    return switch (json) {{ {} _ => throw Exception('Invalid JSON $json_'), }};
+                }}",
+                    a.cases
+                        .iter()
+                        .enumerate()
+                        .map(|(i, v)| {
+                            let inner_name = heck::AsPascalCase(&v.name);
+                            match v.ty {
+                                Some(ty) => format!(
+                                    "({i}, Object? value) => {name}{inner_name}({}),",
+                                    self.type_from_json("value", &ty),
+                                ),
+                                None => format!("({i}, null) => const {name}{inner_name}(),",),
+                            }
+                        })
+                        .collect::<String>()
+                ));
+                let mut cases_string = String::new();
                 a.cases.iter().for_each(|v| {
-                    add_docs(&mut s, &v.docs);
+                    add_docs(&mut cases_string, &v.docs);
                     let inner_name =  heck::AsPascalCase(&v.name);
+                    let class_name = format!("{name}{inner_name}");
                     if let Some(ty) = v.ty {
                         let ty =self.type_to_str(&ty);
-                        s.push_str(&format!(
-                            "class {}{} implements {} {{ final {} value; const {}{}(this.value); }}",
-                            name, inner_name, name, ty, name, inner_name
+                        cases_string.push_str(&format!(
+                            "class {class_name} implements {name} {{ final {ty} value; const {class_name}(this.value);
+                            @override\nObject? toJson() => {{'{}': value}};
+                         }}", v.name
                         ));
+                        s.push_str(&format!("const factory {name}.{}({ty} value) = {class_name};", heck::AsLowerCamelCase(&v.name)));
                     } else {
-                        s.push_str(&format!(
-                            "class {}{} implements {} {{ const {}{}(); }}",
-                            name, inner_name, name, name, inner_name
+                        cases_string.push_str(&format!(
+                            "class {class_name} implements {name} {{ const {class_name}();
+                            @override\nObject? toJson() => {{'{}': null}}; }}", v.name,
                         ));
+                        s.push_str(&format!("const factory {name}.{}() = {class_name};", heck::AsLowerCamelCase(&v.name)));
                     }
                 });
+                s.push_str("\nObject? toJson();\n");
+                s.push_str(&format!(
+                    "static const _spec = {};",
+                    self.type_def_to_spec(&ty)
+                ));
+                s.push_str("}"); // close sealed union class
+                s.push_str(&cases_string);
                 s
             }
             TypeDefKind::Flags(f) => {
                 let name = name.unwrap();
-                s.push_str(&format!("typedef {} = int; class {}Flag {{", name, name));
+                let num_bytes = ((f.flags.len() + 32 - 1) / 32) * 4;
+                s.push_str(&format!(
+                    "class {name} {{ final ByteData flagBits; const {name}(this.flagBits); {name}.none(): flagBits = ByteData({num_bytes});
+                    {name}.all(): flagBits = (Uint8List({num_bytes})..fillRange(0, {num_bytes}, 255)).buffer.asByteData();
+
+                    factory {name}.fromJson(Object? json) {{
+                        final flagBits = flagBitsFromJson(json, _spec);
+                        return {name}(flagBits);
+                    }}
+
+                    Object toJson() => Uint32List.view(flagBits.buffer).toList();
+                    
+                    int _index(int i) => flagBits.getUint32(i, Endian.little);
+                    ",
+                ));
                 f.flags.iter().enumerate().for_each(|(i, v)| {
+                    let property = heck::AsLowerCamelCase(&v.name);
+
                     add_docs(&mut s, &v.docs);
-                    // TODO: proper representation of flags
-                    s.push_str(&format!("static const {} = {};", v.name, i));
+                    let index = (i / 32) * 4;
+                    let flag = 2_u32.pow(i.try_into().unwrap());
+                    let getter = format!("_index({index})");
+
+                    s.push_str(&format!("\n\nstatic const {property}IndexAndFlag = (index:{index}, flag:{flag});"));
+
+                    s.push_str(&format!("bool get {property} => ({getter} & {flag}) != 0;"));
+                    add_docs(&mut s, &v.docs);
+                    s.push_str(&format!(
+                        "set {property}(bool enable) => flagBits.setUint32({index}, enable ? ({flag} | {getter}) : ((~{flag}) & {getter}), Endian.little);",
+                    ));
                 });
-                s.push_str(&format!("static final _spec = {};", self.type_def_to_spec(&ty)));
+                s.push_str(&format!(
+                    "static const _spec = {};",
+                    self.type_def_to_spec(&ty)
+                ));
                 s.push_str("}");
                 s
             }

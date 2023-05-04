@@ -783,14 +783,52 @@ typedef VariantValue = RecordValue;
 typedef FlagsValue = RecordValue;
 typedef TupleValue = RecordValue;
 
-enum StringEncoding { utf8, utf16, latin1utf16 }
+enum StringEncoding {
+  utf8,
+  utf16,
+  latin1utf16;
+
+  factory StringEncoding.fromJson(Object? json) {
+    return switch (json) {
+      'utf8' => utf8,
+      'utf16' => utf16,
+      'latin1+utf16' || 'latin1utf16' => latin1utf16,
+      _ => throw 'unreachable',
+    };
+  }
+
+  String toJson() {
+    return switch (this) {
+      utf8 => 'utf8',
+      utf16 => 'utf16',
+      latin1utf16 => 'latin1+utf16',
+    };
+  }
+}
 
 class ParsedString {
   final String value;
   final StringEncoding encoding;
   final int tagged_code_units;
 
-  ParsedString(this.value, this.encoding, this.tagged_code_units);
+  const ParsedString(this.value, this.encoding, this.tagged_code_units);
+
+  factory ParsedString.fromJson(Object? json) {
+    final map = json as Map<String, Object?>;
+    return ParsedString(
+      map['value'] as String,
+      StringEncoding.fromJson(map['encoding']),
+      map['tagged_code_units'] as int,
+    );
+  }
+
+  Map<String, Object?> toJson() {
+    return {
+      'value': value,
+      'encoding': encoding.toJson(),
+      'tagged_code_units': tagged_code_units,
+    };
+  }
 
   @override
   String toString() => value;

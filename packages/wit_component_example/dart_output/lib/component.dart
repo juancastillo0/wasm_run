@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+import 'dart:math' as math;
 import 'package:wasmit/wasmit.dart';
 import 'package:wasmit/src/wasm_bindings/make_function_num_args.dart';
 
@@ -73,6 +74,36 @@ class None<T extends Object> implements Option<T> {
   const None();
 
   Object? toJson() => {'none': null};
+}
+
+ByteData flagBitsFromJson(Object? json, Flags spec) {
+  final num_bytes = num_i32_flags(spec.labels) * 4;
+  final flagBits = ByteData(num_bytes);
+
+  if (json is Map) {
+    json.forEach((k, v) {
+      final index = spec.labels.indexOf(k as String);
+      if (index == -1) throw Exception('Invalid flag $k: $v');
+      if (v == true || v == 1) {
+        final u32Index = index ~/ 32;
+        final current = flagBits.getUint32(u32Index, Endian.little);
+        flagBits.setUint32(
+          u32Index,
+          current | (math.pow(2, index % 32) as int),
+          Endian.little,
+        );
+      }
+    });
+    return flagBits;
+  } else {
+    final _json = json as List<int>;
+    if (_json.length != (num_bytes ~/ 4))
+      throw Exception('Invalid flag list length: $_json');
+
+    for (var i = 0; i < _json.length; i++)
+      flagBits.setUint32(i * 4, _json[i], Endian.little);
+    return flagBits;
+  }
 }
 
 WasmValueType mapFlattenedToWasmType(FlattenType e) {

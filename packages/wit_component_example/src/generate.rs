@@ -99,6 +99,8 @@ pub fn add_docs(s: &mut String, docs: &Docs) {
 const HEADER: &str = "
 // FILE GENERATED FROM WIT
 
+import 'dart:typed_data';
+
 import 'component.dart';
 import 'canonical_abi.dart';
 ";
