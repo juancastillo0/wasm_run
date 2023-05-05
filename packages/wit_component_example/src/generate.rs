@@ -34,24 +34,32 @@ pub fn document_to_dart(parsed: &UnresolvedPackage) -> String {
     parsed.worlds.iter().for_each(|(id, w)| {
         let w_name = heck::AsPascalCase(&w.name);
 
+        let mut func_imports = String::new();
         // Imports Interfaces as Dart classes
-        p.add_interfaces(&mut s, &mut w.imports.iter());
+        p.add_interfaces(
+            &mut s,
+            &mut w.imports.iter(),
+            false,
+            Some(&mut func_imports),
+        );
         // World Imports
-        s.push_str(&format!("class {}WorldImports {{", w_name));
+        s.push_str(&format!("class {w_name}WorldImports {{"));
         if w.imports.is_empty() {
-            s.push_str(&format!("const {}WorldImports();", w_name));
+            s.push_str(&format!("const {w_name}WorldImports();"));
         } else {
-            let mut constructor = format!("const {}WorldImports({{", w_name);
+            let mut constructor = format!("const {w_name}WorldImports({{",);
             w.imports.iter().for_each(|(id, i)| {
                 match i {
                     WorldItem::Interface(_interface_id) => {
-                        constructor.push_str(&format!("required this.{},", id));
-                        s.push_str(&format!("final {} {};", heck::AsPascalCase(id), id));
+                        constructor.push_str(&format!("required this.{id},"));
+                        s.push_str(&format!("final {} {id};", heck::AsPascalCase(id)));
                     }
                     WorldItem::Type(_type_id) => {}
                     WorldItem::Function(f) => {
-                        constructor.push_str(&format!("required this.{},", id)); // TODO: should be name
+                        constructor.push_str(&format!("required this.{id},")); // TODO: should be name
                         p.add_function(&mut s, f, FuncKind::Field);
+
+                        func_imports.push_str(&p.function_import(None, id, f));
                     }
                 };
             });
@@ -63,22 +71,74 @@ pub fn document_to_dart(parsed: &UnresolvedPackage) -> String {
         // World Exports
         //TODO: separate per document?
 
-        p.add_interfaces(&mut s, &mut w.exports.iter());
+        p.add_interfaces(&mut s, &mut w.exports.iter(), true, None);
 
         add_docs(&mut s, &w.docs);
-        s.push_str(&format!("abstract class {}World {{", w_name));
+        s.push_str(&format!(
+            "class {w_name}World {{
+            final {w_name}WorldImports imports;
+            final WasmLibrary library;",
+        ));
+        let mut constructor: Vec<String> = vec![];
+        let mut methods = String::new();
         w.exports.iter().for_each(|(id, i)| {
             match i {
                 WorldItem::Interface(interface_id) => {
                     let interface = parsed.interfaces.get(*interface_id).unwrap();
-                    p.add_interface(&mut s, id, interface)
+                    constructor.push(format!(
+                        "{} = {}(library)",
+                        heck::AsLowerCamelCase(id),
+                        heck::AsPascalCase(id)
+                    ));
+                    s.push_str(&format!(
+                        "final {} {};",
+                        heck::AsPascalCase(id),
+                        heck::AsLowerCamelCase(id)
+                    ));
                 }
                 WorldItem::Type(_type_id) => {}
                 WorldItem::Function(f) => {
-                    p.add_function(&mut s, f, FuncKind::Method);
+                    constructor.push(format!(
+                        "_{} = library.lookupComponentFunction('{id}', const {},)!",
+                        heck::AsLowerCamelCase(id),
+                        p.function_spec(f)
+                    ));
+                    p.add_function(&mut methods, f, FuncKind::MethodCall);
                 }
             };
         });
+
+        s.push_str(
+            "TypesWorld({
+            required this.imports,
+            required this.library,
+        })",
+        );
+        if constructor.is_empty() {
+            s.push_str(";");
+        } else {
+            s.push_str(&format!(": {};", constructor.join(", ")));
+        }
+
+        s.push_str(&format!(
+            "static Future<{w_name}World> init(
+                    WasmInstanceBuilder builder, {{
+                    required {w_name}WorldImports imports,
+                }}) async {{
+                    late final WasmLibrary library;
+                    WasmLibrary getLib() => library;
+
+                    {func_imports}
+
+                    final instance = await builder.build();
+
+                    library = WasmLibrary(instance);
+                    return {w_name}World(imports: imports, library: library);
+                }}
+
+                {methods}
+            ",
+        ));
         s.push_str("}");
     });
     s
@@ -86,9 +146,12 @@ pub fn document_to_dart(parsed: &UnresolvedPackage) -> String {
 
 pub fn add_docs(s: &mut String, docs: &Docs) {
     if let Some(docs) = &docs.contents {
+        let mut m = docs.clone();
+        if m.ends_with('\n') {
+            m.replace_range(m.len() - 1.., "");
+        }
         s.push_str(
-            &docs
-                .split("\n")
+            &m.split("\n")
                 .map(|l| format!("/// {}\n", l))
                 .collect::<Vec<_>>()
                 .join(""),
@@ -100,6 +163,8 @@ const HEADER: &str = "
 // FILE GENERATED FROM WIT
 
 import 'dart:typed_data';
+
+import 'package:wasmit/wasmit.dart';
 
 import 'component.dart';
 import 'canonical_abi.dart';
@@ -140,7 +205,7 @@ pub fn parse_wit_types() {
         .unwrap();
 
     std::process::Command::new("dart")
-        .arg("-w")
+        .arg("format")
         .arg(&output_path)
         .output()
         .unwrap();

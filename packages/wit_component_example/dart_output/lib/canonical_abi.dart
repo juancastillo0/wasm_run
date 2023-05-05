@@ -91,7 +91,7 @@ class FuncType extends ExternType {
   final List<(String, ValType)> params;
   final List<(String, ValType)> results; // TODO: or only ValType
 
-  FuncType(this.params, this.results);
+  const FuncType(this.params, this.results);
   List<ValType> param_types() => extract_types(params);
   List<ValType> result_types() => extract_types(results);
 

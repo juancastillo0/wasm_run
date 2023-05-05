@@ -1,18 +1,19 @@
 default interface types-interface {
-  // "package of named fields"
+  /// "package of named fields"
   record r {
     a: u32,
     b: string,
+    c: list<tuple<string, option<t4>>>
   }
 
-  // values of this type will be one of the specified cases
+  /// values of this type will be one of the specified cases
   variant human {
     baby,
     child(u32), // optional type payload
     adult,
   }
 
-  // similar to `variant`, but no type payloads
+  /// similar to `variant`, but no type payloads
   enum errno {
     too-big,
     too-small,
@@ -20,15 +21,15 @@ default interface types-interface {
     too-slow,
   }
 
-  // similar to `variant`, but doesn't require naming cases and all variants
-  // have a type payload -- note that this is not a C union, it still has a
-  // discriminant
+  /// similar to `variant`, but doesn't require naming cases and all variants
+  /// have a type payload -- note that this is not a C union, it still has a
+  /// discriminant
   union input {
     u64,
     string,
   }
 
-  // a bitflags type
+  /// a bitflags type
   flags permissions {
     read,
     write,
@@ -49,6 +50,47 @@ default interface types-interface {
   type t10 = t9
 }
 
+interface api-imports {
+  use self.types-interface.{t7}
+
+  /// Same name as the type in `types-interface`, but this is a different type
+  variant human {
+    baby,
+    child(u64),
+    adult(tuple<string, option<option<string>>, tuple<s64>>),
+  }
+
+  api-a1-b2: func(arg: list<human>) -> (h1: t7, val2: human)
+}
+
+interface api {
+  f1: func() -> (val-one: tuple<s32>, val2: string)
+}
+
 default world types {
+    use self.types-interface.{t2 as t2-renamed, t10, permissions}
+
+    import imports: self.api-imports
+    import print: func(message: string, level: log-level)
+    import inline: interface {
+      inline-imp: func(args: list<option<char>>) -> result<_, char>
+    }
+
     export types: self.types-interface
+    export api: self.api
+
+    enum log-level {
+      debug,
+      info,
+      warn,
+      error,
+    }
+
+    record empty {}
+
+    export f-f1: func(typedef: t10) -> t10
+    export f1: func(f: float32, f-list: list<tuple<char, float64>>) -> (val-p1: s64, val2: string)
+    /// t2 has been renamed with `use self.types-interface.{t2 as t2-renamed}`
+    export re-named: func(perm: option<permissions>, e: option<empty>) -> t2-renamed
+    export re-named2: func(tup: tuple<list<u16>>, e: empty) -> tuple<option<u8>, s8>
 }

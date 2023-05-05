@@ -1,3 +1,5 @@
+use std::fmt::format;
+
 use crate::generate::*;
 use wit_parser::*;
 
@@ -55,18 +57,165 @@ impl Parsed<'_> {
             }
             Type::Bool => "bool".to_string(),
             Type::String => "String".to_string(),
-            Type::Char => "int /* Char */".to_string(),
-            Type::Float32 => "double /* Float32 */".to_string(),
-            Type::Float64 => "double /* Float64 */".to_string(),
-            Type::S8 => "int /* S8 */".to_string(),
-            Type::S16 => "int /* S16 */".to_string(),
-            Type::S32 => "int /* S32 */".to_string(),
-            Type::S64 => "int /* S64 */".to_string(),
-            Type::U8 => "int /* U8 */".to_string(),
-            Type::U16 => "int /* U16 */".to_string(),
-            Type::U32 => "int /* U32 */".to_string(),
-            Type::U64 => "int /* U64 */".to_string(),
+            Type::Char => "String /*Char*/".to_string(),
+            Type::Float32 => "double /*F32*/".to_string(),
+            Type::Float64 => "double /*F64*/".to_string(),
+            Type::S8 => "int /*S8*/".to_string(),
+            Type::S16 => "int /*S16*/".to_string(),
+            Type::S32 => "int /*S32*/".to_string(),
+            Type::S64 => "int /*S64*/".to_string(),
+            Type::U8 => "int /*U8*/".to_string(),
+            Type::U16 => "int /*U16*/".to_string(),
+            Type::U32 => "int /*U32*/".to_string(),
+            Type::U64 => "int /*U64*/".to_string(),
         }
+    }
+
+    pub fn type_to_json(&self, getter: &str, ty: &Type) -> String {
+        match ty {
+            Type::Id(ty_id) => {
+                let ty_def = self.0.types.get(*ty_id).unwrap();
+                self.type_def_to_json(getter, ty_def)
+            }
+            Type::Bool => getter.to_string(),
+            Type::String => getter.to_string(),
+            Type::Char => getter.to_string(),
+            Type::Float32 => getter.to_string(),
+            Type::Float64 => getter.to_string(),
+            Type::S8 => getter.to_string(),
+            Type::S16 => getter.to_string(),
+            Type::S32 => getter.to_string(),
+            Type::S64 => getter.to_string(),
+            Type::U8 => getter.to_string(),
+            Type::U16 => getter.to_string(),
+            Type::U32 => getter.to_string(),
+            Type::U64 => getter.to_string(),
+        }
+    }
+
+    pub fn type_def_to_json(&self, getter: &str, ty: &TypeDef) -> String {
+        let name = ty.name.as_ref().map(heck::AsPascalCase);
+        match &ty.kind {
+            TypeDefKind::Record(record) => format!("{getter}.toJson()"),
+            TypeDefKind::Enum(enum_) => format!("{getter}.toJson()"),
+            TypeDefKind::Union(union) => format!("{getter}.toJson()"),
+            TypeDefKind::Flags(flags) => format!("{getter}.toJson()"),
+            TypeDefKind::Variant(variant) => format!("{getter}.toJson()"),
+            TypeDefKind::Option(variant) => format!("{getter}.toJson()"),
+            TypeDefKind::Result(variant) => format!("{getter}.toJson()"),
+            TypeDefKind::Tuple(t) => {
+                format!(
+                    "[{}]",
+                    t.types
+                        .iter()
+                        .enumerate()
+                        .map(|(i, t)| self.type_to_json(&format!("{getter}.${ind}", ind = i + 1), t))
+                        .collect::<Vec<_>>()
+                        .join(", "),
+                )
+            }
+            TypeDefKind::List(ty) => format!(
+                "{getter}.map((e) => {}).toList()",
+                self.type_to_json("e", &ty)
+            ),
+            TypeDefKind::Future(ty) => unreachable!("Future"),
+            TypeDefKind::Stream(s) => unreachable!("Stream"),
+            TypeDefKind::Type(ty) => self.type_to_json(getter, &ty),
+            TypeDefKind::Unknown => unimplemented!("Unknown type"),
+        }
+    }
+
+    pub fn function_import(&self, interface_name: Option<&str>, id: &str, f: &Function) -> String {
+        let interface_name_m = interface_name.unwrap_or("$root");
+        let getter = format!(
+            "imports.{}{}",
+            interface_name
+                .map(|v| format!("{v}."))
+                .unwrap_or("".to_string()),
+            heck::AsLowerCamelCase(id),
+        );
+        format!(
+            "{{
+                const ft = {ft};
+                {exec}
+                final lowered = loweredImportFunction(ft, exec{exec_name}, getLib);
+                builder.addImport(r'{interface_name_m}', '{id}', lowered);
+            }}",
+            ft = self.function_spec(f),
+            exec = self.function_exec(&getter, f,),
+            exec_name = heck::AsPascalCase(&getter),
+        )
+    }
+
+    pub fn function_spec(&self, function: &Function) -> String {
+        format!(
+            "FuncType([{}], [{}])",
+            function
+                .params
+                .iter()
+                .map(|(name, ty)| format!("('{name}', {})", self.type_to_spec(ty)))
+                .collect::<Vec<_>>()
+                .join(", "),
+            match &function.results {
+                Results::Anon(a) => format!("('', {})", self.type_to_spec(a)),
+                Results::Named(results) => results
+                    .iter()
+                    .map(|(name, ty)| format!("('{name}', {})", self.type_to_spec(ty)))
+                    .collect::<Vec<_>>()
+                    .join(", "),
+            }
+        )
+    }
+
+    pub fn function_exec(&self, getter: &str, function: &Function) -> String {
+        // TODO: post function
+        format!(
+            "
+        (ListValue, void Function()) exec{n}(ListValue args) {{
+        {args}
+        {results_def}{getter}({args_from_json});
+        return ({ret}, () {{}});
+        }}
+        ",
+            n = heck::AsPascalCase(getter),
+            results_def = if function.results.len() == 0 {
+                ""
+            } else {
+                "final results = "
+            },
+            args = function
+                .params
+                .iter()
+                .enumerate()
+                .map(|(i, (_name, ty))| format!("final args{i} = args[{i}];"))
+                .collect::<String>(),
+            args_from_json = function
+                .params
+                .iter()
+                .enumerate()
+                .map(|(i, (_name, ty))| self.type_from_json(&format!("args{i}"), ty))
+                .collect::<Vec<_>>()
+                .join(", "),
+            ret = match &function.results {
+                Results::Anon(a) => format!("[{}]", self.type_to_json("results", a)),
+                Results::Named(results) =>
+                    if results.is_empty() {
+                        "const []".to_string()
+                    } else {
+                        format!(
+                            "[{}]",
+                            results
+                                .iter()
+                                .map(|(name, ty)| self.type_to_json(
+                                    &format!("results.{}", heck::AsLowerCamelCase(name)),
+                                    ty
+                                ))
+                                .collect::<Vec<_>>()
+                                .join(", ")
+                        )
+                    },
+            }
+        )
     }
 
     pub fn type_to_spec(&self, ty: &Type) -> String {
@@ -211,14 +360,20 @@ impl Parsed<'_> {
             TypeDefKind::Variant(variant) => format!("{}.fromJson({getter})", name.unwrap()),
             TypeDefKind::Tuple(t) => {
                 format!(
-                    "(() {{final l = {getter} is Map ? Iterable.generate({getter}.length, (i) => {getter}[i.toString()]) : {getter} as Iterable;\n{} return {};}})()",
+                    "(() {{final l = {getter} is Map
+                        ? Iterable.generate({getter}.length, (i) => {getter}[i.toString()])
+                        : {getter} as Iterable;
+                        final it = l.iterator;\n{}
+                        return ({},);}})()",
                     (0..t.types.len())
-                        .map(|i| format!("final v{i} = l..moveNext().current;\n"))
+                        .map(|i| format!("final v{i} = (it..moveNext()).current;\n"))
                         .collect::<String>(),
                     t.types
-                        .iter().enumerate()
-                        .map(|(i, t)| self.type_from_json(&format!("v{i},"), t))
-                        .collect::<String>(),
+                        .iter()
+                        .enumerate()
+                        .map(|(i, t)| self.type_from_json(&format!("v{i}"), t))
+                        .collect::<Vec<_>>()
+                        .join(", "),
                 )
             }
             TypeDefKind::Option(ty) => format!(
@@ -294,9 +449,12 @@ impl Parsed<'_> {
                     "({})",
                     t.types
                         .iter()
-                        .map(|t| self.type_to_ffi(t))
-                        .collect::<Vec<_>>()
-                        .join(", ")
+                        .map(|t| {
+                            let mut s = self.type_to_str(t);
+                            s.push_str(", ");
+                            s
+                        })
+                        .collect::<String>()
                 )
             }
             TypeDefKind::Option(ty) => format!("Option<{}>", self.type_to_str(&ty)),
@@ -339,11 +497,15 @@ impl Parsed<'_> {
                     add_docs(&mut s, &f.docs);
                     s.push_str(&format!("final {} {};", self.type_to_str(&f.ty), f.name));
                 });
-                s.push_str(&format!("\n\nconst {name}({{",));
-                r.fields.iter().for_each(|f| {
-                    s.push_str(&format!("required this.{},", f.name));
-                });
-                s.push_str("});");
+                if r.fields.is_empty() {
+                    s.push_str(&format!("\n\nconst {name}();",));
+                } else {
+                    s.push_str(&format!("\n\nconst {name}({{",));
+                    r.fields.iter().for_each(|f| {
+                        s.push_str(&format!("required this.{},", f.name));
+                    });
+                    s.push_str("});");
+                }
                 s.push_str(&format!(
                     "\n\nfactory {name}.fromJson(Object? json) {{
                         final _json = json as Map; {} return {name}({});}}",
@@ -360,7 +522,7 @@ impl Parsed<'_> {
                     "\nObject? toJson() => {{{}}};\n",
                     r.fields
                         .iter()
-                        .map(|f| format!("'{}': {},", f.name, f.name))
+                        .map(|f| format!("'{}': {},", f.name, self.type_to_json(&f.name, &f.ty)))
                         .collect::<String>()
                 ));
 
@@ -428,12 +590,13 @@ impl Parsed<'_> {
                     let class_name = format!("{name}{inner_name}");
                     cases_string.push_str(&format!(
                         "class {class_name} implements {name} {{ final {ty} value; const {class_name}(this.value);
-                         @override\nObject? toJson() => {{'{i}': value}}; }}",
+                         @override\nObject? toJson() => {{'{i}': {}}}; }}",
+                         self.type_to_json("value", &v.ty)
                     ));
                     s.push_str(&format!("const factory {name}.{}({ty} value) = {class_name};", heck::AsLowerCamelCase(&ty)));
                 });
 
-                s.push_str("\nObject? toJson();\n");
+                s.push_str("\n\nObject? toJson();\n");
 
                 s.push_str(&format!(
                     "static const _spec = {};",
@@ -478,13 +641,13 @@ impl Parsed<'_> {
                     let inner_name =  heck::AsPascalCase(&v.name);
                     let class_name = format!("{name}{inner_name}");
                     if let Some(ty) = v.ty {
-                        let ty =self.type_to_str(&ty);
+                        let ty_str =self.type_to_str(&ty);
                         cases_string.push_str(&format!(
-                            "class {class_name} implements {name} {{ final {ty} value; const {class_name}(this.value);
-                            @override\nObject? toJson() => {{'{}': value}};
-                         }}", v.name
+                            "class {class_name} implements {name} {{ final {ty_str} value; const {class_name}(this.value);
+                            @override\nObject? toJson() => {{'{}': {}}};
+                         }}", v.name, self.type_to_json("value", &ty)
                         ));
-                        s.push_str(&format!("const factory {name}.{}({ty} value) = {class_name};", heck::AsLowerCamelCase(&v.name)));
+                        s.push_str(&format!("const factory {name}.{}({ty_str} value) = {class_name};", heck::AsLowerCamelCase(&v.name)));
                     } else {
                         cases_string.push_str(&format!(
                             "class {class_name} implements {name} {{ const {class_name}();
@@ -493,7 +656,7 @@ impl Parsed<'_> {
                         s.push_str(&format!("const factory {name}.{}() = {class_name};", heck::AsLowerCamelCase(&v.name)));
                     }
                 });
-                s.push_str("\nObject? toJson();\n");
+                s.push_str("\n\nObject? toJson();\n");
                 s.push_str(&format!(
                     "static const _spec = {};",
                     self.type_def_to_spec(&ty)
@@ -514,25 +677,35 @@ impl Parsed<'_> {
                         return {name}(flagBits);
                     }}
 
-                    Object toJson() => Uint32List.view(flagBits.buffer).toList();
+                    Object toJson() => Uint32List.view(flagBits.buffer);
                     
                     int _index(int i) => flagBits.getUint32(i, Endian.little);
+                    void _setIndex(int i, int flag, bool enable) {{
+                        final currentValue = _index(i);
+                        flagBits.setUint32(
+                        i,
+                        enable ? (flag | currentValue) : ((~flag) & currentValue),
+                        Endian.little,
+                    );
+                    }}
                     ",
                 ));
                 f.flags.iter().enumerate().for_each(|(i, v)| {
                     let property = heck::AsLowerCamelCase(&v.name);
 
-                    add_docs(&mut s, &v.docs);
                     let index = (i / 32) * 4;
                     let flag = 2_u32.pow(i.try_into().unwrap());
                     let getter = format!("_index({index})");
 
-                    s.push_str(&format!("\n\nstatic const {property}IndexAndFlag = (index:{index}, flag:{flag});"));
+                    s.push_str(&format!(
+                        "\n\nstatic const {property}IndexAndFlag = (index:{index}, flag:{flag});"
+                    ));
 
+                    add_docs(&mut s, &v.docs);
                     s.push_str(&format!("bool get {property} => ({getter} & {flag}) != 0;"));
                     add_docs(&mut s, &v.docs);
                     s.push_str(&format!(
-                        "set {property}(bool enable) => flagBits.setUint32({index}, enable ? ({flag} | {getter}) : ((~{flag}) & {getter}), Endian.little);",
+                        "set {property}(bool enable) => _setIndex({index}, {flag}, enable);",
                     ));
                 });
                 s.push_str(&format!(
@@ -557,68 +730,153 @@ impl Parsed<'_> {
         &self,
         mut s: &mut String,
         map: &mut dyn Iterator<Item = (&String, &WorldItem)>,
+        is_export: bool,
+        mut func_imports: Option<&mut String>,
     ) {
         map.for_each(|(id, item)| match item {
             WorldItem::Interface(interface_id) => {
                 let interface = self.0.interfaces.get(*interface_id).unwrap();
-                self.add_interface(&mut s, &heck::AsPascalCase(id).to_string(), interface)
+                self.add_interface(&mut s, id, interface, is_export, &mut func_imports)
             }
             _ => {}
         });
     }
 
-    pub fn add_interface(&self, mut s: &mut String, name: &str, interface: &Interface) {
+    pub fn add_interface(
+        &self,
+        mut s: &mut String,
+        interface_id: &str,
+        interface: &Interface,
+        is_export: bool,
+        func_imports: &mut Option<&mut String>,
+    ) {
+        let name = heck::AsPascalCase(interface_id);
         add_docs(&mut s, &interface.docs);
-        s.push_str(&format!(
-            "class {} {{",
-            name, // interface.name.as_ref().unwrap())
-        ));
-        interface.functions.iter().for_each(|(id, f)| {
-            self.add_function(&mut s, f, FuncKind::Method);
-        });
-        s.push_str("}");
+        if is_export {
+            s.push_str(&format!("class {name} {{ {name}(WasmLibrary library)"));
+            if interface.functions.is_empty() {
+                s.push_str(";");
+            } else {
+                s.push_str(":");
+                interface
+                    .functions
+                    .iter()
+                    .enumerate()
+                    .for_each(|(index, (id, f))| {
+                        s.push_str(&format!(
+                            "_{id} = library.lookupComponentFunction('{id}', const {},)!",
+                            self.function_spec(f)
+                        ));
+                        if index != interface.functions.len() - 1 {
+                            s.push_str(",");
+                        }
+                    });
+                s.push_str(";");
+            }
+
+            interface.functions.iter().for_each(|(id, f)| {
+                self.add_function(&mut s, f, FuncKind::MethodCall);
+            });
+            s.push_str("}");
+        } else {
+            s.push_str(&format!(
+                "abstract class {} {{",
+                name, // interface.name.as_ref().unwrap())
+            ));
+            interface.functions.iter().for_each(|(id, f)| {
+                self.add_function(&mut s, f, FuncKind::Method);
+                if let Some(func_imports) = func_imports {
+                    func_imports.push_str(&self.function_import(Some(interface_id), id, f));
+                }
+            });
+            s.push_str("}");
+        }
     }
 
     pub fn add_function(&self, mut s: &mut String, f: &Function, kind: FuncKind) {
         let params = f
             .params
             .iter()
-            .map(|(name, ty)| format!("{} {}", self.type_to_str(ty), name))
+            .map(|(name, ty)| format!("{} {}", self.type_to_str(ty), heck::AsLowerCamelCase(name)))
             .collect::<Vec<_>>()
             .join(",");
 
         let mut results = match &f.results {
             Results::Anon(ty) => self.type_to_str(ty),
-            Results::Named(list) => list
-                .iter()
-                .map(|(name, ty)| format!("{} {}", self.type_to_str(ty), name))
-                .collect::<Vec<_>>()
-                .join(","),
+            Results::Named(list) => {
+                if list.is_empty() {
+                    "void".to_string()
+                } else {
+                    format!(
+                        "({{{}}})",
+                        list.iter()
+                            .map(|(name, ty)| {
+                                format!(
+                                    "{} {}",
+                                    self.type_to_str(ty),
+                                    heck::AsLowerCamelCase(name),
+                                )
+                            })
+                            .collect::<Vec<_>>()
+                            .join(",")
+                    )
+                }
+            }
         };
-        if results.is_empty() {
-            results = "void".to_string();
-        }
 
         add_docs(&mut s, &f.docs);
+        let name = heck::AsLowerCamelCase(&f.name);
         match kind {
-            FuncKind::Field => s.push_str(&format!(
-                "final {} Function({}) {};",
-                results, params, f.name
-            )),
-            FuncKind::Method => s.push_str(&format!("{} {}({});", results, f.name, params,)),
+            FuncKind::Field => s.push_str(&format!("final {results} Function({params}) {name};",)),
+            FuncKind::Method => s.push_str(&format!("{results} {name}({params});",)),
             FuncKind::MethodCall => {
-                s.push_str(&format!("late final _{} = lookup('{}');", f.name, f.name));
-                s.push_str(&format!("{} {}({}) {{", results, f.name, params,));
+                // s.push_str(&format!("late final _{} = lookup('{}');", f.name, f.name));
+                s.push_str(&format!("{results} {name}({params}) {{"));
                 s.push_str(&format!(
-                    "return _{}({});",
-                    f.name,
-                    f.params
+                    "{}_{name}([{params}]);{ret}",
+                    if f.results.len() == 0 {
+                        ""
+                    } else {
+                        "final results = "
+                    },
+                    params = f
+                        .params
                         .iter()
-                        .map(|(name, _)| name.clone())
+                        .map(|(name, ty)| self
+                            .type_to_json(&heck::AsLowerCamelCase(name).to_string(), ty))
                         .collect::<Vec<_>>()
-                        .join(", ")
+                        .join(", "),
+                    ret = match &f.results {
+                        Results::Anon(a) => format!(
+                            "final result = results[0];return {};",
+                            self.type_from_json("result", a)
+                        ),
+                        Results::Named(results) =>
+                            if results.is_empty() {
+                                "".to_string()
+                            } else {
+                                format!(
+                                    "{}return ({},);",
+                                    (0..results.len())
+                                        .map(|i| format!("final r{i}= results[{i}];"))
+                                        .collect::<String>(),
+                                    results
+                                        .iter()
+                                        .enumerate()
+                                        .map(|(i, (name, ty))| format!(
+                                            "{}: {}",
+                                            heck::AsLowerCamelCase(name),
+                                            self.type_from_json(&format!("r{i}"), ty),
+                                        ),)
+                                        .collect::<Vec<_>>()
+                                        .join(", ")
+                                )
+                            },
+                    }
                 ));
                 s.push_str("}");
+
+                s.push_str(&format!("final ListValue Function(ListValue) _{name};"));
             }
         }
     }
