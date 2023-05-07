@@ -489,12 +489,12 @@ class WasmValue {
   /// Value of 64-bit signed or unsigned integer.
   WasmValue.i64BigInt(
     BigInt value,
-  )   : value = int64FromBigInt(value),
+  )   : value = i64.fromBigInt(value),
         type = ValueTy.i64;
 
   /// Value of 64-bit signed or unsigned integer.
   WasmValue.i64(int value)
-      : value = int64FromInt(value),
+      : value = i64.fromInt(value),
         type = ValueTy.i64;
 
   /// Value of 32-bit IEEE 754-2008 floating point number.

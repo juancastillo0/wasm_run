@@ -31,6 +31,7 @@ analyzer:
     unnecessary_overrides: warning
     valid_regexps: warning
     use_super_parameters: warning
+    unawaited_futures: warning
 
 # You can customize the lint rules set to your own liking. A list of all rules
 # can be found at https://dart-lang.github.io/linter/lints/options/options.html

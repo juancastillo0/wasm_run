@@ -1,4 +1,4 @@
-// ignore_for_file: public_member_api_docs
+// ignore_for_file: public_member_api_docs, non_constant_identifier_names
 
 /// import { WASI, File, OpenFile, PreopenDirectory } from "@bjorn3/browser_wasi_shim";
 /// let args = ["bin", "arg1", "arg2"];

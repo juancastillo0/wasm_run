@@ -72,9 +72,9 @@ void setUint64Bytes(ByteData array, int index, Object value, Endian endian) {
 //   external int get byteOffset;
 //   external ByteBuffer get buffer;
 
-//   external void setBigUint64(int byteOffset, JsBigInt value, 
+//   external void setBigUint64(int byteOffset, JsBigInt value,
 //      bool littleEndian);
-//   external void setBigInt64(int byteOffset, JsBigInt value, 
+//   external void setBigInt64(int byteOffset, JsBigInt value,
 //      bool littleEndian);
 //   external JsBigInt getBigInt64(int byteOffset, bool littleEndian);
 //   external JsBigInt getBigUint64(int byteOffset, bool littleEndian);

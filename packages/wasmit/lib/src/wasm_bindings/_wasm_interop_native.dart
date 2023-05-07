@@ -319,7 +319,7 @@ class _References {
   static Object? dartValueFromWasm(WasmVal raw, WasmitModuleId module) {
     return raw.when(
       i32: (value) => value,
-      i64: BigInt.from,
+      i64: (value) => value,
       f32: (value) => value,
       f64: (value) => value,
       v128: (field0) => field0,

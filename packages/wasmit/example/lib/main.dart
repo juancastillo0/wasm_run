@@ -434,10 +434,23 @@ void testAll({
     expect(f42.inner(), 42);
     expect((table[1]! as WasmFunction)(), [83]);
 
-    // TODO(test): test web updates
+    final i64p9 = table.get(2)! as WasmFunction;
+    expect(
+      i64p9([i64.fromBigInt(BigInt.from(5))]),
+      [i64.fromInt(5 + 9)],
+    );
+    expect(
+      i64p9.inner(i64.fromInt(208302802)),
+      i64.fromBigInt(BigInt.from(208302802 + 9)),
+    );
 
-    if (!isLibrary) return;
-
+    table[1] = WasmValue.funcRef(f42);
+    expect((table.get(1)! as WasmFunction)(), [42]);
+    if (!isLibrary) {
+      // Can's update table with user created functions in web browsers.
+      // The can only be set by exports
+      return;
+    }
     final f43 = WasmFunction(
       () => 43,
       params: [],
@@ -460,17 +473,20 @@ void testAll({
     table.set(
       0,
       WasmValue.funcRef(WasmFunction(
-        (BigInt p) => [-1.4, p],
-        params: [WasmValueType.i64],
-        results: [WasmValueType.f64, WasmValueType.i64],
+        (I64 p) => [-1.4, p],
+        params: [ValueTy.i64],
+        results: [ValueTy.f64, ValueTy.i64],
       )),
     );
 
-    expect((table.get(0)! as WasmFunction)([5]), [-1.4, BigInt.from(5)]);
+    expect(
+      (table.get(0)! as WasmFunction)([i64.fromBigInt(BigInt.from(5))]),
+      [-1.4, i64.fromInt(5)],
+    );
     // TODO: should we allow this? 5 and BigInt.from(5) are both valid
     expect(
-      (table.get(0)! as WasmFunction)([BigInt.from(5)]),
-      [-1.4, BigInt.from(5)],
+      (table.get(0)! as WasmFunction)([i64.fromInt(5)]),
+      [-1.4, i64.fromBigInt(BigInt.from(5))],
     );
   });
 
@@ -985,7 +1001,7 @@ void testAll({
   print('CONFIGURED ALL TEST IN ${getRunnerIdentity()}');
 }
 
-final endian = Endian.host;
+const endian = Endian.little;
 
 class Parser {
   final Uint8List memView;
