@@ -21,10 +21,6 @@ import 'bridge_generated.io.dart'
 part 'bridge_generated.freezed.dart';
 
 abstract class WasmitDart {
-  Memory createSharedMemory({required CompiledModule module, dynamic hint});
-
-  FlutterRustBridgeTaskConstMeta get kCreateSharedMemoryConstMeta;
-
   WasmitModuleId moduleBuilder(
       {required CompiledModule module,
       WasiConfigNative? wasiConfig,
@@ -183,6 +179,12 @@ abstract class WasmitDart {
   FlutterRustBridgeTaskConstMeta
       get kGetMemoryDataMethodWasmitModuleIdConstMeta;
 
+  int getMemoryDataPointerMethodWasmitModuleId(
+      {required WasmitModuleId that, required Memory memory, dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta
+      get kGetMemoryDataPointerMethodWasmitModuleIdConstMeta;
+
   Uint8List readMemoryMethodWasmitModuleId(
       {required WasmitModuleId that,
       required Memory memory,
@@ -276,6 +278,14 @@ abstract class WasmitDart {
 
   FlutterRustBridgeTaskConstMeta get kConsumeFuelMethodWasmitModuleIdConstMeta;
 
+  WasmiSharedMemory createSharedMemoryMethodCompiledModule(
+      {required CompiledModule that,
+      required MemoryTy memoryType,
+      dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta
+      get kCreateSharedMemoryMethodCompiledModuleConstMeta;
+
   List<ModuleImportDesc> getModuleImportsMethodCompiledModule(
       {required CompiledModule that, dynamic hint});
 
@@ -288,6 +298,207 @@ abstract class WasmitDart {
   FlutterRustBridgeTaskConstMeta
       get kGetModuleExportsMethodCompiledModuleConstMeta;
 
+  MemoryTy tyMethodWasmiSharedMemory(
+      {required WasmiSharedMemory that, dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kTyMethodWasmiSharedMemoryConstMeta;
+
+  int sizeMethodWasmiSharedMemory(
+      {required WasmiSharedMemory that, dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kSizeMethodWasmiSharedMemoryConstMeta;
+
+  int dataSizeMethodWasmiSharedMemory(
+      {required WasmiSharedMemory that, dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kDataSizeMethodWasmiSharedMemoryConstMeta;
+
+  int dataPointerMethodWasmiSharedMemory(
+      {required WasmiSharedMemory that, dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta
+      get kDataPointerMethodWasmiSharedMemoryConstMeta;
+
+  int growMethodWasmiSharedMemory(
+      {required WasmiSharedMemory that, required int delta, dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kGrowMethodWasmiSharedMemoryConstMeta;
+
+  Future<Atomics> atomicsMethodWasmiSharedMemory(
+      {required WasmiSharedMemory that, dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kAtomicsMethodWasmiSharedMemoryConstMeta;
+
+  int atomicNotifyMethodWasmiSharedMemory(
+      {required WasmiSharedMemory that,
+      required int addr,
+      required int count,
+      dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta
+      get kAtomicNotifyMethodWasmiSharedMemoryConstMeta;
+
+  /// Equivalent of the WebAssembly `memory.atomic.wait32` instruction for
+  /// this shared memory.
+  ///
+  /// This method allows embedders to block the current thread until notified
+  /// via the `memory.atomic.notify` instruction or the
+  /// [`SharedMemory::atomic_notify`] method, enabling synchronization with
+  /// the wasm guest as desired.
+  ///
+  /// The `expected` argument is the expected 32-bit value to be stored at
+  /// the byte address `addr` specified. The `addr` specified is an index
+  /// into this linear memory.
+  ///
+  /// The optional `timeout` argument is the point in time after which the
+  /// calling thread is guaranteed to be woken up. Blocking will not occur
+  /// past this point.
+  ///
+  /// This function returns one of three possible values:
+  ///
+  /// * `WaitResult::Ok` - this function, loaded the value at `addr`, found
+  ///   it was equal to `expected`, and then blocked (all as one atomic
+  ///   operation). The thread was then awoken with a `memory.atomic.notify`
+  ///   instruction or the [`SharedMemory::atomic_notify`] method.
+  /// * `WaitResult::Mismatch` - the value at `addr` was loaded but was not
+  ///   equal to `expected` so the thread did not block and immediately
+  ///   returned.
+  /// * `WaitResult::TimedOut` - all the steps of `Ok` happened, except this
+  ///   thread was woken up due to a timeout.
+  ///
+  /// This function will not return due to spurious wakeups.
+  ///
+  /// # Errors
+  ///
+  /// This function will return an error if `addr` is not within bounds or
+  /// not aligned to a 4-byte boundary.
+  SharedMemoryWaitResult atomicWait32MethodWasmiSharedMemory(
+      {required WasmiSharedMemory that,
+      required int addr,
+      required int expected,
+      dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta
+      get kAtomicWait32MethodWasmiSharedMemoryConstMeta;
+
+  /// Equivalent of the WebAssembly `memory.atomic.wait64` instruction for
+  /// this shared memory.
+  ///
+  /// For more information see [`SharedMemory::atomic_wait32`].
+  ///
+  /// # Errors
+  ///
+  /// Returns the same error as [`SharedMemory::atomic_wait32`] except that
+  /// the specified address must be 8-byte aligned instead of 4-byte aligned.
+  SharedMemoryWaitResult atomicWait64MethodWasmiSharedMemory(
+      {required WasmiSharedMemory that,
+      required int addr,
+      required int expected,
+      dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta
+      get kAtomicWait64MethodWasmiSharedMemoryConstMeta;
+
+  /// Adds the provided value to the existing value at the specified index of the array. Returns the old value at that index.
+  Future<int> addMethodAtomics(
+      {required Atomics that,
+      required int offset,
+      required AtomicKind kind,
+      required int val,
+      required AtomicOrdering order,
+      dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kAddMethodAtomicsConstMeta;
+
+  /// Returns the value at the specified index of the array.
+  Future<int> loadMethodAtomics(
+      {required Atomics that,
+      required int offset,
+      required AtomicKind kind,
+      required AtomicOrdering order,
+      dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kLoadMethodAtomicsConstMeta;
+
+  /// Stores a value at the specified index of the array. Returns the value.
+  Future<void> storeMethodAtomics(
+      {required Atomics that,
+      required int offset,
+      required AtomicKind kind,
+      required int val,
+      required AtomicOrdering order,
+      dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kStoreMethodAtomicsConstMeta;
+
+  /// Stores a value at the specified index of the array. Returns the old value.
+  Future<int> swapMethodAtomics(
+      {required Atomics that,
+      required int offset,
+      required AtomicKind kind,
+      required int val,
+      required AtomicOrdering order,
+      dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kSwapMethodAtomicsConstMeta;
+
+  /// Stores a value at the specified index of the array, if it equals a value. Returns the old value.
+  Future<CompareExchangeResult> compareExchangeMethodAtomics(
+      {required Atomics that,
+      required int offset,
+      required AtomicKind kind,
+      required int current,
+      required int newValue,
+      required AtomicOrdering success,
+      required AtomicOrdering failure,
+      dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kCompareExchangeMethodAtomicsConstMeta;
+
+  /// Subtracts a value at the specified index of the array. Returns the old value at that index.
+  Future<int> subMethodAtomics(
+      {required Atomics that,
+      required int offset,
+      required AtomicKind kind,
+      required int val,
+      required AtomicOrdering order,
+      dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kSubMethodAtomicsConstMeta;
+
+  /// Computes a bitwise AND on the value at the specified index of the array with the provided value. Returns the old value at that index.
+  Future<int> andMethodAtomics(
+      {required Atomics that,
+      required int offset,
+      required AtomicKind kind,
+      required int val,
+      required AtomicOrdering order,
+      dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kAndMethodAtomicsConstMeta;
+
+  /// Computes a bitwise OR on the value at the specified index of the array with the provided value. Returns the old value at that index.
+  Future<int> orMethodAtomics(
+      {required Atomics that,
+      required int offset,
+      required AtomicKind kind,
+      required int val,
+      required AtomicOrdering order,
+      dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kOrMethodAtomicsConstMeta;
+
+  /// Computes a bitwise XOR on the value at the specified index of the array with the provided value. Returns the old value at that index.
+  Future<int> xorMethodAtomics(
+      {required Atomics that,
+      required int offset,
+      required AtomicKind kind,
+      required int val,
+      required AtomicOrdering order,
+      dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kXorMethodAtomicsConstMeta;
+
   DropFnType get dropOpaqueArcStdSyncMutexModule;
   ShareFnType get shareOpaqueArcStdSyncMutexModule;
   OpaqueTypeFinalizer get ArcStdSyncMutexModuleFinalizer;
@@ -299,6 +510,10 @@ abstract class WasmitDart {
   DropFnType get dropOpaqueMemory;
   ShareFnType get shareOpaqueMemory;
   OpaqueTypeFinalizer get MemoryFinalizer;
+
+  DropFnType get dropOpaqueRwLockSharedMemory;
+  ShareFnType get shareOpaqueRwLockSharedMemory;
+  OpaqueTypeFinalizer get RwLockSharedMemoryFinalizer;
 
   DropFnType get dropOpaqueTable;
   ShareFnType get shareOpaqueTable;
@@ -354,6 +569,21 @@ class Memory extends FrbOpaque {
 }
 
 @sealed
+class RwLockSharedMemory extends FrbOpaque {
+  final WasmitDart bridge;
+  RwLockSharedMemory.fromRaw(int ptr, int size, this.bridge)
+      : super.unsafe(ptr, size);
+  @override
+  DropFnType get dropFn => bridge.dropOpaqueRwLockSharedMemory;
+
+  @override
+  ShareFnType get shareFn => bridge.shareOpaqueRwLockSharedMemory;
+
+  @override
+  OpaqueTypeFinalizer get staticFinalizer => bridge.RwLockSharedMemoryFinalizer;
+}
+
+@sealed
 class Table extends FrbOpaque {
   final WasmitDart bridge;
   Table.fromRaw(int ptr, int size, this.bridge) : super.unsafe(ptr, size);
@@ -381,6 +611,182 @@ class WFunc extends FrbOpaque {
   OpaqueTypeFinalizer get staticFinalizer => bridge.WFuncFinalizer;
 }
 
+enum AtomicKind {
+  I8,
+  I16,
+  I32,
+  I64,
+  U8,
+  U16,
+  U32,
+  U64,
+}
+
+enum AtomicOrdering {
+  Relaxed,
+  Release,
+  Acquire,
+  AcqRel,
+  SeqCst,
+}
+
+class Atomics {
+  final WasmitDart bridge;
+  final int field0;
+
+  const Atomics({
+    required this.bridge,
+    required this.field0,
+  });
+
+  /// Adds the provided value to the existing value at the specified index of the array. Returns the old value at that index.
+  Future<int> add(
+          {required int offset,
+          required AtomicKind kind,
+          required int val,
+          required AtomicOrdering order,
+          dynamic hint}) =>
+      bridge.addMethodAtomics(
+        that: this,
+        offset: offset,
+        kind: kind,
+        val: val,
+        order: order,
+      );
+
+  /// Returns the value at the specified index of the array.
+  Future<int> load(
+          {required int offset,
+          required AtomicKind kind,
+          required AtomicOrdering order,
+          dynamic hint}) =>
+      bridge.loadMethodAtomics(
+        that: this,
+        offset: offset,
+        kind: kind,
+        order: order,
+      );
+
+  /// Stores a value at the specified index of the array. Returns the value.
+  Future<void> store(
+          {required int offset,
+          required AtomicKind kind,
+          required int val,
+          required AtomicOrdering order,
+          dynamic hint}) =>
+      bridge.storeMethodAtomics(
+        that: this,
+        offset: offset,
+        kind: kind,
+        val: val,
+        order: order,
+      );
+
+  /// Stores a value at the specified index of the array. Returns the old value.
+  Future<int> swap(
+          {required int offset,
+          required AtomicKind kind,
+          required int val,
+          required AtomicOrdering order,
+          dynamic hint}) =>
+      bridge.swapMethodAtomics(
+        that: this,
+        offset: offset,
+        kind: kind,
+        val: val,
+        order: order,
+      );
+
+  /// Stores a value at the specified index of the array, if it equals a value. Returns the old value.
+  Future<CompareExchangeResult> compareExchange(
+          {required int offset,
+          required AtomicKind kind,
+          required int current,
+          required int newValue,
+          required AtomicOrdering success,
+          required AtomicOrdering failure,
+          dynamic hint}) =>
+      bridge.compareExchangeMethodAtomics(
+        that: this,
+        offset: offset,
+        kind: kind,
+        current: current,
+        newValue: newValue,
+        success: success,
+        failure: failure,
+      );
+
+  /// Subtracts a value at the specified index of the array. Returns the old value at that index.
+  Future<int> sub(
+          {required int offset,
+          required AtomicKind kind,
+          required int val,
+          required AtomicOrdering order,
+          dynamic hint}) =>
+      bridge.subMethodAtomics(
+        that: this,
+        offset: offset,
+        kind: kind,
+        val: val,
+        order: order,
+      );
+
+  /// Computes a bitwise AND on the value at the specified index of the array with the provided value. Returns the old value at that index.
+  Future<int> and(
+          {required int offset,
+          required AtomicKind kind,
+          required int val,
+          required AtomicOrdering order,
+          dynamic hint}) =>
+      bridge.andMethodAtomics(
+        that: this,
+        offset: offset,
+        kind: kind,
+        val: val,
+        order: order,
+      );
+
+  /// Computes a bitwise OR on the value at the specified index of the array with the provided value. Returns the old value at that index.
+  Future<int> or(
+          {required int offset,
+          required AtomicKind kind,
+          required int val,
+          required AtomicOrdering order,
+          dynamic hint}) =>
+      bridge.orMethodAtomics(
+        that: this,
+        offset: offset,
+        kind: kind,
+        val: val,
+        order: order,
+      );
+
+  /// Computes a bitwise XOR on the value at the specified index of the array with the provided value. Returns the old value at that index.
+  Future<int> xor(
+          {required int offset,
+          required AtomicKind kind,
+          required int val,
+          required AtomicOrdering order,
+          dynamic hint}) =>
+      bridge.xorMethodAtomics(
+        that: this,
+        offset: offset,
+        kind: kind,
+        val: val,
+        order: order,
+      );
+}
+
+class CompareExchangeResult {
+  final bool success;
+  final int value;
+
+  const CompareExchangeResult({
+    required this.success,
+    required this.value,
+  });
+}
+
 class CompiledModule {
   final WasmitDart bridge;
   final ArcStdSyncMutexModule field0;
@@ -389,6 +795,13 @@ class CompiledModule {
     required this.bridge,
     required this.field0,
   });
+
+  WasmiSharedMemory createSharedMemory(
+          {required MemoryTy memoryType, dynamic hint}) =>
+      bridge.createSharedMemoryMethodCompiledModule(
+        that: this,
+        memoryType: memoryType,
+      );
 
   List<ModuleImportDesc> getModuleImports({dynamic hint}) =>
       bridge.getModuleImportsMethodCompiledModule(
@@ -680,6 +1093,21 @@ class PreopenedDir {
     required this.wasmGuestPath,
     required this.hostPath,
   });
+}
+
+/// Result of [SharedMemory.atomicWait32] and [SharedMemory.atomicWait64]
+enum SharedMemoryWaitResult {
+  /// Indicates that a `wait` completed by being awoken by a different thread.
+  /// This means the thread went to sleep and didn't time out.
+  Ok,
+
+  /// Indicates that `wait` did not complete and instead returned due to the
+  /// value in memory not matching the expected value.
+  Mismatch,
+
+  /// Indicates that `wait` completed with a timeout, meaning that the
+  /// original value matched as expected but nothing ever called `notify`.
+  TimedOut,
 }
 
 enum StdIOKind {
@@ -1014,6 +1442,109 @@ class WasmWasiFeatures {
   });
 }
 
+class WasmiSharedMemory {
+  final WasmitDart bridge;
+  final RwLockSharedMemory field0;
+
+  const WasmiSharedMemory({
+    required this.bridge,
+    required this.field0,
+  });
+
+  MemoryTy ty({dynamic hint}) => bridge.tyMethodWasmiSharedMemory(
+        that: this,
+      );
+
+  int size({dynamic hint}) => bridge.sizeMethodWasmiSharedMemory(
+        that: this,
+      );
+
+  int dataSize({dynamic hint}) => bridge.dataSizeMethodWasmiSharedMemory(
+        that: this,
+      );
+
+  int dataPointer({dynamic hint}) => bridge.dataPointerMethodWasmiSharedMemory(
+        that: this,
+      );
+
+  int grow({required int delta, dynamic hint}) =>
+      bridge.growMethodWasmiSharedMemory(
+        that: this,
+        delta: delta,
+      );
+
+  Future<Atomics> atomics({dynamic hint}) =>
+      bridge.atomicsMethodWasmiSharedMemory(
+        that: this,
+      );
+
+  int atomicNotify({required int addr, required int count, dynamic hint}) =>
+      bridge.atomicNotifyMethodWasmiSharedMemory(
+        that: this,
+        addr: addr,
+        count: count,
+      );
+
+  /// Equivalent of the WebAssembly `memory.atomic.wait32` instruction for
+  /// this shared memory.
+  ///
+  /// This method allows embedders to block the current thread until notified
+  /// via the `memory.atomic.notify` instruction or the
+  /// [`SharedMemory::atomic_notify`] method, enabling synchronization with
+  /// the wasm guest as desired.
+  ///
+  /// The `expected` argument is the expected 32-bit value to be stored at
+  /// the byte address `addr` specified. The `addr` specified is an index
+  /// into this linear memory.
+  ///
+  /// The optional `timeout` argument is the point in time after which the
+  /// calling thread is guaranteed to be woken up. Blocking will not occur
+  /// past this point.
+  ///
+  /// This function returns one of three possible values:
+  ///
+  /// * `WaitResult::Ok` - this function, loaded the value at `addr`, found
+  ///   it was equal to `expected`, and then blocked (all as one atomic
+  ///   operation). The thread was then awoken with a `memory.atomic.notify`
+  ///   instruction or the [`SharedMemory::atomic_notify`] method.
+  /// * `WaitResult::Mismatch` - the value at `addr` was loaded but was not
+  ///   equal to `expected` so the thread did not block and immediately
+  ///   returned.
+  /// * `WaitResult::TimedOut` - all the steps of `Ok` happened, except this
+  ///   thread was woken up due to a timeout.
+  ///
+  /// This function will not return due to spurious wakeups.
+  ///
+  /// # Errors
+  ///
+  /// This function will return an error if `addr` is not within bounds or
+  /// not aligned to a 4-byte boundary.
+  SharedMemoryWaitResult atomicWait32(
+          {required int addr, required int expected, dynamic hint}) =>
+      bridge.atomicWait32MethodWasmiSharedMemory(
+        that: this,
+        addr: addr,
+        expected: expected,
+      );
+
+  /// Equivalent of the WebAssembly `memory.atomic.wait64` instruction for
+  /// this shared memory.
+  ///
+  /// For more information see [`SharedMemory::atomic_wait32`].
+  ///
+  /// # Errors
+  ///
+  /// Returns the same error as [`SharedMemory::atomic_wait32`] except that
+  /// the specified address must be 8-byte aligned instead of 4-byte aligned.
+  SharedMemoryWaitResult atomicWait64(
+          {required int addr, required int expected, dynamic hint}) =>
+      bridge.atomicWait64MethodWasmiSharedMemory(
+        that: this,
+        addr: addr,
+        expected: expected,
+      );
+}
+
 class WasmitInstanceId {
   final WasmitDart bridge;
   final int field0;
@@ -1158,6 +1689,12 @@ class WasmitModuleId {
         memory: memory,
       );
 
+  int getMemoryDataPointer({required Memory memory, dynamic hint}) =>
+      bridge.getMemoryDataPointerMethodWasmitModuleId(
+        that: this,
+        memory: memory,
+      );
+
   Uint8List readMemory(
           {required Memory memory,
           required int offset,
@@ -1278,23 +1815,6 @@ class WasmitDartImpl implements WasmitDart {
   factory WasmitDartImpl.wasm(FutureOr<WasmModule> module) =>
       WasmitDartImpl(module as ExternalLibrary);
   WasmitDartImpl.raw(this._platform);
-  Memory createSharedMemory({required CompiledModule module, dynamic hint}) {
-    var arg0 = _platform.api2wire_box_autoadd_compiled_module(module);
-    return _platform.executeSync(FlutterRustBridgeSyncTask(
-      callFfi: () => _platform.inner.wire_create_shared_memory(arg0),
-      parseSuccessData: _wire2api_Memory,
-      constMeta: kCreateSharedMemoryConstMeta,
-      argValues: [module],
-      hint: hint,
-    ));
-  }
-
-  FlutterRustBridgeTaskConstMeta get kCreateSharedMemoryConstMeta =>
-      const FlutterRustBridgeTaskConstMeta(
-        debugName: "create_shared_memory",
-        argNames: ["module"],
-      );
-
   WasmitModuleId moduleBuilder(
       {required CompiledModule module,
       WasiConfigNative? wasiConfig,
@@ -1823,6 +2343,27 @@ class WasmitDartImpl implements WasmitDart {
             argNames: ["that", "memory"],
           );
 
+  int getMemoryDataPointerMethodWasmitModuleId(
+      {required WasmitModuleId that, required Memory memory, dynamic hint}) {
+    var arg0 = _platform.api2wire_box_autoadd_wasmit_module_id(that);
+    var arg1 = _platform.api2wire_Memory(memory);
+    return _platform.executeSync(FlutterRustBridgeSyncTask(
+      callFfi: () => _platform.inner
+          .wire_get_memory_data_pointer__method__WasmitModuleId(arg0, arg1),
+      parseSuccessData: _wire2api_usize,
+      constMeta: kGetMemoryDataPointerMethodWasmitModuleIdConstMeta,
+      argValues: [that, memory],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta
+      get kGetMemoryDataPointerMethodWasmitModuleIdConstMeta =>
+          const FlutterRustBridgeTaskConstMeta(
+            debugName: "get_memory_data_pointer__method__WasmitModuleId",
+            argNames: ["that", "memory"],
+          );
+
   Uint8List readMemoryMethodWasmitModuleId(
       {required WasmitModuleId that,
       required Memory memory,
@@ -2128,6 +2669,29 @@ class WasmitDartImpl implements WasmitDart {
             argNames: ["that", "delta"],
           );
 
+  WasmiSharedMemory createSharedMemoryMethodCompiledModule(
+      {required CompiledModule that,
+      required MemoryTy memoryType,
+      dynamic hint}) {
+    var arg0 = _platform.api2wire_box_autoadd_compiled_module(that);
+    var arg1 = _platform.api2wire_box_autoadd_memory_ty(memoryType);
+    return _platform.executeSync(FlutterRustBridgeSyncTask(
+      callFfi: () => _platform.inner
+          .wire_create_shared_memory__method__CompiledModule(arg0, arg1),
+      parseSuccessData: _wire2api_wasmi_shared_memory,
+      constMeta: kCreateSharedMemoryMethodCompiledModuleConstMeta,
+      argValues: [that, memoryType],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta
+      get kCreateSharedMemoryMethodCompiledModuleConstMeta =>
+          const FlutterRustBridgeTaskConstMeta(
+            debugName: "create_shared_memory__method__CompiledModule",
+            argNames: ["that", "memoryType"],
+          );
+
   List<ModuleImportDesc> getModuleImportsMethodCompiledModule(
       {required CompiledModule that, dynamic hint}) {
     var arg0 = _platform.api2wire_box_autoadd_compiled_module(that);
@@ -2168,6 +2732,459 @@ class WasmitDartImpl implements WasmitDart {
             argNames: ["that"],
           );
 
+  MemoryTy tyMethodWasmiSharedMemory(
+      {required WasmiSharedMemory that, dynamic hint}) {
+    var arg0 = _platform.api2wire_box_autoadd_wasmi_shared_memory(that);
+    return _platform.executeSync(FlutterRustBridgeSyncTask(
+      callFfi: () => _platform.inner.wire_ty__method__WasmiSharedMemory(arg0),
+      parseSuccessData: _wire2api_memory_ty,
+      constMeta: kTyMethodWasmiSharedMemoryConstMeta,
+      argValues: [that],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta get kTyMethodWasmiSharedMemoryConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "ty__method__WasmiSharedMemory",
+        argNames: ["that"],
+      );
+
+  int sizeMethodWasmiSharedMemory(
+      {required WasmiSharedMemory that, dynamic hint}) {
+    var arg0 = _platform.api2wire_box_autoadd_wasmi_shared_memory(that);
+    return _platform.executeSync(FlutterRustBridgeSyncTask(
+      callFfi: () => _platform.inner.wire_size__method__WasmiSharedMemory(arg0),
+      parseSuccessData: _wire2api_u64,
+      constMeta: kSizeMethodWasmiSharedMemoryConstMeta,
+      argValues: [that],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta get kSizeMethodWasmiSharedMemoryConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "size__method__WasmiSharedMemory",
+        argNames: ["that"],
+      );
+
+  int dataSizeMethodWasmiSharedMemory(
+      {required WasmiSharedMemory that, dynamic hint}) {
+    var arg0 = _platform.api2wire_box_autoadd_wasmi_shared_memory(that);
+    return _platform.executeSync(FlutterRustBridgeSyncTask(
+      callFfi: () =>
+          _platform.inner.wire_data_size__method__WasmiSharedMemory(arg0),
+      parseSuccessData: _wire2api_usize,
+      constMeta: kDataSizeMethodWasmiSharedMemoryConstMeta,
+      argValues: [that],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta
+      get kDataSizeMethodWasmiSharedMemoryConstMeta =>
+          const FlutterRustBridgeTaskConstMeta(
+            debugName: "data_size__method__WasmiSharedMemory",
+            argNames: ["that"],
+          );
+
+  int dataPointerMethodWasmiSharedMemory(
+      {required WasmiSharedMemory that, dynamic hint}) {
+    var arg0 = _platform.api2wire_box_autoadd_wasmi_shared_memory(that);
+    return _platform.executeSync(FlutterRustBridgeSyncTask(
+      callFfi: () =>
+          _platform.inner.wire_data_pointer__method__WasmiSharedMemory(arg0),
+      parseSuccessData: _wire2api_usize,
+      constMeta: kDataPointerMethodWasmiSharedMemoryConstMeta,
+      argValues: [that],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta
+      get kDataPointerMethodWasmiSharedMemoryConstMeta =>
+          const FlutterRustBridgeTaskConstMeta(
+            debugName: "data_pointer__method__WasmiSharedMemory",
+            argNames: ["that"],
+          );
+
+  int growMethodWasmiSharedMemory(
+      {required WasmiSharedMemory that, required int delta, dynamic hint}) {
+    var arg0 = _platform.api2wire_box_autoadd_wasmi_shared_memory(that);
+    var arg1 = _platform.api2wire_u64(delta);
+    return _platform.executeSync(FlutterRustBridgeSyncTask(
+      callFfi: () =>
+          _platform.inner.wire_grow__method__WasmiSharedMemory(arg0, arg1),
+      parseSuccessData: _wire2api_u64,
+      constMeta: kGrowMethodWasmiSharedMemoryConstMeta,
+      argValues: [that, delta],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta get kGrowMethodWasmiSharedMemoryConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "grow__method__WasmiSharedMemory",
+        argNames: ["that", "delta"],
+      );
+
+  Future<Atomics> atomicsMethodWasmiSharedMemory(
+      {required WasmiSharedMemory that, dynamic hint}) {
+    var arg0 = _platform.api2wire_box_autoadd_wasmi_shared_memory(that);
+    return _platform.executeNormal(FlutterRustBridgeTask(
+      callFfi: (port_) =>
+          _platform.inner.wire_atomics__method__WasmiSharedMemory(port_, arg0),
+      parseSuccessData: (d) => _wire2api_atomics(d),
+      constMeta: kAtomicsMethodWasmiSharedMemoryConstMeta,
+      argValues: [that],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta get kAtomicsMethodWasmiSharedMemoryConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "atomics__method__WasmiSharedMemory",
+        argNames: ["that"],
+      );
+
+  int atomicNotifyMethodWasmiSharedMemory(
+      {required WasmiSharedMemory that,
+      required int addr,
+      required int count,
+      dynamic hint}) {
+    var arg0 = _platform.api2wire_box_autoadd_wasmi_shared_memory(that);
+    var arg1 = _platform.api2wire_u64(addr);
+    var arg2 = api2wire_u32(count);
+    return _platform.executeSync(FlutterRustBridgeSyncTask(
+      callFfi: () => _platform.inner
+          .wire_atomic_notify__method__WasmiSharedMemory(arg0, arg1, arg2),
+      parseSuccessData: _wire2api_u32,
+      constMeta: kAtomicNotifyMethodWasmiSharedMemoryConstMeta,
+      argValues: [that, addr, count],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta
+      get kAtomicNotifyMethodWasmiSharedMemoryConstMeta =>
+          const FlutterRustBridgeTaskConstMeta(
+            debugName: "atomic_notify__method__WasmiSharedMemory",
+            argNames: ["that", "addr", "count"],
+          );
+
+  SharedMemoryWaitResult atomicWait32MethodWasmiSharedMemory(
+      {required WasmiSharedMemory that,
+      required int addr,
+      required int expected,
+      dynamic hint}) {
+    var arg0 = _platform.api2wire_box_autoadd_wasmi_shared_memory(that);
+    var arg1 = _platform.api2wire_u64(addr);
+    var arg2 = api2wire_u32(expected);
+    return _platform.executeSync(FlutterRustBridgeSyncTask(
+      callFfi: () => _platform.inner
+          .wire_atomic_wait32__method__WasmiSharedMemory(arg0, arg1, arg2),
+      parseSuccessData: _wire2api_shared_memory_wait_result,
+      constMeta: kAtomicWait32MethodWasmiSharedMemoryConstMeta,
+      argValues: [that, addr, expected],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta
+      get kAtomicWait32MethodWasmiSharedMemoryConstMeta =>
+          const FlutterRustBridgeTaskConstMeta(
+            debugName: "atomic_wait32__method__WasmiSharedMemory",
+            argNames: ["that", "addr", "expected"],
+          );
+
+  SharedMemoryWaitResult atomicWait64MethodWasmiSharedMemory(
+      {required WasmiSharedMemory that,
+      required int addr,
+      required int expected,
+      dynamic hint}) {
+    var arg0 = _platform.api2wire_box_autoadd_wasmi_shared_memory(that);
+    var arg1 = _platform.api2wire_u64(addr);
+    var arg2 = _platform.api2wire_u64(expected);
+    return _platform.executeSync(FlutterRustBridgeSyncTask(
+      callFfi: () => _platform.inner
+          .wire_atomic_wait64__method__WasmiSharedMemory(arg0, arg1, arg2),
+      parseSuccessData: _wire2api_shared_memory_wait_result,
+      constMeta: kAtomicWait64MethodWasmiSharedMemoryConstMeta,
+      argValues: [that, addr, expected],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta
+      get kAtomicWait64MethodWasmiSharedMemoryConstMeta =>
+          const FlutterRustBridgeTaskConstMeta(
+            debugName: "atomic_wait64__method__WasmiSharedMemory",
+            argNames: ["that", "addr", "expected"],
+          );
+
+  Future<int> addMethodAtomics(
+      {required Atomics that,
+      required int offset,
+      required AtomicKind kind,
+      required int val,
+      required AtomicOrdering order,
+      dynamic hint}) {
+    var arg0 = _platform.api2wire_box_autoadd_atomics(that);
+    var arg1 = api2wire_usize(offset);
+    var arg2 = api2wire_atomic_kind(kind);
+    var arg3 = _platform.api2wire_i64(val);
+    var arg4 = api2wire_atomic_ordering(order);
+    return _platform.executeNormal(FlutterRustBridgeTask(
+      callFfi: (port_) => _platform.inner
+          .wire_add__method__Atomics(port_, arg0, arg1, arg2, arg3, arg4),
+      parseSuccessData: _wire2api_i64,
+      constMeta: kAddMethodAtomicsConstMeta,
+      argValues: [that, offset, kind, val, order],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta get kAddMethodAtomicsConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "add__method__Atomics",
+        argNames: ["that", "offset", "kind", "val", "order"],
+      );
+
+  Future<int> loadMethodAtomics(
+      {required Atomics that,
+      required int offset,
+      required AtomicKind kind,
+      required AtomicOrdering order,
+      dynamic hint}) {
+    var arg0 = _platform.api2wire_box_autoadd_atomics(that);
+    var arg1 = api2wire_usize(offset);
+    var arg2 = api2wire_atomic_kind(kind);
+    var arg3 = api2wire_atomic_ordering(order);
+    return _platform.executeNormal(FlutterRustBridgeTask(
+      callFfi: (port_) => _platform.inner
+          .wire_load__method__Atomics(port_, arg0, arg1, arg2, arg3),
+      parseSuccessData: _wire2api_i64,
+      constMeta: kLoadMethodAtomicsConstMeta,
+      argValues: [that, offset, kind, order],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta get kLoadMethodAtomicsConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "load__method__Atomics",
+        argNames: ["that", "offset", "kind", "order"],
+      );
+
+  Future<void> storeMethodAtomics(
+      {required Atomics that,
+      required int offset,
+      required AtomicKind kind,
+      required int val,
+      required AtomicOrdering order,
+      dynamic hint}) {
+    var arg0 = _platform.api2wire_box_autoadd_atomics(that);
+    var arg1 = api2wire_usize(offset);
+    var arg2 = api2wire_atomic_kind(kind);
+    var arg3 = _platform.api2wire_i64(val);
+    var arg4 = api2wire_atomic_ordering(order);
+    return _platform.executeNormal(FlutterRustBridgeTask(
+      callFfi: (port_) => _platform.inner
+          .wire_store__method__Atomics(port_, arg0, arg1, arg2, arg3, arg4),
+      parseSuccessData: _wire2api_unit,
+      constMeta: kStoreMethodAtomicsConstMeta,
+      argValues: [that, offset, kind, val, order],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta get kStoreMethodAtomicsConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "store__method__Atomics",
+        argNames: ["that", "offset", "kind", "val", "order"],
+      );
+
+  Future<int> swapMethodAtomics(
+      {required Atomics that,
+      required int offset,
+      required AtomicKind kind,
+      required int val,
+      required AtomicOrdering order,
+      dynamic hint}) {
+    var arg0 = _platform.api2wire_box_autoadd_atomics(that);
+    var arg1 = api2wire_usize(offset);
+    var arg2 = api2wire_atomic_kind(kind);
+    var arg3 = _platform.api2wire_i64(val);
+    var arg4 = api2wire_atomic_ordering(order);
+    return _platform.executeNormal(FlutterRustBridgeTask(
+      callFfi: (port_) => _platform.inner
+          .wire_swap__method__Atomics(port_, arg0, arg1, arg2, arg3, arg4),
+      parseSuccessData: _wire2api_i64,
+      constMeta: kSwapMethodAtomicsConstMeta,
+      argValues: [that, offset, kind, val, order],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta get kSwapMethodAtomicsConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "swap__method__Atomics",
+        argNames: ["that", "offset", "kind", "val", "order"],
+      );
+
+  Future<CompareExchangeResult> compareExchangeMethodAtomics(
+      {required Atomics that,
+      required int offset,
+      required AtomicKind kind,
+      required int current,
+      required int newValue,
+      required AtomicOrdering success,
+      required AtomicOrdering failure,
+      dynamic hint}) {
+    var arg0 = _platform.api2wire_box_autoadd_atomics(that);
+    var arg1 = api2wire_usize(offset);
+    var arg2 = api2wire_atomic_kind(kind);
+    var arg3 = _platform.api2wire_i64(current);
+    var arg4 = _platform.api2wire_i64(newValue);
+    var arg5 = api2wire_atomic_ordering(success);
+    var arg6 = api2wire_atomic_ordering(failure);
+    return _platform.executeNormal(FlutterRustBridgeTask(
+      callFfi: (port_) => _platform.inner
+          .wire_compare_exchange__method__Atomics(
+              port_, arg0, arg1, arg2, arg3, arg4, arg5, arg6),
+      parseSuccessData: _wire2api_compare_exchange_result,
+      constMeta: kCompareExchangeMethodAtomicsConstMeta,
+      argValues: [that, offset, kind, current, newValue, success, failure],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta get kCompareExchangeMethodAtomicsConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "compare_exchange__method__Atomics",
+        argNames: [
+          "that",
+          "offset",
+          "kind",
+          "current",
+          "newValue",
+          "success",
+          "failure"
+        ],
+      );
+
+  Future<int> subMethodAtomics(
+      {required Atomics that,
+      required int offset,
+      required AtomicKind kind,
+      required int val,
+      required AtomicOrdering order,
+      dynamic hint}) {
+    var arg0 = _platform.api2wire_box_autoadd_atomics(that);
+    var arg1 = api2wire_usize(offset);
+    var arg2 = api2wire_atomic_kind(kind);
+    var arg3 = _platform.api2wire_i64(val);
+    var arg4 = api2wire_atomic_ordering(order);
+    return _platform.executeNormal(FlutterRustBridgeTask(
+      callFfi: (port_) => _platform.inner
+          .wire_sub__method__Atomics(port_, arg0, arg1, arg2, arg3, arg4),
+      parseSuccessData: _wire2api_i64,
+      constMeta: kSubMethodAtomicsConstMeta,
+      argValues: [that, offset, kind, val, order],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta get kSubMethodAtomicsConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "sub__method__Atomics",
+        argNames: ["that", "offset", "kind", "val", "order"],
+      );
+
+  Future<int> andMethodAtomics(
+      {required Atomics that,
+      required int offset,
+      required AtomicKind kind,
+      required int val,
+      required AtomicOrdering order,
+      dynamic hint}) {
+    var arg0 = _platform.api2wire_box_autoadd_atomics(that);
+    var arg1 = api2wire_usize(offset);
+    var arg2 = api2wire_atomic_kind(kind);
+    var arg3 = _platform.api2wire_i64(val);
+    var arg4 = api2wire_atomic_ordering(order);
+    return _platform.executeNormal(FlutterRustBridgeTask(
+      callFfi: (port_) => _platform.inner
+          .wire_and__method__Atomics(port_, arg0, arg1, arg2, arg3, arg4),
+      parseSuccessData: _wire2api_i64,
+      constMeta: kAndMethodAtomicsConstMeta,
+      argValues: [that, offset, kind, val, order],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta get kAndMethodAtomicsConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "and__method__Atomics",
+        argNames: ["that", "offset", "kind", "val", "order"],
+      );
+
+  Future<int> orMethodAtomics(
+      {required Atomics that,
+      required int offset,
+      required AtomicKind kind,
+      required int val,
+      required AtomicOrdering order,
+      dynamic hint}) {
+    var arg0 = _platform.api2wire_box_autoadd_atomics(that);
+    var arg1 = api2wire_usize(offset);
+    var arg2 = api2wire_atomic_kind(kind);
+    var arg3 = _platform.api2wire_i64(val);
+    var arg4 = api2wire_atomic_ordering(order);
+    return _platform.executeNormal(FlutterRustBridgeTask(
+      callFfi: (port_) => _platform.inner
+          .wire_or__method__Atomics(port_, arg0, arg1, arg2, arg3, arg4),
+      parseSuccessData: _wire2api_i64,
+      constMeta: kOrMethodAtomicsConstMeta,
+      argValues: [that, offset, kind, val, order],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta get kOrMethodAtomicsConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "or__method__Atomics",
+        argNames: ["that", "offset", "kind", "val", "order"],
+      );
+
+  Future<int> xorMethodAtomics(
+      {required Atomics that,
+      required int offset,
+      required AtomicKind kind,
+      required int val,
+      required AtomicOrdering order,
+      dynamic hint}) {
+    var arg0 = _platform.api2wire_box_autoadd_atomics(that);
+    var arg1 = api2wire_usize(offset);
+    var arg2 = api2wire_atomic_kind(kind);
+    var arg3 = _platform.api2wire_i64(val);
+    var arg4 = api2wire_atomic_ordering(order);
+    return _platform.executeNormal(FlutterRustBridgeTask(
+      callFfi: (port_) => _platform.inner
+          .wire_xor__method__Atomics(port_, arg0, arg1, arg2, arg3, arg4),
+      parseSuccessData: _wire2api_i64,
+      constMeta: kXorMethodAtomicsConstMeta,
+      argValues: [that, offset, kind, val, order],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta get kXorMethodAtomicsConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "xor__method__Atomics",
+        argNames: ["that", "offset", "kind", "val", "order"],
+      );
+
   DropFnType get dropOpaqueArcStdSyncMutexModule =>
       _platform.inner.drop_opaque_ArcStdSyncMutexModule;
   ShareFnType get shareOpaqueArcStdSyncMutexModule =>
@@ -2182,6 +3199,13 @@ class WasmitDartImpl implements WasmitDart {
   DropFnType get dropOpaqueMemory => _platform.inner.drop_opaque_Memory;
   ShareFnType get shareOpaqueMemory => _platform.inner.share_opaque_Memory;
   OpaqueTypeFinalizer get MemoryFinalizer => _platform.MemoryFinalizer;
+
+  DropFnType get dropOpaqueRwLockSharedMemory =>
+      _platform.inner.drop_opaque_RwLockSharedMemory;
+  ShareFnType get shareOpaqueRwLockSharedMemory =>
+      _platform.inner.share_opaque_RwLockSharedMemory;
+  OpaqueTypeFinalizer get RwLockSharedMemoryFinalizer =>
+      _platform.RwLockSharedMemoryFinalizer;
 
   DropFnType get dropOpaqueTable => _platform.inner.drop_opaque_Table;
   ShareFnType get shareOpaqueTable => _platform.inner.share_opaque_Table;
@@ -2208,6 +3232,10 @@ class WasmitDartImpl implements WasmitDart {
     return Memory.fromRaw(raw[0], raw[1], this);
   }
 
+  RwLockSharedMemory _wire2api_RwLockSharedMemory(dynamic raw) {
+    return RwLockSharedMemory.fromRaw(raw[0], raw[1], this);
+  }
+
   String _wire2api_String(dynamic raw) {
     return raw as String;
   }
@@ -2218,6 +3246,16 @@ class WasmitDartImpl implements WasmitDart {
 
   WFunc _wire2api_WFunc(dynamic raw) {
     return WFunc.fromRaw(raw[0], raw[1], this);
+  }
+
+  Atomics _wire2api_atomics(dynamic raw) {
+    final arr = raw as List<dynamic>;
+    if (arr.length != 1)
+      throw Exception('unexpected arr length: expect 1 but see ${arr.length}');
+    return Atomics(
+      bridge: this,
+      field0: _wire2api_usize(arr[0]),
+    );
   }
 
   bool _wire2api_bool(dynamic raw) {
@@ -2258,6 +3296,16 @@ class WasmitDartImpl implements WasmitDart {
 
   WasmWasiFeatures _wire2api_box_autoadd_wasm_wasi_features(dynamic raw) {
     return _wire2api_wasm_wasi_features(raw);
+  }
+
+  CompareExchangeResult _wire2api_compare_exchange_result(dynamic raw) {
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2)
+      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return CompareExchangeResult(
+      success: _wire2api_bool(arr[0]),
+      value: _wire2api_i64(arr[1]),
+    );
   }
 
   CompiledModule _wire2api_compiled_module(dynamic raw) {
@@ -2437,6 +3485,10 @@ class WasmitDartImpl implements WasmitDart {
     return raw == null ? null : _wire2api_box_autoadd_wasm_wasi_features(raw);
   }
 
+  SharedMemoryWaitResult _wire2api_shared_memory_wait_result(dynamic raw) {
+    return SharedMemoryWaitResult.values[raw];
+  }
+
   TableTy _wire2api_table_ty(dynamic raw) {
     final arr = raw as List<dynamic>;
     if (arr.length != 3)
@@ -2470,6 +3522,10 @@ class WasmitDartImpl implements WasmitDart {
 
   void _wire2api_unit(dynamic raw) {
     return;
+  }
+
+  int _wire2api_usize(dynamic raw) {
+    return castInt(raw);
   }
 
   ValueTy _wire2api_value_ty(dynamic raw) {
@@ -2567,6 +3623,16 @@ class WasmitDartImpl implements WasmitDart {
     );
   }
 
+  WasmiSharedMemory _wire2api_wasmi_shared_memory(dynamic raw) {
+    final arr = raw as List<dynamic>;
+    if (arr.length != 1)
+      throw Exception('unexpected arr length: expect 1 but see ${arr.length}');
+    return WasmiSharedMemory(
+      bridge: this,
+      field0: _wire2api_RwLockSharedMemory(arr[0]),
+    );
+  }
+
   WasmitInstanceId _wire2api_wasmit_instance_id(dynamic raw) {
     final arr = raw as List<dynamic>;
     if (arr.length != 1)
@@ -2589,6 +3655,16 @@ class WasmitDartImpl implements WasmitDart {
 }
 
 // Section: api2wire
+
+@protected
+int api2wire_atomic_kind(AtomicKind raw) {
+  return api2wire_i32(raw.index);
+}
+
+@protected
+int api2wire_atomic_ordering(AtomicOrdering raw) {
+  return api2wire_i32(raw.index);
+}
 
 @protected
 bool api2wire_bool(bool raw) {

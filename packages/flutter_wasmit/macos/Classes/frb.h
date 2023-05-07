@@ -49,7 +49,7 @@ typedef struct wire_list_preopened_dir {
   int32_t len;
 } wire_list_preopened_dir;
 
-typedef struct wire_WasiConfig {
+typedef struct wire_WasiConfigNative {
   bool capture_stdout;
   bool capture_stderr;
   bool inherit_stdin;
@@ -59,7 +59,7 @@ typedef struct wire_WasiConfig {
   struct wire_list_env_variable *env;
   struct wire_StringList *preopened_files;
   struct wire_list_preopened_dir *preopened_dirs;
-} wire_WasiConfig;
+} wire_WasiConfigNative;
 
 typedef struct wire_WasiStackLimits {
   uintptr_t initial_value_stack_height;
@@ -222,7 +222,7 @@ typedef struct wire_list_value_ty {
 } wire_list_value_ty;
 
 typedef struct wire_MemoryTy {
-  uint32_t initial_pages;
+  uint32_t minimum_pages;
   uint32_t *maximum_pages;
 } wire_MemoryTy;
 
@@ -230,6 +230,18 @@ typedef struct wire_TableArgs {
   uint32_t min;
   uint32_t *max;
 } wire_TableArgs;
+
+typedef struct wire_RwLockSharedMemory {
+  const void *ptr;
+} wire_RwLockSharedMemory;
+
+typedef struct wire_WasmiSharedMemory {
+  struct wire_RwLockSharedMemory field0;
+} wire_WasmiSharedMemory;
+
+typedef struct wire_Atomics {
+  uintptr_t field0;
+} wire_Atomics;
 
 void store_dart_post_cobject(DartPostCObjectFnType ptr);
 
@@ -241,10 +253,8 @@ uintptr_t new_dart_opaque(Dart_Handle handle);
 
 intptr_t init_frb_dart_api_dl(void *obj);
 
-WireSyncReturn wire_create_shared_memory(struct wire_CompiledModule *_module);
-
 WireSyncReturn wire_module_builder(struct wire_CompiledModule *module,
-                                   struct wire_WasiConfig *wasi_config);
+                                   struct wire_WasiConfigNative *wasi_config);
 
 void wire_parse_wat_format(int64_t port_, struct wire_uint_8_list *wat);
 
@@ -319,6 +329,9 @@ WireSyncReturn wire_get_memory_type__method__WasmitModuleId(struct wire_WasmitMo
 WireSyncReturn wire_get_memory_data__method__WasmitModuleId(struct wire_WasmitModuleId *that,
                                                             struct wire_Memory memory);
 
+WireSyncReturn wire_get_memory_data_pointer__method__WasmitModuleId(struct wire_WasmitModuleId *that,
+                                                                    struct wire_Memory memory);
+
 WireSyncReturn wire_read_memory__method__WasmitModuleId(struct wire_WasmitModuleId *that,
                                                         struct wire_Memory memory,
                                                         uintptr_t offset,
@@ -370,15 +383,109 @@ WireSyncReturn wire_fuel_consumed__method__WasmitModuleId(struct wire_WasmitModu
 WireSyncReturn wire_consume_fuel__method__WasmitModuleId(struct wire_WasmitModuleId *that,
                                                          uint64_t delta);
 
+WireSyncReturn wire_create_shared_memory__method__CompiledModule(struct wire_CompiledModule *that,
+                                                                 struct wire_MemoryTy *memory_type);
+
 WireSyncReturn wire_get_module_imports__method__CompiledModule(struct wire_CompiledModule *that);
 
 WireSyncReturn wire_get_module_exports__method__CompiledModule(struct wire_CompiledModule *that);
+
+WireSyncReturn wire_ty__method__WasmiSharedMemory(struct wire_WasmiSharedMemory *that);
+
+WireSyncReturn wire_size__method__WasmiSharedMemory(struct wire_WasmiSharedMemory *that);
+
+WireSyncReturn wire_data_size__method__WasmiSharedMemory(struct wire_WasmiSharedMemory *that);
+
+WireSyncReturn wire_data_pointer__method__WasmiSharedMemory(struct wire_WasmiSharedMemory *that);
+
+WireSyncReturn wire_grow__method__WasmiSharedMemory(struct wire_WasmiSharedMemory *that,
+                                                    uint64_t delta);
+
+void wire_atomics__method__WasmiSharedMemory(int64_t port_, struct wire_WasmiSharedMemory *that);
+
+WireSyncReturn wire_atomic_notify__method__WasmiSharedMemory(struct wire_WasmiSharedMemory *that,
+                                                             uint64_t addr,
+                                                             uint32_t count);
+
+WireSyncReturn wire_atomic_wait32__method__WasmiSharedMemory(struct wire_WasmiSharedMemory *that,
+                                                             uint64_t addr,
+                                                             uint32_t expected);
+
+WireSyncReturn wire_atomic_wait64__method__WasmiSharedMemory(struct wire_WasmiSharedMemory *that,
+                                                             uint64_t addr,
+                                                             uint64_t expected);
+
+void wire_add__method__Atomics(int64_t port_,
+                               struct wire_Atomics *that,
+                               uintptr_t offset,
+                               int32_t kind,
+                               int64_t val,
+                               int32_t order);
+
+void wire_load__method__Atomics(int64_t port_,
+                                struct wire_Atomics *that,
+                                uintptr_t offset,
+                                int32_t kind,
+                                int32_t order);
+
+void wire_store__method__Atomics(int64_t port_,
+                                 struct wire_Atomics *that,
+                                 uintptr_t offset,
+                                 int32_t kind,
+                                 int64_t val,
+                                 int32_t order);
+
+void wire_swap__method__Atomics(int64_t port_,
+                                struct wire_Atomics *that,
+                                uintptr_t offset,
+                                int32_t kind,
+                                int64_t val,
+                                int32_t order);
+
+void wire_compare_exchange__method__Atomics(int64_t port_,
+                                            struct wire_Atomics *that,
+                                            uintptr_t offset,
+                                            int32_t kind,
+                                            int64_t current,
+                                            int64_t new_value,
+                                            int32_t success,
+                                            int32_t failure);
+
+void wire_sub__method__Atomics(int64_t port_,
+                               struct wire_Atomics *that,
+                               uintptr_t offset,
+                               int32_t kind,
+                               int64_t val,
+                               int32_t order);
+
+void wire_and__method__Atomics(int64_t port_,
+                               struct wire_Atomics *that,
+                               uintptr_t offset,
+                               int32_t kind,
+                               int64_t val,
+                               int32_t order);
+
+void wire_or__method__Atomics(int64_t port_,
+                              struct wire_Atomics *that,
+                              uintptr_t offset,
+                              int32_t kind,
+                              int64_t val,
+                              int32_t order);
+
+void wire_xor__method__Atomics(int64_t port_,
+                               struct wire_Atomics *that,
+                               uintptr_t offset,
+                               int32_t kind,
+                               int64_t val,
+                               int32_t order);
 
 struct wire_ArcStdSyncMutexModule new_ArcStdSyncMutexModule(void);
 
 struct wire_Global new_Global(void);
 
 struct wire_Memory new_Memory(void);
+
+struct wire_RwLockSharedMemory new_RwLockSharedMemory(void);
 
 struct wire_StringList *new_StringList_0(int32_t len);
 
@@ -387,6 +494,8 @@ struct wire_Table new_Table(void);
 struct wire_WFunc new_WFunc(void);
 
 struct wire_WFunc *new_box_autoadd_WFunc_0(void);
+
+struct wire_Atomics *new_box_autoadd_atomics_0(void);
 
 bool *new_box_autoadd_bool_0(bool value);
 
@@ -408,11 +517,13 @@ uint64_t *new_box_autoadd_u64_0(uint64_t value);
 
 uintptr_t *new_box_autoadd_usize_0(uintptr_t value);
 
-struct wire_WasiConfig *new_box_autoadd_wasi_config_0(void);
+struct wire_WasiConfigNative *new_box_autoadd_wasi_config_native_0(void);
 
 struct wire_WasiStackLimits *new_box_autoadd_wasi_stack_limits_0(void);
 
 struct wire_WasmVal *new_box_autoadd_wasm_val_0(void);
+
+struct wire_WasmiSharedMemory *new_box_autoadd_wasmi_shared_memory_0(void);
 
 struct wire_WasmitInstanceId *new_box_autoadd_wasmit_instance_id_0(void);
 
@@ -441,6 +552,10 @@ const void *share_opaque_Global(const void *ptr);
 void drop_opaque_Memory(const void *ptr);
 
 const void *share_opaque_Memory(const void *ptr);
+
+void drop_opaque_RwLockSharedMemory(const void *ptr);
+
+const void *share_opaque_RwLockSharedMemory(const void *ptr);
 
 void drop_opaque_Table(const void *ptr);
 
@@ -476,7 +591,6 @@ void free_WireSyncReturn(WireSyncReturn ptr);
 
 static int64_t dummy_method_to_enforce_bundling(void) {
     int64_t dummy_var = 0;
-    dummy_var ^= ((int64_t) (void*) wire_create_shared_memory);
     dummy_var ^= ((int64_t) (void*) wire_module_builder);
     dummy_var ^= ((int64_t) (void*) wire_parse_wat_format);
     dummy_var ^= ((int64_t) (void*) wire_compile_wasm);
@@ -501,6 +615,7 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) wire_set_global_value__method__WasmitModuleId);
     dummy_var ^= ((int64_t) (void*) wire_get_memory_type__method__WasmitModuleId);
     dummy_var ^= ((int64_t) (void*) wire_get_memory_data__method__WasmitModuleId);
+    dummy_var ^= ((int64_t) (void*) wire_get_memory_data_pointer__method__WasmitModuleId);
     dummy_var ^= ((int64_t) (void*) wire_read_memory__method__WasmitModuleId);
     dummy_var ^= ((int64_t) (void*) wire_get_memory_pages__method__WasmitModuleId);
     dummy_var ^= ((int64_t) (void*) wire_write_memory__method__WasmitModuleId);
@@ -514,15 +629,36 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) wire_add_fuel__method__WasmitModuleId);
     dummy_var ^= ((int64_t) (void*) wire_fuel_consumed__method__WasmitModuleId);
     dummy_var ^= ((int64_t) (void*) wire_consume_fuel__method__WasmitModuleId);
+    dummy_var ^= ((int64_t) (void*) wire_create_shared_memory__method__CompiledModule);
     dummy_var ^= ((int64_t) (void*) wire_get_module_imports__method__CompiledModule);
     dummy_var ^= ((int64_t) (void*) wire_get_module_exports__method__CompiledModule);
+    dummy_var ^= ((int64_t) (void*) wire_ty__method__WasmiSharedMemory);
+    dummy_var ^= ((int64_t) (void*) wire_size__method__WasmiSharedMemory);
+    dummy_var ^= ((int64_t) (void*) wire_data_size__method__WasmiSharedMemory);
+    dummy_var ^= ((int64_t) (void*) wire_data_pointer__method__WasmiSharedMemory);
+    dummy_var ^= ((int64_t) (void*) wire_grow__method__WasmiSharedMemory);
+    dummy_var ^= ((int64_t) (void*) wire_atomics__method__WasmiSharedMemory);
+    dummy_var ^= ((int64_t) (void*) wire_atomic_notify__method__WasmiSharedMemory);
+    dummy_var ^= ((int64_t) (void*) wire_atomic_wait32__method__WasmiSharedMemory);
+    dummy_var ^= ((int64_t) (void*) wire_atomic_wait64__method__WasmiSharedMemory);
+    dummy_var ^= ((int64_t) (void*) wire_add__method__Atomics);
+    dummy_var ^= ((int64_t) (void*) wire_load__method__Atomics);
+    dummy_var ^= ((int64_t) (void*) wire_store__method__Atomics);
+    dummy_var ^= ((int64_t) (void*) wire_swap__method__Atomics);
+    dummy_var ^= ((int64_t) (void*) wire_compare_exchange__method__Atomics);
+    dummy_var ^= ((int64_t) (void*) wire_sub__method__Atomics);
+    dummy_var ^= ((int64_t) (void*) wire_and__method__Atomics);
+    dummy_var ^= ((int64_t) (void*) wire_or__method__Atomics);
+    dummy_var ^= ((int64_t) (void*) wire_xor__method__Atomics);
     dummy_var ^= ((int64_t) (void*) new_ArcStdSyncMutexModule);
     dummy_var ^= ((int64_t) (void*) new_Global);
     dummy_var ^= ((int64_t) (void*) new_Memory);
+    dummy_var ^= ((int64_t) (void*) new_RwLockSharedMemory);
     dummy_var ^= ((int64_t) (void*) new_StringList_0);
     dummy_var ^= ((int64_t) (void*) new_Table);
     dummy_var ^= ((int64_t) (void*) new_WFunc);
     dummy_var ^= ((int64_t) (void*) new_box_autoadd_WFunc_0);
+    dummy_var ^= ((int64_t) (void*) new_box_autoadd_atomics_0);
     dummy_var ^= ((int64_t) (void*) new_box_autoadd_bool_0);
     dummy_var ^= ((int64_t) (void*) new_box_autoadd_compiled_module_0);
     dummy_var ^= ((int64_t) (void*) new_box_autoadd_memory_ty_0);
@@ -533,9 +669,10 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) new_box_autoadd_u32_0);
     dummy_var ^= ((int64_t) (void*) new_box_autoadd_u64_0);
     dummy_var ^= ((int64_t) (void*) new_box_autoadd_usize_0);
-    dummy_var ^= ((int64_t) (void*) new_box_autoadd_wasi_config_0);
+    dummy_var ^= ((int64_t) (void*) new_box_autoadd_wasi_config_native_0);
     dummy_var ^= ((int64_t) (void*) new_box_autoadd_wasi_stack_limits_0);
     dummy_var ^= ((int64_t) (void*) new_box_autoadd_wasm_val_0);
+    dummy_var ^= ((int64_t) (void*) new_box_autoadd_wasmi_shared_memory_0);
     dummy_var ^= ((int64_t) (void*) new_box_autoadd_wasmit_instance_id_0);
     dummy_var ^= ((int64_t) (void*) new_box_autoadd_wasmit_module_id_0);
     dummy_var ^= ((int64_t) (void*) new_list_env_variable_0);
@@ -550,6 +687,8 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) share_opaque_Global);
     dummy_var ^= ((int64_t) (void*) drop_opaque_Memory);
     dummy_var ^= ((int64_t) (void*) share_opaque_Memory);
+    dummy_var ^= ((int64_t) (void*) drop_opaque_RwLockSharedMemory);
+    dummy_var ^= ((int64_t) (void*) share_opaque_RwLockSharedMemory);
     dummy_var ^= ((int64_t) (void*) drop_opaque_Table);
     dummy_var ^= ((int64_t) (void*) share_opaque_Table);
     dummy_var ^= ((int64_t) (void*) drop_opaque_WFunc);

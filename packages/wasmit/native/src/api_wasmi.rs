@@ -1,3 +1,4 @@
+pub use crate::atomics::*;
 use crate::bridge_generated::{wire_list_wasm_val, Wire2Api};
 use crate::config::*;
 pub use crate::external::WFunc;
@@ -8,11 +9,8 @@ use flutter_rust_bridge::{
 };
 use once_cell::sync::Lazy;
 use std::io::Write;
-use std::{
-    collections::HashMap,
-    fs,
-    sync::{Arc, RwLock},
-};
+pub use std::sync::RwLock;
+use std::{collections::HashMap, fs, sync::Arc};
 #[cfg(feature = "wasi")]
 use wasi_common::{file::FileCaps, pipe::WritePipe};
 use wasmi::core::Trap;
@@ -54,21 +52,19 @@ struct StoreState {
     // TODO: add to stdin?
 }
 
+pub struct WasmiSharedMemory(pub RustOpaque<RwLock<SharedMemory>>);
+
+pub struct SharedMemory;
+
 #[derive(Debug, Clone, Copy)]
 pub struct WasmitModuleId(pub u32);
 
 #[derive(Debug, Clone, Copy)]
 pub struct WasmitInstanceId(pub u32);
 
-pub fn create_shared_memory(_module: CompiledModule) -> Result<SyncReturn<RustOpaque<Memory>>> {
-    Err(anyhow::Error::msg(
-        "shared_memory is not supported for wasmi",
-    ))
-}
-
 pub fn module_builder(
     module: CompiledModule,
-    wasi_config: Option<WasiConfig>,
+    wasi_config: Option<WasiConfigNative>,
 ) -> Result<SyncReturn<WasmitModuleId>> {
     if wasi_config.is_some() && !cfg!(feature = "wasi") {
         return Err(anyhow::Error::msg(
@@ -462,6 +458,9 @@ impl WasmitModuleId {
     pub fn get_memory_data(&self, memory: RustOpaque<Memory>) -> SyncReturn<Vec<u8>> {
         SyncReturn(self.with_module(|store| memory.data(store).to_owned()))
     }
+    pub fn get_memory_data_pointer(&self, memory: RustOpaque<Memory>) -> SyncReturn<usize> {
+        SyncReturn(self.with_module_mut(|store| memory.data_mut(store).as_mut_ptr() as usize))
+    }
     pub fn read_memory(
         &self,
         memory: RustOpaque<Memory>,
@@ -596,6 +595,16 @@ type WasmFunction =
 pub struct CompiledModule(pub RustOpaque<Arc<std::sync::Mutex<Module>>>);
 
 impl CompiledModule {
+    #[allow(unused)]
+    pub fn create_shared_memory(
+        &self,
+        memory_type: MemoryTy,
+    ) -> Result<SyncReturn<WasmiSharedMemory>> {
+        Err(anyhow::Error::msg(
+            "shared_memory is not supported for wasmi",
+        ))
+    }
+
     pub fn get_module_imports(&self) -> SyncReturn<Vec<ModuleImportDesc>> {
         SyncReturn(
             self.0
@@ -645,4 +654,170 @@ pub fn wasm_features_for_config(config: ModuleConfig) -> SyncReturn<WasmFeatures
 
 pub fn wasm_runtime_features() -> SyncReturn<WasmRuntimeFeatures> {
     SyncReturn(WasmRuntimeFeatures::default())
+}
+
+#[allow(unused)]
+impl WasmiSharedMemory {
+    pub fn ty(&self) -> SyncReturn<MemoryTy> {
+        unreachable!()
+    }
+    pub fn size(&self) -> SyncReturn<u64> {
+        unreachable!()
+    }
+    pub fn data_size(&self) -> SyncReturn<usize> {
+        unreachable!()
+    }
+    pub fn data_pointer(&self) -> SyncReturn<usize> {
+        unreachable!()
+    }
+    pub fn grow(&self, delta: u64) -> Result<SyncReturn<u64>> {
+        unreachable!()
+    }
+    // pub fn atomic_i8(&self) -> crate::atomics::Ati8 {
+    //     crate::atomics::Ati8(self.0.read().unwrap().data().as_ptr() as usize)
+    // }
+
+    pub fn atomics(&self) -> Atomics {
+        unreachable!()
+    }
+    pub fn atomic_notify(&self, addr: u64, count: u32) -> Result<SyncReturn<u32>> {
+        unreachable!()
+    }
+
+    /// Equivalent of the WebAssembly `memory.atomic.wait32` instruction for
+    /// this shared memory.
+    ///
+    /// This method allows embedders to block the current thread until notified
+    /// via the `memory.atomic.notify` instruction or the
+    /// [`SharedMemory::atomic_notify`] method, enabling synchronization with
+    /// the wasm guest as desired.
+    ///
+    /// The `expected` argument is the expected 32-bit value to be stored at
+    /// the byte address `addr` specified. The `addr` specified is an index
+    /// into this linear memory.
+    ///
+    /// The optional `timeout` argument is the point in time after which the
+    /// calling thread is guaranteed to be woken up. Blocking will not occur
+    /// past this point.
+    ///
+    /// This function returns one of three possible values:
+    ///
+    /// * `WaitResult::Ok` - this function, loaded the value at `addr`, found
+    ///   it was equal to `expected`, and then blocked (all as one atomic
+    ///   operation). The thread was then awoken with a `memory.atomic.notify`
+    ///   instruction or the [`SharedMemory::atomic_notify`] method.
+    /// * `WaitResult::Mismatch` - the value at `addr` was loaded but was not
+    ///   equal to `expected` so the thread did not block and immediately
+    ///   returned.
+    /// * `WaitResult::TimedOut` - all the steps of `Ok` happened, except this
+    ///   thread was woken up due to a timeout.
+    ///
+    /// This function will not return due to spurious wakeups.
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if `addr` is not within bounds or
+    /// not aligned to a 4-byte boundary.
+    pub fn atomic_wait32(
+        &self,
+        addr: u64,
+        expected: u32,
+        // TODO: timeout: Option<Instant>,
+    ) -> Result<SyncReturn<SharedMemoryWaitResult>> {
+        unreachable!()
+    }
+
+    /// Equivalent of the WebAssembly `memory.atomic.wait64` instruction for
+    /// this shared memory.
+    ///
+    /// For more information see [`SharedMemory::atomic_wait32`].
+    ///
+    /// # Errors
+    ///
+    /// Returns the same error as [`SharedMemory::atomic_wait32`] except that
+    /// the specified address must be 8-byte aligned instead of 4-byte aligned.
+    pub fn atomic_wait64(
+        &self,
+        addr: u64,
+        expected: u64,
+        // TODO: timeout: Option<Instant>,
+    ) -> Result<SyncReturn<SharedMemoryWaitResult>> {
+        unreachable!()
+    }
+}
+
+/// Result of [SharedMemory.atomicWait32] and [SharedMemory.atomicWait64]
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[allow(unused)]
+pub enum SharedMemoryWaitResult {
+    /// Indicates that a `wait` completed by being awoken by a different thread.
+    /// This means the thread went to sleep and didn't time out.
+    Ok = 0,
+    /// Indicates that `wait` did not complete and instead returned due to the
+    /// value in memory not matching the expected value.
+    Mismatch = 1,
+    /// Indicates that `wait` completed with a timeout, meaning that the
+    /// original value matched as expected but nothing ever called `notify`.
+    TimedOut = 2,
+}
+
+#[allow(unused)]
+impl Atomics {
+    /// Adds the provided value to the existing value at the specified index of the array. Returns the old value at that index.
+    pub fn add(&self, offset: usize, kind: AtomicKind, val: i64, order: AtomicOrdering) -> i64 {
+        unreachable!()
+    }
+
+    /// Returns the value at the specified index of the array.
+    pub fn load(&self, offset: usize, kind: AtomicKind, order: AtomicOrdering) -> i64 {
+        unreachable!()
+    }
+
+    /// Stores a value at the specified index of the array. Returns the value.
+    pub fn store(&self, offset: usize, kind: AtomicKind, val: i64, order: AtomicOrdering) {
+        unreachable!()
+    }
+
+    /// Stores a value at the specified index of the array. Returns the old value.
+    pub fn swap(&self, offset: usize, kind: AtomicKind, val: i64, order: AtomicOrdering) -> i64 {
+        unreachable!()
+    }
+
+    /// Stores a value at the specified index of the array, if it equals a value. Returns the old value.
+    pub fn compare_exchange(
+        &self,
+        offset: usize,
+        kind: AtomicKind,
+        current: i64,
+        new_value: i64,
+        success: AtomicOrdering,
+        failure: AtomicOrdering,
+    ) -> CompareExchangeResult {
+        unreachable!()
+    }
+
+    /// Subtracts a value at the specified index of the array. Returns the old value at that index.
+    pub fn sub(&self, offset: usize, kind: AtomicKind, val: i64, order: AtomicOrdering) -> i64 {
+        unreachable!()
+    }
+
+    /// Computes a bitwise AND on the value at the specified index of the array with the provided value. Returns the old value at that index.
+    pub fn and(&self, offset: usize, kind: AtomicKind, val: i64, order: AtomicOrdering) -> i64 {
+        unreachable!()
+    }
+
+    /// Computes a bitwise OR on the value at the specified index of the array with the provided value. Returns the old value at that index.
+    pub fn or(&self, offset: usize, kind: AtomicKind, val: i64, order: AtomicOrdering) -> i64 {
+        unreachable!()
+    }
+
+    /// Computes a bitwise XOR on the value at the specified index of the array with the provided value. Returns the old value at that index.
+    pub fn xor(&self, offset: usize, kind: AtomicKind, val: i64, order: AtomicOrdering) -> i64 {
+        unreachable!()
+    }
+}
+
+pub struct CompareExchangeResult {
+    pub success: bool,
+    pub value: i64,
 }

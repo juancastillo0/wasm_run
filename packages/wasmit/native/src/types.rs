@@ -563,7 +563,7 @@ pub struct MemoryTy {
 impl MemoryTy {
     #[cfg(not(feature = "wasmtime"))]
     pub fn to_memory_type(&self) -> Result<MemoryType> {
-        MemoryType::new(self.initial_pages, self.maximum_pages).map_err(to_anyhow)
+        MemoryType::new(self.minimum_pages, self.maximum_pages).map_err(to_anyhow)
     }
 
     #[cfg(feature = "wasmtime")]
@@ -579,7 +579,7 @@ impl MemoryTy {
 impl From<&MemoryType> for MemoryTy {
     fn from(memory_type: &MemoryType) -> Self {
         MemoryTy {
-            initial_pages: memory_type.initial_pages().into(),
+            minimum_pages: memory_type.initial_pages().into(),
             maximum_pages: memory_type.maximum_pages().map(|v| v.into()),
         }
     }

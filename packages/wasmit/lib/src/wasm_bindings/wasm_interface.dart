@@ -240,7 +240,6 @@ abstract class WasmMemory extends WasmExternal {
   int get lengthInPages;
 
   /// A view of the memory as a [Uint8List].
-  /// TODO(performance): improve performance by using native pointer.
   Uint8List get view;
 
   /// The number of bytes per page in a wasm memory.

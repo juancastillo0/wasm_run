@@ -19,6 +19,9 @@ use std::sync::Arc;
 
 // Section: imports
 
+use crate::atomics::AtomicKind;
+use crate::atomics::AtomicOrdering;
+use crate::atomics::Atomics;
 use crate::config::EnvVariable;
 use crate::config::ModuleConfig;
 use crate::config::ModuleConfigWasmi;
@@ -47,21 +50,6 @@ use crate::types::WasmVal;
 
 // Section: wire functions
 
-fn wire_create_shared_memory_impl(
-    _module: impl Wire2Api<CompiledModule> + UnwindSafe,
-) -> support::WireSyncReturn {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
-        WrapInfo {
-            debug_name: "create_shared_memory",
-            port: None,
-            mode: FfiCallMode::Sync,
-        },
-        move || {
-            let api__module = _module.wire2api();
-            create_shared_memory(api__module)
-        },
-    )
-}
 fn wire_module_builder_impl(
     module: impl Wire2Api<CompiledModule> + UnwindSafe,
     wasi_config: impl Wire2Api<Option<WasiConfigNative>> + UnwindSafe,
@@ -478,6 +466,25 @@ fn wire_get_memory_data__method__WasmitModuleId_impl(
         },
     )
 }
+fn wire_get_memory_data_pointer__method__WasmitModuleId_impl(
+    that: impl Wire2Api<WasmitModuleId> + UnwindSafe,
+    memory: impl Wire2Api<RustOpaque<Memory>> + UnwindSafe,
+) -> support::WireSyncReturn {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
+        WrapInfo {
+            debug_name: "get_memory_data_pointer__method__WasmitModuleId",
+            port: None,
+            mode: FfiCallMode::Sync,
+        },
+        move || {
+            let api_that = that.wire2api();
+            let api_memory = memory.wire2api();
+            Ok(WasmitModuleId::get_memory_data_pointer(
+                &api_that, api_memory,
+            ))
+        },
+    )
+}
 fn wire_read_memory__method__WasmitModuleId_impl(
     that: impl Wire2Api<WasmitModuleId> + UnwindSafe,
     memory: impl Wire2Api<RustOpaque<Memory>> + UnwindSafe,
@@ -723,6 +730,23 @@ fn wire_consume_fuel__method__WasmitModuleId_impl(
         },
     )
 }
+fn wire_create_shared_memory__method__CompiledModule_impl(
+    that: impl Wire2Api<CompiledModule> + UnwindSafe,
+    memory_type: impl Wire2Api<MemoryTy> + UnwindSafe,
+) -> support::WireSyncReturn {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
+        WrapInfo {
+            debug_name: "create_shared_memory__method__CompiledModule",
+            port: None,
+            mode: FfiCallMode::Sync,
+        },
+        move || {
+            let api_that = that.wire2api();
+            let api_memory_type = memory_type.wire2api();
+            CompiledModule::create_shared_memory(&api_that, api_memory_type)
+        },
+    )
+}
 fn wire_get_module_imports__method__CompiledModule_impl(
     that: impl Wire2Api<CompiledModule> + UnwindSafe,
 ) -> support::WireSyncReturn {
@@ -753,6 +777,412 @@ fn wire_get_module_exports__method__CompiledModule_impl(
         },
     )
 }
+fn wire_ty__method__WasmiSharedMemory_impl(
+    that: impl Wire2Api<WasmiSharedMemory> + UnwindSafe,
+) -> support::WireSyncReturn {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
+        WrapInfo {
+            debug_name: "ty__method__WasmiSharedMemory",
+            port: None,
+            mode: FfiCallMode::Sync,
+        },
+        move || {
+            let api_that = that.wire2api();
+            Ok(WasmiSharedMemory::ty(&api_that))
+        },
+    )
+}
+fn wire_size__method__WasmiSharedMemory_impl(
+    that: impl Wire2Api<WasmiSharedMemory> + UnwindSafe,
+) -> support::WireSyncReturn {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
+        WrapInfo {
+            debug_name: "size__method__WasmiSharedMemory",
+            port: None,
+            mode: FfiCallMode::Sync,
+        },
+        move || {
+            let api_that = that.wire2api();
+            Ok(WasmiSharedMemory::size(&api_that))
+        },
+    )
+}
+fn wire_data_size__method__WasmiSharedMemory_impl(
+    that: impl Wire2Api<WasmiSharedMemory> + UnwindSafe,
+) -> support::WireSyncReturn {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
+        WrapInfo {
+            debug_name: "data_size__method__WasmiSharedMemory",
+            port: None,
+            mode: FfiCallMode::Sync,
+        },
+        move || {
+            let api_that = that.wire2api();
+            Ok(WasmiSharedMemory::data_size(&api_that))
+        },
+    )
+}
+fn wire_data_pointer__method__WasmiSharedMemory_impl(
+    that: impl Wire2Api<WasmiSharedMemory> + UnwindSafe,
+) -> support::WireSyncReturn {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
+        WrapInfo {
+            debug_name: "data_pointer__method__WasmiSharedMemory",
+            port: None,
+            mode: FfiCallMode::Sync,
+        },
+        move || {
+            let api_that = that.wire2api();
+            Ok(WasmiSharedMemory::data_pointer(&api_that))
+        },
+    )
+}
+fn wire_grow__method__WasmiSharedMemory_impl(
+    that: impl Wire2Api<WasmiSharedMemory> + UnwindSafe,
+    delta: impl Wire2Api<u64> + UnwindSafe,
+) -> support::WireSyncReturn {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
+        WrapInfo {
+            debug_name: "grow__method__WasmiSharedMemory",
+            port: None,
+            mode: FfiCallMode::Sync,
+        },
+        move || {
+            let api_that = that.wire2api();
+            let api_delta = delta.wire2api();
+            WasmiSharedMemory::grow(&api_that, api_delta)
+        },
+    )
+}
+fn wire_atomics__method__WasmiSharedMemory_impl(
+    port_: MessagePort,
+    that: impl Wire2Api<WasmiSharedMemory> + UnwindSafe,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap(
+        WrapInfo {
+            debug_name: "atomics__method__WasmiSharedMemory",
+            port: Some(port_),
+            mode: FfiCallMode::Normal,
+        },
+        move || {
+            let api_that = that.wire2api();
+            move |task_callback| Ok(WasmiSharedMemory::atomics(&api_that))
+        },
+    )
+}
+fn wire_atomic_notify__method__WasmiSharedMemory_impl(
+    that: impl Wire2Api<WasmiSharedMemory> + UnwindSafe,
+    addr: impl Wire2Api<u64> + UnwindSafe,
+    count: impl Wire2Api<u32> + UnwindSafe,
+) -> support::WireSyncReturn {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
+        WrapInfo {
+            debug_name: "atomic_notify__method__WasmiSharedMemory",
+            port: None,
+            mode: FfiCallMode::Sync,
+        },
+        move || {
+            let api_that = that.wire2api();
+            let api_addr = addr.wire2api();
+            let api_count = count.wire2api();
+            WasmiSharedMemory::atomic_notify(&api_that, api_addr, api_count)
+        },
+    )
+}
+fn wire_atomic_wait32__method__WasmiSharedMemory_impl(
+    that: impl Wire2Api<WasmiSharedMemory> + UnwindSafe,
+    addr: impl Wire2Api<u64> + UnwindSafe,
+    expected: impl Wire2Api<u32> + UnwindSafe,
+) -> support::WireSyncReturn {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
+        WrapInfo {
+            debug_name: "atomic_wait32__method__WasmiSharedMemory",
+            port: None,
+            mode: FfiCallMode::Sync,
+        },
+        move || {
+            let api_that = that.wire2api();
+            let api_addr = addr.wire2api();
+            let api_expected = expected.wire2api();
+            WasmiSharedMemory::atomic_wait32(&api_that, api_addr, api_expected)
+        },
+    )
+}
+fn wire_atomic_wait64__method__WasmiSharedMemory_impl(
+    that: impl Wire2Api<WasmiSharedMemory> + UnwindSafe,
+    addr: impl Wire2Api<u64> + UnwindSafe,
+    expected: impl Wire2Api<u64> + UnwindSafe,
+) -> support::WireSyncReturn {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
+        WrapInfo {
+            debug_name: "atomic_wait64__method__WasmiSharedMemory",
+            port: None,
+            mode: FfiCallMode::Sync,
+        },
+        move || {
+            let api_that = that.wire2api();
+            let api_addr = addr.wire2api();
+            let api_expected = expected.wire2api();
+            WasmiSharedMemory::atomic_wait64(&api_that, api_addr, api_expected)
+        },
+    )
+}
+fn wire_add__method__Atomics_impl(
+    port_: MessagePort,
+    that: impl Wire2Api<Atomics> + UnwindSafe,
+    offset: impl Wire2Api<usize> + UnwindSafe,
+    kind: impl Wire2Api<AtomicKind> + UnwindSafe,
+    val: impl Wire2Api<i64> + UnwindSafe,
+    order: impl Wire2Api<AtomicOrdering> + UnwindSafe,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap(
+        WrapInfo {
+            debug_name: "add__method__Atomics",
+            port: Some(port_),
+            mode: FfiCallMode::Normal,
+        },
+        move || {
+            let api_that = that.wire2api();
+            let api_offset = offset.wire2api();
+            let api_kind = kind.wire2api();
+            let api_val = val.wire2api();
+            let api_order = order.wire2api();
+            move |task_callback| {
+                Ok(Atomics::add(
+                    &api_that, api_offset, api_kind, api_val, api_order,
+                ))
+            }
+        },
+    )
+}
+fn wire_load__method__Atomics_impl(
+    port_: MessagePort,
+    that: impl Wire2Api<Atomics> + UnwindSafe,
+    offset: impl Wire2Api<usize> + UnwindSafe,
+    kind: impl Wire2Api<AtomicKind> + UnwindSafe,
+    order: impl Wire2Api<AtomicOrdering> + UnwindSafe,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap(
+        WrapInfo {
+            debug_name: "load__method__Atomics",
+            port: Some(port_),
+            mode: FfiCallMode::Normal,
+        },
+        move || {
+            let api_that = that.wire2api();
+            let api_offset = offset.wire2api();
+            let api_kind = kind.wire2api();
+            let api_order = order.wire2api();
+            move |task_callback| Ok(Atomics::load(&api_that, api_offset, api_kind, api_order))
+        },
+    )
+}
+fn wire_store__method__Atomics_impl(
+    port_: MessagePort,
+    that: impl Wire2Api<Atomics> + UnwindSafe,
+    offset: impl Wire2Api<usize> + UnwindSafe,
+    kind: impl Wire2Api<AtomicKind> + UnwindSafe,
+    val: impl Wire2Api<i64> + UnwindSafe,
+    order: impl Wire2Api<AtomicOrdering> + UnwindSafe,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap(
+        WrapInfo {
+            debug_name: "store__method__Atomics",
+            port: Some(port_),
+            mode: FfiCallMode::Normal,
+        },
+        move || {
+            let api_that = that.wire2api();
+            let api_offset = offset.wire2api();
+            let api_kind = kind.wire2api();
+            let api_val = val.wire2api();
+            let api_order = order.wire2api();
+            move |task_callback| {
+                Ok(Atomics::store(
+                    &api_that, api_offset, api_kind, api_val, api_order,
+                ))
+            }
+        },
+    )
+}
+fn wire_swap__method__Atomics_impl(
+    port_: MessagePort,
+    that: impl Wire2Api<Atomics> + UnwindSafe,
+    offset: impl Wire2Api<usize> + UnwindSafe,
+    kind: impl Wire2Api<AtomicKind> + UnwindSafe,
+    val: impl Wire2Api<i64> + UnwindSafe,
+    order: impl Wire2Api<AtomicOrdering> + UnwindSafe,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap(
+        WrapInfo {
+            debug_name: "swap__method__Atomics",
+            port: Some(port_),
+            mode: FfiCallMode::Normal,
+        },
+        move || {
+            let api_that = that.wire2api();
+            let api_offset = offset.wire2api();
+            let api_kind = kind.wire2api();
+            let api_val = val.wire2api();
+            let api_order = order.wire2api();
+            move |task_callback| {
+                Ok(Atomics::swap(
+                    &api_that, api_offset, api_kind, api_val, api_order,
+                ))
+            }
+        },
+    )
+}
+fn wire_compare_exchange__method__Atomics_impl(
+    port_: MessagePort,
+    that: impl Wire2Api<Atomics> + UnwindSafe,
+    offset: impl Wire2Api<usize> + UnwindSafe,
+    kind: impl Wire2Api<AtomicKind> + UnwindSafe,
+    current: impl Wire2Api<i64> + UnwindSafe,
+    new_value: impl Wire2Api<i64> + UnwindSafe,
+    success: impl Wire2Api<AtomicOrdering> + UnwindSafe,
+    failure: impl Wire2Api<AtomicOrdering> + UnwindSafe,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap(
+        WrapInfo {
+            debug_name: "compare_exchange__method__Atomics",
+            port: Some(port_),
+            mode: FfiCallMode::Normal,
+        },
+        move || {
+            let api_that = that.wire2api();
+            let api_offset = offset.wire2api();
+            let api_kind = kind.wire2api();
+            let api_current = current.wire2api();
+            let api_new_value = new_value.wire2api();
+            let api_success = success.wire2api();
+            let api_failure = failure.wire2api();
+            move |task_callback| {
+                Ok(Atomics::compare_exchange(
+                    &api_that,
+                    api_offset,
+                    api_kind,
+                    api_current,
+                    api_new_value,
+                    api_success,
+                    api_failure,
+                ))
+            }
+        },
+    )
+}
+fn wire_sub__method__Atomics_impl(
+    port_: MessagePort,
+    that: impl Wire2Api<Atomics> + UnwindSafe,
+    offset: impl Wire2Api<usize> + UnwindSafe,
+    kind: impl Wire2Api<AtomicKind> + UnwindSafe,
+    val: impl Wire2Api<i64> + UnwindSafe,
+    order: impl Wire2Api<AtomicOrdering> + UnwindSafe,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap(
+        WrapInfo {
+            debug_name: "sub__method__Atomics",
+            port: Some(port_),
+            mode: FfiCallMode::Normal,
+        },
+        move || {
+            let api_that = that.wire2api();
+            let api_offset = offset.wire2api();
+            let api_kind = kind.wire2api();
+            let api_val = val.wire2api();
+            let api_order = order.wire2api();
+            move |task_callback| {
+                Ok(Atomics::sub(
+                    &api_that, api_offset, api_kind, api_val, api_order,
+                ))
+            }
+        },
+    )
+}
+fn wire_and__method__Atomics_impl(
+    port_: MessagePort,
+    that: impl Wire2Api<Atomics> + UnwindSafe,
+    offset: impl Wire2Api<usize> + UnwindSafe,
+    kind: impl Wire2Api<AtomicKind> + UnwindSafe,
+    val: impl Wire2Api<i64> + UnwindSafe,
+    order: impl Wire2Api<AtomicOrdering> + UnwindSafe,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap(
+        WrapInfo {
+            debug_name: "and__method__Atomics",
+            port: Some(port_),
+            mode: FfiCallMode::Normal,
+        },
+        move || {
+            let api_that = that.wire2api();
+            let api_offset = offset.wire2api();
+            let api_kind = kind.wire2api();
+            let api_val = val.wire2api();
+            let api_order = order.wire2api();
+            move |task_callback| {
+                Ok(Atomics::and(
+                    &api_that, api_offset, api_kind, api_val, api_order,
+                ))
+            }
+        },
+    )
+}
+fn wire_or__method__Atomics_impl(
+    port_: MessagePort,
+    that: impl Wire2Api<Atomics> + UnwindSafe,
+    offset: impl Wire2Api<usize> + UnwindSafe,
+    kind: impl Wire2Api<AtomicKind> + UnwindSafe,
+    val: impl Wire2Api<i64> + UnwindSafe,
+    order: impl Wire2Api<AtomicOrdering> + UnwindSafe,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap(
+        WrapInfo {
+            debug_name: "or__method__Atomics",
+            port: Some(port_),
+            mode: FfiCallMode::Normal,
+        },
+        move || {
+            let api_that = that.wire2api();
+            let api_offset = offset.wire2api();
+            let api_kind = kind.wire2api();
+            let api_val = val.wire2api();
+            let api_order = order.wire2api();
+            move |task_callback| {
+                Ok(Atomics::or(
+                    &api_that, api_offset, api_kind, api_val, api_order,
+                ))
+            }
+        },
+    )
+}
+fn wire_xor__method__Atomics_impl(
+    port_: MessagePort,
+    that: impl Wire2Api<Atomics> + UnwindSafe,
+    offset: impl Wire2Api<usize> + UnwindSafe,
+    kind: impl Wire2Api<AtomicKind> + UnwindSafe,
+    val: impl Wire2Api<i64> + UnwindSafe,
+    order: impl Wire2Api<AtomicOrdering> + UnwindSafe,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap(
+        WrapInfo {
+            debug_name: "xor__method__Atomics",
+            port: Some(port_),
+            mode: FfiCallMode::Normal,
+        },
+        move || {
+            let api_that = that.wire2api();
+            let api_offset = offset.wire2api();
+            let api_kind = kind.wire2api();
+            let api_val = val.wire2api();
+            let api_order = order.wire2api();
+            move |task_callback| {
+                Ok(Atomics::xor(
+                    &api_that, api_offset, api_kind, api_val, api_order,
+                ))
+            }
+        },
+    )
+}
 // Section: wrapper structs
 
 // Section: static checks
@@ -773,6 +1203,34 @@ where
 {
     fn wire2api(self) -> Option<T> {
         (!self.is_null()).then(|| self.wire2api())
+    }
+}
+
+impl Wire2Api<AtomicKind> for i32 {
+    fn wire2api(self) -> AtomicKind {
+        match self {
+            0 => AtomicKind::I8,
+            1 => AtomicKind::I16,
+            2 => AtomicKind::I32,
+            3 => AtomicKind::I64,
+            4 => AtomicKind::U8,
+            5 => AtomicKind::U16,
+            6 => AtomicKind::U32,
+            7 => AtomicKind::U64,
+            _ => unreachable!("Invalid variant for AtomicKind: {}", self),
+        }
+    }
+}
+impl Wire2Api<AtomicOrdering> for i32 {
+    fn wire2api(self) -> AtomicOrdering {
+        match self {
+            0 => AtomicOrdering::Relaxed,
+            1 => AtomicOrdering::Release,
+            2 => AtomicOrdering::Acquire,
+            3 => AtomicOrdering::AcqRel,
+            4 => AtomicOrdering::SeqCst,
+            _ => unreachable!("Invalid variant for AtomicOrdering: {}", self),
+        }
     }
 }
 
@@ -860,6 +1318,20 @@ impl Wire2Api<ValueTy> for i32 {
 
 // Section: impl IntoDart
 
+impl support::IntoDart for Atomics {
+    fn into_dart(self) -> support::DartAbi {
+        vec![self.0.into_dart()].into_dart()
+    }
+}
+impl support::IntoDartExceptPrimitive for Atomics {}
+
+impl support::IntoDart for CompareExchangeResult {
+    fn into_dart(self) -> support::DartAbi {
+        vec![self.success.into_dart(), self.value.into_dart()].into_dart()
+    }
+}
+impl support::IntoDartExceptPrimitive for CompareExchangeResult {}
+
 impl support::IntoDart for CompiledModule {
     fn into_dart(self) -> support::DartAbi {
         vec![self.0.into_dart()].into_dart()
@@ -919,7 +1391,7 @@ impl support::IntoDartExceptPrimitive for GlobalTy {}
 impl support::IntoDart for MemoryTy {
     fn into_dart(self) -> support::DartAbi {
         vec![
-            self.initial_pages.into_dart(),
+            self.minimum_pages.into_dart(),
             self.maximum_pages.into_dart(),
         ]
         .into_dart()
@@ -953,6 +1425,17 @@ impl support::IntoDart for ModuleImportDesc {
 }
 impl support::IntoDartExceptPrimitive for ModuleImportDesc {}
 
+impl support::IntoDart for SharedMemoryWaitResult {
+    fn into_dart(self) -> support::DartAbi {
+        match self {
+            Self::Ok => 0,
+            Self::Mismatch => 1,
+            Self::TimedOut => 2,
+        }
+        .into_dart()
+    }
+}
+impl support::IntoDartExceptPrimitive for SharedMemoryWaitResult {}
 impl support::IntoDart for TableTy {
     fn into_dart(self) -> support::DartAbi {
         vec![
@@ -1054,6 +1537,13 @@ impl support::IntoDart for WasmWasiFeatures {
 }
 impl support::IntoDartExceptPrimitive for WasmWasiFeatures {}
 
+impl support::IntoDart for WasmiSharedMemory {
+    fn into_dart(self) -> support::DartAbi {
+        vec![self.0.into_dart()].into_dart()
+    }
+}
+impl support::IntoDartExceptPrimitive for WasmiSharedMemory {}
+
 impl support::IntoDart for WasmitInstanceId {
     fn into_dart(self) -> support::DartAbi {
         vec![self.0.into_dart()].into_dart()
@@ -1079,11 +1569,6 @@ support::lazy_static! {
 mod web {
     use super::*;
     // Section: wire functions
-
-    #[wasm_bindgen]
-    pub fn wire_create_shared_memory(_module: JsValue) -> support::WireSyncReturn {
-        wire_create_shared_memory_impl(_module)
-    }
 
     #[wasm_bindgen]
     pub fn wire_module_builder(module: JsValue, wasi_config: JsValue) -> support::WireSyncReturn {
@@ -1263,6 +1748,14 @@ mod web {
     }
 
     #[wasm_bindgen]
+    pub fn wire_get_memory_data_pointer__method__WasmitModuleId(
+        that: JsValue,
+        memory: JsValue,
+    ) -> support::WireSyncReturn {
+        wire_get_memory_data_pointer__method__WasmitModuleId_impl(that, memory)
+    }
+
+    #[wasm_bindgen]
     pub fn wire_read_memory__method__WasmitModuleId(
         that: JsValue,
         memory: JsValue,
@@ -1377,6 +1870,14 @@ mod web {
     }
 
     #[wasm_bindgen]
+    pub fn wire_create_shared_memory__method__CompiledModule(
+        that: JsValue,
+        memory_type: JsValue,
+    ) -> support::WireSyncReturn {
+        wire_create_shared_memory__method__CompiledModule_impl(that, memory_type)
+    }
+
+    #[wasm_bindgen]
     pub fn wire_get_module_imports__method__CompiledModule(
         that: JsValue,
     ) -> support::WireSyncReturn {
@@ -1388,6 +1889,177 @@ mod web {
         that: JsValue,
     ) -> support::WireSyncReturn {
         wire_get_module_exports__method__CompiledModule_impl(that)
+    }
+
+    #[wasm_bindgen]
+    pub fn wire_ty__method__WasmiSharedMemory(that: JsValue) -> support::WireSyncReturn {
+        wire_ty__method__WasmiSharedMemory_impl(that)
+    }
+
+    #[wasm_bindgen]
+    pub fn wire_size__method__WasmiSharedMemory(that: JsValue) -> support::WireSyncReturn {
+        wire_size__method__WasmiSharedMemory_impl(that)
+    }
+
+    #[wasm_bindgen]
+    pub fn wire_data_size__method__WasmiSharedMemory(that: JsValue) -> support::WireSyncReturn {
+        wire_data_size__method__WasmiSharedMemory_impl(that)
+    }
+
+    #[wasm_bindgen]
+    pub fn wire_data_pointer__method__WasmiSharedMemory(that: JsValue) -> support::WireSyncReturn {
+        wire_data_pointer__method__WasmiSharedMemory_impl(that)
+    }
+
+    #[wasm_bindgen]
+    pub fn wire_grow__method__WasmiSharedMemory(
+        that: JsValue,
+        delta: u64,
+    ) -> support::WireSyncReturn {
+        wire_grow__method__WasmiSharedMemory_impl(that, delta)
+    }
+
+    #[wasm_bindgen]
+    pub fn wire_atomics__method__WasmiSharedMemory(port_: MessagePort, that: JsValue) {
+        wire_atomics__method__WasmiSharedMemory_impl(port_, that)
+    }
+
+    #[wasm_bindgen]
+    pub fn wire_atomic_notify__method__WasmiSharedMemory(
+        that: JsValue,
+        addr: u64,
+        count: u32,
+    ) -> support::WireSyncReturn {
+        wire_atomic_notify__method__WasmiSharedMemory_impl(that, addr, count)
+    }
+
+    #[wasm_bindgen]
+    pub fn wire_atomic_wait32__method__WasmiSharedMemory(
+        that: JsValue,
+        addr: u64,
+        expected: u32,
+    ) -> support::WireSyncReturn {
+        wire_atomic_wait32__method__WasmiSharedMemory_impl(that, addr, expected)
+    }
+
+    #[wasm_bindgen]
+    pub fn wire_atomic_wait64__method__WasmiSharedMemory(
+        that: JsValue,
+        addr: u64,
+        expected: u64,
+    ) -> support::WireSyncReturn {
+        wire_atomic_wait64__method__WasmiSharedMemory_impl(that, addr, expected)
+    }
+
+    #[wasm_bindgen]
+    pub fn wire_add__method__Atomics(
+        port_: MessagePort,
+        that: JsValue,
+        offset: usize,
+        kind: i32,
+        val: i64,
+        order: i32,
+    ) {
+        wire_add__method__Atomics_impl(port_, that, offset, kind, val, order)
+    }
+
+    #[wasm_bindgen]
+    pub fn wire_load__method__Atomics(
+        port_: MessagePort,
+        that: JsValue,
+        offset: usize,
+        kind: i32,
+        order: i32,
+    ) {
+        wire_load__method__Atomics_impl(port_, that, offset, kind, order)
+    }
+
+    #[wasm_bindgen]
+    pub fn wire_store__method__Atomics(
+        port_: MessagePort,
+        that: JsValue,
+        offset: usize,
+        kind: i32,
+        val: i64,
+        order: i32,
+    ) {
+        wire_store__method__Atomics_impl(port_, that, offset, kind, val, order)
+    }
+
+    #[wasm_bindgen]
+    pub fn wire_swap__method__Atomics(
+        port_: MessagePort,
+        that: JsValue,
+        offset: usize,
+        kind: i32,
+        val: i64,
+        order: i32,
+    ) {
+        wire_swap__method__Atomics_impl(port_, that, offset, kind, val, order)
+    }
+
+    #[wasm_bindgen]
+    pub fn wire_compare_exchange__method__Atomics(
+        port_: MessagePort,
+        that: JsValue,
+        offset: usize,
+        kind: i32,
+        current: i64,
+        new_value: i64,
+        success: i32,
+        failure: i32,
+    ) {
+        wire_compare_exchange__method__Atomics_impl(
+            port_, that, offset, kind, current, new_value, success, failure,
+        )
+    }
+
+    #[wasm_bindgen]
+    pub fn wire_sub__method__Atomics(
+        port_: MessagePort,
+        that: JsValue,
+        offset: usize,
+        kind: i32,
+        val: i64,
+        order: i32,
+    ) {
+        wire_sub__method__Atomics_impl(port_, that, offset, kind, val, order)
+    }
+
+    #[wasm_bindgen]
+    pub fn wire_and__method__Atomics(
+        port_: MessagePort,
+        that: JsValue,
+        offset: usize,
+        kind: i32,
+        val: i64,
+        order: i32,
+    ) {
+        wire_and__method__Atomics_impl(port_, that, offset, kind, val, order)
+    }
+
+    #[wasm_bindgen]
+    pub fn wire_or__method__Atomics(
+        port_: MessagePort,
+        that: JsValue,
+        offset: usize,
+        kind: i32,
+        val: i64,
+        order: i32,
+    ) {
+        wire_or__method__Atomics_impl(port_, that, offset, kind, val, order)
+    }
+
+    #[wasm_bindgen]
+    pub fn wire_xor__method__Atomics(
+        port_: MessagePort,
+        that: JsValue,
+        offset: usize,
+        kind: i32,
+        val: i64,
+        order: i32,
+    ) {
+        wire_xor__method__Atomics_impl(port_, that, offset, kind, val, order)
     }
 
     // Section: allocate functions
@@ -1440,6 +2112,21 @@ mod web {
     }
 
     #[wasm_bindgen]
+    pub fn drop_opaque_RwLockSharedMemory(ptr: *const c_void) {
+        unsafe {
+            Arc::<RwLock<SharedMemory>>::decrement_strong_count(ptr as _);
+        }
+    }
+
+    #[wasm_bindgen]
+    pub fn share_opaque_RwLockSharedMemory(ptr: *const c_void) -> *const c_void {
+        unsafe {
+            Arc::<RwLock<SharedMemory>>::increment_strong_count(ptr as _);
+            ptr
+        }
+    }
+
+    #[wasm_bindgen]
     pub fn drop_opaque_Table(ptr: *const c_void) {
         unsafe {
             Arc::<Table>::decrement_strong_count(ptr as _);
@@ -1483,6 +2170,19 @@ mod web {
                 .iter()
                 .map(Wire2Api::wire2api)
                 .collect()
+        }
+    }
+
+    impl Wire2Api<Atomics> for JsValue {
+        fn wire2api(self) -> Atomics {
+            let self_ = self.dyn_into::<JsArray>().unwrap();
+            assert_eq!(
+                self_.length(),
+                1,
+                "Expected 1 elements, got {}",
+                self_.length()
+            );
+            Atomics(self_.get(0).wire2api())
         }
     }
 
@@ -1581,7 +2281,7 @@ mod web {
                 self_.length()
             );
             MemoryTy {
-                initial_pages: self_.get(0).wire2api(),
+                minimum_pages: self_.get(0).wire2api(),
                 maximum_pages: self_.get(1).wire2api(),
             }
         }
@@ -1794,6 +2494,18 @@ mod web {
             }
         }
     }
+    impl Wire2Api<WasmiSharedMemory> for JsValue {
+        fn wire2api(self) -> WasmiSharedMemory {
+            let self_ = self.dyn_into::<JsArray>().unwrap();
+            assert_eq!(
+                self_.length(),
+                1,
+                "Expected 1 elements, got {}",
+                self_.length()
+            );
+            WasmiSharedMemory(self_.get(0).wire2api())
+        }
+    }
     impl Wire2Api<WasmitInstanceId> for JsValue {
         fn wire2api(self) -> WasmitInstanceId {
             let self_ = self.dyn_into::<JsArray>().unwrap();
@@ -1850,6 +2562,16 @@ mod web {
             unsafe { support::opaque_from_dart((self.as_f64().unwrap() as usize) as _) }
         }
     }
+    impl Wire2Api<RustOpaque<RwLock<SharedMemory>>> for JsValue {
+        fn wire2api(self) -> RustOpaque<RwLock<SharedMemory>> {
+            #[cfg(target_pointer_width = "64")]
+            {
+                compile_error!("64-bit pointers are not supported.");
+            }
+
+            unsafe { support::opaque_from_dart((self.as_f64().unwrap() as usize) as _) }
+        }
+    }
     impl Wire2Api<String> for JsValue {
         fn wire2api(self) -> String {
             self.as_string().expect("non-UTF-8 string, or not a string")
@@ -1873,6 +2595,16 @@ mod web {
             }
 
             unsafe { support::opaque_from_dart((self.as_f64().unwrap() as usize) as _) }
+        }
+    }
+    impl Wire2Api<AtomicKind> for JsValue {
+        fn wire2api(self) -> AtomicKind {
+            (self.unchecked_into_f64() as i32).wire2api()
+        }
+    }
+    impl Wire2Api<AtomicOrdering> for JsValue {
+        fn wire2api(self) -> AtomicOrdering {
+            (self.unchecked_into_f64() as i32).wire2api()
         }
     }
     impl Wire2Api<bool> for JsValue {
@@ -1974,13 +2706,6 @@ pub use web::*;
 mod io {
     use super::*;
     // Section: wire functions
-
-    #[no_mangle]
-    pub extern "C" fn wire_create_shared_memory(
-        _module: *mut wire_CompiledModule,
-    ) -> support::WireSyncReturn {
-        wire_create_shared_memory_impl(_module)
-    }
 
     #[no_mangle]
     pub extern "C" fn wire_module_builder(
@@ -2183,6 +2908,14 @@ mod io {
     }
 
     #[no_mangle]
+    pub extern "C" fn wire_get_memory_data_pointer__method__WasmitModuleId(
+        that: *mut wire_WasmitModuleId,
+        memory: wire_Memory,
+    ) -> support::WireSyncReturn {
+        wire_get_memory_data_pointer__method__WasmitModuleId_impl(that, memory)
+    }
+
+    #[no_mangle]
     pub extern "C" fn wire_read_memory__method__WasmitModuleId(
         that: *mut wire_WasmitModuleId,
         memory: wire_Memory,
@@ -2299,6 +3032,14 @@ mod io {
     }
 
     #[no_mangle]
+    pub extern "C" fn wire_create_shared_memory__method__CompiledModule(
+        that: *mut wire_CompiledModule,
+        memory_type: *mut wire_MemoryTy,
+    ) -> support::WireSyncReturn {
+        wire_create_shared_memory__method__CompiledModule_impl(that, memory_type)
+    }
+
+    #[no_mangle]
     pub extern "C" fn wire_get_module_imports__method__CompiledModule(
         that: *mut wire_CompiledModule,
     ) -> support::WireSyncReturn {
@@ -2310,6 +3051,188 @@ mod io {
         that: *mut wire_CompiledModule,
     ) -> support::WireSyncReturn {
         wire_get_module_exports__method__CompiledModule_impl(that)
+    }
+
+    #[no_mangle]
+    pub extern "C" fn wire_ty__method__WasmiSharedMemory(
+        that: *mut wire_WasmiSharedMemory,
+    ) -> support::WireSyncReturn {
+        wire_ty__method__WasmiSharedMemory_impl(that)
+    }
+
+    #[no_mangle]
+    pub extern "C" fn wire_size__method__WasmiSharedMemory(
+        that: *mut wire_WasmiSharedMemory,
+    ) -> support::WireSyncReturn {
+        wire_size__method__WasmiSharedMemory_impl(that)
+    }
+
+    #[no_mangle]
+    pub extern "C" fn wire_data_size__method__WasmiSharedMemory(
+        that: *mut wire_WasmiSharedMemory,
+    ) -> support::WireSyncReturn {
+        wire_data_size__method__WasmiSharedMemory_impl(that)
+    }
+
+    #[no_mangle]
+    pub extern "C" fn wire_data_pointer__method__WasmiSharedMemory(
+        that: *mut wire_WasmiSharedMemory,
+    ) -> support::WireSyncReturn {
+        wire_data_pointer__method__WasmiSharedMemory_impl(that)
+    }
+
+    #[no_mangle]
+    pub extern "C" fn wire_grow__method__WasmiSharedMemory(
+        that: *mut wire_WasmiSharedMemory,
+        delta: u64,
+    ) -> support::WireSyncReturn {
+        wire_grow__method__WasmiSharedMemory_impl(that, delta)
+    }
+
+    #[no_mangle]
+    pub extern "C" fn wire_atomics__method__WasmiSharedMemory(
+        port_: i64,
+        that: *mut wire_WasmiSharedMemory,
+    ) {
+        wire_atomics__method__WasmiSharedMemory_impl(port_, that)
+    }
+
+    #[no_mangle]
+    pub extern "C" fn wire_atomic_notify__method__WasmiSharedMemory(
+        that: *mut wire_WasmiSharedMemory,
+        addr: u64,
+        count: u32,
+    ) -> support::WireSyncReturn {
+        wire_atomic_notify__method__WasmiSharedMemory_impl(that, addr, count)
+    }
+
+    #[no_mangle]
+    pub extern "C" fn wire_atomic_wait32__method__WasmiSharedMemory(
+        that: *mut wire_WasmiSharedMemory,
+        addr: u64,
+        expected: u32,
+    ) -> support::WireSyncReturn {
+        wire_atomic_wait32__method__WasmiSharedMemory_impl(that, addr, expected)
+    }
+
+    #[no_mangle]
+    pub extern "C" fn wire_atomic_wait64__method__WasmiSharedMemory(
+        that: *mut wire_WasmiSharedMemory,
+        addr: u64,
+        expected: u64,
+    ) -> support::WireSyncReturn {
+        wire_atomic_wait64__method__WasmiSharedMemory_impl(that, addr, expected)
+    }
+
+    #[no_mangle]
+    pub extern "C" fn wire_add__method__Atomics(
+        port_: i64,
+        that: *mut wire_Atomics,
+        offset: usize,
+        kind: i32,
+        val: i64,
+        order: i32,
+    ) {
+        wire_add__method__Atomics_impl(port_, that, offset, kind, val, order)
+    }
+
+    #[no_mangle]
+    pub extern "C" fn wire_load__method__Atomics(
+        port_: i64,
+        that: *mut wire_Atomics,
+        offset: usize,
+        kind: i32,
+        order: i32,
+    ) {
+        wire_load__method__Atomics_impl(port_, that, offset, kind, order)
+    }
+
+    #[no_mangle]
+    pub extern "C" fn wire_store__method__Atomics(
+        port_: i64,
+        that: *mut wire_Atomics,
+        offset: usize,
+        kind: i32,
+        val: i64,
+        order: i32,
+    ) {
+        wire_store__method__Atomics_impl(port_, that, offset, kind, val, order)
+    }
+
+    #[no_mangle]
+    pub extern "C" fn wire_swap__method__Atomics(
+        port_: i64,
+        that: *mut wire_Atomics,
+        offset: usize,
+        kind: i32,
+        val: i64,
+        order: i32,
+    ) {
+        wire_swap__method__Atomics_impl(port_, that, offset, kind, val, order)
+    }
+
+    #[no_mangle]
+    pub extern "C" fn wire_compare_exchange__method__Atomics(
+        port_: i64,
+        that: *mut wire_Atomics,
+        offset: usize,
+        kind: i32,
+        current: i64,
+        new_value: i64,
+        success: i32,
+        failure: i32,
+    ) {
+        wire_compare_exchange__method__Atomics_impl(
+            port_, that, offset, kind, current, new_value, success, failure,
+        )
+    }
+
+    #[no_mangle]
+    pub extern "C" fn wire_sub__method__Atomics(
+        port_: i64,
+        that: *mut wire_Atomics,
+        offset: usize,
+        kind: i32,
+        val: i64,
+        order: i32,
+    ) {
+        wire_sub__method__Atomics_impl(port_, that, offset, kind, val, order)
+    }
+
+    #[no_mangle]
+    pub extern "C" fn wire_and__method__Atomics(
+        port_: i64,
+        that: *mut wire_Atomics,
+        offset: usize,
+        kind: i32,
+        val: i64,
+        order: i32,
+    ) {
+        wire_and__method__Atomics_impl(port_, that, offset, kind, val, order)
+    }
+
+    #[no_mangle]
+    pub extern "C" fn wire_or__method__Atomics(
+        port_: i64,
+        that: *mut wire_Atomics,
+        offset: usize,
+        kind: i32,
+        val: i64,
+        order: i32,
+    ) {
+        wire_or__method__Atomics_impl(port_, that, offset, kind, val, order)
+    }
+
+    #[no_mangle]
+    pub extern "C" fn wire_xor__method__Atomics(
+        port_: i64,
+        that: *mut wire_Atomics,
+        offset: usize,
+        kind: i32,
+        val: i64,
+        order: i32,
+    ) {
+        wire_xor__method__Atomics_impl(port_, that, offset, kind, val, order)
     }
 
     // Section: allocate functions
@@ -2327,6 +3250,11 @@ mod io {
     #[no_mangle]
     pub extern "C" fn new_Memory() -> wire_Memory {
         wire_Memory::new_with_null_ptr()
+    }
+
+    #[no_mangle]
+    pub extern "C" fn new_RwLockSharedMemory() -> wire_RwLockSharedMemory {
+        wire_RwLockSharedMemory::new_with_null_ptr()
     }
 
     #[no_mangle]
@@ -2351,6 +3279,11 @@ mod io {
     #[no_mangle]
     pub extern "C" fn new_box_autoadd_WFunc_0() -> *mut wire_WFunc {
         support::new_leak_box_ptr(wire_WFunc::new_with_null_ptr())
+    }
+
+    #[no_mangle]
+    pub extern "C" fn new_box_autoadd_atomics_0() -> *mut wire_Atomics {
+        support::new_leak_box_ptr(wire_Atomics::new_with_null_ptr())
     }
 
     #[no_mangle]
@@ -2416,6 +3349,11 @@ mod io {
     #[no_mangle]
     pub extern "C" fn new_box_autoadd_wasm_val_0() -> *mut wire_WasmVal {
         support::new_leak_box_ptr(wire_WasmVal::new_with_null_ptr())
+    }
+
+    #[no_mangle]
+    pub extern "C" fn new_box_autoadd_wasmi_shared_memory_0() -> *mut wire_WasmiSharedMemory {
+        support::new_leak_box_ptr(wire_WasmiSharedMemory::new_with_null_ptr())
     }
 
     #[no_mangle]
@@ -2530,6 +3468,21 @@ mod io {
     }
 
     #[no_mangle]
+    pub extern "C" fn drop_opaque_RwLockSharedMemory(ptr: *const c_void) {
+        unsafe {
+            Arc::<RwLock<SharedMemory>>::decrement_strong_count(ptr as _);
+        }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn share_opaque_RwLockSharedMemory(ptr: *const c_void) -> *const c_void {
+        unsafe {
+            Arc::<RwLock<SharedMemory>>::increment_strong_count(ptr as _);
+            ptr
+        }
+    }
+
+    #[no_mangle]
     pub extern "C" fn drop_opaque_Table(ptr: *const c_void) {
         unsafe {
             Arc::<Table>::decrement_strong_count(ptr as _);
@@ -2576,6 +3529,11 @@ mod io {
             unsafe { support::opaque_from_dart(self.ptr as _) }
         }
     }
+    impl Wire2Api<RustOpaque<RwLock<SharedMemory>>> for wire_RwLockSharedMemory {
+        fn wire2api(self) -> RustOpaque<RwLock<SharedMemory>> {
+            unsafe { support::opaque_from_dart(self.ptr as _) }
+        }
+    }
     impl Wire2Api<String> for *mut wire_uint_8_list {
         fn wire2api(self) -> String {
             let vec: Vec<u8> = self.wire2api();
@@ -2602,10 +3560,22 @@ mod io {
         }
     }
 
+    impl Wire2Api<Atomics> for wire_Atomics {
+        fn wire2api(self) -> Atomics {
+            Atomics(self.field0.wire2api())
+        }
+    }
+
     impl Wire2Api<RustOpaque<WFunc>> for *mut wire_WFunc {
         fn wire2api(self) -> RustOpaque<WFunc> {
             let wrap = unsafe { support::box_from_leak_ptr(self) };
             Wire2Api::<RustOpaque<WFunc>>::wire2api(*wrap).into()
+        }
+    }
+    impl Wire2Api<Atomics> for *mut wire_Atomics {
+        fn wire2api(self) -> Atomics {
+            let wrap = unsafe { support::box_from_leak_ptr(self) };
+            Wire2Api::<Atomics>::wire2api(*wrap).into()
         }
     }
     impl Wire2Api<bool> for *mut bool {
@@ -2680,6 +3650,12 @@ mod io {
         fn wire2api(self) -> WasmVal {
             let wrap = unsafe { support::box_from_leak_ptr(self) };
             Wire2Api::<WasmVal>::wire2api(*wrap).into()
+        }
+    }
+    impl Wire2Api<WasmiSharedMemory> for *mut wire_WasmiSharedMemory {
+        fn wire2api(self) -> WasmiSharedMemory {
+            let wrap = unsafe { support::box_from_leak_ptr(self) };
+            Wire2Api::<WasmiSharedMemory>::wire2api(*wrap).into()
         }
     }
     impl Wire2Api<WasmitInstanceId> for *mut wire_WasmitInstanceId {
@@ -2783,7 +3759,7 @@ mod io {
     impl Wire2Api<MemoryTy> for wire_MemoryTy {
         fn wire2api(self) -> MemoryTy {
             MemoryTy {
-                initial_pages: self.initial_pages.wire2api(),
+                minimum_pages: self.minimum_pages.wire2api(),
                 maximum_pages: self.maximum_pages.wire2api(),
             }
         }
@@ -2944,6 +3920,11 @@ mod io {
             }
         }
     }
+    impl Wire2Api<WasmiSharedMemory> for wire_WasmiSharedMemory {
+        fn wire2api(self) -> WasmiSharedMemory {
+            WasmiSharedMemory(self.field0.wire2api())
+        }
+    }
     impl Wire2Api<WasmitInstanceId> for wire_WasmitInstanceId {
         fn wire2api(self) -> WasmitInstanceId {
             WasmitInstanceId(self.field0.wire2api())
@@ -2976,6 +3957,12 @@ mod io {
 
     #[repr(C)]
     #[derive(Clone)]
+    pub struct wire_RwLockSharedMemory {
+        ptr: *const core::ffi::c_void,
+    }
+
+    #[repr(C)]
+    #[derive(Clone)]
     pub struct wire_StringList {
         ptr: *mut *mut wire_uint_8_list,
         len: i32,
@@ -2991,6 +3978,12 @@ mod io {
     #[derive(Clone)]
     pub struct wire_WFunc {
         ptr: *const core::ffi::c_void,
+    }
+
+    #[repr(C)]
+    #[derive(Clone)]
+    pub struct wire_Atomics {
+        field0: usize,
     }
 
     #[repr(C)]
@@ -3044,7 +4037,7 @@ mod io {
     #[repr(C)]
     #[derive(Clone)]
     pub struct wire_MemoryTy {
-        initial_pages: u32,
+        minimum_pages: u32,
         maximum_pages: *mut u32,
     }
 
@@ -3141,6 +4134,12 @@ mod io {
         initial_value_stack_height: usize,
         maximum_value_stack_height: usize,
         maximum_recursion_depth: usize,
+    }
+
+    #[repr(C)]
+    #[derive(Clone)]
+    pub struct wire_WasmiSharedMemory {
+        field0: wire_RwLockSharedMemory,
     }
 
     #[repr(C)]
@@ -3287,6 +4286,13 @@ mod io {
             }
         }
     }
+    impl NewWithNullPtr for wire_RwLockSharedMemory {
+        fn new_with_null_ptr() -> Self {
+            Self {
+                ptr: core::ptr::null(),
+            }
+        }
+    }
 
     impl NewWithNullPtr for wire_Table {
         fn new_with_null_ptr() -> Self {
@@ -3300,6 +4306,20 @@ mod io {
             Self {
                 ptr: core::ptr::null(),
             }
+        }
+    }
+
+    impl NewWithNullPtr for wire_Atomics {
+        fn new_with_null_ptr() -> Self {
+            Self {
+                field0: Default::default(),
+            }
+        }
+    }
+
+    impl Default for wire_Atomics {
+        fn default() -> Self {
+            Self::new_with_null_ptr()
         }
     }
 
@@ -3380,7 +4400,7 @@ mod io {
     impl NewWithNullPtr for wire_MemoryTy {
         fn new_with_null_ptr() -> Self {
             Self {
-                initial_pages: Default::default(),
+                minimum_pages: Default::default(),
                 maximum_pages: core::ptr::null_mut(),
             }
         }
@@ -3614,6 +4634,20 @@ mod io {
                 field0: core::ptr::null_mut(),
             }),
         })
+    }
+
+    impl NewWithNullPtr for wire_WasmiSharedMemory {
+        fn new_with_null_ptr() -> Self {
+            Self {
+                field0: wire_RwLockSharedMemory::new_with_null_ptr(),
+            }
+        }
+    }
+
+    impl Default for wire_WasmiSharedMemory {
+        fn default() -> Self {
+            Self::new_with_null_ptr()
+        }
     }
 
     impl NewWithNullPtr for wire_WasmitInstanceId {

@@ -623,7 +623,11 @@ class _Memory extends WasmMemory {
   int get lengthInPages => module.getMemoryPages(memory: memory);
 
   @override
-  Uint8List get view => module.getMemoryData(memory: memory);
+  Uint8List get view {
+    final address = module.getMemoryDataPointer(memory: memory);
+    final pointer = ffi.Pointer<ffi.Uint8>.fromAddress(address);
+    return pointer.asTypedList(lengthInBytes);
+  }
 }
 
 class _Global extends WasmGlobal {
