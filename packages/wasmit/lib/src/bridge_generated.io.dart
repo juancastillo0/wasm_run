@@ -140,10 +140,10 @@ class WasmitDartPlatform extends FlutterRustBridgeBase<WasmitDartWire> {
   }
 
   @protected
-  ffi.Pointer<wire_WasiConfig> api2wire_box_autoadd_wasi_config(
-      WasiConfig raw) {
-    final ptr = inner.new_box_autoadd_wasi_config_0();
-    _api_fill_to_wire_wasi_config(raw, ptr.ref);
+  ffi.Pointer<wire_WasiConfigNative> api2wire_box_autoadd_wasi_config_native(
+      WasiConfigNative raw) {
+    final ptr = inner.new_box_autoadd_wasi_config_native_0();
+    _api_fill_to_wire_wasi_config_native(raw, ptr.ref);
     return ptr;
   }
 
@@ -274,9 +274,11 @@ class WasmitDartPlatform extends FlutterRustBridgeBase<WasmitDartWire> {
   }
 
   @protected
-  ffi.Pointer<wire_WasiConfig> api2wire_opt_box_autoadd_wasi_config(
-      WasiConfig? raw) {
-    return raw == null ? ffi.nullptr : api2wire_box_autoadd_wasi_config(raw);
+  ffi.Pointer<wire_WasiConfigNative>
+      api2wire_opt_box_autoadd_wasi_config_native(WasiConfigNative? raw) {
+    return raw == null
+        ? ffi.nullptr
+        : api2wire_box_autoadd_wasi_config_native(raw);
   }
 
   @protected
@@ -383,9 +385,9 @@ class WasmitDartPlatform extends FlutterRustBridgeBase<WasmitDartWire> {
     _api_fill_to_wire_table_args(apiObj, wireObj.ref);
   }
 
-  void _api_fill_to_wire_box_autoadd_wasi_config(
-      WasiConfig apiObj, ffi.Pointer<wire_WasiConfig> wireObj) {
-    _api_fill_to_wire_wasi_config(apiObj, wireObj.ref);
+  void _api_fill_to_wire_box_autoadd_wasi_config_native(
+      WasiConfigNative apiObj, ffi.Pointer<wire_WasiConfigNative> wireObj) {
+    _api_fill_to_wire_wasi_config_native(apiObj, wireObj.ref);
   }
 
   void _api_fill_to_wire_box_autoadd_wasi_stack_limits(
@@ -540,10 +542,10 @@ class WasmitDartPlatform extends FlutterRustBridgeBase<WasmitDartWire> {
       _api_fill_to_wire_box_autoadd_module_config_wasmtime(apiObj, wireObj);
   }
 
-  void _api_fill_to_wire_opt_box_autoadd_wasi_config(
-      WasiConfig? apiObj, ffi.Pointer<wire_WasiConfig> wireObj) {
+  void _api_fill_to_wire_opt_box_autoadd_wasi_config_native(
+      WasiConfigNative? apiObj, ffi.Pointer<wire_WasiConfigNative> wireObj) {
     if (apiObj != null)
-      _api_fill_to_wire_box_autoadd_wasi_config(apiObj, wireObj);
+      _api_fill_to_wire_box_autoadd_wasi_config_native(apiObj, wireObj);
   }
 
   void _api_fill_to_wire_opt_box_autoadd_wasi_stack_limits(
@@ -563,8 +565,8 @@ class WasmitDartPlatform extends FlutterRustBridgeBase<WasmitDartWire> {
     wireObj.max = api2wire_opt_box_autoadd_u32(apiObj.max);
   }
 
-  void _api_fill_to_wire_wasi_config(
-      WasiConfig apiObj, wire_WasiConfig wireObj) {
+  void _api_fill_to_wire_wasi_config_native(
+      WasiConfigNative apiObj, wire_WasiConfigNative wireObj) {
     wireObj.capture_stdout = api2wire_bool(apiObj.captureStdout);
     wireObj.capture_stderr = api2wire_bool(apiObj.captureStderr);
     wireObj.inherit_stdin = api2wire_bool(apiObj.inheritStdin);
@@ -762,7 +764,7 @@ class WasmitDartWire implements FlutterRustBridgeWireBase {
 
   WireSyncReturn wire_module_builder(
     ffi.Pointer<wire_CompiledModule> module,
-    ffi.Pointer<wire_WasiConfig> wasi_config,
+    ffi.Pointer<wire_WasiConfigNative> wasi_config,
   ) {
     return _wire_module_builder(
       module,
@@ -773,10 +775,10 @@ class WasmitDartWire implements FlutterRustBridgeWireBase {
   late final _wire_module_builderPtr = _lookup<
       ffi.NativeFunction<
           WireSyncReturn Function(ffi.Pointer<wire_CompiledModule>,
-              ffi.Pointer<wire_WasiConfig>)>>('wire_module_builder');
+              ffi.Pointer<wire_WasiConfigNative>)>>('wire_module_builder');
   late final _wire_module_builder = _wire_module_builderPtr.asFunction<
-      WireSyncReturn Function(
-          ffi.Pointer<wire_CompiledModule>, ffi.Pointer<wire_WasiConfig>)>();
+      WireSyncReturn Function(ffi.Pointer<wire_CompiledModule>,
+          ffi.Pointer<wire_WasiConfigNative>)>();
 
   void wire_parse_wat_format(
     int port_,
@@ -1727,15 +1729,16 @@ class WasmitDartWire implements FlutterRustBridgeWireBase {
   late final _new_box_autoadd_usize_0 = _new_box_autoadd_usize_0Ptr
       .asFunction<ffi.Pointer<ffi.UintPtr> Function(int)>();
 
-  ffi.Pointer<wire_WasiConfig> new_box_autoadd_wasi_config_0() {
-    return _new_box_autoadd_wasi_config_0();
+  ffi.Pointer<wire_WasiConfigNative> new_box_autoadd_wasi_config_native_0() {
+    return _new_box_autoadd_wasi_config_native_0();
   }
 
-  late final _new_box_autoadd_wasi_config_0Ptr =
-      _lookup<ffi.NativeFunction<ffi.Pointer<wire_WasiConfig> Function()>>(
-          'new_box_autoadd_wasi_config_0');
-  late final _new_box_autoadd_wasi_config_0 = _new_box_autoadd_wasi_config_0Ptr
-      .asFunction<ffi.Pointer<wire_WasiConfig> Function()>();
+  late final _new_box_autoadd_wasi_config_native_0Ptr = _lookup<
+          ffi.NativeFunction<ffi.Pointer<wire_WasiConfigNative> Function()>>(
+      'new_box_autoadd_wasi_config_native_0');
+  late final _new_box_autoadd_wasi_config_native_0 =
+      _new_box_autoadd_wasi_config_native_0Ptr
+          .asFunction<ffi.Pointer<wire_WasiConfigNative> Function()>();
 
   ffi.Pointer<wire_WasiStackLimits> new_box_autoadd_wasi_stack_limits_0() {
     return _new_box_autoadd_wasi_stack_limits_0();
@@ -2192,7 +2195,7 @@ class wire_list_preopened_dir extends ffi.Struct {
   external int len;
 }
 
-class wire_WasiConfig extends ffi.Struct {
+class wire_WasiConfigNative extends ffi.Struct {
   @ffi.Bool()
   external bool capture_stdout;
 

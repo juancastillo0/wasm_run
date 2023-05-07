@@ -77,7 +77,7 @@ pub fn create_shared_memory(_module: CompiledModule) -> Result<SyncReturn<RustOp
 
 pub fn module_builder(
     module: CompiledModule,
-    wasi_config: Option<WasiConfig>,
+    wasi_config: Option<WasiConfigNative>,
 ) -> Result<SyncReturn<WasmitModuleId>> {
     let guard = module.0.lock().unwrap();
     let engine = guard.engine();

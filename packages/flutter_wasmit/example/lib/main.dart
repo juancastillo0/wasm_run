@@ -49,14 +49,14 @@ Future<void> main() async {
   final WasmInstance instance = await builder.buildAsync();
   final WasmFunction add = instance.getFunction('add')!;
 
-  final List<WasmValueType?> params = add.params;
+  final List<ValueTy?> params = add.params;
   assert(params.length == 2);
 
   final WasmRuntimeFeatures runtime = await wasmRuntimeFeatures();
   if (!runtime.isBrowser) {
-    assert(params.every((t) => t == WasmValueType.i32));
+    assert(params.every((t) => t == ValueTy.i32));
     assert(add.results!.length == 1);
-    assert(add.results!.first == WasmValueType.i32);
+    assert(add.results!.first == ValueTy.i32);
   }
 
   final List<Object?> result = add([1, 4]);

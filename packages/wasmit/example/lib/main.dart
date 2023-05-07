@@ -138,9 +138,9 @@ void testAll({
     final add = instance.getFunction('add')!;
     expect(
       add.params,
-      isLibrary ? [WasmValueType.i32, WasmValueType.i32] : [null, null],
+      isLibrary ? [ValueTy.i32, ValueTy.i32] : [null, null],
     );
-    expect(add.results, isLibrary ? [WasmValueType.i32] : null);
+    expect(add.results, isLibrary ? [ValueTy.i32] : null);
     final result = add.call([1, 4]);
     expect(result, [5]);
     print('result $result');
@@ -184,7 +184,7 @@ void testAll({
       (int args) {
         argsList = args;
       },
-      params: [WasmValueType.i32],
+      params: [ValueTy.i32],
     );
 
     final instance =
@@ -245,12 +245,12 @@ void testAll({
         builder.addImports([WasmImport('js', 'global', global)]).build();
 
     final getGlobal = instance.getFunction('getGlobal')!;
-    expect(getGlobal.params, <WasmValueType>[]);
-    expect(getGlobal.results, isLibrary ? [WasmValueType.i32] : null);
+    expect(getGlobal.params, <ValueTy>[]);
+    expect(getGlobal.results, isLibrary ? [ValueTy.i32] : null);
 
     final incGlobal = instance.getFunction('incGlobal')!;
-    expect(incGlobal.params, <WasmValueType>[]);
-    expect(incGlobal.results, isLibrary ? <WasmValueType>[] : null);
+    expect(incGlobal.params, <ValueTy>[]);
+    expect(incGlobal.results, isLibrary ? <ValueTy>[] : null);
 
     expect(getGlobal([]), [1]);
     expect(incGlobal([]), <dynamic>[]);
@@ -311,7 +311,7 @@ void testAll({
         final bytes = memory.view.sublist(offset, offset + length);
         result = utf8.decode(bytes);
       },
-      params: [WasmValueType.i32, WasmValueType.i32],
+      params: [ValueTy.i32, ValueTy.i32],
     );
     final instance = builder
         .addImports([WasmImport('js', 'mem', memory)])
@@ -322,8 +322,8 @@ void testAll({
     expect(memory.view[1], utf8.encode('i').first);
 
     final writeHi = instance.getFunction('writeHi')!;
-    expect(writeHi.params, <WasmValueType>[]);
-    expect(writeHi.results, isLibrary ? <WasmValueType>[] : null);
+    expect(writeHi.params, <ValueTy>[]);
+    expect(writeHi.results, isLibrary ? <ValueTy>[] : null);
 
     expect(result, isNull);
     expect(writeHi([]), <dynamic>[]);
@@ -379,8 +379,8 @@ void testAll({
 
     final call = instance.getFunction('callByIndex')!;
 
-    expect(call.params, [isLibrary ? WasmValueType.i32 : null]);
-    expect(call.results, isLibrary ? [WasmValueType.i32] : null);
+    expect(call.params, [isLibrary ? ValueTy.i32 : null]);
+    expect(call.results, isLibrary ? [ValueTy.i32] : null);
     expect(call([0]), [42]);
     expect(call.inner(1), 13);
 
@@ -440,12 +440,12 @@ void testAll({
     final f43 = WasmFunction(
       () => 43,
       params: [],
-      results: [WasmValueType.i32],
+      results: [ValueTy.i32],
     );
     final f84 = WasmFunction(
       () => 84.3,
       params: [],
-      results: [WasmValueType.f64],
+      results: [ValueTy.f64],
     );
     table[0] = WasmValue.funcRef(f43);
     table[1] = WasmValue.funcRef(f84);
@@ -488,6 +488,7 @@ void testAll({
       for (final element in wasmFiles) {
         try {
           binary = await File(element).readAsBytes();
+          break;
         } catch (_) {}
       }
       if (binary == null) {
@@ -618,8 +619,8 @@ void testAll({
       'translate',
       WasmFunction(
         (int v) => v + 0.5,
-        params: [WasmValueType.i32],
-        results: [WasmValueType.f64],
+        params: [ValueTy.i32],
+        results: [ValueTy.f64],
       ),
     );
     final instance1 = await builder1.buildAsync();
@@ -806,8 +807,8 @@ void testAll({
             (int a, double b) {
               return [b, a];
             },
-            params: [WasmValueType.i32, WasmValueType.f32],
-            results: [WasmValueType.f32, WasmValueType.i32],
+            params: [ValueTy.i32, ValueTy.f32],
+            results: [ValueTy.f32, ValueTy.i32],
           ),
         )
         .build();

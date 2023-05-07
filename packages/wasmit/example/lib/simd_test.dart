@@ -108,8 +108,8 @@ void simdTests() {
           'f',
           WasmFunction(
             (U8Array16 arr, double f) => [arr, f],
-            params: [WasmValueType.v128, WasmValueType.f32],
-            results: [WasmValueType.v128, WasmValueType.f32],
+            params: [ValueTy.v128, ValueTy.f32],
+            results: [ValueTy.v128, ValueTy.f32],
           ),
         )
         .build();

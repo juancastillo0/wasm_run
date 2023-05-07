@@ -169,7 +169,7 @@ class _Builder extends WasmInstanceBuilder {
     int? maxSize,
   }) {
     return _Table(
-      value.type == WasmValueType.funcRef
+      value.type == ValueTy.funcRef
           ? Table.funcref(
               initial: minSize,
               maximum: maxSize,
@@ -186,29 +186,29 @@ class _Builder extends WasmInstanceBuilder {
   @override
   WasmGlobal createGlobal(WasmValue value, {required bool mutable}) {
     switch (value.type) {
-      case WasmValueType.i32:
+      case ValueTy.i32:
         return _Global(
           Global.i32(value: value.value! as int, mutable: mutable),
         );
-      case WasmValueType.i64:
+      case ValueTy.i64:
         return _Global(
-          Global.i64(value: value.value! as BigInt, mutable: mutable),
+          Global.i64(value: i64.toBigInt(value.value!), mutable: mutable),
         );
-      case WasmValueType.f32:
+      case ValueTy.f32:
         return _Global(
           Global.f32(value: value.value! as double, mutable: mutable),
         );
-      case WasmValueType.f64:
+      case ValueTy.f64:
         return _Global(
           Global.f64(value: value.value! as double, mutable: mutable),
         );
-      case WasmValueType.v128:
-        throw UnsupportedError('v128 is not supported on web');
-      case WasmValueType.externRef:
+      case ValueTy.v128:
+        throw UnsupportedError('v128 external values are not supported on web');
+      case ValueTy.externRef:
         return _Global(
           Global.externref(value: value.value, mutable: mutable),
         );
-      case WasmValueType.funcRef:
+      case ValueTy.funcRef:
         return _Global(
           // TODO(web): Implement funcRef "anyfunc"
           Global.externref(value: value.value, mutable: mutable),
@@ -359,7 +359,7 @@ class _Table extends WasmTable {
 
   @override
   void set(int index, WasmValue value) {
-    if (value.type == WasmValueType.funcRef && value.value is WasmFunction) {
+    if (value.type == ValueTy.funcRef && value.value is WasmFunction) {
       final v = value.value! as WasmFunction;
       js_util.setProperty(v.inner, 'DartWasmFunction', value.value);
       table.jsObject.set(index, v.inner);

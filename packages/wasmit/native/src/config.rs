@@ -1,5 +1,5 @@
 #[derive(Debug)]
-pub struct WasiConfig {
+pub struct WasiConfigNative {
     /// Whether to capture stdout.
     /// If this is true, you can use the [WasmInstance.stdout]
     /// getter to retrieve a stream of the module's stdout.
@@ -34,7 +34,7 @@ pub enum StdIOKind {
 }
 
 #[cfg(feature = "wasi")]
-impl WasiConfig {
+impl WasiConfigNative {
     pub fn to_wasi_ctx(&self) -> anyhow::Result<wasi_common::WasiCtx> {
         #[cfg(not(feature = "wasmtime"))]
         use wasmi_wasi::{ambient_authority, WasiCtxBuilder};

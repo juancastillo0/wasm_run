@@ -25,7 +25,7 @@ use crate::config::ModuleConfigWasmi;
 use crate::config::ModuleConfigWasmtime;
 use crate::config::PreopenedDir;
 use crate::config::StdIOKind;
-use crate::config::WasiConfig;
+use crate::config::WasiConfigNative;
 use crate::config::WasiStackLimits;
 use crate::config::WasmFeatures;
 use crate::config::WasmRuntimeFeatures;
@@ -64,7 +64,7 @@ fn wire_create_shared_memory_impl(
 }
 fn wire_module_builder_impl(
     module: impl Wire2Api<CompiledModule> + UnwindSafe,
-    wasi_config: impl Wire2Api<Option<WasiConfig>> + UnwindSafe,
+    wasi_config: impl Wire2Api<Option<WasiConfigNative>> + UnwindSafe,
 ) -> support::WireSyncReturn {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
         WrapInfo {
@@ -1687,8 +1687,8 @@ mod web {
         }
     }
 
-    impl Wire2Api<Option<WasiConfig>> for JsValue {
-        fn wire2api(self) -> Option<WasiConfig> {
+    impl Wire2Api<Option<WasiConfigNative>> for JsValue {
+        fn wire2api(self) -> Option<WasiConfigNative> {
             (!self.is_undefined() && !self.is_null()).then(|| self.wire2api())
         }
     }
@@ -1741,8 +1741,8 @@ mod web {
         }
     }
 
-    impl Wire2Api<WasiConfig> for JsValue {
-        fn wire2api(self) -> WasiConfig {
+    impl Wire2Api<WasiConfigNative> for JsValue {
+        fn wire2api(self) -> WasiConfigNative {
             let self_ = self.dyn_into::<JsArray>().unwrap();
             assert_eq!(
                 self_.length(),
@@ -1750,7 +1750,7 @@ mod web {
                 "Expected 9 elements, got {}",
                 self_.length()
             );
-            WasiConfig {
+            WasiConfigNative {
                 capture_stdout: self_.get(0).wire2api(),
                 capture_stderr: self_.get(1).wire2api(),
                 inherit_stdin: self_.get(2).wire2api(),
@@ -1985,7 +1985,7 @@ mod io {
     #[no_mangle]
     pub extern "C" fn wire_module_builder(
         module: *mut wire_CompiledModule,
-        wasi_config: *mut wire_WasiConfig,
+        wasi_config: *mut wire_WasiConfigNative,
     ) -> support::WireSyncReturn {
         wire_module_builder_impl(module, wasi_config)
     }
@@ -2404,8 +2404,8 @@ mod io {
     }
 
     #[no_mangle]
-    pub extern "C" fn new_box_autoadd_wasi_config_0() -> *mut wire_WasiConfig {
-        support::new_leak_box_ptr(wire_WasiConfig::new_with_null_ptr())
+    pub extern "C" fn new_box_autoadd_wasi_config_native_0() -> *mut wire_WasiConfigNative {
+        support::new_leak_box_ptr(wire_WasiConfigNative::new_with_null_ptr())
     }
 
     #[no_mangle]
@@ -2664,10 +2664,10 @@ mod io {
             unsafe { *support::box_from_leak_ptr(self) }
         }
     }
-    impl Wire2Api<WasiConfig> for *mut wire_WasiConfig {
-        fn wire2api(self) -> WasiConfig {
+    impl Wire2Api<WasiConfigNative> for *mut wire_WasiConfigNative {
+        fn wire2api(self) -> WasiConfigNative {
             let wrap = unsafe { support::box_from_leak_ptr(self) };
-            Wire2Api::<WasiConfig>::wire2api(*wrap).into()
+            Wire2Api::<WasiConfigNative>::wire2api(*wrap).into()
         }
     }
     impl Wire2Api<WasiStackLimits> for *mut wire_WasiStackLimits {
@@ -2878,9 +2878,9 @@ mod io {
         }
     }
 
-    impl Wire2Api<WasiConfig> for wire_WasiConfig {
-        fn wire2api(self) -> WasiConfig {
-            WasiConfig {
+    impl Wire2Api<WasiConfigNative> for wire_WasiConfigNative {
+        fn wire2api(self) -> WasiConfigNative {
+            WasiConfigNative {
                 capture_stdout: self.capture_stdout.wire2api(),
                 capture_stderr: self.capture_stderr.wire2api(),
                 inherit_stdin: self.inherit_stdin.wire2api(),
@@ -3123,7 +3123,7 @@ mod io {
 
     #[repr(C)]
     #[derive(Clone)]
-    pub struct wire_WasiConfig {
+    pub struct wire_WasiConfigNative {
         capture_stdout: bool,
         capture_stderr: bool,
         inherit_stdin: bool,
@@ -3506,7 +3506,7 @@ mod io {
         }
     }
 
-    impl NewWithNullPtr for wire_WasiConfig {
+    impl NewWithNullPtr for wire_WasiConfigNative {
         fn new_with_null_ptr() -> Self {
             Self {
                 capture_stdout: Default::default(),
@@ -3522,7 +3522,7 @@ mod io {
         }
     }
 
-    impl Default for wire_WasiConfig {
+    impl Default for wire_WasiConfigNative {
         fn default() -> Self {
             Self::new_with_null_ptr()
         }

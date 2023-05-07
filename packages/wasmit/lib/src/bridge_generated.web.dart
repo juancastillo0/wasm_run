@@ -113,8 +113,8 @@ class WasmitDartPlatform extends FlutterRustBridgeBase<WasmitDartWire>
   }
 
   @protected
-  List<dynamic> api2wire_box_autoadd_wasi_config(WasiConfig raw) {
-    return api2wire_wasi_config(raw);
+  List<dynamic> api2wire_box_autoadd_wasi_config_native(WasiConfigNative raw) {
+    return api2wire_wasi_config_native(raw);
   }
 
   @protected
@@ -299,8 +299,9 @@ class WasmitDartPlatform extends FlutterRustBridgeBase<WasmitDartWire>
   }
 
   @protected
-  List<dynamic>? api2wire_opt_box_autoadd_wasi_config(WasiConfig? raw) {
-    return raw == null ? null : api2wire_box_autoadd_wasi_config(raw);
+  List<dynamic>? api2wire_opt_box_autoadd_wasi_config_native(
+      WasiConfigNative? raw) {
+    return raw == null ? null : api2wire_box_autoadd_wasi_config_native(raw);
   }
 
   @protected
@@ -335,7 +336,7 @@ class WasmitDartPlatform extends FlutterRustBridgeBase<WasmitDartWire>
   }
 
   @protected
-  List<dynamic> api2wire_wasi_config(WasiConfig raw) {
+  List<dynamic> api2wire_wasi_config_native(WasiConfigNative raw) {
     return [
       api2wire_bool(raw.captureStdout),
       api2wire_bool(raw.captureStderr),

@@ -26,7 +26,9 @@ abstract class WasmitDart {
   FlutterRustBridgeTaskConstMeta get kCreateSharedMemoryConstMeta;
 
   WasmitModuleId moduleBuilder(
-      {required CompiledModule module, WasiConfig? wasiConfig, dynamic hint});
+      {required CompiledModule module,
+      WasiConfigNative? wasiConfig,
+      dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kModuleBuilderConstMeta;
 
@@ -751,7 +753,7 @@ enum ValueTy {
   externRef,
 }
 
-class WasiConfig {
+class WasiConfigNative {
   /// Whether to capture stdout.
   /// If this is true, you can use the [WasmInstance.stdout]
   /// getter to retrieve a stream of the module's stdout.
@@ -784,7 +786,7 @@ class WasiConfig {
   /// The module will be able to access and edit these directories
   final List<PreopenedDir> preopenedDirs;
 
-  const WasiConfig({
+  const WasiConfigNative({
     required this.captureStdout,
     required this.captureStderr,
     required this.inheritStdin,
@@ -1294,9 +1296,12 @@ class WasmitDartImpl implements WasmitDart {
       );
 
   WasmitModuleId moduleBuilder(
-      {required CompiledModule module, WasiConfig? wasiConfig, dynamic hint}) {
+      {required CompiledModule module,
+      WasiConfigNative? wasiConfig,
+      dynamic hint}) {
     var arg0 = _platform.api2wire_box_autoadd_compiled_module(module);
-    var arg1 = _platform.api2wire_opt_box_autoadd_wasi_config(wasiConfig);
+    var arg1 =
+        _platform.api2wire_opt_box_autoadd_wasi_config_native(wasiConfig);
     return _platform.executeSync(FlutterRustBridgeSyncTask(
       callFfi: () => _platform.inner.wire_module_builder(arg0, arg1),
       parseSuccessData: _wire2api_wasmit_module_id,

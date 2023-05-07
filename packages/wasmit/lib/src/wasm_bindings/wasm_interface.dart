@@ -270,7 +270,7 @@ class WasmFunction extends WasmExternal {
   /// The types may be null if the wasm runtime does not expose
   /// this information. For example in web browsers.
   /// However, the length of the list is always the number of parameters.
-  final List<WasmValueType?> params;
+  final List<ValueTy?> params;
 
   /// The number of parameters of the function.
   int get numberOfParameters => params.length;
@@ -278,7 +278,7 @@ class WasmFunction extends WasmExternal {
   /// The result types of the function.
   /// May be null if the wasm runtime does not expose this information.
   /// For example in web browsers.
-  final List<WasmValueType>? results;
+  final List<ValueTy>? results;
 
   /// The inner function that is called when this function is invoked.
   /// It receives positional parameters and does not receive a list of values
@@ -389,8 +389,6 @@ class WasmImport {
   String toString() => 'WasmImport($moduleName, $value, $value)';
 }
 
-typedef WasmValueType = ValueTy;
-
 // TODO(type): separate into WasmValueRef
 /// A WASM value.
 @immutable
@@ -398,53 +396,59 @@ class WasmValue {
   /// The Dart value.
   ///
   /// Cloud be an:
-  /// - [int] for [WasmValueType.i32]
-  /// - [BigInt] for [WasmValueType.i64]
-  /// - [double] for [WasmValueType.f32]
-  /// - [double] for [WasmValueType.f64]
-  /// - [U8Array16] for [WasmValueType.v128]
-  /// - [WasmFunction]? for [WasmValueType.funcRef]
-  /// - [Object]? for [WasmValueType.externRef]
+  /// - [int] for [ValueTy.i32]
+  /// - [I64] ([int] or browser's `BigInt`) for [ValueTy.i64]
+  /// - [double] for [ValueTy.f32]
+  /// - [double] for [ValueTy.f64]
+  /// - [U8Array16] for [ValueTy.v128]
+  /// - [WasmFunction]? for [ValueTy.funcRef]
+  /// - [Object]? for [ValueTy.externRef]
   ///
   final Object? value;
 
   /// The Wasm type of the value.
-  final WasmValueType type;
+  final ValueTy type;
 
   /// Value of 32-bit signed or unsigned integer.
   const WasmValue.i32(
     int this.value,
-  ) : type = WasmValueType.i32;
+  ) : type = ValueTy.i32;
 
   /// Value of 64-bit signed or unsigned integer.
-  const WasmValue.i64(
-    BigInt this.value,
-  ) : type = WasmValueType.i64;
+  WasmValue.i64BigInt(
+    BigInt value,
+  )   : value = int64FromBigInt(value),
+        type = ValueTy.i64;
+
+  /// Value of 64-bit signed or unsigned integer.
+  WasmValue.i64(int value)
+      : value = int64FromInt(value),
+        type = ValueTy.i64;
 
   /// Value of 32-bit IEEE 754-2008 floating point number.
   const WasmValue.f32(
     double this.value,
-  ) : type = WasmValueType.f32;
+  ) : type = ValueTy.f32;
 
   /// Value of 64-bit IEEE 754-2008 floating point number.
   const WasmValue.f64(
     double this.value,
-  ) : type = WasmValueType.f64;
+  ) : type = ValueTy.f64;
 
   /// A 128 bit number.
   const WasmValue.v128(
     U8Array16 this.value,
-  ) : type = WasmValueType.v128;
+  ) : type = ValueTy.v128;
 
   /// A nullable function reference.
   const WasmValue.funcRef(
     WasmFunction? this.value,
-  ) : type = WasmValueType.funcRef;
+  ) : type = ValueTy.funcRef;
 
   /// A nullable external object reference.
   const WasmValue.externRef(
     this.value,
-  ) : type = WasmValueType.externRef;
+  ) : type = ValueTy.externRef;
 
   @override
   String toString() => 'WasmValue($value, $type)';

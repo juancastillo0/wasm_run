@@ -333,8 +333,7 @@ class _References {
   static WasmValue dartValueTypedFromWasm(WasmVal raw, WasmitModuleId module) {
     return raw.when(
       i32: WasmValue.i32,
-      // TODO(compat): BigInt not necessary in native
-      i64: (i64) => WasmValue.i64(BigInt.from(i64)),
+      i64: WasmValue.i64,
       f32: WasmValue.f32,
       f64: WasmValue.f64,
       v128: WasmValue.v128,
