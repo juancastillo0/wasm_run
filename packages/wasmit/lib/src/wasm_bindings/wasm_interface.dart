@@ -2,22 +2,33 @@ import 'dart:typed_data';
 
 import 'package:meta/meta.dart';
 import 'package:wasmit/src/bridge_generated.dart'
-    show ExternalType, U8Array16, ValueTy, WasiConfig, WasmFeatures;
+    show
+        EnvVariable,
+        ExternalType,
+        PreopenedDir,
+        U8Array16,
+        ValueTy,
+        WasiConfigNative,
+        WasmFeatures;
+import 'package:wasmit/src/int64_bigint/int64_bigint.dart';
 import 'package:wasmit/src/wasm_bindings/_wasm_interop_stub.dart'
     if (dart.library.io) '_wasm_interop_native.dart'
     if (dart.library.html) '_wasm_interop_web.dart' show isVoidReturn;
 
 export 'package:wasmit/src/bridge_generated.dart'
     show
+        EnvVariable,
         ExternalType,
         FuncTy,
         GlobalMutability,
         GlobalTy,
         MemoryTy,
+        PreopenedDir,
         TableTy,
         U8Array16,
-        WasiConfig,
+        ValueTy,
         WasmFeatures;
+export 'package:wasmit/src/int64_bigint/int64_bigint.dart';
 
 /// A compiled WASM module.
 /// You may introspect it by using [getImports] and [getExports].
@@ -49,6 +60,67 @@ abstract class WasmModule {
 
   @override
   String toString() => 'WasmModule(${getImports()}, ${getExports()})';
+}
+
+/// A Wasi file system item
+/// One of [WasiFile] or [WasiDirectory].
+class WasiFd {}
+
+/// A Wasi in-memory file for the browser executor.
+class WasiFile implements WasiFd {
+  /// The contents of the file.
+  final Uint8List content;
+
+  /// A Wasi in-memory file for the browser executor.
+  WasiFile(this.content);
+}
+
+/// A Wasi in-memory directory for the browser executor.
+class WasiDirectory implements WasiFd {
+  /// The file system items in the directory.
+  final Map<String, WasiFd> items;
+
+  /// A Wasi in-memory directory for the browser executor.
+  WasiDirectory(this.items);
+}
+
+/// The configuration and arguments for the WASI module.
+class WasiConfig implements WasiConfigNative {
+  @override
+  final bool captureStdout;
+  @override
+  final bool captureStderr;
+  @override
+  final bool inheritStdin;
+  @override
+  final bool inheritEnv;
+  @override
+  final bool inheritArgs;
+  @override
+  final List<String> args;
+  @override
+  final List<EnvVariable> env;
+  @override
+  final List<String> preopenedFiles;
+  @override
+  final List<PreopenedDir> preopenedDirs;
+
+  /// Not supported outside the browser executor.
+  final Map<String, WasiDirectory> browserFileSystem;
+
+  /// The configuration and arguments for the WASI module.
+  const WasiConfig({
+    required this.captureStdout,
+    required this.captureStderr,
+    required this.inheritStdin,
+    required this.inheritEnv,
+    required this.inheritArgs,
+    required this.args,
+    required this.env,
+    required this.preopenedFiles,
+    required this.preopenedDirs,
+    required this.browserFileSystem,
+  });
 }
 
 /// Constructs a new [WasmInstance] from a [WasmModule]

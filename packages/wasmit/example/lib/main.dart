@@ -493,18 +493,15 @@ void testAll({
         } catch (_) {}
       }
       if (binary == null) {
-        throw Exception('Could not find wasm file');
+        if (isWeb) {
+          binary = base64Decode(wasiExampleBase64);
+        } else {
+          throw Exception('Could not find wasm file');
+        }
       }
     }
-    final module = compileWasmModuleSync(binary);
-
-    final directoryToAllow =
-        getDirectory != null ? await getDirectory() : Directory.current;
-
-    final fileToDelete =
-        File('${directoryToAllow.path}${Platform.pathSeparator}wasi.wasm')
-          ..writeAsBytesSync(binary);
-    addTearDown(() => fileToDelete.deleteSync());
+    // print(base64Encode(binary));
+    final module = await compileWasmModule(binary);
 
     print(module);
     expect(
@@ -586,12 +583,35 @@ void testAll({
       ].map((e) => e.toString()),
     );
 
-    final wasmGuestPath = Platform.isWindows
-        ? (directoryToAllow.path.split('\\')..[0] = '').join('/')
-        : directoryToAllow.path;
-    final wasmGuestFilePath = Platform.isWindows
-        ? '$wasmGuestPath/${fileToDelete.uri.pathSegments.last}'
-        : fileToDelete.path;
+    final String directoryToAllow;
+    final List<PreopenedDir> preopenedDirs;
+    final String wasmGuestFilePath;
+    if (isWeb) {
+      preopenedDirs = [];
+      directoryToAllow = 'root-browser-directory';
+      wasmGuestFilePath = 'root-browser-directory/wasi.wasm';
+    } else {
+      final dirToAllow =
+          getDirectory != null ? await getDirectory() : Directory.current;
+      directoryToAllow = dirToAllow.path;
+      final fileToDelete =
+          File('${dirToAllow.path}${Platform.pathSeparator}wasi.wasm')
+            ..writeAsBytesSync(binary);
+      addTearDown(fileToDelete.deleteSync);
+      final wasmGuestPath = Platform.isWindows
+          ? (dirToAllow.path.split('\\')..[0] = '').join('/')
+          : dirToAllow.path;
+      preopenedDirs = [
+        PreopenedDir(
+          wasmGuestPath: wasmGuestPath,
+          hostPath: dirToAllow.path,
+        )
+      ];
+      wasmGuestFilePath = Platform.isWindows
+          ? '$wasmGuestPath/${fileToDelete.uri.pathSegments.last}'
+          : fileToDelete.path;
+    }
+
     final args = ['arg1'];
     final builder1 = module.builder(
       wasiConfig: WasiConfig(
@@ -605,16 +625,17 @@ void testAll({
         // TODO: this doesn't work
         // preopenedFiles: [File(wasmFile).absolute.path],
         preopenedFiles: [],
-        preopenedDirs: [
-          PreopenedDir(
-            wasmGuestPath: wasmGuestPath,
-            hostPath: directoryToAllow.path,
-          ),
-        ],
+        preopenedDirs: preopenedDirs,
+        browserFileSystem: {
+          directoryToAllow: WasiDirectory({
+            'wasi.wasm': WasiFile(binary),
+          })
+        },
       ),
     );
     print(
-      'allow directory: ${directoryToAllow.path} wasmGuestPath: ${wasmGuestPath}',
+      'allow directory: ${directoryToAllow}'
+      ' wasmGuestFilePath: ${wasmGuestFilePath}',
     );
     builder1.addImport(
       'example_imports',
@@ -730,7 +751,7 @@ void testAll({
       print(data);
       expect(data.size, binary.lengthInBytes);
       expect(data.read_only, false);
-      if (data.created != null) {
+      if (data.created != null && isLibrary) {
         // may be null for some platforms
         expect(startTimestamp, lessThanOrEqualTo(data.created!));
         expect(data.modified, greaterThanOrEqualTo(data.created!));
@@ -765,7 +786,7 @@ void testAll({
 
     await stdoutSubscription.cancel();
     await stderrSubscription.cancel();
-  }, skip: isWeb);
+  });
 
   test('multi value', () async {
     final binary = await getBinary(

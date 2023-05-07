@@ -6,6 +6,7 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge.dart'
 import 'package:meta/meta.dart';
 import 'package:wasmit/src/bridge_generated.io.dart';
 import 'package:wasmit/src/ffi.dart' show defaultInstance;
+import 'package:wasmit/src/logger.dart';
 import 'package:wasmit/src/wasm_bindings/make_function_num_args.dart';
 import 'package:wasmit/src/wasm_bindings/wasm_interface.dart';
 
@@ -525,17 +526,28 @@ class _Instance extends WasmInstance {
       d.map((e) => e.desc.name),
       d.map((value) => _toWasmExternal(value, this)),
     );
-    if (builder.wasiConfig?.captureStderr == true) {
-      _stderr ??= builder.module
-          .stdioStream(kind: StdIOKind.stderr)
-          .asBroadcastStream();
-      _stderr!.first;
-    }
-    if (builder.wasiConfig?.captureStderr == true) {
-      _stdout ??= builder.module
-          .stdioStream(kind: StdIOKind.stdout)
-          .asBroadcastStream();
-      _stdout!.first;
+    final wasiConfig = builder.wasiConfig;
+    if (wasiConfig != null) {
+      if (wasiConfig.captureStderr) {
+        _stderr ??= builder.module
+            .stdioStream(kind: StdIOKind.stderr)
+            .asBroadcastStream();
+        _stderr!.first;
+      }
+      if (wasiConfig.captureStderr) {
+        _stdout ??= builder.module
+            .stdioStream(kind: StdIOKind.stdout)
+            .asBroadcastStream();
+        _stdout!.first;
+      }
+
+      if (getFunction('_start')?.params.isEmpty ?? false) {
+        getFunction('_start')!();
+      } else if (getFunction('_initialize')?.params.isEmpty ?? false) {
+        getFunction('_initialize')!();
+      } else {
+        logWasiNoStartOrInitialize();
+      }
     }
   }
 

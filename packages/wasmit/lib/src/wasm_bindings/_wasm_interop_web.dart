@@ -3,6 +3,8 @@ import 'dart:js_util' as js_util;
 import 'dart:typed_data' show Uint8List;
 
 import 'package:wasm_interop/wasm_interop.dart';
+import 'package:wasmit/src/logger.dart';
+import 'package:wasmit/src/wasm_bindings/_wasi_web.dart';
 
 import 'package:wasmit/src/wasm_bindings/_wasm_feature_detect_web.dart';
 import 'package:wasmit/src/wasm_bindings/wasm.dart';
@@ -91,6 +93,27 @@ WasmModule compileWasmModuleSync(
   return _WasmModule(bytes);
 }
 
+Map<String, Object> _mapWasiFiles(Map<String, WasiFd> items) {
+  return items.map(
+    (key, value) {
+      if (value is WasiFile) {
+        return MapEntry(key, WasiWebFile(value.content));
+      } else {
+        final items = _mapWasiFiles((value as WasiDirectory).items);
+        return MapEntry(key, WasiWebDirectory(items));
+      }
+    },
+  );
+}
+
+class _WASI {
+  final WASI inner;
+  final WasiStdio? stdout;
+  final WasiStdio? stderr;
+
+  _WASI(this.inner, this.stdout, this.stderr);
+}
+
 class _WasmModule extends WasmModule {
   final Module module;
   _WasmModule(Uint8List bytes) : module = Module.fromBytes(bytes);
@@ -119,10 +142,29 @@ class _WasmModule extends WasmModule {
 
   @override
   WasmInstanceBuilder builder({WasiConfig? wasiConfig}) {
+    _WASI? wasi;
     if (wasiConfig != null) {
-      throw UnsupportedError('WASI is not supported on web');
+      final stdout = wasiConfig.captureStdout ? WasiStdio() : null;
+      final stderr = wasiConfig.captureStderr ? WasiStdio() : null;
+
+      final wasiWeb = WASI(
+        wasiConfig.args,
+        wasiConfig.env.map((e) => '${e.name}=${e.value}').toList(),
+        [
+          OpenFile(WasiWebFile(Uint8List(0))), // TODO: stdin
+          stdout?.fd ?? OpenFile(WasiWebFile(Uint8List(0))),
+          stderr?.fd ?? OpenFile(WasiWebFile(Uint8List(0))),
+          ...wasiConfig.browserFileSystem.entries.map(
+            (e) => PreopenDirectory(
+              e.key,
+              js_util.jsify(_mapWasiFiles(e.value.items)) as Object,
+            ),
+          ),
+        ],
+      );
+      wasi = _WASI(wasiWeb, stdout, stderr);
     }
-    return _Builder(module);
+    return _Builder(module, wasi);
   }
 
   @override
@@ -153,9 +195,15 @@ class _WasmModule extends WasmModule {
 
 class _Builder extends WasmInstanceBuilder {
   final Module module;
+  final _WASI? wasi;
   final Map<String, Map<String, Object>> importMap = {};
 
-  _Builder(this.module);
+  _Builder(this.module, this.wasi) {
+    if (wasi != null) {
+      final wasiImports = js_util.dartify(wasi!.inner.wasiImport)!;
+      importMap['wasi_snapshot_preview1'] = (wasiImports as Map).cast();
+    }
+  }
 
   @override
   WasmMemory createMemory(int pages, {int? maxPages}) {
@@ -237,25 +285,28 @@ class _Builder extends WasmInstanceBuilder {
 
   @override
   WasmInstance build() {
-    return _Instance(Instance.fromModule(module, importMap: importMap));
+    final instance = Instance.fromModule(module, importMap: importMap);
+    return _Instance(this, instance);
   }
 
   @override
   Future<WasmInstance> buildAsync() async {
     final instance =
         await Instance.fromModuleAsync(module, importMap: importMap);
-    return _Instance(instance);
+    return _Instance(this, instance);
   }
 }
 
 class _Instance extends WasmInstance {
+  final _Builder builder;
   final Instance instance;
   @override
   final _WasmModule module;
   @override
   late final UnmodifiableMapView<String, WasmExternal> exports;
 
-  _Instance(this.instance) : module = _WasmModule._(instance.module) {
+  _Instance(this.builder, this.instance)
+      : module = _WasmModule._(instance.module) {
     exports = UnmodifiableMapView(
       Map.fromEntries(
         instance.functions.entries
@@ -297,16 +348,27 @@ class _Instance extends WasmInstance {
             ),
       ),
     );
+    final wasi = builder.wasi?.inner;
+    if (wasi != null) {
+      if (getFunction('_start')?.params.isEmpty ?? false) {
+        wasi.start(instance.jsObject);
+      } else if (getFunction('_initialize')?.params.isEmpty ?? false) {
+        wasi.initialize(instance.jsObject);
+      } else {
+        js_util.setProperty(wasi, 'inst', instance.jsObject);
+        logWasiNoStartOrInitialize();
+      }
+    }
   }
 
   @override
   WasmInstanceFuel? fuel() => null;
 
   @override
-  Stream<Uint8List> get stderr => throw UnimplementedError();
+  Stream<Uint8List> get stderr => builder.wasi!.stderr!.streamController.stream;
 
   @override
-  Stream<Uint8List> get stdout => throw UnimplementedError();
+  Stream<Uint8List> get stdout => builder.wasi!.stdout!.streamController.stream;
 }
 
 class _Memory extends WasmMemory {
