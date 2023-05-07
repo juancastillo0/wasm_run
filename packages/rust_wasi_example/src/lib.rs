@@ -23,7 +23,8 @@ pub extern "C" fn read_file_size(path: *const c_char) -> u64 {
     let metadata = std::fs::metadata(path.to_str().unwrap());
 
     if let Err(err) = &metadata {
-        eprintln!("Error: {:?} {:?}", path, err);
+        let err = format!("{path:?} {err:?}");
+        eprintln!("{err}");
     }
     metadata.unwrap().len()
 }

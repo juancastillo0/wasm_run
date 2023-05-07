@@ -12,6 +12,7 @@ dependencies:
   flutter_rust_bridge: ^1.72.2
   freezed_annotation: ^2.2.0
   wasm_interop: ^2.0.0
+  logging: ^1.1.1
 
 dev_dependencies:
   ffigen: ^7.2.10

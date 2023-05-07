@@ -1,4 +1,4 @@
-// ignore_for_file: avoid_print
+// ignore_for_file: avoid_print, prefer_const_literals_to_create_immutables
 
 import 'dart:convert';
 import 'dart:io';
@@ -11,6 +11,7 @@ import 'package:wasmit/src/ffi.dart' show defaultInstance;
 import 'package:wasmit/wasmit.dart';
 import 'package:wasmit_example/runner_identity/runner_identity.dart';
 import 'package:wasmit_example/simd_test.dart' show simdTests;
+import 'package:wasmit_example/wasi_base64.dart';
 
 const isWeb = identical(0, 0.0);
 const compiledWasmLibraryPath =
@@ -508,7 +509,8 @@ void testAll({
     print(module);
     expect(
       module.getExports().map((e) => e.toString()).toList()..sort(),
-      [
+      const [
+        // WasmModuleExport('_start', WasmExternalKind.function), // _initialize
         WasmModuleExport('alloc', WasmExternalKind.function),
         WasmModuleExport('current_time', WasmExternalKind.function),
         WasmModuleExport('dealloc', WasmExternalKind.function),
@@ -628,7 +630,7 @@ void testAll({
     final currentTime = instance1.getFunction('current_time')!;
     final now1 = DateTime.now().millisecondsSinceEpoch;
     await Future<void>.delayed(const Duration(milliseconds: 1));
-    final t = (currentTime().first! as BigInt).toInt();
+    final t = i64.toInt(currentTime().first!);
     expect(now1, lessThan(t));
     await Future<void>.delayed(const Duration(milliseconds: 1));
     expect(DateTime.now().millisecondsSinceEpoch, greaterThan(t));
@@ -693,7 +695,7 @@ void testAll({
       memory.write(offset: offset, buffer: buffer);
       int size;
       try {
-        size = (readFileSize([offset]).first! as BigInt).toInt();
+        size = i64.toInt(readFileSize([offset]).first!);
       } catch (e, s) {
         print('$e $s');
         await Future<void>.delayed(const Duration(milliseconds: 10));
@@ -743,8 +745,7 @@ void testAll({
 
     final printHello = instance1.getFunction('print_hello')!;
     final List<String> stdout1 = [];
-    final stdout = instance1.stdout;
-    final stdoutSubscription = stdout.listen((event) {
+    final stdoutSubscription = instance1.stdout.listen((event) {
       stdout1.add(utf8.decode(event));
     });
     printHello.inner();
@@ -753,7 +754,7 @@ void testAll({
 
     final stderrLog = instance1.getFunction('stderr_log')!;
 
-    final errMsg = 'error message';
+    const errMsg = 'error message';
     final buffer = Uint8List.sublistView(Uint16List.fromList(errMsg.codeUnits));
     withBufferOffset(buffer, (offset) {
       stderrLog([offset, errMsg.codeUnits.length]);
@@ -973,6 +974,7 @@ class Parser {
   ByteData get byteData => memView.buffer.asByteData();
   bool _isDealloc = false;
 
+  /// Utilities for parsing data from a [memView].
   // TODO(test-improve): improve api, maybe pass WasmMemory
   // TODO(test-improve): improve api, only one method parses and it requires dealloc
   Parser(
@@ -1041,9 +1043,9 @@ class Parser {
   }
 
   int parseUint64() {
-    final value = byteData.getUint64(memOffset, endian);
+    final value = i64.getUint64(byteData, memOffset, endian);
     memOffset += 8;
-    return value;
+    return i64.toInt(value);
   }
 
   T? parseNullable<T>(T Function() parse) {
@@ -1062,6 +1064,7 @@ class FileData {
   final int? accessed;
   final int? created;
 
+  ///
   FileData({
     required this.size,
     required this.read_only,
@@ -1088,6 +1091,7 @@ class FileData {
 
   @override
   String toString() {
-    return 'FileData(size: $size, read_only: $read_only, modified: $modified, accessed: $accessed, created: $created)';
+    return 'FileData(size: $size, read_only: $read_only, modified: $modified,'
+        ' accessed: $accessed, created: $created)';
   }
 }
