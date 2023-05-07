@@ -54,7 +54,10 @@ class R {
   Object? toJson() => {
         'a': a,
         'b': b,
-        'c': c.map((e) => [e.$1, e.$2.toJson()]).toList(),
+        'c': c
+            .map((e) =>
+                [e.$1, e.$2.toJson((some) => some.toJson((some) => some))])
+            .toList(),
       };
   static const _spec = Record([
     (label: 'a', t: U32()),
@@ -299,7 +302,7 @@ class HumanAdult implements Human {
   Object? toJson() => {
         'adult': [
           value.$1,
-          value.$2.toJson(),
+          value.$2.toJson((some) => some.toJson((some) => some)),
           [value.$3.$1]
         ]
       };
@@ -518,7 +521,13 @@ class TypesWorld {
         final args0 = args[0];
         final results = imports.imports.apiA1B2(
             (args0 as Iterable).map((e) => Human.fromJson(e)).toList());
-        return ([results.h1.toJson(), results.val2.toJson()], () {});
+        return (
+          [
+            results.h1.toJson(null, (error) => error.toJson()),
+            results.val2.toJson()
+          ],
+          () {}
+        );
       }
 
       final lowered =
@@ -534,7 +543,7 @@ class TypesWorld {
         final results = imports.inline.inlineImp((args0 as Iterable)
             .map((e) => Option.fromJson(e, (some) => some as String))
             .toList());
-        return ([results.toJson()], () {});
+        return ([results.toJson(null, null)], () {});
       }
 
       final lowered =
@@ -601,7 +610,10 @@ class TypesWorld {
     int /*U32*/,
     int /*U64*/,
   ) reNamed(Option<Permissions> perm, Option<Empty> e) {
-    final results = _reNamed([perm.toJson(), e.toJson()]);
+    final results = _reNamed([
+      perm.toJson((some) => some.toJson()),
+      e.toJson((some) => some.toJson())
+    ]);
     final result = results[0];
     return (() {
       final l = result is Map

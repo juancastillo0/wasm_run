@@ -96,13 +96,38 @@ impl Parsed<'_> {
     pub fn type_def_to_json(&self, getter: &str, ty: &TypeDef) -> String {
         let name = ty.name.as_ref().map(heck::AsPascalCase);
         match &ty.kind {
-            TypeDefKind::Record(record) => format!("{getter}.toJson()"),
-            TypeDefKind::Enum(enum_) => format!("{getter}.toJson()"),
-            TypeDefKind::Union(union) => format!("{getter}.toJson()"),
-            TypeDefKind::Flags(flags) => format!("{getter}.toJson()"),
-            TypeDefKind::Variant(variant) => format!("{getter}.toJson()"),
-            TypeDefKind::Option(variant) => format!("{getter}.toJson()"),
-            TypeDefKind::Result(variant) => format!("{getter}.toJson()"),
+            TypeDefKind::Record(_record) => format!("{getter}.toJson()"),
+            TypeDefKind::Enum(_enum_) => format!("{getter}.toJson()"),
+            TypeDefKind::Union(_union) => format!("{getter}.toJson()"),
+            TypeDefKind::Flags(_flags) => format!("{getter}.toJson()"),
+            TypeDefKind::Variant(_variant) => format!("{getter}.toJson()"),
+            TypeDefKind::Option(ty) => format!(
+                "{getter}.toJson((some) => {})",
+                self.type_to_json("some", &ty)
+            ),
+            TypeDefKind::Result(r) => format!(
+                "{getter}.toJson({}, {})",
+                r.ok.map_or_else(
+                    || "null".to_string(),
+                    |ok| {
+                        let to_json = self.type_to_json("ok", &ok);
+                        if to_json == "ok" {
+                            return "null".to_string();
+                        }
+                        format!("(ok) => {to_json}")
+                    }
+                ),
+                r.err.map_or_else(
+                    || "null".to_string(),
+                    |error| {
+                        let to_json = self.type_to_json("error", &error);
+                        if to_json == "error" {
+                            return "null".to_string();
+                        }
+                        format!("(error) => {to_json}")
+                    }
+                )
+            ),
             TypeDefKind::Tuple(t) => {
                 format!(
                     "[{}]",
@@ -118,8 +143,8 @@ impl Parsed<'_> {
                 "{getter}.map((e) => {}).toList()",
                 self.type_to_json("e", &ty)
             ),
-            TypeDefKind::Future(ty) => unreachable!("Future"),
-            TypeDefKind::Stream(s) => unreachable!("Stream"),
+            TypeDefKind::Future(_ty) => unreachable!("Future"),
+            TypeDefKind::Stream(_s) => unreachable!("Stream"),
             TypeDefKind::Type(ty) => self.type_to_json(getter, &ty),
             TypeDefKind::Unknown => unimplemented!("Unknown type"),
         }

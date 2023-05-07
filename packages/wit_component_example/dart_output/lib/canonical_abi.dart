@@ -1,6 +1,8 @@
 // PORTED FROM https://github.com/WebAssembly/component-model/blob/20e98fd3874bd4b63b3fdc50802c3804066ec138/design/mvp/canonical-abi/definitions.py
 
-import 'dart:convert' show utf8, latin1;
+// ignore_for_file: non_constant_identifier_names, constant_identifier_names, parameter_assignments
+
+import 'dart:convert' show latin1, utf8;
 import 'dart:math' as math;
 import 'dart:typed_data' show ByteData, Endian, Uint8List;
 
@@ -10,8 +12,9 @@ class CoreWebAssemblyException implements Exception {}
 
 Never trap() => throw Trap();
 
-void trap_if(bool cond) {
-  if (cond) throw Trap();
+// ignore: avoid_positional_boolean_parameters
+void trap_if(bool condition) {
+  if (condition) throw Trap();
 }
 
 sealed class BaseType {
@@ -97,8 +100,6 @@ class FuncType extends ExternType {
 
   static List<ValType> extract_types(List<(String, ValType)> vec) {
     if (vec.isEmpty) return [];
-    // if (vec[0] is ValType)
-    //   return vec;
     return [...vec.map((e) => e.$2)];
   }
 }
@@ -310,14 +311,15 @@ sealed class DespecializedValType extends ValType {
 
 DespecializedValType despecialize(ValType t) {
   return switch (t) {
-    Tuple(:var ts) =>
+    Tuple(:final ts) =>
       Record([...ts.indexed.map((t) => (label: t.$1.toString(), t: t.$2))]),
-    Union(:var ts) =>
+    Union(:final ts) =>
       Variant([...ts.indexed.map((t) => Case(t.$1.toString(), t.$2))]),
-    EnumType(:var labels) => Variant([...labels.map((e) => Case(e, null))]),
-    OptionType(:var t) => Variant([Case("none", null), Case("some", t)]),
-    ResultType(:var ok, :var error) =>
-      Variant([Case("ok", ok), Case("error", error)]),
+    EnumType(:final labels) => Variant([...labels.map((e) => Case(e, null))]),
+    OptionType(:final t) =>
+      Variant([const Case('none', null), Case('some', t)]),
+    ResultType(:final ok, :final error) =>
+      Variant([Case('ok', ok), Case('error', error)]),
     DespecializedValType() => t,
   };
 }
@@ -344,11 +346,11 @@ int alignment(ValType t) {
       return 4;
     case StringType() || ListType():
       return 4;
-    case Record(:var fields):
+    case Record(:final fields):
       return alignment_record(fields);
-    case Variant(:var cases):
+    case Variant(:final cases):
       return alignment_variant(cases);
-    case Flags(:var labels):
+    case Flags(:final labels):
       return alignment_flags(labels);
     case Own() || Borrow():
       return 4;
@@ -358,7 +360,9 @@ int alignment(ValType t) {
 
 int alignment_record(List<Field> fields) {
   int a = 1;
-  for (final f in fields) a = math.max(a, alignment(f.t));
+  for (final f in fields) {
+    a = math.max(a, alignment(f.t));
+  }
   return a;
 }
 // #
@@ -371,27 +375,29 @@ int alignment_variant(List<Case> cases) {
 }
 
 ValType discriminant_type(List<Case> cases) {
-  int n = cases.length;
+  final int n = cases.length;
   assert(0 < n);
   assert(n < (1 << 32));
   return switch (((math.log(n) / math.ln2) / 8).ceil()) {
-    0 => U8(),
-    1 => U8(),
-    2 => U16(),
-    3 => U32(),
-    _ => throw "unreachable",
+    0 => const U8(),
+    1 => const U8(),
+    2 => const U16(),
+    3 => const U32(),
+    _ => throw Exception('Unreachable'),
   };
 }
 
 int max_case_alignment(List<Case> cases) {
   int a = 1;
-  for (final c in cases) if (c.t != null) a = math.max(a, alignment(c.t!));
+  for (final c in cases) {
+    if (c.t != null) a = math.max(a, alignment(c.t!));
+  }
   return a;
 }
 // #
 
 int alignment_flags(List<String> labels) {
-  int n = labels.length;
+  final int n = labels.length;
   if (n <= 8) return 1;
   if (n <= 16) return 2;
   return 4;
@@ -418,11 +424,11 @@ int size(ValType t) {
       return 4;
     case StringType() || ListType():
       return 8;
-    case Record(:var fields):
+    case Record(:final fields):
       return size_record(fields);
-    case Variant(:var cases):
+    case Variant(:final cases):
       return size_variant(cases);
-    case Flags(:var labels):
+    case Flags(:final labels):
       return size_flags(labels);
     case Own() || Borrow():
       return 4;
@@ -446,13 +452,15 @@ int size_variant(List<Case> cases) {
   int s = size(discriminant_type(cases));
   s = align_to(s, max_case_alignment(cases));
   int cs = 0;
-  for (final c in cases) if (c.t != null) cs = math.max(cs, size(c.t!));
+  for (final c in cases) {
+    if (c.t != null) cs = math.max(cs, size(c.t!));
+  }
   s += cs;
   return align_to(s, alignment_variant(cases));
 }
 
 int size_flags(List<String> labels) {
-  int n = labels.length;
+  final int n = labels.length;
   if (n == 0) return 0;
   if (n <= 8) return 1;
   if (n <= 16) return 2;
@@ -675,21 +683,14 @@ Object? load(Context cx, int ptr, ValType t) {
   return switch (_t) {
     Bool() => convert_int_to_bool(load_int(cx, ptr, 1)),
     IntType() => load_int_type(cx, ptr, _t),
-    // U16() => load_int(cx, ptr, 2),
-    // U32() => load_int(cx, ptr, 4),
-    // U64() => load_int(cx, ptr, 8),
-    // S8() => load_int(cx, ptr, 1, signed: true),
-    // S16() => load_int(cx, ptr, 2, signed: true),
-    // S32() => load_int(cx, ptr, 4, signed: true),
-    // S64() => load_int(cx, ptr, 8, signed: true),
     Float32() => canonicalize32(reinterpret_i32_as_float(load_int(cx, ptr, 4))),
     Float64() => canonicalize64(reinterpret_i64_as_float(load_int(cx, ptr, 8))),
     Char() => convert_i32_to_char(cx, load_int(cx, ptr, 4)),
     StringType() => load_string(cx, ptr),
-    ListType(:var t) => load_list(cx, ptr, t),
-    Record(:var fields) => load_record(cx, ptr, fields),
-    Variant(:var cases) => load_variant(cx, ptr, cases),
-    Flags(:var labels) => load_flags(cx, ptr, labels),
+    ListType(:final t) => load_list(cx, ptr, t),
+    Record(:final fields) => load_record(cx, ptr, fields),
+    Variant(:final cases) => load_variant(cx, ptr, cases),
+    Flags(:final labels) => load_flags(cx, ptr, labels),
     Own() => lift_own(cx, load_int(cx, ptr, 4), _t),
     Borrow() => lift_borrow(cx, load_int(cx, ptr, 4), _t),
   };
@@ -707,7 +708,7 @@ int load_int(Context cx, int ptr, int nbytes, {bool signed = false}) {
     (2, true) => data.getInt16(ptr, Endian.little),
     (4, true) => data.getInt32(ptr, Endian.little),
     (8, true) => data.getInt64(ptr, Endian.little),
-    _ => throw 'unreachable',
+    _ => throw Exception('Unreachable'),
   };
 }
 
@@ -793,7 +794,10 @@ enum StringEncoding {
       'utf8' => utf8,
       'utf16' => utf16,
       'latin1+utf16' || 'latin1utf16' => latin1utf16,
-      _ => throw 'unreachable',
+      _ => throw Exception(
+          'invalid string encoding: $json.'
+          ' Values: ${StringEncoding.values}',
+        ),
     };
   }
 
@@ -814,11 +818,11 @@ class ParsedString {
   const ParsedString(this.value, this.encoding, this.tagged_code_units);
 
   factory ParsedString.fromJson(Object? json) {
-    final map = json as Map<String, Object?>;
+    final map = json! as Map<String, Object?>;
     return ParsedString(
-      map['value'] as String,
+      map['value']! as String,
       StringEncoding.fromJson(map['encoding']),
-      map['tagged_code_units'] as int,
+      map['tagged_code_units']! as int,
     );
   }
 
@@ -844,8 +848,8 @@ class ParsedString {
 /// isn't simply a Dart String, but a [ParsedString] containing a String, the original encoding
 /// and the original byte length.
 ParsedString load_string(Context cx, int ptr) {
-  int begin = load_int(cx, ptr, 4);
-  int tagged_code_units = load_int(cx, ptr + 4, 4);
+  final int begin = load_int(cx, ptr, 4);
+  final int tagged_code_units = load_int(cx, ptr + 4, 4);
   return load_string_from_range(cx, begin, tagged_code_units);
 }
 
@@ -911,8 +915,8 @@ String decodeString(Uint8List bytes, StringEncoding encoding) {
 
 /// Lists are loaded by recursively loading their elements
 ListValue load_list(Context cx, int ptr, ValType elem_type) {
-  int begin = load_int(cx, ptr, 4);
-  int length = load_int(cx, ptr + 4, 4);
+  final int begin = load_int(cx, ptr, 4);
+  final int length = load_int(cx, ptr + 4, 4);
   return load_list_from_range(cx, begin, length, elem_type);
 }
 
@@ -970,9 +974,8 @@ VariantValue load_variant(
 }
 
 String case_label_with_refinements(Case c, List<Case> cases) {
-  List<String> labels = [c.label];
+  final List<String> labels = [c.label];
   while (c.refines != null) {
-    // TODO: find_case returns -1
     c = cases[find_case(c.refines!, cases)];
     labels.add(c.label);
   }
@@ -980,7 +983,7 @@ String case_label_with_refinements(Case c, List<Case> cases) {
 }
 
 int find_case(String label, List<Case> cases) {
-  final matches = cases.indexed.where((e) => e.$2 == label).toList();
+  final matches = cases.indexed.where((e) => e.$2.label == label).toList();
   assert(matches.length <= 1);
   if (matches.length == 1) return matches[0].$1;
   return -1;
@@ -1034,9 +1037,9 @@ BorrowHandle lift_borrow(Context cx, int i, Resource t) {
 
 int truthyInt(Object? v) => v == false || v == 0 || v == null ? 0 : 1;
 
-/// The store function defines how to write a value [v] of a given value type [t]
-/// into linear memory starting at offset [ptr].
-/// Presenting the definition of store piecewise, we start with the top-level case analysis:
+/// The store function defines how to write a value [v] of a given value
+/// type [t] into linear memory starting at offset [ptr].
+/// Presenting the definition of store piecewise.
 void store(Context cx, Object? v, ValType t, int ptr) {
   assert(ptr == align_to(ptr, alignment(t)));
   assert(ptr + size(t) <= cx.opts.memory.length);
@@ -1045,50 +1048,51 @@ void store(Context cx, Object? v, ValType t, int ptr) {
     case Bool():
       store_int(cx, truthyInt(v), ptr, 1);
     case U8():
-      store_int(cx, v as int, ptr, 1);
+      store_int(cx, v! as int, ptr, 1);
     case U16():
-      store_int(cx, v as int, ptr, 2);
+      store_int(cx, v! as int, ptr, 2);
     case U32():
-      store_int(cx, v as int, ptr, 4);
+      store_int(cx, v! as int, ptr, 4);
     case U64():
-      store_int(cx, v as int, ptr, 8);
+      store_int(cx, v! as int, ptr, 8);
     case S8():
-      store_int(cx, v as int, ptr, 1, signed: true);
+      store_int(cx, v! as int, ptr, 1, signed: true);
     case S16():
-      store_int(cx, v as int, ptr, 2, signed: true);
+      store_int(cx, v! as int, ptr, 2, signed: true);
     case S32():
-      store_int(cx, v as int, ptr, 4, signed: true);
+      store_int(cx, v! as int, ptr, 4, signed: true);
     case S64():
-      store_int(cx, v as int, ptr, 8, signed: true);
+      store_int(cx, v! as int, ptr, 8, signed: true);
     case Float32():
       store_int(
-          cx, reinterpret_float_as_i32(canonicalize32(v as double)), ptr, 4);
+          cx, reinterpret_float_as_i32(canonicalize32(v! as double)), ptr, 4);
     case Float64():
       store_int(
-          cx, reinterpret_float_as_i64(canonicalize64(v as double)), ptr, 8);
+          cx, reinterpret_float_as_i64(canonicalize64(v! as double)), ptr, 8);
     case Char():
-      store_int(cx, char_to_i32(v as String), ptr, 4);
+      store_int(cx, char_to_i32(v! as String), ptr, 4);
     case StringType():
-      store_string(cx, v as ParsedString, ptr);
-    case ListType(:var t):
-      store_list(cx, v as ListValue, ptr, t);
-    case Record(:var fields):
-      store_record(cx, v as RecordValue, ptr, fields);
-    case Variant(:var cases):
-      store_variant(cx, v as VariantValue, ptr, cases);
-    case Flags(:var labels):
-      store_flags(cx, v as FlagsValue, ptr, labels);
+      store_string(cx, v! as ParsedString, ptr);
+    case ListType(:final t):
+      store_list(cx, v! as ListValue, ptr, t);
+    case Record(:final fields):
+      store_record(cx, v! as RecordValue, ptr, fields);
+    case Variant(:final cases):
+      store_variant(cx, v! as VariantValue, ptr, cases);
+    case Flags(:final labels):
+      store_flags(cx, v! as FlagsValue, ptr, labels);
     case Own():
-      store_int(cx, lower_own(cx, v as Handle, _t), ptr, 4);
+      store_int(cx, lower_own(cx, v! as Handle, _t), ptr, 4);
     case Borrow():
-      store_int(cx, lower_borrow(cx, v as Handle, _t), ptr, 4);
+      store_int(cx, lower_borrow(cx, v! as Handle, _t), ptr, 4);
   }
 }
 // #
 
-/// Integers are stored directly into memory. Because the input domain is exactly
-/// the integers in range for the given type, no extra range checks are necessary;
-/// the signed parameter is only present to ensure that the internal range checks of int.to_bytes are satisfied.
+/// Integers are stored directly into memory. Because the input domain is
+/// exactly the integers in range for the given type, no extra range
+/// checks are necessary; the signed parameter is only present to ensure
+/// that the internal range checks of int.to_bytes are satisfied.
 void store_int(Context cx, int v, int ptr, int nbytes, {bool signed = false}) {
   final data = cx.opts.memory.buffer.asByteData();
   switch ((nbytes, signed)) {
@@ -1109,9 +1113,8 @@ void store_int(Context cx, int v, int ptr, int nbytes, {bool signed = false}) {
     case (8, true):
       data.setInt64(ptr, v, Endian.little);
     case _:
-      throw 'unreachable';
+      throw Exception('Unreachable');
   }
-  ;
 }
 
 // #
@@ -1127,7 +1130,8 @@ int reinterpret_float_as_i64(double f) => f.truncate();
 // #
 
 /// The integral value of a char (a Unicode Scalar Value)
-/// is a valid unsigned i32 and thus no runtime conversion or checking is necessary:
+/// is a valid unsigned i32 and thus no runtime conversion
+/// or checking is necessary:
 int char_to_i32(String c) {
   final i = c.runes.first;
   assert(0 <= i && i <= 0xD7FF || 0xD800 <= i && i <= 0x10FFFF);
@@ -1156,9 +1160,9 @@ void store_string(Context cx, ParsedString v, int ptr) {
   store_int(cx, tagged_code_units, ptr + 4, 4);
 }
 
-/// We start with a case analysis to enumerate all the meaningful encoding combinations,
-/// subdividing the latin1+utf16 encoding into either latin1 or utf16 based on the
-/// UTF16_BIT flag set by load_string
+/// We start with a case analysis to enumerate all the meaningful
+/// encoding combinations, subdividing the latin1+utf16 encoding into either
+/// latin1 or utf16 based on the UTF16_BIT flag set by load_string
 PointerAndSize store_string_into_range(Context cx, ParsedString v) {
   final src = v.value;
   final src_encoding = v.encoding;
@@ -1215,8 +1219,8 @@ PointerAndSize store_string_into_range(Context cx, ParsedString v) {
             case StringEncoding.utf16:
               return store_probably_utf16_to_latin1_or_utf16(
                   cx, src, src_code_units);
-            default:
-              throw 'unreachable';
+            case _:
+              throw Exception('Unreachable');
           }
       }
   }
@@ -1299,7 +1303,7 @@ PointerAndSize store_string_to_utf8(
   final lenEncoded = encoded.length;
   assert(src_code_units <= lenEncoded);
   cx.opts.memory.setRange(ptr, ptr + src_code_units, encoded);
-  if (src_code_units < (lenEncoded)) {
+  if (src_code_units < lenEncoded) {
     trap_if(worst_case_size > MAX_STRING_BYTE_LENGTH);
     ptr = cx.opts.realloc(ptr, src_code_units, 1, worst_case_size);
     trap_if(ptr + worst_case_size > (cx.opts.memory.length));
@@ -1333,7 +1337,7 @@ PointerAndSize store_utf8_to_utf16(Context cx, String src, int src_code_units) {
     trap_if(ptr != align_to(ptr, 2));
     trap_if(ptr + lenEncoded > cx.opts.memory.length);
   }
-  final code_units = (lenEncoded ~/ 2);
+  final code_units = lenEncoded ~/ 2;
   return (ptr, code_units);
 }
 // #
@@ -1415,9 +1419,10 @@ PointerAndSize store_probably_utf16_to_latin1_or_utf16(
     final tagged_code_units = (lenEncoded ~/ 2) | UTF16_TAG;
     return (ptr, tagged_code_units);
   }
-  final latin1_size = (lenEncoded ~/ 2);
-  for (final i in Iterable<int>.generate(latin1_size))
+  final latin1_size = lenEncoded ~/ 2;
+  for (final i in Iterable<int>.generate(latin1_size)) {
     cx.opts.memory[ptr + i] = cx.opts.memory[ptr + 2 * i];
+  }
   ptr = cx.opts.realloc(ptr, src_byte_length, 1, latin1_size);
   trap_if(ptr + latin1_size > (cx.opts.memory.length));
   return (ptr, latin1_size);
@@ -1435,14 +1440,16 @@ void store_list(Context cx, ListValue v, int ptr, ValType elem_type) {
   store_int(cx, length, ptr + 4, 4);
 }
 
-(int, int) store_list_into_range(Context cx, ListValue v, ValType elem_type) {
+PointerAndSize store_list_into_range(
+    Context cx, ListValue v, ValType elem_type) {
   final byte_length = v.length * size(elem_type);
   trap_if(byte_length >= (1 << 32));
   final ptr = cx.opts.realloc(0, 0, alignment(elem_type), byte_length);
   trap_if(ptr != align_to(ptr, alignment(elem_type)));
   trap_if(ptr + byte_length > cx.opts.memory.length);
-  for (final (i, e) in v.indexed)
+  for (final (i, e) in v.indexed) {
     store(cx, e, elem_type, ptr + i * size(elem_type));
+  }
   return (ptr, v.length);
 }
 
@@ -1464,10 +1471,11 @@ void store_record(
 
 /// TODO(generator): Variants are stored using the |-separated list of refines cases built
 /// by [case_label_with_refinements] (above) to iteratively find a matching
-/// case (which validation guarantees will succeed). While this code appears to do O(n)
-/// string matching, a normal implementation can statically fuse store_variant with
-/// its matching load_variant to ultimately build a dense array that maps
-/// producer's case indices to the consumer's case indices.
+/// case (which validation guarantees will succeed).
+/// While this code appears to do O(n) string matching, a normal implementation
+/// can statically fuse store_variant with its matching load_variant
+/// to ultimately build a dense array that maps producer's case indices
+/// to the consumer's case indices.
 void store_variant(Context cx, VariantValue v, int ptr, List<Case> cases) {
   final (case_index, case_value) = match_case(v, cases);
   final disc_size = size(discriminant_type(cases));
@@ -1529,7 +1537,6 @@ int lower_own(Context cx, Handle h, Resource t) {
 /// of creating an intermediate borrow handle.
 int lower_borrow(Context cx, Handle h, Resource t) {
   assert(h is BorrowHandle);
-  // TODO: should it be identical?
   if (cx.inst == t.rt.impl) return h.rep;
   (h as BorrowHandle).cx = cx;
   return cx.inst.handles.add(h, t);
@@ -1568,7 +1575,7 @@ CoreFuncType flatten_functype(FuncType ft, FlattenContext context) {
   if (flat_params.length > MAX_FLAT_PARAMS) flat_params = [FlattenType.i32];
 
   var flat_results = flatten_types(ft.result_types());
-  if (flat_results.length > MAX_FLAT_RESULTS)
+  if (flat_results.length > MAX_FLAT_RESULTS) {
     switch (context) {
       case FlattenContext.lift:
         flat_results = [FlattenType.i32];
@@ -1576,6 +1583,7 @@ CoreFuncType flatten_functype(FuncType ft, FlattenContext context) {
         flat_params += [FlattenType.i32];
         flat_results = [];
     }
+  }
 
   return CoreFuncType(flat_params, flat_results);
 }
@@ -1603,9 +1611,9 @@ List<FlattenType> flatten_type(ValType t) {
     Float64() => [FlattenType.f64],
     Char() => [FlattenType.i32],
     StringType() || ListType() => [FlattenType.i32, FlattenType.i32],
-    Record(:var fields) => flatten_record(fields),
-    Variant(:var cases) => flatten_variant(cases),
-    Flags(:var labels) => List.filled(num_i32_flags(labels), FlattenType.i32),
+    Record(:final fields) => flatten_record(fields),
+    Variant(:final cases) => flatten_variant(cases),
+    Flags(:final labels) => List.filled(num_i32_flags(labels), FlattenType.i32),
     Own() || Borrow() => [FlattenType.i32],
   };
 }
@@ -1614,7 +1622,9 @@ List<FlattenType> flatten_type(ValType t) {
 /// Record flattening simply flattens each field in sequence.
 List<FlattenType> flatten_record(List<Field> fields) {
   final List<FlattenType> flat = [];
-  for (final f in fields) flat.addAll(flatten_type(f.t));
+  for (final f in fields) {
+    flat.addAll(flatten_type(f.t));
+  }
   return flat;
 }
 // #
@@ -1629,13 +1639,14 @@ List<FlattenType> flatten_record(List<Field> fields) {
 /// reinterpreting an f32 as an i32 or zero-extending an i32 into an i64.
 List<FlattenType> flatten_variant(List<Case> cases) {
   final List<FlattenType> flat = [];
-  for (final c in cases)
-    if (c.t != null)
-      for (final (i, ft) in flatten_type(c.t!).indexed)
-        if (i < flat.length)
-          flat[i] = join(flat[i], ft);
-        else
-          flat.add(ft);
+  for (final c in cases.where((c) => c.t != null)) {
+    for (final (i, ft) in flatten_type(c.t!).indexed) {
+      if (i < flat.length)
+        flat[i] = join(flat[i], ft);
+      else
+        flat.add(ft);
+    }
+  }
   return flatten_type(discriminant_type(cases)) + flat;
 }
 
@@ -1696,9 +1707,8 @@ class _ValueIter implements ValueIter {
 
 /// The lift_flat function defines how to convert zero or more core values
 /// into a single high-level value of type [t]. The values are given by a value
-/// iterator [vi] that iterates over a complete parameter or result list and asserts
-/// that the expected and actual types line up. Presenting the definition of
-/// lift_flat piecewise, we start with the top-level case analysis:
+/// iterator [vi] that iterates over a complete parameter or result list and
+/// asserts that the expected and actual types line up.
 Object? lift_flat(Context cx, ValueIter vi, ValType t) {
   final _t = despecialize(t);
   return switch (_t) {
@@ -1715,10 +1725,10 @@ Object? lift_flat(Context cx, ValueIter vi, ValType t) {
     Float64() => canonicalize64(vi.nextDouble(FlattenType.f64)),
     Char() => convert_i32_to_char(cx, vi.nextInt(FlattenType.i32)),
     StringType() => lift_flat_string(cx, vi),
-    ListType(:var t) => lift_flat_list(cx, vi, t),
-    Record(:var fields) => lift_flat_record(cx, vi, fields),
-    Variant(:var cases) => lift_flat_variant(cx, vi, cases),
-    Flags(:var labels) => lift_flat_flags(vi, labels),
+    ListType(:final t) => lift_flat_list(cx, vi, t),
+    Record(:final fields) => lift_flat_record(cx, vi, fields),
+    Variant(:final cases) => lift_flat_variant(cx, vi, cases),
+    Flags(:final labels) => lift_flat_flags(vi, labels),
     Own() => lift_own(cx, vi.nextInt(FlattenType.i32), _t),
     Borrow() => lift_borrow(cx, vi.nextInt(FlattenType.i32), _t),
   };
@@ -1731,7 +1741,8 @@ Object? lift_flat(Context cx, ValueIter vi, ValType t) {
 /// the Canonical ABI ignores the unused high bits (like load_int).
 /// The conversion logic here assumes that i32 values are always
 /// represented as unsigned Python ints and thus lifting to a signed
-/// type performs a manual 2s complement conversion in the Python (which would be a no-op in hardware).
+/// type performs a manual 2s complement conversion in the Python
+/// (which would be a no-op in hardware).
 int lift_flat_unsigned(ValueIter vi, int core_width, int t_width) {
   final i = vi.nextInt(core_width == 32 ? FlattenType.i32 : FlattenType.i64);
   assert(0 <= i);
@@ -1743,7 +1754,7 @@ int lift_flat_signed(ValueIter vi, int core_width, int t_width) {
   int i = vi.nextInt(core_width == 32 ? FlattenType.i32 : FlattenType.i64);
   assert(0 <= i);
   assert(i < (1 << core_width));
-  i %= (1 << t_width);
+  i %= 1 << t_width;
   if (i >= (1 << (t_width - 1))) return i - (1 << t_width);
   return i;
 }
@@ -1751,19 +1762,21 @@ int lift_flat_signed(ValueIter vi, int core_width, int t_width) {
 
 /// The contents of strings and lists are always stored in memory
 /// so lifting these types is essentially the same as loading them from memory;
-/// the only difference is that the pointer and length come from i32 values instead of from linear memory:
+/// the only difference is that the pointer and length come
+/// from i32 values instead of from linear memory:
 ParsedString lift_flat_string(Context cx, ValueIter vi) {
-  int ptr = vi.nextInt(FlattenType.i32);
-  int packed_length = vi.nextInt(FlattenType.i32);
+  final int ptr = vi.nextInt(FlattenType.i32);
+  final int packed_length = vi.nextInt(FlattenType.i32);
   return load_string_from_range(cx, ptr, packed_length);
 }
 
 /// The contents of strings and lists are always stored in memory
 /// so lifting these types is essentially the same as loading them from memory;
-/// the only difference is that the pointer and length come from i32 values instead of from linear memory:
+/// the only difference is that the pointer and length come
+/// from i32 values instead of from linear memory:
 ListValue lift_flat_list(Context cx, ValueIter vi, ValType elem_type) {
-  int ptr = vi.nextInt(FlattenType.i32);
-  int length = vi.nextInt(FlattenType.i32);
+  final int ptr = vi.nextInt(FlattenType.i32);
+  final int length = vi.nextInt(FlattenType.i32);
   return load_list_from_range(cx, ptr, length, elem_type);
 }
 
@@ -1772,7 +1785,9 @@ ListValue lift_flat_list(Context cx, ValueIter vi, ValType elem_type) {
 /// Records are lifted by recursively lifting their fields:
 RecordValue lift_flat_record(Context cx, ValueIter vi, List<Field> fields) {
   final RecordValue record = {};
-  for (final f in fields) record[f.label] = lift_flat(cx, vi, f.t);
+  for (final f in fields) {
+    record[f.label] = lift_flat(cx, vi, f.t);
+  }
   return record;
 }
 // #
@@ -1802,11 +1817,12 @@ class CoerceValueIter implements ValueIter {
 }
 
 /// Variants are also lifted recursively. Lifting a variant must carefully
-/// follow the definition of [flatten_variant] above, consuming the exact same core
-/// types regardless of the dynamic case payload being lifted.
+/// follow the definition of [flatten_variant] above, consuming the exact
+/// same core types regardless of the dynamic case payload being lifted.
 /// Because of the [join] performed by [flatten_variant], we need a
-/// more-permissive value iterator ([CoerceValueIter]) that reinterprets between the different
-/// types appropriately and also traps if the high bits of an i64 are set for a 32-bit type:
+/// more-permissive value iterator ([CoerceValueIter]) that reinterprets
+/// between the different types appropriately and also traps if the
+/// high bits of an i64 are set for a 32-bit type:
 VariantValue lift_flat_variant(Context cx, ValueIter vi, List<Case> cases) {
   final flat_types = flatten_variant(cases);
   assert(flat_types.removeAt(0) == FlattenType.i32);
@@ -1814,12 +1830,11 @@ VariantValue lift_flat_variant(Context cx, ValueIter vi, List<Case> cases) {
   trap_if(case_index >= cases.length);
 
   final c = cases[case_index];
-  final Object? v;
-  if (c.t == null)
-    v = null;
-  else
-    v = lift_flat(cx, CoerceValueIter(vi, flat_types), c.t!);
-  for (final have in flat_types) vi.next(have);
+  final Object? v =
+      c.t == null ? null : lift_flat(cx, CoerceValueIter(vi, flat_types), c.t!);
+  for (final have in flat_types) {
+    vi.next(have);
+  }
   return {case_label_with_refinements(c, cases): v};
 }
 
@@ -1846,29 +1861,29 @@ FlagsValue lift_flat_flags(ValueIter vi, List<String> labels) {
 
 /// The lower_flat function defines how to convert a value [v]
 /// of a given type [t] into zero or more core [Value]s.
-/// Presenting the definition of lower_flat piecewise, we start with the top-level case analysis:
+/// Presenting the definition of lower_flat piecewise.
 List<Value> lower_flat(Context cx, Object? v, ValType t) {
   final _t = despecialize(t);
   return switch (_t) {
     Bool() => [Value(FlattenType.i32, v == 0 || v == false ? 0 : 1)],
-    U8() => [Value(FlattenType.i32, v as int)],
-    U16() => [Value(FlattenType.i32, v as int)],
-    U32() => [Value(FlattenType.i32, v as int)],
-    U64() => [Value(FlattenType.i64, v as int)],
-    S8() => lower_flat_signed(v as int, 32),
-    S16() => lower_flat_signed(v as int, 32),
-    S32() => lower_flat_signed(v as int, 32),
-    S64() => lower_flat_signed(v as int, 64),
-    Float32() => [Value(FlattenType.f32, canonicalize32(v as double))],
-    Float64() => [Value(FlattenType.f64, canonicalize64(v as double))],
-    Char() => [Value(FlattenType.i32, char_to_i32(v as String))],
-    StringType() => lower_flat_string(cx, v as ParsedString),
-    ListType(:var t) => lower_flat_list(cx, v as ListValue, t),
-    Record(:var fields) => lower_flat_record(cx, v as RecordValue, fields),
-    Variant(:var cases) => lower_flat_variant(cx, v as VariantValue, cases),
-    Flags(:var labels) => lower_flat_flags(v as FlagsValue, labels),
-    Own() => [Value(FlattenType.i32, lower_own(cx, v as Handle, _t))],
-    Borrow() => [Value(FlattenType.i32, lower_borrow(cx, v as Handle, _t))],
+    U8() => [Value(FlattenType.i32, v! as int)],
+    U16() => [Value(FlattenType.i32, v! as int)],
+    U32() => [Value(FlattenType.i32, v! as int)],
+    U64() => [Value(FlattenType.i64, v! as int)],
+    S8() => lower_flat_signed(v! as int, 32),
+    S16() => lower_flat_signed(v! as int, 32),
+    S32() => lower_flat_signed(v! as int, 32),
+    S64() => lower_flat_signed(v! as int, 64),
+    Float32() => [Value(FlattenType.f32, canonicalize32(v! as double))],
+    Float64() => [Value(FlattenType.f64, canonicalize64(v! as double))],
+    Char() => [Value(FlattenType.i32, char_to_i32(v! as String))],
+    StringType() => lower_flat_string(cx, v! as ParsedString),
+    ListType(:final t) => lower_flat_list(cx, v! as ListValue, t),
+    Record(:final fields) => lower_flat_record(cx, v! as RecordValue, fields),
+    Variant(:final cases) => lower_flat_variant(cx, v! as VariantValue, cases),
+    Flags(:final labels) => lower_flat_flags(v! as FlagsValue, labels),
+    Own() => [Value(FlattenType.i32, lower_own(cx, v! as Handle, _t))],
+    Borrow() => [Value(FlattenType.i32, lower_borrow(cx, v! as Handle, _t))],
   };
 }
 // #
@@ -1879,20 +1894,26 @@ List<Value> lower_flat(Context cx, Object? v, ValType t) {
 /// Signed integer values are converted to unsigned core i32s
 /// by 2s complement arithmetic (which again would be a no-op in hardware)
 List<Value> lower_flat_signed(int i, int core_bits) {
-  if (i < 0) i += (1 << core_bits);
+  if (i < 0) {
+    i += 1 << core_bits;
+  }
   return [Value(core_bits == 32 ? FlattenType.i32 : FlattenType.i64, i)];
 }
 // #
 
-/// Since strings and lists are stored in linear memory, lifting can reuse the previous definitions;
-/// only the resulting pointers are returned differently (as i32 values instead of as a pair in linear memory)
+/// Since strings and lists are stored in linear memory, lifting can reuse
+/// the previous definitions;
+/// only the resulting pointers are returned differently
+/// (as i32 values instead of as a pair in linear memory)
 List<Value> lower_flat_string(Context cx, ParsedString v) {
   final (ptr, packed_length) = store_string_into_range(cx, v);
   return [Value(FlattenType.i32, ptr), Value(FlattenType.i32, packed_length)];
 }
 
-/// Since strings and lists are stored in linear memory, lifting can reuse the previous definitions;
-/// only the resulting pointers are returned differently (as i32 values instead of as a pair in linear memory)
+/// Since strings and lists are stored in linear memory, lifting can reuse
+/// the previous definitions;
+/// only the resulting pointers are returned differently
+/// (as i32 values instead of as a pair in linear memory)
 List<Value> lower_flat_list(Context cx, ListValue v, ValType elem_type) {
   final (ptr, length) = store_list_into_range(cx, v, elem_type);
   return [Value(FlattenType.i32, ptr), Value(FlattenType.i32, length)];
@@ -1902,25 +1923,26 @@ List<Value> lower_flat_list(Context cx, ListValue v, ValType elem_type) {
 /// Records are lowered by recursively lowering their fields
 List<Value> lower_flat_record(Context cx, RecordValue v, List<Field> fields) {
   final List<Value> flat = [];
-  for (final f in fields) flat.addAll(lower_flat(cx, v[f.label], f.t));
+  for (final f in fields) {
+    flat.addAll(lower_flat(cx, v[f.label], f.t));
+  }
   return flat;
 }
 // #
 
-/// Variants are also lowered recursively. Symmetric to [lift_flat_variant] above,
-/// lower_flat_variant must consume all flattened types of [flatten_variant],
+/// Variants are also lowered recursively.
+/// Symmetric to [lift_flat_variant] above, lower_flat_variant
+/// must consume all flattened types of [flatten_variant],
 /// manually coercing the otherwise-incompatible type pairings allowed by [join]
 List<Value> lower_flat_variant(Context cx, VariantValue v, List<Case> cases) {
   final (case_index, case_value) = match_case(v, cases);
   final flat_types = flatten_variant(cases);
   assert(flat_types.removeAt(0) == FlattenType.i32);
   final c = cases[case_index];
-  final List<Value> payload;
-  if (c.t == null)
-    payload = [];
-  else
-    payload = lower_flat(cx, case_value, c.t!);
-  for (final (i, have) in (payload.indexed)) {
+  final List<Value> payload =
+      c.t == null ? [] : lower_flat(cx, case_value, c.t!);
+
+  for (final (i, have) in payload.indexed) {
     final want = flat_types.removeAt(0);
     switch ((have.t, want)) {
       case (FlattenType.f32, FlattenType.i32):
@@ -1938,8 +1960,10 @@ List<Value> lower_flat_variant(Context cx, VariantValue v, List<Case> cases) {
         break;
     }
   }
-  for (final want in flat_types) payload.add(Value(want, 0));
-  return [Value(FlattenType.i32, case_index)]..addAll(payload);
+  for (final want in flat_types) {
+    payload.add(Value(want, 0));
+  }
+  return [Value(FlattenType.i32, case_index), ...payload];
 }
 // #
 
@@ -1972,7 +1996,7 @@ ListValue lift_values(
     final tuple_type = Tuple(ts);
     trap_if(ptr != align_to(ptr, alignment(tuple_type)));
     trap_if(ptr + size(tuple_type) > cx.opts.memory.length);
-    final tuple_value = load(cx, ptr, tuple_type) as TupleValue;
+    final tuple_value = load(cx, ptr, tuple_type)! as TupleValue;
 
     return tuple_value.values.toList();
   } else {
@@ -1983,8 +2007,8 @@ ListValue lift_values(
 
 /// The lower_values function defines how to lower a list of
 /// component-level values [vs] of types [ts] into a list of at
-/// most [max_flat] core values. As already described for [flatten_functype] above,
-/// lowering handles the greater-than-[max_flat] case by either
+/// most [max_flat] core values. As already described for [flatten_functype]
+/// above, lowering handles the greater-than-[max_flat] case by either
 /// allocating storage with [CanonicalOptions.realloc] or accepting a
 /// caller-allocated buffer as an [out_param].
 List<Value> lower_values(
@@ -2002,18 +2026,20 @@ List<Value> lower_values(
       vs,
     );
     final int ptr;
-    if (out_param == null)
+    if (out_param == null) {
       ptr = cx.opts.realloc(0, 0, alignment(tuple_type), size(tuple_type));
-    else
+    } else {
       ptr = out_param.nextInt(FlattenType.i32);
+    }
     trap_if(ptr != align_to(ptr, alignment(tuple_type)));
     trap_if(ptr + size(tuple_type) > cx.opts.memory.length);
     store(cx, tuple_value, tuple_type, ptr);
     return [Value(FlattenType.i32, ptr)];
   } else {
     final List<Value> flat_vals = [];
-    for (final i in Iterable<int>.generate(vs.length))
+    for (final i in Iterable<int>.generate(vs.length)) {
       flat_vals.addAll(lower_flat(cx, vs[i], ts[i]));
+    }
     return flat_vals;
   }
 }
@@ -2092,7 +2118,7 @@ List<Value> lower_values(
   );
 
   void post_return() {
-    if (opts.post_return != null) opts.post_return!(flat_results);
+    opts.post_return?.call(flat_results);
     trap_if(cx.borrow_count != 0);
   }
 
@@ -2195,7 +2221,9 @@ List<Value> canon_lower(
 
   post_return();
 
-  for (final h in cx.lenders) h.lend_count -= 1;
+  for (final h in cx.lenders) {
+    h.lend_count -= 1;
+  }
 
   if (calling_import) inst.may_enter = true;
 
@@ -2203,7 +2231,8 @@ List<Value> canon_lower(
 }
 
 typedef CanonLowerCallee = (ListValue, void Function()) Function(
-    ListValue args);
+  ListValue args,
+);
 
 // ### `resource.new`
 

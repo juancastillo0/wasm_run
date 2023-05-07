@@ -1,14 +1,27 @@
-import 'dart:typed_data';
 import 'dart:math' as math;
-import 'package:wasmit/wasmit.dart';
-import 'package:wasmit/src/wasm_bindings/make_function_num_args.dart';
+import 'dart:typed_data';
 
-import 'canonical_abi.dart';
+import 'package:dart_output/canonical_abi.dart';
+// TODO: ignore: implementation_imports
+import 'package:wasmit/src/wasm_bindings/make_function_num_args.dart';
+import 'package:wasmit/wasmit.dart';
 
 /// A Rust-style Result type.
 sealed class Result<O, E> {
   const factory Result.ok(O ok) = Ok<O, E>;
-  const factory Result.err(E err) = Err<O, E>;
+  const factory Result.err(E error) = Err<O, E>;
+
+  /// Returns `true` if this is an [Ok] instance
+  bool get isOk;
+
+  /// Returns `true` if this is an [Err] instance
+  bool get isError;
+
+  /// Returns the contained [O] ok value, if present, otherwise returns null
+  O? get ok;
+
+  /// Returns the contained [E] error value, if present, otherwise returns null
+  E? get error;
 
   factory Result.fromJson(
     Object? json,
@@ -16,64 +29,118 @@ sealed class Result<O, E> {
     E Function(Object? json) err,
   ) {
     return switch (json) {
-      {'ok': Object? o} => Ok(ok(o)),
-      ('ok', Object? o) => Ok(ok(o)),
-      {'error': Object? e} => Err(err(e)),
-      ('error', Object? e) => Err(err(e)),
+      {'ok': final o} => Ok(ok(o)),
+      ('ok', final o) => Ok(ok(o)),
+      {'error': final e} => Err(err(e)),
+      ('error', final e) => Err(err(e)),
       _ => throw Exception('Invalid JSON for Result: $json'),
     };
   }
 
-  Object toJson();
+  Object? toJson([
+    Object? Function(O value)? mapOk,
+    Object? Function(E value)? mapError,
+  ]);
 }
 
 /// A Rust-style Result type's success value.
 class Ok<O, E> implements Result<O, E> {
+  @override
   final O ok;
   const Ok(this.ok);
 
-  Object toJson() => {'ok': ok};
+  @override
+  bool get isOk => true;
+  @override
+  bool get isError => false;
+  @override
+  E? get error => null;
+
+  @override
+  Object toJson([
+    Object? Function(O value)? mapOk,
+    Object? Function(E value)? mapError,
+  ]) =>
+      {'ok': mapOk == null ? ok : mapOk(ok)};
 }
 
 /// A Rust-style Result type's failure value.
 class Err<O, E> implements Result<O, E> {
+  @override
   final E error;
   const Err(this.error);
 
-  Object toJson() => {'error': error};
+  @override
+  bool get isOk => false;
+  @override
+  bool get isError => true;
+  @override
+  O? get ok => null;
+
+  @override
+  Object toJson([
+    Object? Function(O value)? mapOk,
+    Object? Function(E value)? mapError,
+  ]) =>
+      {'error': mapError == null ? error : mapError(error)};
 }
 
 /// A Rust-style Option type.
 sealed class Option<T extends Object> {
   const factory Option.some(T value) = Some;
   const factory Option.none() = None;
+
   factory Option.fromJson(Object? json, T Function(Object? json) some) {
     return switch (json) {
       null => None(),
-      {'some': Object? o} => Some(some(o)),
-      ('some', Object? o) => Some(some(o)),
-      {'none': null} => None(),
-      ('none', null) => None(),
+      {'some': final o} => Some(some(o)),
+      ('some', final o) => Some(some(o)),
+      {'none': null} => const None(),
+      ('none', null) => const None(),
       _ => throw Exception('Invalid JSON for Option: $json'),
     };
   }
 
-  Object? toJson();
+  /// Returns the contained [T] value, if present, otherwise returns null
+  T? get value;
+
+  /// Returns `true` if this is a [Some] instance
+  bool get isSome;
+
+  /// Returns `true` if this is a [None] instance
+  bool get isNone;
+
+  Object? toJson([Object? Function(T value)? mapValue]);
 }
 
 /// A Rust-style Option type's Some value.
 class Some<T extends Object> implements Option<T> {
+  @override
   final T value;
   const Some(this.value);
 
-  Object? toJson() => {'some': value};
+  @override
+  bool get isSome => true;
+  @override
+  bool get isNone => false;
+
+  @override
+  Object? toJson([Object? Function(T value)? mapValue]) =>
+      {'some': mapValue == null ? value : mapValue(value)};
 }
 
 /// A Rust-style Option type's None value.
 class None<T extends Object> implements Option<T> {
   const None();
+  @override
+  T? get value => null;
+  @override
+  bool get isSome => false;
+  @override
+  bool get isNone => true;
 
-  Object? toJson() => {'none': null};
+  @override
+  Object? toJson([Object? Function(T value)? mapValue]) => {'none': null};
 }
 
 ByteData flagBitsFromJson(Object? json, Flags spec) {
@@ -96,22 +163,23 @@ ByteData flagBitsFromJson(Object? json, Flags spec) {
     });
     return flagBits;
   } else {
-    final _json = json as List<int>;
-    if (_json.length != (num_bytes ~/ 4))
+    final _json = json! as List<int>;
+    if (_json.length != (num_bytes ~/ 4)) {
       throw Exception('Invalid flag list length: $_json');
-
-    for (var i = 0; i < _json.length; i++)
+    }
+    for (var i = 0; i < _json.length; i++) {
       flagBits.setUint32(i * 4, _json[i], Endian.little);
+    }
     return flagBits;
   }
 }
 
-WasmValueType mapFlattenedToWasmType(FlattenType e) {
+ValueTy mapFlattenedToWasmType(FlattenType e) {
   return switch (e) {
-    FlattenType.i32 => WasmValueType.i32,
-    FlattenType.i64 => WasmValueType.i64,
-    FlattenType.f32 => WasmValueType.f32,
-    FlattenType.f64 => WasmValueType.f64,
+    FlattenType.i32 => ValueTy.i32,
+    FlattenType.i64 => ValueTy.i64,
+    FlattenType.f32 => ValueTy.f32,
+    FlattenType.f64 => ValueTy.f64,
   };
 }
 
@@ -122,10 +190,8 @@ WasmFunction loweredImportFunction(
 ) {
   final flattenedFt = flatten_functype(ft, FlattenContext.lower);
   final lowered = WasmFunction(
-    // params: const [WasmValueType.i32, WasmValueType.i32],
     params: flattenedFt.params.map(mapFlattenedToWasmType).toList(),
     results: flattenedFt.results.map(mapFlattenedToWasmType).toList(),
-    // (int ptr, int len) {
     makeFunctionNumArgs(flattenedFt.params.length, (args) {
       final library = getWasmLibrary();
       final results = canon_lower(
@@ -134,9 +200,8 @@ WasmFunction loweredImportFunction(
         execFn,
         true,
         ft,
-        // [Value(FlattenType.i32, ptr), Value(FlattenType.i32, len)],
         args.indexed
-            .map((e) => Value(flattenedFt.params[e.$1], e.$2 as num))
+            .map((e) => Value(flattenedFt.params[e.$1], e.$2! as num))
             .toList(),
       );
       return results.map((e) => e.v).toList();
@@ -146,7 +211,13 @@ WasmFunction loweredImportFunction(
   return lowered;
 }
 
+/// A [WasmLibrary] is a wrapper around a [WasmInstance] that provides
+/// convenience methods for interacting with the instance that implements
+/// the WASM component model.
 class WasmLibrary {
+  /// A [WasmLibrary] is a wrapper around a [WasmInstance] that provides
+  /// convenience methods for interacting with the instance that implements
+  /// the WASM component model.
   WasmLibrary(this.instance, {this.stringEncoding = StringEncoding.utf8})
       : _realloc = instance.getFunction('cabi_realloc')!.inner,
         wasmMemory = instance.getMemory('memory') ??
@@ -172,7 +243,7 @@ class WasmLibrary {
     final post_func = instance.getFunction('cabi_post_$functionName');
     if (post_func == null) return null;
     return (flat_results) {
-      post_func.call(flat_results.map((e) => e.v).toList());
+      post_func(flat_results.map((e) => e.v).toList());
     };
   }
 
@@ -190,7 +261,7 @@ class WasmLibrary {
       final results = func.call(p0.map((e) => e.v).toList());
       if (results.isEmpty) return [];
       return results.indexed
-          .map((e) => Value(flattenedFt.results[e.$1], e.$2 as int))
+          .map((e) => Value(flattenedFt.results[e.$1], e.$2! as int))
           .toList();
     }
 
