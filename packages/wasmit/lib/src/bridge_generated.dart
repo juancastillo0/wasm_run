@@ -278,7 +278,7 @@ abstract class WasmitDart {
 
   FlutterRustBridgeTaskConstMeta get kConsumeFuelMethodWasmitModuleIdConstMeta;
 
-  WasmiSharedMemory createSharedMemoryMethodCompiledModule(
+  WasmitSharedMemory createSharedMemoryMethodCompiledModule(
       {required CompiledModule that,
       required MemoryTy memoryType,
       dynamic hint});
@@ -298,45 +298,45 @@ abstract class WasmitDart {
   FlutterRustBridgeTaskConstMeta
       get kGetModuleExportsMethodCompiledModuleConstMeta;
 
-  MemoryTy tyMethodWasmiSharedMemory(
-      {required WasmiSharedMemory that, dynamic hint});
+  MemoryTy tyMethodWasmitSharedMemory(
+      {required WasmitSharedMemory that, dynamic hint});
 
-  FlutterRustBridgeTaskConstMeta get kTyMethodWasmiSharedMemoryConstMeta;
+  FlutterRustBridgeTaskConstMeta get kTyMethodWasmitSharedMemoryConstMeta;
 
-  int sizeMethodWasmiSharedMemory(
-      {required WasmiSharedMemory that, dynamic hint});
+  int sizeMethodWasmitSharedMemory(
+      {required WasmitSharedMemory that, dynamic hint});
 
-  FlutterRustBridgeTaskConstMeta get kSizeMethodWasmiSharedMemoryConstMeta;
+  FlutterRustBridgeTaskConstMeta get kSizeMethodWasmitSharedMemoryConstMeta;
 
-  int dataSizeMethodWasmiSharedMemory(
-      {required WasmiSharedMemory that, dynamic hint});
+  int dataSizeMethodWasmitSharedMemory(
+      {required WasmitSharedMemory that, dynamic hint});
 
-  FlutterRustBridgeTaskConstMeta get kDataSizeMethodWasmiSharedMemoryConstMeta;
+  FlutterRustBridgeTaskConstMeta get kDataSizeMethodWasmitSharedMemoryConstMeta;
 
-  int dataPointerMethodWasmiSharedMemory(
-      {required WasmiSharedMemory that, dynamic hint});
+  int dataPointerMethodWasmitSharedMemory(
+      {required WasmitSharedMemory that, dynamic hint});
 
   FlutterRustBridgeTaskConstMeta
-      get kDataPointerMethodWasmiSharedMemoryConstMeta;
+      get kDataPointerMethodWasmitSharedMemoryConstMeta;
 
-  int growMethodWasmiSharedMemory(
-      {required WasmiSharedMemory that, required int delta, dynamic hint});
+  int growMethodWasmitSharedMemory(
+      {required WasmitSharedMemory that, required int delta, dynamic hint});
 
-  FlutterRustBridgeTaskConstMeta get kGrowMethodWasmiSharedMemoryConstMeta;
+  FlutterRustBridgeTaskConstMeta get kGrowMethodWasmitSharedMemoryConstMeta;
 
-  Future<Atomics> atomicsMethodWasmiSharedMemory(
-      {required WasmiSharedMemory that, dynamic hint});
+  Future<Atomics> atomicsMethodWasmitSharedMemory(
+      {required WasmitSharedMemory that, dynamic hint});
 
-  FlutterRustBridgeTaskConstMeta get kAtomicsMethodWasmiSharedMemoryConstMeta;
+  FlutterRustBridgeTaskConstMeta get kAtomicsMethodWasmitSharedMemoryConstMeta;
 
-  int atomicNotifyMethodWasmiSharedMemory(
-      {required WasmiSharedMemory that,
+  int atomicNotifyMethodWasmitSharedMemory(
+      {required WasmitSharedMemory that,
       required int addr,
       required int count,
       dynamic hint});
 
   FlutterRustBridgeTaskConstMeta
-      get kAtomicNotifyMethodWasmiSharedMemoryConstMeta;
+      get kAtomicNotifyMethodWasmitSharedMemoryConstMeta;
 
   /// Equivalent of the WebAssembly `memory.atomic.wait32` instruction for
   /// this shared memory.
@@ -372,14 +372,14 @@ abstract class WasmitDart {
   ///
   /// This function will return an error if `addr` is not within bounds or
   /// not aligned to a 4-byte boundary.
-  SharedMemoryWaitResult atomicWait32MethodWasmiSharedMemory(
-      {required WasmiSharedMemory that,
+  SharedMemoryWaitResult atomicWait32MethodWasmitSharedMemory(
+      {required WasmitSharedMemory that,
       required int addr,
       required int expected,
       dynamic hint});
 
   FlutterRustBridgeTaskConstMeta
-      get kAtomicWait32MethodWasmiSharedMemoryConstMeta;
+      get kAtomicWait32MethodWasmitSharedMemoryConstMeta;
 
   /// Equivalent of the WebAssembly `memory.atomic.wait64` instruction for
   /// this shared memory.
@@ -390,14 +390,14 @@ abstract class WasmitDart {
   ///
   /// Returns the same error as [`SharedMemory::atomic_wait32`] except that
   /// the specified address must be 8-byte aligned instead of 4-byte aligned.
-  SharedMemoryWaitResult atomicWait64MethodWasmiSharedMemory(
-      {required WasmiSharedMemory that,
+  SharedMemoryWaitResult atomicWait64MethodWasmitSharedMemory(
+      {required WasmitSharedMemory that,
       required int addr,
       required int expected,
       dynamic hint});
 
   FlutterRustBridgeTaskConstMeta
-      get kAtomicWait64MethodWasmiSharedMemoryConstMeta;
+      get kAtomicWait64MethodWasmitSharedMemoryConstMeta;
 
   /// Adds the provided value to the existing value at the specified index of the array. Returns the old value at that index.
   Future<int> addMethodAtomics(
@@ -796,7 +796,7 @@ class CompiledModule {
     required this.field0,
   });
 
-  WasmiSharedMemory createSharedMemory(
+  WasmitSharedMemory createSharedMemory(
           {required MemoryTy memoryType, dynamic hint}) =>
       bridge.createSharedMemoryMethodCompiledModule(
         that: this,
@@ -1442,109 +1442,6 @@ class WasmWasiFeatures {
   });
 }
 
-class WasmiSharedMemory {
-  final WasmitDart bridge;
-  final RwLockSharedMemory field0;
-
-  const WasmiSharedMemory({
-    required this.bridge,
-    required this.field0,
-  });
-
-  MemoryTy ty({dynamic hint}) => bridge.tyMethodWasmiSharedMemory(
-        that: this,
-      );
-
-  int size({dynamic hint}) => bridge.sizeMethodWasmiSharedMemory(
-        that: this,
-      );
-
-  int dataSize({dynamic hint}) => bridge.dataSizeMethodWasmiSharedMemory(
-        that: this,
-      );
-
-  int dataPointer({dynamic hint}) => bridge.dataPointerMethodWasmiSharedMemory(
-        that: this,
-      );
-
-  int grow({required int delta, dynamic hint}) =>
-      bridge.growMethodWasmiSharedMemory(
-        that: this,
-        delta: delta,
-      );
-
-  Future<Atomics> atomics({dynamic hint}) =>
-      bridge.atomicsMethodWasmiSharedMemory(
-        that: this,
-      );
-
-  int atomicNotify({required int addr, required int count, dynamic hint}) =>
-      bridge.atomicNotifyMethodWasmiSharedMemory(
-        that: this,
-        addr: addr,
-        count: count,
-      );
-
-  /// Equivalent of the WebAssembly `memory.atomic.wait32` instruction for
-  /// this shared memory.
-  ///
-  /// This method allows embedders to block the current thread until notified
-  /// via the `memory.atomic.notify` instruction or the
-  /// [`SharedMemory::atomic_notify`] method, enabling synchronization with
-  /// the wasm guest as desired.
-  ///
-  /// The `expected` argument is the expected 32-bit value to be stored at
-  /// the byte address `addr` specified. The `addr` specified is an index
-  /// into this linear memory.
-  ///
-  /// The optional `timeout` argument is the point in time after which the
-  /// calling thread is guaranteed to be woken up. Blocking will not occur
-  /// past this point.
-  ///
-  /// This function returns one of three possible values:
-  ///
-  /// * `WaitResult::Ok` - this function, loaded the value at `addr`, found
-  ///   it was equal to `expected`, and then blocked (all as one atomic
-  ///   operation). The thread was then awoken with a `memory.atomic.notify`
-  ///   instruction or the [`SharedMemory::atomic_notify`] method.
-  /// * `WaitResult::Mismatch` - the value at `addr` was loaded but was not
-  ///   equal to `expected` so the thread did not block and immediately
-  ///   returned.
-  /// * `WaitResult::TimedOut` - all the steps of `Ok` happened, except this
-  ///   thread was woken up due to a timeout.
-  ///
-  /// This function will not return due to spurious wakeups.
-  ///
-  /// # Errors
-  ///
-  /// This function will return an error if `addr` is not within bounds or
-  /// not aligned to a 4-byte boundary.
-  SharedMemoryWaitResult atomicWait32(
-          {required int addr, required int expected, dynamic hint}) =>
-      bridge.atomicWait32MethodWasmiSharedMemory(
-        that: this,
-        addr: addr,
-        expected: expected,
-      );
-
-  /// Equivalent of the WebAssembly `memory.atomic.wait64` instruction for
-  /// this shared memory.
-  ///
-  /// For more information see [`SharedMemory::atomic_wait32`].
-  ///
-  /// # Errors
-  ///
-  /// Returns the same error as [`SharedMemory::atomic_wait32`] except that
-  /// the specified address must be 8-byte aligned instead of 4-byte aligned.
-  SharedMemoryWaitResult atomicWait64(
-          {required int addr, required int expected, dynamic hint}) =>
-      bridge.atomicWait64MethodWasmiSharedMemory(
-        that: this,
-        addr: addr,
-        expected: expected,
-      );
-}
-
 class WasmitInstanceId {
   final WasmitDart bridge;
   final int field0;
@@ -1803,6 +1700,109 @@ class WasmitModuleId {
       bridge.consumeFuelMethodWasmitModuleId(
         that: this,
         delta: delta,
+      );
+}
+
+class WasmitSharedMemory {
+  final WasmitDart bridge;
+  final RwLockSharedMemory field0;
+
+  const WasmitSharedMemory({
+    required this.bridge,
+    required this.field0,
+  });
+
+  MemoryTy ty({dynamic hint}) => bridge.tyMethodWasmitSharedMemory(
+        that: this,
+      );
+
+  int size({dynamic hint}) => bridge.sizeMethodWasmitSharedMemory(
+        that: this,
+      );
+
+  int dataSize({dynamic hint}) => bridge.dataSizeMethodWasmitSharedMemory(
+        that: this,
+      );
+
+  int dataPointer({dynamic hint}) => bridge.dataPointerMethodWasmitSharedMemory(
+        that: this,
+      );
+
+  int grow({required int delta, dynamic hint}) =>
+      bridge.growMethodWasmitSharedMemory(
+        that: this,
+        delta: delta,
+      );
+
+  Future<Atomics> atomics({dynamic hint}) =>
+      bridge.atomicsMethodWasmitSharedMemory(
+        that: this,
+      );
+
+  int atomicNotify({required int addr, required int count, dynamic hint}) =>
+      bridge.atomicNotifyMethodWasmitSharedMemory(
+        that: this,
+        addr: addr,
+        count: count,
+      );
+
+  /// Equivalent of the WebAssembly `memory.atomic.wait32` instruction for
+  /// this shared memory.
+  ///
+  /// This method allows embedders to block the current thread until notified
+  /// via the `memory.atomic.notify` instruction or the
+  /// [`SharedMemory::atomic_notify`] method, enabling synchronization with
+  /// the wasm guest as desired.
+  ///
+  /// The `expected` argument is the expected 32-bit value to be stored at
+  /// the byte address `addr` specified. The `addr` specified is an index
+  /// into this linear memory.
+  ///
+  /// The optional `timeout` argument is the point in time after which the
+  /// calling thread is guaranteed to be woken up. Blocking will not occur
+  /// past this point.
+  ///
+  /// This function returns one of three possible values:
+  ///
+  /// * `WaitResult::Ok` - this function, loaded the value at `addr`, found
+  ///   it was equal to `expected`, and then blocked (all as one atomic
+  ///   operation). The thread was then awoken with a `memory.atomic.notify`
+  ///   instruction or the [`SharedMemory::atomic_notify`] method.
+  /// * `WaitResult::Mismatch` - the value at `addr` was loaded but was not
+  ///   equal to `expected` so the thread did not block and immediately
+  ///   returned.
+  /// * `WaitResult::TimedOut` - all the steps of `Ok` happened, except this
+  ///   thread was woken up due to a timeout.
+  ///
+  /// This function will not return due to spurious wakeups.
+  ///
+  /// # Errors
+  ///
+  /// This function will return an error if `addr` is not within bounds or
+  /// not aligned to a 4-byte boundary.
+  SharedMemoryWaitResult atomicWait32(
+          {required int addr, required int expected, dynamic hint}) =>
+      bridge.atomicWait32MethodWasmitSharedMemory(
+        that: this,
+        addr: addr,
+        expected: expected,
+      );
+
+  /// Equivalent of the WebAssembly `memory.atomic.wait64` instruction for
+  /// this shared memory.
+  ///
+  /// For more information see [`SharedMemory::atomic_wait32`].
+  ///
+  /// # Errors
+  ///
+  /// Returns the same error as [`SharedMemory::atomic_wait32`] except that
+  /// the specified address must be 8-byte aligned instead of 4-byte aligned.
+  SharedMemoryWaitResult atomicWait64(
+          {required int addr, required int expected, dynamic hint}) =>
+      bridge.atomicWait64MethodWasmitSharedMemory(
+        that: this,
+        addr: addr,
+        expected: expected,
       );
 }
 
@@ -2669,7 +2669,7 @@ class WasmitDartImpl implements WasmitDart {
             argNames: ["that", "delta"],
           );
 
-  WasmiSharedMemory createSharedMemoryMethodCompiledModule(
+  WasmitSharedMemory createSharedMemoryMethodCompiledModule(
       {required CompiledModule that,
       required MemoryTy memoryType,
       dynamic hint}) {
@@ -2678,7 +2678,7 @@ class WasmitDartImpl implements WasmitDart {
     return _platform.executeSync(FlutterRustBridgeSyncTask(
       callFfi: () => _platform.inner
           .wire_create_shared_memory__method__CompiledModule(arg0, arg1),
-      parseSuccessData: _wire2api_wasmi_shared_memory,
+      parseSuccessData: _wire2api_wasmit_shared_memory,
       constMeta: kCreateSharedMemoryMethodCompiledModuleConstMeta,
       argValues: [that, memoryType],
       hint: hint,
@@ -2732,193 +2732,195 @@ class WasmitDartImpl implements WasmitDart {
             argNames: ["that"],
           );
 
-  MemoryTy tyMethodWasmiSharedMemory(
-      {required WasmiSharedMemory that, dynamic hint}) {
-    var arg0 = _platform.api2wire_box_autoadd_wasmi_shared_memory(that);
+  MemoryTy tyMethodWasmitSharedMemory(
+      {required WasmitSharedMemory that, dynamic hint}) {
+    var arg0 = _platform.api2wire_box_autoadd_wasmit_shared_memory(that);
     return _platform.executeSync(FlutterRustBridgeSyncTask(
-      callFfi: () => _platform.inner.wire_ty__method__WasmiSharedMemory(arg0),
+      callFfi: () => _platform.inner.wire_ty__method__WasmitSharedMemory(arg0),
       parseSuccessData: _wire2api_memory_ty,
-      constMeta: kTyMethodWasmiSharedMemoryConstMeta,
+      constMeta: kTyMethodWasmitSharedMemoryConstMeta,
       argValues: [that],
       hint: hint,
     ));
   }
 
-  FlutterRustBridgeTaskConstMeta get kTyMethodWasmiSharedMemoryConstMeta =>
+  FlutterRustBridgeTaskConstMeta get kTyMethodWasmitSharedMemoryConstMeta =>
       const FlutterRustBridgeTaskConstMeta(
-        debugName: "ty__method__WasmiSharedMemory",
+        debugName: "ty__method__WasmitSharedMemory",
         argNames: ["that"],
       );
 
-  int sizeMethodWasmiSharedMemory(
-      {required WasmiSharedMemory that, dynamic hint}) {
-    var arg0 = _platform.api2wire_box_autoadd_wasmi_shared_memory(that);
+  int sizeMethodWasmitSharedMemory(
+      {required WasmitSharedMemory that, dynamic hint}) {
+    var arg0 = _platform.api2wire_box_autoadd_wasmit_shared_memory(that);
     return _platform.executeSync(FlutterRustBridgeSyncTask(
-      callFfi: () => _platform.inner.wire_size__method__WasmiSharedMemory(arg0),
+      callFfi: () =>
+          _platform.inner.wire_size__method__WasmitSharedMemory(arg0),
       parseSuccessData: _wire2api_u64,
-      constMeta: kSizeMethodWasmiSharedMemoryConstMeta,
+      constMeta: kSizeMethodWasmitSharedMemoryConstMeta,
       argValues: [that],
       hint: hint,
     ));
   }
 
-  FlutterRustBridgeTaskConstMeta get kSizeMethodWasmiSharedMemoryConstMeta =>
+  FlutterRustBridgeTaskConstMeta get kSizeMethodWasmitSharedMemoryConstMeta =>
       const FlutterRustBridgeTaskConstMeta(
-        debugName: "size__method__WasmiSharedMemory",
+        debugName: "size__method__WasmitSharedMemory",
         argNames: ["that"],
       );
 
-  int dataSizeMethodWasmiSharedMemory(
-      {required WasmiSharedMemory that, dynamic hint}) {
-    var arg0 = _platform.api2wire_box_autoadd_wasmi_shared_memory(that);
+  int dataSizeMethodWasmitSharedMemory(
+      {required WasmitSharedMemory that, dynamic hint}) {
+    var arg0 = _platform.api2wire_box_autoadd_wasmit_shared_memory(that);
     return _platform.executeSync(FlutterRustBridgeSyncTask(
       callFfi: () =>
-          _platform.inner.wire_data_size__method__WasmiSharedMemory(arg0),
+          _platform.inner.wire_data_size__method__WasmitSharedMemory(arg0),
       parseSuccessData: _wire2api_usize,
-      constMeta: kDataSizeMethodWasmiSharedMemoryConstMeta,
+      constMeta: kDataSizeMethodWasmitSharedMemoryConstMeta,
       argValues: [that],
       hint: hint,
     ));
   }
 
   FlutterRustBridgeTaskConstMeta
-      get kDataSizeMethodWasmiSharedMemoryConstMeta =>
+      get kDataSizeMethodWasmitSharedMemoryConstMeta =>
           const FlutterRustBridgeTaskConstMeta(
-            debugName: "data_size__method__WasmiSharedMemory",
+            debugName: "data_size__method__WasmitSharedMemory",
             argNames: ["that"],
           );
 
-  int dataPointerMethodWasmiSharedMemory(
-      {required WasmiSharedMemory that, dynamic hint}) {
-    var arg0 = _platform.api2wire_box_autoadd_wasmi_shared_memory(that);
+  int dataPointerMethodWasmitSharedMemory(
+      {required WasmitSharedMemory that, dynamic hint}) {
+    var arg0 = _platform.api2wire_box_autoadd_wasmit_shared_memory(that);
     return _platform.executeSync(FlutterRustBridgeSyncTask(
       callFfi: () =>
-          _platform.inner.wire_data_pointer__method__WasmiSharedMemory(arg0),
+          _platform.inner.wire_data_pointer__method__WasmitSharedMemory(arg0),
       parseSuccessData: _wire2api_usize,
-      constMeta: kDataPointerMethodWasmiSharedMemoryConstMeta,
+      constMeta: kDataPointerMethodWasmitSharedMemoryConstMeta,
       argValues: [that],
       hint: hint,
     ));
   }
 
   FlutterRustBridgeTaskConstMeta
-      get kDataPointerMethodWasmiSharedMemoryConstMeta =>
+      get kDataPointerMethodWasmitSharedMemoryConstMeta =>
           const FlutterRustBridgeTaskConstMeta(
-            debugName: "data_pointer__method__WasmiSharedMemory",
+            debugName: "data_pointer__method__WasmitSharedMemory",
             argNames: ["that"],
           );
 
-  int growMethodWasmiSharedMemory(
-      {required WasmiSharedMemory that, required int delta, dynamic hint}) {
-    var arg0 = _platform.api2wire_box_autoadd_wasmi_shared_memory(that);
+  int growMethodWasmitSharedMemory(
+      {required WasmitSharedMemory that, required int delta, dynamic hint}) {
+    var arg0 = _platform.api2wire_box_autoadd_wasmit_shared_memory(that);
     var arg1 = _platform.api2wire_u64(delta);
     return _platform.executeSync(FlutterRustBridgeSyncTask(
       callFfi: () =>
-          _platform.inner.wire_grow__method__WasmiSharedMemory(arg0, arg1),
+          _platform.inner.wire_grow__method__WasmitSharedMemory(arg0, arg1),
       parseSuccessData: _wire2api_u64,
-      constMeta: kGrowMethodWasmiSharedMemoryConstMeta,
+      constMeta: kGrowMethodWasmitSharedMemoryConstMeta,
       argValues: [that, delta],
       hint: hint,
     ));
   }
 
-  FlutterRustBridgeTaskConstMeta get kGrowMethodWasmiSharedMemoryConstMeta =>
+  FlutterRustBridgeTaskConstMeta get kGrowMethodWasmitSharedMemoryConstMeta =>
       const FlutterRustBridgeTaskConstMeta(
-        debugName: "grow__method__WasmiSharedMemory",
+        debugName: "grow__method__WasmitSharedMemory",
         argNames: ["that", "delta"],
       );
 
-  Future<Atomics> atomicsMethodWasmiSharedMemory(
-      {required WasmiSharedMemory that, dynamic hint}) {
-    var arg0 = _platform.api2wire_box_autoadd_wasmi_shared_memory(that);
+  Future<Atomics> atomicsMethodWasmitSharedMemory(
+      {required WasmitSharedMemory that, dynamic hint}) {
+    var arg0 = _platform.api2wire_box_autoadd_wasmit_shared_memory(that);
     return _platform.executeNormal(FlutterRustBridgeTask(
       callFfi: (port_) =>
-          _platform.inner.wire_atomics__method__WasmiSharedMemory(port_, arg0),
+          _platform.inner.wire_atomics__method__WasmitSharedMemory(port_, arg0),
       parseSuccessData: (d) => _wire2api_atomics(d),
-      constMeta: kAtomicsMethodWasmiSharedMemoryConstMeta,
+      constMeta: kAtomicsMethodWasmitSharedMemoryConstMeta,
       argValues: [that],
       hint: hint,
     ));
   }
 
-  FlutterRustBridgeTaskConstMeta get kAtomicsMethodWasmiSharedMemoryConstMeta =>
-      const FlutterRustBridgeTaskConstMeta(
-        debugName: "atomics__method__WasmiSharedMemory",
-        argNames: ["that"],
-      );
+  FlutterRustBridgeTaskConstMeta
+      get kAtomicsMethodWasmitSharedMemoryConstMeta =>
+          const FlutterRustBridgeTaskConstMeta(
+            debugName: "atomics__method__WasmitSharedMemory",
+            argNames: ["that"],
+          );
 
-  int atomicNotifyMethodWasmiSharedMemory(
-      {required WasmiSharedMemory that,
+  int atomicNotifyMethodWasmitSharedMemory(
+      {required WasmitSharedMemory that,
       required int addr,
       required int count,
       dynamic hint}) {
-    var arg0 = _platform.api2wire_box_autoadd_wasmi_shared_memory(that);
+    var arg0 = _platform.api2wire_box_autoadd_wasmit_shared_memory(that);
     var arg1 = _platform.api2wire_u64(addr);
     var arg2 = api2wire_u32(count);
     return _platform.executeSync(FlutterRustBridgeSyncTask(
       callFfi: () => _platform.inner
-          .wire_atomic_notify__method__WasmiSharedMemory(arg0, arg1, arg2),
+          .wire_atomic_notify__method__WasmitSharedMemory(arg0, arg1, arg2),
       parseSuccessData: _wire2api_u32,
-      constMeta: kAtomicNotifyMethodWasmiSharedMemoryConstMeta,
+      constMeta: kAtomicNotifyMethodWasmitSharedMemoryConstMeta,
       argValues: [that, addr, count],
       hint: hint,
     ));
   }
 
   FlutterRustBridgeTaskConstMeta
-      get kAtomicNotifyMethodWasmiSharedMemoryConstMeta =>
+      get kAtomicNotifyMethodWasmitSharedMemoryConstMeta =>
           const FlutterRustBridgeTaskConstMeta(
-            debugName: "atomic_notify__method__WasmiSharedMemory",
+            debugName: "atomic_notify__method__WasmitSharedMemory",
             argNames: ["that", "addr", "count"],
           );
 
-  SharedMemoryWaitResult atomicWait32MethodWasmiSharedMemory(
-      {required WasmiSharedMemory that,
+  SharedMemoryWaitResult atomicWait32MethodWasmitSharedMemory(
+      {required WasmitSharedMemory that,
       required int addr,
       required int expected,
       dynamic hint}) {
-    var arg0 = _platform.api2wire_box_autoadd_wasmi_shared_memory(that);
+    var arg0 = _platform.api2wire_box_autoadd_wasmit_shared_memory(that);
     var arg1 = _platform.api2wire_u64(addr);
     var arg2 = api2wire_u32(expected);
     return _platform.executeSync(FlutterRustBridgeSyncTask(
       callFfi: () => _platform.inner
-          .wire_atomic_wait32__method__WasmiSharedMemory(arg0, arg1, arg2),
+          .wire_atomic_wait32__method__WasmitSharedMemory(arg0, arg1, arg2),
       parseSuccessData: _wire2api_shared_memory_wait_result,
-      constMeta: kAtomicWait32MethodWasmiSharedMemoryConstMeta,
+      constMeta: kAtomicWait32MethodWasmitSharedMemoryConstMeta,
       argValues: [that, addr, expected],
       hint: hint,
     ));
   }
 
   FlutterRustBridgeTaskConstMeta
-      get kAtomicWait32MethodWasmiSharedMemoryConstMeta =>
+      get kAtomicWait32MethodWasmitSharedMemoryConstMeta =>
           const FlutterRustBridgeTaskConstMeta(
-            debugName: "atomic_wait32__method__WasmiSharedMemory",
+            debugName: "atomic_wait32__method__WasmitSharedMemory",
             argNames: ["that", "addr", "expected"],
           );
 
-  SharedMemoryWaitResult atomicWait64MethodWasmiSharedMemory(
-      {required WasmiSharedMemory that,
+  SharedMemoryWaitResult atomicWait64MethodWasmitSharedMemory(
+      {required WasmitSharedMemory that,
       required int addr,
       required int expected,
       dynamic hint}) {
-    var arg0 = _platform.api2wire_box_autoadd_wasmi_shared_memory(that);
+    var arg0 = _platform.api2wire_box_autoadd_wasmit_shared_memory(that);
     var arg1 = _platform.api2wire_u64(addr);
     var arg2 = _platform.api2wire_u64(expected);
     return _platform.executeSync(FlutterRustBridgeSyncTask(
       callFfi: () => _platform.inner
-          .wire_atomic_wait64__method__WasmiSharedMemory(arg0, arg1, arg2),
+          .wire_atomic_wait64__method__WasmitSharedMemory(arg0, arg1, arg2),
       parseSuccessData: _wire2api_shared_memory_wait_result,
-      constMeta: kAtomicWait64MethodWasmiSharedMemoryConstMeta,
+      constMeta: kAtomicWait64MethodWasmitSharedMemoryConstMeta,
       argValues: [that, addr, expected],
       hint: hint,
     ));
   }
 
   FlutterRustBridgeTaskConstMeta
-      get kAtomicWait64MethodWasmiSharedMemoryConstMeta =>
+      get kAtomicWait64MethodWasmitSharedMemoryConstMeta =>
           const FlutterRustBridgeTaskConstMeta(
-            debugName: "atomic_wait64__method__WasmiSharedMemory",
+            debugName: "atomic_wait64__method__WasmitSharedMemory",
             argNames: ["that", "addr", "expected"],
           );
 
@@ -3623,16 +3625,6 @@ class WasmitDartImpl implements WasmitDart {
     );
   }
 
-  WasmiSharedMemory _wire2api_wasmi_shared_memory(dynamic raw) {
-    final arr = raw as List<dynamic>;
-    if (arr.length != 1)
-      throw Exception('unexpected arr length: expect 1 but see ${arr.length}');
-    return WasmiSharedMemory(
-      bridge: this,
-      field0: _wire2api_RwLockSharedMemory(arr[0]),
-    );
-  }
-
   WasmitInstanceId _wire2api_wasmit_instance_id(dynamic raw) {
     final arr = raw as List<dynamic>;
     if (arr.length != 1)
@@ -3650,6 +3642,16 @@ class WasmitDartImpl implements WasmitDart {
     return WasmitModuleId(
       bridge: this,
       field0: _wire2api_u32(arr[0]),
+    );
+  }
+
+  WasmitSharedMemory _wire2api_wasmit_shared_memory(dynamic raw) {
+    final arr = raw as List<dynamic>;
+    if (arr.length != 1)
+      throw Exception('unexpected arr length: expect 1 but see ${arr.length}');
+    return WasmitSharedMemory(
+      bridge: this,
+      field0: _wire2api_RwLockSharedMemory(arr[0]),
     );
   }
 }

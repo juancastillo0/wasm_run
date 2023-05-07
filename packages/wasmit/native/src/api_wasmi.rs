@@ -52,7 +52,7 @@ struct StoreState {
     // TODO: add to stdin?
 }
 
-pub struct WasmiSharedMemory(pub RustOpaque<RwLock<SharedMemory>>);
+pub struct WasmitSharedMemory(pub RustOpaque<RwLock<SharedMemory>>);
 
 pub struct SharedMemory;
 
@@ -599,7 +599,7 @@ impl CompiledModule {
     pub fn create_shared_memory(
         &self,
         memory_type: MemoryTy,
-    ) -> Result<SyncReturn<WasmiSharedMemory>> {
+    ) -> Result<SyncReturn<WasmitSharedMemory>> {
         Err(anyhow::Error::msg(
             "shared_memory is not supported for wasmi",
         ))
@@ -657,7 +657,7 @@ pub fn wasm_runtime_features() -> SyncReturn<WasmRuntimeFeatures> {
 }
 
 #[allow(unused)]
-impl WasmiSharedMemory {
+impl WasmitSharedMemory {
     pub fn ty(&self) -> SyncReturn<MemoryTy> {
         unreachable!()
     }

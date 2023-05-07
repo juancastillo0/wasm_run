@@ -777,107 +777,107 @@ fn wire_get_module_exports__method__CompiledModule_impl(
         },
     )
 }
-fn wire_ty__method__WasmiSharedMemory_impl(
-    that: impl Wire2Api<WasmiSharedMemory> + UnwindSafe,
+fn wire_ty__method__WasmitSharedMemory_impl(
+    that: impl Wire2Api<WasmitSharedMemory> + UnwindSafe,
 ) -> support::WireSyncReturn {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
         WrapInfo {
-            debug_name: "ty__method__WasmiSharedMemory",
+            debug_name: "ty__method__WasmitSharedMemory",
             port: None,
             mode: FfiCallMode::Sync,
         },
         move || {
             let api_that = that.wire2api();
-            Ok(WasmiSharedMemory::ty(&api_that))
+            Ok(WasmitSharedMemory::ty(&api_that))
         },
     )
 }
-fn wire_size__method__WasmiSharedMemory_impl(
-    that: impl Wire2Api<WasmiSharedMemory> + UnwindSafe,
+fn wire_size__method__WasmitSharedMemory_impl(
+    that: impl Wire2Api<WasmitSharedMemory> + UnwindSafe,
 ) -> support::WireSyncReturn {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
         WrapInfo {
-            debug_name: "size__method__WasmiSharedMemory",
+            debug_name: "size__method__WasmitSharedMemory",
             port: None,
             mode: FfiCallMode::Sync,
         },
         move || {
             let api_that = that.wire2api();
-            Ok(WasmiSharedMemory::size(&api_that))
+            Ok(WasmitSharedMemory::size(&api_that))
         },
     )
 }
-fn wire_data_size__method__WasmiSharedMemory_impl(
-    that: impl Wire2Api<WasmiSharedMemory> + UnwindSafe,
+fn wire_data_size__method__WasmitSharedMemory_impl(
+    that: impl Wire2Api<WasmitSharedMemory> + UnwindSafe,
 ) -> support::WireSyncReturn {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
         WrapInfo {
-            debug_name: "data_size__method__WasmiSharedMemory",
+            debug_name: "data_size__method__WasmitSharedMemory",
             port: None,
             mode: FfiCallMode::Sync,
         },
         move || {
             let api_that = that.wire2api();
-            Ok(WasmiSharedMemory::data_size(&api_that))
+            Ok(WasmitSharedMemory::data_size(&api_that))
         },
     )
 }
-fn wire_data_pointer__method__WasmiSharedMemory_impl(
-    that: impl Wire2Api<WasmiSharedMemory> + UnwindSafe,
+fn wire_data_pointer__method__WasmitSharedMemory_impl(
+    that: impl Wire2Api<WasmitSharedMemory> + UnwindSafe,
 ) -> support::WireSyncReturn {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
         WrapInfo {
-            debug_name: "data_pointer__method__WasmiSharedMemory",
+            debug_name: "data_pointer__method__WasmitSharedMemory",
             port: None,
             mode: FfiCallMode::Sync,
         },
         move || {
             let api_that = that.wire2api();
-            Ok(WasmiSharedMemory::data_pointer(&api_that))
+            Ok(WasmitSharedMemory::data_pointer(&api_that))
         },
     )
 }
-fn wire_grow__method__WasmiSharedMemory_impl(
-    that: impl Wire2Api<WasmiSharedMemory> + UnwindSafe,
+fn wire_grow__method__WasmitSharedMemory_impl(
+    that: impl Wire2Api<WasmitSharedMemory> + UnwindSafe,
     delta: impl Wire2Api<u64> + UnwindSafe,
 ) -> support::WireSyncReturn {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
         WrapInfo {
-            debug_name: "grow__method__WasmiSharedMemory",
+            debug_name: "grow__method__WasmitSharedMemory",
             port: None,
             mode: FfiCallMode::Sync,
         },
         move || {
             let api_that = that.wire2api();
             let api_delta = delta.wire2api();
-            WasmiSharedMemory::grow(&api_that, api_delta)
+            WasmitSharedMemory::grow(&api_that, api_delta)
         },
     )
 }
-fn wire_atomics__method__WasmiSharedMemory_impl(
+fn wire_atomics__method__WasmitSharedMemory_impl(
     port_: MessagePort,
-    that: impl Wire2Api<WasmiSharedMemory> + UnwindSafe,
+    that: impl Wire2Api<WasmitSharedMemory> + UnwindSafe,
 ) {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap(
         WrapInfo {
-            debug_name: "atomics__method__WasmiSharedMemory",
+            debug_name: "atomics__method__WasmitSharedMemory",
             port: Some(port_),
             mode: FfiCallMode::Normal,
         },
         move || {
             let api_that = that.wire2api();
-            move |task_callback| Ok(WasmiSharedMemory::atomics(&api_that))
+            move |task_callback| Ok(WasmitSharedMemory::atomics(&api_that))
         },
     )
 }
-fn wire_atomic_notify__method__WasmiSharedMemory_impl(
-    that: impl Wire2Api<WasmiSharedMemory> + UnwindSafe,
+fn wire_atomic_notify__method__WasmitSharedMemory_impl(
+    that: impl Wire2Api<WasmitSharedMemory> + UnwindSafe,
     addr: impl Wire2Api<u64> + UnwindSafe,
     count: impl Wire2Api<u32> + UnwindSafe,
 ) -> support::WireSyncReturn {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
         WrapInfo {
-            debug_name: "atomic_notify__method__WasmiSharedMemory",
+            debug_name: "atomic_notify__method__WasmitSharedMemory",
             port: None,
             mode: FfiCallMode::Sync,
         },
@@ -885,18 +885,18 @@ fn wire_atomic_notify__method__WasmiSharedMemory_impl(
             let api_that = that.wire2api();
             let api_addr = addr.wire2api();
             let api_count = count.wire2api();
-            WasmiSharedMemory::atomic_notify(&api_that, api_addr, api_count)
+            WasmitSharedMemory::atomic_notify(&api_that, api_addr, api_count)
         },
     )
 }
-fn wire_atomic_wait32__method__WasmiSharedMemory_impl(
-    that: impl Wire2Api<WasmiSharedMemory> + UnwindSafe,
+fn wire_atomic_wait32__method__WasmitSharedMemory_impl(
+    that: impl Wire2Api<WasmitSharedMemory> + UnwindSafe,
     addr: impl Wire2Api<u64> + UnwindSafe,
     expected: impl Wire2Api<u32> + UnwindSafe,
 ) -> support::WireSyncReturn {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
         WrapInfo {
-            debug_name: "atomic_wait32__method__WasmiSharedMemory",
+            debug_name: "atomic_wait32__method__WasmitSharedMemory",
             port: None,
             mode: FfiCallMode::Sync,
         },
@@ -904,18 +904,18 @@ fn wire_atomic_wait32__method__WasmiSharedMemory_impl(
             let api_that = that.wire2api();
             let api_addr = addr.wire2api();
             let api_expected = expected.wire2api();
-            WasmiSharedMemory::atomic_wait32(&api_that, api_addr, api_expected)
+            WasmitSharedMemory::atomic_wait32(&api_that, api_addr, api_expected)
         },
     )
 }
-fn wire_atomic_wait64__method__WasmiSharedMemory_impl(
-    that: impl Wire2Api<WasmiSharedMemory> + UnwindSafe,
+fn wire_atomic_wait64__method__WasmitSharedMemory_impl(
+    that: impl Wire2Api<WasmitSharedMemory> + UnwindSafe,
     addr: impl Wire2Api<u64> + UnwindSafe,
     expected: impl Wire2Api<u64> + UnwindSafe,
 ) -> support::WireSyncReturn {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
         WrapInfo {
-            debug_name: "atomic_wait64__method__WasmiSharedMemory",
+            debug_name: "atomic_wait64__method__WasmitSharedMemory",
             port: None,
             mode: FfiCallMode::Sync,
         },
@@ -923,7 +923,7 @@ fn wire_atomic_wait64__method__WasmiSharedMemory_impl(
             let api_that = that.wire2api();
             let api_addr = addr.wire2api();
             let api_expected = expected.wire2api();
-            WasmiSharedMemory::atomic_wait64(&api_that, api_addr, api_expected)
+            WasmitSharedMemory::atomic_wait64(&api_that, api_addr, api_expected)
         },
     )
 }
@@ -1537,13 +1537,6 @@ impl support::IntoDart for WasmWasiFeatures {
 }
 impl support::IntoDartExceptPrimitive for WasmWasiFeatures {}
 
-impl support::IntoDart for WasmiSharedMemory {
-    fn into_dart(self) -> support::DartAbi {
-        vec![self.0.into_dart()].into_dart()
-    }
-}
-impl support::IntoDartExceptPrimitive for WasmiSharedMemory {}
-
 impl support::IntoDart for WasmitInstanceId {
     fn into_dart(self) -> support::DartAbi {
         vec![self.0.into_dart()].into_dart()
@@ -1557,6 +1550,13 @@ impl support::IntoDart for WasmitModuleId {
     }
 }
 impl support::IntoDartExceptPrimitive for WasmitModuleId {}
+
+impl support::IntoDart for WasmitSharedMemory {
+    fn into_dart(self) -> support::DartAbi {
+        vec![self.0.into_dart()].into_dart()
+    }
+}
+impl support::IntoDartExceptPrimitive for WasmitSharedMemory {}
 
 // Section: executor
 
@@ -1892,63 +1892,63 @@ mod web {
     }
 
     #[wasm_bindgen]
-    pub fn wire_ty__method__WasmiSharedMemory(that: JsValue) -> support::WireSyncReturn {
-        wire_ty__method__WasmiSharedMemory_impl(that)
+    pub fn wire_ty__method__WasmitSharedMemory(that: JsValue) -> support::WireSyncReturn {
+        wire_ty__method__WasmitSharedMemory_impl(that)
     }
 
     #[wasm_bindgen]
-    pub fn wire_size__method__WasmiSharedMemory(that: JsValue) -> support::WireSyncReturn {
-        wire_size__method__WasmiSharedMemory_impl(that)
+    pub fn wire_size__method__WasmitSharedMemory(that: JsValue) -> support::WireSyncReturn {
+        wire_size__method__WasmitSharedMemory_impl(that)
     }
 
     #[wasm_bindgen]
-    pub fn wire_data_size__method__WasmiSharedMemory(that: JsValue) -> support::WireSyncReturn {
-        wire_data_size__method__WasmiSharedMemory_impl(that)
+    pub fn wire_data_size__method__WasmitSharedMemory(that: JsValue) -> support::WireSyncReturn {
+        wire_data_size__method__WasmitSharedMemory_impl(that)
     }
 
     #[wasm_bindgen]
-    pub fn wire_data_pointer__method__WasmiSharedMemory(that: JsValue) -> support::WireSyncReturn {
-        wire_data_pointer__method__WasmiSharedMemory_impl(that)
+    pub fn wire_data_pointer__method__WasmitSharedMemory(that: JsValue) -> support::WireSyncReturn {
+        wire_data_pointer__method__WasmitSharedMemory_impl(that)
     }
 
     #[wasm_bindgen]
-    pub fn wire_grow__method__WasmiSharedMemory(
+    pub fn wire_grow__method__WasmitSharedMemory(
         that: JsValue,
         delta: u64,
     ) -> support::WireSyncReturn {
-        wire_grow__method__WasmiSharedMemory_impl(that, delta)
+        wire_grow__method__WasmitSharedMemory_impl(that, delta)
     }
 
     #[wasm_bindgen]
-    pub fn wire_atomics__method__WasmiSharedMemory(port_: MessagePort, that: JsValue) {
-        wire_atomics__method__WasmiSharedMemory_impl(port_, that)
+    pub fn wire_atomics__method__WasmitSharedMemory(port_: MessagePort, that: JsValue) {
+        wire_atomics__method__WasmitSharedMemory_impl(port_, that)
     }
 
     #[wasm_bindgen]
-    pub fn wire_atomic_notify__method__WasmiSharedMemory(
+    pub fn wire_atomic_notify__method__WasmitSharedMemory(
         that: JsValue,
         addr: u64,
         count: u32,
     ) -> support::WireSyncReturn {
-        wire_atomic_notify__method__WasmiSharedMemory_impl(that, addr, count)
+        wire_atomic_notify__method__WasmitSharedMemory_impl(that, addr, count)
     }
 
     #[wasm_bindgen]
-    pub fn wire_atomic_wait32__method__WasmiSharedMemory(
+    pub fn wire_atomic_wait32__method__WasmitSharedMemory(
         that: JsValue,
         addr: u64,
         expected: u32,
     ) -> support::WireSyncReturn {
-        wire_atomic_wait32__method__WasmiSharedMemory_impl(that, addr, expected)
+        wire_atomic_wait32__method__WasmitSharedMemory_impl(that, addr, expected)
     }
 
     #[wasm_bindgen]
-    pub fn wire_atomic_wait64__method__WasmiSharedMemory(
+    pub fn wire_atomic_wait64__method__WasmitSharedMemory(
         that: JsValue,
         addr: u64,
         expected: u64,
     ) -> support::WireSyncReturn {
-        wire_atomic_wait64__method__WasmiSharedMemory_impl(that, addr, expected)
+        wire_atomic_wait64__method__WasmitSharedMemory_impl(that, addr, expected)
     }
 
     #[wasm_bindgen]
@@ -2494,18 +2494,6 @@ mod web {
             }
         }
     }
-    impl Wire2Api<WasmiSharedMemory> for JsValue {
-        fn wire2api(self) -> WasmiSharedMemory {
-            let self_ = self.dyn_into::<JsArray>().unwrap();
-            assert_eq!(
-                self_.length(),
-                1,
-                "Expected 1 elements, got {}",
-                self_.length()
-            );
-            WasmiSharedMemory(self_.get(0).wire2api())
-        }
-    }
     impl Wire2Api<WasmitInstanceId> for JsValue {
         fn wire2api(self) -> WasmitInstanceId {
             let self_ = self.dyn_into::<JsArray>().unwrap();
@@ -2528,6 +2516,18 @@ mod web {
                 self_.length()
             );
             WasmitModuleId(self_.get(0).wire2api())
+        }
+    }
+    impl Wire2Api<WasmitSharedMemory> for JsValue {
+        fn wire2api(self) -> WasmitSharedMemory {
+            let self_ = self.dyn_into::<JsArray>().unwrap();
+            assert_eq!(
+                self_.length(),
+                1,
+                "Expected 1 elements, got {}",
+                self_.length()
+            );
+            WasmitSharedMemory(self_.get(0).wire2api())
         }
     }
     // Section: impl Wire2Api for JsValue
@@ -3054,74 +3054,74 @@ mod io {
     }
 
     #[no_mangle]
-    pub extern "C" fn wire_ty__method__WasmiSharedMemory(
-        that: *mut wire_WasmiSharedMemory,
+    pub extern "C" fn wire_ty__method__WasmitSharedMemory(
+        that: *mut wire_WasmitSharedMemory,
     ) -> support::WireSyncReturn {
-        wire_ty__method__WasmiSharedMemory_impl(that)
+        wire_ty__method__WasmitSharedMemory_impl(that)
     }
 
     #[no_mangle]
-    pub extern "C" fn wire_size__method__WasmiSharedMemory(
-        that: *mut wire_WasmiSharedMemory,
+    pub extern "C" fn wire_size__method__WasmitSharedMemory(
+        that: *mut wire_WasmitSharedMemory,
     ) -> support::WireSyncReturn {
-        wire_size__method__WasmiSharedMemory_impl(that)
+        wire_size__method__WasmitSharedMemory_impl(that)
     }
 
     #[no_mangle]
-    pub extern "C" fn wire_data_size__method__WasmiSharedMemory(
-        that: *mut wire_WasmiSharedMemory,
+    pub extern "C" fn wire_data_size__method__WasmitSharedMemory(
+        that: *mut wire_WasmitSharedMemory,
     ) -> support::WireSyncReturn {
-        wire_data_size__method__WasmiSharedMemory_impl(that)
+        wire_data_size__method__WasmitSharedMemory_impl(that)
     }
 
     #[no_mangle]
-    pub extern "C" fn wire_data_pointer__method__WasmiSharedMemory(
-        that: *mut wire_WasmiSharedMemory,
+    pub extern "C" fn wire_data_pointer__method__WasmitSharedMemory(
+        that: *mut wire_WasmitSharedMemory,
     ) -> support::WireSyncReturn {
-        wire_data_pointer__method__WasmiSharedMemory_impl(that)
+        wire_data_pointer__method__WasmitSharedMemory_impl(that)
     }
 
     #[no_mangle]
-    pub extern "C" fn wire_grow__method__WasmiSharedMemory(
-        that: *mut wire_WasmiSharedMemory,
+    pub extern "C" fn wire_grow__method__WasmitSharedMemory(
+        that: *mut wire_WasmitSharedMemory,
         delta: u64,
     ) -> support::WireSyncReturn {
-        wire_grow__method__WasmiSharedMemory_impl(that, delta)
+        wire_grow__method__WasmitSharedMemory_impl(that, delta)
     }
 
     #[no_mangle]
-    pub extern "C" fn wire_atomics__method__WasmiSharedMemory(
+    pub extern "C" fn wire_atomics__method__WasmitSharedMemory(
         port_: i64,
-        that: *mut wire_WasmiSharedMemory,
+        that: *mut wire_WasmitSharedMemory,
     ) {
-        wire_atomics__method__WasmiSharedMemory_impl(port_, that)
+        wire_atomics__method__WasmitSharedMemory_impl(port_, that)
     }
 
     #[no_mangle]
-    pub extern "C" fn wire_atomic_notify__method__WasmiSharedMemory(
-        that: *mut wire_WasmiSharedMemory,
+    pub extern "C" fn wire_atomic_notify__method__WasmitSharedMemory(
+        that: *mut wire_WasmitSharedMemory,
         addr: u64,
         count: u32,
     ) -> support::WireSyncReturn {
-        wire_atomic_notify__method__WasmiSharedMemory_impl(that, addr, count)
+        wire_atomic_notify__method__WasmitSharedMemory_impl(that, addr, count)
     }
 
     #[no_mangle]
-    pub extern "C" fn wire_atomic_wait32__method__WasmiSharedMemory(
-        that: *mut wire_WasmiSharedMemory,
+    pub extern "C" fn wire_atomic_wait32__method__WasmitSharedMemory(
+        that: *mut wire_WasmitSharedMemory,
         addr: u64,
         expected: u32,
     ) -> support::WireSyncReturn {
-        wire_atomic_wait32__method__WasmiSharedMemory_impl(that, addr, expected)
+        wire_atomic_wait32__method__WasmitSharedMemory_impl(that, addr, expected)
     }
 
     #[no_mangle]
-    pub extern "C" fn wire_atomic_wait64__method__WasmiSharedMemory(
-        that: *mut wire_WasmiSharedMemory,
+    pub extern "C" fn wire_atomic_wait64__method__WasmitSharedMemory(
+        that: *mut wire_WasmitSharedMemory,
         addr: u64,
         expected: u64,
     ) -> support::WireSyncReturn {
-        wire_atomic_wait64__method__WasmiSharedMemory_impl(that, addr, expected)
+        wire_atomic_wait64__method__WasmitSharedMemory_impl(that, addr, expected)
     }
 
     #[no_mangle]
@@ -3352,11 +3352,6 @@ mod io {
     }
 
     #[no_mangle]
-    pub extern "C" fn new_box_autoadd_wasmi_shared_memory_0() -> *mut wire_WasmiSharedMemory {
-        support::new_leak_box_ptr(wire_WasmiSharedMemory::new_with_null_ptr())
-    }
-
-    #[no_mangle]
     pub extern "C" fn new_box_autoadd_wasmit_instance_id_0() -> *mut wire_WasmitInstanceId {
         support::new_leak_box_ptr(wire_WasmitInstanceId::new_with_null_ptr())
     }
@@ -3364,6 +3359,11 @@ mod io {
     #[no_mangle]
     pub extern "C" fn new_box_autoadd_wasmit_module_id_0() -> *mut wire_WasmitModuleId {
         support::new_leak_box_ptr(wire_WasmitModuleId::new_with_null_ptr())
+    }
+
+    #[no_mangle]
+    pub extern "C" fn new_box_autoadd_wasmit_shared_memory_0() -> *mut wire_WasmitSharedMemory {
+        support::new_leak_box_ptr(wire_WasmitSharedMemory::new_with_null_ptr())
     }
 
     #[no_mangle]
@@ -3652,12 +3652,6 @@ mod io {
             Wire2Api::<WasmVal>::wire2api(*wrap).into()
         }
     }
-    impl Wire2Api<WasmiSharedMemory> for *mut wire_WasmiSharedMemory {
-        fn wire2api(self) -> WasmiSharedMemory {
-            let wrap = unsafe { support::box_from_leak_ptr(self) };
-            Wire2Api::<WasmiSharedMemory>::wire2api(*wrap).into()
-        }
-    }
     impl Wire2Api<WasmitInstanceId> for *mut wire_WasmitInstanceId {
         fn wire2api(self) -> WasmitInstanceId {
             let wrap = unsafe { support::box_from_leak_ptr(self) };
@@ -3668,6 +3662,12 @@ mod io {
         fn wire2api(self) -> WasmitModuleId {
             let wrap = unsafe { support::box_from_leak_ptr(self) };
             Wire2Api::<WasmitModuleId>::wire2api(*wrap).into()
+        }
+    }
+    impl Wire2Api<WasmitSharedMemory> for *mut wire_WasmitSharedMemory {
+        fn wire2api(self) -> WasmitSharedMemory {
+            let wrap = unsafe { support::box_from_leak_ptr(self) };
+            Wire2Api::<WasmitSharedMemory>::wire2api(*wrap).into()
         }
     }
     impl Wire2Api<CompiledModule> for wire_CompiledModule {
@@ -3920,11 +3920,6 @@ mod io {
             }
         }
     }
-    impl Wire2Api<WasmiSharedMemory> for wire_WasmiSharedMemory {
-        fn wire2api(self) -> WasmiSharedMemory {
-            WasmiSharedMemory(self.field0.wire2api())
-        }
-    }
     impl Wire2Api<WasmitInstanceId> for wire_WasmitInstanceId {
         fn wire2api(self) -> WasmitInstanceId {
             WasmitInstanceId(self.field0.wire2api())
@@ -3933,6 +3928,11 @@ mod io {
     impl Wire2Api<WasmitModuleId> for wire_WasmitModuleId {
         fn wire2api(self) -> WasmitModuleId {
             WasmitModuleId(self.field0.wire2api())
+        }
+    }
+    impl Wire2Api<WasmitSharedMemory> for wire_WasmitSharedMemory {
+        fn wire2api(self) -> WasmitSharedMemory {
+            WasmitSharedMemory(self.field0.wire2api())
         }
     }
     // Section: wire structs
@@ -4138,12 +4138,6 @@ mod io {
 
     #[repr(C)]
     #[derive(Clone)]
-    pub struct wire_WasmiSharedMemory {
-        field0: wire_RwLockSharedMemory,
-    }
-
-    #[repr(C)]
-    #[derive(Clone)]
     pub struct wire_WasmitInstanceId {
         field0: u32,
     }
@@ -4152,6 +4146,12 @@ mod io {
     #[derive(Clone)]
     pub struct wire_WasmitModuleId {
         field0: u32,
+    }
+
+    #[repr(C)]
+    #[derive(Clone)]
+    pub struct wire_WasmitSharedMemory {
+        field0: wire_RwLockSharedMemory,
     }
 
     #[repr(C)]
@@ -4636,20 +4636,6 @@ mod io {
         })
     }
 
-    impl NewWithNullPtr for wire_WasmiSharedMemory {
-        fn new_with_null_ptr() -> Self {
-            Self {
-                field0: wire_RwLockSharedMemory::new_with_null_ptr(),
-            }
-        }
-    }
-
-    impl Default for wire_WasmiSharedMemory {
-        fn default() -> Self {
-            Self::new_with_null_ptr()
-        }
-    }
-
     impl NewWithNullPtr for wire_WasmitInstanceId {
         fn new_with_null_ptr() -> Self {
             Self {
@@ -4673,6 +4659,20 @@ mod io {
     }
 
     impl Default for wire_WasmitModuleId {
+        fn default() -> Self {
+            Self::new_with_null_ptr()
+        }
+    }
+
+    impl NewWithNullPtr for wire_WasmitSharedMemory {
+        fn new_with_null_ptr() -> Self {
+            Self {
+                field0: wire_RwLockSharedMemory::new_with_null_ptr(),
+            }
+        }
+    }
+
+    impl Default for wire_WasmitSharedMemory {
         fn default() -> Self {
             Self::new_with_null_ptr()
         }

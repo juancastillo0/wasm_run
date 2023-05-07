@@ -563,9 +563,9 @@ impl CompiledModule {
     pub fn create_shared_memory(
         &self,
         memory_type: MemoryTy,
-    ) -> Result<SyncReturn<WasmiSharedMemory>> {
+    ) -> Result<SyncReturn<WasmitSharedMemory>> {
         let module = self.0.lock().unwrap();
-        Ok(SyncReturn(WasmiSharedMemory(RustOpaque::new(RwLock::new(
+        Ok(SyncReturn(WasmitSharedMemory(RustOpaque::new(RwLock::new(
             SharedMemory::new(module.engine(), memory_type.to_memory_type()?)?,
         )))))
     }
@@ -645,9 +645,9 @@ impl From<WaitResult> for SharedMemoryWaitResult {
     }
 }
 
-pub struct WasmiSharedMemory(pub RustOpaque<RwLock<SharedMemory>>);
+pub struct WasmitSharedMemory(pub RustOpaque<RwLock<SharedMemory>>);
 
-impl WasmiSharedMemory {
+impl WasmitSharedMemory {
     pub fn ty(&self) -> SyncReturn<MemoryTy> {
         SyncReturn((&self.0.read().unwrap().ty()).into())
     }

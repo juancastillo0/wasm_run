@@ -143,12 +143,6 @@ class WasmitDartPlatform extends FlutterRustBridgeBase<WasmitDartWire>
   }
 
   @protected
-  List<dynamic> api2wire_box_autoadd_wasmi_shared_memory(
-      WasmiSharedMemory raw) {
-    return api2wire_wasmi_shared_memory(raw);
-  }
-
-  @protected
   List<dynamic> api2wire_box_autoadd_wasmit_instance_id(WasmitInstanceId raw) {
     return api2wire_wasmit_instance_id(raw);
   }
@@ -156,6 +150,12 @@ class WasmitDartPlatform extends FlutterRustBridgeBase<WasmitDartWire>
   @protected
   List<dynamic> api2wire_box_autoadd_wasmit_module_id(WasmitModuleId raw) {
     return api2wire_wasmit_module_id(raw);
+  }
+
+  @protected
+  List<dynamic> api2wire_box_autoadd_wasmit_shared_memory(
+      WasmitSharedMemory raw) {
+    return api2wire_wasmit_shared_memory(raw);
   }
 
   @protected
@@ -408,11 +408,6 @@ class WasmitDartPlatform extends FlutterRustBridgeBase<WasmitDartWire>
   }
 
   @protected
-  List<dynamic> api2wire_wasmi_shared_memory(WasmiSharedMemory raw) {
-    return [api2wire_RwLockSharedMemory(raw.field0)];
-  }
-
-  @protected
   List<dynamic> api2wire_wasmit_instance_id(WasmitInstanceId raw) {
     return [api2wire_u32(raw.field0)];
   }
@@ -420,6 +415,11 @@ class WasmitDartPlatform extends FlutterRustBridgeBase<WasmitDartWire>
   @protected
   List<dynamic> api2wire_wasmit_module_id(WasmitModuleId raw) {
     return [api2wire_u32(raw.field0)];
+  }
+
+  @protected
+  List<dynamic> api2wire_wasmit_shared_memory(WasmitSharedMemory raw) {
+    return [api2wire_RwLockSharedMemory(raw.field0)];
   }
 // Section: finalizer
 
@@ -596,31 +596,31 @@ class WasmitDartWasmModule implements WasmModule {
   external dynamic /* List<dynamic> */
       wire_get_module_exports__method__CompiledModule(List<dynamic> that);
 
-  external dynamic /* List<dynamic> */ wire_ty__method__WasmiSharedMemory(
+  external dynamic /* List<dynamic> */ wire_ty__method__WasmitSharedMemory(
       List<dynamic> that);
 
-  external dynamic /* Object */ wire_size__method__WasmiSharedMemory(
+  external dynamic /* Object */ wire_size__method__WasmitSharedMemory(
       List<dynamic> that);
 
-  external dynamic /* int */ wire_data_size__method__WasmiSharedMemory(
+  external dynamic /* int */ wire_data_size__method__WasmitSharedMemory(
       List<dynamic> that);
 
-  external dynamic /* int */ wire_data_pointer__method__WasmiSharedMemory(
+  external dynamic /* int */ wire_data_pointer__method__WasmitSharedMemory(
       List<dynamic> that);
 
-  external dynamic /* Object */ wire_grow__method__WasmiSharedMemory(
+  external dynamic /* Object */ wire_grow__method__WasmitSharedMemory(
       List<dynamic> that, Object delta);
 
-  external dynamic /* void */ wire_atomics__method__WasmiSharedMemory(
+  external dynamic /* void */ wire_atomics__method__WasmitSharedMemory(
       NativePortType port_, List<dynamic> that);
 
-  external dynamic /* int */ wire_atomic_notify__method__WasmiSharedMemory(
+  external dynamic /* int */ wire_atomic_notify__method__WasmitSharedMemory(
       List<dynamic> that, Object addr, int count);
 
-  external dynamic /* int */ wire_atomic_wait32__method__WasmiSharedMemory(
+  external dynamic /* int */ wire_atomic_wait32__method__WasmitSharedMemory(
       List<dynamic> that, Object addr, int expected);
 
-  external dynamic /* int */ wire_atomic_wait64__method__WasmiSharedMemory(
+  external dynamic /* int */ wire_atomic_wait64__method__WasmitSharedMemory(
       List<dynamic> that, Object addr, Object expected);
 
   external dynamic /* void */ wire_add__method__Atomics(NativePortType port_,
@@ -869,43 +869,43 @@ class WasmitDartWire
           List<dynamic> that) =>
       wasmModule.wire_get_module_exports__method__CompiledModule(that);
 
-  dynamic /* List<dynamic> */ wire_ty__method__WasmiSharedMemory(
+  dynamic /* List<dynamic> */ wire_ty__method__WasmitSharedMemory(
           List<dynamic> that) =>
-      wasmModule.wire_ty__method__WasmiSharedMemory(that);
+      wasmModule.wire_ty__method__WasmitSharedMemory(that);
 
-  dynamic /* Object */ wire_size__method__WasmiSharedMemory(
+  dynamic /* Object */ wire_size__method__WasmitSharedMemory(
           List<dynamic> that) =>
-      wasmModule.wire_size__method__WasmiSharedMemory(that);
+      wasmModule.wire_size__method__WasmitSharedMemory(that);
 
-  dynamic /* int */ wire_data_size__method__WasmiSharedMemory(
+  dynamic /* int */ wire_data_size__method__WasmitSharedMemory(
           List<dynamic> that) =>
-      wasmModule.wire_data_size__method__WasmiSharedMemory(that);
+      wasmModule.wire_data_size__method__WasmitSharedMemory(that);
 
-  dynamic /* int */ wire_data_pointer__method__WasmiSharedMemory(
+  dynamic /* int */ wire_data_pointer__method__WasmitSharedMemory(
           List<dynamic> that) =>
-      wasmModule.wire_data_pointer__method__WasmiSharedMemory(that);
+      wasmModule.wire_data_pointer__method__WasmitSharedMemory(that);
 
-  dynamic /* Object */ wire_grow__method__WasmiSharedMemory(
+  dynamic /* Object */ wire_grow__method__WasmitSharedMemory(
           List<dynamic> that, Object delta) =>
-      wasmModule.wire_grow__method__WasmiSharedMemory(that, delta);
+      wasmModule.wire_grow__method__WasmitSharedMemory(that, delta);
 
-  void wire_atomics__method__WasmiSharedMemory(
+  void wire_atomics__method__WasmitSharedMemory(
           NativePortType port_, List<dynamic> that) =>
-      wasmModule.wire_atomics__method__WasmiSharedMemory(port_, that);
+      wasmModule.wire_atomics__method__WasmitSharedMemory(port_, that);
 
-  dynamic /* int */ wire_atomic_notify__method__WasmiSharedMemory(
+  dynamic /* int */ wire_atomic_notify__method__WasmitSharedMemory(
           List<dynamic> that, Object addr, int count) =>
-      wasmModule.wire_atomic_notify__method__WasmiSharedMemory(
+      wasmModule.wire_atomic_notify__method__WasmitSharedMemory(
           that, addr, count);
 
-  dynamic /* int */ wire_atomic_wait32__method__WasmiSharedMemory(
+  dynamic /* int */ wire_atomic_wait32__method__WasmitSharedMemory(
           List<dynamic> that, Object addr, int expected) =>
-      wasmModule.wire_atomic_wait32__method__WasmiSharedMemory(
+      wasmModule.wire_atomic_wait32__method__WasmitSharedMemory(
           that, addr, expected);
 
-  dynamic /* int */ wire_atomic_wait64__method__WasmiSharedMemory(
+  dynamic /* int */ wire_atomic_wait64__method__WasmitSharedMemory(
           List<dynamic> that, Object addr, Object expected) =>
-      wasmModule.wire_atomic_wait64__method__WasmiSharedMemory(
+      wasmModule.wire_atomic_wait64__method__WasmitSharedMemory(
           that, addr, expected);
 
   void wire_add__method__Atomics(NativePortType port_, List<dynamic> that,

@@ -235,9 +235,9 @@ typedef struct wire_RwLockSharedMemory {
   const void *ptr;
 } wire_RwLockSharedMemory;
 
-typedef struct wire_WasmiSharedMemory {
+typedef struct wire_WasmitSharedMemory {
   struct wire_RwLockSharedMemory field0;
-} wire_WasmiSharedMemory;
+} wire_WasmitSharedMemory;
 
 typedef struct wire_Atomics {
   uintptr_t field0;
@@ -390,30 +390,30 @@ WireSyncReturn wire_get_module_imports__method__CompiledModule(struct wire_Compi
 
 WireSyncReturn wire_get_module_exports__method__CompiledModule(struct wire_CompiledModule *that);
 
-WireSyncReturn wire_ty__method__WasmiSharedMemory(struct wire_WasmiSharedMemory *that);
+WireSyncReturn wire_ty__method__WasmitSharedMemory(struct wire_WasmitSharedMemory *that);
 
-WireSyncReturn wire_size__method__WasmiSharedMemory(struct wire_WasmiSharedMemory *that);
+WireSyncReturn wire_size__method__WasmitSharedMemory(struct wire_WasmitSharedMemory *that);
 
-WireSyncReturn wire_data_size__method__WasmiSharedMemory(struct wire_WasmiSharedMemory *that);
+WireSyncReturn wire_data_size__method__WasmitSharedMemory(struct wire_WasmitSharedMemory *that);
 
-WireSyncReturn wire_data_pointer__method__WasmiSharedMemory(struct wire_WasmiSharedMemory *that);
+WireSyncReturn wire_data_pointer__method__WasmitSharedMemory(struct wire_WasmitSharedMemory *that);
 
-WireSyncReturn wire_grow__method__WasmiSharedMemory(struct wire_WasmiSharedMemory *that,
-                                                    uint64_t delta);
+WireSyncReturn wire_grow__method__WasmitSharedMemory(struct wire_WasmitSharedMemory *that,
+                                                     uint64_t delta);
 
-void wire_atomics__method__WasmiSharedMemory(int64_t port_, struct wire_WasmiSharedMemory *that);
+void wire_atomics__method__WasmitSharedMemory(int64_t port_, struct wire_WasmitSharedMemory *that);
 
-WireSyncReturn wire_atomic_notify__method__WasmiSharedMemory(struct wire_WasmiSharedMemory *that,
-                                                             uint64_t addr,
-                                                             uint32_t count);
+WireSyncReturn wire_atomic_notify__method__WasmitSharedMemory(struct wire_WasmitSharedMemory *that,
+                                                              uint64_t addr,
+                                                              uint32_t count);
 
-WireSyncReturn wire_atomic_wait32__method__WasmiSharedMemory(struct wire_WasmiSharedMemory *that,
-                                                             uint64_t addr,
-                                                             uint32_t expected);
+WireSyncReturn wire_atomic_wait32__method__WasmitSharedMemory(struct wire_WasmitSharedMemory *that,
+                                                              uint64_t addr,
+                                                              uint32_t expected);
 
-WireSyncReturn wire_atomic_wait64__method__WasmiSharedMemory(struct wire_WasmiSharedMemory *that,
-                                                             uint64_t addr,
-                                                             uint64_t expected);
+WireSyncReturn wire_atomic_wait64__method__WasmitSharedMemory(struct wire_WasmitSharedMemory *that,
+                                                              uint64_t addr,
+                                                              uint64_t expected);
 
 void wire_add__method__Atomics(int64_t port_,
                                struct wire_Atomics *that,
@@ -523,11 +523,11 @@ struct wire_WasiStackLimits *new_box_autoadd_wasi_stack_limits_0(void);
 
 struct wire_WasmVal *new_box_autoadd_wasm_val_0(void);
 
-struct wire_WasmiSharedMemory *new_box_autoadd_wasmi_shared_memory_0(void);
-
 struct wire_WasmitInstanceId *new_box_autoadd_wasmit_instance_id_0(void);
 
 struct wire_WasmitModuleId *new_box_autoadd_wasmit_module_id_0(void);
+
+struct wire_WasmitSharedMemory *new_box_autoadd_wasmit_shared_memory_0(void);
 
 struct wire_list_env_variable *new_list_env_variable_0(int32_t len);
 
@@ -632,15 +632,15 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) wire_create_shared_memory__method__CompiledModule);
     dummy_var ^= ((int64_t) (void*) wire_get_module_imports__method__CompiledModule);
     dummy_var ^= ((int64_t) (void*) wire_get_module_exports__method__CompiledModule);
-    dummy_var ^= ((int64_t) (void*) wire_ty__method__WasmiSharedMemory);
-    dummy_var ^= ((int64_t) (void*) wire_size__method__WasmiSharedMemory);
-    dummy_var ^= ((int64_t) (void*) wire_data_size__method__WasmiSharedMemory);
-    dummy_var ^= ((int64_t) (void*) wire_data_pointer__method__WasmiSharedMemory);
-    dummy_var ^= ((int64_t) (void*) wire_grow__method__WasmiSharedMemory);
-    dummy_var ^= ((int64_t) (void*) wire_atomics__method__WasmiSharedMemory);
-    dummy_var ^= ((int64_t) (void*) wire_atomic_notify__method__WasmiSharedMemory);
-    dummy_var ^= ((int64_t) (void*) wire_atomic_wait32__method__WasmiSharedMemory);
-    dummy_var ^= ((int64_t) (void*) wire_atomic_wait64__method__WasmiSharedMemory);
+    dummy_var ^= ((int64_t) (void*) wire_ty__method__WasmitSharedMemory);
+    dummy_var ^= ((int64_t) (void*) wire_size__method__WasmitSharedMemory);
+    dummy_var ^= ((int64_t) (void*) wire_data_size__method__WasmitSharedMemory);
+    dummy_var ^= ((int64_t) (void*) wire_data_pointer__method__WasmitSharedMemory);
+    dummy_var ^= ((int64_t) (void*) wire_grow__method__WasmitSharedMemory);
+    dummy_var ^= ((int64_t) (void*) wire_atomics__method__WasmitSharedMemory);
+    dummy_var ^= ((int64_t) (void*) wire_atomic_notify__method__WasmitSharedMemory);
+    dummy_var ^= ((int64_t) (void*) wire_atomic_wait32__method__WasmitSharedMemory);
+    dummy_var ^= ((int64_t) (void*) wire_atomic_wait64__method__WasmitSharedMemory);
     dummy_var ^= ((int64_t) (void*) wire_add__method__Atomics);
     dummy_var ^= ((int64_t) (void*) wire_load__method__Atomics);
     dummy_var ^= ((int64_t) (void*) wire_store__method__Atomics);
@@ -672,9 +672,9 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) new_box_autoadd_wasi_config_native_0);
     dummy_var ^= ((int64_t) (void*) new_box_autoadd_wasi_stack_limits_0);
     dummy_var ^= ((int64_t) (void*) new_box_autoadd_wasm_val_0);
-    dummy_var ^= ((int64_t) (void*) new_box_autoadd_wasmi_shared_memory_0);
     dummy_var ^= ((int64_t) (void*) new_box_autoadd_wasmit_instance_id_0);
     dummy_var ^= ((int64_t) (void*) new_box_autoadd_wasmit_module_id_0);
+    dummy_var ^= ((int64_t) (void*) new_box_autoadd_wasmit_shared_memory_0);
     dummy_var ^= ((int64_t) (void*) new_list_env_variable_0);
     dummy_var ^= ((int64_t) (void*) new_list_module_import_0);
     dummy_var ^= ((int64_t) (void*) new_list_preopened_dir_0);

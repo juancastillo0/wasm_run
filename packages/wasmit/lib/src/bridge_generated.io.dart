@@ -177,14 +177,6 @@ class WasmitDartPlatform extends FlutterRustBridgeBase<WasmitDartWire> {
   }
 
   @protected
-  ffi.Pointer<wire_WasmiSharedMemory> api2wire_box_autoadd_wasmi_shared_memory(
-      WasmiSharedMemory raw) {
-    final ptr = inner.new_box_autoadd_wasmi_shared_memory_0();
-    _api_fill_to_wire_wasmi_shared_memory(raw, ptr.ref);
-    return ptr;
-  }
-
-  @protected
   ffi.Pointer<wire_WasmitInstanceId> api2wire_box_autoadd_wasmit_instance_id(
       WasmitInstanceId raw) {
     final ptr = inner.new_box_autoadd_wasmit_instance_id_0();
@@ -197,6 +189,14 @@ class WasmitDartPlatform extends FlutterRustBridgeBase<WasmitDartWire> {
       WasmitModuleId raw) {
     final ptr = inner.new_box_autoadd_wasmit_module_id_0();
     _api_fill_to_wire_wasmit_module_id(raw, ptr.ref);
+    return ptr;
+  }
+
+  @protected
+  ffi.Pointer<wire_WasmitSharedMemory>
+      api2wire_box_autoadd_wasmit_shared_memory(WasmitSharedMemory raw) {
+    final ptr = inner.new_box_autoadd_wasmit_shared_memory_0();
+    _api_fill_to_wire_wasmit_shared_memory(raw, ptr.ref);
     return ptr;
   }
 
@@ -440,11 +440,6 @@ class WasmitDartPlatform extends FlutterRustBridgeBase<WasmitDartWire> {
     _api_fill_to_wire_wasm_val(apiObj, wireObj.ref);
   }
 
-  void _api_fill_to_wire_box_autoadd_wasmi_shared_memory(
-      WasmiSharedMemory apiObj, ffi.Pointer<wire_WasmiSharedMemory> wireObj) {
-    _api_fill_to_wire_wasmi_shared_memory(apiObj, wireObj.ref);
-  }
-
   void _api_fill_to_wire_box_autoadd_wasmit_instance_id(
       WasmitInstanceId apiObj, ffi.Pointer<wire_WasmitInstanceId> wireObj) {
     _api_fill_to_wire_wasmit_instance_id(apiObj, wireObj.ref);
@@ -453,6 +448,11 @@ class WasmitDartPlatform extends FlutterRustBridgeBase<WasmitDartWire> {
   void _api_fill_to_wire_box_autoadd_wasmit_module_id(
       WasmitModuleId apiObj, ffi.Pointer<wire_WasmitModuleId> wireObj) {
     _api_fill_to_wire_wasmit_module_id(apiObj, wireObj.ref);
+  }
+
+  void _api_fill_to_wire_box_autoadd_wasmit_shared_memory(
+      WasmitSharedMemory apiObj, ffi.Pointer<wire_WasmitSharedMemory> wireObj) {
+    _api_fill_to_wire_wasmit_shared_memory(apiObj, wireObj.ref);
   }
 
   void _api_fill_to_wire_compiled_module(
@@ -685,11 +685,6 @@ class WasmitDartPlatform extends FlutterRustBridgeBase<WasmitDartWire> {
     }
   }
 
-  void _api_fill_to_wire_wasmi_shared_memory(
-      WasmiSharedMemory apiObj, wire_WasmiSharedMemory wireObj) {
-    wireObj.field0 = api2wire_RwLockSharedMemory(apiObj.field0);
-  }
-
   void _api_fill_to_wire_wasmit_instance_id(
       WasmitInstanceId apiObj, wire_WasmitInstanceId wireObj) {
     wireObj.field0 = api2wire_u32(apiObj.field0);
@@ -698,6 +693,11 @@ class WasmitDartPlatform extends FlutterRustBridgeBase<WasmitDartWire> {
   void _api_fill_to_wire_wasmit_module_id(
       WasmitModuleId apiObj, wire_WasmitModuleId wireObj) {
     wireObj.field0 = api2wire_u32(apiObj.field0);
+  }
+
+  void _api_fill_to_wire_wasmit_shared_memory(
+      WasmitSharedMemory apiObj, wire_WasmitSharedMemory wireObj) {
+    wireObj.field0 = api2wire_RwLockSharedMemory(apiObj.field0);
   }
 }
 
@@ -1616,175 +1616,175 @@ class WasmitDartWire implements FlutterRustBridgeWireBase {
       _wire_get_module_exports__method__CompiledModulePtr.asFunction<
           WireSyncReturn Function(ffi.Pointer<wire_CompiledModule>)>();
 
-  WireSyncReturn wire_ty__method__WasmiSharedMemory(
-    ffi.Pointer<wire_WasmiSharedMemory> that,
+  WireSyncReturn wire_ty__method__WasmitSharedMemory(
+    ffi.Pointer<wire_WasmitSharedMemory> that,
   ) {
-    return _wire_ty__method__WasmiSharedMemory(
+    return _wire_ty__method__WasmitSharedMemory(
       that,
     );
   }
 
-  late final _wire_ty__method__WasmiSharedMemoryPtr = _lookup<
+  late final _wire_ty__method__WasmitSharedMemoryPtr = _lookup<
           ffi.NativeFunction<
-              WireSyncReturn Function(ffi.Pointer<wire_WasmiSharedMemory>)>>(
-      'wire_ty__method__WasmiSharedMemory');
-  late final _wire_ty__method__WasmiSharedMemory =
-      _wire_ty__method__WasmiSharedMemoryPtr.asFunction<
-          WireSyncReturn Function(ffi.Pointer<wire_WasmiSharedMemory>)>();
+              WireSyncReturn Function(ffi.Pointer<wire_WasmitSharedMemory>)>>(
+      'wire_ty__method__WasmitSharedMemory');
+  late final _wire_ty__method__WasmitSharedMemory =
+      _wire_ty__method__WasmitSharedMemoryPtr.asFunction<
+          WireSyncReturn Function(ffi.Pointer<wire_WasmitSharedMemory>)>();
 
-  WireSyncReturn wire_size__method__WasmiSharedMemory(
-    ffi.Pointer<wire_WasmiSharedMemory> that,
+  WireSyncReturn wire_size__method__WasmitSharedMemory(
+    ffi.Pointer<wire_WasmitSharedMemory> that,
   ) {
-    return _wire_size__method__WasmiSharedMemory(
+    return _wire_size__method__WasmitSharedMemory(
       that,
     );
   }
 
-  late final _wire_size__method__WasmiSharedMemoryPtr = _lookup<
+  late final _wire_size__method__WasmitSharedMemoryPtr = _lookup<
           ffi.NativeFunction<
-              WireSyncReturn Function(ffi.Pointer<wire_WasmiSharedMemory>)>>(
-      'wire_size__method__WasmiSharedMemory');
-  late final _wire_size__method__WasmiSharedMemory =
-      _wire_size__method__WasmiSharedMemoryPtr.asFunction<
-          WireSyncReturn Function(ffi.Pointer<wire_WasmiSharedMemory>)>();
+              WireSyncReturn Function(ffi.Pointer<wire_WasmitSharedMemory>)>>(
+      'wire_size__method__WasmitSharedMemory');
+  late final _wire_size__method__WasmitSharedMemory =
+      _wire_size__method__WasmitSharedMemoryPtr.asFunction<
+          WireSyncReturn Function(ffi.Pointer<wire_WasmitSharedMemory>)>();
 
-  WireSyncReturn wire_data_size__method__WasmiSharedMemory(
-    ffi.Pointer<wire_WasmiSharedMemory> that,
+  WireSyncReturn wire_data_size__method__WasmitSharedMemory(
+    ffi.Pointer<wire_WasmitSharedMemory> that,
   ) {
-    return _wire_data_size__method__WasmiSharedMemory(
+    return _wire_data_size__method__WasmitSharedMemory(
       that,
     );
   }
 
-  late final _wire_data_size__method__WasmiSharedMemoryPtr = _lookup<
+  late final _wire_data_size__method__WasmitSharedMemoryPtr = _lookup<
           ffi.NativeFunction<
-              WireSyncReturn Function(ffi.Pointer<wire_WasmiSharedMemory>)>>(
-      'wire_data_size__method__WasmiSharedMemory');
-  late final _wire_data_size__method__WasmiSharedMemory =
-      _wire_data_size__method__WasmiSharedMemoryPtr.asFunction<
-          WireSyncReturn Function(ffi.Pointer<wire_WasmiSharedMemory>)>();
+              WireSyncReturn Function(ffi.Pointer<wire_WasmitSharedMemory>)>>(
+      'wire_data_size__method__WasmitSharedMemory');
+  late final _wire_data_size__method__WasmitSharedMemory =
+      _wire_data_size__method__WasmitSharedMemoryPtr.asFunction<
+          WireSyncReturn Function(ffi.Pointer<wire_WasmitSharedMemory>)>();
 
-  WireSyncReturn wire_data_pointer__method__WasmiSharedMemory(
-    ffi.Pointer<wire_WasmiSharedMemory> that,
+  WireSyncReturn wire_data_pointer__method__WasmitSharedMemory(
+    ffi.Pointer<wire_WasmitSharedMemory> that,
   ) {
-    return _wire_data_pointer__method__WasmiSharedMemory(
+    return _wire_data_pointer__method__WasmitSharedMemory(
       that,
     );
   }
 
-  late final _wire_data_pointer__method__WasmiSharedMemoryPtr = _lookup<
+  late final _wire_data_pointer__method__WasmitSharedMemoryPtr = _lookup<
           ffi.NativeFunction<
-              WireSyncReturn Function(ffi.Pointer<wire_WasmiSharedMemory>)>>(
-      'wire_data_pointer__method__WasmiSharedMemory');
-  late final _wire_data_pointer__method__WasmiSharedMemory =
-      _wire_data_pointer__method__WasmiSharedMemoryPtr.asFunction<
-          WireSyncReturn Function(ffi.Pointer<wire_WasmiSharedMemory>)>();
+              WireSyncReturn Function(ffi.Pointer<wire_WasmitSharedMemory>)>>(
+      'wire_data_pointer__method__WasmitSharedMemory');
+  late final _wire_data_pointer__method__WasmitSharedMemory =
+      _wire_data_pointer__method__WasmitSharedMemoryPtr.asFunction<
+          WireSyncReturn Function(ffi.Pointer<wire_WasmitSharedMemory>)>();
 
-  WireSyncReturn wire_grow__method__WasmiSharedMemory(
-    ffi.Pointer<wire_WasmiSharedMemory> that,
+  WireSyncReturn wire_grow__method__WasmitSharedMemory(
+    ffi.Pointer<wire_WasmitSharedMemory> that,
     int delta,
   ) {
-    return _wire_grow__method__WasmiSharedMemory(
+    return _wire_grow__method__WasmitSharedMemory(
       that,
       delta,
     );
   }
 
-  late final _wire_grow__method__WasmiSharedMemoryPtr = _lookup<
+  late final _wire_grow__method__WasmitSharedMemoryPtr = _lookup<
       ffi.NativeFunction<
-          WireSyncReturn Function(ffi.Pointer<wire_WasmiSharedMemory>,
-              ffi.Uint64)>>('wire_grow__method__WasmiSharedMemory');
-  late final _wire_grow__method__WasmiSharedMemory =
-      _wire_grow__method__WasmiSharedMemoryPtr.asFunction<
-          WireSyncReturn Function(ffi.Pointer<wire_WasmiSharedMemory>, int)>();
+          WireSyncReturn Function(ffi.Pointer<wire_WasmitSharedMemory>,
+              ffi.Uint64)>>('wire_grow__method__WasmitSharedMemory');
+  late final _wire_grow__method__WasmitSharedMemory =
+      _wire_grow__method__WasmitSharedMemoryPtr.asFunction<
+          WireSyncReturn Function(ffi.Pointer<wire_WasmitSharedMemory>, int)>();
 
-  void wire_atomics__method__WasmiSharedMemory(
+  void wire_atomics__method__WasmitSharedMemory(
     int port_,
-    ffi.Pointer<wire_WasmiSharedMemory> that,
+    ffi.Pointer<wire_WasmitSharedMemory> that,
   ) {
-    return _wire_atomics__method__WasmiSharedMemory(
+    return _wire_atomics__method__WasmitSharedMemory(
       port_,
       that,
     );
   }
 
-  late final _wire_atomics__method__WasmiSharedMemoryPtr = _lookup<
+  late final _wire_atomics__method__WasmitSharedMemoryPtr = _lookup<
           ffi.NativeFunction<
               ffi.Void Function(
-                  ffi.Int64, ffi.Pointer<wire_WasmiSharedMemory>)>>(
-      'wire_atomics__method__WasmiSharedMemory');
-  late final _wire_atomics__method__WasmiSharedMemory =
-      _wire_atomics__method__WasmiSharedMemoryPtr.asFunction<
-          void Function(int, ffi.Pointer<wire_WasmiSharedMemory>)>();
+                  ffi.Int64, ffi.Pointer<wire_WasmitSharedMemory>)>>(
+      'wire_atomics__method__WasmitSharedMemory');
+  late final _wire_atomics__method__WasmitSharedMemory =
+      _wire_atomics__method__WasmitSharedMemoryPtr.asFunction<
+          void Function(int, ffi.Pointer<wire_WasmitSharedMemory>)>();
 
-  WireSyncReturn wire_atomic_notify__method__WasmiSharedMemory(
-    ffi.Pointer<wire_WasmiSharedMemory> that,
+  WireSyncReturn wire_atomic_notify__method__WasmitSharedMemory(
+    ffi.Pointer<wire_WasmitSharedMemory> that,
     int addr,
     int count,
   ) {
-    return _wire_atomic_notify__method__WasmiSharedMemory(
+    return _wire_atomic_notify__method__WasmitSharedMemory(
       that,
       addr,
       count,
     );
   }
 
-  late final _wire_atomic_notify__method__WasmiSharedMemoryPtr = _lookup<
+  late final _wire_atomic_notify__method__WasmitSharedMemoryPtr = _lookup<
       ffi.NativeFunction<
           WireSyncReturn Function(
-              ffi.Pointer<wire_WasmiSharedMemory>,
+              ffi.Pointer<wire_WasmitSharedMemory>,
               ffi.Uint64,
-              ffi.Uint32)>>('wire_atomic_notify__method__WasmiSharedMemory');
-  late final _wire_atomic_notify__method__WasmiSharedMemory =
-      _wire_atomic_notify__method__WasmiSharedMemoryPtr.asFunction<
+              ffi.Uint32)>>('wire_atomic_notify__method__WasmitSharedMemory');
+  late final _wire_atomic_notify__method__WasmitSharedMemory =
+      _wire_atomic_notify__method__WasmitSharedMemoryPtr.asFunction<
           WireSyncReturn Function(
-              ffi.Pointer<wire_WasmiSharedMemory>, int, int)>();
+              ffi.Pointer<wire_WasmitSharedMemory>, int, int)>();
 
-  WireSyncReturn wire_atomic_wait32__method__WasmiSharedMemory(
-    ffi.Pointer<wire_WasmiSharedMemory> that,
+  WireSyncReturn wire_atomic_wait32__method__WasmitSharedMemory(
+    ffi.Pointer<wire_WasmitSharedMemory> that,
     int addr,
     int expected,
   ) {
-    return _wire_atomic_wait32__method__WasmiSharedMemory(
+    return _wire_atomic_wait32__method__WasmitSharedMemory(
       that,
       addr,
       expected,
     );
   }
 
-  late final _wire_atomic_wait32__method__WasmiSharedMemoryPtr = _lookup<
+  late final _wire_atomic_wait32__method__WasmitSharedMemoryPtr = _lookup<
       ffi.NativeFunction<
           WireSyncReturn Function(
-              ffi.Pointer<wire_WasmiSharedMemory>,
+              ffi.Pointer<wire_WasmitSharedMemory>,
               ffi.Uint64,
-              ffi.Uint32)>>('wire_atomic_wait32__method__WasmiSharedMemory');
-  late final _wire_atomic_wait32__method__WasmiSharedMemory =
-      _wire_atomic_wait32__method__WasmiSharedMemoryPtr.asFunction<
+              ffi.Uint32)>>('wire_atomic_wait32__method__WasmitSharedMemory');
+  late final _wire_atomic_wait32__method__WasmitSharedMemory =
+      _wire_atomic_wait32__method__WasmitSharedMemoryPtr.asFunction<
           WireSyncReturn Function(
-              ffi.Pointer<wire_WasmiSharedMemory>, int, int)>();
+              ffi.Pointer<wire_WasmitSharedMemory>, int, int)>();
 
-  WireSyncReturn wire_atomic_wait64__method__WasmiSharedMemory(
-    ffi.Pointer<wire_WasmiSharedMemory> that,
+  WireSyncReturn wire_atomic_wait64__method__WasmitSharedMemory(
+    ffi.Pointer<wire_WasmitSharedMemory> that,
     int addr,
     int expected,
   ) {
-    return _wire_atomic_wait64__method__WasmiSharedMemory(
+    return _wire_atomic_wait64__method__WasmitSharedMemory(
       that,
       addr,
       expected,
     );
   }
 
-  late final _wire_atomic_wait64__method__WasmiSharedMemoryPtr = _lookup<
+  late final _wire_atomic_wait64__method__WasmitSharedMemoryPtr = _lookup<
       ffi.NativeFunction<
           WireSyncReturn Function(
-              ffi.Pointer<wire_WasmiSharedMemory>,
+              ffi.Pointer<wire_WasmitSharedMemory>,
               ffi.Uint64,
-              ffi.Uint64)>>('wire_atomic_wait64__method__WasmiSharedMemory');
-  late final _wire_atomic_wait64__method__WasmiSharedMemory =
-      _wire_atomic_wait64__method__WasmiSharedMemoryPtr.asFunction<
+              ffi.Uint64)>>('wire_atomic_wait64__method__WasmitSharedMemory');
+  late final _wire_atomic_wait64__method__WasmitSharedMemory =
+      _wire_atomic_wait64__method__WasmitSharedMemoryPtr.asFunction<
           WireSyncReturn Function(
-              ffi.Pointer<wire_WasmiSharedMemory>, int, int)>();
+              ffi.Pointer<wire_WasmitSharedMemory>, int, int)>();
 
   void wire_add__method__Atomics(
     int port_,
@@ -2270,17 +2270,6 @@ class WasmitDartWire implements FlutterRustBridgeWireBase {
   late final _new_box_autoadd_wasm_val_0 = _new_box_autoadd_wasm_val_0Ptr
       .asFunction<ffi.Pointer<wire_WasmVal> Function()>();
 
-  ffi.Pointer<wire_WasmiSharedMemory> new_box_autoadd_wasmi_shared_memory_0() {
-    return _new_box_autoadd_wasmi_shared_memory_0();
-  }
-
-  late final _new_box_autoadd_wasmi_shared_memory_0Ptr = _lookup<
-          ffi.NativeFunction<ffi.Pointer<wire_WasmiSharedMemory> Function()>>(
-      'new_box_autoadd_wasmi_shared_memory_0');
-  late final _new_box_autoadd_wasmi_shared_memory_0 =
-      _new_box_autoadd_wasmi_shared_memory_0Ptr
-          .asFunction<ffi.Pointer<wire_WasmiSharedMemory> Function()>();
-
   ffi.Pointer<wire_WasmitInstanceId> new_box_autoadd_wasmit_instance_id_0() {
     return _new_box_autoadd_wasmit_instance_id_0();
   }
@@ -2302,6 +2291,18 @@ class WasmitDartWire implements FlutterRustBridgeWireBase {
   late final _new_box_autoadd_wasmit_module_id_0 =
       _new_box_autoadd_wasmit_module_id_0Ptr
           .asFunction<ffi.Pointer<wire_WasmitModuleId> Function()>();
+
+  ffi.Pointer<wire_WasmitSharedMemory>
+      new_box_autoadd_wasmit_shared_memory_0() {
+    return _new_box_autoadd_wasmit_shared_memory_0();
+  }
+
+  late final _new_box_autoadd_wasmit_shared_memory_0Ptr = _lookup<
+          ffi.NativeFunction<ffi.Pointer<wire_WasmitSharedMemory> Function()>>(
+      'new_box_autoadd_wasmit_shared_memory_0');
+  late final _new_box_autoadd_wasmit_shared_memory_0 =
+      _new_box_autoadd_wasmit_shared_memory_0Ptr
+          .asFunction<ffi.Pointer<wire_WasmitSharedMemory> Function()>();
 
   ffi.Pointer<wire_list_env_variable> new_list_env_variable_0(
     int len,
@@ -3007,7 +3008,7 @@ class wire_RwLockSharedMemory extends ffi.Struct {
   external ffi.Pointer<ffi.Void> ptr;
 }
 
-class wire_WasmiSharedMemory extends ffi.Struct {
+class wire_WasmitSharedMemory extends ffi.Struct {
   external wire_RwLockSharedMemory field0;
 }
 
