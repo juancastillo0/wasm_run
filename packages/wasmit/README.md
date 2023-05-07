@@ -20,6 +20,7 @@ We use the [wasm-feature-detect JavaScript library](https://github.com/GoogleChr
 
 ```html
 <script src="./packages/wasmit/assets/wasm-feature-detect.js"></script>
+<script type="module" src="./packages/wasmit/assets/browser_wasi_shim.js"></script>
 ```
 
 

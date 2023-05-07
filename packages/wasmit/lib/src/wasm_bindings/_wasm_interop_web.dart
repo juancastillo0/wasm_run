@@ -131,12 +131,12 @@ class _WasmModule extends WasmModule {
   }
 
   @override
-  WasmMemory createSharedMemory(int pages, {int? maxPages}) {
+  WasmMemory createSharedMemory({
+    required int minPages,
+    required int maxPages,
+  }) {
     return _Memory(
-      Memory.shared(
-        initial: pages,
-        maximum: maxPages ?? 65536, // 2^16
-      ),
+      Memory.shared(initial: minPages, maximum: maxPages),
     );
   }
 
@@ -206,8 +206,8 @@ class _Builder extends WasmInstanceBuilder {
   }
 
   @override
-  WasmMemory createMemory(int pages, {int? maxPages}) {
-    return _Memory(Memory(initial: pages, maximum: maxPages));
+  WasmMemory createMemory({required int minPages, int? maxPages}) {
+    return _Memory(Memory(initial: minPages, maximum: maxPages));
   }
 
   @override
@@ -284,13 +284,13 @@ class _Builder extends WasmInstanceBuilder {
   WasmInstanceFuel? fuel() => null;
 
   @override
-  WasmInstance build() {
+  WasmInstance buildSync() {
     final instance = Instance.fromModule(module, importMap: importMap);
     return _Instance(this, instance);
   }
 
   @override
-  Future<WasmInstance> buildAsync() async {
+  Future<WasmInstance> build() async {
     final instance =
         await Instance.fromModuleAsync(module, importMap: importMap);
     return _Instance(this, instance);
@@ -365,10 +365,28 @@ class _Instance extends WasmInstance {
   WasmInstanceFuel? fuel() => null;
 
   @override
-  Stream<Uint8List> get stderr => builder.wasi!.stderr!.streamController.stream;
+  Stream<Uint8List> get stderr {
+    final stream = builder.wasi?.stderr?.streamController.stream;
+    if (stream == null) {
+      throw Exception(
+        'WASI stderr is not available.'
+        ' You should enable it with `WasiConfig.captureStderr`.',
+      );
+    }
+    return stream;
+  }
 
   @override
-  Stream<Uint8List> get stdout => builder.wasi!.stdout!.streamController.stream;
+  Stream<Uint8List> get stdout {
+    final stream = builder.wasi?.stdout?.streamController.stream;
+    if (stream == null) {
+      throw Exception(
+        'WASI stdout is not available.'
+        ' You should enable it with `WasiConfig.captureStdout`.',
+      );
+    }
+    return stream;
+  }
 }
 
 class _Memory extends WasmMemory {
@@ -407,11 +425,11 @@ class _Global extends WasmGlobal {
   _Global(this.global);
 
   @override
-  Object? get() => global.value;
+  Object? get() => global.jsObject.value;
 
   @override
   void set(WasmValue value) {
-    global.value = value.value;
+    global.jsObject.value = value.value;
   }
 }
 
@@ -423,7 +441,6 @@ class _Table extends WasmTable {
   void set(int index, WasmValue value) {
     if (value.type == ValueTy.funcRef && value.value is WasmFunction) {
       final v = value.value! as WasmFunction;
-      js_util.setProperty(v.inner, 'DartWasmFunction', value.value);
       table.jsObject.set(index, v.inner);
     } else {
       table.jsObject.set(index, value.value);
@@ -436,10 +453,6 @@ class _Table extends WasmTable {
     if (v is Function &&
         v is! WasmFunction &&
         js_util.hasProperty(v, 'length')) {
-      if (js_util.hasProperty(v, 'DartWasmFunction')) {
-        return js_util.getProperty(v, 'DartWasmFunction');
-      }
-      // TODO(web/test): test globals
       return WasmFunction(
         v,
         params: List.filled(js_util.getProperty(v, 'length') as int, null),

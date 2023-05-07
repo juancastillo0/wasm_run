@@ -25,7 +25,7 @@ void simdTests() {
     );
 
     final module = compileWasmModuleSync(binary);
-    final instance = module.builder().build();
+    final instance = module.builder().buildSync();
 
     final g = instance.getFunction('g')!;
 
@@ -57,7 +57,7 @@ void simdTests() {
     );
 
     final module = compileWasmModuleSync(binary);
-    final instance = module.builder().build();
+    final instance = module.builder().buildSync();
     final g = instance.getFunction('g')!;
     final values = Int32x4(1, 20, 300, 4000);
     final param =
@@ -101,7 +101,7 @@ void simdTests() {
         wasmtime: ModuleConfigWasmtime(wasmSimd: true),
       ),
     );
-    final instance = module
+    final instance = await module
         .builder()
         .addImport(
           '',
@@ -148,13 +148,13 @@ void simdTests() {
           'AGFzbQEAAAABBgFgAXsBewMCAQAHBQEBZwAACgkBBwAgAP2BAgsACwRuYW1lAQQBAAFn',
     );
 
-    final module = compileWasmModuleSync(
+    final module = await compileWasmModule(
       binary,
       config: ModuleConfig(
         wasmtime: ModuleConfigWasmtime(wasmRelaxedSimd: true),
       ),
     );
-    final instance = module.builder().build();
+    final instance = module.builder().buildSync();
 
     final result = instance.getFunction('g')!([
       U8Array16(

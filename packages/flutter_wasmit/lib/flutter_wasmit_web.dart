@@ -5,13 +5,20 @@ import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 class FlutterWasmitWeb {
   static void registerWith(Registrar registrar) {
     _injectSrcScript('./packages/wasmit/assets/wasm-feature-detect.js');
+    _injectSrcScript(
+      './packages/wasmit/assets/browser_wasi_shim.js',
+      type: 'module',
+    );
   }
 
   /// Injects a `script` with a `src` dynamically into the head of the current
   /// document.
-  static Future<void> _injectSrcScript(String src) {
+  static Future<void> _injectSrcScript(
+    String src, {
+    String type = 'application/javascript',
+  }) {
     final script = html.ScriptElement();
-    script.type = 'application/javascript';
+    script.type = type;
     script.src = src;
     script.defer = true;
     // script.async = true;

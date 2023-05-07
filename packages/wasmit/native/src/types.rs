@@ -555,7 +555,7 @@ pub struct TableArgs {
 #[derive(Debug)]
 pub struct MemoryTy {
     /// The number of initial pages associated with the memory.
-    pub initial_pages: u32,
+    pub minimum_pages: u32,
     /// The maximum number of pages this memory can have.
     pub maximum_pages: Option<u32>,
 }
@@ -569,7 +569,7 @@ impl MemoryTy {
     #[cfg(feature = "wasmtime")]
     pub fn to_memory_type(&self) -> Result<wasmtime::MemoryType> {
         Ok(wasmtime::MemoryType::new(
-            self.initial_pages,
+            self.minimum_pages,
             self.maximum_pages,
         ))
     }
@@ -589,7 +589,7 @@ impl From<&MemoryType> for MemoryTy {
 impl From<&wasmtime::MemoryType> for MemoryTy {
     fn from(memory_type: &wasmtime::MemoryType) -> Self {
         MemoryTy {
-            initial_pages: memory_type.minimum().try_into().unwrap(),
+            minimum_pages: memory_type.minimum().try_into().unwrap(),
             maximum_pages: memory_type.maximum().map(|v| v.try_into().unwrap()),
         }
     }

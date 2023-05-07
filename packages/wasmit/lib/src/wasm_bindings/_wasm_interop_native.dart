@@ -53,7 +53,10 @@ class _WasmModule extends WasmModule {
   Future<WasmFeatures> features() async => _features;
 
   @override
-  WasmMemory createSharedMemory(int pages, {int? maxPages}) {
+  WasmMemory createSharedMemory({
+    required int minPages,
+    required int maxPages,
+  }) {
     // final memory = defaultInstance().createSharedMemory(module: module);
     // return _Memory(memory, store);
     // TODO(threads): implement createSharedMemory
@@ -143,26 +146,43 @@ WasmFunction _toWasmFunction(WFunc func, WasmitModuleId module) {
   final type = module.getFunctionType(func: func);
   final params = type.params;
 
+  List<WasmVal> mapArgs([List<Object?>? args]) {
+    int i = 0;
+    return args == null || args.isEmpty
+        ? const []
+        : args.map((v) => _fromWasmValueRaw(params[i++], v, module)).toList();
+  }
+
+  List<Object?> call([List<Object?>? args]) {
+    final result = module.callFunctionHandleSync(
+      func: func,
+      args: mapArgs(args),
+    );
+    if (result.isEmpty) return const [];
+    return result.map((r) => _References.dartValueFromWasm(r, module)).toList();
+  }
+
   return WasmFunction(
     params: params,
     results: type.results,
+    call: call,
+    callAsync: ([args]) async {
+      final result = await module.callFunctionHandle(
+        func: func,
+        args: mapArgs(args),
+      );
+      if (result.isEmpty) return const [];
+      return result
+          .map((r) => _References.dartValueFromWasm(r, module))
+          .toList();
+    },
     makeFunctionNumArgs(
       params.length,
-      (args) {
-        int i = 0;
-        final result = module.callFunctionHandleSync(
-          func: func,
-          args: args
-              .map((v) => _fromWasmValueRaw(params[i++], v, module))
-              .toList(),
-        );
+      (List<Object?> args) {
+        final result = call(args);
         if (result.isEmpty) return _noReturnPlaceholder;
-        if (result.length == 1) {
-          return _References.dartValueFromWasm(result.first, module);
-        }
-        return result
-            .map((r) => _References.dartValueFromWasm(r, module))
-            .toList();
+        if (result.length == 1) return result[0];
+        return result;
       },
     ),
   );
@@ -354,7 +374,7 @@ class _Builder extends WasmInstanceBuilder {
   final _WasmInstanceFuel? _fuel;
 
   _Builder(this.compiledModule, this.module, this.wasiConfig)
-      : _fuel = compiledModule.config.consumeFuel == true
+      : _fuel = (compiledModule.config.consumeFuel ?? false)
             ? _WasmInstanceFuel(module)
             : null;
 
@@ -368,10 +388,10 @@ class _Builder extends WasmInstanceBuilder {
   }
 
   @override
-  WasmMemory createMemory(int pages, {int? maxPages}) {
+  WasmMemory createMemory({required int minPages, int? maxPages}) {
     final memory = module.createMemory(
       memoryType: MemoryTy(
-        initialPages: pages,
+        minimumPages: minPages,
         maximumPages: maxPages,
       ),
     );
@@ -413,7 +433,7 @@ class _Builder extends WasmInstanceBuilder {
             .firstWhere((e) => e.module == moduleName && e.name == name);
         final type = desc.ty;
         if (type is! ExternalType_Func) {
-          throw Exception('Expected function');
+          throw Exception('Expected function import type found: $type');
         }
         final expectedParams = type.field0.params;
         {
@@ -470,13 +490,13 @@ class _Builder extends WasmInstanceBuilder {
   WasmInstanceFuel? fuel() => _fuel;
 
   @override
-  WasmInstance build() {
+  WasmInstance buildSync() {
     final instance = module.instantiateSync();
     return _Instance(instance, this);
   }
 
   @override
-  Future<WasmInstance> buildAsync() async {
+  Future<WasmInstance> build() async {
     final instance = await module.instantiate();
     return _Instance(instance, this);
   }

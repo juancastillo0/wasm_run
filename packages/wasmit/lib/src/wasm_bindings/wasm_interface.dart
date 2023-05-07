@@ -35,12 +35,6 @@ export 'package:wasmit/src/int64_bigint/int64_bigint.dart';
 /// You may use [builder] to create a [WasmInstance] from it to execute it
 /// or use its exports.
 abstract class WasmModule {
-  // TODO(names): initial instead of pages, shared: true
-  // TODO(names): initial instead of minSize
-  // factory WasmModule(Uint8List bytes) {
-  //   throw UnimplementedError();
-  // }
-
   /// A builder that creates a new [WasmInstance] from this module.
   /// It configures the imports and definitions of the instance.
   /// [wasiConfig] is not supported in the browser executor.
@@ -48,9 +42,12 @@ abstract class WasmModule {
 
   Future<WasmFeatures> features();
 
-  /// Creates a new memory with [pages] and [maxPages] pages.
+  /// Creates a new memory with [minPages] and [maxPages].
   /// Not supported in the wasmi executor.
-  WasmMemory createSharedMemory(int pages, {int? maxPages});
+  WasmMemory createSharedMemory({
+    required int minPages,
+    required int maxPages,
+  });
 
   /// Returns a list of imports required by this module.
   List<WasmModuleImport> getImports();
@@ -130,8 +127,8 @@ class WasiConfig implements WasiConfigNative {
 /// To instantiate this builder you may use [WasmInstanceBuilder.build]
 /// or [WasmInstanceBuilder.buildAsync].
 abstract class WasmInstanceBuilder {
-  /// Creates a new memory with [pages] and [maxPages] pages.
-  WasmMemory createMemory(int pages, {int? maxPages});
+  /// Creates a new memory with [minPages] and [maxPages] pages.
+  WasmMemory createMemory({required int minPages, int? maxPages});
 
   /// Creates a new global with [value] and the [mutable] flag.
   WasmGlobal createGlobal(WasmValue value, {required bool mutable});
@@ -166,13 +163,13 @@ abstract class WasmInstanceBuilder {
   /// the amount of computations performed by the instance.
   WasmInstanceFuel? fuel();
 
-  /// Builds the instance synchronously.
-  /// May throw if some required imports where not supplied.
-  WasmInstance build();
-
   /// Builds the instance asynchronously.
   /// May throw if some required imports where not supplied.
-  Future<WasmInstance> buildAsync();
+  Future<WasmInstance> build();
+
+  /// Builds the instance synchronously.
+  /// May throw if some required imports where not supplied.
+  WasmInstance buildSync();
 }
 
 /// The module instance that was created from a [module] and can be used
@@ -329,14 +326,17 @@ class WasmFunction extends WasmExternal {
     required this.params,
     required this.results,
     this.callAsync,
-  });
+    List<Object?> Function([List<Object?>? args])? call,
+  }) : _call = call;
 
   /// Constructs a Wasm function with no results.
-  WasmFunction.voidReturn(
+  const WasmFunction.voidReturn(
     this.inner, {
     required this.params,
     this.callAsync,
-  }) : results = const [];
+    List<Object?> Function([List<Object?>? args])? call,
+  })  : results = const [],
+        _call = call;
 
   /// The parameters of the function.
   /// The types may be null if the wasm runtime does not expose
@@ -366,9 +366,13 @@ class WasmFunction extends WasmExternal {
   /// require synchronous execution.
   final Future<List<Object?>> Function([List<Object?>? args])? callAsync;
 
+  final List<Object?> Function([List<Object?>? args])? _call;
+
   /// Invokes [inner] with the given [args]
   /// and casts the result to a [List] of Dart values.
   List<Object?> call([List<Object?>? args]) {
+    if (_call != null) return _call!(args);
+
     // `?? const []` is required for dart2js
     final values = Function.apply(inner, args ?? const []);
     if (values is List && values is! U8Array16) {
@@ -469,7 +473,7 @@ class WasmValue {
   ///
   /// Cloud be an:
   /// - [int] for [ValueTy.i32]
-  /// - [I64] ([int] or browser's `BigInt`) for [ValueTy.i64]
+  /// - [I64] ([int] or JS browser's `BigInt`) for [ValueTy.i64]
   /// - [double] for [ValueTy.f32]
   /// - [double] for [ValueTy.f64]
   /// - [U8Array16] for [ValueTy.v128]

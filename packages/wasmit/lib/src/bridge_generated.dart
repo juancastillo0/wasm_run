@@ -489,13 +489,13 @@ class GlobalTy {
 
 class MemoryTy {
   /// The number of initial pages associated with the memory.
-  final int initialPages;
+  final int minimumPages;
 
   /// The maximum number of pages this memory can have.
   final int? maximumPages;
 
   const MemoryTy({
-    required this.initialPages,
+    required this.minimumPages,
     this.maximumPages,
   });
 }
@@ -2381,7 +2381,7 @@ class WasmitDartImpl implements WasmitDart {
     if (arr.length != 2)
       throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
     return MemoryTy(
-      initialPages: _wire2api_u32(arr[0]),
+      minimumPages: _wire2api_u32(arr[0]),
       maximumPages: _wire2api_opt_box_autoadd_u32(arr[1]),
     );
   }

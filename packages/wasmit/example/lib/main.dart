@@ -15,6 +15,7 @@ import 'package:wasmit_example/wasi_base64.dart';
 
 const isWeb = identical(0, 0.0);
 const compiledWasmLibraryPath =
+    // ignore: unnecessary_const
     const String.fromEnvironment('compiledWasmLibraryPath');
 final isLibrary = !isWeb || compiledWasmLibraryPath.isNotEmpty;
 
@@ -135,7 +136,7 @@ void testAll({
     );
     expect(module.getImports(), isEmpty);
 
-    final instance = module.builder().build();
+    final instance = module.builder().buildSync();
     final add = instance.getFunction('add')!;
     expect(
       add.params,
@@ -189,7 +190,7 @@ void testAll({
     );
 
     final instance =
-        (module.builder()..addImport('host', 'hello', hostHello)).build();
+        (module.builder()..addImport('host', 'hello', hostHello)).buildSync();
 
     expect(argsList, isNull);
     final hello = instance.getFunction('hello')!;
@@ -243,7 +244,7 @@ void testAll({
     expect(global.get(), 1);
 
     final instance =
-        builder.addImports([WasmImport('js', 'global', global)]).build();
+        builder.addImports([WasmImport('js', 'global', global)]).buildSync();
 
     final getGlobal = instance.getFunction('getGlobal')!;
     expect(getGlobal.params, <ValueTy>[]);
@@ -301,7 +302,7 @@ void testAll({
     );
 
     final builder = module.builder();
-    final memory = builder.createMemory(1);
+    final memory = builder.createMemory(minPages: 1);
     expect(memory.lengthInBytes, WasmMemory.bytesPerPage);
     expect(memory.lengthInPages, 1);
     expect(memory.view, Uint8List(WasmMemory.bytesPerPage));
@@ -317,7 +318,7 @@ void testAll({
     final instance = builder
         .addImports([WasmImport('js', 'mem', memory)])
         .addImport('console', 'logUtf8', logUtf8)
-        .build();
+        .buildSync();
 
     // expect(memory[1], utf8.encode('i').first);
     expect(memory.view[1], utf8.encode('i').first);
@@ -376,7 +377,7 @@ void testAll({
       <String>[],
     );
 
-    final instance = await module.builder().buildAsync();
+    final instance = await module.builder().build();
 
     final call = instance.getFunction('callByIndex')!;
 
@@ -392,14 +393,15 @@ void testAll({
     final binary = await getBinary(
       wat: r'''
 (module
-    (import "js" "tbl" (table 2 anyfunc))
+    (import "js" "tbl" (table 3 anyfunc))
     (func $f42 (result i32) i32.const 42)
     (func $f83 (result i32) i32.const 83)
-    (elem (i32.const 0) $f42 $f83)
+    (func $f64p9 (param i64) (result i64) (i64.add (local.get 0) (i64.const 9)))
+    (elem (i32.const 0) $f42 $f83 $f64p9)
 )
 ''',
       base64Binary:
-          'AGFzbQEAAAABBQFgAAF/AgwBAmpzA3RibAFwAAIDAwIAAAkIAQBBAAsCAAEKDAIEAEEqCwUAQdMACwASBG5hbWUBCwIAA2Y0MgEDZjgz',
+          'AGFzbQEAAAABCgJgAAF/YAF+AX4CDAECanMDdGJsAXAAAwMEAwAAAQkJAQBBAAsDAAECChQDBABBKgsFAEHTAAsHACAAQgl8CwAZBG5hbWUBEgMAA2Y0MgEDZjgzAgVmNjRwOQ==',
     );
 
     final module = compileWasmModuleSync(binary);
@@ -421,14 +423,14 @@ void testAll({
 
     final builder = module.builder();
     final table = builder.createTable(
-      minSize: 2,
+      minSize: 3,
       value: WasmValue.funcRef(null),
     );
-    expect(table.length, 2);
+    expect(table.length, 3);
 
     expect(table[0], isNull);
 
-    builder.addImports([WasmImport('js', 'tbl', table)]).build();
+    await builder.addImports([WasmImport('js', 'tbl', table)]).build();
 
     final f42 = table.get(0)! as WasmFunction;
     expect(f42.inner(), 42);
@@ -662,7 +664,7 @@ void testAll({
         results: [ValueTy.f64],
       ),
     );
-    final instance1 = await builder1.buildAsync();
+    final instance1 = await builder1.build();
 
     final currentTime = instance1.getFunction('current_time')!;
     final now1 = DateTime.now().millisecondsSinceEpoch;
@@ -836,7 +838,7 @@ void testAll({
 
     final module = compileWasmModuleSync(binary);
 
-    final instance = module
+    final instance = await module
         .builder()
         .addImport(
           '',
@@ -857,9 +859,7 @@ void testAll({
     expect(g([42, 409.32000732421875]), [(409.32000732421875), 42]);
     expect(g.inner(42, 3.240000009536743), [3.240000009536743, 42]);
 
-    // TODO: improve tests for i64 BigInt on web
-    if (!isLibrary) return;
-    final params = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(BigInt.from).toList();
+    final params = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(i64.fromInt).toList();
     expect(roundTripMany(params), params);
     expect(Function.apply(roundTripMany.inner, params), params);
   });
@@ -882,7 +882,7 @@ void testAll({
           'AGFzbQEAAAABBgFgAW8BbwMCAQAEBAFvAAoGBgFvAdBvCwcZAwV0YWJsZQEABmdsb2JhbAMABGZ1bmMAAAoGAQQAIAALABoEbmFtZQUIAQAFdGFibGUHCQEABmdsb2JhbA==',
     );
     final module = compileWasmModuleSync(binary);
-    final instance = module.builder().build();
+    final instance = module.builder().buildSync();
 
     final table = instance.getTable('table')!;
     final global = instance.getGlobal('global')!;
@@ -950,7 +950,7 @@ void testAll({
     expect(fuel.consumeFuel(1), 0);
     expect(fuel.fuelConsumed(), 1);
 
-    final instance = await builder.buildAsync();
+    final instance = await builder.build();
     expect(fuel, instance.fuel());
 
     fuel.addFuel(10000);

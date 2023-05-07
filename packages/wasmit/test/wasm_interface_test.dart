@@ -38,7 +38,7 @@ void main() {
       );
       expect(module.getImports(), isEmpty);
 
-      final instance = module.builder().build();
+      final instance = module.builder().buildSync();
 
       final result = instance.getFunction('add')!.call([1, 4]);
       expect(result, [5]);

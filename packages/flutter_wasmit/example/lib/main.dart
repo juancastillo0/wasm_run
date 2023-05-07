@@ -36,7 +36,9 @@ Future<void> main() async {
   final List<WasmModuleImport> imports = module.getImports();
   assert(imports.isEmpty);
 
-  final WasmInstanceBuilder builder = module.builder();
+  // configure wasi
+  WasiConfig? wasiConfig;
+  final WasmInstanceBuilder builder = module.builder(wasiConfig: wasiConfig);
 
   // create external
   // builder.createTable
@@ -46,7 +48,7 @@ Future<void> main() async {
   // Add imports
   // builder.addImport(moduleName, name, value);
 
-  final WasmInstance instance = await builder.buildAsync();
+  final WasmInstance instance = await builder.build();
   final WasmFunction add = instance.getFunction('add')!;
 
   final List<ValueTy?> params = add.params;
@@ -54,6 +56,7 @@ Future<void> main() async {
 
   final WasmRuntimeFeatures runtime = await wasmRuntimeFeatures();
   if (!runtime.isBrowser) {
+    // Types are not supported in browser
     assert(params.every((t) => t == ValueTy.i32));
     assert(add.results!.length == 1);
     assert(add.results!.first == ValueTy.i32);

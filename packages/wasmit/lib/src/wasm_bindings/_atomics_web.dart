@@ -1,11 +1,15 @@
+// ignore_for_file: lines_longer_than_80_chars
+
 @JS()
 library atomics;
 
 import 'package:flutter_rust_bridge/flutter_rust_bridge.dart';
 
+/// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Atomics
 @JS('Atomics')
 external Atomics get atomics;
 
+/// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Atomics
 @JS()
 @anonymous
 abstract class Atomics {
