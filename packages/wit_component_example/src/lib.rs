@@ -1,5 +1,6 @@
 mod generate;
 mod types;
+mod function;
 
 // Use a procedural macro to generate bindings for the world we specified in
 // `host.wit`
