@@ -222,6 +222,7 @@ typedef struct wire_list_value_ty {
 } wire_list_value_ty;
 
 typedef struct wire_MemoryTy {
+  bool shared;
   uint32_t minimum_pages;
   uint32_t *maximum_pages;
 } wire_MemoryTy;

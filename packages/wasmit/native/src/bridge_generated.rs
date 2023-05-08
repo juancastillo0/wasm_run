@@ -1391,6 +1391,7 @@ impl support::IntoDartExceptPrimitive for GlobalTy {}
 impl support::IntoDart for MemoryTy {
     fn into_dart(self) -> support::DartAbi {
         vec![
+            self.shared.into_dart(),
             self.minimum_pages.into_dart(),
             self.maximum_pages.into_dart(),
         ]
@@ -2276,13 +2277,14 @@ mod web {
             let self_ = self.dyn_into::<JsArray>().unwrap();
             assert_eq!(
                 self_.length(),
-                2,
-                "Expected 2 elements, got {}",
+                3,
+                "Expected 3 elements, got {}",
                 self_.length()
             );
             MemoryTy {
-                minimum_pages: self_.get(0).wire2api(),
-                maximum_pages: self_.get(1).wire2api(),
+                shared: self_.get(0).wire2api(),
+                minimum_pages: self_.get(1).wire2api(),
+                maximum_pages: self_.get(2).wire2api(),
             }
         }
     }
@@ -3759,6 +3761,7 @@ mod io {
     impl Wire2Api<MemoryTy> for wire_MemoryTy {
         fn wire2api(self) -> MemoryTy {
             MemoryTy {
+                shared: self.shared.wire2api(),
                 minimum_pages: self.minimum_pages.wire2api(),
                 maximum_pages: self.maximum_pages.wire2api(),
             }
@@ -4037,6 +4040,7 @@ mod io {
     #[repr(C)]
     #[derive(Clone)]
     pub struct wire_MemoryTy {
+        shared: bool,
         minimum_pages: u32,
         maximum_pages: *mut u32,
     }
@@ -4400,6 +4404,7 @@ mod io {
     impl NewWithNullPtr for wire_MemoryTy {
         fn new_with_null_ptr() -> Self {
             Self {
+                shared: Default::default(),
                 minimum_pages: Default::default(),
                 maximum_pages: core::ptr::null_mut(),
             }
