@@ -5,7 +5,11 @@ import 'package:wasmit/src/bridge_generated.dart'
     show
         EnvVariable,
         ExternalType,
+        GlobalTy,
+        MemoryTy,
         PreopenedDir,
+        SharedMemoryWaitResult,
+        TableTy,
         U8Array16,
         ValueTy,
         WasiConfigNative,
@@ -24,6 +28,7 @@ export 'package:wasmit/src/bridge_generated.dart'
         GlobalTy,
         MemoryTy,
         PreopenedDir,
+        SharedMemoryWaitResult,
         TableTy,
         U8Array16,
         ValueTy,
@@ -44,7 +49,7 @@ abstract class WasmModule {
 
   /// Creates a new memory with [minPages] and [maxPages].
   /// Not supported in the wasmi executor.
-  WasmMemory createSharedMemory({
+  WasmSharedMemory createSharedMemory({
     required int minPages,
     required int maxPages,
   });
@@ -247,9 +252,25 @@ abstract class WasmMemory extends WasmExternal {
   /// [WasmMemory.bytesPerPage] = 65536 = 2^16 = 64KiB
   static const bytesPerPage = 65536;
 
+  /// Returns the type of this memory.
+  MemoryTy? get type;
+
   @override
   String toString() {
-    return 'WasmMemory(pages: $lengthInPages, bytes: $lengthInBytes)';
+    return 'WasmMemory(pages: $lengthInPages, bytes: $lengthInBytes,'
+        ' type: $type)';
+  }
+}
+
+abstract class WasmSharedMemory extends WasmMemory {
+  int atomicNotify(int addr, int count);
+  SharedMemoryWaitResult atomicWait32(int addr, int expected);
+  SharedMemoryWaitResult atomicWait64(int addr, int expected);
+
+  @override
+  String toString() {
+    return 'WasmSharedMemory(pages: $lengthInPages, bytes: $lengthInBytes,'
+        ' type: $type)';
   }
 }
 
@@ -274,10 +295,12 @@ abstract class WasmTable extends WasmExternal {
   /// new indexes with [fillValue].
   int grow(int delta, WasmValue fillValue);
 
+  /// Returns the type of the table.
+  TableTy? get type;
+
   @override
   String toString() {
-    // TODO(type): type
-    return 'WasmTable(length: $length)';
+    return 'WasmTable(length: $length, type: $type)';
   }
 }
 
@@ -289,6 +312,14 @@ abstract class WasmGlobal extends WasmExternal {
 
   /// Returns the value of the global.
   Object? get();
+
+  /// Returns the type of the global.
+  GlobalTy? get type;
+
+  @override
+  String toString() {
+    return 'WasmGlobal(type: $type)';
+  }
 }
 
 /// A Wasm function.

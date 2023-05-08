@@ -66,7 +66,7 @@ abstract class Atomics {
   /// `"timed-out"`) or until the agent is awoken (returning `"ok"`); otherwise, returns
   /// `"not-equal"`.
   String /* "ok" | "not-equal" | "timed-out" */ wait(
-    Int32List typedArray,
+    TypedData typedArray,
     int index,
     int value,
     int? timeout,
@@ -77,7 +77,7 @@ abstract class Atomics {
   /// @param typedArray A shared Int32Array.
   /// @param index The position in the typedArray to wake up on.
   /// @param count The number of sleeping agents to notify. Defaults to +Infinity.
-  int notify(Int32List typedArray, int index, int? count);
+  int notify(TypedData typedArray, int index, int? count);
 
   /// Stores the bitwise XOR of a value with the value at the given position in the array,
   /// returning the original value. Until this atomic operation completes, any other read or write

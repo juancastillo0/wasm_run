@@ -4,6 +4,7 @@ import 'dart:typed_data' show Uint8List;
 
 import 'package:wasm_interop/wasm_interop.dart';
 import 'package:wasmit/src/logger.dart';
+import 'package:wasmit/src/wasm_bindings/_atomics_web.dart';
 import 'package:wasmit/src/wasm_bindings/_wasi_web.dart';
 
 import 'package:wasmit/src/wasm_bindings/_wasm_feature_detect_web.dart';
@@ -61,7 +62,16 @@ Future<WasmRuntimeFeatures> _calculateFeatures() async {
     componentModel: false, // TODO(web-compat): check
     memoryControl: false, // TODO(web-compat): check
     garbageCollection: features[4],
-    wasiFeatures: null,
+    wasiFeatures: const WasmWasiFeatures(
+      io: true,
+      filesystem: true,
+      clocks: true,
+      random: true,
+      poll: false,
+      machineLearning: false,
+      crypto: false,
+      threads: false,
+    ),
     // TODO: moduleLinking
   );
 
@@ -131,11 +141,11 @@ class _WasmModule extends WasmModule {
   }
 
   @override
-  WasmMemory createSharedMemory({
+  WasmSharedMemory createSharedMemory({
     required int minPages,
     required int maxPages,
   }) {
-    return _Memory(
+    return _SharedMemory(
       Memory.shared(initial: minPages, maximum: maxPages),
     );
   }
@@ -175,6 +185,7 @@ class _WasmModule extends WasmModule {
             e.module,
             e.name,
             WasmExternalKind.values.byName(e.kind.name),
+            type: _getExternalType(e),
           ),
         )
         .toList();
@@ -187,6 +198,7 @@ class _WasmModule extends WasmModule {
           (e) => WasmModuleExport(
             e.name,
             WasmExternalKind.values.byName(e.kind.name),
+            type: _getExternalType(e),
           ),
         )
         .toList();
@@ -311,41 +323,24 @@ class _Instance extends WasmInstance {
       Map.fromEntries(
         instance.functions.entries
             .map<MapEntry<String, WasmExternal>>(
-              (e) {
-                final params = List.filled(
-                  js_util.getProperty(e.value, 'length') as int,
-                  null,
-                );
-                return MapEntry(
-                  e.key,
-                  // results is not supported on web https://github.com/WebAssembly/js-types/blob/main/proposals/js-types/Overview.md
-                  WasmFunction(e.value, params: params, results: null),
-                  // TODO(web): callAsync,
-                );
-                // makeFunction(params.length, (args) {
-                //   // final result = Function.apply(
-                //   //   e.value,
-                //   //   args.map((e) => e.value).toList(),
-                //   // );
-                //   final result = Function.apply(e.value, args);
-                //   return result is List
-                //       ? result
-                //       : [if (result != null) result];
-                // }),
-              },
+              (e) => MapEntry(e.key, _makeWasmFunction(e.value)),
             )
             .followedBy(
               instance.globals.entries
                   .map((e) => MapEntry(e.key, _Global(e.value))),
             )
             .followedBy(
-              instance.memories.entries
-                  .map((e) => MapEntry(e.key, _Memory(e.value))),
-            )
-            .followedBy(
-              instance.tables.entries
-                  .map((e) => MapEntry(e.key, _Table(e.value))),
-            ),
+          instance.memories.entries.map((e) {
+            final c =
+                js_util.getProperty<Object>(e.value.buffer, 'constructor');
+            if (js_util.getProperty<Object>(c, 'name') == 'SharedArrayBuffer') {
+              return MapEntry(e.key, _SharedMemory(e.value));
+            }
+            return MapEntry(e.key, _Memory(e.value));
+          }),
+        ).followedBy(
+          instance.tables.entries.map((e) => MapEntry(e.key, _Table(e.value))),
+        ),
       ),
     );
     final wasi = builder.wasi?.inner;
@@ -389,6 +384,52 @@ class _Instance extends WasmInstance {
   }
 }
 
+WasmExternal _makeWasmFunction(Function value) {
+  final ty = _getFuncType(value);
+  final params = ty?.params.cast<ValueTy?>() ??
+      List.filled(
+        js_util.getProperty(value, 'length') as int,
+        null,
+      );
+  final function = WasmFunction(
+    value,
+    params: params,
+    // results is not supported on web https://github.com/WebAssembly/js-types/blob/main/proposals/js-types/Overview.md
+    results: ty?.results,
+    // TODO(web): callAsync,
+  );
+  return function;
+}
+
+class _SharedMemory extends _Memory implements WasmSharedMemory {
+  _SharedMemory(super.memory);
+
+  @override
+  int atomicNotify(int addr, int count) {
+    return atomics.notify(view, addr, count);
+  }
+
+  @override
+  SharedMemoryWaitResult atomicWait32(int addr, int expected) {
+    final value = atomics.wait(view, addr, expected, null);
+    switch (value) {
+      case 'ok':
+        return SharedMemoryWaitResult.Ok;
+      case 'not-equal':
+        return SharedMemoryWaitResult.Mismatch;
+      case 'timed-out':
+        return SharedMemoryWaitResult.TimedOut;
+      default:
+        throw Exception('atomicWait32 Unexpected value: $value');
+    }
+  }
+
+  @override
+  SharedMemoryWaitResult atomicWait64(int addr, int expected) {
+    throw UnimplementedError('atomicWait64 is not supported on web');
+  }
+}
+
 class _Memory extends WasmMemory {
   final Memory memory;
 
@@ -417,6 +458,9 @@ class _Memory extends WasmMemory {
   void write({required int offset, required Uint8List buffer}) {
     List.copyRange(view, offset, buffer);
   }
+
+  @override
+  MemoryTy? get type => _getMemoryType(memory.jsObject);
 }
 
 class _Global extends WasmGlobal {
@@ -431,6 +475,9 @@ class _Global extends WasmGlobal {
   void set(WasmValue value) {
     global.jsObject.value = value.value;
   }
+
+  @override
+  GlobalTy? get type => _getGlobalType(global.jsObject);
 }
 
 class _Table extends WasmTable {
@@ -453,11 +500,7 @@ class _Table extends WasmTable {
     if (v is Function &&
         v is! WasmFunction &&
         js_util.hasProperty(v, 'length')) {
-      return WasmFunction(
-        v,
-        params: List.filled(js_util.getProperty(v, 'length') as int, null),
-        results: null,
-      );
+      return _makeWasmFunction(v);
     }
     return v;
   }
@@ -475,4 +518,81 @@ class _Table extends WasmTable {
     }
     return previous;
   }
+
+  @override
+  TableTy? get type => _getTableType(table.jsObject);
+}
+
+ExternalType? _getExternalType(Object value) {
+  final type = _getType(value);
+  if (type == null) return null;
+  if (type['mutable'] is bool && type['value'] is String) {
+    return ExternalType.global(_getGlobalType(value)!);
+  } else if (type['element'] is String && type['minimum'] is int) {
+    return ExternalType.table(_getTableType(value)!);
+  } else if (type['shared'] is bool && type['minimum'] is int) {
+    return ExternalType.memory(_getMemoryType(value)!);
+  } else if (type.containsKey('results') &&
+      type.containsKey('parameters') &&
+      value is Function) {
+    return ExternalType.func(_getFuncType(value)!);
+  } else {
+    return null;
+  }
+}
+
+MemoryTy? _getMemoryType(Object value) {
+  final t = _getType(value);
+  if (t == null) return null;
+  return MemoryTy(
+    shared: t['shared'] == true,
+    minimumPages: t['minimum']! as int,
+    maximumPages: t['maximum'] as int?,
+  );
+}
+
+GlobalTy? _getGlobalType(Object value) {
+  final t = _getType(value);
+  if (t == null) return null;
+  final ty = ValueTy.values.byName(t['value']! as String);
+  return GlobalTy(
+    content: ty,
+    // TODO: improve naming and enum
+    mutability:
+        t['mutable'] == true ? GlobalMutability.Var : GlobalMutability.Const,
+  );
+}
+
+TableTy? _getTableType(Object value) {
+  final t = _getType(value);
+  if (t == null) return null;
+  final ty = ValueTy.values.byName(t['element']! as String);
+  return TableTy(
+    element: ty,
+    min: t['minimum']! as int,
+    max: t['maximum'] as int?,
+  );
+}
+
+FuncTy? _getFuncType(Function value) {
+  final type = _getType(value);
+  if (type == null) return null;
+  final params = (type['parameters'] as List?)
+      ?.cast<String>()
+      .map(ValueTy.values.byName)
+      .toList();
+  final results = (type['results'] as List?)
+      ?.cast<String>()
+      .map(ValueTy.values.byName)
+      .toList();
+  if (results == null || params == null) {
+    return null;
+  }
+  return FuncTy(params: params, results: results);
+}
+
+Map<String, Object?>? _getType(Object value) {
+  if (!js_util.hasProperty(value, 'type')) return null;
+  final type = js_util.callMethod<Object?>(value, 'type', const []);
+  return (js_util.dartify(type)! as Map).cast();
 }

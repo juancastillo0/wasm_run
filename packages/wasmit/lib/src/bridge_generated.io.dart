@@ -499,6 +499,7 @@ class WasmitDartPlatform extends FlutterRustBridgeBase<WasmitDartWire> {
   }
 
   void _api_fill_to_wire_memory_ty(MemoryTy apiObj, wire_MemoryTy wireObj) {
+    wireObj.shared = api2wire_bool(apiObj.shared);
     wireObj.minimum_pages = api2wire_u32(apiObj.minimumPages);
     wireObj.maximum_pages = api2wire_opt_box_autoadd_u32(apiObj.maximumPages);
   }
@@ -2991,6 +2992,9 @@ class wire_list_value_ty extends ffi.Struct {
 }
 
 class wire_MemoryTy extends ffi.Struct {
+  @ffi.Bool()
+  external bool shared;
+
   @ffi.Uint32()
   external int minimum_pages;
 

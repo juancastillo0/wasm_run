@@ -901,6 +901,9 @@ class GlobalTy {
 }
 
 class MemoryTy {
+  /// Whether or not this memory could be shared between multiple processes.
+  final bool shared;
+
   /// The number of initial pages associated with the memory.
   final int minimumPages;
 
@@ -908,6 +911,7 @@ class MemoryTy {
   final int? maximumPages;
 
   const MemoryTy({
+    required this.shared,
     required this.minimumPages,
     this.maximumPages,
   });
@@ -3428,11 +3432,12 @@ class WasmitDartImpl implements WasmitDart {
 
   MemoryTy _wire2api_memory_ty(dynamic raw) {
     final arr = raw as List<dynamic>;
-    if (arr.length != 2)
-      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    if (arr.length != 3)
+      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
     return MemoryTy(
-      minimumPages: _wire2api_u32(arr[0]),
-      maximumPages: _wire2api_opt_box_autoadd_u32(arr[1]),
+      shared: _wire2api_bool(arr[0]),
+      minimumPages: _wire2api_u32(arr[1]),
+      maximumPages: _wire2api_opt_box_autoadd_u32(arr[2]),
     );
   }
 

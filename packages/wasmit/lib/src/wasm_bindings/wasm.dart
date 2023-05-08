@@ -14,10 +14,10 @@ export 'package:wasmit/src/bridge_generated.dart'
         ModuleConfigWasmi,
         ModuleConfigWasmtime,
         PreopenedDir,
-        WasiConfig,
         WasiStackLimits,
         WasmFeatures,
-        WasmRuntimeFeatures;
+        WasmRuntimeFeatures,
+        WasmWasiFeatures;
 export 'package:wasmit/src/wasm_bindings/wasm_interface.dart';
 
 // TODO(config): The default [ModuleConfig] used by [compileWasmModule].

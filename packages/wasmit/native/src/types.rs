@@ -554,6 +554,8 @@ pub struct TableArgs {
 
 #[derive(Debug)]
 pub struct MemoryTy {
+    /// Whether or not this memory could be shared between multiple processes.
+    pub shared: bool,
     /// The number of initial pages associated with the memory.
     pub minimum_pages: u32,
     /// The maximum number of pages this memory can have.
@@ -568,6 +570,13 @@ impl MemoryTy {
 
     #[cfg(feature = "wasmtime")]
     pub fn to_memory_type(&self) -> Result<wasmtime::MemoryType> {
+        if self.shared {
+            return Ok(wasmtime::MemoryType::shared(
+                self.minimum_pages,
+                self.maximum_pages
+                    .ok_or("maximum_pages is required for shared memories")?,
+            ));
+        }
         Ok(wasmtime::MemoryType::new(
             self.minimum_pages,
             self.maximum_pages,
@@ -581,6 +590,7 @@ impl From<&MemoryType> for MemoryTy {
         MemoryTy {
             minimum_pages: memory_type.initial_pages().into(),
             maximum_pages: memory_type.maximum_pages().map(|v| v.into()),
+            shared: false,
         }
     }
 }
@@ -591,6 +601,7 @@ impl From<&wasmtime::MemoryType> for MemoryTy {
         MemoryTy {
             minimum_pages: memory_type.minimum().try_into().unwrap(),
             maximum_pages: memory_type.maximum().map(|v| v.try_into().unwrap()),
+            shared: memory_type.is_shared(),
         }
     }
 }

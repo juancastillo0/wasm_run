@@ -219,6 +219,7 @@ class WasmitDartPlatform extends FlutterRustBridgeBase<WasmitDartWire>
   @protected
   List<dynamic> api2wire_memory_ty(MemoryTy raw) {
     return [
+      api2wire_bool(raw.shared),
       api2wire_u32(raw.minimumPages),
       api2wire_opt_box_autoadd_u32(raw.maximumPages)
     ];

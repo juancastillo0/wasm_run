@@ -53,14 +53,18 @@ class _WasmModule extends WasmModule {
   Future<WasmFeatures> features() async => _features;
 
   @override
-  WasmMemory createSharedMemory({
+  WasmSharedMemory createSharedMemory({
     required int minPages,
     required int maxPages,
   }) {
-    // final memory = defaultInstance().createSharedMemory(module: module);
-    // return _Memory(memory, store);
-    // TODO(threads): implement createSharedMemory
-    throw UnimplementedError();
+    final memory = module.createSharedMemory(
+      memoryType: MemoryTy(
+        shared: true,
+        minimumPages: minPages,
+        maximumPages: maxPages,
+      ),
+    );
+    return _SharedMemory(memory);
   }
 
   @override
@@ -391,6 +395,7 @@ class _Builder extends WasmInstanceBuilder {
   WasmMemory createMemory({required int minPages, int? maxPages}) {
     final memory = module.createMemory(
       memoryType: MemoryTy(
+        shared: false,
         minimumPages: minPages,
         maximumPages: maxPages,
       ),
@@ -628,6 +633,61 @@ class _Memory extends WasmMemory {
     final pointer = ffi.Pointer<ffi.Uint8>.fromAddress(address);
     return pointer.asTypedList(lengthInBytes);
   }
+
+  @override
+  MemoryTy get type => module.getMemoryType(memory: memory);
+}
+
+class _SharedMemory extends WasmSharedMemory {
+  final WasmitSharedMemory memory;
+
+  _SharedMemory(this.memory);
+
+  @override
+  int atomicNotify(int addr, int count) {
+    return memory.atomicNotify(addr: addr, count: count);
+  }
+
+  @override
+  SharedMemoryWaitResult atomicWait32(int addr, int expected) {
+    return memory.atomicWait32(addr: addr, expected: expected);
+  }
+
+  @override
+  SharedMemoryWaitResult atomicWait64(int addr, int expected) {
+    return memory.atomicWait64(addr: addr, expected: expected);
+  }
+
+  @override
+  void grow(int deltaPages) {
+    memory.grow(delta: deltaPages);
+  }
+
+  @override
+  int get lengthInBytes => memory.dataSize();
+
+  @override
+  int get lengthInPages => memory.size();
+
+  @override
+  Uint8List read({required int offset, required int length}) {
+    return view.sublist(offset, offset + length);
+  }
+
+  @override
+  Uint8List get view {
+    final address = memory.dataPointer();
+    final pointer = ffi.Pointer<ffi.Uint8>.fromAddress(address);
+    return pointer.asTypedList(lengthInBytes);
+  }
+
+  @override
+  void write({required int offset, required Uint8List buffer}) {
+    view.setRange(offset, offset + buffer.length, buffer);
+  }
+
+  @override
+  MemoryTy get type => memory.ty();
 }
 
 class _Global extends WasmGlobal {
@@ -647,6 +707,9 @@ class _Global extends WasmGlobal {
     final nativeValue = _fromWasmValue(value, module);
     module.setGlobalValue(global: global, value: nativeValue);
   }
+
+  @override
+  GlobalTy get type => module.getGlobalType(global: global);
 }
 
 class _Table extends WasmTable {
@@ -679,4 +742,7 @@ class _Table extends WasmTable {
       value: _fromWasmValue(fillValue, module),
     );
   }
+
+  @override
+  TableTy get type => module.getTableType(table: table);
 }
