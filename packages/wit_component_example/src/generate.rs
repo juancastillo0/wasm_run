@@ -6,12 +6,11 @@ pub fn document_to_dart(parsed: &UnresolvedPackage) -> String {
     let mut s = String::new();
 
     s.push_str(&format!(
-        "library {};{}\n{}",
-        parsed.name,
+        "{}\n{}",
         parsed
             .url
             .as_deref()
-            .map(|url| format!(" // url: {}", url))
+            .map(|url| format!("// WIT url: {}", url))
             .unwrap_or("".to_string()),
         HEADER,
     ));
@@ -161,6 +160,8 @@ pub fn add_docs(s: &mut String, docs: &Docs) {
 
 const HEADER: &str = "
 // FILE GENERATED FROM WIT
+
+// ignore_for_file: require_trailing_commas, unnecessary_raw_strings
 
 import 'dart:typed_data';
 

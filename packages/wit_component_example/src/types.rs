@@ -352,21 +352,21 @@ impl Parsed<'_> {
                 let ty_def = self.0.types.get(*ty_id).unwrap();
                 self.type_def_from_json(getter, ty_def)
             }
-            Type::Bool => format!("{getter} as bool"),
+            Type::Bool => format!("{getter}! as bool"),
             Type::String => {
-                format!("{getter} is String ? {getter} : ({getter} as ParsedString).value")
+                format!("{getter} is String ? {getter} : ({getter}! as ParsedString).value")
             }
-            Type::Char => format!("{getter} as String"),
-            Type::Float32 => format!("{getter} as double"),
-            Type::Float64 => format!("{getter} as double"),
-            Type::S8 => format!("{getter} as int"),
-            Type::S16 => format!("{getter} as int"),
-            Type::S32 => format!("{getter} as int"),
-            Type::S64 => format!("{getter} as int"),
-            Type::U8 => format!("{getter} as int"),
-            Type::U16 => format!("{getter} as int"),
-            Type::U32 => format!("{getter} as int"),
-            Type::U64 => format!("{getter} as int"),
+            Type::Char => format!("{getter}! as String"),
+            Type::Float32 => format!("{getter}! as double"),
+            Type::Float64 => format!("{getter}! as double"),
+            Type::S8 => format!("{getter}! as int"),
+            Type::S16 => format!("{getter}! as int"),
+            Type::S32 => format!("{getter}! as int"),
+            Type::S64 => format!("{getter}! as int"),
+            Type::U8 => format!("{getter}! as int"),
+            Type::U16 => format!("{getter}! as int"),
+            Type::U32 => format!("{getter}! as int"),
+            Type::U64 => format!("{getter}! as int"),
         }
     }
 
@@ -387,7 +387,7 @@ impl Parsed<'_> {
                 format!(
                     "(() {{final l = {getter} is Map
                         ? Iterable.generate({getter}.length, (i) => {getter}[i.toString()])
-                        : {getter} as Iterable;
+                        : {getter}! as Iterable;
                         final it = l.iterator;\n{}
                         return ({},);}})()",
                     (0..t.types.len())
@@ -420,7 +420,7 @@ impl Parsed<'_> {
             //     self.type_def_from_json_option(&format!("({getter} as Map)['error']"), r.err),
             // ),
             TypeDefKind::List(ty) => format!(
-                "({getter} as Iterable).map((e) => {}).toList()",
+                "({getter}! as Iterable).map((e) => {}).toList()",
                 self.type_from_json("e", &ty)
             ),
             TypeDefKind::Future(ty) => {
@@ -531,18 +531,28 @@ impl Parsed<'_> {
                     });
                     s.push_str("});");
                 }
-                s.push_str(&format!(
-                    "\n\nfactory {name}.fromJson(Object? json) {{
-                        final _json = json as Map; {} return {name}({});}}",
-                    r.fields
-                        .iter()
-                        .map(|f| format!("final {} = _json['{}'];", f.name, f.name))
-                        .collect::<String>(),
-                    r.fields
-                        .iter()
-                        .map(|f| format!("{}: {},", f.name, self.type_from_json(&f.name, &f.ty)))
-                        .collect::<String>()
-                ));
+                if r.fields.is_empty() {
+                    s.push_str(&format!(
+                        "\n\nfactory {name}.fromJson(Object? json) => const {name}();"
+                    ));
+                } else {
+                    s.push_str(&format!(
+                        "\n\nfactory {name}.fromJson(Object? json_) {{
+                        final json = json_! as Map; {} return {name}({});}}",
+                        r.fields
+                            .iter()
+                            .map(|f| format!("final {} = json['{}'];", f.name, f.name))
+                            .collect::<String>(),
+                        r.fields
+                            .iter()
+                            .map(|f| format!(
+                                "{}: {},",
+                                f.name,
+                                self.type_from_json(&f.name, &f.ty)
+                            ))
+                            .collect::<String>()
+                    ));
+                }
                 s.push_str(&format!(
                     "\nObject? toJson() => {{{}}};\n",
                     r.fields
@@ -577,7 +587,7 @@ impl Parsed<'_> {
                             final index = _spec.labels.indexOf(json);
                             return index != -1 ? values[index] : values.byName(json);
                         }}
-                        return values[json as int];}}",
+                        return values[json! as int];}}",
                 ));
                 s.push_str("\nObject? toJson() => _spec.labels[index];\n");
 
@@ -594,14 +604,16 @@ impl Parsed<'_> {
                     &format!("sealed class {name} {{
                     factory {name}.fromJson(Object? json_) {{
                         Object? json = json_;
-                        if (json is Map) json = (int.parse(json.keys.first as String), json.values.first);
+                        if (json is Map) {{
+                            json = (int.parse(json.keys.first! as String), json.values.first);
+                        }}
                         return switch (json) {{ {} _ => throw Exception('Invalid JSON $json_'), }};
                     }}", 
                     u.cases.iter().enumerate().map(|(i, v)| {
                         let ty = self.type_to_str(&v.ty);
                         let inner_name = heck::AsPascalCase(&ty);
                         format!(
-                            "({i}, Object? value) => {name}{inner_name}({}),",
+                            "({i}, final value) => {name}{inner_name}({}),",
                             self.type_from_json("value", &v.ty),
                         )
                     }).collect::<String>()),
@@ -638,10 +650,11 @@ impl Parsed<'_> {
                     Object? json = json_;
                     if (json is Map) {{
                         final k = json.keys.first;
-                        if (k is int)
+                        if (k is int){{
                             json = (k, json.values.first);
-                        else
+                        }} else {{
                             json = (_spec.cases.indexWhere((c) => c.label == k), json.values.first);
+                        }}
                     }}
                     return switch (json) {{ {} _ => throw Exception('Invalid JSON $json_'), }};
                 }}",
@@ -652,7 +665,7 @@ impl Parsed<'_> {
                             let inner_name = heck::AsPascalCase(&v.name);
                             match v.ty {
                                 Some(ty) => format!(
-                                    "({i}, Object? value) => {name}{inner_name}({}),",
+                                    "({i}, final value) => {name}{inner_name}({}),",
                                     self.type_from_json("value", &ty),
                                 ),
                                 None => format!("({i}, null) => const {name}{inner_name}(),",),

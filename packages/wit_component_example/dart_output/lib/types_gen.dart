@@ -1,6 +1,6 @@
-library types;
-
 // FILE GENERATED FROM WIT
+
+// ignore_for_file: require_trailing_commas, unnecessary_raw_strings
 
 import 'dart:typed_data';
 
@@ -25,27 +25,27 @@ class R {
     required this.c,
   });
 
-  factory R.fromJson(Object? json) {
-    final _json = json as Map;
-    final a = _json['a'];
-    final b = _json['b'];
-    final c = _json['c'];
+  factory R.fromJson(Object? json_) {
+    final json = json_! as Map;
+    final a = json['a'];
+    final b = json['b'];
+    final c = json['c'];
     return R(
-      a: a as int,
-      b: b is String ? b : (b as ParsedString).value,
-      c: (c as Iterable)
+      a: a! as int,
+      b: b is String ? b : (b! as ParsedString).value,
+      c: (c! as Iterable)
           .map((e) => (() {
                 final l = e is Map
                     ? Iterable.generate(e.length, (i) => e[i.toString()])
-                    : e as Iterable;
+                    : e! as Iterable;
                 final it = l.iterator;
                 final v0 = (it..moveNext()).current;
                 final v1 = (it..moveNext()).current;
 
                 return (
-                  v0 is String ? v0 : (v0 as ParsedString).value,
+                  v0 is String ? v0 : (v0! as ParsedString).value,
                   Option.fromJson(v1,
-                      (some) => Option.fromJson(some, (some) => some as int)),
+                      (some) => Option.fromJson(some, (some) => some! as int)),
                 );
               })())
           .toList(),
@@ -114,12 +114,13 @@ class Permissions {
 sealed class Input {
   factory Input.fromJson(Object? json_) {
     Object? json = json_;
-    if (json is Map)
-      json = (int.parse(json.keys.first as String), json.values.first);
+    if (json is Map) {
+      json = (int.parse(json.keys.first! as String), json.values.first);
+    }
     return switch (json) {
-      (0, Object? value) => InputIntU64(value as int),
-      (1, Object? value) =>
-        InputString(value is String ? value : (value as ParsedString).value),
+      (0, final value) => InputIntU64(value! as int),
+      (1, final value) =>
+        InputString(value is String ? value : (value! as ParsedString).value),
       _ => throw Exception('Invalid JSON $json_'),
     };
   }
@@ -150,14 +151,15 @@ sealed class Human {
     Object? json = json_;
     if (json is Map) {
       final k = json.keys.first;
-      if (k is int)
+      if (k is int) {
         json = (k, json.values.first);
-      else
+      } else {
         json = (_spec.cases.indexWhere((c) => c.label == k), json.values.first);
+      }
     }
     return switch (json) {
       (0, null) => const HumanBaby(),
-      (1, Object? value) => HumanChild(value as int),
+      (1, final value) => HumanChild(value! as int),
       (2, null) => const HumanAdult(),
       _ => throw Exception('Invalid JSON $json_'),
     };
@@ -203,7 +205,7 @@ enum Errno {
       final index = _spec.labels.indexOf(json);
       return index != -1 ? values[index] : values.byName(json);
     }
-    return values[json as int];
+    return values[json! as int];
   }
   Object? toJson() => _spec.labels[index];
   static const _spec =
@@ -216,39 +218,40 @@ sealed class Human {
     Object? json = json_;
     if (json is Map) {
       final k = json.keys.first;
-      if (k is int)
+      if (k is int) {
         json = (k, json.values.first);
-      else
+      } else {
         json = (_spec.cases.indexWhere((c) => c.label == k), json.values.first);
+      }
     }
     return switch (json) {
       (0, null) => const HumanBaby(),
-      (1, Object? value) => HumanChild(value as int),
-      (2, Object? value) => HumanAdult((() {
+      (1, final value) => HumanChild(value! as int),
+      (2, final value) => HumanAdult((() {
           final l = value is Map
               ? Iterable.generate(value.length, (i) => value[i.toString()])
-              : value as Iterable;
+              : value! as Iterable;
           final it = l.iterator;
           final v0 = (it..moveNext()).current;
           final v1 = (it..moveNext()).current;
           final v2 = (it..moveNext()).current;
 
           return (
-            v0 is String ? v0 : (v0 as ParsedString).value,
+            v0 is String ? v0 : (v0! as ParsedString).value,
             Option.fromJson(
                 v1,
                 (some) => Option.fromJson(
                     some,
                     (some) =>
-                        some is String ? some : (some as ParsedString).value)),
+                        some is String ? some : (some! as ParsedString).value)),
             (() {
               final l = v2 is Map
                   ? Iterable.generate(v2.length, (i) => v2[i.toString()])
-                  : v2 as Iterable;
+                  : v2! as Iterable;
               final it = l.iterator;
               final v0 = (it..moveNext()).current;
 
-              return (v0 as int,);
+              return (v0! as int,);
             })(),
           );
         })()),
@@ -359,7 +362,7 @@ enum LogLevel {
       final index = _spec.labels.indexOf(json);
       return index != -1 ? values[index] : values.byName(json);
     }
-    return values[json as int];
+    return values[json! as int];
   }
   Object? toJson() => _spec.labels[index];
   static const _spec = EnumType(['debug', 'info', 'warn', 'error']);
@@ -368,10 +371,7 @@ enum LogLevel {
 class Empty {
   const Empty();
 
-  factory Empty.fromJson(Object? json) {
-    final _json = json as Map;
-    return Empty();
-  }
+  factory Empty.fromJson(Object? json) => const Empty();
   Object? toJson() => {};
   static const _spec = Record([]);
 }
@@ -416,13 +416,13 @@ class Api {
       valOne: (() {
         final l = r0 is Map
             ? Iterable.generate(r0.length, (i) => r0[i.toString()])
-            : r0 as Iterable;
+            : r0! as Iterable;
         final it = l.iterator;
         final v0 = (it..moveNext()).current;
 
-        return (v0 as int,);
+        return (v0! as int,);
       })(),
-      val2: r1 is String ? r1 : (r1 as ParsedString).value,
+      val2: r1 is String ? r1 : (r1! as ParsedString).value,
     );
   }
 
@@ -520,7 +520,7 @@ class TypesWorld {
       (ListValue, void Function()) execImportsImportsApiA1b2(ListValue args) {
         final args0 = args[0];
         final results = imports.imports.apiA1B2(
-            (args0 as Iterable).map((e) => Human.fromJson(e)).toList());
+            (args0! as Iterable).map((e) => Human.fromJson(e)).toList());
         return (
           [
             results.h1.toJson(null, (error) => error.toJson()),
@@ -540,8 +540,8 @@ class TypesWorld {
 
       (ListValue, void Function()) execImportsInlineInlineImp(ListValue args) {
         final args0 = args[0];
-        final results = imports.inline.inlineImp((args0 as Iterable)
-            .map((e) => Option.fromJson(e, (some) => some as String))
+        final results = imports.inline.inlineImp((args0! as Iterable)
+            .map((e) => Option.fromJson(e, (some) => some! as String))
             .toList());
         return ([results.toJson(null, null)], () {});
       }
@@ -559,7 +559,7 @@ class TypesWorld {
       (ListValue, void Function()) execImportsPrint(ListValue args) {
         final args0 = args[0];
         final args1 = args[1];
-        imports.print(args0 is String ? args0 : (args0 as ParsedString).value,
+        imports.print(args0 is String ? args0 : (args0! as ParsedString).value,
             LogLevel.fromJson(args1));
         return (const [], () {});
       }
@@ -577,8 +577,8 @@ class TypesWorld {
   List<String> fF1(List<String> typedef) {
     final results = _fF1([typedef.map((e) => e).toList()]);
     final result = results[0];
-    return (result as Iterable)
-        .map((e) => e is String ? e : (e as ParsedString).value)
+    return (result! as Iterable)
+        .map((e) => e is String ? e : (e! as ParsedString).value)
         .toList();
   }
 
@@ -598,8 +598,8 @@ class TypesWorld {
     final r0 = results[0];
     final r1 = results[1];
     return (
-      valP1: r0 as int,
-      val2: r1 is String ? r1 : (r1 as ParsedString).value,
+      valP1: r0! as int,
+      val2: r1 is String ? r1 : (r1! as ParsedString).value,
     );
   }
 
@@ -618,14 +618,14 @@ class TypesWorld {
     return (() {
       final l = result is Map
           ? Iterable.generate(result.length, (i) => result[i.toString()])
-          : result as Iterable;
+          : result! as Iterable;
       final it = l.iterator;
       final v0 = (it..moveNext()).current;
       final v1 = (it..moveNext()).current;
 
       return (
-        v0 as int,
-        v1 as int,
+        v0! as int,
+        v1! as int,
       );
     })();
   }
@@ -643,14 +643,14 @@ class TypesWorld {
     return (() {
       final l = result is Map
           ? Iterable.generate(result.length, (i) => result[i.toString()])
-          : result as Iterable;
+          : result! as Iterable;
       final it = l.iterator;
       final v0 = (it..moveNext()).current;
       final v1 = (it..moveNext()).current;
 
       return (
-        Option.fromJson(v0, (some) => some as int),
-        v1 as int,
+        Option.fromJson(v0, (some) => some! as int),
+        v1! as int,
       );
     })();
   }
