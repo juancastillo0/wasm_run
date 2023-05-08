@@ -377,16 +377,23 @@ class Empty {
 }
 
 abstract class Imports {
-  ({Result<String /*Char*/, Errno> h1, Human val2}) apiA1B2(List<Human> arg);
+  ({Result<String /*Char*/, Errno> h1, Human val2}) apiA1B2({
+    required List<Human> arg,
+  });
 }
 
 abstract class Inline {
-  Result<void, String /*Char*/ > inlineImp(List<Option<String /*Char*/ >> args);
+  Result<void, String /*Char*/ > inlineImp({
+    required List<Option<String /*Char*/ >> args,
+  });
 }
 
 class TypesWorldImports {
   final Imports imports;
-  final void Function(String message, LogLevel level) print;
+  final void Function({
+    required String message,
+    required LogLevel level,
+  }) print;
   final Inline inline;
   const TypesWorldImports({
     required this.imports,
@@ -408,6 +415,7 @@ class Api {
             ('val2', StringType())
           ]),
         )!;
+  final ListValue Function(ListValue) _f1;
   ({(int /*S32*/,) valOne, String val2}) f1() {
     final results = _f1([]);
     final r0 = results[0];
@@ -425,8 +433,6 @@ class Api {
       val2: r1 is String ? r1 : (r1! as ParsedString).value,
     );
   }
-
-  final ListValue Function(ListValue) _f1;
 }
 
 class TypesWorld {
@@ -520,7 +526,7 @@ class TypesWorld {
       (ListValue, void Function()) execImportsImportsApiA1b2(ListValue args) {
         final args0 = args[0];
         final results = imports.imports.apiA1B2(
-            (args0! as Iterable).map((e) => Human.fromJson(e)).toList());
+            arg: (args0! as Iterable).map((e) => Human.fromJson(e)).toList());
         return (
           [
             results.h1.toJson(null, (error) => error.toJson()),
@@ -540,9 +546,10 @@ class TypesWorld {
 
       (ListValue, void Function()) execImportsInlineInlineImp(ListValue args) {
         final args0 = args[0];
-        final results = imports.inline.inlineImp((args0! as Iterable)
-            .map((e) => Option.fromJson(e, (some) => some! as String))
-            .toList());
+        final results = imports.inline.inlineImp(
+            args: (args0! as Iterable)
+                .map((e) => Option.fromJson(e, (some) => some! as String))
+                .toList());
         return ([results.toJson(null, null)], () {});
       }
 
@@ -559,8 +566,9 @@ class TypesWorld {
       (ListValue, void Function()) execImportsPrint(ListValue args) {
         final args0 = args[0];
         final args1 = args[1];
-        imports.print(args0 is String ? args0 : (args0! as ParsedString).value,
-            LogLevel.fromJson(args1));
+        imports.print(
+            message: args0 is String ? args0 : (args0! as ParsedString).value,
+            level: LogLevel.fromJson(args1));
         return (const [], () {});
       }
 
@@ -574,7 +582,10 @@ class TypesWorld {
     return TypesWorld(imports: imports, library: library);
   }
 
-  List<String> fF1(List<String> typedef) {
+  final ListValue Function(ListValue) _fF1;
+  List<String> fF1({
+    required List<String> typedef,
+  }) {
     final results = _fF1([typedef.map((e) => e).toList()]);
     final result = results[0];
     return (result! as Iterable)
@@ -582,15 +593,16 @@ class TypesWorld {
         .toList();
   }
 
-  final ListValue Function(ListValue) _fF1;
-  ({int /*S64*/ valP1, String val2}) f1(
-      double /*F32*/ f,
-      List<
-              (
-                String /*Char*/,
-                double /*F64*/,
-              )>
-          fList) {
+  final ListValue Function(ListValue) _f1;
+  ({int /*S64*/ valP1, String val2}) f1({
+    required double /*F32*/ f,
+    required List<
+            (
+              String /*Char*/,
+              double /*F64*/,
+            )>
+        fList,
+  }) {
     final results = _f1([
       f,
       fList.map((e) => [e.$1, e.$2]).toList()
@@ -603,13 +615,16 @@ class TypesWorld {
     );
   }
 
-  final ListValue Function(ListValue) _f1;
+  final ListValue Function(ListValue) _reNamed;
 
   /// t2 has been renamed with `use self.types-interface.{t2 as t2-renamed}`
   (
     int /*U32*/,
     int /*U64*/,
-  ) reNamed(Option<Permissions> perm, Option<Empty> e) {
+  ) reNamed({
+    Option<Permissions> perm = const None(),
+    Option<Empty> e = const None(),
+  }) {
     final results = _reNamed([
       perm.toJson((some) => some.toJson()),
       e.toJson((some) => some.toJson())
@@ -630,11 +645,14 @@ class TypesWorld {
     })();
   }
 
-  final ListValue Function(ListValue) _reNamed;
+  final ListValue Function(ListValue) _reNamed2;
   (
     Option<int /*U8*/ >,
     int /*S8*/,
-  ) reNamed2((List<int /*U16*/ >,) tup, Empty e) {
+  ) reNamed2({
+    required (List<int /*U16*/ >,) tup,
+    required Empty e,
+  }) {
     final results = _reNamed2([
       [tup.$1.map((e) => e).toList()],
       e.toJson()
@@ -654,6 +672,4 @@ class TypesWorld {
       );
     })();
   }
-
-  final ListValue Function(ListValue) _reNamed2;
 }

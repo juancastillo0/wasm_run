@@ -74,7 +74,10 @@ impl Parsed<'_> {
                 .params
                 .iter()
                 .enumerate()
-                .map(|(i, (_name, ty))| self.type_from_json(&format!("args{i}"), ty))
+                .map(|(i, (name, ty))| format!(
+                    "{name}: {}",
+                    self.type_from_json(&format!("args{i}"), ty)
+                ))
                 .collect::<Vec<_>>()
                 .join(", "),
             ret = match &function.results {
@@ -166,15 +169,41 @@ impl Parsed<'_> {
         }
     }
 
+    pub fn is_option(&self, ty: &Type) -> bool {
+        match ty {
+            Type::Id(ty_id) => {
+                let ty_def = self.0.types.get(*ty_id).unwrap();
+                matches!(ty_def.kind, TypeDefKind::Option(_))
+            }
+            _ => false,
+        }
+    }
+
     pub fn add_function(&self, mut s: &mut String, f: &Function, kind: FuncKind) {
-        let params = f
+        let mut params = f
             .params
             .iter()
-            .map(|(name, ty)| format!("{} {}", self.type_to_str(ty), heck::AsLowerCamelCase(name)))
-            .collect::<Vec<_>>()
-            .join(",");
+            .map(|(name, ty)| {
+                if self.is_option(ty) {
+                    format!(
+                        "{} {} = const None(),",
+                        self.type_to_str(ty),
+                        heck::AsLowerCamelCase(name)
+                    )
+                } else {
+                    format!(
+                        "required {} {},",
+                        self.type_to_str(ty),
+                        heck::AsLowerCamelCase(name)
+                    )
+                }
+            })
+            .collect::<String>();
+        if params.len() > 0 {
+            params = format!("{{{}}}", params);
+        }
 
-        let mut results = match &f.results {
+        let results = match &f.results {
             Results::Anon(ty) => self.type_to_str(ty),
             Results::Named(list) => {
                 if list.is_empty() {
@@ -197,13 +226,21 @@ impl Parsed<'_> {
             }
         };
 
-        add_docs(&mut s, &f.docs);
         let name = heck::AsLowerCamelCase(&f.name);
         match kind {
-            FuncKind::Field => s.push_str(&format!("final {results} Function({params}) {name};",)),
-            FuncKind::Method => s.push_str(&format!("{results} {name}({params});",)),
+            FuncKind::Field => {
+                add_docs(&mut s, &f.docs);
+                s.push_str(&format!("final {results} Function({params}) {name};",))
+            }
+            FuncKind::Method => {
+                add_docs(&mut s, &f.docs);
+                s.push_str(&format!("{results} {name}({params});",))
+            }
             FuncKind::MethodCall => {
                 // s.push_str(&format!("late final _{} = lookup('{}');", f.name, f.name));
+                s.push_str(&format!("final ListValue Function(ListValue) _{name};"));
+
+                add_docs(&mut s, &f.docs);
                 s.push_str(&format!("{results} {name}({params}) {{"));
                 s.push_str(&format!(
                     "{}_{name}([{params}]);{ret}",
@@ -248,8 +285,6 @@ impl Parsed<'_> {
                     }
                 ));
                 s.push_str("}");
-
-                s.push_str(&format!("final ListValue Function(ListValue) _{name};"));
             }
         }
     }
