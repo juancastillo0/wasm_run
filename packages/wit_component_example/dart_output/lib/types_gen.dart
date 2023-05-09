@@ -36,30 +36,34 @@ class R {
   });
 
   factory R.fromJson(Object? json_) {
-    final json = json_! as Map;
-    final a = json['a'];
-    final b = json['b'];
-    final c = json['c'];
-    return R(
-      a: a! as int,
-      b: b is String ? b : (b! as ParsedString).value,
-      c: (c! as Iterable)
-          .map((e) => (() {
-                final l = e is Map
-                    ? List.generate(e.length, (i) => e[i.toString()],
-                        growable: false)
-                    : e! as List<Object?>;
-                final v0 = l[0];
-                final v1 = l[1];
-
-                return (
-                  v0 is String ? v0 : (v0! as ParsedString).value,
-                  Option.fromJson(v1,
-                      (some) => Option.fromJson(some, (some) => some! as int)),
-                );
-              })())
-          .toList(),
-    );
+    final json = json_ is Map
+        ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
+        : json_;
+    return switch (json) {
+      [final a, final b, final c] || (final a, final b, final c) => R(
+          a: a! as int,
+          b: b is String ? b : (b! as ParsedString).value,
+          c: (c! as Iterable)
+              .map((e) => (() {
+                    final l = e is Map
+                        ? List.generate(2, (i) => e[i.toString()],
+                            growable: false)
+                        : e;
+                    return switch (l) {
+                      [final v0, final v1] || (final v0, final v1) => (
+                          v0 is String ? v0 : (v0! as ParsedString).value,
+                          Option.fromJson(
+                              v1,
+                              (some) => Option.fromJson(
+                                  some, (some) => some! as int)),
+                        ),
+                      _ => throw Exception('Invalid JSON $e')
+                    };
+                  })())
+              .toList(),
+        ),
+      _ => throw Exception('Invalid JSON $json_')
+    };
   }
   Object? toJson() => {
         'a': a,
@@ -120,7 +124,8 @@ sealed class Input {
   factory Input.fromJson(Object? json_) {
     Object? json = json_;
     if (json is Map) {
-      json = (int.parse(json.keys.first! as String), json.values.first);
+      final k = json.keys.first;
+      json = (k is int ? k : int.parse(k! as String), json.values.first);
     }
     return switch (json) {
       (0, final value) => InputIntU64(value! as int),
@@ -239,31 +244,33 @@ sealed class HumanApiImports {
       (1, final value) => HumanApiImportsChild(value! as int),
       (2, final value) => HumanApiImportsAdult((() {
           final l = value is Map
-              ? List.generate(value.length, (i) => value[i.toString()],
-                  growable: false)
-              : value! as List<Object?>;
-          final v0 = l[0];
-          final v1 = l[1];
-          final v2 = l[2];
-
-          return (
-            v0 is String ? v0 : (v0! as ParsedString).value,
-            Option.fromJson(
-                v1,
-                (some) => Option.fromJson(
-                    some,
-                    (some) =>
-                        some is String ? some : (some! as ParsedString).value)),
-            (() {
-              final l = v2 is Map
-                  ? List.generate(v2.length, (i) => v2[i.toString()],
-                      growable: false)
-                  : v2! as List<Object?>;
-              final v0 = l[0];
-
-              return (v0! as int,);
-            })(),
-          );
+              ? List.generate(3, (i) => value[i.toString()], growable: false)
+              : value;
+          return switch (l) {
+            [final v0, final v1, final v2] ||
+            (final v0, final v1, final v2) =>
+              (
+                v0 is String ? v0 : (v0! as ParsedString).value,
+                Option.fromJson(
+                    v1,
+                    (some) => Option.fromJson(
+                        some,
+                        (some) => some is String
+                            ? some
+                            : (some! as ParsedString).value)),
+                (() {
+                  final l = v2 is Map
+                      ? List.generate(1, (i) => v2[i.toString()],
+                          growable: false)
+                      : v2;
+                  return switch (l) {
+                    [final v0] || (final v0,) => (v0! as int,),
+                    _ => throw Exception('Invalid JSON $v2')
+                  };
+                })(),
+              ),
+            _ => throw Exception('Invalid JSON $value')
+          };
         })()),
       _ => throw Exception('Invalid JSON $json_'),
     };
@@ -337,18 +344,21 @@ class ErrnoApi {
   });
 
   factory ErrnoApi.fromJson(Object? json_) {
-    final json = json_! as Map;
-    final aU1 = json['a-u1'];
-    final listS1 = json['list-s1'];
-    final str = json['str'];
-    final c = json['c'];
-    return ErrnoApi(
-      aU1: aU1! as int,
-      listS1: (listS1! as Iterable).map((e) => e! as int).toList(),
-      str: Option.fromJson(
-          str, (some) => some is String ? some : (some! as ParsedString).value),
-      c: Option.fromJson(c, (some) => some! as String),
-    );
+    final json = json_ is Map
+        ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
+        : json_;
+    return switch (json) {
+      [final aU1, final listS1, final str, final c] ||
+      (final aU1, final listS1, final str, final c) =>
+        ErrnoApi(
+          aU1: aU1! as int,
+          listS1: (listS1! as Iterable).map((e) => e! as int).toList(),
+          str: Option.fromJson(str,
+              (some) => some is String ? some : (some! as ParsedString).value),
+          c: Option.fromJson(c, (some) => some! as String),
+        ),
+      _ => throw Exception('Invalid JSON $json_')
+    };
   }
   Object? toJson() => {
         'a-u1': aU1,
@@ -484,11 +494,12 @@ class Api {
     return (
       valOne: (() {
         final l = r0 is Map
-            ? List.generate(r0.length, (i) => r0[i.toString()], growable: false)
-            : r0! as List<Object?>;
-        final v0 = l[0];
-
-        return (v0! as int,);
+            ? List.generate(1, (i) => r0[i.toString()], growable: false)
+            : r0;
+        return switch (l) {
+          [final v0] || (final v0,) => (v0! as int,),
+          _ => throw Exception('Invalid JSON $r0')
+        };
       })(),
       val2: r1 is String ? r1 : (r1! as ParsedString).value,
     );
@@ -715,16 +726,15 @@ class TypesWorld {
     final result = results[0];
     return (() {
       final l = result is Map
-          ? List.generate(result.length, (i) => result[i.toString()],
-              growable: false)
-          : result! as List<Object?>;
-      final v0 = l[0];
-      final v1 = l[1];
-
-      return (
-        v0! as int,
-        v1! as int,
-      );
+          ? List.generate(2, (i) => result[i.toString()], growable: false)
+          : result;
+      return switch (l) {
+        [final v0, final v1] || (final v0, final v1) => (
+            v0! as int,
+            v1! as int,
+          ),
+        _ => throw Exception('Invalid JSON $result')
+      };
     })();
   }
 
@@ -743,16 +753,15 @@ class TypesWorld {
     final result = results[0];
     return (() {
       final l = result is Map
-          ? List.generate(result.length, (i) => result[i.toString()],
-              growable: false)
-          : result! as List<Object?>;
-      final v0 = l[0];
-      final v1 = l[1];
-
-      return (
-        Option.fromJson(v0, (some) => some! as int),
-        v1! as int,
-      );
+          ? List.generate(2, (i) => result[i.toString()], growable: false)
+          : result;
+      return switch (l) {
+        [final v0, final v1] || (final v0, final v1) => (
+            Option.fromJson(v0, (some) => some! as int),
+            v1! as int,
+          ),
+        _ => throw Exception('Invalid JSON $result')
+      };
     })();
   }
 }

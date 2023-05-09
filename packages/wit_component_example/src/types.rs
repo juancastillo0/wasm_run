@@ -290,21 +290,26 @@ impl Parsed<'_> {
                 if t.types.len() == 0 {
                     format!("()")
                 } else {
+                    let spread = (0..t.types.len())
+                        .map(|i| format!("final v{i}"))
+                        .collect::<Vec<_>>()
+                        .join(",");
+                    let s_comma = if t.types.len() == 1 { "," } else { "" };
                     format!(
                         "(() {{final l = {getter} is Map
-                        ? List.generate({getter}.length, (i) => {getter}[i.toString()], growable: false)
-                        : {getter}! as List<Object?>;
-                        {}
-                        return ({},);}})()",
-                        (0..t.types.len())
-                            .map(|i| format!("final v{i} = l[{i}];\n"))
-                            .collect::<String>(),
+                        ? List.generate({length}, (i) => {getter}[i.toString()], growable: false)
+                        : {getter};
+                        return switch (l) {{
+                            [{spread}] || ({spread}{s_comma}) => ({},),
+                            _ => throw Exception('Invalid JSON ${getter}')}};
+                        }})()",
                         t.types
                             .iter()
                             .enumerate()
                             .map(|(i, t)| self.type_from_json(&format!("v{i}"), t))
                             .collect::<Vec<_>>()
                             .join(", "),
+                        length = t.types.len(),
                     )
                 }
             }
@@ -472,13 +477,20 @@ impl Parsed<'_> {
                         "\n\nfactory {name}.fromJson(Object? _) => const {name}();"
                     ));
                 } else {
+                    let spread = r
+                        .fields
+                        .iter()
+                        .map(|f| format!("final {}", f.name.as_var()))
+                        .collect::<Vec<_>>()
+                        .join(",");
+                    let s_comma = if r.fields.len() == 1 { "," } else { "" };
                     s.push_str(&format!(
                         "\n\nfactory {name}.fromJson(Object? json_) {{
-                        final json = json_! as Map; {} return {name}({});}}",
-                        r.fields
-                            .iter()
-                            .map(|f| format!("final {} = json['{}'];", f.name.as_var(), f.name))
-                            .collect::<String>(),
+                        final json = json_ is Map ? _spec.fields.map((f) => json_[f.label]).toList(growable: false) : json_;
+                        return switch (json) {{
+                            [{spread}] || ({spread}{s_comma}) => {name}({}),
+                            _ => throw Exception('Invalid JSON $json_')}};
+                        }}",
                         r.fields
                             .iter()
                             .map(|f| format!(
@@ -545,7 +557,8 @@ impl Parsed<'_> {
                     factory {name}.fromJson(Object? json_) {{
                         Object? json = json_;
                         if (json is Map) {{
-                            json = (int.parse(json.keys.first! as String), json.values.first);
+                            final k = json.keys.first;
+                            json = (k is int ? k : int.parse(k! as String), json.values.first);
                         }}
                         return switch (json) {{ {} _ => throw Exception('Invalid JSON $json_'), }};
                     }}",
