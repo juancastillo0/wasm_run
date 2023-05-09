@@ -143,12 +143,13 @@ class None<T extends Object> implements Option<T> {
   Object? toJson([Object? Function(T value)? mapValue]) => {'none': null};
 }
 
-ByteData flagBitsFromJson(Object? json, Flags spec) {
-  final num_bytes = num_i32_flags(spec.labels) * 4;
-  final flagBits = ByteData(num_bytes);
+/// Converts a JSON object to a [ByteData] containing the flag bits.
+ByteData flagBitsFromJson(Object? json_, Flags spec) {
+  final numBytes = num_i32_flags(spec.labels) * 4;
+  final flagBits = ByteData(numBytes);
 
-  if (json is Map) {
-    json.forEach((k, v) {
+  if (json_ is Map) {
+    json_.forEach((k, v) {
       final index = spec.labels.indexOf(k as String);
       if (index == -1) throw Exception('Invalid flag $k: $v');
       if (v == true || v == 1) {
@@ -163,17 +164,18 @@ ByteData flagBitsFromJson(Object? json, Flags spec) {
     });
     return flagBits;
   } else {
-    final _json = json! as List<int>;
-    if (_json.length != (num_bytes ~/ 4)) {
-      throw Exception('Invalid flag list length: $_json');
+    final json = json_! as List<int>;
+    if (json.length != (numBytes ~/ 4)) {
+      throw Exception('Invalid flag list length: $json');
     }
-    for (var i = 0; i < _json.length; i++) {
-      flagBits.setUint32(i * 4, _json[i], Endian.little);
+    for (var i = 0; i < json.length; i++) {
+      flagBits.setUint32(i * 4, json[i], Endian.little);
     }
     return flagBits;
   }
 }
 
+/// Maps a [FlattenType] core wasm type to a [ValueTy].
 ValueTy mapFlattenedToWasmType(FlattenType e) {
   return switch (e) {
     FlattenType.i32 => ValueTy.i32,
@@ -183,6 +185,8 @@ ValueTy mapFlattenedToWasmType(FlattenType e) {
   };
 }
 
+/// Creates a core [WasmFunction] from a component [CanonLowerCallee] function
+/// by lowering it with [canon_lower] for the given [ft] ([FuncType]).
 WasmFunction loweredImportFunction(
   FuncType ft,
   CanonLowerCallee execFn,
@@ -195,7 +199,7 @@ WasmFunction loweredImportFunction(
     makeFunctionNumArgs(flattenedFt.params.length, (args) {
       final library = getWasmLibrary();
       final results = canon_lower(
-        library.functionOptions(null),
+        library._functionOptions(null),
         library.componentInstance,
         execFn,
         true,
@@ -223,33 +227,45 @@ class WasmLibrary {
         wasmMemory = instance.getMemory('memory') ??
             instance.exports.values.whereType<WasmMemory>().first;
 
+  /// The [WasmInstance] that implements the WASM component model.
   final WasmInstance instance;
+
+  /// The [ComponentInstance] for tracking handles and checking invariants.
   final ComponentInstance componentInstance = ComponentInstance();
+
+  /// The [StringEncoding] to use for strings.
   final StringEncoding stringEncoding;
 
   final Function _realloc;
-  int realloc(int ptr, int size_initial, int alignment, int size_final) =>
-      _realloc(ptr, size_initial, alignment, size_final) as int;
-  final WasmMemory wasmMemory;
-  Uint8List get memoryView => wasmMemory.view;
 
-  CanonicalOptions functionOptions(void Function(List<Value>)? post_return) {
+  /// Reallocates a section of memory to a new size.
+  /// May be used to grow or shrink the memory.
+  int realloc(int ptr, int sizeInitial, int alignment, int sizeFinal) =>
+      _realloc(ptr, sizeInitial, alignment, sizeFinal) as int;
+
+  /// The [WasmMemory] for this [instance].
+  final WasmMemory wasmMemory;
+
+  CanonicalOptions _functionOptions(void Function(List<Value>)? postReturn) {
     final options =
-        CanonicalOptions(memoryView, stringEncoding, realloc, post_return);
+        CanonicalOptions(wasmMemory.view, stringEncoding, realloc, postReturn);
     return options;
   }
 
   void Function(List<Value>)? postReturnFunction(String functionName) {
-    final post_func = instance.getFunction('cabi_post_$functionName');
-    if (post_func == null) return null;
-    return (flat_results) {
-      post_func(flat_results.map((e) => e.v).toList());
+    final postFunc = instance.getFunction('cabi_post_$functionName');
+    if (postFunc == null) return null;
+    return (flatResults) {
+      postFunc(flatResults.map((e) => e.v).toList());
     };
   }
 
-  WasmFunction? lookupFunction(String name) => instance.getFunction(name);
-
-  ListValue Function(ListValue args)? lookupComponentFunction(
+  /// Returns a Function that can be used to call the component function
+  /// with the given [name] and [ft] ([FuncType]).
+  /// The function is constructed by flattening the [ft] and then calling
+  /// [canon_lift] to create a function that can be called with a list of
+  /// core Wasm [Value]s.
+  ListValue Function(ListValue args)? getComponentFunction(
     String name,
     FuncType ft,
   ) {
@@ -257,7 +273,7 @@ class WasmLibrary {
     if (func == null) return null;
     final flattenedFt = flatten_functype(ft, FlattenContext.lift);
     final postFunc = postReturnFunction(name);
-    List<Value> core_fn(List<Value> p0) {
+    List<Value> coreFunc(List<Value> p0) {
       final results = func.call(p0.map((e) => e.v).toList());
       if (results.isEmpty) return [];
       return results.indexed
@@ -266,17 +282,17 @@ class WasmLibrary {
     }
 
     return (ListValue args) {
-      final options = functionOptions(postFunc);
-      final (func_lift, post) = canon_lift(
+      final options = _functionOptions(postFunc);
+      final (funcLift, post) = canon_lift(
         options,
         componentInstance,
-        core_fn,
+        coreFunc,
         ft,
         args,
       );
       post();
 
-      return func_lift;
+      return funcLift;
     };
   }
 }

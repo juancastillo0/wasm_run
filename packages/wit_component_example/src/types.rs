@@ -1,4 +1,4 @@
-use std::fmt::format;
+use std::{collections::HashMap, fmt::format};
 
 use crate::generate::*;
 use wit_parser::*;
@@ -16,7 +16,10 @@ pub enum FuncKind {
     Field,
 }
 
-pub struct Parsed<'a>(pub &'a UnresolvedPackage);
+pub struct Parsed<'a>(
+    pub &'a UnresolvedPackage,
+    pub HashMap<&'a str, Vec<&'a TypeDef>>,
+);
 
 impl Parsed<'_> {
     pub fn type_to_ffi(&self, ty: &Type) -> String {
@@ -94,7 +97,6 @@ impl Parsed<'_> {
     }
 
     pub fn type_def_to_json(&self, getter: &str, ty: &TypeDef) -> String {
-        let name = ty.name.as_ref().map(heck::AsPascalCase);
         match &ty.kind {
             TypeDefKind::Record(_record) => format!("{getter}.toJson()"),
             TypeDefKind::Enum(_enum_) => format!("{getter}.toJson()"),
@@ -150,7 +152,6 @@ impl Parsed<'_> {
         }
     }
 
-
     pub fn type_to_spec(&self, ty: &Type) -> String {
         match ty {
             Type::Id(ty_id) => {
@@ -179,7 +180,6 @@ impl Parsed<'_> {
     }
 
     pub fn type_def_to_spec(&self, ty: &TypeDef) -> String {
-        let name = ty.name.as_ref().map(heck::AsPascalCase);
         match &ty.kind {
             TypeDefKind::Record(record) => format!(
                 "Record([{}])",
@@ -284,13 +284,13 @@ impl Parsed<'_> {
     }
 
     pub fn type_def_from_json(&self, getter: &str, ty: &TypeDef) -> String {
-        let name = ty.name.as_ref().map(heck::AsPascalCase);
+        let name = self.type_def_to_name_definition(ty);
         match &ty.kind {
-            TypeDefKind::Record(record) => format!("{}.fromJson({getter})", name.unwrap()),
-            TypeDefKind::Enum(enum_) => format!("{}.fromJson({getter})", name.unwrap()),
-            TypeDefKind::Union(union) => format!("{}.fromJson({getter})", name.unwrap()),
-            TypeDefKind::Flags(flags) => format!("{}.fromJson({getter})", name.unwrap()),
-            TypeDefKind::Variant(variant) => format!("{}.fromJson({getter})", name.unwrap()),
+            TypeDefKind::Record(_record) => format!("{}.fromJson({getter})", name.unwrap()),
+            TypeDefKind::Enum(_enum_) => format!("{}.fromJson({getter})", name.unwrap()),
+            TypeDefKind::Union(_union) => format!("{}.fromJson({getter})", name.unwrap()),
+            TypeDefKind::Flags(_flags) => format!("{}.fromJson({getter})", name.unwrap()),
+            TypeDefKind::Variant(_variant) => format!("{}.fromJson({getter})", name.unwrap()),
             TypeDefKind::Tuple(t) => {
                 format!(
                     "(() {{final l = {getter} is Map
@@ -370,7 +370,7 @@ impl Parsed<'_> {
     }
 
     pub fn type_def_to_name(&self, ty: &TypeDef) -> String {
-        let name = ty.name.as_ref().map(heck::AsPascalCase);
+        let name = self.type_def_to_name_definition(ty);
         match &ty.kind {
             TypeDefKind::Record(_record) => name.unwrap().to_string(),
             TypeDefKind::Enum(_enum) => name.unwrap().to_string(),
@@ -417,8 +417,30 @@ impl Parsed<'_> {
         }
     }
 
+    pub fn type_def_to_name_definition(&self, ty: &TypeDef) -> Option<String> {
+        if let Some(v) = &ty.name {
+            let defined = self.1.get(v as &str);
+            if let Some(def) = defined {
+                let owner = match ty.owner {
+                    TypeOwner::World(id) => Some(&self.0.worlds.get(id).unwrap().name),
+                    TypeOwner::Interface(id) => self.0.interfaces.get(id).unwrap().name.as_ref(),
+                    TypeOwner::None => None,
+                };
+                let name = format!(
+                    "{v}-{}",
+                    owner.unwrap_or(&def.iter().position(|e| (*e).eq(ty)).unwrap().to_string())
+                );
+                Some(heck::AsPascalCase(name).to_string())
+            } else {
+                Some(heck::AsPascalCase(v).to_string())
+            }
+        } else {
+            None
+        }
+    }
+
     pub fn type_def_to_definition(&self, ty: &TypeDef) -> String {
-        let name = ty.name.as_ref().map(heck::AsPascalCase);
+        let name = self.type_def_to_name_definition(ty);
 
         let mut s = String::new();
         add_docs(&mut s, &ty.docs);
@@ -508,24 +530,28 @@ impl Parsed<'_> {
             }
             TypeDefKind::Union(u) => {
                 let name = name.unwrap();
-                s.push_str(
-                    &format!("sealed class {name} {{
+                s.push_str(&format!(
+                    "sealed class {name} {{
                     factory {name}.fromJson(Object? json_) {{
                         Object? json = json_;
                         if (json is Map) {{
                             json = (int.parse(json.keys.first! as String), json.values.first);
                         }}
                         return switch (json) {{ {} _ => throw Exception('Invalid JSON $json_'), }};
-                    }}", 
-                    u.cases.iter().enumerate().map(|(i, v)| {
-                        let ty = self.type_to_str(&v.ty);
-                        let inner_name = heck::AsPascalCase(&ty);
-                        format!(
-                            "({i}, final value) => {name}{inner_name}({}),",
-                            self.type_from_json("value", &v.ty),
-                        )
-                    }).collect::<String>()),
-                );
+                    }}",
+                    u.cases
+                        .iter()
+                        .enumerate()
+                        .map(|(i, v)| {
+                            let ty = self.type_to_str(&v.ty);
+                            let inner_name = heck::AsPascalCase(&ty);
+                            format!(
+                                "({i}, final value) => {name}{inner_name}({}),",
+                                self.type_from_json("value", &v.ty),
+                            )
+                        })
+                        .collect::<String>()
+                ));
 
                 let mut cases_string = String::new();
                 u.cases.iter().enumerate().for_each(|(i, v)| {

@@ -1,5 +1,5 @@
 use crate::types::*;
-use std::{fs::File, io::Write, path::Path};
+use std::{collections::HashMap, fs::File, io::Write, path::Path};
 use wit_parser::*;
 
 pub fn document_to_dart(parsed: &UnresolvedPackage) -> String {
@@ -14,14 +14,30 @@ pub fn document_to_dart(parsed: &UnresolvedPackage) -> String {
             .unwrap_or("".to_string()),
         HEADER,
     ));
-    let p = Parsed(&parsed);
+
+    let names = HashMap::<&str, Vec<&TypeDef>>::new();
+    let mut p = Parsed(&parsed, names);
 
     // parsed.documents
     // parsed.foreign_deps
     // parsed.interfaces
     // parsed.types
 
-    parsed.types.iter().for_each(|(id, ty)| {
+    parsed.types.iter().for_each(|(_id, ty)| {
+        if matches!(ty.kind, TypeDefKind::Type(_)) {
+            return;
+        }
+        if let Some(name) = &ty.name {
+            let entry = p.1.entry(name);
+            entry.or_insert(vec![]).push(ty);
+        }
+    });
+    p.1.retain(|_k, v| v.len() > 1);
+
+    parsed.types.iter().for_each(|(_id, ty)| {
+        if matches!(ty.kind, TypeDefKind::Type(_)) {
+            return;
+        }
         let definition = p.type_def_to_definition(ty);
 
         if !definition.is_empty() {
@@ -30,7 +46,7 @@ pub fn document_to_dart(parsed: &UnresolvedPackage) -> String {
         }
     });
 
-    parsed.worlds.iter().for_each(|(id, w)| {
+    parsed.worlds.iter().for_each(|(_id, w)| {
         let w_name = heck::AsPascalCase(&w.name);
 
         let mut func_imports = String::new();
@@ -98,7 +114,7 @@ pub fn document_to_dart(parsed: &UnresolvedPackage) -> String {
                 WorldItem::Type(_type_id) => {}
                 WorldItem::Function(f) => {
                     constructor.push(format!(
-                        "_{} = library.lookupComponentFunction('{id}', const {},)!",
+                        "_{} = library.getComponentFunction('{id}', const {},)!",
                         heck::AsLowerCamelCase(id),
                         p.function_spec(f)
                     ));

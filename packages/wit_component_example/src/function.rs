@@ -140,7 +140,7 @@ impl Parsed<'_> {
                     .enumerate()
                     .for_each(|(index, (id, f))| {
                         s.push_str(&format!(
-                            "_{id} = library.lookupComponentFunction('{id}', const {},)!",
+                            "_{id} = library.getComponentFunction('{id}', const {},)!",
                             self.function_spec(f)
                         ));
                         if index != interface.functions.len() - 1 {

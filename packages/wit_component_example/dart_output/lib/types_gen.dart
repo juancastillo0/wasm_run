@@ -146,8 +146,8 @@ class InputString implements Input {
 }
 
 /// values of this type will be one of the specified cases
-sealed class Human {
-  factory Human.fromJson(Object? json_) {
+sealed class HumanTypesInterface {
+  factory HumanTypesInterface.fromJson(Object? json_) {
     Object? json = json_;
     if (json is Map) {
       final k = json.keys.first;
@@ -158,36 +158,37 @@ sealed class Human {
       }
     }
     return switch (json) {
-      (0, null) => const HumanBaby(),
-      (1, final value) => HumanChild(value! as int),
-      (2, null) => const HumanAdult(),
+      (0, null) => const HumanTypesInterfaceBaby(),
+      (1, final value) => HumanTypesInterfaceChild(value! as int),
+      (2, null) => const HumanTypesInterfaceAdult(),
       _ => throw Exception('Invalid JSON $json_'),
     };
   }
-  const factory Human.baby() = HumanBaby;
-  const factory Human.child(int /*U32*/ value) = HumanChild;
-  const factory Human.adult() = HumanAdult;
+  const factory HumanTypesInterface.baby() = HumanTypesInterfaceBaby;
+  const factory HumanTypesInterface.child(int /*U32*/ value) =
+      HumanTypesInterfaceChild;
+  const factory HumanTypesInterface.adult() = HumanTypesInterfaceAdult;
 
   Object? toJson();
   static const _spec =
       Variant([Case('baby', null), Case('child', U32()), Case('adult', null)]);
 }
 
-class HumanBaby implements Human {
-  const HumanBaby();
+class HumanTypesInterfaceBaby implements HumanTypesInterface {
+  const HumanTypesInterfaceBaby();
   @override
   Object? toJson() => {'baby': null};
 }
 
-class HumanChild implements Human {
+class HumanTypesInterfaceChild implements HumanTypesInterface {
   final int /*U32*/ value;
-  const HumanChild(this.value);
+  const HumanTypesInterfaceChild(this.value);
   @override
   Object? toJson() => {'child': value};
 }
 
-class HumanAdult implements Human {
-  const HumanAdult();
+class HumanTypesInterfaceAdult implements HumanTypesInterface {
+  const HumanTypesInterfaceAdult();
   @override
   Object? toJson() => {'adult': null};
 }
@@ -213,8 +214,8 @@ enum Errno {
 }
 
 /// Same name as the type in `types-interface`, but this is a different type
-sealed class Human {
-  factory Human.fromJson(Object? json_) {
+sealed class HumanApiImports {
+  factory HumanApiImports.fromJson(Object? json_) {
     Object? json = json_;
     if (json is Map) {
       final k = json.keys.first;
@@ -225,9 +226,9 @@ sealed class Human {
       }
     }
     return switch (json) {
-      (0, null) => const HumanBaby(),
-      (1, final value) => HumanChild(value! as int),
-      (2, final value) => HumanAdult((() {
+      (0, null) => const HumanApiImportsBaby(),
+      (1, final value) => HumanApiImportsChild(value! as int),
+      (2, final value) => HumanApiImportsAdult((() {
           final l = value is Map
               ? Iterable.generate(value.length, (i) => value[i.toString()])
               : value! as Iterable;
@@ -258,14 +259,14 @@ sealed class Human {
       _ => throw Exception('Invalid JSON $json_'),
     };
   }
-  const factory Human.baby() = HumanBaby;
-  const factory Human.child(int /*U64*/ value) = HumanChild;
-  const factory Human.adult(
+  const factory HumanApiImports.baby() = HumanApiImportsBaby;
+  const factory HumanApiImports.child(int /*U64*/ value) = HumanApiImportsChild;
+  const factory HumanApiImports.adult(
       (
         String,
         Option<Option<String>>,
         (int /*S64*/,),
-      ) value) = HumanAdult;
+      ) value) = HumanApiImportsAdult;
 
   Object? toJson();
   static const _spec = Variant([
@@ -281,26 +282,26 @@ sealed class Human {
   ]);
 }
 
-class HumanBaby implements Human {
-  const HumanBaby();
+class HumanApiImportsBaby implements HumanApiImports {
+  const HumanApiImportsBaby();
   @override
   Object? toJson() => {'baby': null};
 }
 
-class HumanChild implements Human {
+class HumanApiImportsChild implements HumanApiImports {
   final int /*U64*/ value;
-  const HumanChild(this.value);
+  const HumanApiImportsChild(this.value);
   @override
   Object? toJson() => {'child': value};
 }
 
-class HumanAdult implements Human {
+class HumanApiImportsAdult implements HumanApiImports {
   final (
     String,
     Option<Option<String>>,
     (int /*S64*/,),
   ) value;
-  const HumanAdult(this.value);
+  const HumanApiImportsAdult(this.value);
   @override
   Object? toJson() => {
         'adult': [
@@ -309,45 +310,6 @@ class HumanAdult implements Human {
           [value.$3.$1]
         ]
       };
-}
-
-/// a bitflags type
-class Permissions {
-  final ByteData flagBits;
-  const Permissions(this.flagBits);
-  Permissions.none() : flagBits = ByteData(4);
-  Permissions.all()
-      : flagBits = (Uint8List(4)..fillRange(0, 4, 255)).buffer.asByteData();
-
-  factory Permissions.fromJson(Object? json) {
-    final flagBits = flagBitsFromJson(json, _spec);
-    return Permissions(flagBits);
-  }
-
-  Object toJson() => Uint32List.view(flagBits.buffer);
-
-  int _index(int i) => flagBits.getUint32(i, Endian.little);
-  void _setIndex(int i, int flag, bool enable) {
-    final currentValue = _index(i);
-    flagBits.setUint32(
-      i,
-      enable ? (flag | currentValue) : ((~flag) & currentValue),
-      Endian.little,
-    );
-  }
-
-  static const readIndexAndFlag = (index: 0, flag: 1);
-  bool get read => (_index(0) & 1) != 0;
-  set read(bool enable) => _setIndex(0, 1, enable);
-
-  static const writeIndexAndFlag = (index: 0, flag: 2);
-  bool get write => (_index(0) & 2) != 0;
-  set write(bool enable) => _setIndex(0, 2, enable);
-
-  static const execIndexAndFlag = (index: 0, flag: 4);
-  bool get exec => (_index(0) & 4) != 0;
-  set exec(bool enable) => _setIndex(0, 4, enable);
-  static const _spec = Flags(['read', 'write', 'exec']);
 }
 
 enum LogLevel {
@@ -377,8 +339,8 @@ class Empty {
 }
 
 abstract class Imports {
-  ({Result<String /*Char*/, Errno> h1, Human val2}) apiA1B2({
-    required List<Human> arg,
+  ({Result<String /*Char*/, Errno> h1, HumanApiImports val2}) apiA1B2({
+    required List<HumanApiImports> arg,
   });
 }
 
@@ -408,7 +370,7 @@ class Types {
 
 class Api {
   Api(WasmLibrary library)
-      : _f1 = library.lookupComponentFunction(
+      : _f1 = library.getComponentFunction(
           'f1',
           const FuncType([], [
             ('val-one', Tuple([S32()])),
@@ -445,12 +407,12 @@ class TypesWorld {
     required this.library,
   })  : types = Types(library),
         api = Api(library),
-        _fF1 = library.lookupComponentFunction(
+        _fF1 = library.getComponentFunction(
           'f-f1',
           const FuncType([('typedef', ListType(StringType()))],
               [('', ListType(StringType()))]),
         )!,
-        _f1 = library.lookupComponentFunction(
+        _f1 = library.getComponentFunction(
           'f1',
           const FuncType([
             ('f', Float32()),
@@ -460,7 +422,7 @@ class TypesWorld {
             ('val2', StringType())
           ]),
         )!,
-        _reNamed = library.lookupComponentFunction(
+        _reNamed = library.getComponentFunction(
           're-named',
           const FuncType([
             ('perm', OptionType(Flags(['read', 'write', 'exec']))),
@@ -469,7 +431,7 @@ class TypesWorld {
             ('', Tuple([U32(), U64()]))
           ]),
         )!,
-        _reNamed2 = library.lookupComponentFunction(
+        _reNamed2 = library.getComponentFunction(
           're-named2',
           const FuncType([
             ('tup', Tuple([ListType(U16())])),
@@ -526,7 +488,9 @@ class TypesWorld {
       (ListValue, void Function()) execImportsImportsApiA1b2(ListValue args) {
         final args0 = args[0];
         final results = imports.imports.apiA1B2(
-            arg: (args0! as Iterable).map((e) => Human.fromJson(e)).toList());
+            arg: (args0! as Iterable)
+                .map((e) => HumanApiImports.fromJson(e))
+                .toList());
         return (
           [
             results.h1.toJson(null, (error) => error.toJson()),

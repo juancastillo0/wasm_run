@@ -108,7 +108,7 @@ class TypesWorld {
     return TypesWorld(imports: imports, types: Types(), library: library);
   }
 
-  late final _run = library.lookupFunction('run')!;
+  late final _run = library.instance.getFunction('run')!;
   void run() {
     _run();
   }
@@ -124,7 +124,7 @@ class TypesWorld {
     (label: 'c', t: Float64())
   ]);
 
-  late final _get = library.lookupComponentFunction(
+  late final _get = library.getComponentFunction(
     'get',
     FuncType([], [('record-test', _recordTest)]),
   )!;
