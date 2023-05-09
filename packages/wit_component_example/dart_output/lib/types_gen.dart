@@ -9,6 +9,16 @@ import 'package:wasmit/wasmit.dart';
 import 'component.dart';
 import 'canonical_abi.dart';
 
+typedef T9 = List<String>;
+typedef T8 = Result<void, void>;
+typedef T6 = Result<String, void>;
+typedef T4 = Option<int /*U32*/ >;
+typedef T2 = (
+  int /*U32*/,
+  int /*U64*/,
+);
+typedef T10 = T9;
+
 /// "package of named fields"
 class R {
   final int /*U32*/ a;
@@ -16,7 +26,7 @@ class R {
   final List<
       (
         String,
-        Option<Option<int /*U32*/ >>,
+        Option<T4>,
       )> c;
 
   const R({
@@ -94,15 +104,10 @@ class Permissions {
     );
   }
 
-  static const readIndexAndFlag = (index: 0, flag: 1);
   bool get read => (_index(0) & 1) != 0;
   set read(bool enable) => _setIndex(0, 1, enable);
-
-  static const writeIndexAndFlag = (index: 0, flag: 2);
   bool get write => (_index(0) & 2) != 0;
   set write(bool enable) => _setIndex(0, 2, enable);
-
-  static const execIndexAndFlag = (index: 0, flag: 4);
   bool get exec => (_index(0) & 4) != 0;
   set exec(bool enable) => _setIndex(0, 4, enable);
   static const _spec = Flags(['read', 'write', 'exec']);
@@ -213,7 +218,10 @@ enum ErrnoTypesInterface {
       EnumType(['too-big', 'too-small', 'too-fast', 'too-slow']);
 }
 
+typedef T7 = Result<String /*Char*/, ErrnoTypesInterface>;
+
 /// no "ok" type
+typedef T5TypesInterface = Result<void, ErrnoTypesInterface>;
 
 /// Same name as the type in `types-interface`, but this is a different type
 sealed class HumanApiImports {
@@ -357,6 +365,8 @@ class ErrnoApi {
 }
 
 /// Comment for t5 in api
+typedef T5Api = Result<void, Option<ErrnoApi>>;
+typedef T2Renamed = T2;
 
 enum LogLevel {
   /// lowest level
@@ -387,8 +397,7 @@ class Empty {
 
 /// Comment for import interface
 abstract class Imports {
-  ({Result<String /*Char*/, ErrnoTypesInterface> h1, HumanApiImports val2})
-      apiA1B2({
+  ({T7 h1, HumanApiImports val2}) apiA1B2({
     required List<HumanApiImports> arg,
   });
 }
@@ -487,7 +496,7 @@ class Api {
 
   final ListValue Function(ListValue) _class_;
   () class_({
-    Option<Option<Result<void, Option<ErrnoApi>>>> break_ = const None(),
+    Option<Option<T5Api>> break_ = const None(),
   }) {
     _class_([
       break_.toJson((some) => some.toJson((some) =>
@@ -660,8 +669,8 @@ class TypesWorld {
   }
 
   final ListValue Function(ListValue) _fF1;
-  List<String> fF1({
-    required List<String> typedef_,
+  T10 fF1({
+    required T10 typedef_,
   }) {
     final results = _fF1([typedef_.map((e) => e).toList()]);
     final result = results[0];
@@ -695,10 +704,7 @@ class TypesWorld {
   final ListValue Function(ListValue) _reNamed;
 
   /// t2 has been renamed with `use self.types-interface.{t2 as t2-renamed}`
-  (
-    int /*U32*/,
-    int /*U64*/,
-  ) reNamed({
+  T2Renamed reNamed({
     Option<Permissions> perm = const None(),
     Option<Empty> e = const None(),
   }) {

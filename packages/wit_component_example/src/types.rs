@@ -50,7 +50,7 @@ impl Parsed<'_> {
         match ty {
             Type::Id(ty_id) => {
                 let ty_def = self.0.types.get(*ty_id).unwrap();
-                self.type_def_to_name(ty_def)
+                self.type_def_to_name(ty_def, true)
             }
             Type::Bool => "bool".to_string(),
             Type::String => "String".to_string(),
@@ -368,8 +368,11 @@ impl Parsed<'_> {
         }
     }
 
-    pub fn type_def_to_name(&self, ty: &TypeDef) -> String {
+    pub fn type_def_to_name(&self, ty: &TypeDef, allow_alias: bool) -> String {
         let name = self.type_def_to_name_definition(ty);
+        if allow_alias && name.is_some() {
+            return name.unwrap();
+        }
         match &ty.kind {
             TypeDefKind::Record(_record) => name.unwrap(),
             TypeDefKind::Enum(_enum) => name.unwrap(),
@@ -673,14 +676,12 @@ impl Parsed<'_> {
                     let index = (i / 32) * 4;
                     let flag = 2_u32.pow(i.try_into().unwrap());
                     let getter = format!("_index({index})");
-
-                    s.push_str(&format!(
-                        "\n\nstatic const {property}IndexAndFlag = (index:{index}, flag:{flag});"
-                    ));
+                    // s.push_str(&format!(
+                    //     "\n\nstatic const {property}IndexAndFlag = (index:{index}, flag:{flag});"
+                    // ));
 
                     add_docs(&mut s, &v.docs);
                     s.push_str(&format!("bool get {property} => ({getter} & {flag}) != 0;"));
-                    add_docs(&mut s, &v.docs);
                     s.push_str(&format!(
                         "set {property}(bool enable) => _setIndex({index}, {flag}, enable);",
                     ));
@@ -693,12 +694,20 @@ impl Parsed<'_> {
                 s
             }
             TypeDefKind::Type(ty) => self.type_to_dart_definition(ty),
-            TypeDefKind::List(_) => s,
-            TypeDefKind::Tuple(_) => s,
-            TypeDefKind::Option(_) => s,
-            TypeDefKind::Result(_) => s,
-            TypeDefKind::Future(_) => s,
-            TypeDefKind::Stream(_) => s,
+            TypeDefKind::List(_)
+            | TypeDefKind::Tuple(_)
+            | TypeDefKind::Option(_)
+            | TypeDefKind::Result(_)
+            | TypeDefKind::Future(_)
+            | TypeDefKind::Stream(_) => {
+                if let Some(name) = name {
+                    s.push_str(&format!(
+                        "typedef {name} = {};",
+                        self.type_def_to_name(ty, false)
+                    ));
+                }
+                s
+            }
             TypeDefKind::Unknown => todo!(),
         }
     }

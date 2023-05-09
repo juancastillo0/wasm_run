@@ -35,7 +35,18 @@ pub fn document_to_dart(parsed: &UnresolvedPackage) -> String {
     p.1.retain(|_k, v| v.len() > 1);
 
     parsed.types.iter().for_each(|(_id, ty)| {
-        if matches!(ty.kind, TypeDefKind::Type(_)) {
+        if let (TypeDefKind::Type(ty), Some(name)) =
+            (&ty.kind, p.type_def_to_name_definition(ty).as_ref())
+        {
+            // Renamed imports and typedefs
+            if let Type::Id(ref_id) = ty {
+                let ty = parsed.types.get(*ref_id).unwrap();
+                if let Some(ref_name) = p.type_def_to_name_definition(ty).as_ref() {
+                    if ref_name != name {
+                        s.push_str(&format!("typedef {name} = {ref_name};"));
+                    }
+                }
+            }
             return;
         }
         let definition = p.type_def_to_definition(ty);
