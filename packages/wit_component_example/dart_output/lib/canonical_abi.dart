@@ -2,7 +2,7 @@
 
 // ignore_for_file: non_constant_identifier_names, constant_identifier_names, parameter_assignments
 
-import 'dart:convert' show latin1, utf8;
+import 'dart:convert' show Utf8Codec, latin1;
 import 'dart:math' as math;
 import 'dart:typed_data' show ByteData, Endian, Uint8List;
 
@@ -795,7 +795,7 @@ enum StringEncoding {
       'utf16' => utf16,
       'latin1+utf16' || 'latin1utf16' => latin1utf16,
       _ => throw Exception(
-          'invalid string encoding: $json.'
+          'Invalid string encoding: $json.'
           ' Values: ${StringEncoding.values}',
         ),
     };
@@ -807,6 +807,46 @@ enum StringEncoding {
       utf16 => 'utf16',
       latin1utf16 => 'latin1+utf16',
     };
+  }
+
+  String decode(Uint8List bytes) {
+    switch (this) {
+      case StringEncoding.utf8:
+        return const Utf8Codec().decoder.convert(bytes);
+      case StringEncoding.utf16:
+        if (Endian.host != Endian.little) {
+          final data = ByteData.sublistView(bytes);
+          final list = Uint16List(bytes.lengthInBytes);
+          for (var i = 0; i < list.length; i++) {
+            list[i] = data.getInt16(i * 2, Endian.little);
+          }
+          return String.fromCharCodes(list);
+        } else {
+          return String.fromCharCodes(Uint16List.sublistView(bytes));
+        }
+      case StringEncoding.latin1utf16:
+        return latin1.decode(bytes);
+    }
+  }
+
+  Uint8List encode(String string) {
+    switch (this) {
+      case StringEncoding.utf8:
+        return const Utf8Codec().encoder.convert(string);
+      case StringEncoding.utf16:
+        final codeUnits = string.codeUnits;
+        if (Endian.host != Endian.little) {
+          final data = ByteData(codeUnits.length * 2);
+          for (int i = 0; i < codeUnits.length; i++) {
+            data.setUint16(i * 2, codeUnits[i], Endian.little);
+          }
+          return data.buffer.asUint8List();
+        } else {
+          return Uint16List.fromList(codeUnits).buffer.asUint8List();
+        }
+      case StringEncoding.latin1utf16:
+        return latin1.encode(string);
+    }
   }
 }
 
@@ -890,7 +930,7 @@ ParsedString load_string_from_range(
   final String s;
   try {
     final codeUnits = cx.opts.view(ptr, ptr + byte_length);
-    s = decodeString(codeUnits, encoding);
+    s = encoding.decode(codeUnits);
   }
   // TODO: on UnicodeError
   catch (_) {
@@ -900,18 +940,6 @@ ParsedString load_string_from_range(
   return ParsedString(s, cx.opts.string_encoding, tagged_code_units);
 }
 // #
-
-String decodeString(Uint8List bytes, StringEncoding encoding) {
-  switch (encoding) {
-    case StringEncoding.utf8:
-      return utf8.decode(bytes);
-    case StringEncoding.utf16:
-      // TODO: little endian
-      return String.fromCharCodes(bytes);
-    case StringEncoding.latin1utf16:
-      return latin1.decode(bytes);
-  }
-}
 
 /// Lists are loaded by recursively loading their elements
 ListValue load_list(Context cx, int ptr, ValType elem_type) {
@@ -1247,27 +1275,13 @@ PointerAndSize store_string_copy(
   final ptr = cx.opts.realloc(0, 0, dst_alignment, dst_byte_length);
   trap_if(ptr != align_to(ptr, dst_alignment));
   trap_if(ptr + dst_byte_length > cx.opts.memory.length);
-  final encoded = src.encode(dst_encoding);
+  final encoded = dst_encoding.encode(src);
   assert(dst_byte_length == (encoded.length));
   cx.opts.memory.setRange(ptr, ptr + dst_byte_length, encoded);
   // cx.opts.memory[ptr : ptr+len(encoded)] = encoded;
   return (ptr, src_code_units);
 }
 // #
-
-extension StringEncode on String {
-  List<int> encode(StringEncoding encoding) {
-    switch (encoding) {
-      case StringEncoding.utf8:
-        return utf8.encoder.convert(this);
-      case StringEncoding.utf16:
-        // TODO: should be utf16-le
-        return this.codeUnits;
-      case StringEncoding.latin1utf16:
-        return latin1.encode(this);
-    }
-  }
-}
 
 // var s = '\u{1F4A9}';
 //   var codeUnits = s.codeUnits;
@@ -1299,7 +1313,7 @@ PointerAndSize store_string_to_utf8(
   assert(src_code_units <= MAX_STRING_BYTE_LENGTH);
   int ptr = cx.opts.realloc(0, 0, 1, src_code_units);
   trap_if(ptr + src_code_units > cx.opts.memory.length);
-  final encoded = src.encode(StringEncoding.utf8);
+  final encoded = StringEncoding.utf8.encode(src);
   final lenEncoded = encoded.length;
   assert(src_code_units <= lenEncoded);
   cx.opts.memory.setRange(ptr, ptr + src_code_units, encoded);
@@ -1329,10 +1343,10 @@ PointerAndSize store_utf8_to_utf16(Context cx, String src, int src_code_units) {
   int ptr = cx.opts.realloc(0, 0, 2, worst_case_size);
   trap_if(ptr != align_to(ptr, 2));
   trap_if(ptr + worst_case_size > cx.opts.memory.length);
-  final encoded = src.encode(StringEncoding.utf16);
+  final encoded = StringEncoding.utf16.encode(src);
   final lenEncoded = encoded.length;
   cx.opts.memory.setAll(ptr, encoded);
-  if ((encoded.length) < worst_case_size) {
+  if (encoded.length < worst_case_size) {
     ptr = cx.opts.realloc(ptr, worst_case_size, 2, lenEncoded);
     trap_if(ptr != align_to(ptr, 2));
     trap_if(ptr + lenEncoded > cx.opts.memory.length);
@@ -1372,7 +1386,7 @@ PointerAndSize store_string_to_latin1_or_utf16(
         cx.opts.memory[ptr + 2 * j] = cx.opts.memory[ptr + j];
         cx.opts.memory[ptr + 2 * j + 1] = 0;
       }
-      final encoded = src.encode(StringEncoding.utf16);
+      final encoded = StringEncoding.utf16.encode(src);
       final lenEncoded = encoded.length;
       cx.opts.memory.setRange(ptr + 2 * dst_byte_length, ptr + lenEncoded,
           encoded, 2 * dst_byte_length);
@@ -1412,7 +1426,7 @@ PointerAndSize store_probably_utf16_to_latin1_or_utf16(
   int ptr = cx.opts.realloc(0, 0, 2, src_byte_length);
   trap_if(ptr != align_to(ptr, 2));
   trap_if(ptr + src_byte_length > (cx.opts.memory.length));
-  final encoded = src.encode(StringEncoding.utf16);
+  final encoded = StringEncoding.utf16.encode(src);
   final lenEncoded = encoded.length;
   cx.opts.memory.setAll(ptr, encoded);
   if (src.runes.any((c) => c >= (1 << 8))) {
