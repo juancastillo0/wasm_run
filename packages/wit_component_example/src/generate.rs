@@ -1,4 +1,4 @@
-use crate::types::*;
+use crate::{function::FuncKind, strings::Normalize, types::*};
 use std::{collections::HashMap, fs::File, io::Write, path::Path};
 use wit_parser::*;
 
@@ -102,20 +102,20 @@ pub fn document_to_dart(parsed: &UnresolvedPackage) -> String {
                     let interface = parsed.interfaces.get(*interface_id).unwrap();
                     constructor.push(format!(
                         "{} = {}(library)",
-                        heck::AsLowerCamelCase(id),
+                        id.as_var(),
                         heck::AsPascalCase(id)
                     ));
                     s.push_str(&format!(
                         "final {} {};",
                         heck::AsPascalCase(id),
-                        heck::AsLowerCamelCase(id)
+                        id.as_var()
                     ));
                 }
                 WorldItem::Type(_type_id) => {}
                 WorldItem::Function(f) => {
                     constructor.push(format!(
                         "_{} = library.getComponentFunction('{id}', const {},)!",
-                        heck::AsLowerCamelCase(id),
+                        id.as_var(),
                         p.function_spec(f)
                     ));
                     p.add_function(&mut methods, f, FuncKind::MethodCall);

@@ -1,9 +1,12 @@
 use wit_parser::*;
 
-use crate::{
-    generate::add_docs,
-    types::{FuncKind, Parsed},
-};
+use crate::{generate::add_docs, strings::Normalize, types::Parsed};
+
+pub enum FuncKind {
+    MethodCall,
+    Method,
+    Field,
+}
 
 impl Parsed<'_> {
     pub fn function_import(&self, interface_name: Option<&str>, id: &str, f: &Function) -> String {
@@ -13,7 +16,7 @@ impl Parsed<'_> {
             interface_name
                 .map(|v| format!("{v}."))
                 .unwrap_or("".to_string()),
-            heck::AsLowerCamelCase(id),
+            id.as_var(),
         );
         format!(
             "{{
@@ -24,7 +27,7 @@ impl Parsed<'_> {
             }}",
             ft = self.function_spec(f),
             exec = self.function_exec(&getter, f,),
-            exec_name = heck::AsPascalCase(&getter),
+            exec_name = getter.as_fn_suffix(),
         )
     }
 
@@ -58,7 +61,7 @@ impl Parsed<'_> {
         return ({ret}, () {{}});
         }}
         ",
-            n = heck::AsPascalCase(getter),
+            n = getter.as_fn_suffix(),
             results_def = if function.results.len() == 0 {
                 ""
             } else {
@@ -68,14 +71,15 @@ impl Parsed<'_> {
                 .params
                 .iter()
                 .enumerate()
-                .map(|(i, (_name, ty))| format!("final args{i} = args[{i}];"))
+                .map(|(i, (_name, _ty))| format!("final args{i} = args[{i}];"))
                 .collect::<String>(),
             args_from_json = function
                 .params
                 .iter()
                 .enumerate()
                 .map(|(i, (name, ty))| format!(
-                    "{name}: {}",
+                    "{}: {}",
+                    name.as_var(),
                     self.type_from_json(&format!("args{i}"), ty)
                 ))
                 .collect::<Vec<_>>()
@@ -90,10 +94,8 @@ impl Parsed<'_> {
                             "[{}]",
                             results
                                 .iter()
-                                .map(|(name, ty)| self.type_to_json(
-                                    &format!("results.{}", heck::AsLowerCamelCase(name)),
-                                    ty
-                                ))
+                                .map(|(name, ty)| self
+                                    .type_to_json(&format!("results.{}", name.as_var()), ty))
                                 .collect::<Vec<_>>()
                                 .join(", ")
                         )
@@ -140,7 +142,8 @@ impl Parsed<'_> {
                     .enumerate()
                     .for_each(|(index, (id, f))| {
                         s.push_str(&format!(
-                            "_{id} = library.getComponentFunction('{id}', const {},)!",
+                            "_{} = library.getComponentFunction('{id}', const {},)!",
+                            id.as_var(),
                             self.function_spec(f)
                         ));
                         if index != interface.functions.len() - 1 {
@@ -150,14 +153,14 @@ impl Parsed<'_> {
                 s.push_str(";");
             }
 
-            interface.functions.iter().for_each(|(id, f)| {
+            interface.functions.iter().for_each(|(_id, f)| {
                 self.add_function(&mut s, f, FuncKind::MethodCall);
             });
             s.push_str("}");
         } else {
             s.push_str(&format!(
-                "abstract class {} {{",
-                name, // interface.name.as_ref().unwrap())
+                "abstract class {name} {{",
+                // interface.name.as_ref().unwrap())
             ));
             interface.functions.iter().for_each(|(id, f)| {
                 self.add_function(&mut s, f, FuncKind::Method);
@@ -179,23 +182,29 @@ impl Parsed<'_> {
         }
     }
 
+    pub fn is_unit(&self, ty: &Type) -> bool {
+        match ty {
+            Type::Id(ty_id) => {
+                let ty_def = self.0.types.get(*ty_id).unwrap();
+                if let TypeDefKind::Tuple(Tuple { types }) = &ty_def.kind {
+                    types.is_empty()
+                } else {
+                    false
+                }
+            }
+            _ => false,
+        }
+    }
+
     pub fn add_function(&self, mut s: &mut String, f: &Function, kind: FuncKind) {
         let mut params = f
             .params
             .iter()
             .map(|(name, ty)| {
                 if self.is_option(ty) {
-                    format!(
-                        "{} {} = const None(),",
-                        self.type_to_str(ty),
-                        heck::AsLowerCamelCase(name)
-                    )
+                    format!("{} {} = const None(),", self.type_to_str(ty), name.as_var())
                 } else {
-                    format!(
-                        "required {} {},",
-                        self.type_to_str(ty),
-                        heck::AsLowerCamelCase(name)
-                    )
+                    format!("required {} {},", self.type_to_str(ty), name.as_var())
                 }
             })
             .collect::<String>();
@@ -210,23 +219,19 @@ impl Parsed<'_> {
                     "void".to_string()
                 } else {
                     format!(
-                    "({{{}}})",
-                    list.iter()
-                        .map(|(name, ty)| {
-                            format!(
-                                "{} {}",
-                                self.type_to_str(ty),
-                                heck::AsLowerCamelCase(name),
-                            )
-                        })
-                        .collect::<Vec<_>>()
-                        .join(",")
-                )
+                        "({{{}}})",
+                        list.iter()
+                            .map(|(name, ty)| {
+                                format!("{} {}", self.type_to_str(ty), name.as_var(),)
+                            })
+                            .collect::<Vec<_>>()
+                            .join(",")
+                    )
                 }
             }
         };
 
-        let name = heck::AsLowerCamelCase(&f.name);
+        let name = &f.name.as_fn();
         match kind {
             FuncKind::Field => {
                 add_docs(&mut s, &f.docs);
@@ -244,7 +249,10 @@ impl Parsed<'_> {
                 s.push_str(&format!("{results} {name}({params}) {{"));
                 s.push_str(&format!(
                     "{}_{name}([{params}]);{ret}",
-                    if f.results.len() == 0 {
+                    if f.results.len() == 0
+                        || (f.results.len() == 1
+                            && self.is_unit(f.results.iter_types().next().unwrap()))
+                    {
                         ""
                     } else {
                         "final results = "
@@ -252,15 +260,20 @@ impl Parsed<'_> {
                     params = f
                         .params
                         .iter()
-                        .map(|(name, ty)| self
-                            .type_to_json(&heck::AsLowerCamelCase(name).to_string(), ty))
+                        .map(|(name, ty)| self.type_to_json(&name.as_var(), ty))
                         .collect::<Vec<_>>()
                         .join(", "),
                     ret = match &f.results {
-                        Results::Anon(a) => format!(
-                            "final result = results[0];return {};",
-                            self.type_from_json("result", a)
-                        ),
+                        Results::Anon(a) => {
+                            if self.is_unit(&a) {
+                                "return ();".to_string()
+                            } else {
+                                format!(
+                                    "final result = results[0];return {};",
+                                    self.type_from_json("result", a)
+                                )
+                            }
+                        }
                         Results::Named(results) =>
                             if results.is_empty() {
                                 "".to_string()
@@ -268,14 +281,14 @@ impl Parsed<'_> {
                                 format!(
                                     "{}return ({},);",
                                     (0..results.len())
-                                        .map(|i| format!("final r{i}= results[{i}];"))
+                                        .map(|i| format!("final r{i} = results[{i}];"))
                                         .collect::<String>(),
                                     results
                                         .iter()
                                         .enumerate()
                                         .map(|(i, (name, ty))| format!(
                                             "{}: {}",
-                                            heck::AsLowerCamelCase(name),
+                                            name.as_var(),
                                             self.type_from_json(&format!("r{i}"), ty),
                                         ),)
                                         .collect::<Vec<_>>()

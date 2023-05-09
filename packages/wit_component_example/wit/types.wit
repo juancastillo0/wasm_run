@@ -9,6 +9,7 @@ default interface types-interface {
   /// values of this type will be one of the specified cases
   variant human {
     baby,
+    /// type payload
     child(u32), // optional type payload
     adult,
   }
@@ -42,6 +43,7 @@ default interface types-interface {
   type t2 = tuple<u32, u64>
   type t3 = string
   type t4 = option<u32>
+  /// no "ok" type
   type t5 = result<_, errno>            // no "ok" type
   type t6 = result<string>              // no "err" type
   type t7 = result<char, errno>         // both types specified
@@ -50,6 +52,7 @@ default interface types-interface {
   type t10 = t9
 }
 
+/// Comment for import interface
 interface api-imports {
   use self.types-interface.{t7}
 
@@ -64,7 +67,22 @@ interface api-imports {
 }
 
 interface api {
+  /// Comment for export function
   f1: func() -> (val-one: tuple<s32>, val2: string)
+
+  /// Comment for t5 in api
+  type t5 = result<_, option<errno>>
+
+  record errno {
+    a-u1: u64,
+    /// A list of signed 64-bit integers
+    list-s1: list<s64>,
+    str: option<string>,
+    c: option<char>,
+  }
+
+  class: func(break: option<option<t5>>) -> tuple<>
+  continue: func(abstract: option<result<_, errno>>, extends: tuple<>) -> (%implements: option<tuple<>>)
 }
 
 default world types {
@@ -72,7 +90,9 @@ default world types {
 
     import imports: self.api-imports
     import print: func(message: string, level: log-level)
+    /// Comment for import inline
     import inline: interface {
+      /// Comment for import inline function
       inline-imp: func(args: list<option<char>>) -> result<_, char>
     }
 
@@ -80,6 +100,7 @@ default world types {
     export api: self.api
 
     enum log-level {
+      /// lowest level
       debug,
       info,
       warn,

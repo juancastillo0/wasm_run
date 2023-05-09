@@ -1,6 +1,6 @@
 use std::{collections::HashMap, fmt::format};
 
-use crate::generate::*;
+use crate::{generate::*, strings::Normalize};
 use wit_parser::*;
 
 pub struct DartType {
@@ -8,12 +8,6 @@ pub struct DartType {
     pub ty: Type,
     pub ffi_ty: String,
     pub is_pointer: bool,
-}
-
-pub enum FuncKind {
-    MethodCall,
-    Method,
-    Field,
 }
 
 pub struct Parsed<'a>(
@@ -142,6 +136,7 @@ impl Parsed<'_> {
                 )
             }
             TypeDefKind::List(ty) => format!(
+                // TODO: if {} is just e, maybe don't copy
                 "{getter}.map((e) => {}).toList()",
                 self.type_to_json("e", &ty)
             ),
@@ -292,22 +287,26 @@ impl Parsed<'_> {
             TypeDefKind::Flags(_flags) => format!("{}.fromJson({getter})", name.unwrap()),
             TypeDefKind::Variant(_variant) => format!("{}.fromJson({getter})", name.unwrap()),
             TypeDefKind::Tuple(t) => {
-                format!(
-                    "(() {{final l = {getter} is Map
-                        ? Iterable.generate({getter}.length, (i) => {getter}[i.toString()])
-                        : {getter}! as Iterable;
-                        final it = l.iterator;\n{}
+                if t.types.len() == 0 {
+                    format!("()")
+                } else {
+                    format!(
+                        "(() {{final l = {getter} is Map
+                        ? List.generate({getter}.length, (i) => {getter}[i.toString()], growable: false)
+                        : {getter}! as List<Object?>;
+                        {}
                         return ({},);}})()",
-                    (0..t.types.len())
-                        .map(|i| format!("final v{i} = (it..moveNext()).current;\n"))
-                        .collect::<String>(),
-                    t.types
-                        .iter()
-                        .enumerate()
-                        .map(|(i, t)| self.type_from_json(&format!("v{i}"), t))
-                        .collect::<Vec<_>>()
-                        .join(", "),
-                )
+                        (0..t.types.len())
+                            .map(|i| format!("final v{i} = l[{i}];\n"))
+                            .collect::<String>(),
+                        t.types
+                            .iter()
+                            .enumerate()
+                            .map(|(i, t)| self.type_from_json(&format!("v{i}"), t))
+                            .collect::<Vec<_>>()
+                            .join(", "),
+                    )
+                }
             }
             TypeDefKind::Option(ty) => format!(
                 "Option.fromJson({getter}, (some) => {})",
@@ -372,11 +371,11 @@ impl Parsed<'_> {
     pub fn type_def_to_name(&self, ty: &TypeDef) -> String {
         let name = self.type_def_to_name_definition(ty);
         match &ty.kind {
-            TypeDefKind::Record(_record) => name.unwrap().to_string(),
-            TypeDefKind::Enum(_enum) => name.unwrap().to_string(),
-            TypeDefKind::Union(_union) => name.unwrap().to_string(),
-            TypeDefKind::Flags(_flags) => name.unwrap().to_string(),
-            TypeDefKind::Variant(_variant) => name.unwrap().to_string(),
+            TypeDefKind::Record(_record) => name.unwrap(),
+            TypeDefKind::Enum(_enum) => name.unwrap(),
+            TypeDefKind::Union(_union) => name.unwrap(),
+            TypeDefKind::Flags(_flags) => name.unwrap(),
+            TypeDefKind::Variant(_variant) => name.unwrap(),
             TypeDefKind::Tuple(t) => {
                 format!(
                     "({})",
@@ -450,20 +449,24 @@ impl Parsed<'_> {
                 s.push_str(&format!("class {name} {{"));
                 r.fields.iter().for_each(|f| {
                     add_docs(&mut s, &f.docs);
-                    s.push_str(&format!("final {} {};", self.type_to_str(&f.ty), f.name));
+                    s.push_str(&format!(
+                        "final {} {};",
+                        self.type_to_str(&f.ty),
+                        f.name.as_var()
+                    ));
                 });
                 if r.fields.is_empty() {
                     s.push_str(&format!("\n\nconst {name}();",));
                 } else {
                     s.push_str(&format!("\n\nconst {name}({{",));
                     r.fields.iter().for_each(|f| {
-                        s.push_str(&format!("required this.{},", f.name));
+                        s.push_str(&format!("required this.{},", f.name.as_var()));
                     });
                     s.push_str("});");
                 }
                 if r.fields.is_empty() {
                     s.push_str(&format!(
-                        "\n\nfactory {name}.fromJson(Object? json) => const {name}();"
+                        "\n\nfactory {name}.fromJson(Object? _) => const {name}();"
                     ));
                 } else {
                     s.push_str(&format!(
@@ -471,14 +474,14 @@ impl Parsed<'_> {
                         final json = json_! as Map; {} return {name}({});}}",
                         r.fields
                             .iter()
-                            .map(|f| format!("final {} = json['{}'];", f.name, f.name))
+                            .map(|f| format!("final {} = json['{}'];", f.name.as_var(), f.name))
                             .collect::<String>(),
                         r.fields
                             .iter()
                             .map(|f| format!(
                                 "{}: {},",
-                                f.name,
-                                self.type_from_json(&f.name, &f.ty)
+                                f.name.as_var(),
+                                self.type_from_json(&f.name.as_var(), &f.ty)
                             ))
                             .collect::<String>()
                     ));
@@ -487,7 +490,11 @@ impl Parsed<'_> {
                     "\nObject? toJson() => {{{}}};\n",
                     r.fields
                         .iter()
-                        .map(|f| format!("'{}': {},", f.name, self.type_to_json(&f.name, &f.ty)))
+                        .map(|f| format!(
+                            "'{}': {},",
+                            f.name,
+                            self.type_to_json(&f.name.as_var(), &f.ty)
+                        ))
                         .collect::<String>()
                 ));
 
@@ -505,7 +512,7 @@ impl Parsed<'_> {
                     add_docs(&mut s, &v.docs);
                     s.push_str(&format!(
                         "{}{}",
-                        heck::AsLowerCamelCase(&v.name),
+                        v.name.as_var(),
                         if i == e.cases.len() - 1 { ";" } else { "," }
                     ));
                 });
@@ -564,7 +571,7 @@ impl Parsed<'_> {
                          @override\nObject? toJson() => {{'{i}': {}}}; }}",
                          self.type_to_json("value", &v.ty)
                     ));
-                    s.push_str(&format!("const factory {name}.{}({ty} value) = {class_name};", heck::AsLowerCamelCase(&ty)));
+                    s.push_str(&format!("const factory {name}.{}({ty} value) = {class_name};", ty.as_var()));
                 });
 
                 s.push_str("\n\nObject? toJson();\n");
@@ -584,11 +591,10 @@ impl Parsed<'_> {
                     Object? json = json_;
                     if (json is Map) {{
                         final k = json.keys.first;
-                        if (k is int){{
-                            json = (k, json.values.first);
-                        }} else {{
-                            json = (_spec.cases.indexWhere((c) => c.label == k), json.values.first);
-                        }}
+                        json = (
+                          k is int ? k : _spec.cases.indexWhere((c) => c.label == k),
+                          json.values.first
+                        );
                     }}
                     return switch (json) {{ {} _ => throw Exception('Invalid JSON $json_'), }};
                 }}",
@@ -619,13 +625,13 @@ impl Parsed<'_> {
                             @override\nObject? toJson() => {{'{}': {}}};
                          }}", v.name, self.type_to_json("value", &ty)
                         ));
-                        s.push_str(&format!("const factory {name}.{}({ty_str} value) = {class_name};", heck::AsLowerCamelCase(&v.name)));
+                        s.push_str(&format!("const factory {name}.{}({ty_str} value) = {class_name};", v.name.as_var()));
                     } else {
                         cases_string.push_str(&format!(
                             "class {class_name} implements {name} {{ const {class_name}();
                             @override\nObject? toJson() => {{'{}': null}}; }}", v.name,
                         ));
-                        s.push_str(&format!("const factory {name}.{}() = {class_name};", heck::AsLowerCamelCase(&v.name)));
+                        s.push_str(&format!("const factory {name}.{}() = {class_name};", v.name.as_var()));
                     }
                 });
                 s.push_str("\n\nObject? toJson();\n");
@@ -655,16 +661,15 @@ impl Parsed<'_> {
                     void _setIndex(int i, int flag, bool enable) {{
                         final currentValue = _index(i);
                         flagBits.setUint32(
-                        i,
-                        enable ? (flag | currentValue) : ((~flag) & currentValue),
-                        Endian.little,
-                    );
+                            i,
+                            enable ? (flag | currentValue) : ((~flag) & currentValue),
+                            Endian.little,
+                        );
                     }}
                     ",
                 ));
                 f.flags.iter().enumerate().for_each(|(i, v)| {
-                    let property = heck::AsLowerCamelCase(&v.name);
-
+                    let property = v.name.as_var();
                     let index = (i / 32) * 4;
                     let flag = 2_u32.pow(i.try_into().unwrap());
                     let getter = format!("_index({index})");

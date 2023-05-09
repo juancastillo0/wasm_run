@@ -1,6 +1,7 @@
 mod function;
 pub mod generate;
 mod types;
+mod strings;
 
 // Use a procedural macro to generate bindings for the world we specified in
 // `host.wit`

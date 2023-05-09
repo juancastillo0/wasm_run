@@ -36,11 +36,11 @@ class R {
       c: (c! as Iterable)
           .map((e) => (() {
                 final l = e is Map
-                    ? Iterable.generate(e.length, (i) => e[i.toString()])
-                    : e! as Iterable;
-                final it = l.iterator;
-                final v0 = (it..moveNext()).current;
-                final v1 = (it..moveNext()).current;
+                    ? List.generate(e.length, (i) => e[i.toString()],
+                        growable: false)
+                    : e! as List<Object?>;
+                final v0 = l[0];
+                final v1 = l[1];
 
                 return (
                   v0 is String ? v0 : (v0! as ParsedString).value,
@@ -151,11 +151,10 @@ sealed class HumanTypesInterface {
     Object? json = json_;
     if (json is Map) {
       final k = json.keys.first;
-      if (k is int) {
-        json = (k, json.values.first);
-      } else {
-        json = (_spec.cases.indexWhere((c) => c.label == k), json.values.first);
-      }
+      json = (
+        k is int ? k : _spec.cases.indexWhere((c) => c.label == k),
+        json.values.first
+      );
     }
     return switch (json) {
       (0, null) => const HumanTypesInterfaceBaby(),
@@ -180,6 +179,7 @@ class HumanTypesInterfaceBaby implements HumanTypesInterface {
   Object? toJson() => {'baby': null};
 }
 
+/// type payload
 class HumanTypesInterfaceChild implements HumanTypesInterface {
   final int /*U32*/ value;
   const HumanTypesInterfaceChild(this.value);
@@ -194,13 +194,13 @@ class HumanTypesInterfaceAdult implements HumanTypesInterface {
 }
 
 /// similar to `variant`, but no type payloads
-enum Errno {
+enum ErrnoTypesInterface {
   tooBig,
   tooSmall,
   tooFast,
   tooSlow;
 
-  factory Errno.fromJson(Object? json_) {
+  factory ErrnoTypesInterface.fromJson(Object? json_) {
     final json = json_ is Map ? json_.keys.first : json_;
     if (json is String) {
       final index = _spec.labels.indexOf(json);
@@ -213,29 +213,30 @@ enum Errno {
       EnumType(['too-big', 'too-small', 'too-fast', 'too-slow']);
 }
 
+/// no "ok" type
+
 /// Same name as the type in `types-interface`, but this is a different type
 sealed class HumanApiImports {
   factory HumanApiImports.fromJson(Object? json_) {
     Object? json = json_;
     if (json is Map) {
       final k = json.keys.first;
-      if (k is int) {
-        json = (k, json.values.first);
-      } else {
-        json = (_spec.cases.indexWhere((c) => c.label == k), json.values.first);
-      }
+      json = (
+        k is int ? k : _spec.cases.indexWhere((c) => c.label == k),
+        json.values.first
+      );
     }
     return switch (json) {
       (0, null) => const HumanApiImportsBaby(),
       (1, final value) => HumanApiImportsChild(value! as int),
       (2, final value) => HumanApiImportsAdult((() {
           final l = value is Map
-              ? Iterable.generate(value.length, (i) => value[i.toString()])
-              : value! as Iterable;
-          final it = l.iterator;
-          final v0 = (it..moveNext()).current;
-          final v1 = (it..moveNext()).current;
-          final v2 = (it..moveNext()).current;
+              ? List.generate(value.length, (i) => value[i.toString()],
+                  growable: false)
+              : value! as List<Object?>;
+          final v0 = l[0];
+          final v1 = l[1];
+          final v2 = l[2];
 
           return (
             v0 is String ? v0 : (v0! as ParsedString).value,
@@ -247,10 +248,10 @@ sealed class HumanApiImports {
                         some is String ? some : (some! as ParsedString).value)),
             (() {
               final l = v2 is Map
-                  ? Iterable.generate(v2.length, (i) => v2[i.toString()])
-                  : v2! as Iterable;
-              final it = l.iterator;
-              final v0 = (it..moveNext()).current;
+                  ? List.generate(v2.length, (i) => v2[i.toString()],
+                      growable: false)
+                  : v2! as List<Object?>;
+              final v0 = l[0];
 
               return (v0! as int,);
             })(),
@@ -312,7 +313,53 @@ class HumanApiImportsAdult implements HumanApiImports {
       };
 }
 
+class ErrnoApi {
+  final int /*U64*/ aU1;
+
+  /// A list of signed 64-bit integers
+  final List<int /*S64*/ > listS1;
+  final Option<String> str;
+  final Option<String /*Char*/ > c;
+
+  const ErrnoApi({
+    required this.aU1,
+    required this.listS1,
+    required this.str,
+    required this.c,
+  });
+
+  factory ErrnoApi.fromJson(Object? json_) {
+    final json = json_! as Map;
+    final aU1 = json['a-u1'];
+    final listS1 = json['list-s1'];
+    final str = json['str'];
+    final c = json['c'];
+    return ErrnoApi(
+      aU1: aU1! as int,
+      listS1: (listS1! as Iterable).map((e) => e! as int).toList(),
+      str: Option.fromJson(
+          str, (some) => some is String ? some : (some! as ParsedString).value),
+      c: Option.fromJson(c, (some) => some! as String),
+    );
+  }
+  Object? toJson() => {
+        'a-u1': aU1,
+        'list-s1': listS1.map((e) => e).toList(),
+        'str': str.toJson((some) => some),
+        'c': c.toJson((some) => some),
+      };
+  static const _spec = Record([
+    (label: 'a-u1', t: U64()),
+    (label: 'list-s1', t: ListType(S64())),
+    (label: 'str', t: OptionType(StringType())),
+    (label: 'c', t: OptionType(Char()))
+  ]);
+}
+
+/// Comment for t5 in api
+
 enum LogLevel {
+  /// lowest level
   debug,
   info,
   warn,
@@ -333,18 +380,22 @@ enum LogLevel {
 class Empty {
   const Empty();
 
-  factory Empty.fromJson(Object? json) => const Empty();
+  factory Empty.fromJson(Object? _) => const Empty();
   Object? toJson() => {};
   static const _spec = Record([]);
 }
 
+/// Comment for import interface
 abstract class Imports {
-  ({Result<String /*Char*/, Errno> h1, HumanApiImports val2}) apiA1B2({
+  ({Result<String /*Char*/, ErrnoTypesInterface> h1, HumanApiImports val2})
+      apiA1B2({
     required List<HumanApiImports> arg,
   });
 }
 
+/// Comment for import inline
 abstract class Inline {
+  /// Comment for import inline function
   Result<void, String /*Char*/ > inlineImp({
     required List<Option<String /*Char*/ >> args,
   });
@@ -376,8 +427,47 @@ class Api {
             ('val-one', Tuple([S32()])),
             ('val2', StringType())
           ]),
+        )!,
+        _class_ = library.getComponentFunction(
+          'class',
+          const FuncType([
+            (
+              'break',
+              OptionType(OptionType(ResultType(
+                  null,
+                  OptionType(Record([
+                    (label: 'a-u1', t: U64()),
+                    (label: 'list-s1', t: ListType(S64())),
+                    (label: 'str', t: OptionType(StringType())),
+                    (label: 'c', t: OptionType(Char()))
+                  ])))))
+            )
+          ], [
+            ('', Tuple([]))
+          ]),
+        )!,
+        _continue_ = library.getComponentFunction(
+          'continue',
+          const FuncType([
+            (
+              'abstract',
+              OptionType(ResultType(
+                  null,
+                  Record([
+                    (label: 'a-u1', t: U64()),
+                    (label: 'list-s1', t: ListType(S64())),
+                    (label: 'str', t: OptionType(StringType())),
+                    (label: 'c', t: OptionType(Char()))
+                  ])))
+            ),
+            ('extends', Tuple([]))
+          ], [
+            ('implements', OptionType(Tuple([])))
+          ]),
         )!;
   final ListValue Function(ListValue) _f1;
+
+  /// Comment for export function
   ({(int /*S32*/,) valOne, String val2}) f1() {
     final results = _f1([]);
     final r0 = results[0];
@@ -385,15 +475,38 @@ class Api {
     return (
       valOne: (() {
         final l = r0 is Map
-            ? Iterable.generate(r0.length, (i) => r0[i.toString()])
-            : r0! as Iterable;
-        final it = l.iterator;
-        final v0 = (it..moveNext()).current;
+            ? List.generate(r0.length, (i) => r0[i.toString()], growable: false)
+            : r0! as List<Object?>;
+        final v0 = l[0];
 
         return (v0! as int,);
       })(),
       val2: r1 is String ? r1 : (r1! as ParsedString).value,
     );
+  }
+
+  final ListValue Function(ListValue) _class_;
+  () class_({
+    Option<Option<Result<void, Option<ErrnoApi>>>> break_ = const None(),
+  }) {
+    _class_([
+      break_.toJson((some) => some.toJson((some) =>
+          some.toJson(null, (error) => error.toJson((some) => some.toJson()))))
+    ]);
+    return ();
+  }
+
+  final ListValue Function(ListValue) _continue_;
+  ({Option<()> implements_}) continue_({
+    Option<Result<void, ErrnoApi>> abstract_ = const None(),
+    required () extends_,
+  }) {
+    final results = _continue_([
+      abstract_.toJson((some) => some.toJson(null, (error) => error.toJson())),
+      []
+    ]);
+    final r0 = results[0];
+    return (implements_: Option.fromJson(r0, (some) => ()),);
   }
 }
 
@@ -548,9 +661,9 @@ class TypesWorld {
 
   final ListValue Function(ListValue) _fF1;
   List<String> fF1({
-    required List<String> typedef,
+    required List<String> typedef_,
   }) {
-    final results = _fF1([typedef.map((e) => e).toList()]);
+    final results = _fF1([typedef_.map((e) => e).toList()]);
     final result = results[0];
     return (result! as Iterable)
         .map((e) => e is String ? e : (e! as ParsedString).value)
@@ -596,11 +709,11 @@ class TypesWorld {
     final result = results[0];
     return (() {
       final l = result is Map
-          ? Iterable.generate(result.length, (i) => result[i.toString()])
-          : result! as Iterable;
-      final it = l.iterator;
-      final v0 = (it..moveNext()).current;
-      final v1 = (it..moveNext()).current;
+          ? List.generate(result.length, (i) => result[i.toString()],
+              growable: false)
+          : result! as List<Object?>;
+      final v0 = l[0];
+      final v1 = l[1];
 
       return (
         v0! as int,
@@ -624,11 +737,11 @@ class TypesWorld {
     final result = results[0];
     return (() {
       final l = result is Map
-          ? Iterable.generate(result.length, (i) => result[i.toString()])
-          : result! as Iterable;
-      final it = l.iterator;
-      final v0 = (it..moveNext()).current;
-      final v1 = (it..moveNext()).current;
+          ? List.generate(result.length, (i) => result[i.toString()],
+              growable: false)
+          : result! as List<Object?>;
+      final v0 = l[0];
+      final v1 = l[1];
 
       return (
         Option.fromJson(v0, (some) => some! as int),
