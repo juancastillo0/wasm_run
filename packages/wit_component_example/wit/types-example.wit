@@ -85,7 +85,7 @@ interface api {
   continue: func(abstract: option<result<_, errno>>, extends: tuple<>) -> (%implements: option<tuple<>>)
 }
 
-default world types {
+default world types-example {
     use self.types-interface.{t2 as t2-renamed, t10, permissions}
 
     import imports: self.api-imports
@@ -96,7 +96,7 @@ default world types {
       inline-imp: func(args: list<option<char>>) -> result<_, char>
     }
 
-    export types: self.types-interface
+    export types-export: self.types-interface
     export api: self.api
 
     enum log-level {

@@ -220,7 +220,7 @@ default world host {
 
 #[test]
 pub fn parse_wit_types() {
-    let path = format!("{}/wit/types.wit", PACKAGE_DIR);
+    let path = format!("{}/wit/types-example.wit", PACKAGE_DIR);
     let parsed = wit_parser::UnresolvedPackage::parse_file(Path::new(&path)).unwrap();
 
     let s = document_to_dart(&parsed);
