@@ -42,6 +42,15 @@ Future<WasmRuntimeFeatures> _calculateFeatures() async {
     js_util.promiseToFuture<bool>(wfd.threads()), // 16
   ]);
 
+  bool typeReflection;
+  try {
+    final type = _getGlobalType(Global.i32(value: 0, mutable: true).jsObject);
+    typeReflection = type?.mutability == GlobalMutability.Var &&
+        type?.content == ValueTy.i32;
+  } catch (_) {
+    typeReflection = false;
+  }
+
   final wasmFeatures = WasmFeatures(
     mutableGlobal: features[8],
     saturatingFloatToInt: features[11],
@@ -62,6 +71,7 @@ Future<WasmRuntimeFeatures> _calculateFeatures() async {
     componentModel: false, // TODO(web-compat): check
     memoryControl: false, // TODO(web-compat): check
     garbageCollection: features[4],
+    typeReflection: typeReflection,
     wasiFeatures: const WasmWasiFeatures(
       io: true,
       filesystem: true,

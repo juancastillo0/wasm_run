@@ -369,6 +369,9 @@ pub struct WasmFeatures {
     pub memory_control: bool,
     /// The WebAssembly garbage collection (GC) proposal
     pub garbage_collection: bool,
+    /// WebAssembly external types reflection or, for browsers,
+    /// the js-types proposal (https://github.com/WebAssembly/js-types/blob/main/proposals/js-types/Overview.md)
+    pub type_reflection: bool,
     /// The WebAssembly System Interface proposal
     pub wasi_features: Option<WasmWasiFeatures>,
     // TODO:
@@ -443,6 +446,7 @@ impl WasmFeatures {
                 tail_call: false,
                 exceptions: false,
                 memory_control: false,
+                type_reflection: true,
                 wasi_features: if cfg!(feature = "wasi") {
                     Some(WasmWasiFeatures::default())
                 } else {
@@ -472,6 +476,7 @@ impl WasmFeatures {
             exceptions: false,
             memory64: false,
             memory_control: false,
+            type_reflection: true,
             wasi_features: if cfg!(feature = "wasi") {
                 Some(WasmWasiFeatures::default())
             } else {
@@ -503,6 +508,7 @@ impl WasmFeatures {
                 exceptions: false,
                 tail_call: false,
                 memory_control: false,
+                type_reflection: true,
                 wasi_features: if cfg!(feature = "wasi") {
                     Some(WasmWasiFeatures::supported())
                 } else {
@@ -532,6 +538,7 @@ impl WasmFeatures {
             exceptions: false,
             memory64: false,
             memory_control: false,
+            type_reflection: true,
             wasi_features: if cfg!(feature = "wasi") {
                 Some(WasmWasiFeatures::supported())
             } else {
@@ -576,6 +583,7 @@ impl ModuleConfig {
                 tail_call: false,
                 exceptions: false,
                 memory_control: false,
+                type_reflection: true,
                 wasi_features: if cfg!(feature = "wasi") {
                     Some(WasmWasiFeatures::default())
                 } else {
@@ -613,6 +621,7 @@ impl ModuleConfig {
             exceptions: false,
             memory64: false,
             memory_control: false,
+            type_reflection: true,
             wasi_features: if cfg!(feature = "wasi") {
                 Some(WasmWasiFeatures::default())
             } else {
