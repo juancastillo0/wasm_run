@@ -11,6 +11,7 @@ import 'package:wasmit/src/ffi.dart' show defaultInstance;
 import 'package:wasmit/wasmit.dart';
 import 'package:wasmit_example/runner_identity/runner_identity.dart';
 import 'package:wasmit_example/simd_test.dart' show simdTests;
+import 'package:wasmit_example/threads_test.dart';
 import 'package:wasmit_example/wasi_test.dart';
 
 const isWeb = identical(0, 0.0);
@@ -597,6 +598,49 @@ void testAll({
     final l = ['2'];
     table.set(1, WasmValue.externRef(l));
     expect(identical(l, table.get(1)), true);
+  });
+
+  test('call async', skip: !isLibrary, () async {
+    final binary = await getBinary(
+      wat: r'''
+(module
+  (func $fibonacci (param $n i32) (result i32)
+    (if
+      (i32.lt_s (local.get $n) (i32.const 2))
+      (return (local.get $n))
+    )
+    (i32.add
+      (call $fibonacci (i32.sub (local.get $n) (i32.const 1)))
+      (call $fibonacci (i32.sub (local.get $n) (i32.const 2)))
+    )
+  )
+  (export "fibonacci" (func $fibonacci))
+)
+''',
+      base64Binary:
+          'AGFzbQEAAAABBgFgAX8BfwMCAQAHDQEJZmlib25hY2NpAAAKHgEcACAAQQJIBEAgAA8LIABBAWsQACAAQQJrEABqCwAbBG5hbWUBDAEACWZpYm9uYWNjaQIGAQABAAFu',
+    );
+    final module = await compileWasmModule(binary);
+    final instance = await module.builder().build();
+
+    final fibonacci = instance.getFunction('fibonacci')!;
+
+    final result = await fibonacci.callAsync!([7]);
+    expect(result, [13]);
+
+    final values = await Future.wait([
+      fibonacci.callAsync!([7]),
+      fibonacci.callAsync!([8]),
+      fibonacci.callAsync!([9]),
+      fibonacci.callAsync!([10]),
+    ]);
+
+    expect(values, [
+      [13],
+      [21],
+      [34],
+      [55]
+    ]);
   });
 
   /// https://github.com/bytecodealliance/wasmtime/blob/main/examples/fuel.rs
