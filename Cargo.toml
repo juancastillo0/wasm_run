@@ -1,3 +1,7 @@
 [workspace]
 members = ["packages/wasmit/native"]
-exclude = ["packages/rust_wasi_example", "packages/wit_component_example"]
+exclude = [
+    "packages/rust_wasi_example",
+    "packages/wit_component_example",
+    "packages/rust_threads_example",
+]
