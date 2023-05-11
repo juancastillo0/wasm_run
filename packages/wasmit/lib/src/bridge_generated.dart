@@ -23,6 +23,7 @@ part 'bridge_generated.freezed.dart';
 abstract class WasmitDart {
   WasmitModuleId moduleBuilder(
       {required CompiledModule module,
+      int? numThreads,
       WasiConfigNative? wasiConfig,
       dynamic hint});
 
@@ -105,6 +106,15 @@ abstract class WasmitDart {
 
   FlutterRustBridgeTaskConstMeta
       get kCallFunctionHandleMethodWasmitModuleIdConstMeta;
+
+  Future<List<WasmVal>> callFunctionHandleParallelMethodWasmitModuleId(
+      {required WasmitModuleId that,
+      required String funcName,
+      required List<WasmVal> args,
+      dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta
+      get kCallFunctionHandleParallelMethodWasmitModuleIdConstMeta;
 
   FuncTy getFunctionTypeMethodWasmitModuleId(
       {required WasmitModuleId that, required WFunc func, dynamic hint});
@@ -864,6 +874,9 @@ class ExternalValue with _$ExternalValue {
   const factory ExternalValue.memory(
     Memory field0,
   ) = ExternalValue_Memory;
+  const factory ExternalValue.sharedMemory(
+    WasmitSharedMemory field0,
+  ) = ExternalValue_SharedMemory;
 }
 
 class FuncTy {
@@ -1315,6 +1328,10 @@ class WasmFeatures {
   /// The WebAssembly garbage collection (GC) proposal
   final bool garbageCollection;
 
+  /// WebAssembly external types reflection or, for browsers,
+  /// the js-types proposal (https://github.com/WebAssembly/js-types/blob/main/proposals/js-types/Overview.md)
+  final bool typeReflection;
+
   /// The WebAssembly System Interface proposal
   final WasmWasiFeatures? wasiFeatures;
 
@@ -1337,6 +1354,7 @@ class WasmFeatures {
     required this.componentModel,
     required this.memoryControl,
     required this.garbageCollection,
+    required this.typeReflection,
     this.wasiFeatures,
   });
 }
@@ -1509,6 +1527,16 @@ class WasmitModuleId {
       bridge.callFunctionHandleMethodWasmitModuleId(
         that: this,
         func: func,
+        args: args,
+      );
+
+  Future<List<WasmVal>> callFunctionHandleParallel(
+          {required String funcName,
+          required List<WasmVal> args,
+          dynamic hint}) =>
+      bridge.callFunctionHandleParallelMethodWasmitModuleId(
+        that: this,
+        funcName: funcName,
         args: args,
       );
 
@@ -1821,16 +1849,18 @@ class WasmitDartImpl implements WasmitDart {
   WasmitDartImpl.raw(this._platform);
   WasmitModuleId moduleBuilder(
       {required CompiledModule module,
+      int? numThreads,
       WasiConfigNative? wasiConfig,
       dynamic hint}) {
     var arg0 = _platform.api2wire_box_autoadd_compiled_module(module);
-    var arg1 =
+    var arg1 = _platform.api2wire_opt_box_autoadd_usize(numThreads);
+    var arg2 =
         _platform.api2wire_opt_box_autoadd_wasi_config_native(wasiConfig);
     return _platform.executeSync(FlutterRustBridgeSyncTask(
-      callFfi: () => _platform.inner.wire_module_builder(arg0, arg1),
+      callFfi: () => _platform.inner.wire_module_builder(arg0, arg1, arg2),
       parseSuccessData: _wire2api_wasmit_module_id,
       constMeta: kModuleBuilderConstMeta,
-      argValues: [module, wasiConfig],
+      argValues: [module, numThreads, wasiConfig],
       hint: hint,
     ));
   }
@@ -1838,7 +1868,7 @@ class WasmitDartImpl implements WasmitDart {
   FlutterRustBridgeTaskConstMeta get kModuleBuilderConstMeta =>
       const FlutterRustBridgeTaskConstMeta(
         debugName: "module_builder",
-        argNames: ["module", "wasiConfig"],
+        argNames: ["module", "numThreads", "wasiConfig"],
       );
 
   Future<Uint8List> parseWatFormat({required String wat, dynamic hint}) {
@@ -2106,6 +2136,32 @@ class WasmitDartImpl implements WasmitDart {
           const FlutterRustBridgeTaskConstMeta(
             debugName: "call_function_handle__method__WasmitModuleId",
             argNames: ["that", "func", "args"],
+          );
+
+  Future<List<WasmVal>> callFunctionHandleParallelMethodWasmitModuleId(
+      {required WasmitModuleId that,
+      required String funcName,
+      required List<WasmVal> args,
+      dynamic hint}) {
+    var arg0 = _platform.api2wire_box_autoadd_wasmit_module_id(that);
+    var arg1 = _platform.api2wire_String(funcName);
+    var arg2 = _platform.api2wire_list_wasm_val(args);
+    return _platform.executeNormal(FlutterRustBridgeTask(
+      callFfi: (port_) => _platform.inner
+          .wire_call_function_handle_parallel__method__WasmitModuleId(
+              port_, arg0, arg1, arg2),
+      parseSuccessData: _wire2api_list_wasm_val,
+      constMeta: kCallFunctionHandleParallelMethodWasmitModuleIdConstMeta,
+      argValues: [that, funcName, args],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta
+      get kCallFunctionHandleParallelMethodWasmitModuleIdConstMeta =>
+          const FlutterRustBridgeTaskConstMeta(
+            debugName: "call_function_handle_parallel__method__WasmitModuleId",
+            argNames: ["that", "funcName", "args"],
           );
 
   FuncTy getFunctionTypeMethodWasmitModuleId(
@@ -3304,6 +3360,10 @@ class WasmitDartImpl implements WasmitDart {
     return _wire2api_wasm_wasi_features(raw);
   }
 
+  WasmitSharedMemory _wire2api_box_autoadd_wasmit_shared_memory(dynamic raw) {
+    return _wire2api_wasmit_shared_memory(raw);
+  }
+
   CompareExchangeResult _wire2api_compare_exchange_result(dynamic raw) {
     final arr = raw as List<dynamic>;
     if (arr.length != 2)
@@ -3364,6 +3424,10 @@ class WasmitDartImpl implements WasmitDart {
       case 3:
         return ExternalValue_Memory(
           _wire2api_Memory(raw[1]),
+        );
+      case 4:
+        return ExternalValue_SharedMemory(
+          _wire2api_box_autoadd_wasmit_shared_memory(raw[1]),
         );
       default:
         throw Exception("unreachable");
@@ -3541,8 +3605,8 @@ class WasmitDartImpl implements WasmitDart {
 
   WasmFeatures _wire2api_wasm_features(dynamic raw) {
     final arr = raw as List<dynamic>;
-    if (arr.length != 19)
-      throw Exception('unexpected arr length: expect 19 but see ${arr.length}');
+    if (arr.length != 20)
+      throw Exception('unexpected arr length: expect 20 but see ${arr.length}');
     return WasmFeatures(
       mutableGlobal: _wire2api_bool(arr[0]),
       saturatingFloatToInt: _wire2api_bool(arr[1]),
@@ -3562,7 +3626,8 @@ class WasmitDartImpl implements WasmitDart {
       componentModel: _wire2api_bool(arr[15]),
       memoryControl: _wire2api_bool(arr[16]),
       garbageCollection: _wire2api_bool(arr[17]),
-      wasiFeatures: _wire2api_opt_box_autoadd_wasm_wasi_features(arr[18]),
+      typeReflection: _wire2api_bool(arr[18]),
+      wasiFeatures: _wire2api_opt_box_autoadd_wasm_wasi_features(arr[19]),
     );
   }
 

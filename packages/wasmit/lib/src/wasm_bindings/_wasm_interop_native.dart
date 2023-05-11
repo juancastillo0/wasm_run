@@ -68,9 +68,12 @@ class _WasmModule extends WasmModule {
   }
 
   @override
-  WasmInstanceBuilder builder({WasiConfig? wasiConfig}) {
-    final builder =
-        defaultInstance().moduleBuilder(module: module, wasiConfig: wasiConfig);
+  WasmInstanceBuilder builder({WasiConfig? wasiConfig, int? numThreads}) {
+    final builder = defaultInstance().moduleBuilder(
+      module: module,
+      wasiConfig: wasiConfig,
+      numThreads: numThreads,
+    );
     return _Builder(this, builder, wasiConfig);
   }
 
@@ -166,7 +169,7 @@ WasmFunction _toWasmFunction(WFunc func, WasmitModuleId module) {
     return result.map((r) => _References.dartValueFromWasm(r, module)).toList();
   }
 
-  return WasmFunction(
+  return _WasmFunction(
     params: params,
     results: type.results,
     call: call,
@@ -189,12 +192,14 @@ WasmFunction _toWasmFunction(WFunc func, WasmitModuleId module) {
         return result;
       },
     ),
+    func,
   );
 }
 
 WasmExternal _toWasmExternal(ModuleExportValue value, _Instance instance) {
   final module = instance.builder.module;
   return value.value.when(
+    sharedMemory: _SharedMemory.new,
     func: (func) => _toWasmFunction(func, module),
     global: (global) => _Global(global, module),
     table: (table) => _Table(table, module),
@@ -429,13 +434,19 @@ class _Builder extends WasmInstanceBuilder {
     WasmExternal value,
   ) {
     final mapped = value.when(
-      memory: (memory) => ExternalValue.memory((memory as _Memory).memory),
+      memory: (memory) => memory is _SharedMemory
+          ? ExternalValue.sharedMemory(memory.memory)
+          : ExternalValue.memory((memory as _Memory).memory),
       table: (table) => ExternalValue.table((table as _Table).table),
       global: (global) => ExternalValue.global((global as _Global).global),
       function: (function) {
-        final desc = compiledModule.module
-            .getModuleImports()
-            .firstWhere((e) => e.module == moduleName && e.name == name);
+        final desc = compiledModule.module.getModuleImports().firstWhere(
+              (e) => e.module == moduleName && e.name == name,
+              // TODO: this is different behavior from web. On web wrong imports are ignored
+              orElse: () => throw Exception(
+                'Import not found: $moduleName.$name = $value',
+              ),
+            );
         final type = desc.ty;
         if (type is! ExternalType_Func) {
           throw Exception('Expected function import type found: $type');
@@ -577,6 +588,51 @@ class _Instance extends WasmInstance {
   }
 
   @override
+  Future<List<List<Object?>>> runParallel(
+    WasmFunction function,
+    List<List<Object?>> argsLists,
+  ) async {
+    if (function is! _WasmFunction) {
+      throw Exception('Expected _WasmFunction');
+    }
+    final exportEntry = exports.entries.firstWhere(
+      (element) => element.value == function,
+      orElse: () => throw Exception(
+        'Only exported function can be run with `runParallel`',
+      ),
+    );
+    final runner = builder.module;
+    if (argsLists.any((args) => args.length != function.params.length)) {
+      throw Exception(
+        'argsLists.any((element) => element.length != function.params.length)',
+      );
+    }
+
+    List<WasmVal> mapArgs([List<Object?>? args]) {
+      int i = 0;
+      return args == null || args.isEmpty
+          ? const []
+          : args
+              .map((v) => _fromWasmValueRaw(function.params[i++]!, v, runner))
+              .toList();
+    }
+
+    final result = await runner.callFunctionHandleParallel(
+      funcName: exportEntry.key,
+      args: argsLists.expand(mapArgs).toList(),
+    );
+    final resultsLength = function.results!.length;
+    final mappedResults = List.generate(
+      argsLists.length,
+      (index) => result
+          .sublist(index * resultsLength, (index + 1) * resultsLength)
+          .map((e) => _References.dartValueFromWasm(e, runner))
+          .toList(),
+    );
+    return mappedResults;
+  }
+
+  @override
   WasmInstanceFuel? fuel() => builder.fuel();
 
   @override
@@ -688,6 +744,19 @@ class _SharedMemory extends WasmSharedMemory {
 
   @override
   MemoryTy get type => memory.ty();
+}
+
+class _WasmFunction extends WasmFunction {
+  const _WasmFunction(
+    super.inner,
+    this.func, {
+    required super.params,
+    required super.results,
+    super.callAsync,
+    super.call,
+  });
+
+  final WFunc func;
 }
 
 class _Global extends WasmGlobal {

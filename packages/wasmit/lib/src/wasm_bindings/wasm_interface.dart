@@ -43,7 +43,7 @@ abstract class WasmModule {
   /// A builder that creates a new [WasmInstance] from this module.
   /// It configures the imports and definitions of the instance.
   /// [wasiConfig] is not supported in the browser executor.
-  WasmInstanceBuilder builder({WasiConfig? wasiConfig});
+  WasmInstanceBuilder builder({WasiConfig? wasiConfig, int? numThreads});
 
   Future<WasmFeatures> features();
 
@@ -203,6 +203,27 @@ abstract class WasmInstance {
     final export = exports[name];
     return export is T ? export : null;
   }
+
+  /// Executes [function] with [argsLists] in parallel and returns the result.
+  /// Each list in [argsLists] will be passed to [function] as arguments to be
+  /// executed as a task in parallel.
+  /// The native implementation uses Rust's [rayon](https://docs.rs/rayon/latest/rayon/)
+  /// crate to execute tasks with a [work-stealing](https://en.wikipedia.org/wiki/Work_stealing)
+  /// scheduler.
+  ///
+  /// - The builder should have been configured with a `numThreads`
+  /// greater than 0 when constructed with [WasmModule.builder]
+  /// - The length of each list [argsLists] must match the number
+  /// of parameters for [function].
+  /// - The length of the returned list will match the number of lists
+  /// in [argsLists].
+  /// - Each list in the returned list will contain the return values
+  /// of the corresponding call to [function].
+  ///
+  Future<List<List<Object?>>> runParallel(
+    WasmFunction function,
+    List<List<Object?>> argsLists,
+  );
 
   /// Returns the fuel that can be used to limit
   /// the amount of computations performed by the instance.

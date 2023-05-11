@@ -496,6 +496,13 @@ class WasmitDartPlatform extends FlutterRustBridgeBase<WasmitDartWire> {
       wireObj.kind.ref.Memory.ref.field0 = pre_field0;
       return;
     }
+    if (apiObj is ExternalValue_SharedMemory) {
+      var pre_field0 = api2wire_box_autoadd_wasmit_shared_memory(apiObj.field0);
+      wireObj.tag = 4;
+      wireObj.kind = inner.inflate_ExternalValue_SharedMemory();
+      wireObj.kind.ref.SharedMemory.ref.field0 = pre_field0;
+      return;
+    }
   }
 
   void _api_fill_to_wire_memory_ty(MemoryTy apiObj, wire_MemoryTy wireObj) {
@@ -800,21 +807,25 @@ class WasmitDartWire implements FlutterRustBridgeWireBase {
 
   WireSyncReturn wire_module_builder(
     ffi.Pointer<wire_CompiledModule> module,
+    ffi.Pointer<ffi.UintPtr> num_threads,
     ffi.Pointer<wire_WasiConfigNative> wasi_config,
   ) {
     return _wire_module_builder(
       module,
+      num_threads,
       wasi_config,
     );
   }
 
   late final _wire_module_builderPtr = _lookup<
       ffi.NativeFunction<
-          WireSyncReturn Function(ffi.Pointer<wire_CompiledModule>,
+          WireSyncReturn Function(
+              ffi.Pointer<wire_CompiledModule>,
+              ffi.Pointer<ffi.UintPtr>,
               ffi.Pointer<wire_WasiConfigNative>)>>('wire_module_builder');
   late final _wire_module_builder = _wire_module_builderPtr.asFunction<
       WireSyncReturn Function(ffi.Pointer<wire_CompiledModule>,
-          ffi.Pointer<wire_WasiConfigNative>)>();
+          ffi.Pointer<ffi.UintPtr>, ffi.Pointer<wire_WasiConfigNative>)>();
 
   void wire_parse_wat_format(
     int port_,
@@ -1049,6 +1060,37 @@ class WasmitDartWire implements FlutterRustBridgeWireBase {
   late final _wire_call_function_handle__method__WasmitModuleId =
       _wire_call_function_handle__method__WasmitModuleIdPtr.asFunction<
           void Function(int, ffi.Pointer<wire_WasmitModuleId>, wire_WFunc,
+              ffi.Pointer<wire_list_wasm_val>)>();
+
+  void wire_call_function_handle_parallel__method__WasmitModuleId(
+    int port_,
+    ffi.Pointer<wire_WasmitModuleId> that,
+    ffi.Pointer<wire_uint_8_list> func_name,
+    ffi.Pointer<wire_list_wasm_val> args,
+  ) {
+    return _wire_call_function_handle_parallel__method__WasmitModuleId(
+      port_,
+      that,
+      func_name,
+      args,
+    );
+  }
+
+  late final _wire_call_function_handle_parallel__method__WasmitModuleIdPtr =
+      _lookup<
+              ffi.NativeFunction<
+                  ffi.Void Function(
+                      ffi.Int64,
+                      ffi.Pointer<wire_WasmitModuleId>,
+                      ffi.Pointer<wire_uint_8_list>,
+                      ffi.Pointer<wire_list_wasm_val>)>>(
+          'wire_call_function_handle_parallel__method__WasmitModuleId');
+  late final _wire_call_function_handle_parallel__method__WasmitModuleId =
+      _wire_call_function_handle_parallel__method__WasmitModuleIdPtr.asFunction<
+          void Function(
+              int,
+              ffi.Pointer<wire_WasmitModuleId>,
+              ffi.Pointer<wire_uint_8_list>,
               ffi.Pointer<wire_list_wasm_val>)>();
 
   WireSyncReturn wire_get_function_type__method__WasmitModuleId(
@@ -2613,6 +2655,17 @@ class WasmitDartWire implements FlutterRustBridgeWireBase {
   late final _inflate_ExternalValue_Memory = _inflate_ExternalValue_MemoryPtr
       .asFunction<ffi.Pointer<ExternalValueKind> Function()>();
 
+  ffi.Pointer<ExternalValueKind> inflate_ExternalValue_SharedMemory() {
+    return _inflate_ExternalValue_SharedMemory();
+  }
+
+  late final _inflate_ExternalValue_SharedMemoryPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<ExternalValueKind> Function()>>(
+          'inflate_ExternalValue_SharedMemory');
+  late final _inflate_ExternalValue_SharedMemory =
+      _inflate_ExternalValue_SharedMemoryPtr
+          .asFunction<ffi.Pointer<ExternalValueKind> Function()>();
+
   ffi.Pointer<WasmValKind> inflate_WasmVal_i32() {
     return _inflate_WasmVal_i32();
   }
@@ -2890,6 +2943,18 @@ class wire_ExternalValue_Memory extends ffi.Struct {
   external wire_Memory field0;
 }
 
+class wire_RwLockSharedMemory extends ffi.Struct {
+  external ffi.Pointer<ffi.Void> ptr;
+}
+
+class wire_WasmitSharedMemory extends ffi.Struct {
+  external wire_RwLockSharedMemory field0;
+}
+
+class wire_ExternalValue_SharedMemory extends ffi.Struct {
+  external ffi.Pointer<wire_WasmitSharedMemory> field0;
+}
+
 class ExternalValueKind extends ffi.Union {
   external ffi.Pointer<wire_ExternalValue_Func> Func;
 
@@ -2898,6 +2963,8 @@ class ExternalValueKind extends ffi.Union {
   external ffi.Pointer<wire_ExternalValue_Table> Table;
 
   external ffi.Pointer<wire_ExternalValue_Memory> Memory;
+
+  external ffi.Pointer<wire_ExternalValue_SharedMemory> SharedMemory;
 }
 
 class wire_ExternalValue extends ffi.Struct {
@@ -3006,14 +3073,6 @@ class wire_TableArgs extends ffi.Struct {
   external int min;
 
   external ffi.Pointer<ffi.Uint32> max;
-}
-
-class wire_RwLockSharedMemory extends ffi.Struct {
-  external ffi.Pointer<ffi.Void> ptr;
-}
-
-class wire_WasmitSharedMemory extends ffi.Struct {
-  external wire_RwLockSharedMemory field0;
 }
 
 class wire_Atomics extends ffi.Struct {

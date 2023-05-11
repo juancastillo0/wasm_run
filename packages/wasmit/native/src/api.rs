@@ -1,3 +1,4 @@
+pub use crate::atomics::*;
 use crate::bridge_generated::{wire_list_wasm_val, Wire2Api};
 use crate::config::*;
 pub use crate::external::*;
@@ -8,14 +9,11 @@ use flutter_rust_bridge::{
 };
 use once_cell::sync::Lazy;
 use std::io::Write;
-use std::{
-    collections::HashMap,
-    fs,
-    sync::{Arc, RwLock},
-};
+pub use std::sync::{Mutex, RwLock};
+use std::{cell::RefCell, collections::HashMap, fs, sync::Arc};
 use wasi_common::{file::FileCaps, pipe::WritePipe};
 use wasmtime::*;
-pub use wasmtime::{Func, Global, GlobalType, Memory, Module, Table};
+pub use wasmtime::{Func, Global, GlobalType, Memory, Module, SharedMemory, Table};
 
 type Value = wasmtime::Val;
 type ValueType = wasmtime::ValType;
@@ -24,6 +22,8 @@ static ARRAY: Lazy<RwLock<GlobalState>> = Lazy::new(|| RwLock::new(Default::defa
 // TODO: make it module independent
 static CALLER_STACK: Lazy<RwLock<Vec<RwLock<StoreContextMut<'_, StoreState>>>>> =
     Lazy::new(|| RwLock::new(Default::default()));
+
+thread_local!(static STORE: RefCell<Option<WasmiModuleImpl>> = RefCell::new(None));
 
 #[derive(Default)]
 struct GlobalState {
@@ -44,10 +44,12 @@ fn default_val(ty: &ValueType) -> Value {
 }
 
 struct WasmiModuleImpl {
-    module: Arc<std::sync::Mutex<Module>>,
+    module: Arc<Mutex<Module>>,
     linker: Linker<StoreState>,
     store: Store<StoreState>,
     instance: Option<Instance>,
+    threads: Option<Arc<Mutex<Vec<Option<WasmiModuleImpl>>>>>,
+    pool: Option<rayon::ThreadPool>,
 }
 
 // impl Debug for WasmiModuleImpl {
@@ -69,14 +71,9 @@ pub struct WasmitModuleId(pub u32);
 #[derive(Debug, Clone, Copy)]
 pub struct WasmitInstanceId(pub u32);
 
-pub fn create_shared_memory(_module: CompiledModule) -> Result<SyncReturn<RustOpaque<Memory>>> {
-    Err(anyhow::Error::msg(
-        "shared_memory is not implemented for wasmtime at this moment",
-    ))
-}
-
 pub fn module_builder(
     module: CompiledModule,
+    num_threads: Option<usize>,
     wasi_config: Option<WasiConfigNative>,
 ) -> Result<SyncReturn<WasmitModuleId>> {
     let guard = module.0.lock().unwrap();
@@ -134,16 +131,51 @@ pub fn module_builder(
     let store = Store::new(
         engine,
         StoreState {
-            wasi_ctx,
+            wasi_ctx: wasi_ctx.clone(),
             stdout: None,
             stderr: None,
         },
     );
+    let m_ = Arc::clone(&module.0);
+    let threads = if let Some(num_threads) = num_threads {
+        if num_threads <= 1 {
+            return Err(anyhow::anyhow!(format!(
+                "num_threads must be greater than 1. received: {num_threads}"
+            )));
+        }
+        let threads_vec: Vec<Option<WasmiModuleImpl>> = (0..num_threads)
+            .map(|_index| {
+                Some(WasmiModuleImpl {
+                    module: m_.clone(),
+                    linker: linker.clone(),
+                    store: Store::new(
+                        engine,
+                        // TODO: test wasi_ctx and stdio in threads
+                        StoreState {
+                            wasi_ctx: wasi_ctx.clone(),
+                            stdout: None,
+                            stderr: None,
+                        },
+                    ),
+                    instance: None,
+                    threads: None,
+                    pool: None,
+                })
+            })
+            .collect();
+
+        Some(Arc::new(Mutex::new(threads_vec)))
+    } else {
+        None
+    };
+
     let module_builder = WasmiModuleImpl {
-        module: Arc::clone(&module.0),
-        linker,
+        module: m_.clone(),
+        linker: linker.clone(),
         store,
         instance: None,
+        pool: None,
+        threads,
     };
     arr.map.insert(id, module_builder);
 
@@ -212,14 +244,63 @@ impl WasmitModuleId {
             .instantiate(&mut module.store, &module.module.lock().unwrap())?;
 
         module.instance = Some(instance);
+        let threads = module.threads.take();
+        if let Some(threads) = threads {
+            let len = {
+                let mut threads_i = threads.lock().unwrap();
+                for thread in threads_i.iter_mut() {
+                    let mut thread = thread.as_mut().unwrap();
+                    let thread_instance = thread
+                        .linker
+                        .instantiate(&mut thread.store, &thread.module.lock().unwrap())?;
+                    thread.instance = Some(thread_instance);
+                }
+                threads_i.len()
+            };
+
+            let pool = rayon::ThreadPoolBuilder::new()
+                .num_threads(len)
+                .start_handler(move |index| {
+                    STORE.with(|cell| {
+                        let t = threads.clone();
+                        let mut threads = t.lock().unwrap();
+                        let mut local_store = cell.borrow_mut();
+                        *local_store = Some(threads[index].take().unwrap());
+                    })
+                })
+                .build()
+                .unwrap();
+            module.pool = Some(pool);
+        }
+
         Ok(WasmitInstanceId(self.0))
     }
+
     pub fn link_imports(&self, imports: Vec<ModuleImport>) -> Result<SyncReturn<()>> {
         let mut arr = ARRAY.write().unwrap();
         let m = arr.map.get_mut(&self.0).unwrap();
-        for import in imports {
+        if m.instance.is_some() {
+            return Err(anyhow::anyhow!("Instance already exists"));
+        }
+        for import in imports.iter() {
             m.linker
                 .define(&mut m.store, &import.module, &import.name, &import.value)?;
+        }
+        if let Some(threads) = m.threads.as_ref() {
+            for thread in &mut threads.lock().unwrap().iter_mut() {
+                let thread = thread.as_mut().unwrap();
+                // TODO: this is probably not necessary, since the linker may be shared
+                // TODO: If the linker is shared, what happens with imports (table, globals)
+                //  that are not shared?
+                for import in imports.iter() {
+                    thread.linker.define(
+                        &mut thread.store,
+                        &import.module,
+                        &import.name,
+                        &import.value,
+                    )?;
+                }
+            }
         }
         Ok(SyncReturn(()))
     }
@@ -270,6 +351,67 @@ impl WasmitModuleId {
             func.call(&mut store, inputs.as_slice(), &mut outputs)?;
             Ok(outputs.into_iter().map(WasmVal::from_val).collect())
         })
+    }
+
+    pub fn call_function_handle_parallel(
+        &self,
+        func_name: String,
+        args: Vec<WasmVal>,
+    ) -> Result<Vec<WasmVal>> {
+        use rayon::prelude::*;
+
+        let mut m = ARRAY.write().unwrap();
+        let module = m.map.get_mut(&self.0).unwrap();
+
+        let func: Func = module
+            .instance
+            .unwrap()
+            .get_func(&mut module.store, &func_name)
+            .unwrap();
+        let num_params = func.ty(&module.store).params().count();
+        if args.len() % num_params != 0 {
+            return Err(anyhow::anyhow!(
+                "Number of arguments must be a multiple of {num_params}",
+            ));
+        }
+
+        if let Some(pool) = module.pool.as_ref() {
+            let args: Vec<Value> = args.into_iter().map(|v| v.to_val()).collect();
+            let result_types: Vec<ValType> = func.ty(&module.store).results().collect();
+            pool.install(|| {
+                let v = args
+                    .par_chunks_exact(num_params)
+                    .map(|inputs| {
+                        STORE.with(|cell| {
+                            let mut c = cell.borrow_mut();
+                            let m = c.as_mut().unwrap();
+
+                            let mut outputs: Vec<Value> = result_types
+                                .clone()
+                                .into_iter()
+                                .map(|t| default_val(&t))
+                                .collect();
+                            let func = m
+                                .instance
+                                .unwrap()
+                                .get_func(&mut m.store, &func_name)
+                                .unwrap();
+                            func.call(&mut m.store, inputs, &mut outputs)?;
+                            Ok(outputs
+                                .into_iter()
+                                .map(WasmVal::from_val)
+                                .collect::<Vec<WasmVal>>())
+                        })
+                    })
+                    .collect::<Result<Vec<Vec<WasmVal>>>>()?
+                    .into_iter()
+                    .flatten()
+                    .collect::<Vec<WasmVal>>();
+                Ok(v)
+            })
+        } else {
+            Err(anyhow::anyhow!("Instance has no thread pool configured"))
+        }
     }
 
     fn with_module_mut<T>(&self, f: impl FnOnce(StoreContextMut<'_, StoreState>) -> T) -> T {
@@ -438,6 +580,9 @@ impl WasmitModuleId {
     pub fn get_memory_data(&self, memory: RustOpaque<Memory>) -> SyncReturn<Vec<u8>> {
         SyncReturn(self.with_module(|store| memory.data(store).to_owned()))
     }
+    pub fn get_memory_data_pointer(&self, memory: RustOpaque<Memory>) -> SyncReturn<usize> {
+        SyncReturn(self.with_module(|store| memory.data_ptr(store) as usize))
+    }
     pub fn read_memory(
         &self,
         memory: RustOpaque<Memory>,
@@ -565,6 +710,15 @@ type WasmFunction =
 pub struct CompiledModule(pub RustOpaque<Arc<std::sync::Mutex<Module>>>);
 
 impl CompiledModule {
+    pub fn create_shared_memory(
+        &self,
+        memory_type: MemoryTy,
+    ) -> Result<SyncReturn<WasmitSharedMemory>> {
+        let module = self.0.lock().unwrap();
+        let memory = SharedMemory::new(module.engine(), memory_type.to_memory_type()?)?;
+        Ok(SyncReturn(memory.into()))
+    }
+
     pub fn get_module_imports(&self) -> SyncReturn<Vec<ModuleImportDesc>> {
         SyncReturn(
             self.0
@@ -614,4 +768,516 @@ pub fn wasm_features_for_config(config: ModuleConfig) -> SyncReturn<WasmFeatures
 
 pub fn wasm_runtime_features() -> SyncReturn<WasmRuntimeFeatures> {
     SyncReturn(WasmRuntimeFeatures::default())
+}
+
+/// Result of [SharedMemory.atomicWait32] and [SharedMemory.atomicWait64]
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+pub enum SharedMemoryWaitResult {
+    /// Indicates that a `wait` completed by being awoken by a different thread.
+    /// This means the thread went to sleep and didn't time out.
+    Ok = 0,
+    /// Indicates that `wait` did not complete and instead returned due to the
+    /// value in memory not matching the expected value.
+    Mismatch = 1,
+    /// Indicates that `wait` completed with a timeout, meaning that the
+    /// original value matched as expected but nothing ever called `notify`.
+    TimedOut = 2,
+}
+
+impl From<WaitResult> for SharedMemoryWaitResult {
+    fn from(result: WaitResult) -> Self {
+        match result {
+            WaitResult::Ok => SharedMemoryWaitResult::Ok,
+            WaitResult::Mismatch => SharedMemoryWaitResult::Mismatch,
+            WaitResult::TimedOut => SharedMemoryWaitResult::TimedOut,
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct WasmitSharedMemory(pub RustOpaque<RwLock<SharedMemory>>);
+
+impl From<SharedMemory> for WasmitSharedMemory {
+    fn from(memory: SharedMemory) -> Self {
+        WasmitSharedMemory(RustOpaque::new(RwLock::new(memory)))
+    }
+}
+
+impl WasmitSharedMemory {
+    pub fn ty(&self) -> SyncReturn<MemoryTy> {
+        SyncReturn((&self.0.read().unwrap().ty()).into())
+    }
+    pub fn size(&self) -> SyncReturn<u64> {
+        SyncReturn(self.0.read().unwrap().size())
+    }
+    pub fn data_size(&self) -> SyncReturn<usize> {
+        SyncReturn(self.0.read().unwrap().data_size())
+    }
+    pub fn data_pointer(&self) -> SyncReturn<usize> {
+        SyncReturn(self.0.read().unwrap().data().as_ptr() as usize)
+    }
+    pub fn grow(&self, delta: u64) -> Result<SyncReturn<u64>> {
+        Ok(SyncReturn(self.0.read().unwrap().grow(delta)?))
+    }
+    // pub fn atomic_i8(&self) -> crate::atomics::Ati8 {
+    //     crate::atomics::Ati8(self.0.read().unwrap().data().as_ptr() as usize)
+    // }
+
+    pub fn atomics(&self) -> Atomics {
+        Atomics(self.0.read().unwrap().data().as_ptr() as usize)
+    }
+    pub fn atomic_notify(&self, addr: u64, count: u32) -> Result<SyncReturn<u32>> {
+        Ok(SyncReturn(
+            self.0.read().unwrap().atomic_notify(addr, count)?,
+        ))
+    }
+
+    /// Equivalent of the WebAssembly `memory.atomic.wait32` instruction for
+    /// this shared memory.
+    ///
+    /// This method allows embedders to block the current thread until notified
+    /// via the `memory.atomic.notify` instruction or the
+    /// [`SharedMemory::atomic_notify`] method, enabling synchronization with
+    /// the wasm guest as desired.
+    ///
+    /// The `expected` argument is the expected 32-bit value to be stored at
+    /// the byte address `addr` specified. The `addr` specified is an index
+    /// into this linear memory.
+    ///
+    /// The optional `timeout` argument is the point in time after which the
+    /// calling thread is guaranteed to be woken up. Blocking will not occur
+    /// past this point.
+    ///
+    /// This function returns one of three possible values:
+    ///
+    /// * `WaitResult::Ok` - this function, loaded the value at `addr`, found
+    ///   it was equal to `expected`, and then blocked (all as one atomic
+    ///   operation). The thread was then awoken with a `memory.atomic.notify`
+    ///   instruction or the [`SharedMemory::atomic_notify`] method.
+    /// * `WaitResult::Mismatch` - the value at `addr` was loaded but was not
+    ///   equal to `expected` so the thread did not block and immediately
+    ///   returned.
+    /// * `WaitResult::TimedOut` - all the steps of `Ok` happened, except this
+    ///   thread was woken up due to a timeout.
+    ///
+    /// This function will not return due to spurious wakeups.
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if `addr` is not within bounds or
+    /// not aligned to a 4-byte boundary.
+    pub fn atomic_wait32(
+        &self,
+        addr: u64,
+        expected: u32,
+        // TODO: timeout: Option<Instant>,
+    ) -> Result<SyncReturn<SharedMemoryWaitResult>> {
+        Ok(SyncReturn(
+            self.0
+                .read()
+                .unwrap()
+                .atomic_wait32(addr, expected, None)?
+                .into(),
+        ))
+    }
+
+    /// Equivalent of the WebAssembly `memory.atomic.wait64` instruction for
+    /// this shared memory.
+    ///
+    /// For more information see [`SharedMemory::atomic_wait32`].
+    ///
+    /// # Errors
+    ///
+    /// Returns the same error as [`SharedMemory::atomic_wait32`] except that
+    /// the specified address must be 8-byte aligned instead of 4-byte aligned.
+    pub fn atomic_wait64(
+        &self,
+        addr: u64,
+        expected: u64,
+        // TODO: timeout: Option<Instant>,
+    ) -> Result<SyncReturn<SharedMemoryWaitResult>> {
+        Ok(SyncReturn(
+            self.0
+                .read()
+                .unwrap()
+                .atomic_wait64(addr, expected, None)?
+                .into(),
+        ))
+    }
+}
+
+impl Atomics {
+    /// Adds the provided value to the existing value at the specified index of the array. Returns the old value at that index.
+    pub fn add(&self, offset: usize, kind: AtomicKind, val: i64, order: AtomicOrdering) -> i64 {
+        unsafe {
+            match kind {
+                AtomicKind::I32 => Ati32(self.0)
+                    .add(offset, val.try_into().unwrap(), order)
+                    .into(),
+                AtomicKind::U32 => Atu32(self.0)
+                    .add(offset, val.try_into().unwrap(), order)
+                    .into(),
+                AtomicKind::I64 => Ati64(self.0).add(offset, val, order).into(),
+                AtomicKind::U64 => Atu64(self.0)
+                    .add(offset, val.try_into().unwrap(), order)
+                    .try_into()
+                    .unwrap(),
+                AtomicKind::I8 => Ati8(self.0)
+                    .add(offset, val.try_into().unwrap(), order)
+                    .into(),
+                AtomicKind::U8 => Atu8(self.0)
+                    .add(offset, val.try_into().unwrap(), order)
+                    .into(),
+                AtomicKind::I16 => Ati16(self.0)
+                    .add(offset, val.try_into().unwrap(), order)
+                    .into(),
+                AtomicKind::U16 => Atu16(self.0)
+                    .add(offset, val.try_into().unwrap(), order)
+                    .into(),
+            }
+        }
+    }
+
+    /// Returns the value at the specified index of the array.
+    pub fn load(&self, offset: usize, kind: AtomicKind, order: AtomicOrdering) -> i64 {
+        unsafe {
+            match kind {
+                AtomicKind::I32 => Ati32(self.0).load(offset, order).into(),
+                AtomicKind::U32 => Atu32(self.0).load(offset, order).into(),
+                AtomicKind::I64 => Ati64(self.0).load(offset, order).into(),
+                AtomicKind::U64 => Atu64(self.0).load(offset, order).try_into().unwrap(),
+                AtomicKind::I8 => Ati8(self.0).load(offset, order).into(),
+                AtomicKind::U8 => Atu8(self.0).load(offset, order).into(),
+                AtomicKind::I16 => Ati16(self.0).load(offset, order).into(),
+                AtomicKind::U16 => Atu16(self.0).load(offset, order).into(),
+            }
+        }
+    }
+
+    /// Stores a value at the specified index of the array. Returns the value.
+    pub fn store(&self, offset: usize, kind: AtomicKind, val: i64, order: AtomicOrdering) {
+        unsafe {
+            match kind {
+                AtomicKind::I32 => Ati32(self.0).store(offset, val.try_into().unwrap(), order),
+                AtomicKind::U32 => Atu32(self.0).store(offset, val.try_into().unwrap(), order),
+                AtomicKind::I64 => Ati64(self.0).store(offset, val, order),
+                AtomicKind::U64 => Atu64(self.0)
+                    .store(offset, val.try_into().unwrap(), order)
+                    .try_into()
+                    .unwrap(),
+                AtomicKind::I8 => Ati8(self.0).store(offset, val.try_into().unwrap(), order),
+                AtomicKind::U8 => Atu8(self.0).store(offset, val.try_into().unwrap(), order),
+                AtomicKind::I16 => Ati16(self.0).store(offset, val.try_into().unwrap(), order),
+                AtomicKind::U16 => Atu16(self.0).store(offset, val.try_into().unwrap(), order),
+            }
+        }
+    }
+
+    /// Stores a value at the specified index of the array. Returns the old value.
+    pub fn swap(&self, offset: usize, kind: AtomicKind, val: i64, order: AtomicOrdering) -> i64 {
+        unsafe {
+            match kind {
+                AtomicKind::I32 => Ati32(self.0)
+                    .swap(offset, val.try_into().unwrap(), order)
+                    .into(),
+                AtomicKind::U32 => Atu32(self.0)
+                    .swap(offset, val.try_into().unwrap(), order)
+                    .into(),
+                AtomicKind::I64 => Ati64(self.0).swap(offset, val, order).into(),
+                AtomicKind::U64 => Atu64(self.0)
+                    .swap(offset, val.try_into().unwrap(), order)
+                    .try_into()
+                    .unwrap(),
+                AtomicKind::I8 => Ati8(self.0)
+                    .swap(offset, val.try_into().unwrap(), order)
+                    .into(),
+                AtomicKind::U8 => Atu8(self.0)
+                    .swap(offset, val.try_into().unwrap(), order)
+                    .into(),
+                AtomicKind::I16 => Ati16(self.0)
+                    .swap(offset, val.try_into().unwrap(), order)
+                    .into(),
+                AtomicKind::U16 => Atu16(self.0)
+                    .swap(offset, val.try_into().unwrap(), order)
+                    .into(),
+            }
+        }
+    }
+
+    /// Stores a value at the specified index of the array, if it equals a value. Returns the old value.
+    pub fn compare_exchange(
+        &self,
+        offset: usize,
+        kind: AtomicKind,
+        current: i64,
+        new_value: i64,
+        success: AtomicOrdering,
+        failure: AtomicOrdering,
+    ) -> CompareExchangeResult {
+        unsafe {
+            match kind {
+                AtomicKind::I32 => Ati32(self.0)
+                    .compare_exchange(
+                        offset,
+                        current.try_into().unwrap(),
+                        new_value.try_into().unwrap(),
+                        success,
+                        failure,
+                    )
+                    .into(),
+                AtomicKind::U32 => Atu32(self.0)
+                    .compare_exchange(
+                        offset,
+                        current.try_into().unwrap(),
+                        new_value.try_into().unwrap(),
+                        success,
+                        failure,
+                    )
+                    .into(),
+                AtomicKind::I64 => Ati64(self.0)
+                    .compare_exchange(offset, current, new_value, success, failure)
+                    .into(),
+                AtomicKind::U64 => Atu64(self.0)
+                    .compare_exchange(
+                        offset,
+                        current.try_into().unwrap(),
+                        new_value.try_into().unwrap(),
+                        success,
+                        failure,
+                    )
+                    .try_into()
+                    .unwrap(),
+                AtomicKind::I8 => Ati8(self.0)
+                    .compare_exchange(
+                        offset,
+                        current.try_into().unwrap(),
+                        new_value.try_into().unwrap(),
+                        success,
+                        failure,
+                    )
+                    .into(),
+                AtomicKind::U8 => Atu8(self.0)
+                    .compare_exchange(
+                        offset,
+                        current.try_into().unwrap(),
+                        new_value.try_into().unwrap(),
+                        success,
+                        failure,
+                    )
+                    .into(),
+                AtomicKind::I16 => Ati16(self.0)
+                    .compare_exchange(
+                        offset,
+                        current.try_into().unwrap(),
+                        new_value.try_into().unwrap(),
+                        success,
+                        failure,
+                    )
+                    .into(),
+                AtomicKind::U16 => Atu16(self.0)
+                    .compare_exchange(
+                        offset,
+                        current.try_into().unwrap(),
+                        new_value.try_into().unwrap(),
+                        success,
+                        failure,
+                    )
+                    .into(),
+            }
+        }
+    }
+
+    /// Subtracts a value at the specified index of the array. Returns the old value at that index.
+    pub fn sub(&self, offset: usize, kind: AtomicKind, val: i64, order: AtomicOrdering) -> i64 {
+        unsafe {
+            match kind {
+                AtomicKind::I32 => Ati32(self.0)
+                    .sub(offset, val.try_into().unwrap(), order)
+                    .into(),
+                AtomicKind::U32 => Atu32(self.0)
+                    .sub(offset, val.try_into().unwrap(), order)
+                    .into(),
+                AtomicKind::I64 => Ati64(self.0).sub(offset, val, order).into(),
+                AtomicKind::U64 => Atu64(self.0)
+                    .sub(offset, val.try_into().unwrap(), order)
+                    .try_into()
+                    .unwrap(),
+                AtomicKind::I8 => Ati8(self.0)
+                    .sub(offset, val.try_into().unwrap(), order)
+                    .into(),
+                AtomicKind::U8 => Atu8(self.0)
+                    .sub(offset, val.try_into().unwrap(), order)
+                    .into(),
+                AtomicKind::I16 => Ati16(self.0)
+                    .sub(offset, val.try_into().unwrap(), order)
+                    .into(),
+                AtomicKind::U16 => Atu16(self.0)
+                    .sub(offset, val.try_into().unwrap(), order)
+                    .into(),
+            }
+        }
+    }
+
+    /// Computes a bitwise AND on the value at the specified index of the array with the provided value. Returns the old value at that index.
+    pub fn and(&self, offset: usize, kind: AtomicKind, val: i64, order: AtomicOrdering) -> i64 {
+        unsafe {
+            match kind {
+                AtomicKind::I32 => Ati32(self.0)
+                    .and(offset, val.try_into().unwrap(), order)
+                    .into(),
+                AtomicKind::U32 => Atu32(self.0)
+                    .and(offset, val.try_into().unwrap(), order)
+                    .into(),
+                AtomicKind::I64 => Ati64(self.0).and(offset, val, order).into(),
+                AtomicKind::U64 => Atu64(self.0)
+                    .and(offset, val.try_into().unwrap(), order)
+                    .try_into()
+                    .unwrap(),
+                AtomicKind::I8 => Ati8(self.0)
+                    .and(offset, val.try_into().unwrap(), order)
+                    .into(),
+                AtomicKind::U8 => Atu8(self.0)
+                    .and(offset, val.try_into().unwrap(), order)
+                    .into(),
+                AtomicKind::I16 => Ati16(self.0)
+                    .and(offset, val.try_into().unwrap(), order)
+                    .into(),
+                AtomicKind::U16 => Atu16(self.0)
+                    .and(offset, val.try_into().unwrap(), order)
+                    .into(),
+            }
+        }
+    }
+
+    /// Computes a bitwise OR on the value at the specified index of the array with the provided value. Returns the old value at that index.
+    pub fn or(&self, offset: usize, kind: AtomicKind, val: i64, order: AtomicOrdering) -> i64 {
+        unsafe {
+            match kind {
+                AtomicKind::I32 => Ati32(self.0)
+                    .or(offset, val.try_into().unwrap(), order)
+                    .into(),
+                AtomicKind::U32 => Atu32(self.0)
+                    .or(offset, val.try_into().unwrap(), order)
+                    .into(),
+                AtomicKind::I64 => Ati64(self.0).or(offset, val, order).into(),
+                AtomicKind::U64 => Atu64(self.0)
+                    .or(offset, val.try_into().unwrap(), order)
+                    .try_into()
+                    .unwrap(),
+                AtomicKind::I8 => Ati8(self.0)
+                    .or(offset, val.try_into().unwrap(), order)
+                    .into(),
+                AtomicKind::U8 => Atu8(self.0)
+                    .or(offset, val.try_into().unwrap(), order)
+                    .into(),
+                AtomicKind::I16 => Ati16(self.0)
+                    .or(offset, val.try_into().unwrap(), order)
+                    .into(),
+                AtomicKind::U16 => Atu16(self.0)
+                    .or(offset, val.try_into().unwrap(), order)
+                    .into(),
+            }
+        }
+    }
+
+    /// Computes a bitwise XOR on the value at the specified index of the array with the provided value. Returns the old value at that index.
+    pub fn xor(&self, offset: usize, kind: AtomicKind, val: i64, order: AtomicOrdering) -> i64 {
+        unsafe {
+            match kind {
+                AtomicKind::I32 => Ati32(self.0)
+                    .xor(offset, val.try_into().unwrap(), order)
+                    .into(),
+                AtomicKind::U32 => Atu32(self.0)
+                    .xor(offset, val.try_into().unwrap(), order)
+                    .into(),
+                AtomicKind::I64 => Ati64(self.0).xor(offset, val, order).into(),
+                AtomicKind::U64 => Atu64(self.0)
+                    .xor(offset, val.try_into().unwrap(), order)
+                    .try_into()
+                    .unwrap(),
+                AtomicKind::I8 => Ati8(self.0)
+                    .xor(offset, val.try_into().unwrap(), order)
+                    .into(),
+                AtomicKind::U8 => Atu8(self.0)
+                    .xor(offset, val.try_into().unwrap(), order)
+                    .into(),
+                AtomicKind::I16 => Ati16(self.0)
+                    .xor(offset, val.try_into().unwrap(), order)
+                    .into(),
+                AtomicKind::U16 => Atu16(self.0)
+                    .xor(offset, val.try_into().unwrap(), order)
+                    .into(),
+            }
+        }
+    }
+}
+
+pub struct CompareExchangeResult {
+    pub success: bool,
+    pub value: i64,
+}
+
+impl<T: Num> From<std::result::Result<T, T>> for CompareExchangeResult {
+    fn from(result: std::result::Result<T, T>) -> Self {
+        Self {
+            success: result.is_ok(),
+            value: if result.is_ok() {
+                result.unwrap().to_i64()
+            } else {
+                result.unwrap_err().to_i64()
+            },
+        }
+    }
+}
+
+trait Num: std::fmt::Debug {
+    fn to_i64(self) -> i64;
+}
+
+impl Num for i32 {
+    fn to_i64(self) -> i64 {
+        self as i64
+    }
+}
+
+impl Num for u32 {
+    fn to_i64(self) -> i64 {
+        self as i64
+    }
+}
+
+impl Num for i8 {
+    fn to_i64(self) -> i64 {
+        self as i64
+    }
+}
+
+impl Num for u8 {
+    fn to_i64(self) -> i64 {
+        self as i64
+    }
+}
+
+impl Num for i16 {
+    fn to_i64(self) -> i64 {
+        self as i64
+    }
+}
+
+impl Num for u16 {
+    fn to_i64(self) -> i64 {
+        self as i64
+    }
+}
+
+impl Num for i64 {
+    fn to_i64(self) -> i64 {
+        self
+    }
+}
+
+impl Num for u64 {
+    fn to_i64(self) -> i64 {
+        self as i64
+    }
 }

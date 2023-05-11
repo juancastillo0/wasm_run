@@ -446,6 +446,7 @@ pub enum ExternalValue {
     Global(RustOpaque<wasmtime::Global>),
     Table(RustOpaque<wasmtime::Table>),
     Memory(RustOpaque<wasmtime::Memory>),
+    SharedMemory(crate::api::WasmitSharedMemory),
 }
 
 #[cfg(not(feature = "wasmtime"))]
@@ -455,6 +456,7 @@ pub enum ExternalValue {
     Global(RustOpaque<Global>),
     Table(RustOpaque<Table>),
     Memory(RustOpaque<Memory>),
+    SharedMemory(crate::api::WasmitSharedMemory),
 }
 
 impl Default for wire_ExternalValue {
@@ -483,8 +485,7 @@ impl From<wasmtime::Extern> for ExternalValue {
             wasmtime::Extern::Global(g) => ExternalValue::Global(RustOpaque::new(g)),
             wasmtime::Extern::Table(t) => ExternalValue::Table(RustOpaque::new(t)),
             wasmtime::Extern::Memory(m) => ExternalValue::Memory(RustOpaque::new(m)),
-            // TODO: ExternalValue::Memory(RustOpaque::new(m))
-            wasmtime::Extern::SharedMemory(_) => todo!(),
+            wasmtime::Extern::SharedMemory(m) => ExternalValue::SharedMemory(m.into()),
         }
     }
 }
@@ -538,6 +539,9 @@ impl From<&ExternalValue> for wasmtime::Extern {
             ExternalValue::Global(g) => wasmtime::Extern::Global(**g),
             ExternalValue::Table(t) => wasmtime::Extern::Table(**t),
             ExternalValue::Memory(m) => wasmtime::Extern::Memory(**m),
+            ExternalValue::SharedMemory(m) => {
+                wasmtime::Extern::SharedMemory(m.0.read().unwrap().clone())
+            }
         }
     }
 }
@@ -573,8 +577,9 @@ impl MemoryTy {
         if self.shared {
             return Ok(wasmtime::MemoryType::shared(
                 self.minimum_pages,
-                self.maximum_pages
-                    .ok_or("maximum_pages is required for shared memories")?,
+                self.maximum_pages.ok_or(anyhow::anyhow!(
+                    "maximum_pages is required for shared memories"
+                ))?,
             ));
         }
         Ok(wasmtime::MemoryType::new(

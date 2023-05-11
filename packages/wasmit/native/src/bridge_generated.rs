@@ -52,6 +52,7 @@ use crate::types::WasmVal;
 
 fn wire_module_builder_impl(
     module: impl Wire2Api<CompiledModule> + UnwindSafe,
+    num_threads: impl Wire2Api<Option<usize>> + UnwindSafe,
     wasi_config: impl Wire2Api<Option<WasiConfigNative>> + UnwindSafe,
 ) -> support::WireSyncReturn {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
@@ -62,8 +63,9 @@ fn wire_module_builder_impl(
         },
         move || {
             let api_module = module.wire2api();
+            let api_num_threads = num_threads.wire2api();
             let api_wasi_config = wasi_config.wire2api();
-            module_builder(api_module, api_wasi_config)
+            module_builder(api_module, api_num_threads, api_wasi_config)
         },
     )
 }
@@ -275,6 +277,28 @@ fn wire_call_function_handle__method__WasmitModuleId_impl(
             let api_func = func.wire2api();
             let api_args = args.wire2api();
             move |task_callback| WasmitModuleId::call_function_handle(&api_that, api_func, api_args)
+        },
+    )
+}
+fn wire_call_function_handle_parallel__method__WasmitModuleId_impl(
+    port_: MessagePort,
+    that: impl Wire2Api<WasmitModuleId> + UnwindSafe,
+    func_name: impl Wire2Api<String> + UnwindSafe,
+    args: impl Wire2Api<Vec<WasmVal>> + UnwindSafe,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap(
+        WrapInfo {
+            debug_name: "call_function_handle_parallel__method__WasmitModuleId",
+            port: Some(port_),
+            mode: FfiCallMode::Normal,
+        },
+        move || {
+            let api_that = that.wire2api();
+            let api_func_name = func_name.wire2api();
+            let api_args = args.wire2api();
+            move |task_callback| {
+                WasmitModuleId::call_function_handle_parallel(&api_that, api_func_name, api_args)
+            }
         },
     )
 }
@@ -1358,6 +1382,7 @@ impl support::IntoDart for ExternalValue {
             Self::Global(field0) => vec![1.into_dart(), field0.into_dart()],
             Self::Table(field0) => vec![2.into_dart(), field0.into_dart()],
             Self::Memory(field0) => vec![3.into_dart(), field0.into_dart()],
+            Self::SharedMemory(field0) => vec![4.into_dart(), field0.into_dart()],
         }
         .into_dart()
     }
@@ -1485,6 +1510,7 @@ impl support::IntoDart for WasmFeatures {
             self.component_model.into_dart(),
             self.memory_control.into_dart(),
             self.garbage_collection.into_dart(),
+            self.type_reflection.into_dart(),
             self.wasi_features.into_dart(),
         ]
         .into_dart()
@@ -1572,8 +1598,12 @@ mod web {
     // Section: wire functions
 
     #[wasm_bindgen]
-    pub fn wire_module_builder(module: JsValue, wasi_config: JsValue) -> support::WireSyncReturn {
-        wire_module_builder_impl(module, wasi_config)
+    pub fn wire_module_builder(
+        module: JsValue,
+        num_threads: JsValue,
+        wasi_config: JsValue,
+    ) -> support::WireSyncReturn {
+        wire_module_builder_impl(module, num_threads, wasi_config)
     }
 
     #[wasm_bindgen]
@@ -1654,6 +1684,18 @@ mod web {
         args: JsValue,
     ) {
         wire_call_function_handle__method__WasmitModuleId_impl(port_, that, func, args)
+    }
+
+    #[wasm_bindgen]
+    pub fn wire_call_function_handle_parallel__method__WasmitModuleId(
+        port_: MessagePort,
+        that: JsValue,
+        func_name: String,
+        args: JsValue,
+    ) {
+        wire_call_function_handle_parallel__method__WasmitModuleId_impl(
+            port_, that, func_name, args,
+        )
     }
 
     #[wasm_bindgen]
@@ -2222,6 +2264,7 @@ mod web {
                 1 => ExternalValue::Global(self_.get(1).wire2api()),
                 2 => ExternalValue::Table(self_.get(1).wire2api()),
                 3 => ExternalValue::Memory(self_.get(1).wire2api()),
+                4 => ExternalValue::SharedMemory(self_.get(1).wire2api()),
                 _ => unreachable!(),
             }
         }
@@ -2712,9 +2755,10 @@ mod io {
     #[no_mangle]
     pub extern "C" fn wire_module_builder(
         module: *mut wire_CompiledModule,
+        num_threads: *mut usize,
         wasi_config: *mut wire_WasiConfigNative,
     ) -> support::WireSyncReturn {
-        wire_module_builder_impl(module, wasi_config)
+        wire_module_builder_impl(module, num_threads, wasi_config)
     }
 
     #[no_mangle]
@@ -2815,6 +2859,18 @@ mod io {
         args: *mut wire_list_wasm_val,
     ) {
         wire_call_function_handle__method__WasmitModuleId_impl(port_, that, func, args)
+    }
+
+    #[no_mangle]
+    pub extern "C" fn wire_call_function_handle_parallel__method__WasmitModuleId(
+        port_: i64,
+        that: *mut wire_WasmitModuleId,
+        func_name: *mut wire_uint_8_list,
+        args: *mut wire_list_wasm_val,
+    ) {
+        wire_call_function_handle_parallel__method__WasmitModuleId_impl(
+            port_, that, func_name, args,
+        )
     }
 
     #[no_mangle]
@@ -3708,6 +3764,11 @@ mod io {
                     let ans = support::box_from_leak_ptr(ans.Memory);
                     ExternalValue::Memory(ans.field0.wire2api())
                 },
+                4 => unsafe {
+                    let ans = support::box_from_leak_ptr(self.kind);
+                    let ans = support::box_from_leak_ptr(ans.SharedMemory);
+                    ExternalValue::SharedMemory(ans.field0.wire2api())
+                },
                 _ => unreachable!(),
             }
         }
@@ -4171,6 +4232,7 @@ mod io {
         Global: *mut wire_ExternalValue_Global,
         Table: *mut wire_ExternalValue_Table,
         Memory: *mut wire_ExternalValue_Memory,
+        SharedMemory: *mut wire_ExternalValue_SharedMemory,
     }
 
     #[repr(C)]
@@ -4195,6 +4257,12 @@ mod io {
     #[derive(Clone)]
     pub struct wire_ExternalValue_Memory {
         field0: wire_Memory,
+    }
+
+    #[repr(C)]
+    #[derive(Clone)]
+    pub struct wire_ExternalValue_SharedMemory {
+        field0: *mut wire_WasmitSharedMemory,
     }
 
     #[repr(C)]
@@ -4397,6 +4465,15 @@ mod io {
         support::new_leak_box_ptr(ExternalValueKind {
             Memory: support::new_leak_box_ptr(wire_ExternalValue_Memory {
                 field0: wire_Memory::new_with_null_ptr(),
+            }),
+        })
+    }
+
+    #[no_mangle]
+    pub extern "C" fn inflate_ExternalValue_SharedMemory() -> *mut ExternalValueKind {
+        support::new_leak_box_ptr(ExternalValueKind {
+            SharedMemory: support::new_leak_box_ptr(wire_ExternalValue_SharedMemory {
+                field0: core::ptr::null_mut(),
             }),
         })
     }

@@ -161,7 +161,7 @@ class _WasmModule extends WasmModule {
   }
 
   @override
-  WasmInstanceBuilder builder({WasiConfig? wasiConfig}) {
+  WasmInstanceBuilder builder({WasiConfig? wasiConfig, int? numThreads}) {
     _WASI? wasi;
     if (wasiConfig != null) {
       final stdout = wasiConfig.captureStdout ? WasiStdio() : null;
@@ -364,6 +364,14 @@ class _Instance extends WasmInstance {
         logWasiNoStartOrInitialize();
       }
     }
+  }
+
+  @override
+  Future<List<List<Object?>>> runParallel(
+    WasmFunction function,
+    List<List<Object?>> argsLists,
+  ) {
+    throw UnimplementedError('runParallel is not supported on web');
   }
 
   @override

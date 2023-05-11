@@ -145,11 +145,24 @@ typedef struct wire_ExternalValue_Memory {
   struct wire_Memory field0;
 } wire_ExternalValue_Memory;
 
+typedef struct wire_RwLockSharedMemory {
+  const void *ptr;
+} wire_RwLockSharedMemory;
+
+typedef struct wire_WasmitSharedMemory {
+  struct wire_RwLockSharedMemory field0;
+} wire_WasmitSharedMemory;
+
+typedef struct wire_ExternalValue_SharedMemory {
+  struct wire_WasmitSharedMemory *field0;
+} wire_ExternalValue_SharedMemory;
+
 typedef union ExternalValueKind {
   struct wire_ExternalValue_Func *Func;
   struct wire_ExternalValue_Global *Global;
   struct wire_ExternalValue_Table *Table;
   struct wire_ExternalValue_Memory *Memory;
+  struct wire_ExternalValue_SharedMemory *SharedMemory;
 } ExternalValueKind;
 
 typedef struct wire_ExternalValue {
@@ -232,14 +245,6 @@ typedef struct wire_TableArgs {
   uint32_t *max;
 } wire_TableArgs;
 
-typedef struct wire_RwLockSharedMemory {
-  const void *ptr;
-} wire_RwLockSharedMemory;
-
-typedef struct wire_WasmitSharedMemory {
-  struct wire_RwLockSharedMemory field0;
-} wire_WasmitSharedMemory;
-
 typedef struct wire_Atomics {
   uintptr_t field0;
 } wire_Atomics;
@@ -255,6 +260,7 @@ uintptr_t new_dart_opaque(Dart_Handle handle);
 intptr_t init_frb_dart_api_dl(void *obj);
 
 WireSyncReturn wire_module_builder(struct wire_CompiledModule *module,
+                                   uintptr_t *num_threads,
                                    struct wire_WasiConfigNative *wasi_config);
 
 void wire_parse_wat_format(int64_t port_, struct wire_uint_8_list *wat);
@@ -293,6 +299,11 @@ void wire_call_function_handle__method__WasmitModuleId(int64_t port_,
                                                        struct wire_WasmitModuleId *that,
                                                        struct wire_WFunc func,
                                                        struct wire_list_wasm_val *args);
+
+void wire_call_function_handle_parallel__method__WasmitModuleId(int64_t port_,
+                                                                struct wire_WasmitModuleId *that,
+                                                                struct wire_uint_8_list *func_name,
+                                                                struct wire_list_wasm_val *args);
 
 WireSyncReturn wire_get_function_type__method__WasmitModuleId(struct wire_WasmitModuleId *that,
                                                               struct wire_WFunc func);
@@ -574,6 +585,8 @@ union ExternalValueKind *inflate_ExternalValue_Table(void);
 
 union ExternalValueKind *inflate_ExternalValue_Memory(void);
 
+union ExternalValueKind *inflate_ExternalValue_SharedMemory(void);
+
 union WasmValKind *inflate_WasmVal_i32(void);
 
 union WasmValKind *inflate_WasmVal_i64(void);
@@ -606,6 +619,7 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) wire_dispose__method__WasmitModuleId);
     dummy_var ^= ((int64_t) (void*) wire_call_function_handle_sync__method__WasmitModuleId);
     dummy_var ^= ((int64_t) (void*) wire_call_function_handle__method__WasmitModuleId);
+    dummy_var ^= ((int64_t) (void*) wire_call_function_handle_parallel__method__WasmitModuleId);
     dummy_var ^= ((int64_t) (void*) wire_get_function_type__method__WasmitModuleId);
     dummy_var ^= ((int64_t) (void*) wire_create_function__method__WasmitModuleId);
     dummy_var ^= ((int64_t) (void*) wire_create_memory__method__WasmitModuleId);
@@ -698,6 +712,7 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) inflate_ExternalValue_Global);
     dummy_var ^= ((int64_t) (void*) inflate_ExternalValue_Table);
     dummy_var ^= ((int64_t) (void*) inflate_ExternalValue_Memory);
+    dummy_var ^= ((int64_t) (void*) inflate_ExternalValue_SharedMemory);
     dummy_var ^= ((int64_t) (void*) inflate_WasmVal_i32);
     dummy_var ^= ((int64_t) (void*) inflate_WasmVal_i64);
     dummy_var ^= ((int64_t) (void*) inflate_WasmVal_f32);

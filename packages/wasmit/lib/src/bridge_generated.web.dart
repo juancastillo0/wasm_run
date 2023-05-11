@@ -182,6 +182,9 @@ class WasmitDartPlatform extends FlutterRustBridgeBase<WasmitDartWire>
     if (raw is ExternalValue_Memory) {
       return [3, api2wire_Memory(raw.field0)];
     }
+    if (raw is ExternalValue_SharedMemory) {
+      return [4, api2wire_box_autoadd_wasmit_shared_memory(raw.field0)];
+    }
 
     throw Exception('unreachable');
   }
@@ -457,7 +460,7 @@ class WasmitDartWasmModule implements WasmModule {
   external Object /* Promise */ call([String? moduleName]);
   external WasmitDartWasmModule bind(dynamic thisArg, String moduleName);
   external dynamic /* List<dynamic> */ wire_module_builder(
-      List<dynamic> module, List<dynamic>? wasi_config);
+      List<dynamic> module, int? num_threads, List<dynamic>? wasi_config);
 
   external dynamic /* void */ wire_parse_wat_format(
       NativePortType port_, String wat);
@@ -500,6 +503,13 @@ class WasmitDartWasmModule implements WasmModule {
       List<dynamic> that,
       Object func,
       List<dynamic> args);
+
+  external dynamic /* void */
+      wire_call_function_handle_parallel__method__WasmitModuleId(
+          NativePortType port_,
+          List<dynamic> that,
+          String func_name,
+          List<dynamic> args);
 
   external dynamic /* List<dynamic> */
       wire_get_function_type__method__WasmitModuleId(
@@ -691,8 +701,8 @@ class WasmitDartWire
       : super(WasmModule.cast<WasmitDartWasmModule>(module));
 
   dynamic /* List<dynamic> */ wire_module_builder(
-          List<dynamic> module, List<dynamic>? wasi_config) =>
-      wasmModule.wire_module_builder(module, wasi_config);
+          List<dynamic> module, int? num_threads, List<dynamic>? wasi_config) =>
+      wasmModule.wire_module_builder(module, num_threads, wasi_config);
 
   void wire_parse_wat_format(NativePortType port_, String wat) =>
       wasmModule.wire_parse_wat_format(port_, wat);
@@ -746,6 +756,14 @@ class WasmitDartWire
           List<dynamic> that, Object func, List<dynamic> args) =>
       wasmModule.wire_call_function_handle__method__WasmitModuleId(
           port_, that, func, args);
+
+  void wire_call_function_handle_parallel__method__WasmitModuleId(
+          NativePortType port_,
+          List<dynamic> that,
+          String func_name,
+          List<dynamic> args) =>
+      wasmModule.wire_call_function_handle_parallel__method__WasmitModuleId(
+          port_, that, func_name, args);
 
   dynamic /* List<dynamic> */ wire_get_function_type__method__WasmitModuleId(
           List<dynamic> that, Object func) =>

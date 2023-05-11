@@ -9,8 +9,8 @@ use flutter_rust_bridge::{
 };
 use once_cell::sync::Lazy;
 use std::io::Write;
-pub use std::sync::RwLock;
-use std::{collections::HashMap, fs, sync::Arc};
+pub use std::sync::{Mutex, RwLock};
+use std::{cell::RefCell, collections::HashMap, fs, sync::Arc};
 use wasi_common::{file::FileCaps, pipe::WritePipe};
 use wasmtime::*;
 pub use wasmtime::{Func, Global, GlobalType, Memory, Module, SharedMemory, Table};
@@ -22,6 +22,8 @@ static ARRAY: Lazy<RwLock<GlobalState>> = Lazy::new(|| RwLock::new(Default::defa
 // TODO: make it module independent
 static CALLER_STACK: Lazy<RwLock<Vec<RwLock<StoreContextMut<'_, StoreState>>>>> =
     Lazy::new(|| RwLock::new(Default::default()));
+
+thread_local!(static STORE: RefCell<Option<WasmiModuleImpl>> = RefCell::new(None));
 
 #[derive(Default)]
 struct GlobalState {
@@ -42,10 +44,12 @@ fn default_val(ty: &ValueType) -> Value {
 }
 
 struct WasmiModuleImpl {
-    module: Arc<std::sync::Mutex<Module>>,
+    module: Arc<Mutex<Module>>,
     linker: Linker<StoreState>,
     store: Store<StoreState>,
     instance: Option<Instance>,
+    threads: Option<Arc<Mutex<Vec<Option<WasmiModuleImpl>>>>>,
+    pool: Option<rayon::ThreadPool>,
 }
 
 // impl Debug for WasmiModuleImpl {
@@ -69,6 +73,7 @@ pub struct WasmitInstanceId(pub u32);
 
 pub fn module_builder(
     module: CompiledModule,
+    num_threads: Option<usize>,
     wasi_config: Option<WasiConfigNative>,
 ) -> Result<SyncReturn<WasmitModuleId>> {
     let guard = module.0.lock().unwrap();
@@ -126,16 +131,51 @@ pub fn module_builder(
     let store = Store::new(
         engine,
         StoreState {
-            wasi_ctx,
+            wasi_ctx: wasi_ctx.clone(),
             stdout: None,
             stderr: None,
         },
     );
+    let m_ = Arc::clone(&module.0);
+    let threads = if let Some(num_threads) = num_threads {
+        if num_threads <= 1 {
+            return Err(anyhow::anyhow!(format!(
+                "num_threads must be greater than 1. received: {num_threads}"
+            )));
+        }
+        let threads_vec: Vec<Option<WasmiModuleImpl>> = (0..num_threads)
+            .map(|_index| {
+                Some(WasmiModuleImpl {
+                    module: m_.clone(),
+                    linker: linker.clone(),
+                    store: Store::new(
+                        engine,
+                        // TODO: test wasi_ctx and stdio in threads
+                        StoreState {
+                            wasi_ctx: wasi_ctx.clone(),
+                            stdout: None,
+                            stderr: None,
+                        },
+                    ),
+                    instance: None,
+                    threads: None,
+                    pool: None,
+                })
+            })
+            .collect();
+
+        Some(Arc::new(Mutex::new(threads_vec)))
+    } else {
+        None
+    };
+
     let module_builder = WasmiModuleImpl {
-        module: Arc::clone(&module.0),
-        linker,
+        module: m_.clone(),
+        linker: linker.clone(),
         store,
         instance: None,
+        pool: None,
+        threads,
     };
     arr.map.insert(id, module_builder);
 
@@ -204,14 +244,63 @@ impl WasmitModuleId {
             .instantiate(&mut module.store, &module.module.lock().unwrap())?;
 
         module.instance = Some(instance);
+        let threads = module.threads.take();
+        if let Some(threads) = threads {
+            let len = {
+                let mut threads_i = threads.lock().unwrap();
+                for thread in threads_i.iter_mut() {
+                    let mut thread = thread.as_mut().unwrap();
+                    let thread_instance = thread
+                        .linker
+                        .instantiate(&mut thread.store, &thread.module.lock().unwrap())?;
+                    thread.instance = Some(thread_instance);
+                }
+                threads_i.len()
+            };
+
+            let pool = rayon::ThreadPoolBuilder::new()
+                .num_threads(len)
+                .start_handler(move |index| {
+                    STORE.with(|cell| {
+                        let t = threads.clone();
+                        let mut threads = t.lock().unwrap();
+                        let mut local_store = cell.borrow_mut();
+                        *local_store = Some(threads[index].take().unwrap());
+                    })
+                })
+                .build()
+                .unwrap();
+            module.pool = Some(pool);
+        }
+
         Ok(WasmitInstanceId(self.0))
     }
+
     pub fn link_imports(&self, imports: Vec<ModuleImport>) -> Result<SyncReturn<()>> {
         let mut arr = ARRAY.write().unwrap();
         let m = arr.map.get_mut(&self.0).unwrap();
-        for import in imports {
+        if m.instance.is_some() {
+            return Err(anyhow::anyhow!("Instance already exists"));
+        }
+        for import in imports.iter() {
             m.linker
                 .define(&mut m.store, &import.module, &import.name, &import.value)?;
+        }
+        if let Some(threads) = m.threads.as_ref() {
+            for thread in &mut threads.lock().unwrap().iter_mut() {
+                let thread = thread.as_mut().unwrap();
+                // TODO: this is probably not necessary, since the linker may be shared
+                // TODO: If the linker is shared, what happens with imports (table, globals)
+                //  that are not shared?
+                for import in imports.iter() {
+                    thread.linker.define(
+                        &mut thread.store,
+                        &import.module,
+                        &import.name,
+                        &import.value,
+                    )?;
+                }
+            }
         }
         Ok(SyncReturn(()))
     }
@@ -262,6 +351,67 @@ impl WasmitModuleId {
             func.call(&mut store, inputs.as_slice(), &mut outputs)?;
             Ok(outputs.into_iter().map(WasmVal::from_val).collect())
         })
+    }
+
+    pub fn call_function_handle_parallel(
+        &self,
+        func_name: String,
+        args: Vec<WasmVal>,
+    ) -> Result<Vec<WasmVal>> {
+        use rayon::prelude::*;
+
+        let mut m = ARRAY.write().unwrap();
+        let module = m.map.get_mut(&self.0).unwrap();
+
+        let func: Func = module
+            .instance
+            .unwrap()
+            .get_func(&mut module.store, &func_name)
+            .unwrap();
+        let num_params = func.ty(&module.store).params().count();
+        if args.len() % num_params != 0 {
+            return Err(anyhow::anyhow!(
+                "Number of arguments must be a multiple of {num_params}",
+            ));
+        }
+
+        if let Some(pool) = module.pool.as_ref() {
+            let args: Vec<Value> = args.into_iter().map(|v| v.to_val()).collect();
+            let result_types: Vec<ValType> = func.ty(&module.store).results().collect();
+            pool.install(|| {
+                let v = args
+                    .par_chunks_exact(num_params)
+                    .map(|inputs| {
+                        STORE.with(|cell| {
+                            let mut c = cell.borrow_mut();
+                            let m = c.as_mut().unwrap();
+
+                            let mut outputs: Vec<Value> = result_types
+                                .clone()
+                                .into_iter()
+                                .map(|t| default_val(&t))
+                                .collect();
+                            let func = m
+                                .instance
+                                .unwrap()
+                                .get_func(&mut m.store, &func_name)
+                                .unwrap();
+                            func.call(&mut m.store, inputs, &mut outputs)?;
+                            Ok(outputs
+                                .into_iter()
+                                .map(WasmVal::from_val)
+                                .collect::<Vec<WasmVal>>())
+                        })
+                    })
+                    .collect::<Result<Vec<Vec<WasmVal>>>>()?
+                    .into_iter()
+                    .flatten()
+                    .collect::<Vec<WasmVal>>();
+                Ok(v)
+            })
+        } else {
+            Err(anyhow::anyhow!("Instance has no thread pool configured"))
+        }
     }
 
     fn with_module_mut<T>(&self, f: impl FnOnce(StoreContextMut<'_, StoreState>) -> T) -> T {
@@ -565,9 +715,8 @@ impl CompiledModule {
         memory_type: MemoryTy,
     ) -> Result<SyncReturn<WasmitSharedMemory>> {
         let module = self.0.lock().unwrap();
-        Ok(SyncReturn(WasmitSharedMemory(RustOpaque::new(RwLock::new(
-            SharedMemory::new(module.engine(), memory_type.to_memory_type()?)?,
-        )))))
+        let memory = SharedMemory::new(module.engine(), memory_type.to_memory_type()?)?;
+        Ok(SyncReturn(memory.into()))
     }
 
     pub fn get_module_imports(&self) -> SyncReturn<Vec<ModuleImportDesc>> {
@@ -645,7 +794,14 @@ impl From<WaitResult> for SharedMemoryWaitResult {
     }
 }
 
+#[derive(Debug)]
 pub struct WasmitSharedMemory(pub RustOpaque<RwLock<SharedMemory>>);
+
+impl From<SharedMemory> for WasmitSharedMemory {
+    fn from(memory: SharedMemory) -> Self {
+        WasmitSharedMemory(RustOpaque::new(RwLock::new(memory)))
+    }
+}
 
 impl WasmitSharedMemory {
     pub fn ty(&self) -> SyncReturn<MemoryTy> {
