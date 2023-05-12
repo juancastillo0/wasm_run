@@ -143,7 +143,7 @@ abstract class WasmitDart {
   Global createGlobalMethodWasmitModuleId(
       {required WasmitModuleId that,
       required WasmVal value,
-      required GlobalMutability mutability,
+      required bool mutable,
       dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kCreateGlobalMethodWasmitModuleIdConstMeta;
@@ -881,35 +881,27 @@ class ExternalValue with _$ExternalValue {
 
 class FuncTy {
   /// The number of function parameters.
-  final List<ValueTy> params;
+  final List<ValueTy> parameters;
 
   /// The ordered and merged parameter and result types of the function type.]
   final List<ValueTy> results;
 
   const FuncTy({
-    required this.params,
+    required this.parameters,
     required this.results,
   });
 }
 
-enum GlobalMutability {
-  /// The value of the global variable is a constant.
-  Const,
-
-  /// The value of the global variable is mutable.
-  Var,
-}
-
 class GlobalTy {
   /// The value type of the global variable.
-  final ValueTy content;
+  final ValueTy value;
 
   /// The mutability of the global variable.
-  final GlobalMutability mutability;
+  final bool mutable;
 
   const GlobalTy({
-    required this.content,
-    required this.mutability,
+    required this.value,
+    required this.mutable,
   });
 }
 
@@ -918,15 +910,15 @@ class MemoryTy {
   final bool shared;
 
   /// The number of initial pages associated with the memory.
-  final int minimumPages;
+  final int minimum;
 
   /// The maximum number of pages this memory can have.
-  final int? maximumPages;
+  final int? maximum;
 
   const MemoryTy({
     required this.shared,
-    required this.minimumPages,
-    this.maximumPages,
+    required this.minimum,
+    this.maximum,
   });
 }
 
@@ -1116,15 +1108,15 @@ class PreopenedDir {
 enum SharedMemoryWaitResult {
   /// Indicates that a `wait` completed by being awoken by a different thread.
   /// This means the thread went to sleep and didn't time out.
-  Ok,
+  ok,
 
   /// Indicates that `wait` did not complete and instead returned due to the
   /// value in memory not matching the expected value.
-  Mismatch,
+  mismatch,
 
   /// Indicates that `wait` completed with a timeout, meaning that the
   /// original value matched as expected but nothing ever called `notify`.
-  TimedOut,
+  timedOut,
 }
 
 enum StdIOKind {
@@ -1134,16 +1126,16 @@ enum StdIOKind {
 
 class TableArgs {
   /// The minimum number of elements the [`Table`] must have.
-  final int min;
+  final int minimum;
 
   /// The optional maximum number of elements the [`Table`] can have.
   ///
   /// If this is `None` then the [`Table`] is not limited in size.
-  final int? max;
+  final int? maximum;
 
   const TableArgs({
-    required this.min,
-    this.max,
+    required this.minimum,
+    this.maximum,
   });
 }
 
@@ -1152,17 +1144,17 @@ class TableTy {
   final ValueTy element;
 
   /// The minimum number of elements the [WasmTable] must have.
-  final int min;
+  final int minimum;
 
   /// The optional maximum number of elements the [WasmTable] can have.
   ///
   /// If this is `None` then the [WasmTable] is not limited in size.
-  final int? max;
+  final int? maximum;
 
   const TableTy({
     required this.element,
-    required this.min,
-    this.max,
+    required this.minimum,
+    this.maximum,
   });
 }
 
@@ -1567,13 +1559,11 @@ class WasmitModuleId {
       );
 
   Global createGlobal(
-          {required WasmVal value,
-          required GlobalMutability mutability,
-          dynamic hint}) =>
+          {required WasmVal value, required bool mutable, dynamic hint}) =>
       bridge.createGlobalMethodWasmitModuleId(
         that: this,
         value: value,
-        mutability: mutability,
+        mutable: mutable,
       );
 
   Table createTable(
@@ -2247,17 +2237,17 @@ class WasmitDartImpl implements WasmitDart {
   Global createGlobalMethodWasmitModuleId(
       {required WasmitModuleId that,
       required WasmVal value,
-      required GlobalMutability mutability,
+      required bool mutable,
       dynamic hint}) {
     var arg0 = _platform.api2wire_box_autoadd_wasmit_module_id(that);
     var arg1 = _platform.api2wire_box_autoadd_wasm_val(value);
-    var arg2 = api2wire_global_mutability(mutability);
+    var arg2 = mutable;
     return _platform.executeSync(FlutterRustBridgeSyncTask(
       callFfi: () => _platform.inner
           .wire_create_global__method__WasmitModuleId(arg0, arg1, arg2),
       parseSuccessData: _wire2api_Global,
       constMeta: kCreateGlobalMethodWasmitModuleIdConstMeta,
-      argValues: [that, value, mutability],
+      argValues: [that, value, mutable],
       hint: hint,
     ));
   }
@@ -2266,7 +2256,7 @@ class WasmitDartImpl implements WasmitDart {
       get kCreateGlobalMethodWasmitModuleIdConstMeta =>
           const FlutterRustBridgeTaskConstMeta(
             debugName: "create_global__method__WasmitModuleId",
-            argNames: ["that", "value", "mutability"],
+            argNames: ["that", "value", "mutable"],
           );
 
   Table createTableMethodWasmitModuleId(
@@ -3447,13 +3437,9 @@ class WasmitDartImpl implements WasmitDart {
     if (arr.length != 2)
       throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
     return FuncTy(
-      params: _wire2api_list_value_ty(arr[0]),
+      parameters: _wire2api_list_value_ty(arr[0]),
       results: _wire2api_list_value_ty(arr[1]),
     );
-  }
-
-  GlobalMutability _wire2api_global_mutability(dynamic raw) {
-    return GlobalMutability.values[raw];
   }
 
   GlobalTy _wire2api_global_ty(dynamic raw) {
@@ -3461,8 +3447,8 @@ class WasmitDartImpl implements WasmitDart {
     if (arr.length != 2)
       throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
     return GlobalTy(
-      content: _wire2api_value_ty(arr[0]),
-      mutability: _wire2api_global_mutability(arr[1]),
+      value: _wire2api_value_ty(arr[0]),
+      mutable: _wire2api_bool(arr[1]),
     );
   }
 
@@ -3500,8 +3486,8 @@ class WasmitDartImpl implements WasmitDart {
       throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
     return MemoryTy(
       shared: _wire2api_bool(arr[0]),
-      minimumPages: _wire2api_u32(arr[1]),
-      maximumPages: _wire2api_opt_box_autoadd_u32(arr[2]),
+      minimum: _wire2api_u32(arr[1]),
+      maximum: _wire2api_opt_box_autoadd_u32(arr[2]),
     );
   }
 
@@ -3566,8 +3552,8 @@ class WasmitDartImpl implements WasmitDart {
       throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
     return TableTy(
       element: _wire2api_value_ty(arr[0]),
-      min: _wire2api_u32(arr[1]),
-      max: _wire2api_opt_box_autoadd_u32(arr[2]),
+      minimum: _wire2api_u32(arr[1]),
+      maximum: _wire2api_opt_box_autoadd_u32(arr[2]),
     );
   }
 
@@ -3751,11 +3737,6 @@ double api2wire_f32(double raw) {
 @protected
 double api2wire_f64(double raw) {
   return raw;
-}
-
-@protected
-int api2wire_global_mutability(GlobalMutability raw) {
-  return api2wire_i32(raw.index);
 }
 
 @protected

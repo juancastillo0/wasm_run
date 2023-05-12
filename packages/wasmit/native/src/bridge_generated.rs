@@ -36,7 +36,6 @@ use crate::config::WasmWasiFeatures;
 use crate::types::ExternalType;
 use crate::types::ExternalValue;
 use crate::types::FuncTy;
-use crate::types::GlobalMutability;
 use crate::types::GlobalTy;
 use crate::types::MemoryTy;
 use crate::types::ModuleExportDesc;
@@ -368,7 +367,7 @@ fn wire_create_memory__method__WasmitModuleId_impl(
 fn wire_create_global__method__WasmitModuleId_impl(
     that: impl Wire2Api<WasmitModuleId> + UnwindSafe,
     value: impl Wire2Api<WasmVal> + UnwindSafe,
-    mutability: impl Wire2Api<GlobalMutability> + UnwindSafe,
+    mutable: impl Wire2Api<bool> + UnwindSafe,
 ) -> support::WireSyncReturn {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
         WrapInfo {
@@ -379,8 +378,8 @@ fn wire_create_global__method__WasmitModuleId_impl(
         move || {
             let api_that = that.wire2api();
             let api_value = value.wire2api();
-            let api_mutability = mutability.wire2api();
-            WasmitModuleId::create_global(&api_that, api_value, api_mutability)
+            let api_mutable = mutable.wire2api();
+            WasmitModuleId::create_global(&api_that, api_value, api_mutable)
         },
     )
 }
@@ -1274,15 +1273,6 @@ impl Wire2Api<f64> for f64 {
         self
     }
 }
-impl Wire2Api<GlobalMutability> for i32 {
-    fn wire2api(self) -> GlobalMutability {
-        match self {
-            0 => GlobalMutability::Const,
-            1 => GlobalMutability::Var,
-            _ => unreachable!("Invalid variant for GlobalMutability: {}", self),
-        }
-    }
-}
 impl Wire2Api<i32> for i32 {
     fn wire2api(self) -> i32 {
         self
@@ -1391,24 +1381,14 @@ impl support::IntoDartExceptPrimitive for ExternalValue {}
 
 impl support::IntoDart for FuncTy {
     fn into_dart(self) -> support::DartAbi {
-        vec![self.params.into_dart(), self.results.into_dart()].into_dart()
+        vec![self.parameters.into_dart(), self.results.into_dart()].into_dart()
     }
 }
 impl support::IntoDartExceptPrimitive for FuncTy {}
 
-impl support::IntoDart for GlobalMutability {
-    fn into_dart(self) -> support::DartAbi {
-        match self {
-            Self::Const => 0,
-            Self::Var => 1,
-        }
-        .into_dart()
-    }
-}
-impl support::IntoDartExceptPrimitive for GlobalMutability {}
 impl support::IntoDart for GlobalTy {
     fn into_dart(self) -> support::DartAbi {
-        vec![self.content.into_dart(), self.mutability.into_dart()].into_dart()
+        vec![self.value.into_dart(), self.mutable.into_dart()].into_dart()
     }
 }
 impl support::IntoDartExceptPrimitive for GlobalTy {}
@@ -1417,8 +1397,8 @@ impl support::IntoDart for MemoryTy {
     fn into_dart(self) -> support::DartAbi {
         vec![
             self.shared.into_dart(),
-            self.minimum_pages.into_dart(),
-            self.maximum_pages.into_dart(),
+            self.minimum.into_dart(),
+            self.maximum.into_dart(),
         ]
         .into_dart()
     }
@@ -1454,9 +1434,9 @@ impl support::IntoDartExceptPrimitive for ModuleImportDesc {}
 impl support::IntoDart for SharedMemoryWaitResult {
     fn into_dart(self) -> support::DartAbi {
         match self {
-            Self::Ok => 0,
-            Self::Mismatch => 1,
-            Self::TimedOut => 2,
+            Self::ok => 0,
+            Self::mismatch => 1,
+            Self::timedOut => 2,
         }
         .into_dart()
     }
@@ -1466,8 +1446,8 @@ impl support::IntoDart for TableTy {
     fn into_dart(self) -> support::DartAbi {
         vec![
             self.element.into_dart(),
-            self.min.into_dart(),
-            self.max.into_dart(),
+            self.minimum.into_dart(),
+            self.maximum.into_dart(),
         ]
         .into_dart()
     }
@@ -1735,9 +1715,9 @@ mod web {
     pub fn wire_create_global__method__WasmitModuleId(
         that: JsValue,
         value: JsValue,
-        mutability: i32,
+        mutable: bool,
     ) -> support::WireSyncReturn {
-        wire_create_global__method__WasmitModuleId_impl(that, value, mutability)
+        wire_create_global__method__WasmitModuleId_impl(that, value, mutable)
     }
 
     #[wasm_bindgen]
@@ -2326,8 +2306,8 @@ mod web {
             );
             MemoryTy {
                 shared: self_.get(0).wire2api(),
-                minimum_pages: self_.get(1).wire2api(),
-                maximum_pages: self_.get(2).wire2api(),
+                minimum: self_.get(1).wire2api(),
+                maximum: self_.get(2).wire2api(),
             }
         }
     }
@@ -2468,8 +2448,8 @@ mod web {
                 self_.length()
             );
             TableArgs {
-                min: self_.get(0).wire2api(),
-                max: self_.get(1).wire2api(),
+                minimum: self_.get(0).wire2api(),
+                maximum: self_.get(1).wire2api(),
             }
         }
     }
@@ -2665,11 +2645,6 @@ mod web {
     impl Wire2Api<f64> for JsValue {
         fn wire2api(self) -> f64 {
             self.unchecked_into_f64() as _
-        }
-    }
-    impl Wire2Api<GlobalMutability> for JsValue {
-        fn wire2api(self) -> GlobalMutability {
-            (self.unchecked_into_f64() as i32).wire2api()
         }
     }
     impl Wire2Api<i32> for JsValue {
@@ -2910,9 +2885,9 @@ mod io {
     pub extern "C" fn wire_create_global__method__WasmitModuleId(
         that: *mut wire_WasmitModuleId,
         value: *mut wire_WasmVal,
-        mutability: i32,
+        mutable: bool,
     ) -> support::WireSyncReturn {
-        wire_create_global__method__WasmitModuleId_impl(that, value, mutability)
+        wire_create_global__method__WasmitModuleId_impl(that, value, mutable)
     }
 
     #[no_mangle]
@@ -3823,8 +3798,8 @@ mod io {
         fn wire2api(self) -> MemoryTy {
             MemoryTy {
                 shared: self.shared.wire2api(),
-                minimum_pages: self.minimum_pages.wire2api(),
-                maximum_pages: self.maximum_pages.wire2api(),
+                minimum: self.minimum.wire2api(),
+                maximum: self.maximum.wire2api(),
             }
         }
     }
@@ -3897,8 +3872,8 @@ mod io {
     impl Wire2Api<TableArgs> for wire_TableArgs {
         fn wire2api(self) -> TableArgs {
             TableArgs {
-                min: self.min.wire2api(),
-                max: self.max.wire2api(),
+                minimum: self.minimum.wire2api(),
+                maximum: self.maximum.wire2api(),
             }
         }
     }
@@ -4102,8 +4077,8 @@ mod io {
     #[derive(Clone)]
     pub struct wire_MemoryTy {
         shared: bool,
-        minimum_pages: u32,
-        maximum_pages: *mut u32,
+        minimum: u32,
+        maximum: *mut u32,
     }
 
     #[repr(C)]
@@ -4168,8 +4143,8 @@ mod io {
     #[repr(C)]
     #[derive(Clone)]
     pub struct wire_TableArgs {
-        min: u32,
-        max: *mut u32,
+        minimum: u32,
+        maximum: *mut u32,
     }
 
     #[repr(C)]
@@ -4482,8 +4457,8 @@ mod io {
         fn new_with_null_ptr() -> Self {
             Self {
                 shared: Default::default(),
-                minimum_pages: Default::default(),
-                maximum_pages: core::ptr::null_mut(),
+                minimum: Default::default(),
+                maximum: core::ptr::null_mut(),
             }
         }
     }
@@ -4596,8 +4571,8 @@ mod io {
     impl NewWithNullPtr for wire_TableArgs {
         fn new_with_null_ptr() -> Self {
             Self {
-                min: Default::default(),
-                max: core::ptr::null_mut(),
+                minimum: Default::default(),
+                maximum: core::ptr::null_mut(),
             }
         }
     }

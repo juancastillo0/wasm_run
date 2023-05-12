@@ -517,13 +517,20 @@ impl WasmitModuleId {
     pub fn create_global(
         &self,
         value: WasmVal,
-        mutability: GlobalMutability,
+        mutable: bool,
     ) -> Result<SyncReturn<RustOpaque<Global>>> {
         self.with_module_mut(|mut store| {
             let mapped = value.to_val();
             let global = Global::new(
                 &mut store,
-                GlobalType::new(mapped.ty(), mutability.into()),
+                GlobalType::new(
+                    mapped.ty(),
+                    if mutable {
+                        Mutability::Var
+                    } else {
+                        Mutability::Const
+                    },
+                ),
                 mapped,
             )?;
             Ok(SyncReturn(RustOpaque::new(global)))
@@ -532,7 +539,6 @@ impl WasmitModuleId {
 
     pub fn create_table(
         &self,
-
         value: WasmVal,
         table_type: TableArgs,
     ) -> Result<SyncReturn<RustOpaque<Table>>> {
@@ -540,7 +546,7 @@ impl WasmitModuleId {
             let mapped_value = value.to_val();
             let table = Table::new(
                 &mut store,
-                TableType::new(mapped_value.ty(), table_type.min, table_type.max),
+                TableType::new(mapped_value.ty(), table_type.minimum, table_type.maximum),
                 mapped_value,
             )
             .map_err(to_anyhow)?;
@@ -772,24 +778,25 @@ pub fn wasm_runtime_features() -> SyncReturn<WasmRuntimeFeatures> {
 
 /// Result of [SharedMemory.atomicWait32] and [SharedMemory.atomicWait64]
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[allow(non_camel_case_types)]
 pub enum SharedMemoryWaitResult {
     /// Indicates that a `wait` completed by being awoken by a different thread.
     /// This means the thread went to sleep and didn't time out.
-    Ok = 0,
+    ok = 0,
     /// Indicates that `wait` did not complete and instead returned due to the
     /// value in memory not matching the expected value.
-    Mismatch = 1,
+    mismatch = 1,
     /// Indicates that `wait` completed with a timeout, meaning that the
     /// original value matched as expected but nothing ever called `notify`.
-    TimedOut = 2,
+    timedOut = 2,
 }
 
 impl From<WaitResult> for SharedMemoryWaitResult {
     fn from(result: WaitResult) -> Self {
         match result {
-            WaitResult::Ok => SharedMemoryWaitResult::Ok,
-            WaitResult::Mismatch => SharedMemoryWaitResult::Mismatch,
-            WaitResult::TimedOut => SharedMemoryWaitResult::TimedOut,
+            WaitResult::Ok => SharedMemoryWaitResult::ok,
+            WaitResult::Mismatch => SharedMemoryWaitResult::mismatch,
+            WaitResult::TimedOut => SharedMemoryWaitResult::timedOut,
         }
     }
 }

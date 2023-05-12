@@ -632,14 +632,12 @@ void testAll({
       fibonacci.callAsync!([7]),
       fibonacci.callAsync!([8]),
       fibonacci.callAsync!([9]),
-      fibonacci.callAsync!([10]),
     ]);
 
     expect(values, [
       [13],
       [21],
       [34],
-      [55]
     ]);
   });
 

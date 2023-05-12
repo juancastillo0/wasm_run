@@ -236,13 +236,13 @@ typedef struct wire_list_value_ty {
 
 typedef struct wire_MemoryTy {
   bool shared;
-  uint32_t minimum_pages;
-  uint32_t *maximum_pages;
+  uint32_t minimum;
+  uint32_t *maximum;
 } wire_MemoryTy;
 
 typedef struct wire_TableArgs {
-  uint32_t min;
-  uint32_t *max;
+  uint32_t minimum;
+  uint32_t *maximum;
 } wire_TableArgs;
 
 typedef struct wire_Atomics {
@@ -319,7 +319,7 @@ WireSyncReturn wire_create_memory__method__WasmitModuleId(struct wire_WasmitModu
 
 WireSyncReturn wire_create_global__method__WasmitModuleId(struct wire_WasmitModuleId *that,
                                                           struct wire_WasmVal *value,
-                                                          int32_t mutability);
+                                                          bool mutable_);
 
 WireSyncReturn wire_create_table__method__WasmitModuleId(struct wire_WasmitModuleId *that,
                                                          struct wire_WasmVal *value,

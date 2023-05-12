@@ -46,8 +46,7 @@ Future<WasmRuntimeFeatures> _calculateFeatures() async {
   bool typeReflection;
   try {
     final type = _getGlobalType(Global.i32(value: 0, mutable: true).jsObject);
-    typeReflection = type?.mutability == GlobalMutability.Var &&
-        type?.content == ValueTy.i32;
+    typeReflection = (type?.mutable ?? false) && type?.value == ValueTy.i32;
   } catch (_) {
     typeReflection = false;
   }
@@ -158,7 +157,7 @@ class _WasmModule extends WasmModule {
   }) {
     return _SharedMemory(
       Memory.shared(initial: minPages, maximum: maxPages),
-      MemoryTy(minimumPages: minPages, maximumPages: maxPages, shared: true),
+      MemoryTy(minimum: minPages, maximum: maxPages, shared: true),
     );
   }
 
@@ -235,7 +234,7 @@ class _Builder extends WasmInstanceBuilder {
   WasmMemory createMemory({required int minPages, int? maxPages}) {
     return _Memory(
       Memory(initial: minPages, maximum: maxPages),
-      MemoryTy(minimumPages: minPages, maximumPages: maxPages, shared: false),
+      MemoryTy(minimum: minPages, maximum: maxPages, shared: false),
     );
   }
 
@@ -259,18 +258,16 @@ class _Builder extends WasmInstanceBuilder {
             ),
       TableTy(
         element: value.type,
-        min: minSize,
-        max: maxSize,
+        minimum: minSize,
+        maximum: maxSize,
       ),
     );
   }
 
   @override
   WasmGlobal createGlobal(WasmValue value, {required bool mutable}) {
-    final type = GlobalTy(
-      content: value.type,
-      mutability: mutable ? GlobalMutability.Var : GlobalMutability.Const,
-    );
+    final type = GlobalTy(value: value.type, mutable: mutable);
+
     final val = value.value;
     final Global inner;
     switch (value.type) {
@@ -504,7 +501,7 @@ class _Instance extends WasmInstance {
 
 WasmExternal _makeWasmFunction(Function value, _Instance? instance) {
   final ty = _getFuncType(value);
-  final params = ty?.params.cast<ValueTy?>() ??
+  final params = ty?.parameters.cast<ValueTy?>() ??
       List.filled(
         js_util.getProperty(value, 'length') as int,
         null,
@@ -541,11 +538,11 @@ class _SharedMemory extends _Memory implements WasmSharedMemory {
     final value = atomics.wait(view, addr, expected, null);
     switch (value) {
       case 'ok':
-        return SharedMemoryWaitResult.Ok;
+        return SharedMemoryWaitResult.ok;
       case 'not-equal':
-        return SharedMemoryWaitResult.Mismatch;
+        return SharedMemoryWaitResult.mismatch;
       case 'timed-out':
-        return SharedMemoryWaitResult.TimedOut;
+        return SharedMemoryWaitResult.timedOut;
       default:
         throw Exception('atomicWait32 Unexpected value: $value');
     }
@@ -678,8 +675,8 @@ MemoryTy? _getMemoryType(Object value) {
   if (t == null) return null;
   return MemoryTy(
     shared: t['shared'] == true,
-    minimumPages: t['minimum']! as int,
-    maximumPages: t['maximum'] as int?,
+    minimum: t['minimum']! as int,
+    maximum: t['maximum'] as int?,
   );
 }
 
@@ -688,10 +685,8 @@ GlobalTy? _getGlobalType(Object value) {
   if (t == null) return null;
   final ty = ValueTy.values.byName(t['value']! as String);
   return GlobalTy(
-    content: ty,
-    // TODO: improve naming and enum
-    mutability:
-        t['mutable'] == true ? GlobalMutability.Var : GlobalMutability.Const,
+    value: ty,
+    mutable: t['mutable'] == true,
   );
 }
 
@@ -701,8 +696,8 @@ TableTy? _getTableType(Object value) {
   final ty = ValueTy.values.byName(t['element']! as String);
   return TableTy(
     element: ty,
-    min: t['minimum']! as int,
-    max: t['maximum'] as int?,
+    minimum: t['minimum']! as int,
+    maximum: t['maximum'] as int?,
   );
 }
 
@@ -720,7 +715,7 @@ FuncTy? _getFuncType(Function value) {
   if (results == null || params == null) {
     return null;
   }
-  return FuncTy(params: params, results: results);
+  return FuncTy(parameters: params, results: results);
 }
 
 Map<String, Object?>? _getType(Object value) {

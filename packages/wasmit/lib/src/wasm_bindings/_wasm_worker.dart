@@ -63,8 +63,7 @@ class WasmWorker {
     }
     final worker = html.Worker('./packages/wasmit/assets/wasm.worker.js');
 
-    final postMessage =
-        js_util.callMethod<void Function(Object, Object)>(
+    final postMessage = js_util.callMethod<void Function(Object, Object)>(
       js_util.globalThis,
       'eval',
       ['(worker, data) => worker.postMessage(data)'],

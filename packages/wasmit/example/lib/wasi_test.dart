@@ -133,7 +133,7 @@ void wasiTest({
       // TODO: add more tests
       module.getImports().first.type!.maybeWhen(
             orElse: () => throw Exception(),
-            func: (field0) => field0.params,
+            func: (field0) => field0.parameters,
           );
     }
 

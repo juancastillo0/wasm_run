@@ -84,8 +84,8 @@ Future<void> main({bool onlyTest = false}) async {
     final memoryType = memoryImport.type!.field0 as MemoryTy;
     expectEq(memoryType.shared, true);
     memory = module.createSharedMemory(
-      minPages: memoryType.minimumPages, // 17
-      maxPages: memoryType.maximumPages!, // 16384
+      minPages: memoryType.minimum, // 17
+      maxPages: memoryType.maximum!, // 16384
     );
   } else {
     memory = module.createSharedMemory(

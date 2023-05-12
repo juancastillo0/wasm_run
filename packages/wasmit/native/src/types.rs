@@ -94,9 +94,9 @@ impl WasmVal {
 #[derive(Debug)]
 pub struct GlobalTy {
     /// The value type of the global variable.
-    pub content: ValueTy,
+    pub value: ValueTy,
     /// The mutability of the global variable.
-    pub mutability: GlobalMutability,
+    pub mutable: bool,
 }
 
 #[cfg(not(feature = "wasmtime"))]
@@ -113,8 +113,8 @@ impl From<&GlobalType> for GlobalTy {
 impl From<&wasmtime::GlobalType> for GlobalTy {
     fn from(value: &wasmtime::GlobalType) -> Self {
         GlobalTy {
-            content: (*value.content()).into(),
-            mutability: value.mutability().into(),
+            value: (*value.content()).into(),
+            mutable: value.mutability() == wasmtime::Mutability::Var,
         }
     }
 }
@@ -124,11 +124,11 @@ pub struct TableTy {
     /// The type of values stored in the [WasmTable].
     pub element: ValueTy,
     /// The minimum number of elements the [WasmTable] must have.
-    pub min: u32,
+    pub minimum: u32,
     /// The optional maximum number of elements the [WasmTable] can have.
     ///
     /// If this is `None` then the [WasmTable] is not limited in size.
-    pub max: Option<u32>,
+    pub maximum: Option<u32>,
 }
 
 #[cfg(not(feature = "wasmtime"))]
@@ -136,8 +136,8 @@ impl From<&TableType> for TableTy {
     fn from(value: &TableType) -> Self {
         TableTy {
             element: (&value.element()).into(),
-            min: value.minimum(),
-            max: value.maximum(),
+            minimum: value.minimum(),
+            maximum: value.maximum(),
         }
     }
 }
@@ -147,8 +147,8 @@ impl From<&wasmtime::TableType> for TableTy {
     fn from(value: &wasmtime::TableType) -> Self {
         TableTy {
             element: value.element().into(),
-            min: value.minimum(),
-            max: value.maximum(),
+            minimum: value.minimum(),
+            maximum: value.maximum(),
         }
     }
 }
@@ -238,14 +238,6 @@ pub struct ModuleImport {
     pub value: ExternalValue,
 }
 
-#[derive(Debug)]
-pub enum GlobalMutability {
-    /// The value of the global variable is a constant.
-    Const,
-    /// The value of the global variable is mutable.
-    Var,
-}
-
 #[cfg(not(feature = "wasmtime"))]
 impl From<Mutability> for GlobalMutability {
     fn from(value: Mutability) -> Self {
@@ -262,26 +254,6 @@ impl From<GlobalMutability> for Mutability {
         match value {
             GlobalMutability::Const => Mutability::Const,
             GlobalMutability::Var => Mutability::Var,
-        }
-    }
-}
-
-#[cfg(feature = "wasmtime")]
-impl From<wasmtime::Mutability> for GlobalMutability {
-    fn from(value: wasmtime::Mutability) -> Self {
-        match value {
-            wasmtime::Mutability::Const => GlobalMutability::Const,
-            wasmtime::Mutability::Var => GlobalMutability::Var,
-        }
-    }
-}
-
-#[cfg(feature = "wasmtime")]
-impl From<GlobalMutability> for wasmtime::Mutability {
-    fn from(value: GlobalMutability) -> Self {
-        match value {
-            GlobalMutability::Const => wasmtime::Mutability::Const,
-            GlobalMutability::Var => wasmtime::Mutability::Var,
         }
     }
 }
@@ -355,7 +327,7 @@ impl From<&wasmtime::ImportType<'_>> for ModuleImportDesc {
 #[derive(Debug)]
 pub struct FuncTy {
     /// The number of function parameters.
-    pub params: Vec<ValueTy>,
+    pub parameters: Vec<ValueTy>,
     /// The ordered and merged parameter and result types of the function type.]
     pub results: Vec<ValueTy>,
 }
@@ -364,7 +336,7 @@ pub struct FuncTy {
 impl From<&FuncType> for FuncTy {
     fn from(func: &FuncType) -> Self {
         FuncTy {
-            params: func.params().iter().map(ValueTy::from).collect(),
+            parameters: func.params().iter().map(ValueTy::from).collect(),
             results: func.results().iter().map(ValueTy::from).collect(),
         }
     }
@@ -374,7 +346,7 @@ impl From<&FuncType> for FuncTy {
 impl From<&wasmtime::FuncType> for FuncTy {
     fn from(func: &wasmtime::FuncType) -> Self {
         FuncTy {
-            params: func.params().map(ValueTy::from).collect(),
+            parameters: func.params().map(ValueTy::from).collect(),
             results: func.results().map(ValueTy::from).collect(),
         }
     }
@@ -549,11 +521,11 @@ impl From<&ExternalValue> for wasmtime::Extern {
 #[derive(Debug)]
 pub struct TableArgs {
     /// The minimum number of elements the [`Table`] must have.
-    pub min: u32,
+    pub minimum: u32,
     /// The optional maximum number of elements the [`Table`] can have.
     ///
     /// If this is `None` then the [`Table`] is not limited in size.
-    pub max: Option<u32>,
+    pub maximum: Option<u32>,
 }
 
 #[derive(Debug)]
@@ -561,31 +533,28 @@ pub struct MemoryTy {
     /// Whether or not this memory could be shared between multiple processes.
     pub shared: bool,
     /// The number of initial pages associated with the memory.
-    pub minimum_pages: u32,
+    pub minimum: u32,
     /// The maximum number of pages this memory can have.
-    pub maximum_pages: Option<u32>,
+    pub maximum: Option<u32>,
 }
 
 impl MemoryTy {
     #[cfg(not(feature = "wasmtime"))]
     pub fn to_memory_type(&self) -> Result<MemoryType> {
-        MemoryType::new(self.minimum_pages, self.maximum_pages).map_err(to_anyhow)
+        MemoryType::new(self.minimum, self.maximum).map_err(to_anyhow)
     }
 
     #[cfg(feature = "wasmtime")]
     pub fn to_memory_type(&self) -> Result<wasmtime::MemoryType> {
         if self.shared {
             return Ok(wasmtime::MemoryType::shared(
-                self.minimum_pages,
-                self.maximum_pages.ok_or(anyhow::anyhow!(
+                self.minimum,
+                self.maximum.ok_or(anyhow::anyhow!(
                     "maximum_pages is required for shared memories"
                 ))?,
             ));
         }
-        Ok(wasmtime::MemoryType::new(
-            self.minimum_pages,
-            self.maximum_pages,
-        ))
+        Ok(wasmtime::MemoryType::new(self.minimum, self.maximum))
     }
 }
 
@@ -593,8 +562,8 @@ impl MemoryTy {
 impl From<&MemoryType> for MemoryTy {
     fn from(memory_type: &MemoryType) -> Self {
         MemoryTy {
-            minimum_pages: memory_type.initial_pages().into(),
-            maximum_pages: memory_type.maximum_pages().map(|v| v.into()),
+            minimum: memory_type.initial_pages().into(),
+            maximum: memory_type.maximum_pages().map(|v| v.into()),
             shared: false,
         }
     }
@@ -604,8 +573,8 @@ impl From<&MemoryType> for MemoryTy {
 impl From<&wasmtime::MemoryType> for MemoryTy {
     fn from(memory_type: &wasmtime::MemoryType) -> Self {
         MemoryTy {
-            minimum_pages: memory_type.minimum().try_into().unwrap(),
-            maximum_pages: memory_type.maximum().map(|v| v.try_into().unwrap()),
+            minimum: memory_type.minimum().try_into().unwrap(),
+            maximum: memory_type.maximum().map(|v| v.try_into().unwrap()),
             shared: memory_type.is_shared(),
         }
     }

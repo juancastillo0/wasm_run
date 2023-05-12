@@ -507,8 +507,8 @@ class WasmitDartPlatform extends FlutterRustBridgeBase<WasmitDartWire> {
 
   void _api_fill_to_wire_memory_ty(MemoryTy apiObj, wire_MemoryTy wireObj) {
     wireObj.shared = api2wire_bool(apiObj.shared);
-    wireObj.minimum_pages = api2wire_u32(apiObj.minimumPages);
-    wireObj.maximum_pages = api2wire_opt_box_autoadd_u32(apiObj.maximumPages);
+    wireObj.minimum = api2wire_u32(apiObj.minimum);
+    wireObj.maximum = api2wire_opt_box_autoadd_u32(apiObj.maximum);
   }
 
   void _api_fill_to_wire_module_config(
@@ -614,8 +614,8 @@ class WasmitDartPlatform extends FlutterRustBridgeBase<WasmitDartWire> {
   }
 
   void _api_fill_to_wire_table_args(TableArgs apiObj, wire_TableArgs wireObj) {
-    wireObj.min = api2wire_u32(apiObj.min);
-    wireObj.max = api2wire_opt_box_autoadd_u32(apiObj.max);
+    wireObj.minimum = api2wire_u32(apiObj.minimum);
+    wireObj.maximum = api2wire_opt_box_autoadd_u32(apiObj.maximum);
   }
 
   void _api_fill_to_wire_wasi_config_native(
@@ -1169,12 +1169,12 @@ class WasmitDartWire implements FlutterRustBridgeWireBase {
   WireSyncReturn wire_create_global__method__WasmitModuleId(
     ffi.Pointer<wire_WasmitModuleId> that,
     ffi.Pointer<wire_WasmVal> value,
-    int mutability,
+    bool mutable_,
   ) {
     return _wire_create_global__method__WasmitModuleId(
       that,
       value,
-      mutability,
+      mutable_,
     );
   }
 
@@ -1183,11 +1183,11 @@ class WasmitDartWire implements FlutterRustBridgeWireBase {
           WireSyncReturn Function(
               ffi.Pointer<wire_WasmitModuleId>,
               ffi.Pointer<wire_WasmVal>,
-              ffi.Int32)>>('wire_create_global__method__WasmitModuleId');
+              ffi.Bool)>>('wire_create_global__method__WasmitModuleId');
   late final _wire_create_global__method__WasmitModuleId =
       _wire_create_global__method__WasmitModuleIdPtr.asFunction<
           WireSyncReturn Function(ffi.Pointer<wire_WasmitModuleId>,
-              ffi.Pointer<wire_WasmVal>, int)>();
+              ffi.Pointer<wire_WasmVal>, bool)>();
 
   WireSyncReturn wire_create_table__method__WasmitModuleId(
     ffi.Pointer<wire_WasmitModuleId> that,
@@ -3063,16 +3063,16 @@ class wire_MemoryTy extends ffi.Struct {
   external bool shared;
 
   @ffi.Uint32()
-  external int minimum_pages;
+  external int minimum;
 
-  external ffi.Pointer<ffi.Uint32> maximum_pages;
+  external ffi.Pointer<ffi.Uint32> maximum;
 }
 
 class wire_TableArgs extends ffi.Struct {
   @ffi.Uint32()
-  external int min;
+  external int minimum;
 
-  external ffi.Pointer<ffi.Uint32> max;
+  external ffi.Pointer<ffi.Uint32> maximum;
 }
 
 class wire_Atomics extends ffi.Struct {

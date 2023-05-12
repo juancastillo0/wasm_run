@@ -60,8 +60,8 @@ class _WasmModule extends WasmModule {
     final memory = module.createSharedMemory(
       memoryType: MemoryTy(
         shared: true,
-        minimumPages: minPages,
-        maximumPages: maxPages,
+        minimum: minPages,
+        maximum: maxPages,
       ),
     );
     return _SharedMemory(memory);
@@ -151,7 +151,7 @@ WasmExternalKind _toImpExpKind(ExternalType kind) {
 
 WasmFunction _toWasmFunction(WFunc func, WasmitModuleId module) {
   final type = module.getFunctionType(func: func);
-  final params = type.params;
+  final params = type.parameters;
 
   List<WasmVal> mapArgs([List<Object?>? args]) {
     int i = 0;
@@ -391,7 +391,7 @@ class _Builder extends WasmInstanceBuilder {
   WasmGlobal createGlobal(WasmValue value, {required bool mutable}) {
     final global = module.createGlobal(
       value: _fromWasmValue(value, module),
-      mutability: mutable ? GlobalMutability.Var : GlobalMutability.Const,
+      mutable: mutable,
     );
     return _Global(global, module);
   }
@@ -401,8 +401,8 @@ class _Builder extends WasmInstanceBuilder {
     final memory = module.createMemory(
       memoryType: MemoryTy(
         shared: false,
-        minimumPages: minPages,
-        maximumPages: maxPages,
+        minimum: minPages,
+        maximum: maxPages,
       ),
     );
     return _Memory(memory, module);
@@ -419,8 +419,8 @@ class _Builder extends WasmInstanceBuilder {
       module.createTable(
         value: inner,
         tableType: TableArgs(
-          min: minSize,
-          max: maxSize,
+          minimum: minSize,
+          maximum: maxSize,
         ),
       ),
       module,
@@ -451,7 +451,7 @@ class _Builder extends WasmInstanceBuilder {
         if (type is! ExternalType_Func) {
           throw Exception('Expected function import type found: $type');
         }
-        final expectedParams = type.field0.params;
+        final expectedParams = type.field0.parameters;
         {
           int i = 0;
           if (function.params.length != expectedParams.length ||
@@ -485,7 +485,7 @@ class _Builder extends WasmInstanceBuilder {
         final func = module.createFunction(
           functionPointer: _References.globalWasmFunctionPointer,
           functionId: functionId,
-          paramTypes: type.field0.params,
+          paramTypes: type.field0.parameters,
           resultTypes: type.field0.results,
         );
 

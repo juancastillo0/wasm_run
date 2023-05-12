@@ -223,8 +223,8 @@ class WasmitDartPlatform extends FlutterRustBridgeBase<WasmitDartWire>
   List<dynamic> api2wire_memory_ty(MemoryTy raw) {
     return [
       api2wire_bool(raw.shared),
-      api2wire_u32(raw.minimumPages),
-      api2wire_opt_box_autoadd_u32(raw.maximumPages)
+      api2wire_u32(raw.minimum),
+      api2wire_opt_box_autoadd_u32(raw.maximum)
     ];
   }
 
@@ -342,7 +342,10 @@ class WasmitDartPlatform extends FlutterRustBridgeBase<WasmitDartWire>
 
   @protected
   List<dynamic> api2wire_table_args(TableArgs raw) {
-    return [api2wire_u32(raw.min), api2wire_opt_box_autoadd_u32(raw.max)];
+    return [
+      api2wire_u32(raw.minimum),
+      api2wire_opt_box_autoadd_u32(raw.maximum)
+    ];
   }
 
   @protected
@@ -526,7 +529,7 @@ class WasmitDartWasmModule implements WasmModule {
       List<dynamic> that, List<dynamic> memory_type);
 
   external dynamic /* Object */ wire_create_global__method__WasmitModuleId(
-      List<dynamic> that, List<dynamic> value, int mutability);
+      List<dynamic> that, List<dynamic> value, bool mutable);
 
   external dynamic /* Object */ wire_create_table__method__WasmitModuleId(
       List<dynamic> that, List<dynamic> value, List<dynamic> table_type);
@@ -783,9 +786,9 @@ class WasmitDartWire
       wasmModule.wire_create_memory__method__WasmitModuleId(that, memory_type);
 
   dynamic /* Object */ wire_create_global__method__WasmitModuleId(
-          List<dynamic> that, List<dynamic> value, int mutability) =>
+          List<dynamic> that, List<dynamic> value, bool mutable) =>
       wasmModule.wire_create_global__method__WasmitModuleId(
-          that, value, mutability);
+          that, value, mutable);
 
   dynamic /* Object */ wire_create_table__method__WasmitModuleId(
           List<dynamic> that, List<dynamic> value, List<dynamic> table_type) =>
