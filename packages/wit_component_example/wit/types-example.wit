@@ -96,7 +96,6 @@ default world types-example {
       inline-imp: func(args: list<option<char>>) -> result<_, char>
     }
 
-    export types-export: self.types-interface
     export api: self.api
 
     enum log-level {

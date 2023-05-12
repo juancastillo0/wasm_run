@@ -29,10 +29,8 @@ sealed class Result<O, E> {
     E Function(Object? json) err,
   ) {
     return switch (json) {
-      {'ok': final o} => Ok(ok(o)),
-      ('ok', final o) => Ok(ok(o)),
-      {'error': final e} => Err(err(e)),
-      ('error', final e) => Err(err(e)),
+      {'ok': final o} || (0, final o) => Ok(ok(o)),
+      {'error': final e} || (1, final e) => Err(err(e)),
       _ => throw Exception('Invalid JSON for Result: $json'),
     };
   }
@@ -93,10 +91,8 @@ sealed class Option<T extends Object> {
   factory Option.fromJson(Object? json, T Function(Object? json) some) {
     return switch (json) {
       null => None(),
-      {'some': final o} => Some(some(o)),
-      ('some', final o) => Some(some(o)),
-      {'none': null} => const None(),
-      ('none', null) => const None(),
+      {'none': null} || (0, null) => None(),
+      {'some': final o} || (1, final o) => Some(some(o)),
       _ => throw Exception('Invalid JSON for Option: $json'),
     };
   }
@@ -277,7 +273,7 @@ class WasmLibrary {
       final results = func.call(p0.map((e) => e.v).toList());
       if (results.isEmpty) return [];
       return results.indexed
-          .map((e) => Value(flattenedFt.results[e.$1], e.$2! as int))
+          .map((e) => Value(flattenedFt.results[e.$1], e.$2! as num))
           .toList();
     }
 
