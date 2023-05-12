@@ -43,6 +43,7 @@ linter:
     sort_constructors_first: false
     unnecessary_brace_in_string_interps: false
     cascade_invocations: false
+    join_return_with_assignment: false
 
     # Util classes are awesome!
     # avoid_classes_with_only_static_members: false

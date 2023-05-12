@@ -240,6 +240,9 @@ abstract class WasmInstance {
   /// this is the stdout stream.
   Stream<Uint8List> get stdout;
 
+  /// Frees up resources used by this instance.
+  void dispose();
+
   @override
   String toString() => 'WasmInstance($module, $exports)';
 }

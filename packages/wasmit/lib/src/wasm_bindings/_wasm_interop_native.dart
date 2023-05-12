@@ -654,6 +654,11 @@ class _Instance extends WasmInstance {
     }
     return _stdout!;
   }
+
+  @override
+  void dispose() {
+    // TODO: dispose
+  }
 }
 
 class _Memory extends WasmMemory {

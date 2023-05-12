@@ -1,4 +1,4 @@
-import 'dart:collection' show UnmodifiableMapView;
+import 'dart:collection' show Queue, UnmodifiableMapView;
 import 'dart:js_util' as js_util;
 import 'dart:typed_data' show Uint8List;
 
@@ -8,6 +8,7 @@ import 'package:wasmit/src/wasm_bindings/_atomics_web.dart';
 import 'package:wasmit/src/wasm_bindings/_wasi_web.dart';
 
 import 'package:wasmit/src/wasm_bindings/_wasm_feature_detect_web.dart';
+import 'package:wasmit/src/wasm_bindings/_wasm_worker.dart';
 import 'package:wasmit/src/wasm_bindings/wasm.dart';
 
 bool isVoidReturn(dynamic value) {
@@ -184,7 +185,8 @@ class _WasmModule extends WasmModule {
       );
       wasi = _WASI(wasiWeb, stdout, stderr);
     }
-    return _Builder(module, wasi);
+
+    return _Builder(module, wasi, numThreads ?? 0);
   }
 
   @override
@@ -218,9 +220,10 @@ class _WasmModule extends WasmModule {
 class _Builder extends WasmInstanceBuilder {
   final Module module;
   final _WASI? wasi;
+  final int numThreads;
   final Map<String, Map<String, Object>> importMap = {};
 
-  _Builder(this.module, this.wasi) {
+  _Builder(this.module, this.wasi, this.numThreads) {
     if (wasi != null) {
       final wasiImports = js_util.dartify(wasi!.inner.wasiImport)!;
       importMap['wasi_snapshot_preview1'] = (wasiImports as Map).cast();
@@ -307,15 +310,64 @@ class _Builder extends WasmInstanceBuilder {
 
   @override
   WasmInstance buildSync() {
+    if (numThreads > 0) {
+      throw Exception('numThreads is not supported in buildSync()');
+    }
     final instance = Instance.fromModule(module, importMap: importMap);
-    return _Instance(this, instance);
+    return _Instance(this, instance, null);
   }
 
   @override
   Future<WasmInstance> build() async {
     final instance =
         await Instance.fromModuleAsync(module, importMap: importMap);
-    return _Instance(this, instance);
+
+    List<WasmWorker>? workers;
+    if (numThreads > 0) {
+      workers = await _createWorkers(instance);
+    }
+    return _Instance(this, instance, workers);
+  }
+
+  Future<List<WasmWorker>> _createWorkers(
+    Instance instance,
+  ) async {
+    final mappedImports = importMap.map(
+      (key, value) => MapEntry(
+        key,
+        value.map((key, value) {
+          if (value is Memory) return MapEntry(key, value.jsObject);
+          if (value is Global) return MapEntry(key, value.jsObject);
+          if (value is Table) return MapEntry(key, value.jsObject);
+          if (value is Function) {
+            return MapEntry(key, js_util.allowInterop(value));
+          }
+          return MapEntry(key, value);
+        }),
+      ),
+    );
+    final importMemo = importMap['env']?['memory'];
+    final Object jsMemory;
+    if (importMemo is Memory) {
+      jsMemory = importMemo.jsObject;
+    } else {
+      jsMemory = instance.memories.values.first.jsObject;
+    }
+    final workers = await Future.wait(
+      Iterable.generate(
+        numThreads,
+        (index) {
+          return WasmWorker.create(
+            workerId: index + 1,
+            wasmModule: module.jsObject,
+            wasmImports: mappedImports,
+            wasmMemory: jsMemory,
+          );
+        },
+      ),
+    );
+
+    return workers;
   }
 }
 
@@ -327,13 +379,18 @@ class _Instance extends WasmInstance {
   @override
   late final UnmodifiableMapView<String, WasmExternal> exports;
 
-  _Instance(this.builder, this.instance)
-      : module = _WasmModule._(instance.module) {
+  final List<WasmWorker>? workers;
+  final List<WasmWorker> availableWorkers;
+  final Queue<WorkerTask> tasks = Queue();
+
+  _Instance(this.builder, this.instance, this.workers)
+      : module = _WasmModule._(instance.module),
+        availableWorkers = workers ?? [] {
     exports = UnmodifiableMapView(
       Map.fromEntries(
         instance.functions.entries
             .map<MapEntry<String, WasmExternal>>(
-              (e) => MapEntry(e.key, _makeWasmFunction(e.value)),
+              (e) => MapEntry(e.key, _makeWasmFunction(e.value, this)),
             )
             .followedBy(
               instance.globals.entries
@@ -371,7 +428,40 @@ class _Instance extends WasmInstance {
     WasmFunction function,
     List<List<Object?>> argsLists,
   ) {
-    throw UnimplementedError('runParallel is not supported on web');
+    if (workers == null) {
+      throw Exception(
+        '`runParallel` can only be called when numThreads has been configured'
+        ' for WasmInstanceBuilder in `WasmModule.builder`.',
+      );
+    }
+    final entry = exports.entries.firstWhere(
+      (e) => e.value == function,
+      orElse: () => throw Exception(
+        '`runParallel` can only be called for exported functions.'
+        ' $function not found in exports.',
+      ),
+    );
+    final currentTasks = argsLists
+        .map((args) => WorkerTask(entry.key, args))
+        .toList(growable: false);
+    tasks.addAll(currentTasks);
+    _executeTasks();
+
+    return Future.wait(
+      currentTasks.map((e) => e.completer.future).toList(growable: false),
+    );
+  }
+
+  void _executeTasks() {
+    while (availableWorkers.isNotEmpty && tasks.isNotEmpty) {
+      final worker = availableWorkers.removeLast();
+      final task = tasks.removeFirst();
+
+      worker.run(task).whenComplete(() {
+        availableWorkers.add(worker);
+        _executeTasks();
+      });
+    }
   }
 
   @override
@@ -400,21 +490,37 @@ class _Instance extends WasmInstance {
     }
     return stream;
   }
+
+  @override
+  void dispose() {
+    builder.wasi?.stderr?.streamController.close();
+    builder.wasi?.stdout?.streamController.close();
+    workers?.forEach((w) => w.dispose());
+  }
 }
 
-WasmExternal _makeWasmFunction(Function value) {
+WasmExternal _makeWasmFunction(Function value, _Instance? instance) {
   final ty = _getFuncType(value);
   final params = ty?.params.cast<ValueTy?>() ??
       List.filled(
         js_util.getProperty(value, 'length') as int,
         null,
       );
-  final function = WasmFunction(
+  late final WasmFunction function;
+  function = WasmFunction(
     value,
     params: params,
     // results is not supported on web https://github.com/WebAssembly/js-types/blob/main/proposals/js-types/Overview.md
     results: ty?.results,
-    // TODO(web): callAsync,
+    callAsync: instance == null
+        ? null
+        : ([args]) async {
+            final result = await instance.runParallel(
+              function,
+              [args ?? const []],
+            );
+            return result[0];
+          },
   );
   return function;
 }
@@ -518,7 +624,8 @@ class _Table extends WasmTable {
     if (v is Function &&
         v is! WasmFunction &&
         js_util.hasProperty(v, 'length')) {
-      return _makeWasmFunction(v);
+      // TODO: support callAsync
+      return _makeWasmFunction(v, null);
     }
     return v;
   }

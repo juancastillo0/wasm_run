@@ -1,5 +1,6 @@
 // ignore_for_file: avoid_print
 
+import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
@@ -7,10 +8,11 @@ import 'dart:typed_data';
 import 'package:test/test.dart';
 import 'package:wasmit/wasmit.dart';
 import 'package:wasmit_example/main.dart';
+import 'package:wasmit_example/threads_base64.dart';
 
 // dart test test/main_test -c source --release -n threads
 void threadsTest() {
-  test('threads', skip: isWeb, () => main(onlyTest: true));
+  test('threads', () => main(onlyTest: true));
 }
 
 Directory getRootDirectory() {
@@ -26,25 +28,26 @@ Directory getRootDirectory() {
 
 Future<Uint8List> getThreadsExample() async {
   Uint8List? binary;
-  final root = getRootDirectory();
-  final wasmFiles = [
-    '${root.path}/packages/rust_threads_example/target/wasm32-unknown-unknown/release/rust_threads_example.wasm',
-    '${root.path}/packages/rust_threads_example/target/wasm32-unknown-unknown/debug/rust_threads_example.wasm',
-  ];
-  for (final element in wasmFiles) {
-    try {
-      binary = await File(element).readAsBytes();
-      break;
-    } catch (_) {}
-  }
+  try {
+    final root = getRootDirectory();
+    final wasmFiles = [
+      '${root.path}/packages/rust_threads_example/target/wasm32-unknown-unknown/release/rust_threads_example.wasm',
+      '${root.path}/packages/rust_threads_example/target/wasm32-unknown-unknown/debug/rust_threads_example.wasm',
+    ];
+    for (final element in wasmFiles) {
+      try {
+        binary = await File(element).readAsBytes();
+        break;
+      } catch (_) {}
+    }
+  } catch (_) {}
   if (binary == null) {
-    // if (isWeb) {
-    //   binary = base64Decode(threadsExampleBase64);
-    // } else {
-    throw Exception('Could not find wasm file');
-    // }
+    if (isWeb) {
+      binary = base64Decode(threadsExampleBase64);
+    } else {
+      throw Exception('Could not find wasm file');
+    }
   }
-
   return binary;
 }
 
@@ -76,13 +79,20 @@ Future<void> main({bool onlyTest = false}) async {
       .getImports()
       .where((imp) => imp.kind == WasmExternalKind.memory)
       .first;
-
-  final memoryType = memoryImport.type!.field0 as MemoryTy;
-  expectEq(memoryType.shared, true);
-  final memory = module.createSharedMemory(
-    minPages: memoryType.minimumPages,
-    maxPages: memoryType.maximumPages!,
-  );
+  final WasmSharedMemory memory;
+  if (features.supportedFeatures.typeReflection) {
+    final memoryType = memoryImport.type!.field0 as MemoryTy;
+    expectEq(memoryType.shared, true);
+    memory = module.createSharedMemory(
+      minPages: memoryType.minimumPages, // 17
+      maxPages: memoryType.maximumPages!, // 16384
+    );
+  } else {
+    memory = module.createSharedMemory(
+      minPages: 17,
+      maxPages: 16384,
+    );
+  }
   // TODO: MemoryTy toString()
   print(memory);
   builder.addImport('env', 'memory', memory);

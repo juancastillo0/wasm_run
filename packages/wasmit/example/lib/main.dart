@@ -58,8 +58,8 @@ void testAll({
     final defaultFeatures = runtime.defaultFeatures;
     final supportedFeatures = runtime.supportedFeatures;
 
-    expect(defaultFeatures.wasiFeatures, isLibrary ? isNotNull : isNull);
-    expect(supportedFeatures.wasiFeatures, isLibrary ? isNotNull : isNull);
+    expect(defaultFeatures.wasiFeatures, isNotNull);
+    expect(supportedFeatures.wasiFeatures, isNotNull);
 
     final alwaysTrue = [
       supportedFeatures.mutableGlobal,
