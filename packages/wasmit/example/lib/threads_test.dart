@@ -146,8 +146,9 @@ Future<void> main({bool onlyTest = false}) async {
   print('parallel: ${stopwatchPar.elapsedMilliseconds}ms, count: $count');
 
   final stopwatchWasm = Stopwatch()..start();
+  List<Object?> asyncSum = [];
   for (int i = 0; i < count; i++) {
-    await sumFunc.callAsync!([pointer, numInts]);
+    asyncSum = await sumFunc.callAsync!([pointer, numInts]);
   }
   stopwatchWasm.stop();
   print('wasm: ${stopwatchWasm.elapsedMilliseconds}ms, count: $count');
@@ -155,9 +156,11 @@ Future<void> main({bool onlyTest = false}) async {
   int add(int a, int b) => a + b;
   final stopwatch = Stopwatch()..start();
   final c = onlyTest ? 1 : count ~/ 10;
+  int dartSum = 0;
+  int dartMax = 0;
   for (int i = 0; i < c; i++) {
-    values.reduce(add);
-    values.reduce(max);
+    dartSum = values.reduce(add);
+    dartMax = values.reduce(max);
   }
   stopwatch.stop();
   print(
@@ -174,12 +177,10 @@ Future<void> main({bool onlyTest = false}) async {
 
   dealloc.inner(pointer, size);
 
-  final dartSum = values.reduce(add);
   print('sumValues: $sumValues, $valueSum, $dartSum');
-  print('maxValues: $maxValues, $valueMax, ${values.reduce(max)}');
+  print('maxValues: $maxValues, $valueMax, $dartMax');
 
   expectEq(valueSum, sumValues);
-  final asyncSum = await sumFunc.callAsync!([pointer, numInts]);
   expectEq(valueSum, asyncSum.first);
   expectEq(valueSum, sumFunc([pointer, numInts]).first);
   expectEq(valueSum, dartSum);

@@ -56,7 +56,6 @@ class WasmWorker {
   static Future<WasmWorker> create({
     required int workerId,
     required Map<String, Object?> wasmImports,
-    required Object wasmMemory,
     required Object wasmModule,
   }) {
     if (!html.Worker.supported) {
@@ -64,25 +63,24 @@ class WasmWorker {
     }
     final worker = html.Worker('./packages/wasmit/assets/wasm.worker.js');
 
-    final sendSharedMemoryToWorker =
-        js_util.callMethod<void Function(Object, Object, Object)>(
+    final postMessage =
+        js_util.callMethod<void Function(Object, Object)>(
       js_util.globalThis,
       'eval',
-      ['(worker, module, memory) => worker.postMessage({module, memory})'],
+      ['(worker, data) => worker.postMessage(data)'],
     );
 
     final wasmWorker = WasmWorker._(workerId, worker);
     worker.onError.listen(wasmWorker._onLoaded.completeError);
 
-    sendSharedMemoryToWorker(worker, wasmModule, wasmMemory);
-    worker.postMessage(
-      _MessageDataLoad(
-        cmd: 'load',
-        wasmImports: wasmImports,
-        wasmMemory: wasmMemory,
-        wasmModule: wasmModule,
-        workerId: workerId,
-      ),
+    postMessage(
+      worker,
+      js_util.jsify({
+        'cmd': 'load',
+        'wasmImports': wasmImports,
+        'wasmModule': wasmModule,
+        'workerId': workerId
+      }) as Object,
     );
     return wasmWorker._onLoaded.future;
   }

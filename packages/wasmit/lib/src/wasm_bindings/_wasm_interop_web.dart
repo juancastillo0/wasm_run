@@ -158,6 +158,7 @@ class _WasmModule extends WasmModule {
   }) {
     return _SharedMemory(
       Memory.shared(initial: minPages, maximum: maxPages),
+      MemoryTy(minimumPages: minPages, maximumPages: maxPages, shared: true),
     );
   }
 
@@ -232,7 +233,10 @@ class _Builder extends WasmInstanceBuilder {
 
   @override
   WasmMemory createMemory({required int minPages, int? maxPages}) {
-    return _Memory(Memory(initial: minPages, maximum: maxPages));
+    return _Memory(
+      Memory(initial: minPages, maximum: maxPages),
+      MemoryTy(minimumPages: minPages, maximumPages: maxPages, shared: false),
+    );
   }
 
   @override
@@ -253,40 +257,46 @@ class _Builder extends WasmInstanceBuilder {
               maximum: maxSize,
               value: value.value,
             ),
+      TableTy(
+        element: value.type,
+        min: minSize,
+        max: maxSize,
+      ),
     );
   }
 
   @override
   WasmGlobal createGlobal(WasmValue value, {required bool mutable}) {
+    final type = GlobalTy(
+      content: value.type,
+      mutability: mutable ? GlobalMutability.Var : GlobalMutability.Const,
+    );
+    final val = value.value;
+    final Global inner;
     switch (value.type) {
       case ValueTy.i32:
-        return _Global(
-          Global.i32(value: value.value! as int, mutable: mutable),
-        );
+        inner = Global.i32(value: val! as int, mutable: mutable);
+        break;
       case ValueTy.i64:
-        return _Global(
-          Global.i64(value: i64.toBigInt(value.value!), mutable: mutable),
-        );
+        inner = Global.i64(value: i64.toBigInt(val!), mutable: mutable);
+        break;
       case ValueTy.f32:
-        return _Global(
-          Global.f32(value: value.value! as double, mutable: mutable),
-        );
+        inner = Global.f32(value: val! as double, mutable: mutable);
+        break;
       case ValueTy.f64:
-        return _Global(
-          Global.f64(value: value.value! as double, mutable: mutable),
-        );
+        inner = Global.f64(value: val! as double, mutable: mutable);
+        break;
       case ValueTy.v128:
         throw UnsupportedError('v128 external values are not supported on web');
       case ValueTy.externRef:
-        return _Global(
-          Global.externref(value: value.value, mutable: mutable),
-        );
+        inner = Global.externref(value: val, mutable: mutable);
+        break;
       case ValueTy.funcRef:
-        return _Global(
-          // TODO(web): Implement funcRef "anyfunc"
-          Global.externref(value: value.value, mutable: mutable),
-        );
+        // TODO(web): Implement funcRef "anyfunc"
+        inner = Global.externref(value: val, mutable: mutable);
+        break;
     }
+    return _Global(inner, type);
   }
 
   @override
@@ -346,13 +356,6 @@ class _Builder extends WasmInstanceBuilder {
         }),
       ),
     );
-    final importMemo = importMap['env']?['memory'];
-    final Object jsMemory;
-    if (importMemo is Memory) {
-      jsMemory = importMemo.jsObject;
-    } else {
-      jsMemory = instance.memories.values.first.jsObject;
-    }
     final workers = await Future.wait(
       Iterable.generate(
         numThreads,
@@ -361,7 +364,6 @@ class _Builder extends WasmInstanceBuilder {
             workerId: index + 1,
             wasmModule: module.jsObject,
             wasmImports: mappedImports,
-            wasmMemory: jsMemory,
           );
         },
       ),
@@ -394,19 +396,20 @@ class _Instance extends WasmInstance {
             )
             .followedBy(
               instance.globals.entries
-                  .map((e) => MapEntry(e.key, _Global(e.value))),
+                  .map((e) => MapEntry(e.key, _Global(e.value, null))),
             )
             .followedBy(
           instance.memories.entries.map((e) {
             final c =
                 js_util.getProperty<Object>(e.value.buffer, 'constructor');
             if (js_util.getProperty<Object>(c, 'name') == 'SharedArrayBuffer') {
-              return MapEntry(e.key, _SharedMemory(e.value));
+              return MapEntry(e.key, _SharedMemory(e.value, null));
             }
-            return MapEntry(e.key, _Memory(e.value));
+            return MapEntry(e.key, _Memory(e.value, null));
           }),
         ).followedBy(
-          instance.tables.entries.map((e) => MapEntry(e.key, _Table(e.value))),
+          instance.tables.entries
+              .map((e) => MapEntry(e.key, _Table(e.value, null))),
         ),
       ),
     );
@@ -526,7 +529,7 @@ WasmExternal _makeWasmFunction(Function value, _Instance? instance) {
 }
 
 class _SharedMemory extends _Memory implements WasmSharedMemory {
-  _SharedMemory(super.memory);
+  _SharedMemory(super.memory, super._type);
 
   @override
   int atomicNotify(int addr, int count) {
@@ -556,8 +559,9 @@ class _SharedMemory extends _Memory implements WasmSharedMemory {
 
 class _Memory extends WasmMemory {
   final Memory memory;
+  final MemoryTy? _type;
 
-  _Memory(this.memory);
+  _Memory(this.memory, this._type);
 
   @override
   void grow(int deltaPages) {
@@ -584,13 +588,14 @@ class _Memory extends WasmMemory {
   }
 
   @override
-  MemoryTy? get type => _getMemoryType(memory.jsObject);
+  MemoryTy? get type => _type ?? _getMemoryType(memory.jsObject);
 }
 
 class _Global extends WasmGlobal {
   final Global global;
+  final GlobalTy? _type;
 
-  _Global(this.global);
+  _Global(this.global, this._type);
 
   @override
   Object? get() => global.jsObject.value;
@@ -601,12 +606,14 @@ class _Global extends WasmGlobal {
   }
 
   @override
-  GlobalTy? get type => _getGlobalType(global.jsObject);
+  GlobalTy? get type => _type ?? _getGlobalType(global.jsObject);
 }
 
 class _Table extends WasmTable {
   final Table table;
-  _Table(this.table);
+  final TableTy? _type;
+
+  _Table(this.table, this._type);
 
   @override
   void set(int index, WasmValue value) {
@@ -645,7 +652,7 @@ class _Table extends WasmTable {
   }
 
   @override
-  TableTy? get type => _getTableType(table.jsObject);
+  TableTy? get type => _type ?? _getTableType(table.jsObject);
 }
 
 ExternalType? _getExternalType(Object value) {

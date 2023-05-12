@@ -1,16 +1,11 @@
 // @ts-check
 "use strict";
 
-/** @type {WorkerModule | undefined} */
-let Module;
+/** @type {WorkerData | undefined} */
+let workerData;
 
 /** @type {number | undefined} */
 let workerId;
-
-/** @type {WebAssembly.Memory} */
-let globalMemory;
-/** @type {WebAssembly.Module} */
-let globalModule;
 
 /**
  * @param {PostMessage} data
@@ -19,49 +14,36 @@ function sendMessage(data) {
   self.postMessage(data);
 }
 
-onmessage = async (e) => {
+onmessage = (e) => {
   /** @type {number | undefined} */
   let taskId;
-
-  if (
-    typeof e.data === "object" &&
-    e.data.memory instanceof WebAssembly.Memory &&
-    e.data.module instanceof WebAssembly.Module
-  ) {
-    globalMemory = e.data.memory;
-    globalModule = e.data.module;
-    return;
-  }
 
   try {
     /** @type {MessageData} */
     const data = e.data;
     if (data.cmd === "load") {
       workerId = data.workerId;
-      globalModule = globalModule || data.wasmModule || new WebAssembly.Module(data.wasmBytes);
-      globalMemory = globalMemory || data.wasmMemory;
-      // TODO: use imports
-      const instance = new WebAssembly.Instance(globalModule, {
-        env: { memory: globalMemory },
-      });
-      Module = {
-        buffer: globalMemory.buffer,
+      // TODO: map imports
+      const instance = new WebAssembly.Instance(
+        data.wasmModule,
+        data.wasmImports
+      );
+      workerData = {
         wasmInstance: instance,
-        wasmModule: globalModule,
-        wasmMemory: globalMemory,
+        wasmModule: data.wasmModule,
         workerId: data.workerId,
       };
       sendMessage({
         cmd: "loaded",
-        workerId: Module.workerId,
+        workerId: workerData.workerId,
       });
     } else if (data.cmd === "run") {
       taskId = data.taskId;
-      if (!Module) {
-        throw new Error("Module not loaded");
+      if (!workerData) {
+        throw new Error("Worker Instance not loaded");
       }
       try {
-        const func = Module.wasmInstance.exports[data.functionExport];
+        const func = workerData.wasmInstance.exports[data.functionExport];
         if (!func) {
           throw new Error(
             "functionExport " + data.functionExport + " not found"
@@ -83,7 +65,7 @@ onmessage = async (e) => {
           taskId: data.taskId,
           result,
           isUndefined: result === undefined,
-          workerId: Module.workerId,
+          workerId: workerData.workerId,
         });
       } catch (ex) {
         sendMessage({
@@ -91,7 +73,7 @@ onmessage = async (e) => {
           didThrow: true,
           taskId: data.taskId,
           text: ex.message,
-          workerId: Module.workerId,
+          workerId: workerData.workerId,
         });
       }
       // } else if (data.cmd === "cancel") {
@@ -131,25 +113,18 @@ function threadPrintErr() {
 }
 
 /**
- * The complete Triforce, or one or more components of the Triforce.
- * @typedef {Object} WorkerModule
+ * @typedef {Object} WorkerData
  * @property {number} workerId
  * @property {WebAssembly.Instance} wasmInstance
  * @property {WebAssembly.Module} wasmModule
- * @property {WebAssembly.Memory} wasmMemory
- * @property {ArrayBuffer | SharedArrayBuffer} buffer
  */
 
 /**
- * The complete Triforce, or one or more components of the Triforce.
  * @typedef {Object} MessageDataLoad
  * @property {"load"} cmd
  * @property {number} workerId
  * @property {WebAssembly.Module} wasmModule
- * @property {Buffer} wasmBytes
- * @property {WebAssembly.Memory} wasmMemory
  * @property {WebAssembly.Imports | undefined} wasmImports
- * @property {string | Blob} urlOrBlob
  */
 
 /**
