@@ -49,7 +49,7 @@ struct WasmiModuleImpl {
     store: Store<StoreState>,
     instance: Option<Instance>,
     threads: Option<Arc<Mutex<Vec<Option<WasmiModuleImpl>>>>>,
-    pool: Option<rayon::ThreadPool>,
+    pool: Option<Arc<rayon::ThreadPool>>,
 }
 
 // impl Debug for WasmiModuleImpl {
@@ -62,7 +62,15 @@ struct StoreState {
     wasi_ctx: Option<wasi_common::WasiCtx>,
     stdout: Option<StreamSink<Vec<u8>>>,
     stderr: Option<StreamSink<Vec<u8>>>,
+    functions: HashMap<usize, HostFunction>,
     // TODO: add to stdin?
+}
+
+struct HostFunction {
+    function_pointer: usize,
+    function_id: u32,
+    param_types: Vec<ValueTy>,
+    result_types: Vec<ValueTy>,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -71,27 +79,16 @@ pub struct WasmitModuleId(pub u32);
 #[derive(Debug, Clone, Copy)]
 pub struct WasmitInstanceId(pub u32);
 
-pub fn module_builder(
-    module: CompiledModule,
-    num_threads: Option<usize>,
-    wasi_config: Option<WasiConfigNative>,
-) -> Result<SyncReturn<WasmitModuleId>> {
-    let guard = module.0.lock().unwrap();
-    let engine = guard.engine();
-    let mut linker = <Linker<StoreState>>::new(engine);
-
-    let mut arr = ARRAY.write().unwrap();
-    arr.last_id += 1;
-
-    let id = arr.last_id;
+fn make_wasi_ctx(
+    id: u32,
+    wasi_config: &Option<WasiConfigNative>,
+) -> Result<Option<wasi_common::WasiCtx>> {
     let mut wasi_ctx = None;
     if let Some(wasi_config) = wasi_config {
-        wasmtime_wasi::add_to_linker(&mut linker, |ctx| ctx.wasi_ctx.as_mut().unwrap())?;
-
         let wasi = wasi_config.to_wasi_ctx()?;
 
         if !wasi_config.preopened_files.is_empty() {
-            for value in wasi_config.preopened_files {
+            for value in &wasi_config.preopened_files {
                 let file = fs::File::open(value)?;
                 // let vv = file.as_fd().as_raw_fd();
                 let wasm_file =
@@ -128,41 +125,70 @@ pub fn module_builder(
         wasi_ctx = Some(wasi);
     }
 
+    Ok(wasi_ctx)
+}
+
+pub fn module_builder(
+    module: CompiledModule,
+    num_threads: Option<usize>,
+    wasi_config: Option<WasiConfigNative>,
+) -> Result<SyncReturn<WasmitModuleId>> {
+    let guard = module.0.lock().unwrap();
+    let engine = guard.engine();
+
+    let mut arr = ARRAY.write().unwrap();
+    arr.last_id += 1;
+
+    let id = arr.last_id;
+
+    let mut linker = <Linker<StoreState>>::new(engine);
+    let wasi_ctx = make_wasi_ctx(id, &wasi_config)?;
+    if wasi_ctx.is_some() {
+        wasmtime_wasi::add_to_linker(&mut linker, |ctx| ctx.wasi_ctx.as_mut().unwrap())?;
+    }
+
     let store = Store::new(
         engine,
         StoreState {
             wasi_ctx: wasi_ctx.clone(),
             stdout: None,
             stderr: None,
+            functions: Default::default(),
         },
     );
-    let m_ = Arc::clone(&module.0);
+    let wasm_module = Arc::clone(&module.0);
     let threads = if let Some(num_threads) = num_threads {
         if num_threads <= 1 {
             return Err(anyhow::anyhow!(format!(
                 "num_threads must be greater than 1. received: {num_threads}"
             )));
         }
-        let threads_vec: Vec<Option<WasmiModuleImpl>> = (0..num_threads)
+        let threads_vec = (0..num_threads)
             .map(|_index| {
-                Some(WasmiModuleImpl {
-                    module: m_.clone(),
-                    linker: linker.clone(),
+                let mut linker = <Linker<StoreState>>::new(engine);
+                if wasi_ctx.is_some() {
+                    wasmtime_wasi::add_to_linker(&mut linker, |ctx| {
+                        ctx.wasi_ctx.as_mut().unwrap()
+                    })?;
+                }
+                Ok(Some(WasmiModuleImpl {
+                    module: wasm_module.clone(),
+                    linker,
                     store: Store::new(
                         engine,
-                        // TODO: test wasi_ctx and stdio in threads
                         StoreState {
                             wasi_ctx: wasi_ctx.clone(),
                             stdout: None,
                             stderr: None,
+                            functions: Default::default(),
                         },
                     ),
                     instance: None,
                     threads: None,
                     pool: None,
-                })
+                }))
             })
-            .collect();
+            .collect::<Result<Vec<Option<WasmiModuleImpl>>>>()?;
 
         Some(Arc::new(Mutex::new(threads_vec)))
     } else {
@@ -170,7 +196,7 @@ pub fn module_builder(
     };
 
     let module_builder = WasmiModuleImpl {
-        module: m_.clone(),
+        module: wasm_module.clone(),
         linker: linker.clone(),
         store,
         instance: None,
@@ -235,7 +261,7 @@ impl WasmitModuleId {
     }
     pub fn instantiate(&self) -> Result<WasmitInstanceId> {
         let mut state = ARRAY.write().unwrap();
-        let mut module = state.map.get_mut(&self.0).unwrap();
+        let module = state.map.get_mut(&self.0).unwrap();
         if module.instance.is_some() {
             return Err(anyhow::anyhow!("Instance already exists"));
         }
@@ -249,7 +275,7 @@ impl WasmitModuleId {
             let len = {
                 let mut threads_i = threads.lock().unwrap();
                 for thread in threads_i.iter_mut() {
-                    let mut thread = thread.as_mut().unwrap();
+                    let thread = thread.as_mut().unwrap();
                     let thread_instance = thread
                         .linker
                         .instantiate(&mut thread.store, &thread.module.lock().unwrap())?;
@@ -270,10 +296,29 @@ impl WasmitModuleId {
                 })
                 .build()
                 .unwrap();
-            module.pool = Some(pool);
+            module.pool = Some(Arc::new(pool));
         }
 
         Ok(WasmitInstanceId(self.0))
+    }
+
+    fn map_function(
+        m: &WasmiModuleImpl,
+        func: &Func,
+        new_context: StoreContextMut<'_, StoreState>,
+    ) -> RustOpaque<WFunc> {
+        let raw_id = unsafe { func.to_raw(&m.store) };
+        let hf = m.store.data().functions.get(&raw_id).unwrap();
+        let ff = Self::_create_function(
+            new_context,
+            hf.function_pointer,
+            hf.function_id,
+            hf.param_types.clone(),
+            hf.result_types.clone(),
+        )
+        .unwrap()
+        .0;
+        ff
     }
 
     pub fn link_imports(&self, imports: Vec<ModuleImport>) -> Result<SyncReturn<()>> {
@@ -289,15 +334,61 @@ impl WasmitModuleId {
         if let Some(threads) = m.threads.as_ref() {
             for thread in &mut threads.lock().unwrap().iter_mut() {
                 let thread = thread.as_mut().unwrap();
-                // TODO: this is probably not necessary, since the linker may be shared
-                // TODO: If the linker is shared, what happens with imports (table, globals)
-                //  that are not shared?
                 for import in imports.iter() {
+                    let mapped_value = match &import.value {
+                        ExternalValue::Func(f) => {
+                            let ff = Self::map_function(
+                                m,
+                                &f.func_wasmtime,
+                                thread.store.as_context_mut(),
+                            );
+                            ExternalValue::Func(ff)
+                        }
+                        ExternalValue::SharedMemory(m) => ExternalValue::SharedMemory(m.clone()),
+                        ExternalValue::Global(g) => {
+                            let ty = g.ty(&m.store);
+                            let v = match g.get(&mut m.store) {
+                                Val::FuncRef(Some(v)) => {
+                                    let ff =
+                                        Self::map_function(m, &v, thread.store.as_context_mut());
+                                    Val::FuncRef(Some(ff.func_wasmtime))
+                                }
+                                v => v,
+                            };
+                            let global = Global::new(&mut thread.store, ty, v)?;
+                            ExternalValue::Global(RustOpaque::new(global))
+                        }
+                        ExternalValue::Memory(mem) => {
+                            let ty = mem.ty(&m.store);
+                            // TODO: should we copy the memory contents?
+                            let memory = Memory::new(&mut thread.store, ty)?;
+                            ExternalValue::Memory(RustOpaque::new(memory))
+                        }
+                        ExternalValue::Table(t) => {
+                            let ty = t.ty(&m.store);
+                            let fill_value = if t.size(&m.store) > 0 {
+                                let v = t.get(&mut m.store, 0);
+                                if let Some(Val::FuncRef(Some(v))) = v {
+                                    let ff =
+                                        Self::map_function(m, &v, thread.store.as_context_mut());
+                                    Some(Val::FuncRef(Some(ff.func_wasmtime)))
+                                } else {
+                                    v
+                                }
+                            } else {
+                                None
+                            };
+                            let v = fill_value.unwrap_or_else(|| default_val(&ty.element()));
+                            let table = Table::new(&mut thread.store, ty, v)?;
+                            ExternalValue::Table(RustOpaque::new(table))
+                        }
+                    };
+
                     thread.linker.define(
                         &mut thread.store,
                         &import.module,
                         &import.name,
-                        &import.value,
+                        &mapped_value,
                     )?;
                 }
             }
@@ -357,40 +448,51 @@ impl WasmitModuleId {
         &self,
         func_name: String,
         args: Vec<WasmVal>,
+        num_tasks: usize,
     ) -> Result<Vec<WasmVal>> {
         use rayon::prelude::*;
 
-        let mut m = ARRAY.write().unwrap();
-        let module = m.map.get_mut(&self.0).unwrap();
+        let (num_params, result_types, pool) = {
+            let mut m = ARRAY.write().unwrap();
+            let module = m.map.get_mut(&self.0).unwrap();
 
-        let func: Func = module
-            .instance
-            .unwrap()
-            .get_func(&mut module.store, &func_name)
-            .unwrap();
-        let num_params = func.ty(&module.store).params().count();
-        if args.len() % num_params != 0 {
-            return Err(anyhow::anyhow!(
-                "Number of arguments must be a multiple of {num_params}",
-            ));
-        }
-
-        if let Some(pool) = module.pool.as_ref() {
-            let args: Vec<Value> = args.into_iter().map(|v| v.to_val()).collect();
+            let func: Func = module
+                .instance
+                .unwrap()
+                .get_func(&mut module.store, &func_name)
+                .unwrap();
+            let num_params = func.ty(&module.store).params().count();
+            if (num_params == 0 && args.len() != 0)
+                || (num_params != 0 && args.len() % num_params != 0)
+                || args.len() % num_tasks != 0
+            {
+                return Err(anyhow::anyhow!(
+                    "Number of arguments must be a multiple of {num_params}",
+                ));
+            }
             let result_types: Vec<ValType> = func.ty(&module.store).results().collect();
+
+            Ok((num_params, result_types, module.pool.clone()))
+        }?;
+
+        if let Some(pool) = pool {
+            let args: Vec<Value> = args.into_iter().map(|v| v.to_val()).collect();
             pool.install(|| {
-                let v = args
-                    .par_chunks_exact(num_params)
+                let iter: Vec<&[Val]> = if args.is_empty() {
+                    (0..num_tasks).map(|_| [].as_slice()).collect()
+                } else {
+                    args.chunks_exact(num_params).collect()
+                };
+
+                let v = iter
+                    .par_iter()
                     .map(|inputs| {
                         STORE.with(|cell| {
                             let mut c = cell.borrow_mut();
                             let m = c.as_mut().unwrap();
 
-                            let mut outputs: Vec<Value> = result_types
-                                .clone()
-                                .into_iter()
-                                .map(|t| default_val(&t))
-                                .collect();
+                            let mut outputs: Vec<Value> =
+                                result_types.iter().map(default_val).collect();
                             let func = m
                                 .instance
                                 .unwrap()
@@ -460,50 +562,76 @@ impl WasmitModuleId {
         result_types: Vec<ValueTy>,
     ) -> Result<SyncReturn<RustOpaque<WFunc>>> {
         self.with_module_mut(|store| {
-            let f: WasmFunction = unsafe { std::mem::transmute(function_pointer) };
-            let func = Func::new(
+            Self::_create_function(
                 store,
-                FuncType::new(
-                    param_types.into_iter().map(ValueType::from),
-                    result_types.into_iter().map(ValueType::from),
-                ),
-                move |mut caller, params, results| {
-                    let mapped: Vec<WasmVal> = params
-                        .iter()
-                        .map(|a| WasmVal::from_val(a.clone()))
-                        .collect();
-                    let inputs = vec![mapped].into_dart();
-                    {
-                        let v =
-                            RwLock::new(unsafe { std::mem::transmute(caller.as_context_mut()) });
-                        CALLER_STACK.write().unwrap().push(v);
-                    }
-                    let output: Vec<WasmVal> = unsafe {
-                        let pointer = new_leak_box_ptr(inputs);
-                        let result = f(function_id, pointer);
-                        pointer.drop_in_place();
-                        result.wire2api()
-                    };
-                    let last_caller = CALLER_STACK.write().unwrap().pop();
-
-                    if output.len() != results.len() {
-                        return Err(anyhow::anyhow!("Invalid output length"));
-                    } else if last_caller.is_none() {
-                        return Err(anyhow::anyhow!("CALLER_STACK is empty"));
-                    } else if output.is_empty() {
-                        return std::result::Result::Ok(());
-                    }
-                    // let last_caller = last_caller.unwrap();
-                    // let mut caller = last_caller.write().unwrap();
-                    let mut outputs = output.into_iter();
-                    for value in results {
-                        *value = outputs.next().unwrap().to_val();
-                    }
-                    std::result::Result::Ok(())
-                },
-            );
-            Ok(SyncReturn(RustOpaque::new(func.into())))
+                function_pointer,
+                function_id,
+                param_types,
+                result_types,
+            )
         })
+    }
+
+    fn _create_function(
+        mut store: StoreContextMut<'_, StoreState>,
+        function_pointer: usize,
+        function_id: u32,
+        param_types: Vec<ValueTy>,
+        result_types: Vec<ValueTy>,
+    ) -> Result<SyncReturn<RustOpaque<WFunc>>> {
+        let f: WasmFunction = unsafe { std::mem::transmute(function_pointer) };
+        let func = Func::new(
+            store.as_context_mut(),
+            FuncType::new(
+                param_types.iter().cloned().map(ValueType::from),
+                result_types.iter().cloned().map(ValueType::from),
+            ),
+            move |mut caller, params, results| {
+                let mapped: Vec<WasmVal> = params
+                    .iter()
+                    .map(|a| WasmVal::from_val(a.clone()))
+                    .collect();
+                let inputs = vec![mapped].into_dart();
+                {
+                    let v = RwLock::new(unsafe { std::mem::transmute(caller.as_context_mut()) });
+                    CALLER_STACK.write().unwrap().push(v);
+                }
+                // TODO: function can only be called from Dart's main thread
+                let output: Vec<WasmVal> = unsafe {
+                    let pointer = new_leak_box_ptr(inputs);
+                    let result = f(function_id, pointer);
+                    pointer.drop_in_place();
+                    result.wire2api()
+                };
+                let last_caller = CALLER_STACK.write().unwrap().pop();
+
+                if output.len() != results.len() {
+                    return Err(anyhow::anyhow!("Invalid output length"));
+                } else if last_caller.is_none() {
+                    return Err(anyhow::anyhow!("CALLER_STACK is empty"));
+                } else if output.is_empty() {
+                    return std::result::Result::Ok(());
+                }
+                // let last_caller = last_caller.unwrap();
+                // let mut caller = last_caller.write().unwrap();
+                let mut outputs = output.into_iter();
+                for value in results {
+                    *value = outputs.next().unwrap().to_val();
+                }
+                std::result::Result::Ok(())
+            },
+        );
+        let raw_id = unsafe { func.to_raw(&store) };
+        store.data_mut().functions.insert(
+            raw_id,
+            HostFunction {
+                function_pointer,
+                function_id,
+                param_types,
+                result_types,
+            },
+        );
+        Ok(SyncReturn(RustOpaque::new(func.into())))
     }
 
     pub fn create_memory(&self, memory_type: MemoryTy) -> Result<SyncReturn<RustOpaque<Memory>>> {
@@ -801,12 +929,12 @@ impl From<WaitResult> for SharedMemoryWaitResult {
     }
 }
 
-#[derive(Debug)]
-pub struct WasmitSharedMemory(pub RustOpaque<RwLock<SharedMemory>>);
+#[derive(Debug, Clone)]
+pub struct WasmitSharedMemory(pub RustOpaque<Arc<RwLock<SharedMemory>>>);
 
 impl From<SharedMemory> for WasmitSharedMemory {
     fn from(memory: SharedMemory) -> Self {
-        WasmitSharedMemory(RustOpaque::new(RwLock::new(memory)))
+        WasmitSharedMemory(RustOpaque::new(Arc::new(RwLock::new(memory))))
     }
 }
 

@@ -111,6 +111,7 @@ abstract class WasmitDart {
       {required WasmitModuleId that,
       required String funcName,
       required List<WasmVal> args,
+      required int numTasks,
       dynamic hint});
 
   FlutterRustBridgeTaskConstMeta
@@ -509,6 +510,10 @@ abstract class WasmitDart {
 
   FlutterRustBridgeTaskConstMeta get kXorMethodAtomicsConstMeta;
 
+  DropFnType get dropOpaqueArcRwLockSharedMemory;
+  ShareFnType get shareOpaqueArcRwLockSharedMemory;
+  OpaqueTypeFinalizer get ArcRwLockSharedMemoryFinalizer;
+
   DropFnType get dropOpaqueArcStdSyncMutexModule;
   ShareFnType get shareOpaqueArcStdSyncMutexModule;
   OpaqueTypeFinalizer get ArcStdSyncMutexModuleFinalizer;
@@ -521,10 +526,6 @@ abstract class WasmitDart {
   ShareFnType get shareOpaqueMemory;
   OpaqueTypeFinalizer get MemoryFinalizer;
 
-  DropFnType get dropOpaqueRwLockSharedMemory;
-  ShareFnType get shareOpaqueRwLockSharedMemory;
-  OpaqueTypeFinalizer get RwLockSharedMemoryFinalizer;
-
   DropFnType get dropOpaqueTable;
   ShareFnType get shareOpaqueTable;
   OpaqueTypeFinalizer get TableFinalizer;
@@ -532,6 +533,22 @@ abstract class WasmitDart {
   DropFnType get dropOpaqueWFunc;
   ShareFnType get shareOpaqueWFunc;
   OpaqueTypeFinalizer get WFuncFinalizer;
+}
+
+@sealed
+class ArcRwLockSharedMemory extends FrbOpaque {
+  final WasmitDart bridge;
+  ArcRwLockSharedMemory.fromRaw(int ptr, int size, this.bridge)
+      : super.unsafe(ptr, size);
+  @override
+  DropFnType get dropFn => bridge.dropOpaqueArcRwLockSharedMemory;
+
+  @override
+  ShareFnType get shareFn => bridge.shareOpaqueArcRwLockSharedMemory;
+
+  @override
+  OpaqueTypeFinalizer get staticFinalizer =>
+      bridge.ArcRwLockSharedMemoryFinalizer;
 }
 
 @sealed
@@ -576,21 +593,6 @@ class Memory extends FrbOpaque {
 
   @override
   OpaqueTypeFinalizer get staticFinalizer => bridge.MemoryFinalizer;
-}
-
-@sealed
-class RwLockSharedMemory extends FrbOpaque {
-  final WasmitDart bridge;
-  RwLockSharedMemory.fromRaw(int ptr, int size, this.bridge)
-      : super.unsafe(ptr, size);
-  @override
-  DropFnType get dropFn => bridge.dropOpaqueRwLockSharedMemory;
-
-  @override
-  ShareFnType get shareFn => bridge.shareOpaqueRwLockSharedMemory;
-
-  @override
-  OpaqueTypeFinalizer get staticFinalizer => bridge.RwLockSharedMemoryFinalizer;
 }
 
 @sealed
@@ -1525,11 +1527,13 @@ class WasmitModuleId {
   Future<List<WasmVal>> callFunctionHandleParallel(
           {required String funcName,
           required List<WasmVal> args,
+          required int numTasks,
           dynamic hint}) =>
       bridge.callFunctionHandleParallelMethodWasmitModuleId(
         that: this,
         funcName: funcName,
         args: args,
+        numTasks: numTasks,
       );
 
   FuncTy getFunctionType({required WFunc func, dynamic hint}) =>
@@ -1727,7 +1731,7 @@ class WasmitModuleId {
 
 class WasmitSharedMemory {
   final WasmitDart bridge;
-  final RwLockSharedMemory field0;
+  final ArcRwLockSharedMemory field0;
 
   const WasmitSharedMemory({
     required this.bridge,
@@ -2132,17 +2136,19 @@ class WasmitDartImpl implements WasmitDart {
       {required WasmitModuleId that,
       required String funcName,
       required List<WasmVal> args,
+      required int numTasks,
       dynamic hint}) {
     var arg0 = _platform.api2wire_box_autoadd_wasmit_module_id(that);
     var arg1 = _platform.api2wire_String(funcName);
     var arg2 = _platform.api2wire_list_wasm_val(args);
+    var arg3 = api2wire_usize(numTasks);
     return _platform.executeNormal(FlutterRustBridgeTask(
       callFfi: (port_) => _platform.inner
           .wire_call_function_handle_parallel__method__WasmitModuleId(
-              port_, arg0, arg1, arg2),
+              port_, arg0, arg1, arg2, arg3),
       parseSuccessData: _wire2api_list_wasm_val,
       constMeta: kCallFunctionHandleParallelMethodWasmitModuleIdConstMeta,
-      argValues: [that, funcName, args],
+      argValues: [that, funcName, args, numTasks],
       hint: hint,
     ));
   }
@@ -2151,7 +2157,7 @@ class WasmitDartImpl implements WasmitDart {
       get kCallFunctionHandleParallelMethodWasmitModuleIdConstMeta =>
           const FlutterRustBridgeTaskConstMeta(
             debugName: "call_function_handle_parallel__method__WasmitModuleId",
-            argNames: ["that", "funcName", "args"],
+            argNames: ["that", "funcName", "args", "numTasks"],
           );
 
   FuncTy getFunctionTypeMethodWasmitModuleId(
@@ -3237,6 +3243,13 @@ class WasmitDartImpl implements WasmitDart {
         argNames: ["that", "offset", "kind", "val", "order"],
       );
 
+  DropFnType get dropOpaqueArcRwLockSharedMemory =>
+      _platform.inner.drop_opaque_ArcRwLockSharedMemory;
+  ShareFnType get shareOpaqueArcRwLockSharedMemory =>
+      _platform.inner.share_opaque_ArcRwLockSharedMemory;
+  OpaqueTypeFinalizer get ArcRwLockSharedMemoryFinalizer =>
+      _platform.ArcRwLockSharedMemoryFinalizer;
+
   DropFnType get dropOpaqueArcStdSyncMutexModule =>
       _platform.inner.drop_opaque_ArcStdSyncMutexModule;
   ShareFnType get shareOpaqueArcStdSyncMutexModule =>
@@ -3252,13 +3265,6 @@ class WasmitDartImpl implements WasmitDart {
   ShareFnType get shareOpaqueMemory => _platform.inner.share_opaque_Memory;
   OpaqueTypeFinalizer get MemoryFinalizer => _platform.MemoryFinalizer;
 
-  DropFnType get dropOpaqueRwLockSharedMemory =>
-      _platform.inner.drop_opaque_RwLockSharedMemory;
-  ShareFnType get shareOpaqueRwLockSharedMemory =>
-      _platform.inner.share_opaque_RwLockSharedMemory;
-  OpaqueTypeFinalizer get RwLockSharedMemoryFinalizer =>
-      _platform.RwLockSharedMemoryFinalizer;
-
   DropFnType get dropOpaqueTable => _platform.inner.drop_opaque_Table;
   ShareFnType get shareOpaqueTable => _platform.inner.share_opaque_Table;
   OpaqueTypeFinalizer get TableFinalizer => _platform.TableFinalizer;
@@ -3272,6 +3278,10 @@ class WasmitDartImpl implements WasmitDart {
   }
 // Section: wire2api
 
+  ArcRwLockSharedMemory _wire2api_ArcRwLockSharedMemory(dynamic raw) {
+    return ArcRwLockSharedMemory.fromRaw(raw[0], raw[1], this);
+  }
+
   ArcStdSyncMutexModule _wire2api_ArcStdSyncMutexModule(dynamic raw) {
     return ArcStdSyncMutexModule.fromRaw(raw[0], raw[1], this);
   }
@@ -3282,10 +3292,6 @@ class WasmitDartImpl implements WasmitDart {
 
   Memory _wire2api_Memory(dynamic raw) {
     return Memory.fromRaw(raw[0], raw[1], this);
-  }
-
-  RwLockSharedMemory _wire2api_RwLockSharedMemory(dynamic raw) {
-    return RwLockSharedMemory.fromRaw(raw[0], raw[1], this);
   }
 
   String _wire2api_String(dynamic raw) {
@@ -3707,7 +3713,7 @@ class WasmitDartImpl implements WasmitDart {
       throw Exception('unexpected arr length: expect 1 but see ${arr.length}');
     return WasmitSharedMemory(
       bridge: this,
-      field0: _wire2api_RwLockSharedMemory(arr[0]),
+      field0: _wire2api_ArcRwLockSharedMemory(arr[0]),
     );
   }
 }

@@ -17,6 +17,14 @@ class WasmitDartPlatform extends FlutterRustBridgeBase<WasmitDartWire> {
 // Section: api2wire
 
   @protected
+  wire_ArcRwLockSharedMemory api2wire_ArcRwLockSharedMemory(
+      ArcRwLockSharedMemory raw) {
+    final ptr = inner.new_ArcRwLockSharedMemory();
+    _api_fill_to_wire_ArcRwLockSharedMemory(raw, ptr);
+    return ptr;
+  }
+
+  @protected
   wire_ArcStdSyncMutexModule api2wire_ArcStdSyncMutexModule(
       ArcStdSyncMutexModule raw) {
     final ptr = inner.new_ArcStdSyncMutexModule();
@@ -35,13 +43,6 @@ class WasmitDartPlatform extends FlutterRustBridgeBase<WasmitDartWire> {
   wire_Memory api2wire_Memory(Memory raw) {
     final ptr = inner.new_Memory();
     _api_fill_to_wire_Memory(raw, ptr);
-    return ptr;
-  }
-
-  @protected
-  wire_RwLockSharedMemory api2wire_RwLockSharedMemory(RwLockSharedMemory raw) {
-    final ptr = inner.new_RwLockSharedMemory();
-    _api_fill_to_wire_RwLockSharedMemory(raw, ptr);
     return ptr;
   }
 
@@ -332,6 +333,10 @@ class WasmitDartPlatform extends FlutterRustBridgeBase<WasmitDartWire> {
 
 // Section: finalizer
 
+  late final OpaqueTypeFinalizer _ArcRwLockSharedMemoryFinalizer =
+      OpaqueTypeFinalizer(inner._drop_opaque_ArcRwLockSharedMemoryPtr);
+  OpaqueTypeFinalizer get ArcRwLockSharedMemoryFinalizer =>
+      _ArcRwLockSharedMemoryFinalizer;
   late final OpaqueTypeFinalizer _ArcStdSyncMutexModuleFinalizer =
       OpaqueTypeFinalizer(inner._drop_opaque_ArcStdSyncMutexModulePtr);
   OpaqueTypeFinalizer get ArcStdSyncMutexModuleFinalizer =>
@@ -342,10 +347,6 @@ class WasmitDartPlatform extends FlutterRustBridgeBase<WasmitDartWire> {
   late final OpaqueTypeFinalizer _MemoryFinalizer =
       OpaqueTypeFinalizer(inner._drop_opaque_MemoryPtr);
   OpaqueTypeFinalizer get MemoryFinalizer => _MemoryFinalizer;
-  late final OpaqueTypeFinalizer _RwLockSharedMemoryFinalizer =
-      OpaqueTypeFinalizer(inner._drop_opaque_RwLockSharedMemoryPtr);
-  OpaqueTypeFinalizer get RwLockSharedMemoryFinalizer =>
-      _RwLockSharedMemoryFinalizer;
   late final OpaqueTypeFinalizer _TableFinalizer =
       OpaqueTypeFinalizer(inner._drop_opaque_TablePtr);
   OpaqueTypeFinalizer get TableFinalizer => _TableFinalizer;
@@ -353,6 +354,11 @@ class WasmitDartPlatform extends FlutterRustBridgeBase<WasmitDartWire> {
       OpaqueTypeFinalizer(inner._drop_opaque_WFuncPtr);
   OpaqueTypeFinalizer get WFuncFinalizer => _WFuncFinalizer;
 // Section: api_fill_to_wire
+
+  void _api_fill_to_wire_ArcRwLockSharedMemory(
+      ArcRwLockSharedMemory apiObj, wire_ArcRwLockSharedMemory wireObj) {
+    wireObj.ptr = apiObj.shareOrMove();
+  }
 
   void _api_fill_to_wire_ArcStdSyncMutexModule(
       ArcStdSyncMutexModule apiObj, wire_ArcStdSyncMutexModule wireObj) {
@@ -364,11 +370,6 @@ class WasmitDartPlatform extends FlutterRustBridgeBase<WasmitDartWire> {
   }
 
   void _api_fill_to_wire_Memory(Memory apiObj, wire_Memory wireObj) {
-    wireObj.ptr = apiObj.shareOrMove();
-  }
-
-  void _api_fill_to_wire_RwLockSharedMemory(
-      RwLockSharedMemory apiObj, wire_RwLockSharedMemory wireObj) {
     wireObj.ptr = apiObj.shareOrMove();
   }
 
@@ -705,7 +706,7 @@ class WasmitDartPlatform extends FlutterRustBridgeBase<WasmitDartWire> {
 
   void _api_fill_to_wire_wasmit_shared_memory(
       WasmitSharedMemory apiObj, wire_WasmitSharedMemory wireObj) {
-    wireObj.field0 = api2wire_RwLockSharedMemory(apiObj.field0);
+    wireObj.field0 = api2wire_ArcRwLockSharedMemory(apiObj.field0);
   }
 }
 
@@ -1067,12 +1068,14 @@ class WasmitDartWire implements FlutterRustBridgeWireBase {
     ffi.Pointer<wire_WasmitModuleId> that,
     ffi.Pointer<wire_uint_8_list> func_name,
     ffi.Pointer<wire_list_wasm_val> args,
+    int num_tasks,
   ) {
     return _wire_call_function_handle_parallel__method__WasmitModuleId(
       port_,
       that,
       func_name,
       args,
+      num_tasks,
     );
   }
 
@@ -1083,7 +1086,8 @@ class WasmitDartWire implements FlutterRustBridgeWireBase {
                       ffi.Int64,
                       ffi.Pointer<wire_WasmitModuleId>,
                       ffi.Pointer<wire_uint_8_list>,
-                      ffi.Pointer<wire_list_wasm_val>)>>(
+                      ffi.Pointer<wire_list_wasm_val>,
+                      ffi.UintPtr)>>(
           'wire_call_function_handle_parallel__method__WasmitModuleId');
   late final _wire_call_function_handle_parallel__method__WasmitModuleId =
       _wire_call_function_handle_parallel__method__WasmitModuleIdPtr.asFunction<
@@ -1091,7 +1095,8 @@ class WasmitDartWire implements FlutterRustBridgeWireBase {
               int,
               ffi.Pointer<wire_WasmitModuleId>,
               ffi.Pointer<wire_uint_8_list>,
-              ffi.Pointer<wire_list_wasm_val>)>();
+              ffi.Pointer<wire_list_wasm_val>,
+              int)>();
 
   WireSyncReturn wire_get_function_type__method__WasmitModuleId(
     ffi.Pointer<wire_WasmitModuleId> that,
@@ -2073,6 +2078,16 @@ class WasmitDartWire implements FlutterRustBridgeWireBase {
       _wire_xor__method__AtomicsPtr.asFunction<
           void Function(int, ffi.Pointer<wire_Atomics>, int, int, int, int)>();
 
+  wire_ArcRwLockSharedMemory new_ArcRwLockSharedMemory() {
+    return _new_ArcRwLockSharedMemory();
+  }
+
+  late final _new_ArcRwLockSharedMemoryPtr =
+      _lookup<ffi.NativeFunction<wire_ArcRwLockSharedMemory Function()>>(
+          'new_ArcRwLockSharedMemory');
+  late final _new_ArcRwLockSharedMemory = _new_ArcRwLockSharedMemoryPtr
+      .asFunction<wire_ArcRwLockSharedMemory Function()>();
+
   wire_ArcStdSyncMutexModule new_ArcStdSyncMutexModule() {
     return _new_ArcStdSyncMutexModule();
   }
@@ -2098,16 +2113,6 @@ class WasmitDartWire implements FlutterRustBridgeWireBase {
   late final _new_MemoryPtr =
       _lookup<ffi.NativeFunction<wire_Memory Function()>>('new_Memory');
   late final _new_Memory = _new_MemoryPtr.asFunction<wire_Memory Function()>();
-
-  wire_RwLockSharedMemory new_RwLockSharedMemory() {
-    return _new_RwLockSharedMemory();
-  }
-
-  late final _new_RwLockSharedMemoryPtr =
-      _lookup<ffi.NativeFunction<wire_RwLockSharedMemory Function()>>(
-          'new_RwLockSharedMemory');
-  late final _new_RwLockSharedMemory = _new_RwLockSharedMemoryPtr
-      .asFunction<wire_RwLockSharedMemory Function()>();
 
   ffi.Pointer<wire_StringList> new_StringList_0(
     int len,
@@ -2437,6 +2442,37 @@ class WasmitDartWire implements FlutterRustBridgeWireBase {
   late final _new_uint_8_list_0 = _new_uint_8_list_0Ptr
       .asFunction<ffi.Pointer<wire_uint_8_list> Function(int)>();
 
+  void drop_opaque_ArcRwLockSharedMemory(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _drop_opaque_ArcRwLockSharedMemory(
+      ptr,
+    );
+  }
+
+  late final _drop_opaque_ArcRwLockSharedMemoryPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'drop_opaque_ArcRwLockSharedMemory');
+  late final _drop_opaque_ArcRwLockSharedMemory =
+      _drop_opaque_ArcRwLockSharedMemoryPtr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  ffi.Pointer<ffi.Void> share_opaque_ArcRwLockSharedMemory(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _share_opaque_ArcRwLockSharedMemory(
+      ptr,
+    );
+  }
+
+  late final _share_opaque_ArcRwLockSharedMemoryPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Pointer<ffi.Void> Function(
+              ffi.Pointer<ffi.Void>)>>('share_opaque_ArcRwLockSharedMemory');
+  late final _share_opaque_ArcRwLockSharedMemory =
+      _share_opaque_ArcRwLockSharedMemoryPtr
+          .asFunction<ffi.Pointer<ffi.Void> Function(ffi.Pointer<ffi.Void>)>();
+
   void drop_opaque_ArcStdSyncMutexModule(
     ffi.Pointer<ffi.Void> ptr,
   ) {
@@ -2525,37 +2561,6 @@ class WasmitDartWire implements FlutterRustBridgeWireBase {
               ffi.Pointer<ffi.Void>)>>('share_opaque_Memory');
   late final _share_opaque_Memory = _share_opaque_MemoryPtr
       .asFunction<ffi.Pointer<ffi.Void> Function(ffi.Pointer<ffi.Void>)>();
-
-  void drop_opaque_RwLockSharedMemory(
-    ffi.Pointer<ffi.Void> ptr,
-  ) {
-    return _drop_opaque_RwLockSharedMemory(
-      ptr,
-    );
-  }
-
-  late final _drop_opaque_RwLockSharedMemoryPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
-          'drop_opaque_RwLockSharedMemory');
-  late final _drop_opaque_RwLockSharedMemory =
-      _drop_opaque_RwLockSharedMemoryPtr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
-
-  ffi.Pointer<ffi.Void> share_opaque_RwLockSharedMemory(
-    ffi.Pointer<ffi.Void> ptr,
-  ) {
-    return _share_opaque_RwLockSharedMemory(
-      ptr,
-    );
-  }
-
-  late final _share_opaque_RwLockSharedMemoryPtr = _lookup<
-      ffi.NativeFunction<
-          ffi.Pointer<ffi.Void> Function(
-              ffi.Pointer<ffi.Void>)>>('share_opaque_RwLockSharedMemory');
-  late final _share_opaque_RwLockSharedMemory =
-      _share_opaque_RwLockSharedMemoryPtr
-          .asFunction<ffi.Pointer<ffi.Void> Function(ffi.Pointer<ffi.Void>)>();
 
   void drop_opaque_Table(
     ffi.Pointer<ffi.Void> ptr,
@@ -2943,12 +2948,12 @@ class wire_ExternalValue_Memory extends ffi.Struct {
   external wire_Memory field0;
 }
 
-class wire_RwLockSharedMemory extends ffi.Struct {
+class wire_ArcRwLockSharedMemory extends ffi.Struct {
   external ffi.Pointer<ffi.Void> ptr;
 }
 
 class wire_WasmitSharedMemory extends ffi.Struct {
-  external wire_RwLockSharedMemory field0;
+  external wire_ArcRwLockSharedMemory field0;
 }
 
 class wire_ExternalValue_SharedMemory extends ffi.Struct {

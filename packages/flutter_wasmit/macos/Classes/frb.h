@@ -145,12 +145,12 @@ typedef struct wire_ExternalValue_Memory {
   struct wire_Memory field0;
 } wire_ExternalValue_Memory;
 
-typedef struct wire_RwLockSharedMemory {
+typedef struct wire_ArcRwLockSharedMemory {
   const void *ptr;
-} wire_RwLockSharedMemory;
+} wire_ArcRwLockSharedMemory;
 
 typedef struct wire_WasmitSharedMemory {
-  struct wire_RwLockSharedMemory field0;
+  struct wire_ArcRwLockSharedMemory field0;
 } wire_WasmitSharedMemory;
 
 typedef struct wire_ExternalValue_SharedMemory {
@@ -303,7 +303,8 @@ void wire_call_function_handle__method__WasmitModuleId(int64_t port_,
 void wire_call_function_handle_parallel__method__WasmitModuleId(int64_t port_,
                                                                 struct wire_WasmitModuleId *that,
                                                                 struct wire_uint_8_list *func_name,
-                                                                struct wire_list_wasm_val *args);
+                                                                struct wire_list_wasm_val *args,
+                                                                uintptr_t num_tasks);
 
 WireSyncReturn wire_get_function_type__method__WasmitModuleId(struct wire_WasmitModuleId *that,
                                                               struct wire_WFunc func);
@@ -491,13 +492,13 @@ void wire_xor__method__Atomics(int64_t port_,
                                int64_t val,
                                int32_t order);
 
+struct wire_ArcRwLockSharedMemory new_ArcRwLockSharedMemory(void);
+
 struct wire_ArcStdSyncMutexModule new_ArcStdSyncMutexModule(void);
 
 struct wire_Global new_Global(void);
 
 struct wire_Memory new_Memory(void);
-
-struct wire_RwLockSharedMemory new_RwLockSharedMemory(void);
 
 struct wire_StringList *new_StringList_0(int32_t len);
 
@@ -553,6 +554,10 @@ struct wire_list_wasm_val *new_list_wasm_val_0(int32_t len);
 
 struct wire_uint_8_list *new_uint_8_list_0(int32_t len);
 
+void drop_opaque_ArcRwLockSharedMemory(const void *ptr);
+
+const void *share_opaque_ArcRwLockSharedMemory(const void *ptr);
+
 void drop_opaque_ArcStdSyncMutexModule(const void *ptr);
 
 const void *share_opaque_ArcStdSyncMutexModule(const void *ptr);
@@ -564,10 +569,6 @@ const void *share_opaque_Global(const void *ptr);
 void drop_opaque_Memory(const void *ptr);
 
 const void *share_opaque_Memory(const void *ptr);
-
-void drop_opaque_RwLockSharedMemory(const void *ptr);
-
-const void *share_opaque_RwLockSharedMemory(const void *ptr);
 
 void drop_opaque_Table(const void *ptr);
 
@@ -665,10 +666,10 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) wire_and__method__Atomics);
     dummy_var ^= ((int64_t) (void*) wire_or__method__Atomics);
     dummy_var ^= ((int64_t) (void*) wire_xor__method__Atomics);
+    dummy_var ^= ((int64_t) (void*) new_ArcRwLockSharedMemory);
     dummy_var ^= ((int64_t) (void*) new_ArcStdSyncMutexModule);
     dummy_var ^= ((int64_t) (void*) new_Global);
     dummy_var ^= ((int64_t) (void*) new_Memory);
-    dummy_var ^= ((int64_t) (void*) new_RwLockSharedMemory);
     dummy_var ^= ((int64_t) (void*) new_StringList_0);
     dummy_var ^= ((int64_t) (void*) new_Table);
     dummy_var ^= ((int64_t) (void*) new_WFunc);
@@ -696,14 +697,14 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) new_list_value_ty_0);
     dummy_var ^= ((int64_t) (void*) new_list_wasm_val_0);
     dummy_var ^= ((int64_t) (void*) new_uint_8_list_0);
+    dummy_var ^= ((int64_t) (void*) drop_opaque_ArcRwLockSharedMemory);
+    dummy_var ^= ((int64_t) (void*) share_opaque_ArcRwLockSharedMemory);
     dummy_var ^= ((int64_t) (void*) drop_opaque_ArcStdSyncMutexModule);
     dummy_var ^= ((int64_t) (void*) share_opaque_ArcStdSyncMutexModule);
     dummy_var ^= ((int64_t) (void*) drop_opaque_Global);
     dummy_var ^= ((int64_t) (void*) share_opaque_Global);
     dummy_var ^= ((int64_t) (void*) drop_opaque_Memory);
     dummy_var ^= ((int64_t) (void*) share_opaque_Memory);
-    dummy_var ^= ((int64_t) (void*) drop_opaque_RwLockSharedMemory);
-    dummy_var ^= ((int64_t) (void*) share_opaque_RwLockSharedMemory);
     dummy_var ^= ((int64_t) (void*) drop_opaque_Table);
     dummy_var ^= ((int64_t) (void*) share_opaque_Table);
     dummy_var ^= ((int64_t) (void*) drop_opaque_WFunc);

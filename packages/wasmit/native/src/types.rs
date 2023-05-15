@@ -154,7 +154,7 @@ impl From<&wasmtime::TableType> for TableTy {
 }
 
 #[allow(non_camel_case_types)]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum ValueTy {
     /// 32-bit signed or unsigned integer.
     i32,

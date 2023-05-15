@@ -21,6 +21,11 @@ class WasmitDartPlatform extends FlutterRustBridgeBase<WasmitDartWire>
 // Section: api2wire
 
   @protected
+  Object api2wire_ArcRwLockSharedMemory(ArcRwLockSharedMemory raw) {
+    return raw.shareOrMove();
+  }
+
+  @protected
   Object api2wire_ArcStdSyncMutexModule(ArcStdSyncMutexModule raw) {
     return raw.shareOrMove();
   }
@@ -32,11 +37,6 @@ class WasmitDartPlatform extends FlutterRustBridgeBase<WasmitDartWire>
 
   @protected
   Object api2wire_Memory(Memory raw) {
-    return raw.shareOrMove();
-  }
-
-  @protected
-  Object api2wire_RwLockSharedMemory(RwLockSharedMemory raw) {
     return raw.shareOrMove();
   }
 
@@ -426,10 +426,14 @@ class WasmitDartPlatform extends FlutterRustBridgeBase<WasmitDartWire>
 
   @protected
   List<dynamic> api2wire_wasmit_shared_memory(WasmitSharedMemory raw) {
-    return [api2wire_RwLockSharedMemory(raw.field0)];
+    return [api2wire_ArcRwLockSharedMemory(raw.field0)];
   }
 // Section: finalizer
 
+  late final Finalizer<PlatformPointer> _ArcRwLockSharedMemoryFinalizer =
+      Finalizer<PlatformPointer>(inner.drop_opaque_ArcRwLockSharedMemory);
+  Finalizer<PlatformPointer> get ArcRwLockSharedMemoryFinalizer =>
+      _ArcRwLockSharedMemoryFinalizer;
   late final Finalizer<PlatformPointer> _ArcStdSyncMutexModuleFinalizer =
       Finalizer<PlatformPointer>(inner.drop_opaque_ArcStdSyncMutexModule);
   Finalizer<PlatformPointer> get ArcStdSyncMutexModuleFinalizer =>
@@ -440,10 +444,6 @@ class WasmitDartPlatform extends FlutterRustBridgeBase<WasmitDartWire>
   late final Finalizer<PlatformPointer> _MemoryFinalizer =
       Finalizer<PlatformPointer>(inner.drop_opaque_Memory);
   Finalizer<PlatformPointer> get MemoryFinalizer => _MemoryFinalizer;
-  late final Finalizer<PlatformPointer> _RwLockSharedMemoryFinalizer =
-      Finalizer<PlatformPointer>(inner.drop_opaque_RwLockSharedMemory);
-  Finalizer<PlatformPointer> get RwLockSharedMemoryFinalizer =>
-      _RwLockSharedMemoryFinalizer;
   late final Finalizer<PlatformPointer> _TableFinalizer =
       Finalizer<PlatformPointer>(inner.drop_opaque_Table);
   Finalizer<PlatformPointer> get TableFinalizer => _TableFinalizer;
@@ -512,7 +512,8 @@ class WasmitDartWasmModule implements WasmModule {
           NativePortType port_,
           List<dynamic> that,
           String func_name,
-          List<dynamic> args);
+          List<dynamic> args,
+          int num_tasks);
 
   external dynamic /* List<dynamic> */
       wire_get_function_type__method__WasmitModuleId(
@@ -671,6 +672,10 @@ class WasmitDartWasmModule implements WasmModule {
   external dynamic /* void */ wire_xor__method__Atomics(NativePortType port_,
       List<dynamic> that, int offset, int kind, Object val, int order);
 
+  external dynamic /*  */ drop_opaque_ArcRwLockSharedMemory(ptr);
+
+  external int /* *const c_void */ share_opaque_ArcRwLockSharedMemory(ptr);
+
   external dynamic /*  */ drop_opaque_ArcStdSyncMutexModule(ptr);
 
   external int /* *const c_void */ share_opaque_ArcStdSyncMutexModule(ptr);
@@ -682,10 +687,6 @@ class WasmitDartWasmModule implements WasmModule {
   external dynamic /*  */ drop_opaque_Memory(ptr);
 
   external int /* *const c_void */ share_opaque_Memory(ptr);
-
-  external dynamic /*  */ drop_opaque_RwLockSharedMemory(ptr);
-
-  external int /* *const c_void */ share_opaque_RwLockSharedMemory(ptr);
 
   external dynamic /*  */ drop_opaque_Table(ptr);
 
@@ -764,9 +765,10 @@ class WasmitDartWire
           NativePortType port_,
           List<dynamic> that,
           String func_name,
-          List<dynamic> args) =>
+          List<dynamic> args,
+          int num_tasks) =>
       wasmModule.wire_call_function_handle_parallel__method__WasmitModuleId(
-          port_, that, func_name, args);
+          port_, that, func_name, args, num_tasks);
 
   dynamic /* List<dynamic> */ wire_get_function_type__method__WasmitModuleId(
           List<dynamic> that, Object func) =>
@@ -981,6 +983,12 @@ class WasmitDartWire
       wasmModule.wire_xor__method__Atomics(
           port_, that, offset, kind, val, order);
 
+  dynamic /*  */ drop_opaque_ArcRwLockSharedMemory(ptr) =>
+      wasmModule.drop_opaque_ArcRwLockSharedMemory(ptr);
+
+  int /* *const c_void */ share_opaque_ArcRwLockSharedMemory(ptr) =>
+      wasmModule.share_opaque_ArcRwLockSharedMemory(ptr);
+
   dynamic /*  */ drop_opaque_ArcStdSyncMutexModule(ptr) =>
       wasmModule.drop_opaque_ArcStdSyncMutexModule(ptr);
 
@@ -996,12 +1004,6 @@ class WasmitDartWire
 
   int /* *const c_void */ share_opaque_Memory(ptr) =>
       wasmModule.share_opaque_Memory(ptr);
-
-  dynamic /*  */ drop_opaque_RwLockSharedMemory(ptr) =>
-      wasmModule.drop_opaque_RwLockSharedMemory(ptr);
-
-  int /* *const c_void */ share_opaque_RwLockSharedMemory(ptr) =>
-      wasmModule.share_opaque_RwLockSharedMemory(ptr);
 
   dynamic /*  */ drop_opaque_Table(ptr) => wasmModule.drop_opaque_Table(ptr);
 

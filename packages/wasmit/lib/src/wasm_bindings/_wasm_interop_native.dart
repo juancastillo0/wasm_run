@@ -623,6 +623,7 @@ class _Instance extends WasmInstance {
     final result = await runner.callFunctionHandleParallel(
       funcName: exportEntry.key,
       args: argsLists.expand(mapArgs).toList(),
+      numTasks: argsLists.length,
     );
     final resultsLength = function.results!.length;
     final mappedResults = List.generate(

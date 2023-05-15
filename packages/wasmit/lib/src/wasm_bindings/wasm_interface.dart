@@ -24,7 +24,6 @@ export 'package:wasmit/src/bridge_generated.dart'
         EnvVariable,
         ExternalType,
         FuncTy,
-        GlobalMutability,
         GlobalTy,
         MemoryTy,
         PreopenedDir,
@@ -43,7 +42,10 @@ abstract class WasmModule {
   /// A builder that creates a new [WasmInstance] from this module.
   /// It configures the imports and definitions of the instance.
   /// [wasiConfig] is not supported in the browser executor.
-  WasmInstanceBuilder builder({WasiConfig? wasiConfig, int? numThreads});
+  WasmInstanceBuilder builder({
+    WasiConfig? wasiConfig,
+    WorkersConfig? workersConfig,
+  });
 
   Future<WasmFeatures> features();
 
@@ -62,6 +64,55 @@ abstract class WasmModule {
 
   @override
   String toString() => 'WasmModule(${getImports()}, ${getExports()})';
+}
+
+/// Configuration for spawning workers.
+class WorkersConfig {
+  /// The number of threads or workers to spawn
+  final int numberOfWorkers;
+
+  /// The web worker script url
+  final String workerScriptUrl;
+
+  /// The web worker map imports url. Th import should have a function
+  /// `mapWorkerWasmImports` that takes a MapImportsArgs defined in the
+  /// following js example code and returns an map of wasm imports
+  /// This is a url to a js file that exports a function that maps
+  /// the wasm imports. It is called with the following arguments:
+  ///
+  /// ```js
+  /// /**
+  ///  * @typedef {Object} MapImportsArgs
+  ///  * @property {WebAssembly.Imports} imports
+  ///  * @property {number} workerId
+  ///  * @property {WebAssembly.Module} module
+  ///  * @property {(message: any) => void} postMessage
+  ///  */
+  ///
+  /// /**
+  ///  * @param {MapImportsArgs} args
+  ///  * @returns {WebAssembly.Imports}
+  ///  */
+  /// function mapWorkerWasmImports(args) {
+  ///   args.imports["threaded_imports"] = {
+  ///     /** @type {(state: bigint) => bigint} imports */
+  ///     host_map_state: (state) => state + 1n,
+  ///   };
+  ///   return args.imports;
+  /// }
+  /// ```
+  final String? workerMapImportsScriptUrl;
+
+  /// A callback that is executed when a web worker sends a message.
+  final void Function(Object?)? onWorkerMessage;
+
+  /// Configuration for spawning workers.
+  WorkersConfig({
+    required this.numberOfWorkers,
+    this.workerScriptUrl = './packages/wasmit/assets/wasm.worker.js',
+    this.workerMapImportsScriptUrl,
+    this.onWorkerMessage,
+  });
 }
 
 /// A Wasi file system item
@@ -130,7 +181,7 @@ class WasiConfig implements WasiConfigNative {
 /// values ([createMemory], [createGlobal] or [createTable]).
 /// You may use [WasmModule.builder] to create a new [WasmInstanceBuilder].
 /// To instantiate this builder you may use [WasmInstanceBuilder.build]
-/// or [WasmInstanceBuilder.buildAsync].
+/// or [WasmInstanceBuilder.build].
 abstract class WasmInstanceBuilder {
   /// Creates a new memory with [minPages] and [maxPages] pages.
   WasmMemory createMemory({required int minPages, int? maxPages});

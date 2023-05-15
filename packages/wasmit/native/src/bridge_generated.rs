@@ -284,6 +284,7 @@ fn wire_call_function_handle_parallel__method__WasmitModuleId_impl(
     that: impl Wire2Api<WasmitModuleId> + UnwindSafe,
     func_name: impl Wire2Api<String> + UnwindSafe,
     args: impl Wire2Api<Vec<WasmVal>> + UnwindSafe,
+    num_tasks: impl Wire2Api<usize> + UnwindSafe,
 ) {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap(
         WrapInfo {
@@ -295,8 +296,14 @@ fn wire_call_function_handle_parallel__method__WasmitModuleId_impl(
             let api_that = that.wire2api();
             let api_func_name = func_name.wire2api();
             let api_args = args.wire2api();
+            let api_num_tasks = num_tasks.wire2api();
             move |task_callback| {
-                WasmitModuleId::call_function_handle_parallel(&api_that, api_func_name, api_args)
+                WasmitModuleId::call_function_handle_parallel(
+                    &api_that,
+                    api_func_name,
+                    api_args,
+                    api_num_tasks,
+                )
             }
         },
     )
@@ -1672,9 +1679,10 @@ mod web {
         that: JsValue,
         func_name: String,
         args: JsValue,
+        num_tasks: usize,
     ) {
         wire_call_function_handle_parallel__method__WasmitModuleId_impl(
-            port_, that, func_name, args,
+            port_, that, func_name, args, num_tasks,
         )
     }
 
@@ -2090,6 +2098,21 @@ mod web {
     // Section: related functions
 
     #[wasm_bindgen]
+    pub fn drop_opaque_ArcRwLockSharedMemory(ptr: *const c_void) {
+        unsafe {
+            Arc::<Arc<RwLock<SharedMemory>>>::decrement_strong_count(ptr as _);
+        }
+    }
+
+    #[wasm_bindgen]
+    pub fn share_opaque_ArcRwLockSharedMemory(ptr: *const c_void) -> *const c_void {
+        unsafe {
+            Arc::<Arc<RwLock<SharedMemory>>>::increment_strong_count(ptr as _);
+            ptr
+        }
+    }
+
+    #[wasm_bindgen]
     pub fn drop_opaque_ArcStdSyncMutexModule(ptr: *const c_void) {
         unsafe {
             Arc::<Arc<std::sync::Mutex<Module>>>::decrement_strong_count(ptr as _);
@@ -2130,21 +2153,6 @@ mod web {
     pub fn share_opaque_Memory(ptr: *const c_void) -> *const c_void {
         unsafe {
             Arc::<Memory>::increment_strong_count(ptr as _);
-            ptr
-        }
-    }
-
-    #[wasm_bindgen]
-    pub fn drop_opaque_RwLockSharedMemory(ptr: *const c_void) {
-        unsafe {
-            Arc::<RwLock<SharedMemory>>::decrement_strong_count(ptr as _);
-        }
-    }
-
-    #[wasm_bindgen]
-    pub fn share_opaque_RwLockSharedMemory(ptr: *const c_void) -> *const c_void {
-        unsafe {
-            Arc::<RwLock<SharedMemory>>::increment_strong_count(ptr as _);
             ptr
         }
     }
@@ -2557,6 +2565,16 @@ mod web {
     }
     // Section: impl Wire2Api for JsValue
 
+    impl Wire2Api<RustOpaque<Arc<RwLock<SharedMemory>>>> for JsValue {
+        fn wire2api(self) -> RustOpaque<Arc<RwLock<SharedMemory>>> {
+            #[cfg(target_pointer_width = "64")]
+            {
+                compile_error!("64-bit pointers are not supported.");
+            }
+
+            unsafe { support::opaque_from_dart((self.as_f64().unwrap() as usize) as _) }
+        }
+    }
     impl Wire2Api<RustOpaque<Arc<std::sync::Mutex<Module>>>> for JsValue {
         fn wire2api(self) -> RustOpaque<Arc<std::sync::Mutex<Module>>> {
             #[cfg(target_pointer_width = "64")]
@@ -2579,16 +2597,6 @@ mod web {
     }
     impl Wire2Api<RustOpaque<Memory>> for JsValue {
         fn wire2api(self) -> RustOpaque<Memory> {
-            #[cfg(target_pointer_width = "64")]
-            {
-                compile_error!("64-bit pointers are not supported.");
-            }
-
-            unsafe { support::opaque_from_dart((self.as_f64().unwrap() as usize) as _) }
-        }
-    }
-    impl Wire2Api<RustOpaque<RwLock<SharedMemory>>> for JsValue {
-        fn wire2api(self) -> RustOpaque<RwLock<SharedMemory>> {
             #[cfg(target_pointer_width = "64")]
             {
                 compile_error!("64-bit pointers are not supported.");
@@ -2842,9 +2850,10 @@ mod io {
         that: *mut wire_WasmitModuleId,
         func_name: *mut wire_uint_8_list,
         args: *mut wire_list_wasm_val,
+        num_tasks: usize,
     ) {
         wire_call_function_handle_parallel__method__WasmitModuleId_impl(
-            port_, that, func_name, args,
+            port_, that, func_name, args, num_tasks,
         )
     }
 
@@ -3271,6 +3280,11 @@ mod io {
     // Section: allocate functions
 
     #[no_mangle]
+    pub extern "C" fn new_ArcRwLockSharedMemory() -> wire_ArcRwLockSharedMemory {
+        wire_ArcRwLockSharedMemory::new_with_null_ptr()
+    }
+
+    #[no_mangle]
     pub extern "C" fn new_ArcStdSyncMutexModule() -> wire_ArcStdSyncMutexModule {
         wire_ArcStdSyncMutexModule::new_with_null_ptr()
     }
@@ -3283,11 +3297,6 @@ mod io {
     #[no_mangle]
     pub extern "C" fn new_Memory() -> wire_Memory {
         wire_Memory::new_with_null_ptr()
-    }
-
-    #[no_mangle]
-    pub extern "C" fn new_RwLockSharedMemory() -> wire_RwLockSharedMemory {
-        wire_RwLockSharedMemory::new_with_null_ptr()
     }
 
     #[no_mangle]
@@ -3456,6 +3465,21 @@ mod io {
     // Section: related functions
 
     #[no_mangle]
+    pub extern "C" fn drop_opaque_ArcRwLockSharedMemory(ptr: *const c_void) {
+        unsafe {
+            Arc::<Arc<RwLock<SharedMemory>>>::decrement_strong_count(ptr as _);
+        }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn share_opaque_ArcRwLockSharedMemory(ptr: *const c_void) -> *const c_void {
+        unsafe {
+            Arc::<Arc<RwLock<SharedMemory>>>::increment_strong_count(ptr as _);
+            ptr
+        }
+    }
+
+    #[no_mangle]
     pub extern "C" fn drop_opaque_ArcStdSyncMutexModule(ptr: *const c_void) {
         unsafe {
             Arc::<Arc<std::sync::Mutex<Module>>>::decrement_strong_count(ptr as _);
@@ -3501,21 +3525,6 @@ mod io {
     }
 
     #[no_mangle]
-    pub extern "C" fn drop_opaque_RwLockSharedMemory(ptr: *const c_void) {
-        unsafe {
-            Arc::<RwLock<SharedMemory>>::decrement_strong_count(ptr as _);
-        }
-    }
-
-    #[no_mangle]
-    pub extern "C" fn share_opaque_RwLockSharedMemory(ptr: *const c_void) -> *const c_void {
-        unsafe {
-            Arc::<RwLock<SharedMemory>>::increment_strong_count(ptr as _);
-            ptr
-        }
-    }
-
-    #[no_mangle]
     pub extern "C" fn drop_opaque_Table(ptr: *const c_void) {
         unsafe {
             Arc::<Table>::decrement_strong_count(ptr as _);
@@ -3547,6 +3556,11 @@ mod io {
 
     // Section: impl Wire2Api
 
+    impl Wire2Api<RustOpaque<Arc<RwLock<SharedMemory>>>> for wire_ArcRwLockSharedMemory {
+        fn wire2api(self) -> RustOpaque<Arc<RwLock<SharedMemory>>> {
+            unsafe { support::opaque_from_dart(self.ptr as _) }
+        }
+    }
     impl Wire2Api<RustOpaque<Arc<std::sync::Mutex<Module>>>> for wire_ArcStdSyncMutexModule {
         fn wire2api(self) -> RustOpaque<Arc<std::sync::Mutex<Module>>> {
             unsafe { support::opaque_from_dart(self.ptr as _) }
@@ -3559,11 +3573,6 @@ mod io {
     }
     impl Wire2Api<RustOpaque<Memory>> for wire_Memory {
         fn wire2api(self) -> RustOpaque<Memory> {
-            unsafe { support::opaque_from_dart(self.ptr as _) }
-        }
-    }
-    impl Wire2Api<RustOpaque<RwLock<SharedMemory>>> for wire_RwLockSharedMemory {
-        fn wire2api(self) -> RustOpaque<RwLock<SharedMemory>> {
             unsafe { support::opaque_from_dart(self.ptr as _) }
         }
     }
@@ -3978,6 +3987,12 @@ mod io {
 
     #[repr(C)]
     #[derive(Clone)]
+    pub struct wire_ArcRwLockSharedMemory {
+        ptr: *const core::ffi::c_void,
+    }
+
+    #[repr(C)]
+    #[derive(Clone)]
     pub struct wire_ArcStdSyncMutexModule {
         ptr: *const core::ffi::c_void,
     }
@@ -3991,12 +4006,6 @@ mod io {
     #[repr(C)]
     #[derive(Clone)]
     pub struct wire_Memory {
-        ptr: *const core::ffi::c_void,
-    }
-
-    #[repr(C)]
-    #[derive(Clone)]
-    pub struct wire_RwLockSharedMemory {
         ptr: *const core::ffi::c_void,
     }
 
@@ -4191,7 +4200,7 @@ mod io {
     #[repr(C)]
     #[derive(Clone)]
     pub struct wire_WasmitSharedMemory {
-        field0: wire_RwLockSharedMemory,
+        field0: wire_ArcRwLockSharedMemory,
     }
 
     #[repr(C)]
@@ -4312,6 +4321,13 @@ mod io {
         }
     }
 
+    impl NewWithNullPtr for wire_ArcRwLockSharedMemory {
+        fn new_with_null_ptr() -> Self {
+            Self {
+                ptr: core::ptr::null(),
+            }
+        }
+    }
     impl NewWithNullPtr for wire_ArcStdSyncMutexModule {
         fn new_with_null_ptr() -> Self {
             Self {
@@ -4327,13 +4343,6 @@ mod io {
         }
     }
     impl NewWithNullPtr for wire_Memory {
-        fn new_with_null_ptr() -> Self {
-            Self {
-                ptr: core::ptr::null(),
-            }
-        }
-    }
-    impl NewWithNullPtr for wire_RwLockSharedMemory {
         fn new_with_null_ptr() -> Self {
             Self {
                 ptr: core::ptr::null(),
@@ -4724,7 +4733,7 @@ mod io {
     impl NewWithNullPtr for wire_WasmitSharedMemory {
         fn new_with_null_ptr() -> Self {
             Self {
-                field0: wire_RwLockSharedMemory::new_with_null_ptr(),
+                field0: wire_ArcRwLockSharedMemory::new_with_null_ptr(),
             }
         }
     }
