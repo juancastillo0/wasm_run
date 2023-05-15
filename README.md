@@ -34,6 +34,9 @@ Currently it uses the [`wasmtime 8.0`](https://github.com/bytecodealliance/wasmt
   - [Parse Web Assembly Text Format (WAT)](#parse-web-assembly-text-format-wat)
   - [Parse and Introspect WASM Modules](#parse-and-introspect-wasm-modules)
     - [Imports and Exports](#imports-and-exports)
+  - [Execute WASM Function in Worker Threads](#execute-wasm-function-in-worker-threads)
+    - [Threads Example](#threads-example)
+    - [Web Workers configuration](#web-workers-configuration)
   - [Web Assembly System Interface (WASI)](#web-assembly-system-interface-wasi)
     - [Examples](#examples)
     - [Stdio (stdin, stdout, stderr)](#stdio-stdin-stdout-stderr)
@@ -132,6 +135,36 @@ Parsing WASM and WAT modules to explore the exposed interface.
 ### Imports and Exports
 
 You may retrieve the names and types of each import and export defined in a WASM module.
+
+
+## Execute WASM Function in Worker Threads
+
+Executes [function] with [argsLists] in parallel and returns the result.
+
+The native implementation uses Rust's [rayon](https://docs.rs/rayon/latest/rayon/)
+crate to execute tasks with a [work-stealing](https://en.wikipedia.org/wiki/Work_stealing)
+scheduler. 
+
+The web implementation uses web workers for running the functions an a simple task
+queue for scheduling.
+
+### Threads Example
+
+The repository's [packages/rust_threads_example](./packages/rust_threads_example) directory contains an implementation example for a WASM module with shared memories, atomics, thread locals and simd. You may compile it with Rust's Cargo nightly toolchain:
+
+```sh
+RUSTFLAGS='-C target-feature=+atomics,+bulk-memory,+mutable-globals' \
+  cargo +nightly build --target wasm32-unknown-unknown --release -Z build-std=std,panic_abort
+```
+
+The [threads_test.dart](./packages/wasmit/example/lib/threads_test.dart) contains a benchmark and multiple usage and configuration examples.
+
+### Web Workers configuration
+
+The [assets/wasm.worker.js](packages/wasmit/lib/assets/wasm.worker.js) is used as the script for implementing the worker, you may override it with the `workerScriptUrl` configuration in `WorkersConfig`.
+
+Since functions cannot be passed to Web Workers, you will need provide the functions imported in the imported by using the `mapWorkerWasmImports` parameter. An example of the script can be found in [worker_map_imports.js](packages/wasmit/example/test/worker_map_imports.js), it exposes a `mapWorkerWasmImports` that receives the imports, the wasm module and other information, and returns the mapped wasm imports object.
+
 
 ## Web Assembly System Interface (WASI)
 

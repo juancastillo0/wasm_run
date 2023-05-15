@@ -38,14 +38,12 @@ Future<Uint8List> getWasiExample({
   return binary;
 }
 
-void wasiTest({
-  Future<Uint8List> Function()? getWasiExampleBytes,
-  Future<Directory> Function()? getDirectory,
-}) {
+void wasiTest({TestArgs? testArgs}) {
   test('wasi', () async {
     final startTimestamp = DateTime.now().millisecondsSinceEpoch;
-    final Uint8List binary =
-        await getWasiExample(getWasiExampleBytes: getWasiExampleBytes);
+    final Uint8List binary = await getWasiExample(
+      getWasiExampleBytes: testArgs?.getWasiExampleBytes,
+    );
     // print(base64Encode(binary));
     final module = await compileWasmModule(binary);
 
@@ -145,8 +143,9 @@ void wasiTest({
       directoryToAllow = 'root-browser-directory';
       wasmGuestFilePath = 'root-browser-directory/wasi.wasm';
     } else {
-      final dirToAllow =
-          getDirectory != null ? await getDirectory() : Directory.current;
+      final dirToAllow = testArgs?.getDirectory != null
+          ? await testArgs!.getDirectory!()
+          : Directory.current;
       directoryToAllow = dirToAllow.path;
       final fileToDelete =
           File('${dirToAllow.path}${Platform.pathSeparator}wasi.wasm')

@@ -12,12 +12,20 @@ void main() {
 
   group('end-to-end test', () {
     testAll(
-      getWasiExampleBytes: () async {
-        final asset = await rootBundle.load('assets/rust_wasi_example.wasm');
-        final bytes = asset.buffer.asUint8List();
-        return bytes;
-      },
-      getDirectory: getApplicationDocumentsDirectory,
+      testArgs: TestArgs(
+        getDirectory: getApplicationDocumentsDirectory,
+        getWasiExampleBytes: () async {
+          final asset = await rootBundle.load('assets/rust_wasi_example.wasm');
+          final bytes = asset.buffer.asUint8List();
+          return bytes;
+        },
+        getThreadsExampleBytes: () async {
+          final asset =
+              await rootBundle.load('assets/rust_threads_example.wasm');
+          final bytes = asset.buffer.asUint8List();
+          return bytes;
+        },
+      ),
     );
   });
 }

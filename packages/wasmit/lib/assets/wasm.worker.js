@@ -14,6 +14,57 @@ function sendMessage(data) {
   self.postMessage(data);
 }
 
+/**
+ * @typedef {Object} MapImportsArgs2
+ * @property {WebAssembly.Imports} imports
+ * @property {number} workerId
+ * @property {WebAssembly.Module} module
+ * @property {(message: any) => void} postMessage
+ */
+
+/**
+ * @param {WasmImportsLoadParam} param
+ * @returns {WebAssembly.Imports}
+ */
+function mapImports(param) {
+  /** @type {WebAssembly.Imports} */
+  const wasmImports = {};
+  if (param) {
+    for (const moduleName in param) {
+      const map = wasmImports[moduleName] || {};
+      wasmImports[moduleName] = map;
+
+      const moduleImports = param[moduleName];
+      for (const importName in moduleImports) {
+        const value = moduleImports[importName];
+        if (value === null || value === undefined) {
+          continue;
+        }
+        if (
+          typeof value === "number" ||
+          typeof value === "function" ||
+          value instanceof WebAssembly.Global ||
+          value instanceof WebAssembly.Memory ||
+          value instanceof WebAssembly.Table
+        ) {
+          map[importName] = value;
+        } else if ("element" in value) {
+          value.initial = value.initial || value["minimum"];
+          delete value["minimum"];
+          map[importName] = new WebAssembly.Table(value, value.initialValue);
+        } else if ("value" in value) {
+          map[importName] = new WebAssembly.Global(value, value.initialValue);
+        } else if ("shared" in value) {
+          value.initial = value.initial || value["minimum"];
+          delete value["minimum"];
+          map[importName] = new WebAssembly.Memory(value);
+        }
+      }
+    }
+  }
+  return wasmImports;
+}
+
 onmessage = (e) => {
   /** @type {number | undefined} */
   let taskId;
@@ -23,11 +74,32 @@ onmessage = (e) => {
     const data = e.data;
     if (data.cmd === "load") {
       workerId = data.workerId;
-      // TODO: map imports
-      const instance = new WebAssembly.Instance(
-        data.wasmModule,
-        data.wasmImports
-      );
+
+      let wasmImports = mapImports(data.wasmImports);
+      if (data.workerMapImportsScriptUrl) {
+        importScripts(data.workerMapImportsScriptUrl);
+
+        /** @type {MapImportsArgs2} */
+        const args = {
+          imports: wasmImports,
+          module: data.wasmModule,
+          postMessage: (arg) => {
+            sendMessage({
+              cmd: "event",
+              data: arg,
+            });
+          },
+          workerId: data.workerId,
+        };
+        if (typeof self["mapWorkerWasmImports"] == "function") {
+          wasmImports = self.mapWorkerWasmImports(args);
+        } else {
+          throw new Error(
+            "mapWorkerWasmImports is not defined in workerMapImportsScriptUrl"
+          );
+        }
+      }
+      const instance = new WebAssembly.Instance(data.wasmModule, wasmImports);
       workerData = {
         wasmInstance: instance,
         wasmModule: data.wasmModule,
@@ -120,11 +192,19 @@ function threadPrintErr() {
  */
 
 /**
+ * @typedef {Record<string, Record<string, WebAssembly.ImportValue
+ *  | (WebAssembly.TableDescriptor & {initialValue?: any})
+ *  | (WebAssembly.GlobalDescriptor & {initialValue?: any})
+ *  | WebAssembly.MemoryDescriptor>> | undefined} WasmImportsLoadParam
+ */
+
+/**
  * @typedef {Object} MessageDataLoad
  * @property {"load"} cmd
  * @property {number} workerId
  * @property {WebAssembly.Module} wasmModule
- * @property {WebAssembly.Imports | undefined} wasmImports
+ * @property {WasmImportsLoadParam} wasmImports
+ * @property {string | null} workerMapImportsScriptUrl
  */
 
 /**
@@ -169,6 +249,13 @@ function threadPrintErr() {
  */
 
 /**
+ * Message sent to alert the main process
+ * @typedef {Object} PostMessageEvent
+ * @property {"event"} cmd
+ * @property {any} data
+ */
+
+/**
  * Message sent to main process
- * @typedef {(PostMessageLoaded | PostMessageResult | PostMessageAlert)} PostMessage
+ * @typedef {(PostMessageLoaded | PostMessageResult | PostMessageAlert | PostMessageEvent)} PostMessage
  */

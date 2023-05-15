@@ -7,6 +7,7 @@ import 'dart:js_util' as js_util;
 
 import 'package:flutter_rust_bridge/flutter_rust_bridge.dart'
     show JS, anonymous;
+import 'package:wasmit/src/wasm_bindings/wasm_interface.dart';
 
 /// A task that can be run in a [WasmWorker].
 class WorkerTask {
@@ -29,6 +30,10 @@ class WorkerTask {
   }
 }
 
+void postMessageToWorker(html.Worker worker, Object data) {
+  js_util.callMethod<void>(worker, 'postMessage', [data]);
+}
+
 /// A wrapper around a [html.Worker] that can be used to run WASM code in a
 /// separate Web Worker.
 class WasmWorker {
@@ -41,11 +46,13 @@ class WasmWorker {
   late final StreamSubscription<dynamic> _subscription;
   final Completer<WasmWorker> _onLoaded = Completer();
 
+  final WorkersConfig _workersConfig;
+
   /// The tasks that are currently running.
   final Map<int, WorkerTask> _tasks = {};
   int _lastTaskId = 0;
 
-  WasmWorker._(this.workerId, this.worker) {
+  WasmWorker._(this.workerId, this.worker, this._workersConfig) {
     _subscription = worker.onMessage.listen(_handleMessage);
   }
 
@@ -55,30 +62,26 @@ class WasmWorker {
   /// Creates and instantiates a new [WasmWorker] with the given [workerId]
   static Future<WasmWorker> create({
     required int workerId,
-    required Map<String, Object?> wasmImports,
+    required WorkersConfig workersConfig,
+    required Map<String, Map<String, Object?>> wasmImports,
     required Object wasmModule,
   }) {
     if (!html.Worker.supported) {
       throw UnsupportedError('Web Workers are not supported');
     }
-    final worker = html.Worker('./packages/wasmit/assets/wasm.worker.js');
+    final worker = html.Worker(workersConfig.workerScriptUrl);
 
-    final postMessage = js_util.callMethod<void Function(Object, Object)>(
-      js_util.globalThis,
-      'eval',
-      ['(worker, data) => worker.postMessage(data)'],
-    );
-
-    final wasmWorker = WasmWorker._(workerId, worker);
+    final wasmWorker = WasmWorker._(workerId, worker, workersConfig);
     worker.onError.listen(wasmWorker._onLoaded.completeError);
 
-    postMessage(
+    postMessageToWorker(
       worker,
       js_util.jsify({
         'cmd': 'load',
         'wasmImports': wasmImports,
         'wasmModule': wasmModule,
-        'workerId': workerId
+        'workerId': workerId,
+        'workerMapImportsScriptUrl': workersConfig.workerMapImportsScriptUrl
       }) as Object,
     );
     return wasmWorker._onLoaded.future;
@@ -87,14 +90,20 @@ class WasmWorker {
   /// Runs the given [task] in the worker.
   Future<List<Object?>> run(WorkerTask task) {
     _tasks[++_lastTaskId] = task;
-    worker.postMessage(
-      _MessageDataRun(
-        cmd: 'run',
-        args: task.args,
-        functionExport: task.functionName,
-        taskId: _lastTaskId,
-      ),
-    );
+    final data = js_util.jsify({
+      'cmd': 'run',
+      'args': <Object?>[],
+      'functionExport': task.functionName,
+      'taskId': _lastTaskId,
+    }) as Object;
+
+    // TODO: we do this to support JsBigInts
+    final args = js_util.getProperty<Object>(data, 'args');
+    for (final arg in task.args) {
+      js_util.callMethod<void>(args, 'push', [arg]);
+    }
+
+    postMessageToWorker(worker, data);
     return task.completer.future;
   }
 
@@ -121,6 +130,9 @@ class WasmWorker {
       case 'loaded':
         _onLoaded.complete(this);
         break;
+      case 'event':
+        _workersConfig.onWorkerMessage?.call(js_util.dartify(data_['data']));
+        break;
       case 'result':
         final data = _PostMessageResult.fromJson(data_);
         final taskId = data.taskId;
@@ -146,6 +158,7 @@ class WasmWorker {
         }
         break;
       default:
+        print('Unknown worker message: $data_');
     }
   }
 }
@@ -241,5 +254,11 @@ class _PostMessageAlert {
       text: json['text'] as String?,
       didThrow: json['didThrow'] as bool? ?? false,
     );
+  }
+
+  @override
+  String toString() {
+    return 'PostMessageAlert(cmd: $cmd, workerId: $workerId, taskId: $taskId,'
+        ' text: $text, didThrow: $didThrow)';
   }
 }

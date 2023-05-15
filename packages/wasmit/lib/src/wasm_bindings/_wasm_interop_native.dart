@@ -68,11 +68,14 @@ class _WasmModule extends WasmModule {
   }
 
   @override
-  WasmInstanceBuilder builder({WasiConfig? wasiConfig, int? numThreads}) {
+  WasmInstanceBuilder builder({
+    WasiConfig? wasiConfig,
+    WorkersConfig? workersConfig,
+  }) {
     final builder = defaultInstance().moduleBuilder(
       module: module,
       wasiConfig: wasiConfig,
-      numThreads: numThreads,
+      numThreads: workersConfig?.numberOfWorkers,
     );
     return _Builder(this, builder, wasiConfig);
   }

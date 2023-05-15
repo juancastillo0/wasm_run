@@ -162,7 +162,10 @@ class _WasmModule extends WasmModule {
   }
 
   @override
-  WasmInstanceBuilder builder({WasiConfig? wasiConfig, int? numThreads}) {
+  WasmInstanceBuilder builder({
+    WasiConfig? wasiConfig,
+    WorkersConfig? workersConfig,
+  }) {
     _WASI? wasi;
     if (wasiConfig != null) {
       final stdout = wasiConfig.captureStdout ? WasiStdio() : null;
@@ -170,7 +173,9 @@ class _WasmModule extends WasmModule {
 
       final wasiWeb = WASI(
         wasiConfig.args,
-        wasiConfig.env.map((e) => '${e.name}=${e.value}').toList(),
+        wasiConfig.env
+            .map((e) => '${e.name}=${e.value}')
+            .toList(growable: false),
         [
           OpenFile(WasiWebFile(Uint8List(0))), // TODO: stdin
           stdout?.fd ?? OpenFile(WasiWebFile(Uint8List(0))),
@@ -186,7 +191,7 @@ class _WasmModule extends WasmModule {
       wasi = _WASI(wasiWeb, stdout, stderr);
     }
 
-    return _Builder(module, wasi, numThreads ?? 0);
+    return _Builder(module, wasi, workersConfig);
   }
 
   @override
@@ -220,15 +225,10 @@ class _WasmModule extends WasmModule {
 class _Builder extends WasmInstanceBuilder {
   final Module module;
   final _WASI? wasi;
-  final int numThreads;
-  final Map<String, Map<String, Object>> importMap = {};
+  final WorkersConfig? workersConfig;
+  final Map<String, Map<String, WasmExternal>> importMap = {};
 
-  _Builder(this.module, this.wasi, this.numThreads) {
-    if (wasi != null) {
-      final wasiImports = js_util.dartify(wasi!.inner.wasiImport)!;
-      importMap['wasi_snapshot_preview1'] = (wasiImports as Map).cast();
-    }
-  }
+  _Builder(this.module, this.wasi, this.workersConfig);
 
   @override
   WasmMemory createMemory({required int minPages, int? maxPages}) {
@@ -261,6 +261,7 @@ class _Builder extends WasmInstanceBuilder {
         minimum: minSize,
         maximum: maxSize,
       ),
+      value,
     );
   }
 
@@ -293,7 +294,7 @@ class _Builder extends WasmInstanceBuilder {
         inner = Global.externref(value: val, mutable: mutable);
         break;
     }
-    return _Global(inner, type);
+    return _Global(inner, type, value);
   }
 
   @override
@@ -302,13 +303,7 @@ class _Builder extends WasmInstanceBuilder {
     String name,
     WasmExternal value,
   ) {
-    final mapped = value.when(
-      memory: (memory) => (memory as _Memory).memory,
-      table: (table) => (table as _Table).table,
-      global: (global) => (global as _Global).global,
-      function: (function) => function.inner,
-    );
-    importMap.putIfAbsent(moduleName, () => {})[name] = mapped;
+    importMap.putIfAbsent(moduleName, () => {})[name] = value;
     return this;
   }
 
@@ -317,48 +312,102 @@ class _Builder extends WasmInstanceBuilder {
 
   @override
   WasmInstance buildSync() {
-    if (numThreads > 0) {
+    if (workersConfig != null) {
       throw Exception('numThreads is not supported in buildSync()');
     }
-    final instance = Instance.fromModule(module, importMap: importMap);
+    final instance = Instance.fromModule(module, importMap: _mapImports());
     return _Instance(this, instance, null);
   }
 
   @override
   Future<WasmInstance> build() async {
     final instance =
-        await Instance.fromModuleAsync(module, importMap: importMap);
+        await Instance.fromModuleAsync(module, importMap: _mapImports());
 
     List<WasmWorker>? workers;
-    if (numThreads > 0) {
+    if (workersConfig != null) {
       workers = await _createWorkers(instance);
     }
     return _Instance(this, instance, workers);
   }
 
-  Future<List<WasmWorker>> _createWorkers(
-    Instance instance,
-  ) async {
+  Map<String, Map<String, Object>> _mapImports() {
     final mappedImports = importMap.map(
       (key, value) => MapEntry(
         key,
         value.map((key, value) {
-          if (value is Memory) return MapEntry(key, value.jsObject);
-          if (value is Global) return MapEntry(key, value.jsObject);
-          if (value is Table) return MapEntry(key, value.jsObject);
-          if (value is Function) {
-            return MapEntry(key, js_util.allowInterop(value));
-          }
-          return MapEntry(key, value);
+          final mapped = value.when(
+            memory: (memory) => (memory as _Memory).memory,
+            table: (table) => (table as _Table).table,
+            global: (global) => (global as _Global).global,
+            function: (function) => function.inner,
+          );
+          return MapEntry(key, mapped);
         }),
       ),
     );
+    if (wasi != null) {
+      final wasiImports = js_util.dartify(wasi!.inner.wasiImport)!;
+      final previous = mappedImports['wasi_snapshot_preview1'] ?? {};
+      mappedImports['wasi_snapshot_preview1'] = (wasiImports as Map).cast()
+        ..addAll(previous);
+    }
+
+    return mappedImports;
+  }
+
+  Future<List<WasmWorker>> _createWorkers(Instance instance) async {
+    final mappedImports = importMap.map(
+      (key, value) => MapEntry(
+        key,
+        value.map((key, value) {
+          final mapped = value.when(
+            memory: (memory) => memory is _SharedMemory
+                ? memory.memory.jsObject
+                : typeToJson(ExternalType.memory(memory.type!)),
+            table: (table) {
+              final map = typeToJson(ExternalType.table(table.type!));
+              if (table is _Table && table._initialValue?.value != null) {
+                map['initialValue'] = table._initialValue!.value;
+              }
+              return map;
+            },
+            global: (global) {
+              final map = typeToJson(ExternalType.global(global.type!));
+              if (global is _Global && global._initialValue?.value != null) {
+                map['initialValue'] = global._initialValue!.value;
+              }
+              return map;
+            },
+            // functions can't be passed to workers. One should use scripts
+            function: (function) {
+              if (workersConfig?.workerMapImportsScriptUrl == null) {
+                throw Exception(
+                  'workerMapImportsScriptUrl is required'
+                  ' to pass functions to workers',
+                );
+              }
+              return null;
+            },
+          );
+          return MapEntry(key, mapped);
+        }),
+      ),
+    );
+    if (wasi != null) {
+      final wasiImports = js_util.dartify(wasi!.inner.wasiImport)!;
+      final previous = mappedImports['wasi_snapshot_preview1'] ?? {};
+      mappedImports['wasi_snapshot_preview1'] = (wasiImports as Map).cast()
+        ..addAll(previous);
+    }
+
     final workers = await Future.wait(
       Iterable.generate(
-        numThreads,
+        workersConfig!.numberOfWorkers,
         (index) {
           return WasmWorker.create(
             workerId: index + 1,
+            workersConfig: workersConfig!,
             wasmModule: module.jsObject,
             wasmImports: mappedImports,
           );
@@ -393,7 +442,7 @@ class _Instance extends WasmInstance {
             )
             .followedBy(
               instance.globals.entries
-                  .map((e) => MapEntry(e.key, _Global(e.value, null))),
+                  .map((e) => MapEntry(e.key, _Global(e.value, null, null))),
             )
             .followedBy(
           instance.memories.entries.map((e) {
@@ -406,7 +455,7 @@ class _Instance extends WasmInstance {
           }),
         ).followedBy(
           instance.tables.entries
-              .map((e) => MapEntry(e.key, _Table(e.value, null))),
+              .map((e) => MapEntry(e.key, _Table(e.value, null, null))),
         ),
       ),
     );
@@ -591,8 +640,9 @@ class _Memory extends WasmMemory {
 class _Global extends WasmGlobal {
   final Global global;
   final GlobalTy? _type;
+  final WasmValue? _initialValue;
 
-  _Global(this.global, this._type);
+  _Global(this.global, this._type, this._initialValue);
 
   @override
   Object? get() => global.jsObject.value;
@@ -609,8 +659,9 @@ class _Global extends WasmGlobal {
 class _Table extends WasmTable {
   final Table table;
   final TableTy? _type;
+  final WasmValue? _initialValue;
 
-  _Table(this.table, this._type);
+  _Table(this.table, this._type, this._initialValue);
 
   @override
   void set(int index, WasmValue value) {
@@ -668,6 +719,35 @@ ExternalType? _getExternalType(Object value) {
   } else {
     return null;
   }
+}
+
+String valueTypeToJson(ValueTy ty) {
+  return ty.name;
+}
+
+Map<String, Object?> typeToJson(ExternalType ty) {
+  return ty.when(
+    func: (func) => {
+      'parameters': func.parameters.map(valueTypeToJson).toList(),
+      'results': func.results.map(valueTypeToJson).toList(),
+    },
+    global: (global) => {
+      'value': valueTypeToJson(global.value),
+      'mutable': global.mutable,
+    },
+    table: (table) => {
+      'element': valueTypeToJson(table.element),
+      'minimum': table.minimum,
+      'initial': table.minimum,
+      if (table.maximum != null) 'maximum': table.maximum,
+    },
+    memory: (memory) => {
+      'shared': memory.shared,
+      'minimum': memory.minimum,
+      'initial': memory.minimum,
+      if (memory.maximum != null) 'maximum': memory.maximum,
+    },
+  );
 }
 
 MemoryTy? _getMemoryType(Object value) {

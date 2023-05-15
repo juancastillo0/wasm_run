@@ -47,10 +47,19 @@ Future<Uint8List> getBinary({
   return binary;
 }
 
-void testAll({
-  Future<Uint8List> Function()? getWasiExampleBytes,
-  Future<Directory> Function()? getDirectory,
-}) {
+class TestArgs {
+  final Future<Uint8List> Function()? getWasiExampleBytes;
+  final Future<Uint8List> Function()? getThreadsExampleBytes;
+  final Future<Directory> Function()? getDirectory;
+
+  TestArgs({
+    required this.getWasiExampleBytes,
+    required this.getThreadsExampleBytes,
+    required this.getDirectory,
+  });
+}
+
+void testAll({TestArgs? testArgs}) {
   print('RUNNING ALL TEST IN ${getRunnerIdentity()}');
 
   test('WasmFeature', () async {
@@ -494,13 +503,10 @@ void testAll({
   });
 
   /// WASI tests
-  wasiTest(
-    getWasiExampleBytes: getWasiExampleBytes,
-    getDirectory: getDirectory,
-  );
+  wasiTest(testArgs: testArgs);
 
   /// Threads tests
-  threadsTest();
+  threadsTest(testArgs: testArgs);
 
   test('multi value', () async {
     final binary = await getBinary(

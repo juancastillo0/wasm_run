@@ -11,8 +11,121 @@ import 'package:wasmit_example/main.dart';
 import 'package:wasmit_example/threads_base64.dart';
 
 // dart test test/main_test -c source --release -n threads
-void threadsTest() {
-  test('threads', () => main(onlyTest: true));
+void threadsTest({TestArgs? testArgs}) {
+  test('threads', () => main(onlyTest: true, testArgs: testArgs));
+
+  test('threads-state', () async {
+    final features = await wasmRuntimeFeatures();
+    if (!features.supportedFeatures.threads) return;
+    final workerMessages = <Object?>[];
+    final threadedInstance =
+        await getThreadsInstance(testArgs, onWorkerMessage: workerMessages.add);
+    final instance = threadedInstance.instance;
+
+    final getStateLocal = instance.getFunction('get_state_local')!;
+    final setStateLocal = instance.getFunction('set_state_local')!;
+    expect(getStateLocal(), [0]);
+    setStateLocal([1]);
+    expect(getStateLocal(), [1]);
+
+    final getState = instance.getFunction('get_state')!;
+    final increaseState = instance.getFunction('increase_state')!;
+    final mapState = instance.getFunction('map_state')!;
+
+    final state = getState();
+    expect(state, [i64.fromInt(0)]);
+    expect(workerMessages, isEmpty);
+    mapState(); // Calls host function
+    expect(workerMessages, isEmpty);
+    expect(getState(), [i64.fromInt(1)]);
+    final increaseResult = increaseState.inner(i64.fromInt(1));
+    expect(increaseResult, i64.fromInt(1)); // old value
+    expect(getState(), [i64.fromInt(2)]);
+
+    ///
+    /// LOCAL STATES
+    ///
+
+    var localStates = await instance.runParallel(
+      getStateLocal,
+      List.generate(100, (_) => <int>[]),
+    );
+    expect(localStates, List.generate(100, (_) => [0]));
+    final localResult = await instance.runParallel(
+      setStateLocal,
+      [
+        [2]
+      ],
+    );
+    // old value
+    expect(localResult, [
+      [0]
+    ]);
+    expect(getStateLocal(), [1]);
+    localStates = await instance.runParallel(getStateLocal, const [[]]);
+    expect(localStates, [
+      [2]
+    ]);
+
+    ///
+    /// SHARED STATES
+    ///
+
+    var states = await instance.runParallel(
+      getState,
+      List.generate(100, (_) => []),
+    );
+    expect(states, List.generate(100, (_) => [i64.fromInt(2)]));
+
+    final result = await instance.runParallel(
+      increaseState,
+      [
+        [i64.fromInt(2)],
+        [i64.fromInt(2)]
+      ],
+    );
+    expect(result.map((e) => i64.toInt(e[0]!)).toSet(), {2, 4});
+
+    states = await instance.runParallel(
+      getState,
+      List.generate(100, (_) => []),
+    );
+    expect(states.map((e) => i64.toInt(e[0]!)).toSet(), {6});
+
+    // main instance
+    expect(getState().cast<Object>().map(i64.toInt), [6]);
+
+    await instance.runParallel(
+      mapState,
+      const [[], []],
+    );
+    expect(getState().cast<Object>().map(i64.toInt), [8]);
+    if (isWeb) {
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+      expect(
+        workerMessages.skip(workerMessages.length - 2).map(
+          (e_) {
+            final e = e_! as Map;
+            return {...e, 'arg': i64.toInt(e['arg'] as Object)};
+          },
+        ).toList(),
+        [
+          {
+            'kind': 'call',
+            'function': 'host_map_state',
+            'arg': 6,
+            'workerId': isA<int>(),
+          },
+          {
+            'kind': 'call',
+            'function': 'host_map_state',
+            'arg': 7,
+            'workerId': isA<int>(),
+          },
+        ],
+      );
+    }
+  });
 }
 
 Directory getRootDirectory() {
@@ -57,12 +170,23 @@ void expectEq(dynamic a, dynamic b) {
   }
 }
 
-Future<void> main({bool onlyTest = false}) async {
-  final features = await wasmRuntimeFeatures();
-  if (!features.supportedFeatures.threads) return;
-  final count = onlyTest ? 1 : 100;
+class ThreadedInstance {
+  final WasmInstance instance;
+  final int numThreads;
+  final WasmSharedMemory memory;
 
-  final binary = await getThreadsExample();
+  ThreadedInstance(this.instance, this.numThreads, this.memory);
+}
+
+Future<ThreadedInstance> getThreadsInstance(
+  TestArgs? testArgs, {
+  void Function(Object?)? onWorkerMessage,
+}) async {
+  final features = await wasmRuntimeFeatures();
+
+  final binary =
+      await (testArgs?.getThreadsExampleBytes?.call() ?? getThreadsExample());
+
   final module = await compileWasmModule(
     binary,
     config: const ModuleConfig(
@@ -73,7 +197,13 @@ Future<void> main({bool onlyTest = false}) async {
 
   final numThreads = isWeb ? 4 : Platform.numberOfProcessors;
   print('numThreads: $numThreads');
-  final builder = module.builder(numThreads: numThreads);
+  final builder = module.builder(
+    workersConfig: WorkersConfig(
+      numberOfWorkers: numThreads,
+      workerMapImportsScriptUrl: '../../../worker_map_imports.js',
+      onWorkerMessage: onWorkerMessage,
+    ),
+  );
 
   final memoryImport = module
       .getImports()
@@ -96,9 +226,28 @@ Future<void> main({bool onlyTest = false}) async {
   // TODO: MemoryTy toString()
   print(memory);
   builder.addImport('env', 'memory', memory);
+  builder.addImport(
+    'threaded_imports',
+    'host_map_state',
+    WasmFunction(
+      (I64 d) => i64.fromInt(i64.toInt(d) + 1),
+      params: const [ValueTy.i64],
+      results: const [ValueTy.i64],
+    ),
+  );
 
   final instance = await builder.build();
 
+  return ThreadedInstance(instance, numThreads, memory);
+}
+
+Future<void> main({bool onlyTest = false, TestArgs? testArgs}) async {
+  final features = await wasmRuntimeFeatures();
+  if (!features.supportedFeatures.threads) return;
+  final count = onlyTest ? 1 : 100;
+  final threadedInstance = await getThreadsInstance(testArgs);
+  final instance = threadedInstance.instance;
+  final numThreads = threadedInstance.numThreads;
   print(instance);
 
   final alloc = instance.getFunction('alloc')!;
@@ -106,6 +255,7 @@ Future<void> main({bool onlyTest = false}) async {
 
   final sumFunc = instance.getFunction('sum_u32')!;
   final maxFunc = instance.getFunction('max_u32')!;
+  // TODO: test simd
 
   const numIntsPerThread = 5000000;
   const chunkLength = numIntsPerThread * 4;
@@ -117,7 +267,11 @@ Future<void> main({bool onlyTest = false}) async {
 
   int sumValues = 0;
   int maxValues = 0;
-  final values = Uint32List.sublistView(memory.view, pointer, pointer + size);
+  final values = Uint32List.sublistView(
+    threadedInstance.memory.view,
+    pointer,
+    pointer + size,
+  );
   values.setRange(
     0,
     numInts,
