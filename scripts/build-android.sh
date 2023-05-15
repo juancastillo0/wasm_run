@@ -36,9 +36,7 @@ for TARGET in armeabi-v7a arm64-v8a x86 x86_64; do
 done
 
 if [[ $WASM_BUILD_RUST_WASI_EXAMPLE != false ]]; then
-        cargo build --target wasm32-wasi --profile $BUILD_PROFILE \
-                --manifest-path ../packages/rust_wasi_example/Cargo.toml
-        cp -fr ../packages/rust_wasi_example/target/wasm32-wasi/$BUILD_PROFILE_PATH/rust_wasi_example.wasm ../packages/flutter_wasmit/example/assets/rust_wasi_example.wasm
+    bash ../scripts/build-rust-wasm-examples.sh $BUILD_PROFILE
 fi
 
 # Archive the dynamic libs

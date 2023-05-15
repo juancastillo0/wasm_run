@@ -44,10 +44,7 @@ win_build aarch64-pc-windows-msvc windows-arm64 $WINDOWS_LIBNAME
 win_build x86_64-pc-windows-msvc windows-x64 $WINDOWS_LIBNAME
 
 if [[ $WASM_BUILD_RUST_WASI_EXAMPLE != false ]]; then
-    rustup target add wasm32-wasi
-    cargo build --target wasm32-wasi --profile $BUILD_PROFILE \
-        --manifest-path ../packages/rust_wasi_example/Cargo.toml
-    cp -fr ../packages/rust_wasi_example/target/wasm32-wasi/$BUILD_PROFILE_PATH/rust_wasi_example.wasm ../packages/flutter_wasmit/example/assets/rust_wasi_example.wasm
+    bash ../scripts/build-rust-wasm-examples.sh $BUILD_PROFILE
 fi
 
 # Archive the dynamic libs
