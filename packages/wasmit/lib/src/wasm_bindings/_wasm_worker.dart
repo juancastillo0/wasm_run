@@ -4,9 +4,11 @@ library wasm_worker;
 import 'dart:async';
 import 'dart:html' as html;
 import 'dart:js_util' as js_util;
+import 'dart:typed_data';
 
 import 'package:flutter_rust_bridge/flutter_rust_bridge.dart'
     show JS, anonymous;
+import 'package:wasmit/src/wasm_bindings/_atomics_web.dart';
 import 'package:wasmit/src/wasm_bindings/wasm_interface.dart';
 
 /// A task that can be run in a [WasmWorker].
@@ -43,6 +45,9 @@ class WasmWorker {
   /// The underlying [html.Worker].
   final html.Worker worker;
 
+  final List<WasmFunction> _functions;
+  final ByteData _byteData;
+
   late final StreamSubscription<dynamic> _subscription;
   final Completer<WasmWorker> _onLoaded = Completer();
 
@@ -52,7 +57,13 @@ class WasmWorker {
   final Map<int, WorkerTask> _tasks = {};
   int _lastTaskId = 0;
 
-  WasmWorker._(this.workerId, this.worker, this._workersConfig) {
+  WasmWorker._(
+    this.workerId,
+    this.worker,
+    this._workersConfig,
+    this._functions,
+    this._byteData,
+  ) {
     _subscription = worker.onMessage.listen(_handleMessage);
   }
 
@@ -65,13 +76,18 @@ class WasmWorker {
     required WorkersConfig workersConfig,
     required Map<String, Map<String, Object?>> wasmImports,
     required Object wasmModule,
+    required List<WasmFunction> functions,
   }) {
     if (!html.Worker.supported) {
       throw UnsupportedError('Web Workers are not supported');
     }
+    final sharedBuffer = html.SharedArrayBuffer(256);
+    final byteData =
+        js_util.callConstructor<ByteData>(_dataViewConstructor, [sharedBuffer]);
     final worker = html.Worker(workersConfig.workerScriptUrl);
 
-    final wasmWorker = WasmWorker._(workerId, worker, workersConfig);
+    final wasmWorker =
+        WasmWorker._(workerId, worker, workersConfig, functions, byteData);
     worker.onError.listen(wasmWorker._onLoaded.completeError);
 
     postMessageToWorker(
@@ -81,6 +97,7 @@ class WasmWorker {
         'wasmImports': wasmImports,
         'wasmModule': wasmModule,
         'workerId': workerId,
+        'sharedBuffer': sharedBuffer,
         'workerMapImportsScriptUrl': workersConfig.workerMapImportsScriptUrl
       }) as Object,
     );
@@ -130,6 +147,39 @@ class WasmWorker {
       case 'loaded':
         _onLoaded.complete(this);
         break;
+      case 'call':
+        final functionId = data_['functionId']! as int;
+        final function = _functions[functionId];
+        final args = data_['args']! as List;
+        final results = function(args);
+        final bytes = _byteData;
+
+        int offset = 4;
+        int i = 0;
+        for (final type in function.results!) {
+          final value = results[i++]!;
+          switch (type) {
+            case ValueTy.i32:
+              bytes.setInt32(offset += 4, value as int, Endian.little);
+              break;
+            case ValueTy.f32:
+              bytes.setFloat32(offset += 4, value as double, Endian.little);
+              break;
+            case ValueTy.i64:
+              i64.setInt64(bytes, offset += 8, value, Endian.little);
+              break;
+            case ValueTy.f64:
+              bytes.setFloat64(offset += 8, value as double, Endian.little);
+              break;
+            case ValueTy.v128:
+            case ValueTy.externRef:
+            case ValueTy.funcRef:
+              // TODO: implement refs
+              throw UnimplementedError();
+          }
+        }
+        atomics.notify(Int32List.sublistView(bytes), 0, 1);
+        break;
       case 'event':
         _workersConfig.onWorkerMessage?.call(js_util.dartify(data_['data']));
         break;
@@ -162,6 +212,9 @@ class WasmWorker {
     }
   }
 }
+
+@JS('DataView')
+external Object get _dataViewConstructor;
 
 // @JS('sendSharedMemoryToWorker')
 // external void sendSharedMemoryToWorker(

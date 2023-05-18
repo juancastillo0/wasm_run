@@ -24,9 +24,10 @@ function sendMessage(data) {
 
 /**
  * @param {WasmImportsLoadParam} param
+ * @param {SharedArrayBuffer} waitBuffer
  * @returns {WebAssembly.Imports}
  */
-function mapImports(param) {
+function mapImports(param, waitBuffer) {
   /** @type {WebAssembly.Imports} */
   const wasmImports = {};
   if (param) {
@@ -48,6 +49,8 @@ function mapImports(param) {
           value instanceof WebAssembly.Table
         ) {
           map[importName] = value;
+        } else if ("functionId" in value) {
+          map[importName] = createWasmFunctionImport(value, waitBuffer);
         } else if ("element" in value) {
           value.initial = value.initial || value["minimum"];
           delete value["minimum"];
@@ -65,6 +68,48 @@ function mapImports(param) {
   return wasmImports;
 }
 
+/**
+ * @param {FunctionImport} value
+ * @param {SharedArrayBuffer} waitBuffer
+ * @returns {(...args: Array<unknown>) => Array<unknown> | unknown | undefined}
+ */
+function createWasmFunctionImport(value, waitBuffer) {
+  return function () {
+    const args = Array.prototype.slice.call(arguments);
+    const workerId_ = /** @type {number} */ (workerId);
+    sendMessage({
+      cmd: "call",
+      args,
+      workerId: workerId_,
+      functionId: value.functionId,
+    });
+
+    Atomics.wait(new Int32Array(waitBuffer), 0, 0);
+    if (value.resultTypes.length == 0) return undefined;
+
+    const dataView = new DataView(waitBuffer);
+    let offset = 4;
+    const result = value.resultTypes.map((kind) => {
+      switch (kind) {
+        case "i32":
+          return dataView.getInt32((offset += 4), true);
+        case "f32":
+          return dataView.getFloat32((offset += 4), true);
+        case "i64":
+          return dataView.getBigInt64((offset += 8), true);
+        case "f64":
+          return dataView.getFloat64((offset += 8), true);
+        // TODO: support other types
+        default:
+          throw Error("Unimplemented parsing type " + kind);
+      }
+    });
+
+    if (result.length === 1) return result[0];
+    return result;
+  };
+}
+
 onmessage = (e) => {
   /** @type {number | undefined} */
   let taskId;
@@ -75,7 +120,7 @@ onmessage = (e) => {
     if (data.cmd === "load") {
       workerId = data.workerId;
 
-      let wasmImports = mapImports(data.wasmImports);
+      let wasmImports = mapImports(data.wasmImports, data.sharedBuffer);
       if (data.workerMapImportsScriptUrl) {
         importScripts(data.workerMapImportsScriptUrl);
 
@@ -192,16 +237,24 @@ function threadPrintErr() {
  */
 
 /**
+ * @typedef {Object} FunctionImport
+ * @property {number} functionId
+ * @property {Array<"i32" | "i64" | "f32"| "f64">} resultTypes
+ */
+
+/**
  * @typedef {Record<string, Record<string, WebAssembly.ImportValue
  *  | (WebAssembly.TableDescriptor & {initialValue?: any})
  *  | (WebAssembly.GlobalDescriptor & {initialValue?: any})
- *  | WebAssembly.MemoryDescriptor>> | undefined} WasmImportsLoadParam
+ *  | WebAssembly.MemoryDescriptor
+ *  | FunctionImport>> | undefined} WasmImportsLoadParam
  */
 
 /**
  * @typedef {Object} MessageDataLoad
  * @property {"load"} cmd
  * @property {number} workerId
+ * @property {SharedArrayBuffer} sharedBuffer
  * @property {WebAssembly.Module} wasmModule
  * @property {WasmImportsLoadParam} wasmImports
  * @property {string | null} workerMapImportsScriptUrl
@@ -249,13 +302,22 @@ function threadPrintErr() {
  */
 
 /**
- * Message sent to alert the main process
+ * Message sent from `mapWorkerWasmImports` in `workerMapImportsScriptUrl`
  * @typedef {Object} PostMessageEvent
  * @property {"event"} cmd
  * @property {any} data
  */
 
 /**
+ * Message sent to execute an import function
+ * @typedef {Object} PostMessageCall
+ * @property {"call"} cmd
+ * @property {Array<unknown>} args
+ * @property {number} functionId
+ * @property {number} workerId
+ */
+
+/**
  * Message sent to main process
- * @typedef {(PostMessageLoaded | PostMessageResult | PostMessageAlert | PostMessageEvent)} PostMessage
+ * @typedef {(PostMessageLoaded | PostMessageResult | PostMessageAlert | PostMessageEvent | PostMessageCall)} PostMessage
  */

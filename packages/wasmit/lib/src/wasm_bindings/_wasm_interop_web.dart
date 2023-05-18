@@ -357,6 +357,7 @@ class _Builder extends WasmInstanceBuilder {
   }
 
   Future<List<WasmWorker>> _createWorkers(Instance instance) async {
+    final List<WasmFunction> functions = [];
     final mappedImports = importMap.map(
       (key, value) => MapEntry(
         key,
@@ -381,13 +382,28 @@ class _Builder extends WasmInstanceBuilder {
             },
             // functions can't be passed to workers. One should use scripts
             function: (function) {
-              if (workersConfig?.workerMapImportsScriptUrl == null) {
-                throw Exception(
-                  'workerMapImportsScriptUrl is required'
-                  ' to pass functions to workers',
-                );
+              if (workersConfig!.workerMapImportsScriptUrl != null) {
+                return null;
               }
-              return null;
+              functions.add(function);
+              return {
+                'functionId': functions.length - 1,
+                'resultTypes': function.results!.map((e) {
+                  const supportedTypes = [
+                    ValueTy.i32,
+                    ValueTy.i64,
+                    ValueTy.f32,
+                    ValueTy.f64,
+                  ];
+                  if (!supportedTypes.contains(e)) {
+                    throw Exception(
+                      'Result type $e not supported for imported functions'
+                      ' in workers. SupportedTypes: $supportedTypes',
+                    );
+                  }
+                  return e.name;
+                }).toList(),
+              };
             },
           );
           return MapEntry(key, mapped);
@@ -410,6 +426,7 @@ class _Builder extends WasmInstanceBuilder {
             workersConfig: workersConfig!,
             wasmModule: module.jsObject,
             wasmImports: mappedImports,
+            functions: functions,
           );
         },
       ),

@@ -14,12 +14,21 @@ import 'package:wasmit_example/threads_base64.dart';
 void threadsTest({TestArgs? testArgs}) {
   test('threads', () => main(onlyTest: true, testArgs: testArgs));
 
-  test('threads-state', () async {
+  Future<void> threadsStateTest({
+    void Function(Object?)? onWorkerMessage,
+  }) async {
     final features = await wasmRuntimeFeatures();
     if (!features.supportedFeatures.threads) return;
-    final workerMessages = <Object?>[];
-    final threadedInstance =
-        await getThreadsInstance(testArgs, onWorkerMessage: workerMessages.add);
+    final List<Object?> workerMessages = [];
+    final threadedInstance = await getThreadsInstance(
+      testArgs,
+      onWorkerMessage: onWorkerMessage == null
+          ? null
+          : (m) {
+              workerMessages.add(m);
+              onWorkerMessage(m);
+            },
+    );
     final instance = threadedInstance.instance;
 
     final getStateLocal = instance.getFunction('get_state_local')!;
@@ -100,6 +109,13 @@ void threadsTest({TestArgs? testArgs}) {
       const [[], []],
     );
     expect(getState().cast<Object>().map(i64.toInt), [8]);
+  }
+
+  test('threads-state', threadsStateTest);
+
+  test('threads-state web custom import', skip: !isWeb, () async {
+    final workerMessages = <Object?>[];
+    await threadsStateTest(onWorkerMessage: workerMessages.add);
     if (isWeb) {
       await Future<void>.delayed(const Duration(milliseconds: 10));
       expect(
@@ -200,7 +216,8 @@ Future<ThreadedInstance> getThreadsInstance(
   final builder = module.builder(
     workersConfig: WorkersConfig(
       numberOfWorkers: numThreads,
-      workerMapImportsScriptUrl: '../../../worker_map_imports.js',
+      workerMapImportsScriptUrl:
+          onWorkerMessage == null ? null : '../../../worker_map_imports.js',
       onWorkerMessage: onWorkerMessage,
     ),
   );
