@@ -9,6 +9,7 @@ use flutter_rust_bridge::{
 };
 use once_cell::sync::Lazy;
 use std::io::Write;
+use std::sync::mpsc::{self, Receiver, Sender};
 pub use std::sync::{Mutex, RwLock};
 use std::{cell::RefCell, collections::HashMap, fs, sync::Arc};
 use wasi_common::{file::FileCaps, pipe::WritePipe};
@@ -22,6 +23,13 @@ static ARRAY: Lazy<RwLock<GlobalState>> = Lazy::new(|| RwLock::new(Default::defa
 // TODO: make it module independent
 static CALLER_STACK: Lazy<RwLock<Vec<RwLock<StoreContextMut<'_, StoreState>>>>> =
     Lazy::new(|| RwLock::new(Default::default()));
+
+// static RUNTIME: Lazy<tokio::runtime::Runtime> = Lazy::new(|| {
+//     tokio::runtime::Builder::new_current_thread()
+//         .enable_all()
+//         .build()
+//         .unwrap()
+// });
 
 thread_local!(static STORE: RefCell<Option<WasmiModuleImpl>> = RefCell::new(None));
 
@@ -50,6 +58,7 @@ struct WasmiModuleImpl {
     instance: Option<Instance>,
     threads: Option<Arc<Mutex<Vec<Option<WasmiModuleImpl>>>>>,
     pool: Option<Arc<rayon::ThreadPool>>,
+    channels: Option<Arc<Mutex<FunctionChannels>>>,
 }
 
 // impl Debug for WasmiModuleImpl {
@@ -186,6 +195,7 @@ pub fn module_builder(
                     instance: None,
                     threads: None,
                     pool: None,
+                    channels: None,
                 }))
             })
             .collect::<Result<Vec<Option<WasmiModuleImpl>>>>()?;
@@ -202,6 +212,11 @@ pub fn module_builder(
         instance: None,
         pool: None,
         threads,
+        channels: if let Some(num_threads) = num_threads {
+            Some(Arc::new(Mutex::new(FunctionChannels::new(num_threads))))
+        } else {
+            None
+        },
     };
     arr.map.insert(id, module_builder);
 
@@ -235,6 +250,49 @@ impl Write for ModuleIOWriter {
 
     fn flush(&mut self) -> std::io::Result<()> {
         std::io::Result::Ok(())
+    }
+}
+
+struct FunctionChannels {
+    main_send: Sender<FunctionCall>,
+    main_recv: Arc<Mutex<Receiver<FunctionCall>>>,
+    workers_out: Vec<Sender<Vec<Val>>>,
+    workers: Vec<WorkerSendRecv>,
+}
+
+type WorkerSendRecv = Arc<Mutex<(usize, Sender<FunctionCall>, Receiver<Vec<Val>>)>>;
+
+pub enum ParallelExec {
+    Ok(Vec<WasmVal>),
+    Err(String),
+    Call(FunctionCall),
+}
+
+pub struct FunctionCall {
+    pub args: Vec<WasmVal>,
+    pub function_id: u32,
+    pub function_pointer: usize,
+    pub num_results: usize,
+    pub worker_index: usize,
+}
+
+impl FunctionChannels {
+    fn new(num_workers: usize) -> Self {
+        let (main_send, main_recv) = mpsc::channel::<FunctionCall>();
+        let mut workers_out = vec![];
+        let mut workers = vec![];
+        (0..num_workers).for_each(|index| {
+            let (send_out, recv_out) = mpsc::channel::<Vec<Val>>();
+            workers_out.push(send_out);
+            workers.push(Arc::new(Mutex::new((index, main_send.clone(), recv_out))));
+        });
+
+        Self {
+            main_send,
+            main_recv: Arc::new(Mutex::new(main_recv)),
+            workers_out,
+            workers,
+        }
     }
 }
 
@@ -297,6 +355,40 @@ impl WasmitModuleId {
                 .build()
                 .unwrap();
             module.pool = Some(Arc::new(pool));
+            // let channels = module.channels.take().unwrap();
+            // let module_id = self.0;
+            // let runtime = tokio::runtime::Builder::new_current_thread()
+            //     .max_blocking_threads(1)
+            //     .worker_threads(1)
+            //     .enable_all()
+            //     .build()
+            //     .unwrap();
+
+            // runtime.block_on(async move {
+            //     // module.runtime = Some(runtime);
+            //     // TODO: only do this when using runParallel, use select for waiting a finish signal
+
+            //     // runtime.block_on(async move {
+            //     let c = channels.lock().unwrap();
+            //     c.main_recv.iter().for_each(|req| {
+            //         let worker = &c.workers_out[req.worker_index];
+
+            //         let mut results = (0..req.num_results)
+            //             .map(|_| default_val(&ValType::I32))
+            //             .collect::<Vec<_>>();
+
+            //         // TODO: use same module instance
+            //         WasmitModuleId(module_id)
+            //             .with_module_mut(|ctx| {
+            //                 let f: WasmFunction =
+            //                     unsafe { std::mem::transmute(req.function_pointer) };
+            //                 Self::execute_function(ctx, req.args, f, req.function_id, &mut results)
+            //             })
+            //             .unwrap();
+            //         worker.send(results).unwrap();
+            //     })
+            //     // });
+            // });
         }
 
         Ok(WasmitInstanceId(self.0))
@@ -305,6 +397,7 @@ impl WasmitModuleId {
     fn map_function(
         m: &WasmiModuleImpl,
         func: &Func,
+        thread_index: usize,
         new_context: StoreContextMut<'_, StoreState>,
     ) -> RustOpaque<WFunc> {
         let raw_id = unsafe { func.to_raw(&m.store) };
@@ -315,6 +408,7 @@ impl WasmitModuleId {
             hf.function_id,
             hf.param_types.clone(),
             hf.result_types.clone(),
+            Some(m.channels.as_ref().unwrap().lock().unwrap().workers[thread_index].clone()),
         )
         .unwrap()
         .0;
@@ -332,7 +426,7 @@ impl WasmitModuleId {
                 .define(&mut m.store, &import.module, &import.name, &import.value)?;
         }
         if let Some(threads) = m.threads.as_ref() {
-            for thread in &mut threads.lock().unwrap().iter_mut() {
+            for (thread_index, thread) in &mut threads.lock().unwrap().iter_mut().enumerate() {
                 let thread = thread.as_mut().unwrap();
                 for import in imports.iter() {
                     let mapped_value = match &import.value {
@@ -340,6 +434,7 @@ impl WasmitModuleId {
                             let ff = Self::map_function(
                                 m,
                                 &f.func_wasmtime,
+                                thread_index,
                                 thread.store.as_context_mut(),
                             );
                             ExternalValue::Func(ff)
@@ -349,8 +444,12 @@ impl WasmitModuleId {
                             let ty = g.ty(&m.store);
                             let v = match g.get(&mut m.store) {
                                 Val::FuncRef(Some(v)) => {
-                                    let ff =
-                                        Self::map_function(m, &v, thread.store.as_context_mut());
+                                    let ff = Self::map_function(
+                                        m,
+                                        &v,
+                                        thread_index,
+                                        thread.store.as_context_mut(),
+                                    );
                                     Val::FuncRef(Some(ff.func_wasmtime))
                                 }
                                 v => v,
@@ -369,8 +468,12 @@ impl WasmitModuleId {
                             let fill_value = if t.size(&m.store) > 0 {
                                 let v = t.get(&mut m.store, 0);
                                 if let Some(Val::FuncRef(Some(v))) = v {
-                                    let ff =
-                                        Self::map_function(m, &v, thread.store.as_context_mut());
+                                    let ff = Self::map_function(
+                                        m,
+                                        &v,
+                                        thread_index,
+                                        thread.store.as_context_mut(),
+                                    );
                                     Some(Val::FuncRef(Some(ff.func_wasmtime)))
                                 } else {
                                     v
@@ -449,10 +552,11 @@ impl WasmitModuleId {
         func_name: String,
         args: Vec<WasmVal>,
         num_tasks: usize,
-    ) -> Result<Vec<WasmVal>> {
+        function_stream: StreamSink<ParallelExec>,
+    ) {
         use rayon::prelude::*;
 
-        let (num_params, result_types, pool) = {
+        let (num_params, result_types, pool, channels) = {
             let mut m = ARRAY.write().unwrap();
             let module = m.map.get_mut(&self.0).unwrap();
 
@@ -464,56 +568,123 @@ impl WasmitModuleId {
             let num_params = func.ty(&module.store).params().count();
             if (num_params == 0 && args.len() != 0)
                 || (num_params != 0 && args.len() % num_params != 0)
-                || args.len() % num_tasks != 0
+                || num_params * num_tasks != args.len()
             {
-                return Err(anyhow::anyhow!(
-                    "Number of arguments must be a multiple of {num_params}",
-                ));
+                function_stream.add(ParallelExec::Err(format!(
+                    "Number of arguments must be a multiple of {num_params}"
+                )));
+                return;
             }
             let result_types: Vec<ValType> = func.ty(&module.store).results().collect();
 
-            Ok((num_params, result_types, module.pool.clone()))
-        }?;
+            (
+                num_params,
+                result_types,
+                module.pool.clone(),
+                module.channels.clone(),
+            )
+        };
 
-        if let Some(pool) = pool {
+        if let (Some(pool), Some(channels)) = (pool, channels) {
             let args: Vec<Value> = args.into_iter().map(|v| v.to_val()).collect();
-            pool.install(|| {
-                let iter: Vec<&[Val]> = if args.is_empty() {
-                    (0..num_tasks).map(|_| [].as_slice()).collect()
-                } else {
-                    args.chunks_exact(num_params).collect()
-                };
 
-                let v = iter
-                    .par_iter()
-                    .map(|inputs| {
-                        STORE.with(|cell| {
-                            let mut c = cell.borrow_mut();
-                            let m = c.as_mut().unwrap();
+            let main_send = channels.clone().lock().unwrap().main_send.clone();
+            // TODO: try with tokio
+            std::thread::spawn(move || {
+                let value: std::result::Result<Vec<WasmVal>, Error> = pool.install(|| {
+                    let iter: Vec<&[Val]> = if args.is_empty() {
+                        (0..num_tasks).map(|_| [].as_slice()).collect()
+                    } else {
+                        args.chunks_exact(num_params).collect()
+                    };
 
-                            let mut outputs: Vec<Value> =
-                                result_types.iter().map(default_val).collect();
-                            let func = m
-                                .instance
-                                .unwrap()
-                                .get_func(&mut m.store, &func_name)
-                                .unwrap();
-                            func.call(&mut m.store, inputs, &mut outputs)?;
-                            Ok(outputs
-                                .into_iter()
-                                .map(WasmVal::from_val)
-                                .collect::<Vec<WasmVal>>())
+                    let v = iter
+                        .par_iter()
+                        .map(|inputs| {
+                            STORE.with(|cell| {
+                                let mut c = cell.borrow_mut();
+                                let m = c.as_mut().unwrap();
+
+                                let mut outputs: Vec<Value> =
+                                    result_types.iter().map(default_val).collect();
+                                let func = m
+                                    .instance
+                                    .unwrap()
+                                    .get_func(&mut m.store, &func_name)
+                                    .unwrap();
+                                func.call(&mut m.store, inputs, &mut outputs)?;
+                                Ok(outputs
+                                    .into_iter()
+                                    .map(WasmVal::from_val)
+                                    .collect::<Vec<WasmVal>>())
+                            })
                         })
+                        .collect::<Result<Vec<Vec<WasmVal>>>>()?
+                        .into_iter()
+                        .flatten()
+                        .collect::<Vec<WasmVal>>();
+                    Ok(v)
+                });
+                // TODO: don't unwrap
+                main_send
+                    .send(FunctionCall {
+                        // TODO: don't unwrap
+                        args: value.unwrap(),
+                        function_id: 0,
+                        function_pointer: 0,
+                        num_results: 0,
+                        worker_index: 0,
                     })
-                    .collect::<Result<Vec<Vec<WasmVal>>>>()?
-                    .into_iter()
-                    .flatten()
-                    .collect::<Vec<WasmVal>>();
-                Ok(v)
-            })
+                    .unwrap();
+            });
+            let main_recv = channels.lock().unwrap().main_recv.clone();
+            let main_recv_c = main_recv.lock().unwrap();
+            loop {
+                let req = main_recv_c.recv().unwrap();
+                if req.function_pointer == 0 {
+                    function_stream.add(ParallelExec::Ok(req.args));
+                    return;
+                }
+                function_stream.add(ParallelExec::Call(req));
+                // TODO: try this code with sync function
+                // let worker = &c.workers_out[req.worker_index];
+
+                // let mut results = (0..req.num_results)
+                //     .map(|_| default_val(&ValType::I32))
+                //     .collect::<Vec<_>>();
+
+                // // TODO: use same module instance
+                // self.with_module_mut(|ctx| {
+                //     let f: WasmFunction = unsafe { std::mem::transmute(req.function_pointer) };
+                //     Self::execute_function(ctx, req.args, f, req.function_id, &mut results)
+                // })
+                // .unwrap();
+                // worker.send(results).unwrap();
+            }
         } else {
-            Err(anyhow::anyhow!("Instance has no thread pool configured"))
+            function_stream.add(ParallelExec::Err(format!(
+                "Instance has no thread pool configured"
+            )));
         }
+    }
+
+    pub fn worker_execution(
+        &self,
+        worker_index: usize,
+        results: Vec<WasmVal>,
+    ) -> Result<SyncReturn<()>> {
+        let m = ARRAY.read().unwrap();
+        let module = m.map.get(&self.0).unwrap();
+        let worker = &module
+            .channels
+            .as_ref()
+            .unwrap()
+            .lock()
+            .unwrap()
+            .workers_out[worker_index];
+
+        worker.send(results.into_iter().map(|v| v.to_val()).collect())?;
+        Ok(SyncReturn(()))
     }
 
     fn with_module_mut<T>(&self, f: impl FnOnce(StoreContextMut<'_, StoreState>) -> T) -> T {
@@ -568,6 +739,7 @@ impl WasmitModuleId {
                 function_id,
                 param_types,
                 result_types,
+                None,
             )
         })
     }
@@ -578,6 +750,7 @@ impl WasmitModuleId {
         function_id: u32,
         param_types: Vec<ValueTy>,
         result_types: Vec<ValueTy>,
+        worker_channel: Option<WorkerSendRecv>,
     ) -> Result<SyncReturn<RustOpaque<WFunc>>> {
         let f: WasmFunction = unsafe { std::mem::transmute(function_pointer) };
         let func = Func::new(
@@ -591,34 +764,26 @@ impl WasmitModuleId {
                     .iter()
                     .map(|a| WasmVal::from_val(a.clone()))
                     .collect();
-                let inputs = vec![mapped].into_dart();
-                {
-                    let v = RwLock::new(unsafe { std::mem::transmute(caller.as_context_mut()) });
-                    CALLER_STACK.write().unwrap().push(v);
+                if let Some(worker_channel) = worker_channel.clone() {
+                    let guard = worker_channel.lock().unwrap();
+                    // TODO: use StreamSink directly
+                    guard.1.send(FunctionCall {
+                        args: mapped,
+                        function_id,
+                        function_pointer,
+                        num_results: results.len(),
+                        worker_index: guard.0,
+                    })?;
+                    let output = guard.2.recv()?;
+                    let mut outputs = output.into_iter();
+                    for value in results {
+                        *value = outputs.next().unwrap();
+                    }
+                    return Ok(());
                 }
-                // TODO: function can only be called from Dart's main thread
-                let output: Vec<WasmVal> = unsafe {
-                    let pointer = new_leak_box_ptr(inputs);
-                    let result = f(function_id, pointer);
-                    pointer.drop_in_place();
-                    result.wire2api()
-                };
-                let last_caller = CALLER_STACK.write().unwrap().pop();
 
-                if output.len() != results.len() {
-                    return Err(anyhow::anyhow!("Invalid output length"));
-                } else if last_caller.is_none() {
-                    return Err(anyhow::anyhow!("CALLER_STACK is empty"));
-                } else if output.is_empty() {
-                    return std::result::Result::Ok(());
-                }
-                // let last_caller = last_caller.unwrap();
-                // let mut caller = last_caller.write().unwrap();
-                let mut outputs = output.into_iter();
-                for value in results {
-                    *value = outputs.next().unwrap().to_val();
-                }
-                std::result::Result::Ok(())
+                Self::execute_function(caller.as_context_mut(), mapped, f, function_id, results)?;
+                Ok(())
             },
         );
         let raw_id = unsafe { func.to_raw(&store) };
@@ -632,6 +797,44 @@ impl WasmitModuleId {
             },
         );
         Ok(SyncReturn(RustOpaque::new(func.into())))
+    }
+
+    fn execute_function(
+        caller: StoreContextMut<'_, StoreState>,
+        mapped: Vec<WasmVal>,
+        f: WasmFunction,
+        function_id: u32,
+        results: &mut [Val],
+    ) -> Result<()> {
+        let inputs = vec![mapped].into_dart();
+        {
+            let v = RwLock::new(unsafe { std::mem::transmute(caller) });
+            CALLER_STACK.write().unwrap().push(v);
+        }
+
+        let output: Vec<WasmVal> = unsafe {
+            let pointer = new_leak_box_ptr(inputs);
+            let result = f(function_id, pointer);
+            pointer.drop_in_place();
+            result.wire2api()
+        };
+        // TODO: use Drop for this
+        let last_caller = CALLER_STACK.write().unwrap().pop();
+
+        if output.len() != results.len() {
+            return Err(anyhow::anyhow!("Invalid output length"));
+        } else if last_caller.is_none() {
+            return Err(anyhow::anyhow!("CALLER_STACK is empty"));
+        } else if output.is_empty() {
+            return std::result::Result::Ok(());
+        }
+        // let last_caller = last_caller.unwrap();
+        // let mut caller = last_caller.write().unwrap();
+        let mut outputs = output.into_iter();
+        for value in results {
+            *value = outputs.next().unwrap().to_val();
+        }
+        Ok(())
     }
 
     pub fn create_memory(&self, memory_type: MemoryTy) -> Result<SyncReturn<RustOpaque<Memory>>> {

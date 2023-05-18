@@ -515,6 +515,9 @@ class WasmitDartWasmModule implements WasmModule {
           List<dynamic> args,
           int num_tasks);
 
+  external dynamic /* void */ wire_worker_execution__method__WasmitModuleId(
+      List<dynamic> that, int worker_index, List<dynamic> results);
+
   external dynamic /* List<dynamic> */
       wire_get_function_type__method__WasmitModuleId(
           List<dynamic> that, Object func);
@@ -769,6 +772,11 @@ class WasmitDartWire
           int num_tasks) =>
       wasmModule.wire_call_function_handle_parallel__method__WasmitModuleId(
           port_, that, func_name, args, num_tasks);
+
+  dynamic /* void */ wire_worker_execution__method__WasmitModuleId(
+          List<dynamic> that, int worker_index, List<dynamic> results) =>
+      wasmModule.wire_worker_execution__method__WasmitModuleId(
+          that, worker_index, results);
 
   dynamic /* List<dynamic> */ wire_get_function_type__method__WasmitModuleId(
           List<dynamic> that, Object func) =>

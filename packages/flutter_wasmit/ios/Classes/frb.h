@@ -306,6 +306,10 @@ void wire_call_function_handle_parallel__method__WasmitModuleId(int64_t port_,
                                                                 struct wire_list_wasm_val *args,
                                                                 uintptr_t num_tasks);
 
+WireSyncReturn wire_worker_execution__method__WasmitModuleId(struct wire_WasmitModuleId *that,
+                                                             uintptr_t worker_index,
+                                                             struct wire_list_wasm_val *results);
+
 WireSyncReturn wire_get_function_type__method__WasmitModuleId(struct wire_WasmitModuleId *that,
                                                               struct wire_WFunc func);
 
@@ -621,6 +625,7 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) wire_call_function_handle_sync__method__WasmitModuleId);
     dummy_var ^= ((int64_t) (void*) wire_call_function_handle__method__WasmitModuleId);
     dummy_var ^= ((int64_t) (void*) wire_call_function_handle_parallel__method__WasmitModuleId);
+    dummy_var ^= ((int64_t) (void*) wire_worker_execution__method__WasmitModuleId);
     dummy_var ^= ((int64_t) (void*) wire_get_function_type__method__WasmitModuleId);
     dummy_var ^= ((int64_t) (void*) wire_create_function__method__WasmitModuleId);
     dummy_var ^= ((int64_t) (void*) wire_create_memory__method__WasmitModuleId);

@@ -1098,6 +1098,28 @@ class WasmitDartWire implements FlutterRustBridgeWireBase {
               ffi.Pointer<wire_list_wasm_val>,
               int)>();
 
+  WireSyncReturn wire_worker_execution__method__WasmitModuleId(
+    ffi.Pointer<wire_WasmitModuleId> that,
+    int worker_index,
+    ffi.Pointer<wire_list_wasm_val> results,
+  ) {
+    return _wire_worker_execution__method__WasmitModuleId(
+      that,
+      worker_index,
+      results,
+    );
+  }
+
+  late final _wire_worker_execution__method__WasmitModuleIdPtr = _lookup<
+          ffi.NativeFunction<
+              WireSyncReturn Function(ffi.Pointer<wire_WasmitModuleId>,
+                  ffi.UintPtr, ffi.Pointer<wire_list_wasm_val>)>>(
+      'wire_worker_execution__method__WasmitModuleId');
+  late final _wire_worker_execution__method__WasmitModuleId =
+      _wire_worker_execution__method__WasmitModuleIdPtr.asFunction<
+          WireSyncReturn Function(ffi.Pointer<wire_WasmitModuleId>, int,
+              ffi.Pointer<wire_list_wasm_val>)>();
+
   WireSyncReturn wire_get_function_type__method__WasmitModuleId(
     ffi.Pointer<wire_WasmitModuleId> that,
     wire_WFunc func,

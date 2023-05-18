@@ -14,6 +14,8 @@ fn main() {
     // Tell Cargo that if the input Rust code changes, rerun this build script
     println!("cargo:rerun-if-changed={}", RUST_INPUT);
 
+    let _ = std::fs::remove_file(&"../example/test/main_test.bootstrap.isolate.dart");
+
     // Options for frb_codegen
     let raw_opts = RawOpts {
         rust_input: vec![RUST_INPUT.to_string()],

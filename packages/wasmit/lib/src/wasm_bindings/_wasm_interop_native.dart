@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ffi' as ffi;
 import 'dart:typed_data' show Uint8List;
 
@@ -277,14 +278,7 @@ class _References {
     return ref?.value;
   }
 
-  static int get globalWasmFunctionPointer =>
-      ffi.Pointer.fromFunction<GlobalWasmFunction>(_globalWasmFunction).address;
-  static ffi.Pointer<wire_list_wasm_val> _globalWasmFunction(
-    int functionId,
-    WireSyncReturn value,
-  ) {
-    final l = wireSyncReturnIntoDart(value);
-    final input = _wire2api_list_wasm_val(l.first);
+  static List<WasmVal> executeFunction(int functionId, List<WasmVal> input) {
     final ref = _idToReference[functionId]!;
     final module = ref.module;
     final function = ref.value;
@@ -296,7 +290,6 @@ class _References {
 
     final args = input.map((v) => dartValueFromWasm(v, module)).toList();
 
-    final platform = (defaultInstance() as WasmitDartImpl).platform;
     // TODO: should it be a List argument?
     // Function.apply(function, args);
     final output = function.call(args);
@@ -304,12 +297,25 @@ class _References {
     if (output.isEmpty) {
       // TODO: null pointer?
       // ignore: invalid_use_of_protected_member
-      return platform.api2wire_list_wasm_val(const []);
+      return const [];
     }
     final results = function.results!;
     int i = 0;
     final mapped =
         output.map((e) => _fromWasmValueRaw(results[i++], e, module)).toList();
+    return mapped;
+  }
+
+  static int get globalWasmFunctionPointer =>
+      ffi.Pointer.fromFunction<GlobalWasmFunction>(_globalWasmFunction).address;
+  static ffi.Pointer<wire_list_wasm_val> _globalWasmFunction(
+    int functionId,
+    WireSyncReturn value,
+  ) {
+    final l = wireSyncReturnIntoDart(value);
+    final input = _wire2api_list_wasm_val(l.first);
+    final platform = (defaultInstance() as WasmitDartImpl).platform;
+    final mapped = executeFunction(functionId, input);
     // ignore: invalid_use_of_protected_member
     final pointer = platform.api2wire_list_wasm_val(mapped);
     return pointer;
@@ -620,20 +626,44 @@ class _Instance extends WasmInstance {
               .toList();
     }
 
-    final result = await runner.callFunctionHandleParallel(
+    final Completer<List<List<Object?>>> completer = Completer();
+
+    runner
+        .callFunctionHandleParallel(
       funcName: exportEntry.key,
       args: argsLists.expand(mapArgs).toList(),
       numTasks: argsLists.length,
+    )
+        .listen(
+      (event) {
+        event.when(
+          ok: (result) {
+            final resultsLength = function.results!.length;
+            final mappedResults = List.generate(
+              argsLists.length,
+              (index) => result
+                  .sublist(index * resultsLength, (index + 1) * resultsLength)
+                  .map((e) => _References.dartValueFromWasm(e, runner))
+                  .toList(),
+            );
+            completer.complete(mappedResults);
+          },
+          err: (err) => completer.completeError(Exception(err)),
+          call: (call) {
+            final results =
+                _References.executeFunction(call.functionId, call.args);
+            builder.module.workerExecution(
+              workerIndex: call.workerIndex,
+              results: results,
+            );
+          },
+        );
+      },
+      cancelOnError: true,
+      onError: completer.completeError,
     );
-    final resultsLength = function.results!.length;
-    final mappedResults = List.generate(
-      argsLists.length,
-      (index) => result
-          .sublist(index * resultsLength, (index + 1) * resultsLength)
-          .map((e) => _References.dartValueFromWasm(e, runner))
-          .toList(),
-    );
-    return mappedResults;
+
+    return completer.future;
   }
 
   @override

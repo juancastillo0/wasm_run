@@ -1526,6 +1526,500 @@ abstract class ExternalValue_SharedMemory implements ExternalValue {
 }
 
 /// @nodoc
+mixin _$ParallelExec {
+  Object get field0 => throw _privateConstructorUsedError;
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function(List<WasmVal> field0) ok,
+    required TResult Function(String field0) err,
+    required TResult Function(FunctionCall field0) call,
+  }) =>
+      throw _privateConstructorUsedError;
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function(List<WasmVal> field0)? ok,
+    TResult? Function(String field0)? err,
+    TResult? Function(FunctionCall field0)? call,
+  }) =>
+      throw _privateConstructorUsedError;
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function(List<WasmVal> field0)? ok,
+    TResult Function(String field0)? err,
+    TResult Function(FunctionCall field0)? call,
+    required TResult orElse(),
+  }) =>
+      throw _privateConstructorUsedError;
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(ParallelExec_Ok value) ok,
+    required TResult Function(ParallelExec_Err value) err,
+    required TResult Function(ParallelExec_Call value) call,
+  }) =>
+      throw _privateConstructorUsedError;
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(ParallelExec_Ok value)? ok,
+    TResult? Function(ParallelExec_Err value)? err,
+    TResult? Function(ParallelExec_Call value)? call,
+  }) =>
+      throw _privateConstructorUsedError;
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(ParallelExec_Ok value)? ok,
+    TResult Function(ParallelExec_Err value)? err,
+    TResult Function(ParallelExec_Call value)? call,
+    required TResult orElse(),
+  }) =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $ParallelExecCopyWith<$Res> {
+  factory $ParallelExecCopyWith(
+          ParallelExec value, $Res Function(ParallelExec) then) =
+      _$ParallelExecCopyWithImpl<$Res, ParallelExec>;
+}
+
+/// @nodoc
+class _$ParallelExecCopyWithImpl<$Res, $Val extends ParallelExec>
+    implements $ParallelExecCopyWith<$Res> {
+  _$ParallelExecCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+}
+
+/// @nodoc
+abstract class _$$ParallelExec_OkCopyWith<$Res> {
+  factory _$$ParallelExec_OkCopyWith(
+          _$ParallelExec_Ok value, $Res Function(_$ParallelExec_Ok) then) =
+      __$$ParallelExec_OkCopyWithImpl<$Res>;
+  @useResult
+  $Res call({List<WasmVal> field0});
+}
+
+/// @nodoc
+class __$$ParallelExec_OkCopyWithImpl<$Res>
+    extends _$ParallelExecCopyWithImpl<$Res, _$ParallelExec_Ok>
+    implements _$$ParallelExec_OkCopyWith<$Res> {
+  __$$ParallelExec_OkCopyWithImpl(
+      _$ParallelExec_Ok _value, $Res Function(_$ParallelExec_Ok) _then)
+      : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? field0 = null,
+  }) {
+    return _then(_$ParallelExec_Ok(
+      null == field0
+          ? _value._field0
+          : field0 // ignore: cast_nullable_to_non_nullable
+              as List<WasmVal>,
+    ));
+  }
+}
+
+/// @nodoc
+
+class _$ParallelExec_Ok implements ParallelExec_Ok {
+  const _$ParallelExec_Ok(final List<WasmVal> field0) : _field0 = field0;
+
+  final List<WasmVal> _field0;
+  @override
+  List<WasmVal> get field0 {
+    if (_field0 is EqualUnmodifiableListView) return _field0;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_field0);
+  }
+
+  @override
+  String toString() {
+    return 'ParallelExec.ok(field0: $field0)';
+  }
+
+  @override
+  bool operator ==(dynamic other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$ParallelExec_Ok &&
+            const DeepCollectionEquality().equals(other._field0, _field0));
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(runtimeType, const DeepCollectionEquality().hash(_field0));
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$ParallelExec_OkCopyWith<_$ParallelExec_Ok> get copyWith =>
+      __$$ParallelExec_OkCopyWithImpl<_$ParallelExec_Ok>(this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function(List<WasmVal> field0) ok,
+    required TResult Function(String field0) err,
+    required TResult Function(FunctionCall field0) call,
+  }) {
+    return ok(field0);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function(List<WasmVal> field0)? ok,
+    TResult? Function(String field0)? err,
+    TResult? Function(FunctionCall field0)? call,
+  }) {
+    return ok?.call(field0);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function(List<WasmVal> field0)? ok,
+    TResult Function(String field0)? err,
+    TResult Function(FunctionCall field0)? call,
+    required TResult orElse(),
+  }) {
+    if (ok != null) {
+      return ok(field0);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(ParallelExec_Ok value) ok,
+    required TResult Function(ParallelExec_Err value) err,
+    required TResult Function(ParallelExec_Call value) call,
+  }) {
+    return ok(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(ParallelExec_Ok value)? ok,
+    TResult? Function(ParallelExec_Err value)? err,
+    TResult? Function(ParallelExec_Call value)? call,
+  }) {
+    return ok?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(ParallelExec_Ok value)? ok,
+    TResult Function(ParallelExec_Err value)? err,
+    TResult Function(ParallelExec_Call value)? call,
+    required TResult orElse(),
+  }) {
+    if (ok != null) {
+      return ok(this);
+    }
+    return orElse();
+  }
+}
+
+abstract class ParallelExec_Ok implements ParallelExec {
+  const factory ParallelExec_Ok(final List<WasmVal> field0) = _$ParallelExec_Ok;
+
+  @override
+  List<WasmVal> get field0;
+  @JsonKey(ignore: true)
+  _$$ParallelExec_OkCopyWith<_$ParallelExec_Ok> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class _$$ParallelExec_ErrCopyWith<$Res> {
+  factory _$$ParallelExec_ErrCopyWith(
+          _$ParallelExec_Err value, $Res Function(_$ParallelExec_Err) then) =
+      __$$ParallelExec_ErrCopyWithImpl<$Res>;
+  @useResult
+  $Res call({String field0});
+}
+
+/// @nodoc
+class __$$ParallelExec_ErrCopyWithImpl<$Res>
+    extends _$ParallelExecCopyWithImpl<$Res, _$ParallelExec_Err>
+    implements _$$ParallelExec_ErrCopyWith<$Res> {
+  __$$ParallelExec_ErrCopyWithImpl(
+      _$ParallelExec_Err _value, $Res Function(_$ParallelExec_Err) _then)
+      : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? field0 = null,
+  }) {
+    return _then(_$ParallelExec_Err(
+      null == field0
+          ? _value.field0
+          : field0 // ignore: cast_nullable_to_non_nullable
+              as String,
+    ));
+  }
+}
+
+/// @nodoc
+
+class _$ParallelExec_Err implements ParallelExec_Err {
+  const _$ParallelExec_Err(this.field0);
+
+  @override
+  final String field0;
+
+  @override
+  String toString() {
+    return 'ParallelExec.err(field0: $field0)';
+  }
+
+  @override
+  bool operator ==(dynamic other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$ParallelExec_Err &&
+            (identical(other.field0, field0) || other.field0 == field0));
+  }
+
+  @override
+  int get hashCode => Object.hash(runtimeType, field0);
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$ParallelExec_ErrCopyWith<_$ParallelExec_Err> get copyWith =>
+      __$$ParallelExec_ErrCopyWithImpl<_$ParallelExec_Err>(this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function(List<WasmVal> field0) ok,
+    required TResult Function(String field0) err,
+    required TResult Function(FunctionCall field0) call,
+  }) {
+    return err(field0);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function(List<WasmVal> field0)? ok,
+    TResult? Function(String field0)? err,
+    TResult? Function(FunctionCall field0)? call,
+  }) {
+    return err?.call(field0);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function(List<WasmVal> field0)? ok,
+    TResult Function(String field0)? err,
+    TResult Function(FunctionCall field0)? call,
+    required TResult orElse(),
+  }) {
+    if (err != null) {
+      return err(field0);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(ParallelExec_Ok value) ok,
+    required TResult Function(ParallelExec_Err value) err,
+    required TResult Function(ParallelExec_Call value) call,
+  }) {
+    return err(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(ParallelExec_Ok value)? ok,
+    TResult? Function(ParallelExec_Err value)? err,
+    TResult? Function(ParallelExec_Call value)? call,
+  }) {
+    return err?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(ParallelExec_Ok value)? ok,
+    TResult Function(ParallelExec_Err value)? err,
+    TResult Function(ParallelExec_Call value)? call,
+    required TResult orElse(),
+  }) {
+    if (err != null) {
+      return err(this);
+    }
+    return orElse();
+  }
+}
+
+abstract class ParallelExec_Err implements ParallelExec {
+  const factory ParallelExec_Err(final String field0) = _$ParallelExec_Err;
+
+  @override
+  String get field0;
+  @JsonKey(ignore: true)
+  _$$ParallelExec_ErrCopyWith<_$ParallelExec_Err> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class _$$ParallelExec_CallCopyWith<$Res> {
+  factory _$$ParallelExec_CallCopyWith(
+          _$ParallelExec_Call value, $Res Function(_$ParallelExec_Call) then) =
+      __$$ParallelExec_CallCopyWithImpl<$Res>;
+  @useResult
+  $Res call({FunctionCall field0});
+}
+
+/// @nodoc
+class __$$ParallelExec_CallCopyWithImpl<$Res>
+    extends _$ParallelExecCopyWithImpl<$Res, _$ParallelExec_Call>
+    implements _$$ParallelExec_CallCopyWith<$Res> {
+  __$$ParallelExec_CallCopyWithImpl(
+      _$ParallelExec_Call _value, $Res Function(_$ParallelExec_Call) _then)
+      : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? field0 = null,
+  }) {
+    return _then(_$ParallelExec_Call(
+      null == field0
+          ? _value.field0
+          : field0 // ignore: cast_nullable_to_non_nullable
+              as FunctionCall,
+    ));
+  }
+}
+
+/// @nodoc
+
+class _$ParallelExec_Call implements ParallelExec_Call {
+  const _$ParallelExec_Call(this.field0);
+
+  @override
+  final FunctionCall field0;
+
+  @override
+  String toString() {
+    return 'ParallelExec.call(field0: $field0)';
+  }
+
+  @override
+  bool operator ==(dynamic other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$ParallelExec_Call &&
+            (identical(other.field0, field0) || other.field0 == field0));
+  }
+
+  @override
+  int get hashCode => Object.hash(runtimeType, field0);
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$ParallelExec_CallCopyWith<_$ParallelExec_Call> get copyWith =>
+      __$$ParallelExec_CallCopyWithImpl<_$ParallelExec_Call>(this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function(List<WasmVal> field0) ok,
+    required TResult Function(String field0) err,
+    required TResult Function(FunctionCall field0) call,
+  }) {
+    return call(field0);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function(List<WasmVal> field0)? ok,
+    TResult? Function(String field0)? err,
+    TResult? Function(FunctionCall field0)? call,
+  }) {
+    return call?.call(field0);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function(List<WasmVal> field0)? ok,
+    TResult Function(String field0)? err,
+    TResult Function(FunctionCall field0)? call,
+    required TResult orElse(),
+  }) {
+    if (call != null) {
+      return call(field0);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(ParallelExec_Ok value) ok,
+    required TResult Function(ParallelExec_Err value) err,
+    required TResult Function(ParallelExec_Call value) call,
+  }) {
+    return call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(ParallelExec_Ok value)? ok,
+    TResult? Function(ParallelExec_Err value)? err,
+    TResult? Function(ParallelExec_Call value)? call,
+  }) {
+    return call?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(ParallelExec_Ok value)? ok,
+    TResult Function(ParallelExec_Err value)? err,
+    TResult Function(ParallelExec_Call value)? call,
+    required TResult orElse(),
+  }) {
+    if (call != null) {
+      return call(this);
+    }
+    return orElse();
+  }
+}
+
+abstract class ParallelExec_Call implements ParallelExec {
+  const factory ParallelExec_Call(final FunctionCall field0) =
+      _$ParallelExec_Call;
+
+  @override
+  FunctionCall get field0;
+  @JsonKey(ignore: true)
+  _$$ParallelExec_CallCopyWith<_$ParallelExec_Call> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
 mixin _$WasmVal {
   Object? get field0 => throw _privateConstructorUsedError;
   @optionalTypeArgs

@@ -290,7 +290,7 @@ fn wire_call_function_handle_parallel__method__WasmitModuleId_impl(
         WrapInfo {
             debug_name: "call_function_handle_parallel__method__WasmitModuleId",
             port: Some(port_),
-            mode: FfiCallMode::Normal,
+            mode: FfiCallMode::Stream,
         },
         move || {
             let api_that = that.wire2api();
@@ -298,13 +298,33 @@ fn wire_call_function_handle_parallel__method__WasmitModuleId_impl(
             let api_args = args.wire2api();
             let api_num_tasks = num_tasks.wire2api();
             move |task_callback| {
-                WasmitModuleId::call_function_handle_parallel(
+                Ok(WasmitModuleId::call_function_handle_parallel(
                     &api_that,
                     api_func_name,
                     api_args,
                     api_num_tasks,
-                )
+                    task_callback.stream_sink(),
+                ))
             }
+        },
+    )
+}
+fn wire_worker_execution__method__WasmitModuleId_impl(
+    that: impl Wire2Api<WasmitModuleId> + UnwindSafe,
+    worker_index: impl Wire2Api<usize> + UnwindSafe,
+    results: impl Wire2Api<Vec<WasmVal>> + UnwindSafe,
+) -> support::WireSyncReturn {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
+        WrapInfo {
+            debug_name: "worker_execution__method__WasmitModuleId",
+            port: None,
+            mode: FfiCallMode::Sync,
+        },
+        move || {
+            let api_that = that.wire2api();
+            let api_worker_index = worker_index.wire2api();
+            let api_results = results.wire2api();
+            WasmitModuleId::worker_execution(&api_that, api_worker_index, api_results)
         },
     )
 }
@@ -1393,6 +1413,20 @@ impl support::IntoDart for FuncTy {
 }
 impl support::IntoDartExceptPrimitive for FuncTy {}
 
+impl support::IntoDart for FunctionCall {
+    fn into_dart(self) -> support::DartAbi {
+        vec![
+            self.args.into_dart(),
+            self.function_id.into_dart(),
+            self.function_pointer.into_dart(),
+            self.num_results.into_dart(),
+            self.worker_index.into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl support::IntoDartExceptPrimitive for FunctionCall {}
+
 impl support::IntoDart for GlobalTy {
     fn into_dart(self) -> support::DartAbi {
         vec![self.value.into_dart(), self.mutable.into_dart()].into_dart()
@@ -1438,6 +1472,17 @@ impl support::IntoDart for ModuleImportDesc {
 }
 impl support::IntoDartExceptPrimitive for ModuleImportDesc {}
 
+impl support::IntoDart for ParallelExec {
+    fn into_dart(self) -> support::DartAbi {
+        match self {
+            Self::Ok(field0) => vec![0.into_dart(), field0.into_dart()],
+            Self::Err(field0) => vec![1.into_dart(), field0.into_dart()],
+            Self::Call(field0) => vec![2.into_dart(), field0.into_dart()],
+        }
+        .into_dart()
+    }
+}
+impl support::IntoDartExceptPrimitive for ParallelExec {}
 impl support::IntoDart for SharedMemoryWaitResult {
     fn into_dart(self) -> support::DartAbi {
         match self {
@@ -1684,6 +1729,15 @@ mod web {
         wire_call_function_handle_parallel__method__WasmitModuleId_impl(
             port_, that, func_name, args, num_tasks,
         )
+    }
+
+    #[wasm_bindgen]
+    pub fn wire_worker_execution__method__WasmitModuleId(
+        that: JsValue,
+        worker_index: usize,
+        results: JsValue,
+    ) -> support::WireSyncReturn {
+        wire_worker_execution__method__WasmitModuleId_impl(that, worker_index, results)
     }
 
     #[wasm_bindgen]
@@ -2855,6 +2909,15 @@ mod io {
         wire_call_function_handle_parallel__method__WasmitModuleId_impl(
             port_, that, func_name, args, num_tasks,
         )
+    }
+
+    #[no_mangle]
+    pub extern "C" fn wire_worker_execution__method__WasmitModuleId(
+        that: *mut wire_WasmitModuleId,
+        worker_index: usize,
+        results: *mut wire_list_wasm_val,
+    ) -> support::WireSyncReturn {
+        wire_worker_execution__method__WasmitModuleId_impl(that, worker_index, results)
     }
 
     #[no_mangle]

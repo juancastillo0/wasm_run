@@ -107,7 +107,7 @@ abstract class WasmitDart {
   FlutterRustBridgeTaskConstMeta
       get kCallFunctionHandleMethodWasmitModuleIdConstMeta;
 
-  Future<List<WasmVal>> callFunctionHandleParallelMethodWasmitModuleId(
+  Stream<ParallelExec> callFunctionHandleParallelMethodWasmitModuleId(
       {required WasmitModuleId that,
       required String funcName,
       required List<WasmVal> args,
@@ -116,6 +116,15 @@ abstract class WasmitDart {
 
   FlutterRustBridgeTaskConstMeta
       get kCallFunctionHandleParallelMethodWasmitModuleIdConstMeta;
+
+  void workerExecutionMethodWasmitModuleId(
+      {required WasmitModuleId that,
+      required int workerIndex,
+      required List<WasmVal> results,
+      dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta
+      get kWorkerExecutionMethodWasmitModuleIdConstMeta;
 
   FuncTy getFunctionTypeMethodWasmitModuleId(
       {required WasmitModuleId that, required WFunc func, dynamic hint});
@@ -894,6 +903,22 @@ class FuncTy {
   });
 }
 
+class FunctionCall {
+  final List<WasmVal> args;
+  final int functionId;
+  final int functionPointer;
+  final int numResults;
+  final int workerIndex;
+
+  const FunctionCall({
+    required this.args,
+    required this.functionId,
+    required this.functionPointer,
+    required this.numResults,
+    required this.workerIndex,
+  });
+}
+
 class GlobalTy {
   /// The value type of the global variable.
   final ValueTy value;
@@ -1088,6 +1113,19 @@ class ModuleImportDesc {
     required this.name,
     required this.ty,
   });
+}
+
+@freezed
+class ParallelExec with _$ParallelExec {
+  const factory ParallelExec.ok(
+    List<WasmVal> field0,
+  ) = ParallelExec_Ok;
+  const factory ParallelExec.err(
+    String field0,
+  ) = ParallelExec_Err;
+  const factory ParallelExec.call(
+    FunctionCall field0,
+  ) = ParallelExec_Call;
 }
 
 /// A preopened directory that the WASM module will be able to access
@@ -1524,7 +1562,7 @@ class WasmitModuleId {
         args: args,
       );
 
-  Future<List<WasmVal>> callFunctionHandleParallel(
+  Stream<ParallelExec> callFunctionHandleParallel(
           {required String funcName,
           required List<WasmVal> args,
           required int numTasks,
@@ -1534,6 +1572,16 @@ class WasmitModuleId {
         funcName: funcName,
         args: args,
         numTasks: numTasks,
+      );
+
+  void workerExecution(
+          {required int workerIndex,
+          required List<WasmVal> results,
+          dynamic hint}) =>
+      bridge.workerExecutionMethodWasmitModuleId(
+        that: this,
+        workerIndex: workerIndex,
+        results: results,
       );
 
   FuncTy getFunctionType({required WFunc func, dynamic hint}) =>
@@ -2132,7 +2180,7 @@ class WasmitDartImpl implements WasmitDart {
             argNames: ["that", "func", "args"],
           );
 
-  Future<List<WasmVal>> callFunctionHandleParallelMethodWasmitModuleId(
+  Stream<ParallelExec> callFunctionHandleParallelMethodWasmitModuleId(
       {required WasmitModuleId that,
       required String funcName,
       required List<WasmVal> args,
@@ -2142,11 +2190,11 @@ class WasmitDartImpl implements WasmitDart {
     var arg1 = _platform.api2wire_String(funcName);
     var arg2 = _platform.api2wire_list_wasm_val(args);
     var arg3 = api2wire_usize(numTasks);
-    return _platform.executeNormal(FlutterRustBridgeTask(
+    return _platform.executeStream(FlutterRustBridgeTask(
       callFfi: (port_) => _platform.inner
           .wire_call_function_handle_parallel__method__WasmitModuleId(
               port_, arg0, arg1, arg2, arg3),
-      parseSuccessData: _wire2api_list_wasm_val,
+      parseSuccessData: _wire2api_parallel_exec,
       constMeta: kCallFunctionHandleParallelMethodWasmitModuleIdConstMeta,
       argValues: [that, funcName, args, numTasks],
       hint: hint,
@@ -2158,6 +2206,31 @@ class WasmitDartImpl implements WasmitDart {
           const FlutterRustBridgeTaskConstMeta(
             debugName: "call_function_handle_parallel__method__WasmitModuleId",
             argNames: ["that", "funcName", "args", "numTasks"],
+          );
+
+  void workerExecutionMethodWasmitModuleId(
+      {required WasmitModuleId that,
+      required int workerIndex,
+      required List<WasmVal> results,
+      dynamic hint}) {
+    var arg0 = _platform.api2wire_box_autoadd_wasmit_module_id(that);
+    var arg1 = api2wire_usize(workerIndex);
+    var arg2 = _platform.api2wire_list_wasm_val(results);
+    return _platform.executeSync(FlutterRustBridgeSyncTask(
+      callFfi: () => _platform.inner
+          .wire_worker_execution__method__WasmitModuleId(arg0, arg1, arg2),
+      parseSuccessData: _wire2api_unit,
+      constMeta: kWorkerExecutionMethodWasmitModuleIdConstMeta,
+      argValues: [that, workerIndex, results],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta
+      get kWorkerExecutionMethodWasmitModuleIdConstMeta =>
+          const FlutterRustBridgeTaskConstMeta(
+            debugName: "worker_execution__method__WasmitModuleId",
+            argNames: ["that", "workerIndex", "results"],
           );
 
   FuncTy getFunctionTypeMethodWasmitModuleId(
@@ -3328,6 +3401,10 @@ class WasmitDartImpl implements WasmitDart {
     return _wire2api_func_ty(raw);
   }
 
+  FunctionCall _wire2api_box_autoadd_function_call(dynamic raw) {
+    return _wire2api_function_call(raw);
+  }
+
   GlobalTy _wire2api_box_autoadd_global_ty(dynamic raw) {
     return _wire2api_global_ty(raw);
   }
@@ -3448,6 +3525,19 @@ class WasmitDartImpl implements WasmitDart {
     );
   }
 
+  FunctionCall _wire2api_function_call(dynamic raw) {
+    final arr = raw as List<dynamic>;
+    if (arr.length != 5)
+      throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
+    return FunctionCall(
+      args: _wire2api_list_wasm_val(arr[0]),
+      functionId: _wire2api_u32(arr[1]),
+      functionPointer: _wire2api_usize(arr[2]),
+      numResults: _wire2api_usize(arr[3]),
+      workerIndex: _wire2api_usize(arr[4]),
+    );
+  }
+
   GlobalTy _wire2api_global_ty(dynamic raw) {
     final arr = raw as List<dynamic>;
     if (arr.length != 2)
@@ -3546,6 +3636,25 @@ class WasmitDartImpl implements WasmitDart {
 
   WasmWasiFeatures? _wire2api_opt_box_autoadd_wasm_wasi_features(dynamic raw) {
     return raw == null ? null : _wire2api_box_autoadd_wasm_wasi_features(raw);
+  }
+
+  ParallelExec _wire2api_parallel_exec(dynamic raw) {
+    switch (raw[0]) {
+      case 0:
+        return ParallelExec_Ok(
+          _wire2api_list_wasm_val(raw[1]),
+        );
+      case 1:
+        return ParallelExec_Err(
+          _wire2api_String(raw[1]),
+        );
+      case 2:
+        return ParallelExec_Call(
+          _wire2api_box_autoadd_function_call(raw[1]),
+        );
+      default:
+        throw Exception("unreachable");
+    }
   }
 
   SharedMemoryWaitResult _wire2api_shared_memory_wait_result(dynamic raw) {
