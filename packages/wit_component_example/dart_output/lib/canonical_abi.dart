@@ -4,7 +4,10 @@
 
 import 'dart:convert' show Utf8Codec, latin1;
 import 'dart:math' as math;
-import 'dart:typed_data' show ByteData, Endian, Uint8List;
+import 'dart:typed_data'
+    show ByteData, Endian, Uint16List, Uint32List, Uint8List;
+
+import 'package:dart_output/canonical_abi_cache.dart';
 
 final unreachableException = Exception('Unreachable');
 
@@ -35,6 +38,9 @@ Never trap([Object? sourceError, StackTrace? stackTrace]) =>
 void trap_if(bool condition) {
   if (condition) throw Trap('trap_if');
 }
+
+const LIST_GROWABLE =
+    bool.fromEnvironment('CANONICAL_ABI_LIST_GROWABLE', defaultValue: false);
 
 List<T> singleList<T>(T value) => List.filled(1, value, growable: false);
 
@@ -331,6 +337,10 @@ sealed class DespecializedValType extends ValType {
 }
 
 DespecializedValType despecialize(ValType t) {
+  if (ComputedTypeData.isUsingCache) {
+    final v = ComputedTypeData.cache[t];
+    if (v != null) return v.despecialized;
+  }
   return switch (t) {
     DespecializedValType() => t,
     Tuple(:final ts) =>
@@ -348,33 +358,9 @@ DespecializedValType despecialize(ValType t) {
 // ### Alignment
 
 int alignment(ValType t) {
-  switch (despecialize(t)) {
-    case Bool():
-      return 1;
-    case S8() || U8():
-      return 1;
-    case S16() || U16():
-      return 2;
-    case S32() || U32():
-      return 4;
-    case S64() || U64():
-      return 8;
-    case Float32():
-      return 4;
-    case Float64():
-      return 8;
-    case Char():
-      return 4;
-    case StringType() || ListType():
-      return 4;
-    case Record(:final fields):
-      return alignment_record(fields);
-    case Variant(:final cases):
-      return alignment_variant(cases);
-    case Flags(:final labels):
-      return alignment_flags(labels);
-    case Own() || Borrow():
-      return 4;
+  if (ComputedTypeData.isUsingCache) {
+    final v = ComputedTypeData.cache[t];
+    if (v != null) return v.align;
   }
   return switch (despecialize(t)) {
     Bool() => 1,
@@ -441,33 +427,9 @@ int alignment_flags(List<String> labels) {
 // ### Size
 
 int size(ValType t) {
-  switch (despecialize(t)) {
-    case Bool():
-      return 1;
-    case S8() || U8():
-      return 1;
-    case S16() || U16():
-      return 2;
-    case S32() || U32():
-      return 4;
-    case S64() || U64():
-      return 8;
-    case Float32():
-      return 4;
-    case Float64():
-      return 8;
-    case Char():
-      return 4;
-    case StringType() || ListType():
-      return 8;
-    case Record(:final fields):
-      return size_record(fields);
-    case Variant(:final cases):
-      return size_variant(cases);
-    case Flags(:final labels):
-      return size_flags(labels);
-    case Own() || Borrow():
-      return 4;
+  if (ComputedTypeData.isUsingCache) {
+    final v = ComputedTypeData.cache[t];
+    if (v != null) return v.size_;
   }
   return switch (despecialize(t)) {
     Bool() => 1,
@@ -1649,6 +1611,15 @@ enum FlattenContext { lift, lower }
 /// already allocated space for the return value (e.g., efficiently on the stack),
 /// passing in an i32 pointer as an parameter instead of returning an i32 as a return value.
 CoreFuncType flatten_functype(FuncType ft, FlattenContext context) {
+  if (ComputedTypeData.isUsingCache) {
+    final cached = ComputedFuncTypeData.cache[ft];
+    if (cached != null) {
+      return switch (context) {
+        FlattenContext.lift => cached.liftCoreType,
+        FlattenContext.lower => cached.lowerCoreType,
+      };
+    }
+  }
   var flat_params = flatten_types(ft.param_types());
   if (flat_params.length > MAX_FLAT_PARAMS) {
     flat_params = const [FlattenType.i32];
@@ -1682,6 +1653,10 @@ enum FlattenType {
 }
 
 List<FlattenType> flatten_type(ValType t) {
+  if (ComputedTypeData.isUsingCache) {
+    final cached = ComputedTypeData.cache[t];
+    if (cached != null) return cached.flatType;
+  }
   return switch (despecialize(t)) {
     Bool() => const [FlattenType.i32],
     U8() || U16() || U32() => const [FlattenType.i32],
@@ -2085,19 +2060,20 @@ ListValue lift_values(
   Context cx,
   int max_flat,
   ValueIter vi,
-  List<ValType> ts,
-) {
-  final flat_types = flatten_types(ts);
-  if ((flat_types.length) > max_flat) {
+  List<ValType> ts, {
+  FuncTypesData? computedTypes,
+}) {
+  final flat_types = computedTypes?.flatTypes ?? flatten_types(ts);
+  if (flat_types.length > max_flat) {
     final ptr = vi.nextInt(FlattenType.i32);
-    final tuple_type = Tuple(ts);
+    final tuple_type = computedTypes?.tupleType ?? Tuple(ts);
     trap_if(ptr != align_to(ptr, alignment(tuple_type)));
     trap_if(ptr + size(tuple_type) > cx.opts.memory.length);
     final tuple_value = load(cx, ptr, tuple_type)! as TupleValue;
 
-    return tuple_value.values.toList();
+    return tuple_value.values.toList(growable: LIST_GROWABLE);
   } else {
-    return ts.map((t) => lift_flat(cx, vi, t)).toList();
+    return ts.map((t) => lift_flat(cx, vi, t)).toList(growable: LIST_GROWABLE);
   }
 }
 // #
@@ -2114,30 +2090,35 @@ List<Value> lower_values(
   List<Object?> vs,
   List<ValType> ts, {
   ValueIter? out_param,
+  FuncTypesData? computedTypes,
 }) {
-  final flat_types = flatten_types(ts);
+  final flat_types = computedTypes?.flatTypes ?? flatten_types(ts);
   if (flat_types.length > max_flat) {
-    final tuple_type = Tuple(ts);
+    final tuple_type = computedTypes?.tupleType ?? Tuple(ts);
     final TupleValue tuple_value = Map.fromIterables(
       Iterable.generate(vs.length, (i) => i.toString()),
       vs,
     );
+    final tuple_size = size(tuple_type);
+    final tuple_alignment = alignment(tuple_type);
     final int ptr;
     if (out_param == null) {
-      ptr = cx.opts.realloc(0, 0, alignment(tuple_type), size(tuple_type));
+      ptr = cx.opts.realloc(0, 0, tuple_alignment, tuple_size);
     } else {
       ptr = out_param.nextInt(FlattenType.i32);
     }
-    trap_if(ptr != align_to(ptr, alignment(tuple_type)));
-    trap_if(ptr + size(tuple_type) > cx.opts.memory.length);
+    trap_if(ptr != align_to(ptr, tuple_alignment));
+    trap_if(ptr + tuple_size > cx.opts.memory.length);
     store(cx, tuple_value, tuple_type, ptr);
-    return [Value(FlattenType.i32, ptr)];
+    // This is different from canonical_abi.py, which always returns
+    // the pointer to the tuple.
+    return out_param == null ? [Value(FlattenType.i32, ptr)] : const [];
   } else {
-    final List<Value> flat_vals = [];
-    for (final i in Iterable<int>.generate(vs.length)) {
-      flat_vals.addAll(lower_flat(cx, vs[i], ts[i]));
+    final List<Value> flat_values = [];
+    for (int i = 0; i < vs.length; i++) {
+      flat_values.addAll(lower_flat(cx, vs[i], ts[i]));
     }
-    return flat_vals;
+    return flat_values;
   }
 }
 // ### `lift`
@@ -2188,14 +2169,21 @@ List<Value> lower_values(
   ComponentInstance inst,
   List<Value> Function(List<Value>) callee,
   FuncType ft,
-  ListValue args,
-) {
+  ListValue args, {
+  ComputedFuncTypeData? computedFt,
+}) {
   final cx = Context(opts, inst);
   trap_if(!inst.may_enter);
 
   assert(inst.may_leave);
   inst.may_leave = false;
-  final flat_args = lower_values(cx, MAX_FLAT_PARAMS, args, ft.param_types());
+  final flat_args = lower_values(
+    cx,
+    MAX_FLAT_PARAMS,
+    args,
+    computedFt?.parameters ?? ft.param_types(),
+    computedTypes: computedFt?.parametersData,
+  );
   inst.may_leave = true;
 
   final List<Value> flat_results;
@@ -2211,7 +2199,8 @@ List<Value> lower_values(
     cx,
     MAX_FLAT_RESULTS,
     ValueIter(flat_results),
-    ft.result_types(),
+    computedFt?.results ?? ft.result_types(),
+    computedTypes: computedFt?.resultsData,
   );
 
   void post_return() {
@@ -2288,8 +2277,9 @@ List<Value> canon_lower(
   (ListValue, void Function()) Function(ListValue) callee,
   bool calling_import,
   FuncType ft,
-  List<Value> flat_args,
-) {
+  List<Value> flat_args, {
+  ComputedFuncTypeData? computedFt,
+}) {
   final cx = Context(opts, inst);
   trap_if(!inst.may_leave);
 
@@ -2301,7 +2291,8 @@ List<Value> canon_lower(
     cx,
     MAX_FLAT_PARAMS,
     flat_args_iter,
-    ft.param_types(),
+    computedFt?.parameters ?? ft.param_types(),
+    computedTypes: computedFt?.parametersData,
   );
 
   final (results, post_return) = callee(args);
@@ -2311,7 +2302,8 @@ List<Value> canon_lower(
     cx,
     MAX_FLAT_RESULTS,
     results,
-    ft.result_types(),
+    computedFt?.results ?? ft.result_types(),
+    computedTypes: computedFt?.resultsData,
     out_param: flat_args_iter,
   );
   inst.may_leave = true;

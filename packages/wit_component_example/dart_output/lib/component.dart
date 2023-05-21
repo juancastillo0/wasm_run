@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'dart:typed_data';
 
 import 'package:dart_output/canonical_abi.dart';
+import 'package:dart_output/canonical_abi_cache.dart';
 // TODO: ignore: implementation_imports
 import 'package:wasmit/src/wasm_bindings/make_function_num_args.dart';
 import 'package:wasmit/wasmit.dart';
@@ -224,7 +225,7 @@ ByteData flagBitsFromJson(Object? json_, Flags spec) {
 }
 
 /// Maps a [FlattenType] core wasm type to a [ValueTy].
-ValueTy mapFlattenedToWasmType(FlattenType e) {
+ValueTy mapFlatToWasmType(FlattenType e) {
   return switch (e) {
     FlattenType.i32 => ValueTy.i32,
     FlattenType.i64 => ValueTy.i64,
@@ -240,24 +241,33 @@ WasmFunction loweredImportFunction(
   CanonLowerCallee execFn,
   WasmLibrary Function() getWasmLibrary,
 ) {
-  final flattenedFt = flatten_functype(ft, FlattenContext.lower);
-  final lowered = WasmFunction(
-    params: flattenedFt.params.map(mapFlattenedToWasmType).toList(),
-    results: flattenedFt.results.map(mapFlattenedToWasmType).toList(),
-    makeFunctionNumArgs(flattenedFt.params.length, (args) {
-      final library = getWasmLibrary();
-      final results = canon_lower(
-        library._functionOptions(null),
-        library.componentInstance,
-        execFn,
-        true,
-        ft,
-        args.indexed
+  final computedFt = ComputedTypeData.cacheFunction(ft);
+  final flattenedFt = computedFt.lowerCoreType;
+  List<Object?> call([List<Object?>? args]) {
+    final library = getWasmLibrary();
+    final mappedArgs = args == null || args.isEmpty
+        ? const <Value>[]
+        : args.indexed
             .map((e) => Value(flattenedFt.params[e.$1], e.$2! as num))
-            .toList(),
-      );
-      return results.map((e) => e.v).toList();
-    }),
+            .toList(growable: false);
+    final results = canon_lower(
+      library._functionOptions(null),
+      library.componentInstance,
+      execFn,
+      true,
+      ft,
+      mappedArgs,
+      computedFt: computedFt,
+    );
+    if (results.isEmpty) return const [];
+    return results.map((e) => e.v).toList(growable: false);
+  }
+
+  final lowered = WasmFunction(
+    params: flattenedFt.params.map(mapFlatToWasmType).toList(growable: false),
+    results: flattenedFt.results.map(mapFlatToWasmType).toList(growable: false),
+    call: call,
+    makeFunctionNumArgs(flattenedFt.params.length, call),
   );
 
   return lowered;
@@ -332,24 +342,27 @@ class WasmLibrary {
   ) {
     final func = instance.getFunction(name);
     if (func == null) return null;
-    final flattenedFt = flatten_functype(ft, FlattenContext.lift);
+    final computedFt = ComputedTypeData.cacheFunction(ft);
+    final flattenedFt = computedFt.liftCoreType;
     final postFunc = postReturnFunction(name);
-    List<Value> coreFunc(List<Value> p0) {
-      final results = func.call(p0.map((e) => e.v).toList());
-      if (results.isEmpty) return [];
+    List<Value> coreFunc(List<Value> p) {
+      final args = p.map((e) => e.v).toList(growable: false);
+      final results = func.call(args);
+      if (results.isEmpty) return const [];
       return results.indexed
           .map((e) => Value(flattenedFt.results[e.$1], e.$2! as num))
-          .toList();
+          .toList(growable: false);
     }
 
+    final options = _functionOptions(postFunc);
     return (ListValue args) {
-      final options = _functionOptions(postFunc);
       final (funcLift, post) = canon_lift(
         options,
         componentInstance,
         coreFunc,
         ft,
         args,
+        computedFt: computedFt,
       );
       post();
 
