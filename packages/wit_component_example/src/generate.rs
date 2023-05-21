@@ -109,8 +109,7 @@ pub fn document_to_dart(parsed: &UnresolvedPackage) -> String {
         let mut methods = String::new();
         w.exports.iter().for_each(|(id, i)| {
             match i {
-                WorldItem::Interface(interface_id) => {
-                    let interface = parsed.interfaces.get(*interface_id).unwrap();
+                WorldItem::Interface(_interface_id) => {
                     constructor.push(format!(
                         "{} = {}(library)",
                         id.as_var(),
@@ -134,12 +133,12 @@ pub fn document_to_dart(parsed: &UnresolvedPackage) -> String {
             };
         });
 
-        s.push_str(
-            "TypesWorld({
+        s.push_str(&format!(
+            "\n\n{w_name}World({{
             required this.imports,
             required this.library,
-        })",
-        );
+        }})"
+        ));
         if constructor.is_empty() {
             s.push_str(";");
         } else {
@@ -147,7 +146,7 @@ pub fn document_to_dart(parsed: &UnresolvedPackage) -> String {
         }
 
         s.push_str(&format!(
-            "static Future<{w_name}World> init(
+            "\n\nstatic Future<{w_name}World> init(
                     WasmInstanceBuilder builder, {{
                     required {w_name}WorldImports imports,
                 }}) async {{

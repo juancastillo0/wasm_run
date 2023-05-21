@@ -142,7 +142,7 @@ impl Parsed<'_> {
                     .enumerate()
                     .for_each(|(index, (id, f))| {
                         s.push_str(&format!(
-                            "_{} = library.getComponentFunction('{id}', const {},)!",
+                            "_{} = library.getComponentFunction('{interface_id}#{id}', const {},)!",
                             id.as_var(),
                             self.function_spec(f)
                         ));

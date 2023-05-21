@@ -39,7 +39,7 @@ void main() async {
   }
 }
 
-Future<TypesWorld> initTypesWorld(TypesWorldImports imports) async {
+Future<TypesExampleWorld> initTypesWorld(TypesExampleWorldImports imports) async {
   final componentWasm = await File(
     kReleaseMode
         ? '../target/wasm32-unknown-unknown/release/wit_component_example.wasm'
@@ -49,7 +49,7 @@ Future<TypesWorld> initTypesWorld(TypesWorldImports imports) async {
   print(module);
   final builder = module.builder();
 
-  final world = await TypesWorld.init(
+  final world = await TypesExampleWorld.init(
     builder,
     imports: imports,
   );
@@ -84,7 +84,7 @@ class ImportsImpl implements Imports {
 }
 
 class TypesWorldTest {
-  final TypesWorld world;
+  final TypesExampleWorld world;
   final InlineImpl inlineImpl;
   final ImportsImpl importsImpl;
   final List<(LogLevel, String)> printed;
@@ -96,7 +96,7 @@ class TypesWorldTest {
     final importsImpl = ImportsImpl();
     final List<(LogLevel, String)> printed = [];
 
-    final imports = TypesWorldImports(
+    final imports = TypesExampleWorldImports(
       inline: inlineImpl,
       print: ({required LogLevel level, required String message}) {
         printed.add((level, message));

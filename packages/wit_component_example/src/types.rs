@@ -502,7 +502,7 @@ impl Parsed<'_> {
                     ));
                 }
                 s.push_str(&format!(
-                    "\nObject? toJson() => {{{}}};\n",
+                    "\nMap<String, Object?> toJson() => {{{}}};\n",
                     r.fields
                         .iter()
                         .map(|f| format!(
@@ -584,13 +584,13 @@ impl Parsed<'_> {
                     let class_name = format!("{name}{inner_name}");
                     cases_string.push_str(&format!(
                         "class {class_name} implements {name} {{ final {ty} value; const {class_name}(this.value);
-                         @override\nObject? toJson() => {{'{i}': {}}}; }}",
+                         @override\nMap<String, Object?> toJson() => {{'{i}': {}}}; }}",
                          self.type_to_json("value", &v.ty)
                     ));
                     s.push_str(&format!("const factory {name}.{}({ty} value) = {class_name};", ty.as_var()));
                 });
 
-                s.push_str("\n\nObject? toJson();\n");
+                s.push_str("\n\nMap<String, Object?> toJson();\n");
 
                 s.push_str(&format!(
                     "static const _spec = {};",
@@ -638,19 +638,19 @@ impl Parsed<'_> {
                         let ty_str =self.type_to_str(&ty);
                         cases_string.push_str(&format!(
                             "class {class_name} implements {name} {{ final {ty_str} value; const {class_name}(this.value);
-                            @override\nObject? toJson() => {{'{}': {}}};
+                            @override\nMap<String, Object?> toJson() => {{'{}': {}}};
                          }}", v.name, self.type_to_json("value", &ty)
                         ));
                         s.push_str(&format!("const factory {name}.{}({ty_str} value) = {class_name};", v.name.as_var()));
                     } else {
                         cases_string.push_str(&format!(
                             "class {class_name} implements {name} {{ const {class_name}();
-                            @override\nObject? toJson() => {{'{}': null}}; }}", v.name,
+                            @override\nMap<String, Object?> toJson() => {{'{}': null}}; }}", v.name,
                         ));
                         s.push_str(&format!("const factory {name}.{}() = {class_name};", v.name.as_var()));
                     }
                 });
-                s.push_str("\n\nObject? toJson();\n");
+                s.push_str("\n\nMap<String, Object?> toJson();\n");
                 s.push_str(&format!(
                     "static const _spec = {};",
                     self.type_def_to_spec(&ty)
