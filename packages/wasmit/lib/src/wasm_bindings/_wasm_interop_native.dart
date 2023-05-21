@@ -698,6 +698,8 @@ class _Instance extends WasmInstance {
 class _Memory extends WasmMemory {
   final Memory memory;
   final WasmitModuleId module;
+  PointerAndLength? _previous;
+  late Uint8List _view;
 
   _Memory(this.memory, this.module);
 
@@ -723,11 +725,19 @@ class _Memory extends WasmMemory {
   int get lengthInPages => module.getMemoryPages(memory: memory);
 
   @override
-  Uint8List get view {
-    final address = module.getMemoryDataPointer(memory: memory);
-    final pointer = ffi.Pointer<ffi.Uint8>.fromAddress(address);
-    return pointer.asTypedList(lengthInBytes);
+  Uint8List getView() {
+    final ptrLen = module.getMemoryDataPointerAndLength(memory: memory);
+    if (_previous?.length != ptrLen.length ||
+        _previous!.pointer != ptrLen.pointer) {
+      _previous = ptrLen;
+      _view = ffi.Pointer<ffi.Uint8>.fromAddress(ptrLen.pointer)
+          .asTypedList(ptrLen.length);
+    }
+    return _view;
   }
+
+  @override
+  Uint8List get view => getView();
 
   @override
   MemoryTy get type => module.getMemoryType(memory: memory);
@@ -767,6 +777,13 @@ class _SharedMemory extends WasmSharedMemory {
   @override
   Uint8List read({required int offset, required int length}) {
     return view.sublist(offset, offset + length);
+  }
+
+  @override
+  Uint8List getView() {
+    final address = memory.dataPointer();
+    final pointer = ffi.Pointer<ffi.Uint8>.fromAddress(address);
+    return pointer.asTypedList(lengthInBytes);
   }
 
   @override

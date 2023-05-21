@@ -322,6 +322,9 @@ abstract class WasmMemory extends WasmExternal {
   /// A view of the memory as a [Uint8List].
   Uint8List get view;
 
+  /// A view of the memory as a [Uint8List].
+  Uint8List getView();
+
   /// The number of bytes per page in a wasm memory.
   /// The maximum size of the memory in pages.
   /// [WasmMemory.bytesPerPage] = 65536 = 2^16 = 64KiB

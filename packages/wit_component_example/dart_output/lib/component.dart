@@ -288,15 +288,28 @@ class WasmLibrary {
 
   /// Reallocates a section of memory to a new size.
   /// May be used to grow or shrink the memory.
-  int realloc(int ptr, int sizeInitial, int alignment, int sizeFinal) =>
-      _realloc(ptr, sizeInitial, alignment, sizeFinal) as int;
+  int realloc(int ptr, int sizeInitial, int alignment, int sizeFinal) {
+    final pointer = _realloc(ptr, sizeInitial, alignment, sizeFinal) as int;
+    _view = wasmMemory.getView();
+    _byteData = ByteData.sublistView(_view!);
+    return pointer;
+  }
 
   /// The [WasmMemory] for this [instance].
   final WasmMemory wasmMemory;
+  Uint8List? _view;
+  Uint8List _getView() => _view ??= wasmMemory.getView();
+  ByteData? _byteData;
+  ByteData _getByteData() => _byteData ??= ByteData.sublistView(_getView());
 
   CanonicalOptions _functionOptions(void Function(List<Value>)? postReturn) {
-    final options =
-        CanonicalOptions(wasmMemory.view, stringEncoding, realloc, postReturn);
+    final options = CanonicalOptions(
+      _getView,
+      _getByteData,
+      stringEncoding,
+      realloc,
+      postReturn,
+    );
     return options;
   }
 
@@ -304,7 +317,7 @@ class WasmLibrary {
     final postFunc = instance.getFunction('cabi_post_$functionName');
     if (postFunc == null) return null;
     return (flatResults) {
-      postFunc(flatResults.map((e) => e.v).toList());
+      postFunc(flatResults.map((e) => e.v).toList(growable: false));
     };
   }
 

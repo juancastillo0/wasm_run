@@ -638,6 +638,9 @@ class _Memory extends WasmMemory {
   int get lengthInPages => memory.lengthInPages;
 
   @override
+  Uint8List getView() => Uint8List.view(memory.buffer);
+
+  @override
   Uint8List get view => Uint8List.view(memory.buffer);
 
   @override

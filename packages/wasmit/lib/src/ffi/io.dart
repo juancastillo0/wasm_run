@@ -17,6 +17,7 @@ ExternalLibrary localTestingLibraryImpl() {
     '../../../target/release/$filename',
   ]) {
     if (!File(dir).existsSync()) continue;
+    print('Using localTestingLibrary: ${File(dir).absolute.uri.toFilePath()}');
     return _validateLibrary(DynamicLibrary.open(dir));
   }
   throw Exception('Could not find $filename in debug or release');
