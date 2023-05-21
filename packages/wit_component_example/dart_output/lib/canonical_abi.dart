@@ -798,7 +798,7 @@ String convert_i32_to_char(Context cx, int i) {
 typedef ListValue = List<Object?>;
 typedef RecordValue = Map<String, Object?>;
 typedef VariantValue = RecordValue;
-typedef FlagsValue = RecordValue;
+typedef FlagsValue = Uint32List;
 typedef TupleValue = RecordValue;
 
 enum StringEncoding {
@@ -1042,18 +1042,33 @@ int find_case(String label, List<Case> cases) {
 // #
 
 /// Flags are converted from a bit-vector to a dictionary whose keys are
-/// derived from the ordered labels of the flags type. The code here
-/// TODO: takes advantage of Python's support for integers of arbitrary width.
+/// derived from the ordered labels of the flags type.
 FlagsValue load_flags(Context cx, int ptr, List<String> labels) {
-  final i = load_int(cx, ptr, size_flags(labels));
-  return unpack_flags_from_int(i, labels);
+  final size = size_flags(labels);
+  final elem_size = size >= 4 ? 4 : size;
+  final v = Uint32List(num_i32_flags(labels));
+  final data = ByteData.sublistView(v);
+  assert(elem_size * v.length == size);
+  for (var offset = 0; offset < data.lengthInBytes; offset += 4) {
+    final value = load_int(cx, ptr + offset, elem_size);
+    data.setUint32(offset, value, Endian.little);
+  }
+  return v;
 }
 
-FlagsValue unpack_flags_from_int(int i, List<String> labels) {
+// unused
+Map<String, bool> unpack_flags_from_int(FlagsValue list, List<String> labels) {
   final record = <String, bool>{};
+  final data = ByteData.sublistView(list);
+  int i = data.getUint32(0, Endian.little);
+  int count = 0;
   for (final l in labels) {
     record[l] = (i & 1) != 0;
     i >>= 1;
+    count++;
+    if (count % 32 == 0) {
+      i = data.getUint32((count ~/ 32) * 4, Endian.little);
+    }
   }
   return record;
 }
@@ -1545,15 +1560,22 @@ void store_variant(Context cx, VariantValue v, int ptr, List<Case> cases) {
 /// (with a simple byte copy when the case lists are the same) to avoid any
 /// string operations in a similar manner to variants.
 void store_flags(Context cx, FlagsValue v, int ptr, List<String> labels) {
-  final i = pack_flags_into_int(v, labels);
-  store_int(cx, i, ptr, size_flags(labels));
+  final size = size_flags(labels);
+  final elem_size = size >= 4 ? 4 : size;
+  assert(elem_size * v.length == size);
+  final data = ByteData.sublistView(v);
+  for (int offset = 0; offset < data.lengthInBytes; offset += 4) {
+    final value = data.getUint32(offset, Endian.little);
+    store_int(cx, value, ptr + offset, elem_size);
+  }
 }
 
-int pack_flags_into_int(FlagsValue v, List<String> labels) {
+// unused
+int pack_flags_into_int(Map<String, bool> v, List<String> labels) {
   int i = 0;
   int shift = 0;
   for (final l in labels) {
-    i |= (truthyInt(v[l]) << shift);
+    i |= truthyInt(v[l]) << shift;
     shift += 1;
   }
   return i;
@@ -1905,15 +1927,16 @@ int wrap_i64_to_i32(int i) {
 // #
 
 /// Finally, flags are lifted by OR-ing together all the flattened i32 values
-/// and then lifting to a record the same way as when loading flags from linear memory.
+/// and then lifting to a record the same way as when loading flags
+/// from linear memory.
 FlagsValue lift_flat_flags(ValueIter vi, List<String> labels) {
-  int i = 0;
-  int shift = 0;
-  for (final _ in Iterable<int>.generate(num_i32_flags(labels))) {
-    i |= (vi.nextInt(FlattenType.i32) << shift);
-    shift += 32;
+  final list = Uint32List(num_i32_flags(labels));
+  final data = ByteData.sublistView(list);
+  for (int i = 0; i < list.length; i++) {
+    final value = vi.nextInt(FlattenType.i32);
+    data.setUint32(i * 4, value, Endian.little);
   }
-  return unpack_flags_from_int(i, labels);
+  return list;
 }
 // ### Flat Lowering
 
@@ -2041,13 +2064,13 @@ List<Value> lower_flat_variant(Context cx, VariantValue v, Variant variant) {
 
 /// Finally, flags are lowered by slicing the bit vector into i32 chunks:
 List<Value> lower_flat_flags(FlagsValue v, List<String> labels) {
-  int i = pack_flags_into_int(v, labels);
   final List<Value> flat = [];
-  for (final _ in Iterable<int>.generate(num_i32_flags(labels))) {
-    flat.add(Value(FlattenType.i32, i & 0xffffffff));
-    i >>= 32;
+  final data = ByteData.sublistView(v);
+  assert(v.length == num_i32_flags(labels));
+  for (int i = 0; i < v.length; i++) {
+    final value = data.getUint32(i * 4, Endian.little);
+    flat.add(Value(FlattenType.i32, value));
   }
-  assert(i == 0);
   return flat;
 }
 
