@@ -65,7 +65,7 @@ class R {
       _ => throw Exception('Invalid JSON $json_')
     };
   }
-  Object? toJson() => {
+  Map<String, Object?> toJson() => {
         'a': a,
         'b': b,
         'c': c
@@ -137,7 +137,7 @@ sealed class Input {
   const factory Input.intU64(int /*U64*/ value) = InputIntU64;
   const factory Input.string(String value) = InputString;
 
-  Object? toJson();
+  Map<String, Object?> toJson();
   static const _spec = Union([U64(), StringType()]);
 }
 
@@ -145,14 +145,14 @@ class InputIntU64 implements Input {
   final int /*U64*/ value;
   const InputIntU64(this.value);
   @override
-  Object? toJson() => {'0': value};
+  Map<String, Object?> toJson() => {'0': value};
 }
 
 class InputString implements Input {
   final String value;
   const InputString(this.value);
   @override
-  Object? toJson() => {'1': value};
+  Map<String, Object?> toJson() => {'1': value};
 }
 
 /// values of this type will be one of the specified cases
@@ -178,7 +178,7 @@ sealed class HumanTypesInterface {
       HumanTypesInterfaceChild;
   const factory HumanTypesInterface.adult() = HumanTypesInterfaceAdult;
 
-  Object? toJson();
+  Map<String, Object?> toJson();
   static const _spec =
       Variant([Case('baby', null), Case('child', U32()), Case('adult', null)]);
 }
@@ -186,7 +186,7 @@ sealed class HumanTypesInterface {
 class HumanTypesInterfaceBaby implements HumanTypesInterface {
   const HumanTypesInterfaceBaby();
   @override
-  Object? toJson() => {'baby': null};
+  Map<String, Object?> toJson() => {'baby': null};
 }
 
 /// type payload
@@ -194,13 +194,13 @@ class HumanTypesInterfaceChild implements HumanTypesInterface {
   final int /*U32*/ value;
   const HumanTypesInterfaceChild(this.value);
   @override
-  Object? toJson() => {'child': value};
+  Map<String, Object?> toJson() => {'child': value};
 }
 
 class HumanTypesInterfaceAdult implements HumanTypesInterface {
   const HumanTypesInterfaceAdult();
   @override
-  Object? toJson() => {'adult': null};
+  Map<String, Object?> toJson() => {'adult': null};
 }
 
 /// similar to `variant`, but no type payloads
@@ -284,7 +284,7 @@ sealed class HumanApiImports {
         (int /*S64*/,),
       ) value) = HumanApiImportsAdult;
 
-  Object? toJson();
+  Map<String, Object?> toJson();
   static const _spec = Variant([
     Case('baby', null),
     Case('child', U64()),
@@ -301,14 +301,14 @@ sealed class HumanApiImports {
 class HumanApiImportsBaby implements HumanApiImports {
   const HumanApiImportsBaby();
   @override
-  Object? toJson() => {'baby': null};
+  Map<String, Object?> toJson() => {'baby': null};
 }
 
 class HumanApiImportsChild implements HumanApiImports {
   final int /*U64*/ value;
   const HumanApiImportsChild(this.value);
   @override
-  Object? toJson() => {'child': value};
+  Map<String, Object?> toJson() => {'child': value};
 }
 
 class HumanApiImportsAdult implements HumanApiImports {
@@ -319,7 +319,7 @@ class HumanApiImportsAdult implements HumanApiImports {
   ) value;
   const HumanApiImportsAdult(this.value);
   @override
-  Object? toJson() => {
+  Map<String, Object?> toJson() => {
         'adult': [
           value.$1,
           value.$2.toJson((some) => some.toJson((some) => some)),
@@ -360,7 +360,7 @@ class ErrnoApi {
       _ => throw Exception('Invalid JSON $json_')
     };
   }
-  Object? toJson() => {
+  Map<String, Object?> toJson() => {
         'a-u1': aU1,
         'list-s1': listS1.map((e) => e).toList(),
         'str': str.toJson((some) => some),
@@ -401,7 +401,7 @@ class Empty {
   const Empty();
 
   factory Empty.fromJson(Object? _) => const Empty();
-  Object? toJson() => {};
+  Map<String, Object?> toJson() => {};
   static const _spec = Record([]);
 }
 
@@ -420,35 +420,31 @@ abstract class Inline {
   });
 }
 
-class TypesWorldImports {
+class TypesExampleWorldImports {
   final Imports imports;
   final void Function({
     required String message,
     required LogLevel level,
   }) print;
   final Inline inline;
-  const TypesWorldImports({
+  const TypesExampleWorldImports({
     required this.imports,
     required this.print,
     required this.inline,
   });
 }
 
-class Types {
-  Types(WasmLibrary library);
-}
-
 class Api {
   Api(WasmLibrary library)
       : _f1 = library.getComponentFunction(
-          'f1',
+          'api#f1',
           const FuncType([], [
             ('val-one', Tuple([S32()])),
             ('val2', StringType())
           ]),
         )!,
         _class_ = library.getComponentFunction(
-          'class',
+          'api#class',
           const FuncType([
             (
               'break',
@@ -466,7 +462,7 @@ class Api {
           ]),
         )!,
         _continue_ = library.getComponentFunction(
-          'continue',
+          'api#continue',
           const FuncType([
             (
               'abstract',
@@ -530,16 +526,15 @@ class Api {
   }
 }
 
-class TypesWorld {
-  final TypesWorldImports imports;
+class TypesExampleWorld {
+  final TypesExampleWorldImports imports;
   final WasmLibrary library;
-  final Types types;
   final Api api;
-  TypesWorld({
+
+  TypesExampleWorld({
     required this.imports,
     required this.library,
-  })  : types = Types(library),
-        api = Api(library),
+  })  : api = Api(library),
         _fF1 = library.getComponentFunction(
           'f-f1',
           const FuncType([('typedef', ListType(StringType()))],
@@ -573,9 +568,10 @@ class TypesWorld {
             ('', Tuple([OptionType(U8()), S8()]))
           ]),
         )!;
-  static Future<TypesWorld> init(
+
+  static Future<TypesExampleWorld> init(
     WasmInstanceBuilder builder, {
-    required TypesWorldImports imports,
+    required TypesExampleWorldImports imports,
   }) async {
     late final WasmLibrary library;
     WasmLibrary getLib() => library;
@@ -676,7 +672,7 @@ class TypesWorld {
     final instance = await builder.build();
 
     library = WasmLibrary(instance);
-    return TypesWorld(imports: imports, library: library);
+    return TypesExampleWorld(imports: imports, library: library);
   }
 
   final ListValue Function(ListValue) _fF1;
