@@ -356,13 +356,14 @@ class _References {
       case 4:
         return WasmVal_v128(U8Array16(raw[1] as Uint8List));
       case 5:
+        final r1 = raw[1] as List?;
         return WasmVal_funcRef(
-          raw[1] == null
+          r1 == null
               ? null
-              : WFunc.fromRaw(raw[0] as int, raw[1] as int, defaultInstance()),
+              : WFunc.fromRaw(r1[0] as int, r1[1] as int, defaultInstance()),
         );
       case 6:
-        return WasmVal_externRef(raw[1] as int);
+        return WasmVal_externRef(raw[1] as int?);
       default:
         throw Exception('unreachable');
     }
