@@ -35,7 +35,7 @@ sealed class Result<O, E> {
     };
   }
 
-  Object? toJson([
+  Map<String, Object?> toJson([
     Object? Function(O value)? mapOk,
     Object? Function(E value)? mapError,
   ]);
@@ -55,11 +55,23 @@ class Ok<O, E> implements Result<O, E> {
   E? get error => null;
 
   @override
-  Object toJson([
+  Map<String, Object?> toJson([
     Object? Function(O value)? mapOk,
     Object? Function(E value)? mapError,
   ]) =>
       {'ok': mapOk == null ? ok : mapOk(ok)};
+
+  @override
+  bool operator ==(Object other) =>
+      other is Ok<O, E> && other.runtimeType == runtimeType && ok == other.ok;
+
+  @override
+  int get hashCode => Object.hash(runtimeType, ok);
+
+  @override
+  String toString() {
+    return 'Ok<$O, $E>($ok)';
+  }
 }
 
 /// A Rust-style Result type's failure value.
@@ -76,11 +88,25 @@ class Err<O, E> implements Result<O, E> {
   O? get ok => null;
 
   @override
-  Object toJson([
+  Map<String, Object?> toJson([
     Object? Function(O value)? mapOk,
     Object? Function(E value)? mapError,
   ]) =>
       {'error': mapError == null ? error : mapError(error)};
+
+  @override
+  bool operator ==(Object other) =>
+      other is Err<O, E> &&
+      other.runtimeType == runtimeType &&
+      error == other.error;
+
+  @override
+  int get hashCode => Object.hash(runtimeType, error);
+
+  @override
+  String toString() {
+    return 'Err<$O, $E>($error)';
+  }
 }
 
 /// A Rust-style Option type.
@@ -106,7 +132,7 @@ sealed class Option<T extends Object> {
   /// Returns `true` if this is a [None] instance
   bool get isNone;
 
-  Object? toJson([Object? Function(T value)? mapValue]);
+  Map<String, Object?> toJson([Object? Function(T value)? mapValue]);
 }
 
 /// A Rust-style Option type's Some value.
@@ -121,8 +147,22 @@ class Some<T extends Object> implements Option<T> {
   bool get isNone => false;
 
   @override
-  Object? toJson([Object? Function(T value)? mapValue]) =>
+  Map<String, Object?> toJson([Object? Function(T value)? mapValue]) =>
       {'some': mapValue == null ? value : mapValue(value)};
+
+  @override
+  bool operator ==(Object other) =>
+      other is Some<T> &&
+      other.runtimeType == runtimeType &&
+      value == other.value;
+
+  @override
+  int get hashCode => Object.hash(runtimeType, value);
+
+  @override
+  String toString() {
+    return 'Some<$T>($value)';
+  }
 }
 
 /// A Rust-style Option type's None value.
@@ -136,7 +176,19 @@ class None<T extends Object> implements Option<T> {
   bool get isNone => true;
 
   @override
-  Object? toJson([Object? Function(T value)? mapValue]) => {'none': null};
+  Map<String, Object?> toJson([Object? Function(T value)? mapValue]) =>
+      {'none': null};
+
+  @override
+  bool operator ==(Object other) => other is None;
+
+  @override
+  int get hashCode => (None).hashCode;
+
+  @override
+  String toString() {
+    return 'None<$T>()';
+  }
 }
 
 /// Converts a JSON object to a [ByteData] containing the flag bits.

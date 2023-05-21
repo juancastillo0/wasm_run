@@ -14,6 +14,9 @@ struct MyHost;
 
 impl TypesExample for MyHost {
     fn f_f1(mut typedef: T10) -> T10 {
+        if let Some(s) = typedef.last() {
+            print(s, LogLevel::Info);
+        }
         typedef.push("last_value".to_string());
         typedef
     }
@@ -36,7 +39,7 @@ impl TypesExample for MyHost {
         )
     }
 
-    fn re_named2(tup: (Vec<u16>,), e: Empty) -> (Option<u8>, i8) {
+    fn re_named2(tup: (Vec<u16>,), _e: Empty) -> (Option<u8>, i8) {
         (
             if tup.0.len() < 256 {
                 Some(tup.0.len().try_into().unwrap())
@@ -59,6 +62,7 @@ impl api::Api for MyHost {
                 let charr = v.err().flatten().map(|e| e.c).flatten();
                 let r = inline::inline_imp(&[charr]);
                 if let Err(e) = r {
+                    print(&e.to_string(), LogLevel::Warn);
                     inline::inline_imp(&[Some(e)]).unwrap();
                 } else {
                     inline::inline_imp(&[None, None]).unwrap();
