@@ -38,7 +38,7 @@ impl<T: AsRef<str>> Normalize for T {
 ///
 /// Adapted from [wiggle](https://docs.rs/wiggle/latest/wiggle/index.html)
 pub fn escape_reserved_word(word: &str) -> String {
-    if RESERVED.iter().any(|k| (*k).eq(word)) {
+    if RESERVED.contains(&word) {
         // If the camel-cased string matched any strict or reserved keywords, then
         // append a trailing underscore to the identifier we generate.
         format!("{word}_")
@@ -66,7 +66,6 @@ pub fn escape_reserved_word(word: &str) -> String {
 //     Ok(())
 // }
 
-// TODO: add toJson and fromJson, maybe only for fields
 const RESERVED: &[&str] = &[
     // Reserved words.
     "assert",
@@ -139,4 +138,23 @@ const RESERVED: &[&str] = &[
     "show",
     "sync",
     "when",
+    // Other words used by the generator
+    "toJson",
+    "fromJson",
+    "toWasm",
+    "fromWasm",
+    "toString",
+    "hashCode",
+    "runtimeType",
+    "props",
+    "copyWith",
+    "builder",
+    "compareTo",
+    "flagBits",
+    "none",
+    "all",
+    "bool",
+    "int",
+    "double",
+    "num",
 ];
