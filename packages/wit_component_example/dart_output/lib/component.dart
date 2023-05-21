@@ -75,6 +75,63 @@ class Ok<O, E> implements Result<O, E> {
   }
 }
 
+ObjectComparator comparator = const ObjectComparator();
+
+class ObjectComparator {
+  const ObjectComparator();
+
+  /// Returns true if [a] and [b] are equal.
+  bool arePropsEqual(List<Object?> a, List<Object?> b) => areEqual(a, b);
+
+  /// Returns true if [a] and [b] are equal.
+  bool areEqual(Object? a, Object? b) {
+    if (a is List && b is List) {
+      return a.length == b.length &&
+          a.indexed.every((e) => areEqual(b[e.$1], e.$2));
+    } else if (a is Set && b is Set) {
+      return a.length == b.length && a.every(b.contains);
+    } else if (a is Map && b is Map) {
+      return a.length == b.length &&
+          a.entries.every(
+            (e) {
+              final otherValue = b[e.key];
+              return (otherValue != null || b.containsKey(e.key)) &&
+                  areEqual(otherValue, e.value);
+            },
+          );
+    } else {
+      return a == b;
+    }
+  }
+
+  /// Returns a hash code that combines each object in [values].
+  int hashProps(List<Object?> values) {
+    if (values.isEmpty) return const <Object?>[].hashCode;
+    return Object.hashAll(values.map(_mapItem));
+  }
+
+  /// Returns a hash code for [value].
+  int hashValue(Object? value) {
+    if (value is int) return value.hashCode;
+    final mapped = _mapItem(value);
+    return mapped is int ? mapped : mapped.hashCode;
+  }
+
+  Object? _mapItem(Object? e) {
+    if (e is List) {
+      return hashProps(e);
+    } else if (e is Set) {
+      return Object.hashAllUnordered(e.map(_mapItem));
+    } else if (e is Map) {
+      return Object.hashAllUnordered(
+        e.entries.map((e) => hashProps([e.key, e.value])),
+      );
+    } else {
+      return e;
+    }
+  }
+}
+
 /// A Rust-style Result type's failure value.
 class Err<O, E> implements Result<O, E> {
   @override
@@ -213,7 +270,7 @@ ByteData flagBitsFromJson(Object? json_, Flags spec) {
     });
     return flagBits;
   } else {
-    final json = json_! as List<int>;
+    final json = (json_! as List).cast<int>();
     if (json.length != (numBytes ~/ 4)) {
       throw Exception('Invalid flag list length: $json');
     }

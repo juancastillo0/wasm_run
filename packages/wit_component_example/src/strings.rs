@@ -140,9 +140,13 @@ const RESERVED: &[&str] = &[
     "when",
     // Other words used by the generator
     "toJson",
+    "toMap",
     "fromJson",
+    "fromMap",
     "toWasm",
     "fromWasm",
+    "wasmSpec",
+    "wasmType",
     "toString",
     "hashCode",
     "runtimeType",

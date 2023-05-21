@@ -146,7 +146,7 @@ class TypesWorldTest {
         perm: Some(Permissions.all()),
         e: const Some(Empty()),
       );
-      expect(a, 255);
+      expect(a, 7);
       expect(b, 0);
     }
     {

@@ -73,6 +73,27 @@ class R {
                 [e.$1, e.$2.toJson((some) => some.toJson((some) => some))])
             .toList(),
       };
+  R copyWith({
+    int /*U32*/ ? a,
+    String? b,
+    List<
+            (
+              String,
+              Option<T4>,
+            )>?
+        c,
+  }) =>
+      R(a: a ?? this.a, b: b ?? this.b, c: c ?? this.c);
+  List<Object?> get props => [a, b, c];
+  @override
+  String toString() =>
+      'R${Map.fromIterables(_spec.fields.map((f) => f.label), props)}';
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is R && comparator.arePropsEqual(props, other.props);
+  @override
+  int get hashCode => comparator.hashProps(props);
   static const _spec = Record([
     (label: 'a', t: U32()),
     (label: 'b', t: StringType()),
@@ -89,14 +110,41 @@ class Permissions {
   const Permissions(this.flagBits);
   Permissions.none() : flagBits = ByteData(4);
   Permissions.all()
-      : flagBits = (Uint8List(4)..fillRange(0, 4, 255)).buffer.asByteData();
+      : flagBits = flagBitsFromJson(
+          Map.fromIterables(
+            _spec.labels,
+            List.filled(_spec.labels.length, true),
+          ),
+          _spec,
+        );
+  factory Permissions.fromBool(
+      {bool read = false, bool write = false, bool exec = false}) {
+    final _value = Permissions.none();
+    if (read) _value.read = true;
+    if (write) _value.write = true;
+    if (exec) _value.exec = true;
+    return _value;
+  }
 
   factory Permissions.fromJson(Object? json) {
     final flagBits = flagBitsFromJson(json, _spec);
     return Permissions(flagBits);
   }
 
-  Object toJson() => Uint32List.view(flagBits.buffer);
+  Object toJson() => Uint32List.sublistView(flagBits);
+  @override
+  String toString() => 'Permissions(${[
+        if (read) 'read',
+        if (write) 'write',
+        if (exec) 'exec',
+      ].join(', ')})';
+  @override
+  bool operator ==(Object other) =>
+      other is Permissions &&
+      comparator.areEqual(Uint32List.sublistView(flagBits),
+          Uint32List.sublistView(other.flagBits));
+  @override
+  int get hashCode => comparator.hashValue(Uint32List.sublistView(flagBits));
 
   int _index(int i) => flagBits.getUint32(i, Endian.little);
   void _setIndex(int i, int flag, bool enable) {
@@ -146,6 +194,13 @@ class InputIntU64 implements Input {
   const InputIntU64(this.value);
   @override
   Map<String, Object?> toJson() => {'0': value};
+  @override
+  String toString() => 'InputIntU64($value)';
+  @override
+  bool operator ==(Object other) =>
+      other is InputIntU64 && comparator.areEqual(other.value, value);
+  @override
+  int get hashCode => comparator.hashValue(value);
 }
 
 class InputString implements Input {
@@ -153,6 +208,13 @@ class InputString implements Input {
   const InputString(this.value);
   @override
   Map<String, Object?> toJson() => {'1': value};
+  @override
+  String toString() => 'InputString($value)';
+  @override
+  bool operator ==(Object other) =>
+      other is InputString && comparator.areEqual(other.value, value);
+  @override
+  int get hashCode => comparator.hashValue(value);
 }
 
 /// values of this type will be one of the specified cases
@@ -187,6 +249,12 @@ class HumanTypesInterfaceBaby implements HumanTypesInterface {
   const HumanTypesInterfaceBaby();
   @override
   Map<String, Object?> toJson() => {'baby': null};
+  @override
+  String toString() => 'HumanTypesInterfaceBaby()';
+  @override
+  bool operator ==(Object other) => other is HumanTypesInterfaceBaby;
+  @override
+  int get hashCode => (HumanTypesInterfaceBaby).hashCode;
 }
 
 /// type payload
@@ -195,12 +263,26 @@ class HumanTypesInterfaceChild implements HumanTypesInterface {
   const HumanTypesInterfaceChild(this.value);
   @override
   Map<String, Object?> toJson() => {'child': value};
+  @override
+  String toString() => 'HumanTypesInterfaceChild($value)';
+  @override
+  bool operator ==(Object other) =>
+      other is HumanTypesInterfaceChild &&
+      comparator.areEqual(other.value, value);
+  @override
+  int get hashCode => comparator.hashValue(value);
 }
 
 class HumanTypesInterfaceAdult implements HumanTypesInterface {
   const HumanTypesInterfaceAdult();
   @override
   Map<String, Object?> toJson() => {'adult': null};
+  @override
+  String toString() => 'HumanTypesInterfaceAdult()';
+  @override
+  bool operator ==(Object other) => other is HumanTypesInterfaceAdult;
+  @override
+  int get hashCode => (HumanTypesInterfaceAdult).hashCode;
 }
 
 /// similar to `variant`, but no type payloads
@@ -302,6 +384,12 @@ class HumanApiImportsBaby implements HumanApiImports {
   const HumanApiImportsBaby();
   @override
   Map<String, Object?> toJson() => {'baby': null};
+  @override
+  String toString() => 'HumanApiImportsBaby()';
+  @override
+  bool operator ==(Object other) => other is HumanApiImportsBaby;
+  @override
+  int get hashCode => (HumanApiImportsBaby).hashCode;
 }
 
 class HumanApiImportsChild implements HumanApiImports {
@@ -309,6 +397,13 @@ class HumanApiImportsChild implements HumanApiImports {
   const HumanApiImportsChild(this.value);
   @override
   Map<String, Object?> toJson() => {'child': value};
+  @override
+  String toString() => 'HumanApiImportsChild($value)';
+  @override
+  bool operator ==(Object other) =>
+      other is HumanApiImportsChild && comparator.areEqual(other.value, value);
+  @override
+  int get hashCode => comparator.hashValue(value);
 }
 
 class HumanApiImportsAdult implements HumanApiImports {
@@ -326,6 +421,13 @@ class HumanApiImportsAdult implements HumanApiImports {
           [value.$3.$1]
         ]
       };
+  @override
+  String toString() => 'HumanApiImportsAdult($value)';
+  @override
+  bool operator ==(Object other) =>
+      other is HumanApiImportsAdult && comparator.areEqual(other.value, value);
+  @override
+  int get hashCode => comparator.hashValue(value);
 }
 
 class ErrnoApi {
@@ -366,6 +468,27 @@ class ErrnoApi {
         'str': str.toJson((some) => some),
         'c': c.toJson((some) => some),
       };
+  ErrnoApi copyWith({
+    int /*U64*/ ? aU1,
+    List<int /*S64*/ >? listS1,
+    Option<String>? str,
+    Option<String /*Char*/ >? c,
+  }) =>
+      ErrnoApi(
+          aU1: aU1 ?? this.aU1,
+          listS1: listS1 ?? this.listS1,
+          str: str ?? this.str,
+          c: c ?? this.c);
+  List<Object?> get props => [aU1, listS1, str, c];
+  @override
+  String toString() =>
+      'ErrnoApi${Map.fromIterables(_spec.fields.map((f) => f.label), props)}';
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ErrnoApi && comparator.arePropsEqual(props, other.props);
+  @override
+  int get hashCode => comparator.hashProps(props);
   static const _spec = Record([
     (label: 'a-u1', t: U64()),
     (label: 'list-s1', t: ListType(S64())),
@@ -402,6 +525,17 @@ class Empty {
 
   factory Empty.fromJson(Object? _) => const Empty();
   Map<String, Object?> toJson() => {};
+  Empty copyWith() => Empty();
+  List<Object?> get props => [];
+  @override
+  String toString() =>
+      'Empty${Map.fromIterables(_spec.fields.map((f) => f.label), props)}';
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Empty && comparator.arePropsEqual(props, other.props);
+  @override
+  int get hashCode => comparator.hashProps(props);
   static const _spec = Record([]);
 }
 

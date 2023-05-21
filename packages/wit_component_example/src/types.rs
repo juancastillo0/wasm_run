@@ -502,7 +502,13 @@ impl Parsed<'_> {
                     ));
                 }
                 s.push_str(&format!(
-                    "\nMap<String, Object?> toJson() => {{{}}};\n",
+                    "\nMap<String, Object?> toJson() => {{{}}};
+                    {name} copyWith({copy_with_params}) => {name}({copy_with_content});
+                    List<Object?> get props => [{fields}];
+                    @override\nString toString() => '{name}${{Map.fromIterables(_spec.fields.map((f) => f.label), props)}}';
+                    @override\nbool operator ==(Object other) => identical(this, other) || other is {name} && comparator.arePropsEqual(props, other.props);
+                    @override\nint get hashCode => comparator.hashProps(props);
+                    ",
                     r.fields
                         .iter()
                         .map(|f| format!(
@@ -510,7 +516,34 @@ impl Parsed<'_> {
                             f.name,
                             self.type_to_json(&f.name.as_var(), &f.ty)
                         ))
-                        .collect::<String>()
+                        .collect::<String>(),
+                    fields = r
+                        .fields
+                        .iter()
+                        .map(|f| f.name.as_var())
+                        .collect::<Vec<_>>()
+                        .join(","),
+                    copy_with_params = if r.fields.is_empty() { 
+                        "".to_string() 
+                    } else { 
+                        format!("{{{}}}", r
+                                .fields
+                                .iter()
+                                .map(|f| format!("{}? {},", self.type_to_str(&f.ty), f.name.as_var(), ))
+                                .collect::<String>()
+                        )
+                    },
+                    copy_with_content = if r.fields.is_empty() { 
+                        "".to_string()
+                     } else { 
+                        r
+                        .fields
+                        .iter()
+                        .map(|f| format!("{}: {} ?? this.{}", f.name.as_var(), f.name.as_var(), f.name.as_var()))
+                        .collect::<Vec<_>>()
+                        .join(",")
+                    },
+                
                 ));
 
                 s.push_str(&format!(
@@ -584,7 +617,11 @@ impl Parsed<'_> {
                     let class_name = format!("{name}{inner_name}");
                     cases_string.push_str(&format!(
                         "class {class_name} implements {name} {{ final {ty} value; const {class_name}(this.value);
-                         @override\nMap<String, Object?> toJson() => {{'{i}': {}}}; }}",
+                         @override\nMap<String, Object?> toJson() => {{'{i}': {}}};
+                         @override\nString toString() => '{class_name}($value)';
+                         @override\nbool operator ==(Object other) => other is {class_name} && comparator.areEqual(other.value, value);
+                         @override\nint get hashCode => comparator.hashValue(value);
+                        }}",
                          self.type_to_json("value", &v.ty)
                     ));
                     s.push_str(&format!("const factory {name}.{}({ty} value) = {class_name};", ty.as_var()));
@@ -639,13 +676,20 @@ impl Parsed<'_> {
                         cases_string.push_str(&format!(
                             "class {class_name} implements {name} {{ final {ty_str} value; const {class_name}(this.value);
                             @override\nMap<String, Object?> toJson() => {{'{}': {}}};
+                            @override\nString toString() => '{class_name}($value)';
+                            @override\nbool operator ==(Object other) => other is {class_name} && comparator.areEqual(other.value, value);
+                            @override\nint get hashCode => comparator.hashValue(value);
                          }}", v.name, self.type_to_json("value", &ty)
                         ));
                         s.push_str(&format!("const factory {name}.{}({ty_str} value) = {class_name};", v.name.as_var()));
                     } else {
                         cases_string.push_str(&format!(
                             "class {class_name} implements {name} {{ const {class_name}();
-                            @override\nMap<String, Object?> toJson() => {{'{}': null}}; }}", v.name,
+                            @override\nMap<String, Object?> toJson() => {{'{}': null}};
+                            @override\nString toString() => '{class_name}()';
+                            @override\nbool operator ==(Object other) => other is {class_name};
+                            @override\nint get hashCode => ({class_name}).hashCode;
+                        }}", v.name,
                         ));
                         s.push_str(&format!("const factory {name}.{}() = {class_name};", v.name.as_var()));
                     }
@@ -663,15 +707,31 @@ impl Parsed<'_> {
                 let name = name.unwrap();
                 let num_bytes = ((f.flags.len() + 32 - 1) / 32) * 4;
                 s.push_str(&format!(
-                    "class {name} {{ final ByteData flagBits; const {name}(this.flagBits); {name}.none(): flagBits = ByteData({num_bytes});
-                    {name}.all(): flagBits = (Uint8List({num_bytes})..fillRange(0, {num_bytes}, 255)).buffer.asByteData();
+                    "class {name} {{ final ByteData flagBits; const {name}(this.flagBits);
+                    {name}.none(): flagBits = ByteData({num_bytes});
+                    {name}.all(): flagBits = flagBitsFromJson(
+                        Map.fromIterables(
+                          _spec.labels,
+                          List.filled(_spec.labels.length, true),
+                        ),
+                        _spec,
+                      );
+                    factory {name}.fromBool({{{from_bool}}}) {{
+                        final _value = {name}.none();
+                        {from_bool_content}
+                        return _value;
+                    }}
 
                     factory {name}.fromJson(Object? json) {{
                         final flagBits = flagBitsFromJson(json, _spec);
                         return {name}(flagBits);
                     }}
 
-                    Object toJson() => Uint32List.view(flagBits.buffer);
+                    Object toJson() => Uint32List.sublistView(flagBits);
+                    @override\nString toString() => '{name}(${{[{to_string_content}].join(', ')}})';
+                    @override\nbool operator ==(Object other) => other is {name} 
+                        && comparator.areEqual(Uint32List.sublistView(flagBits), Uint32List.sublistView(other.flagBits));
+                    @override\nint get hashCode => comparator.hashValue(Uint32List.sublistView(flagBits));
                     
                     int _index(int i) => flagBits.getUint32(i, Endian.little);
                     void _setIndex(int i, int flag, bool enable) {{
@@ -683,6 +743,9 @@ impl Parsed<'_> {
                         );
                     }}
                     ",
+                    from_bool = f.flags.iter().map(|v| format!("bool {} = false", v.name.as_var())).collect::<Vec<_>>().join(", "),
+                    from_bool_content = f.flags.iter().map(|v| format!("if ({}) _value.{} = true;", v.name.as_var(), v.name.as_var())).collect::<String>(),
+                    to_string_content = f.flags.iter().map(|v| format!("if ({}) '{}',", v.name.as_var(), v.name.as_var())).collect::<String>(),
                 ));
                 f.flags.iter().enumerate().for_each(|(i, v)| {
                     let property = v.name.as_var();
