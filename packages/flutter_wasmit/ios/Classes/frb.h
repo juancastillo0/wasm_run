@@ -349,6 +349,9 @@ WireSyncReturn wire_get_memory_data__method__WasmitModuleId(struct wire_WasmitMo
 WireSyncReturn wire_get_memory_data_pointer__method__WasmitModuleId(struct wire_WasmitModuleId *that,
                                                                     struct wire_Memory memory);
 
+WireSyncReturn wire_get_memory_data_pointer_and_length__method__WasmitModuleId(struct wire_WasmitModuleId *that,
+                                                                               struct wire_Memory memory);
+
 WireSyncReturn wire_read_memory__method__WasmitModuleId(struct wire_WasmitModuleId *that,
                                                         struct wire_Memory memory,
                                                         uintptr_t offset,
@@ -637,6 +640,7 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) wire_get_memory_type__method__WasmitModuleId);
     dummy_var ^= ((int64_t) (void*) wire_get_memory_data__method__WasmitModuleId);
     dummy_var ^= ((int64_t) (void*) wire_get_memory_data_pointer__method__WasmitModuleId);
+    dummy_var ^= ((int64_t) (void*) wire_get_memory_data_pointer_and_length__method__WasmitModuleId);
     dummy_var ^= ((int64_t) (void*) wire_read_memory__method__WasmitModuleId);
     dummy_var ^= ((int64_t) (void*) wire_get_memory_pages__method__WasmitModuleId);
     dummy_var ^= ((int64_t) (void*) wire_write_memory__method__WasmitModuleId);

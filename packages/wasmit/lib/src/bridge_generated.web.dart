@@ -560,6 +560,10 @@ class WasmitDartWasmModule implements WasmModule {
       wire_get_memory_data_pointer__method__WasmitModuleId(
           List<dynamic> that, Object memory);
 
+  external dynamic /* List<dynamic> */
+      wire_get_memory_data_pointer_and_length__method__WasmitModuleId(
+          List<dynamic> that, Object memory);
+
   external dynamic /* Uint8List */ wire_read_memory__method__WasmitModuleId(
       List<dynamic> that, Object memory, int offset, int bytes);
 
@@ -830,6 +834,13 @@ class WasmitDartWire
           List<dynamic> that, Object memory) =>
       wasmModule.wire_get_memory_data_pointer__method__WasmitModuleId(
           that, memory);
+
+  dynamic /* List<dynamic> */
+      wire_get_memory_data_pointer_and_length__method__WasmitModuleId(
+              List<dynamic> that, Object memory) =>
+          wasmModule
+              .wire_get_memory_data_pointer_and_length__method__WasmitModuleId(
+                  that, memory);
 
   dynamic /* Uint8List */ wire_read_memory__method__WasmitModuleId(
           List<dynamic> that, Object memory, int offset, int bytes) =>

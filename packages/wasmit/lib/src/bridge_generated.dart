@@ -205,6 +205,12 @@ abstract class WasmitDart {
   FlutterRustBridgeTaskConstMeta
       get kGetMemoryDataPointerMethodWasmitModuleIdConstMeta;
 
+  PointerAndLength getMemoryDataPointerAndLengthMethodWasmitModuleId(
+      {required WasmitModuleId that, required Memory memory, dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta
+      get kGetMemoryDataPointerAndLengthMethodWasmitModuleIdConstMeta;
+
   Uint8List readMemoryMethodWasmitModuleId(
       {required WasmitModuleId that,
       required Memory memory,
@@ -1128,6 +1134,16 @@ class ParallelExec with _$ParallelExec {
   ) = ParallelExec_Call;
 }
 
+class PointerAndLength {
+  final int pointer;
+  final int length;
+
+  const PointerAndLength({
+    required this.pointer,
+    required this.length,
+  });
+}
+
 /// A preopened directory that the WASM module will be able to access
 class PreopenedDir {
   /// The path inside the WASM module.
@@ -1662,6 +1678,13 @@ class WasmitModuleId {
 
   int getMemoryDataPointer({required Memory memory, dynamic hint}) =>
       bridge.getMemoryDataPointerMethodWasmitModuleId(
+        that: this,
+        memory: memory,
+      );
+
+  PointerAndLength getMemoryDataPointerAndLength(
+          {required Memory memory, dynamic hint}) =>
+      bridge.getMemoryDataPointerAndLengthMethodWasmitModuleId(
         that: this,
         memory: memory,
       );
@@ -2490,6 +2513,29 @@ class WasmitDartImpl implements WasmitDart {
       get kGetMemoryDataPointerMethodWasmitModuleIdConstMeta =>
           const FlutterRustBridgeTaskConstMeta(
             debugName: "get_memory_data_pointer__method__WasmitModuleId",
+            argNames: ["that", "memory"],
+          );
+
+  PointerAndLength getMemoryDataPointerAndLengthMethodWasmitModuleId(
+      {required WasmitModuleId that, required Memory memory, dynamic hint}) {
+    var arg0 = _platform.api2wire_box_autoadd_wasmit_module_id(that);
+    var arg1 = _platform.api2wire_Memory(memory);
+    return _platform.executeSync(FlutterRustBridgeSyncTask(
+      callFfi: () => _platform.inner
+          .wire_get_memory_data_pointer_and_length__method__WasmitModuleId(
+              arg0, arg1),
+      parseSuccessData: _wire2api_pointer_and_length,
+      constMeta: kGetMemoryDataPointerAndLengthMethodWasmitModuleIdConstMeta,
+      argValues: [that, memory],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta
+      get kGetMemoryDataPointerAndLengthMethodWasmitModuleIdConstMeta =>
+          const FlutterRustBridgeTaskConstMeta(
+            debugName:
+                "get_memory_data_pointer_and_length__method__WasmitModuleId",
             argNames: ["that", "memory"],
           );
 
@@ -3655,6 +3701,16 @@ class WasmitDartImpl implements WasmitDart {
       default:
         throw Exception("unreachable");
     }
+  }
+
+  PointerAndLength _wire2api_pointer_and_length(dynamic raw) {
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2)
+      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return PointerAndLength(
+      pointer: _wire2api_usize(arr[0]),
+      length: _wire2api_usize(arr[1]),
+    );
   }
 
   SharedMemoryWaitResult _wire2api_shared_memory_wait_result(dynamic raw) {

@@ -535,6 +535,25 @@ fn wire_get_memory_data_pointer__method__WasmitModuleId_impl(
         },
     )
 }
+fn wire_get_memory_data_pointer_and_length__method__WasmitModuleId_impl(
+    that: impl Wire2Api<WasmitModuleId> + UnwindSafe,
+    memory: impl Wire2Api<RustOpaque<Memory>> + UnwindSafe,
+) -> support::WireSyncReturn {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
+        WrapInfo {
+            debug_name: "get_memory_data_pointer_and_length__method__WasmitModuleId",
+            port: None,
+            mode: FfiCallMode::Sync,
+        },
+        move || {
+            let api_that = that.wire2api();
+            let api_memory = memory.wire2api();
+            Ok(WasmitModuleId::get_memory_data_pointer_and_length(
+                &api_that, api_memory,
+            ))
+        },
+    )
+}
 fn wire_read_memory__method__WasmitModuleId_impl(
     that: impl Wire2Api<WasmitModuleId> + UnwindSafe,
     memory: impl Wire2Api<RustOpaque<Memory>> + UnwindSafe,
@@ -1483,6 +1502,13 @@ impl support::IntoDart for ParallelExec {
     }
 }
 impl support::IntoDartExceptPrimitive for ParallelExec {}
+impl support::IntoDart for PointerAndLength {
+    fn into_dart(self) -> support::DartAbi {
+        vec![self.pointer.into_dart(), self.length.into_dart()].into_dart()
+    }
+}
+impl support::IntoDartExceptPrimitive for PointerAndLength {}
+
 impl support::IntoDart for SharedMemoryWaitResult {
     fn into_dart(self) -> support::DartAbi {
         match self {
@@ -1838,6 +1864,14 @@ mod web {
         memory: JsValue,
     ) -> support::WireSyncReturn {
         wire_get_memory_data_pointer__method__WasmitModuleId_impl(that, memory)
+    }
+
+    #[wasm_bindgen]
+    pub fn wire_get_memory_data_pointer_and_length__method__WasmitModuleId(
+        that: JsValue,
+        memory: JsValue,
+    ) -> support::WireSyncReturn {
+        wire_get_memory_data_pointer_and_length__method__WasmitModuleId_impl(that, memory)
     }
 
     #[wasm_bindgen]
@@ -3018,6 +3052,14 @@ mod io {
         memory: wire_Memory,
     ) -> support::WireSyncReturn {
         wire_get_memory_data_pointer__method__WasmitModuleId_impl(that, memory)
+    }
+
+    #[no_mangle]
+    pub extern "C" fn wire_get_memory_data_pointer_and_length__method__WasmitModuleId(
+        that: *mut wire_WasmitModuleId,
+        memory: wire_Memory,
+    ) -> support::WireSyncReturn {
+        wire_get_memory_data_pointer_and_length__method__WasmitModuleId_impl(that, memory)
     }
 
     #[no_mangle]

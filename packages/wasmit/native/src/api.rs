@@ -82,6 +82,11 @@ struct HostFunction {
     result_types: Vec<ValueTy>,
 }
 
+pub struct PointerAndLength {
+    pub pointer: usize,
+    pub length: usize,
+}
+
 #[derive(Debug, Clone, Copy)]
 pub struct WasmitModuleId(pub u32);
 
@@ -708,17 +713,15 @@ impl WasmitModuleId {
     }
 
     fn with_module<T>(&self, f: impl FnOnce(&StoreContext<'_, StoreState>) -> T) -> T {
-        // TODO: Only read
-        // {
-        //     let stack = CALLER_STACK.read().unwrap();
-        //     if let Some(caller) = stack.last() {
-        //         return f(&caller.read().unwrap().as_context());
-        //     }
-        // }
-        // let arr = ARRAY.read().unwrap();
-        // let value = &arr.map[&self.0];
-        // f(&value.store.as_context())
-        self.with_module_mut(|ctx| f(&ctx.as_context()))
+        {
+            let stack = CALLER_STACK.read().unwrap();
+            if let Some(caller) = stack.last() {
+                return f(&caller.read().unwrap().as_context());
+            }
+        }
+        let arr = ARRAY.read().unwrap();
+        let value = arr.map.get(&self.0).unwrap();
+        f(&value.store.as_context())
     }
 
     pub fn get_function_type(&self, func: RustOpaque<WFunc>) -> SyncReturn<FuncTy> {
@@ -826,7 +829,7 @@ impl WasmitModuleId {
         } else if last_caller.is_none() {
             return Err(anyhow::anyhow!("CALLER_STACK is empty"));
         } else if output.is_empty() {
-            return std::result::Result::Ok(());
+            return Ok(());
         }
         // let last_caller = last_caller.unwrap();
         // let mut caller = last_caller.write().unwrap();
@@ -919,6 +922,15 @@ impl WasmitModuleId {
     }
     pub fn get_memory_data_pointer(&self, memory: RustOpaque<Memory>) -> SyncReturn<usize> {
         SyncReturn(self.with_module(|store| memory.data_ptr(store) as usize))
+    }
+    pub fn get_memory_data_pointer_and_length(
+        &self,
+        memory: RustOpaque<Memory>,
+    ) -> SyncReturn<PointerAndLength> {
+        SyncReturn(self.with_module(|store| PointerAndLength {
+            pointer: memory.data_ptr(store) as usize,
+            length: memory.data_size(store),
+        }))
     }
     pub fn read_memory(
         &self,
