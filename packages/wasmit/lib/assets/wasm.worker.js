@@ -136,8 +136,8 @@ onmessage = (e) => {
           },
           workerId: data.workerId,
         };
-        if (typeof self["mapWorkerWasmImports"] == "function") {
-          wasmImports = self.mapWorkerWasmImports(args);
+        if (typeof self["mapWorkerWasmImports"] === "function") {
+          wasmImports = self["mapWorkerWasmImports"](args);
         } else {
           throw new Error(
             "mapWorkerWasmImports is not defined in workerMapImportsScriptUrl"

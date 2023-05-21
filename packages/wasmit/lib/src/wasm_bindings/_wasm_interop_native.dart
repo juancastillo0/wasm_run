@@ -138,7 +138,7 @@ WasmVal_funcRef _makeFunction(WasmFunction function, WasmitModuleId module) {
   final func = module.createFunction(
     functionPointer: _References.globalWasmFunctionPointer,
     functionId: functionId,
-    paramTypes: function.params.map((v) => v!).toList(),
+    paramTypes: function.params.map((v) => v!).toList(growable: false),
     resultTypes: function.results!,
   );
   return WasmVal_funcRef(func);
@@ -161,7 +161,9 @@ WasmFunction _toWasmFunction(WFunc func, WasmitModuleId module) {
     int i = 0;
     return args == null || args.isEmpty
         ? const []
-        : args.map((v) => _fromWasmValueRaw(params[i++], v, module)).toList();
+        : args
+            .map((v) => _fromWasmValueRaw(params[i++], v, module))
+            .toList(growable: false);
   }
 
   List<Object?> call([List<Object?>? args]) {
@@ -170,7 +172,9 @@ WasmFunction _toWasmFunction(WFunc func, WasmitModuleId module) {
       args: mapArgs(args),
     );
     if (result.isEmpty) return const [];
-    return result.map((r) => _References.dartValueFromWasm(r, module)).toList();
+    return result
+        .map((r) => _References.dartValueFromWasm(r, module))
+        .toList(growable: false);
   }
 
   return _WasmFunction(
@@ -288,21 +292,24 @@ class _References {
       throw Exception('Function $functionId $function has no return values');
     }
 
-    final args = input.map((v) => dartValueFromWasm(v, module)).toList();
-
-    // TODO: should it be a List argument?
-    // Function.apply(function, args);
+    final args =
+        input.map((v) => dartValueFromWasm(v, module)).toList(growable: false);
     final output = function.call(args);
 
+    final results = function.results!;
+    if (results.length != output.length) {
+      throw Exception(
+        'Invalid number of results: expected ${results}'
+        ' got ${output}. Function: $function.',
+      );
+    }
     if (output.isEmpty) {
-      // TODO: null pointer?
-      // ignore: invalid_use_of_protected_member
       return const [];
     }
-    final results = function.results!;
     int i = 0;
-    final mapped =
-        output.map((e) => _fromWasmValueRaw(results[i++], e, module)).toList();
+    final mapped = output
+        .map((e) => _fromWasmValueRaw(results[i++], e, module))
+        .toList(growable: false);
     return mapped;
   }
 
@@ -312,19 +319,26 @@ class _References {
     int functionId,
     WireSyncReturn value,
   ) {
-    final l = wireSyncReturnIntoDart(value);
-    final input = _wire2api_list_wasm_val(l.first);
-    final platform = (defaultInstance() as WasmitDartImpl).platform;
-    final mapped = executeFunction(functionId, input);
-    // ignore: invalid_use_of_protected_member
-    final pointer = platform.api2wire_list_wasm_val(mapped);
+    final ffi.Pointer<wire_list_wasm_val> pointer;
+    try {
+      final l = wireSyncReturnIntoDart(value);
+      final input = _wire2api_list_wasm_val(l[0]);
+      final platform = (defaultInstance() as WasmitDartImpl).platform;
+      final mapped = executeFunction(functionId, input);
+      // TODO: null pointer when mapped is empty?
+      // ignore: invalid_use_of_protected_member
+      pointer = platform.api2wire_list_wasm_val(mapped);
+    } catch (e, s) {
+      print('_globalWasmFunction error: $e $s');
+      rethrow;
+    }
     return pointer;
   }
 
   // ignore: non_constant_identifier_names
   static List<WasmVal> _wire2api_list_wasm_val(dynamic raw) {
     final list = raw as List;
-    return list.map(_wire2api_wasm_val).toList();
+    return list.map(_wire2api_wasm_val).toList(growable: false);
   }
 
   // ignore: non_constant_identifier_names
@@ -617,13 +631,12 @@ class _Instance extends WasmInstance {
       );
     }
 
-    List<WasmVal> mapArgs([List<Object?>? args]) {
+    Iterable<WasmVal> mapArgs([List<Object?>? args]) {
       int i = 0;
       return args == null || args.isEmpty
           ? const []
           : args
-              .map((v) => _fromWasmValueRaw(function.params[i++]!, v, runner))
-              .toList();
+              .map((v) => _fromWasmValueRaw(function.params[i++]!, v, runner));
     }
 
     final Completer<List<List<Object?>>> completer = Completer();
@@ -631,7 +644,7 @@ class _Instance extends WasmInstance {
     runner
         .callFunctionHandleParallel(
       funcName: exportEntry.key,
-      args: argsLists.expand(mapArgs).toList(),
+      args: argsLists.expand(mapArgs).toList(growable: false),
       numTasks: argsLists.length,
     )
         .listen(
@@ -644,7 +657,7 @@ class _Instance extends WasmInstance {
               (index) => result
                   .sublist(index * resultsLength, (index + 1) * resultsLength)
                   .map((e) => _References.dartValueFromWasm(e, runner))
-                  .toList(),
+                  .toList(growable: false),
             );
             completer.complete(mappedResults);
           },
