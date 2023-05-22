@@ -413,6 +413,7 @@ class _Builder extends WasmInstanceBuilder {
     if (wasi != null) {
       final wasiImports = js_util.dartify(wasi!.inner.wasiImport)!;
       final previous = mappedImports['wasi_snapshot_preview1'] ?? {};
+      // TODO: implement wasi in workers
       mappedImports['wasi_snapshot_preview1'] = (wasiImports as Map).cast()
         ..addAll(previous);
     }

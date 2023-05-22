@@ -592,6 +592,7 @@ class _Instance extends WasmInstance {
         _stdout!.first;
       }
 
+      // TODO: extract into separate function
       if (getFunction('_start')?.params.isEmpty ?? false) {
         getFunction('_start')!();
       } else if (getFunction('_initialize')?.params.isEmpty ?? false) {

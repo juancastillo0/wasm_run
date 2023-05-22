@@ -321,6 +321,7 @@ WasmFunction loweredImportFunction(
   }
 
   final lowered = WasmFunction(
+    // TODO: pass name
     params: flattenedFt.params.map(mapFlatToWasmType).toList(growable: false),
     results: flattenedFt.results.map(mapFlatToWasmType).toList(growable: false),
     call: call,
