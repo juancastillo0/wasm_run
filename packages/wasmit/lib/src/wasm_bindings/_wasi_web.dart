@@ -124,6 +124,17 @@ abstract class Filestat {}
 @JS('Fdstat')
 abstract class Fdstat {}
 
+typedef FstFlags = Object?;
+typedef Atim = Object?;
+typedef Mtim = Object?;
+typedef Flags = Object?;
+typedef OldFlags = Object?;
+typedef Dirflags = Object?;
+typedef Oflags = Object?;
+typedef FsRightsBase = Object?;
+typedef FsRightsInheriting = Object?;
+typedef Fdflags = Object?;
+
 @JS('Fd')
 abstract class Fd {
   external factory Fd();
@@ -138,7 +149,7 @@ abstract class Fd {
       BigInt fs_rights_base, BigInt fs_rights_inheriting);
   external FilestatGet fd_filestat_get();
   external int fd_filestat_set_size(IntOrBigInt size);
-  external int fd_filestat_set_times(atim, mtim, fst_flags);
+  external int fd_filestat_set_times(Atim atim, Mtim mtim, FstFlags fst_flags);
   external Read fd_pread(Uint8List view8, List<Iovec> iovs, IntOrBigInt offset);
   external PrestatGet fd_prestat_get();
   external PrestatDirNameGet fd_prestat_dir_name(int path_ptr, int path_len);
@@ -151,13 +162,18 @@ abstract class Fd {
   external OffsetGet fd_tell();
   external NwrittenGet fd_write(Uint8List view8, List<Iovec> iovs);
   external int path_create_directory(String path);
-  external FilestatGet path_filestat_get(flags, String path);
+  external FilestatGet path_filestat_get(Flags flags, String path);
   external void path_filestat_set_times(
-      flags, String path, atim, mtim, fst_flags);
+      Flags flags, String path, Atim atim, Mtim mtim, FstFlags fst_flags);
   external int path_link(
-      int old_fd, old_flags, String old_path, String new_path);
-  external FdObjGet path_open(dirflags, String path, oflags, fs_rights_base,
-      fs_rights_inheriting, fdflags);
+      int old_fd, OldFlags old_flags, String old_path, String new_path);
+  external FdObjGet path_open(
+      Dirflags dirflags,
+      String path,
+      Oflags oflags,
+      FsRightsBase fs_rights_base,
+      FsRightsInheriting fs_rights_inheriting,
+      Fdflags fdflags);
   external DataGet path_readlink(String path);
   external int path_remove_directory(String path);
   external int path_rename(String old_path, int new_fd, String new_path);

@@ -22,6 +22,8 @@ ExternalLibrary localTestingLibraryImpl() {
   for (final dir in [
     '../../target/$buildProfile/$filename',
     '../../../target/$buildProfile/$filename',
+    if (!isRelease) '../../target/release/$filename',
+    if (!isRelease) '../../../target/release/$filename',
   ]) {
     if (!File(dir).existsSync()) continue;
     print('Using localTestingLibrary: ${File(dir).absolute.uri.toFilePath()}');

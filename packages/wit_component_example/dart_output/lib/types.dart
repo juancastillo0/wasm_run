@@ -95,7 +95,7 @@ class TypesWorld {
 
     final _importFt = FuncType([('s', StringType())], []);
     (ListValue, void Function()) _execPrint(ListValue p0) {
-      imports.print((p0[0] as ParsedString).value);
+      imports.print((p0[0]! as ParsedString).value);
       return (const [], () {});
     }
 
@@ -131,6 +131,6 @@ class TypesWorld {
 
   RecordValue get() {
     final result = _get(const []);
-    return result[0] as RecordValue;
+    return result[0]! as RecordValue;
   }
 }

@@ -39,7 +39,9 @@ void main() async {
   }
 }
 
-Future<TypesExampleWorld> initTypesWorld(TypesExampleWorldImports imports) async {
+Future<TypesExampleWorld> initTypesWorld(
+  TypesExampleWorldImports imports,
+) async {
   final componentWasm = await File(
     kReleaseMode
         ? '../target/wasm32-unknown-unknown/release/wit_component_example.wasm'

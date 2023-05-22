@@ -7,6 +7,6 @@ mod bridge_generated;
 mod config;
 mod external;
 // mod interface;
-mod types;
 #[allow(dead_code)]
 mod atomics;
+mod types;

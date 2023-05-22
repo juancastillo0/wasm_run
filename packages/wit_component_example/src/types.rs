@@ -630,7 +630,7 @@ impl Parsed<'_> {
                 s.push_str("\n\nMap<String, Object?> toJson();\n");
 
                 s.push_str(&format!(
-                    "static const _spec = {};",
+                    "// ignore: unused_field\nstatic const _spec = {};",
                     self.type_def_to_spec(&ty)
                 ));
                 s.push_str("}"); // close sealed union class

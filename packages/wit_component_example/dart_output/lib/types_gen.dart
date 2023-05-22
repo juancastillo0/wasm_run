@@ -186,6 +186,7 @@ sealed class Input {
   const factory Input.string(String value) = InputString;
 
   Map<String, Object?> toJson();
+// ignore: unused_field
   static const _spec = Union([U64(), StringType()]);
 }
 

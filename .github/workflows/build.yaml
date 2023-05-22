@@ -10,8 +10,8 @@ on:
     - cron: "0 10 * * *"
 
 env:
-  FLUTTER_CHANNEL: master
-  RUST_TOOLCHAIN: stable
+  FLUTTER_CHANNEL: beta
+  RUST_TOOLCHAIN: nightly
 
 jobs:
   # General build, check, and test steps
