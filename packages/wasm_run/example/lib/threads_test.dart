@@ -13,7 +13,11 @@ import 'package:wasm_run_example/threads_base64.dart';
 
 // dart test test/main_test -c source --release -n threads
 void threadsTest({TestArgs? testArgs}) {
-  test('threads', () => main(onlyTest: true, testArgs: testArgs));
+  test(
+    'threads',
+    timeout: const Timeout(Duration(minutes: 2)),
+    () => main(onlyTest: true, testArgs: testArgs),
+  );
 
   Future<void> threadsStateTest({
     void Function(Object?)? onWorkerMessage,
@@ -112,9 +116,14 @@ void threadsTest({TestArgs? testArgs}) {
     expect(getState().cast<Object>().map(i64.toInt), [8]);
   }
 
-  test('threads-state', threadsStateTest);
+  test(
+    'threads-state',
+    timeout: const Timeout(Duration(minutes: 2)),
+    threadsStateTest,
+  );
 
-  test('threads-state web custom import', skip: !isWeb, () async {
+  test('threads-state web custom import',
+      timeout: const Timeout(Duration(minutes: 2)), skip: !isWeb, () async {
     final workerMessages = <Object?>[];
     await threadsStateTest(onWorkerMessage: workerMessages.add);
 
