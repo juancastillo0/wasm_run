@@ -17,13 +17,13 @@ and the Flutter guide for
 [![wasm_run is released under the MIT license.](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/juancastillo0/wasm_run/blob/main/LICENSE)
 [![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](#contributing)
 
-# Dart Wasm Interpreter
+# Dart Wasm Run
 
 A Web Assembly executor for the Dart programming language.
 
 Currently it uses the [`wasmtime 9.0`](https://github.com/bytecodealliance/wasmtime) or [`wasmi 0.29`](https://github.com/paritytech/wasmi) Rust crates for parsing and executing WASM modules. Bindings are created using [`package:flutter_rust_bridge`](https://github.com/fzyzcjy/flutter_rust_bridge).
 
-- [Dart Wasm Interpreter](#dart-wasm-interpreter)
+- [Dart Wasm Run](#dart-wasm-run)
 - [Features](#features)
   - [Supported Wasm Features](#supported-wasm-features)
   - [Execute WASM on any platform](#execute-wasm-on-any-platform)
@@ -38,14 +38,14 @@ Currently it uses the [`wasmtime 9.0`](https://github.com/bytecodealliance/wasmt
     - [Threads Example](#threads-example)
     - [Web Workers configuration](#web-workers-configuration)
   - [Web Assembly System Interface (WASI)](#web-assembly-system-interface-wasi)
-    - [Examples](#examples)
+    - [WASI Examples](#wasi-examples)
     - [Stdio (stdin, stdout, stderr)](#stdio-stdin-stdout-stderr)
     - [Directories](#directories)
     - [Environment and Arguments](#environment-and-arguments)
     - [Clocks and Random](#clocks-and-random)
+  - [Wasm Components and Wasm Interface Type (WIT)](#wasm-components-and-wasm-interface-type-wit)
   - [Getting started](#getting-started)
   - [Usage](#usage)
-  - [Additional information](#additional-information)
 
 
 
@@ -163,18 +163,17 @@ The [threads_test.dart](./packages/wasm_run/example/lib/threads_test.dart) conta
 
 The [assets/wasm.worker.js](packages/wasm_run/lib/assets/wasm.worker.js) is used as the script for implementing the worker, you may override it with the `workerScriptUrl` configuration in `WorkersConfig`.
 
-Since functions cannot be passed to Web Workers, you will need provide the functions imported in the imported by using the `mapWorkerWasmImports` parameter. An example of the script can be found in [worker_map_imports.js](packages/wasm_run/example/test/worker_map_imports.js), it exposes a `mapWorkerWasmImports` that receives the imports, the wasm module and other information, and returns the mapped wasm imports object.
-
+You may also configure the WASM imports are by using the `mapWorkerWasmImports` parameter. An example of the script can be found in [worker_map_imports.js](packages/wasm_run/example/test/worker_map_imports.js), it exposes a `mapWorkerWasmImports` that receives the imports, the WASM module and other information, and returns the mapped WASM imports object.
 
 ## Web Assembly System Interface (WASI)
 
 We support [WASI](https://github.com/WebAssembly/WASI) [wasi_snapshot_preview1](https://github.com/WebAssembly/WASI/blob/main/legacy/preview1/docs.md) through the [wasmtime_wasi](https://docs.rs/wasmtime-wasi/9.0.0/wasmtime_wasi/) or [wasmi_wasi](https://docs.rs/wasmi_wasi/0.29.0/wasmi_wasi) Rust crates, [chosen depending on the target platform](#runtime-for-platform). 
 
-In the web platform we do not automatically support modules with WASI imports. However, you may provide the imports manually. In the future we may provide an integration in a separate package, perhaps using [bjorn3/browser_wasi_shim](https://github.com/bjorn3/browser_wasi_shim).
+In the web platform we support WASI modules by using [bjorn3/browser_wasi_shim](https://github.com/bjorn3/browser_wasi_shim). The file system directories exported by the host are in-memory Maps where the files are represented as `Uint8List` buffers. Other APIs, such as time and random are implemented using the JavaScript browser APIs.
 
-### Examples
+### WASI Examples
 
-Usage within Dart can be found in the [main test](./packages/wasm_run/example/lib/main.dart).
+Usage within Dart can be found in the [wasi_test.dart](./packages/wasm_run/example/lib/wasi_test.dart).
 
 The WASI module used to execute the test is compiled from the [`rust_wasi_example` Rust project](./packages/rust_wasi_example/src/lib.rs) within this repo.
 
@@ -202,15 +201,13 @@ You can pass custom environment variable and program arguments to the WASI modul
 
 The WASI modules can have access to the system clock and randomness.
 
+## Wasm Components and Wasm Interface Type (WIT)
+
+An experimental Wasm Interface Type (WIT) code generator for Dart can be found in the [wit_component_example](./packages/wit_component_example/) directory.
+
+This is a work in progress and we will provide a separate package or additional tools for using Wasm components.
+
 ## Getting started
-
-TODO: List prerequisites and provide or point to information on how to
-start using the package.
-
-```yaml
-dependencies:
-  wasm_run: 0.0.1
-```
 
 When using Flutter:
 
@@ -221,17 +218,89 @@ dependencies:
   wasm_run_flutter: 0.0.1
 ```
 
-## Usage
+When using it in a pure Dart application:
 
-TODO: Include short and useful examples for package users. Add longer examples
-to `/example` folder. 
-
-```dart
-const like = 'sample';
+```yaml
+dependencies:
+  wasm_run: 0.0.1
 ```
 
-## Additional information
+Fetch the dynamic libraries for your platform by using: 
 
-TODO: Tell users more about the package: where to find more information, how to 
-contribute to the package, how to file issues, what response they can expect 
-from the package authors, and more.
+```
+dart pub run wasm_run:setup
+```
+
+Or provide a custom dynamic library from the releases with `setDynamicLibrary`.
+
+## Usage
+
+You may explore the `testAll` function in the [main.dart](./packages/wasm_run/example/lib/main.dart) file.
+It contains multiple test using distinct APIs withing the browser or native.
+
+A simple usage example is the following. It compiles a WASM module with an `add` export and executes it:
+
+```dart
+/// WASM WAT source:
+///
+/// ```wat
+/// (module
+///     (func (export "add") (param $a i32) (param $b i32) (result i32)
+///         local.get $a
+///         local.get $b
+///         i32.add
+///     )
+/// )
+/// ```
+const base64Binary =
+    'AGFzbQEAAAABBwFgAn9/AX8DAgEABwcBA2FkZAAACgkBBwAgACABagsAEARuYW1lAgkBAAIAAWEBAWI=';
+final Uint8List binary = base64Decode(base64Binary);
+final WasmModule module = await compileWasmModule(
+  binary,
+  config: const ModuleConfig(
+    wasmi: ModuleConfigWasmi(),
+    wasmtime: ModuleConfigWasmtime(),
+  ),
+);
+final List<WasmModuleExport> exports = module.getExports();
+
+assert(
+  exports.first.toString() ==
+      const WasmModuleExport('add', WasmExternalKind.function).toString(),
+);
+final List<WasmModuleImport> imports = module.getImports();
+assert(imports.isEmpty);
+
+// configure wasi
+WasiConfig? wasiConfig;
+final WasmInstanceBuilder builder = module.builder(wasiConfig: wasiConfig);
+
+// create external
+// builder.createTable
+// builder.createGlobal
+// builder.createMemory
+
+// Add imports
+// builder.addImport(moduleName, name, value);
+
+final WasmInstance instance = await builder.build();
+final WasmFunction add = instance.getFunction('add')!;
+
+final List<ValueTy?> params = add.params;
+assert(params.length == 2);
+
+final WasmRuntimeFeatures runtime = await wasmRuntimeFeatures();
+if (!runtime.isBrowser) {
+  // Types are not supported in browser
+  assert(params.every((t) => t == ValueTy.i32));
+  assert(add.results!.length == 1);
+  assert(add.results!.first == ValueTy.i32);
+}
+
+final List<Object?> result = add([1, 4]);
+assert(result.length == 1);
+assert(result.first == 5);
+
+final resultInner = add.inner(-1, 8) as int;
+assert(resultInner == 7);
+```
