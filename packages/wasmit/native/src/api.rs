@@ -206,17 +206,14 @@ pub fn module_builder(
     };
 
     let module_builder = WasmiModuleImpl {
-        module: wasm_module.clone(),
+        module: wasm_module,
         linker: linker.clone(),
         store,
         instance: None,
         pool: None,
         threads,
-        channels: if let Some(num_threads) = num_threads {
-            Some(Arc::new(Mutex::new(FunctionChannels::new(num_threads))))
-        } else {
-            None
-        },
+        channels: num_threads
+            .map(|num_threads| Arc::new(Mutex::new(FunctionChannels::new(num_threads)))),
     };
     arr.map.insert(id, module_builder);
 
@@ -552,7 +549,7 @@ impl WasmitModuleId {
                 .get_func(&mut module.store, &func_name)
                 .unwrap();
             let num_params = func.ty(&module.store).params().count();
-            if (num_params == 0 && args.len() != 0)
+            if (num_params == 0 && !args.is_empty())
                 || (num_params != 0 && args.len() % num_params != 0)
                 || num_params * num_tasks != args.len()
             {
@@ -574,7 +571,7 @@ impl WasmitModuleId {
         if let (Some(pool), Some(channels)) = (pool, channels) {
             let args: Vec<Value> = args.into_iter().map(|v| v.to_val()).collect();
 
-            let main_send = channels.clone().lock().unwrap().main_send.clone();
+            let main_send = channels.lock().unwrap().main_send.clone();
             // TODO: try with tokio
             std::thread::spawn(move || {
                 let value: std::result::Result<Vec<WasmVal>, Error> = pool.install(|| {
@@ -648,9 +645,9 @@ impl WasmitModuleId {
                 // worker.send(results).unwrap();
             }
         } else {
-            function_stream.add(ParallelExec::Err(format!(
-                "Instance has no thread pool configured"
-            )));
+            function_stream.add(ParallelExec::Err(
+                "Instance has no thread pool configured".to_string(),
+            ));
         }
     }
 
@@ -1223,7 +1220,7 @@ impl Atomics {
                 AtomicKind::U32 => Atu32(self.0)
                     .add(offset, val.try_into().unwrap(), order)
                     .into(),
-                AtomicKind::I64 => Ati64(self.0).add(offset, val, order).into(),
+                AtomicKind::I64 => Ati64(self.0).add(offset, val, order),
                 AtomicKind::U64 => Atu64(self.0)
                     .add(offset, val.try_into().unwrap(), order)
                     .try_into()
@@ -1250,7 +1247,7 @@ impl Atomics {
             match kind {
                 AtomicKind::I32 => Ati32(self.0).load(offset, order).into(),
                 AtomicKind::U32 => Atu32(self.0).load(offset, order).into(),
-                AtomicKind::I64 => Ati64(self.0).load(offset, order).into(),
+                AtomicKind::I64 => Ati64(self.0).load(offset, order),
                 AtomicKind::U64 => Atu64(self.0).load(offset, order).try_into().unwrap(),
                 AtomicKind::I8 => Ati8(self.0).load(offset, order).into(),
                 AtomicKind::U8 => Atu8(self.0).load(offset, order).into(),
@@ -1267,10 +1264,7 @@ impl Atomics {
                 AtomicKind::I32 => Ati32(self.0).store(offset, val.try_into().unwrap(), order),
                 AtomicKind::U32 => Atu32(self.0).store(offset, val.try_into().unwrap(), order),
                 AtomicKind::I64 => Ati64(self.0).store(offset, val, order),
-                AtomicKind::U64 => Atu64(self.0)
-                    .store(offset, val.try_into().unwrap(), order)
-                    .try_into()
-                    .unwrap(),
+                AtomicKind::U64 => Atu64(self.0).store(offset, val.try_into().unwrap(), order),
                 AtomicKind::I8 => Ati8(self.0).store(offset, val.try_into().unwrap(), order),
                 AtomicKind::U8 => Atu8(self.0).store(offset, val.try_into().unwrap(), order),
                 AtomicKind::I16 => Ati16(self.0).store(offset, val.try_into().unwrap(), order),
@@ -1289,7 +1283,7 @@ impl Atomics {
                 AtomicKind::U32 => Atu32(self.0)
                     .swap(offset, val.try_into().unwrap(), order)
                     .into(),
-                AtomicKind::I64 => Ati64(self.0).swap(offset, val, order).into(),
+                AtomicKind::I64 => Ati64(self.0).swap(offset, val, order),
                 AtomicKind::U64 => Atu64(self.0)
                     .swap(offset, val.try_into().unwrap(), order)
                     .try_into()
@@ -1403,7 +1397,7 @@ impl Atomics {
                 AtomicKind::U32 => Atu32(self.0)
                     .sub(offset, val.try_into().unwrap(), order)
                     .into(),
-                AtomicKind::I64 => Ati64(self.0).sub(offset, val, order).into(),
+                AtomicKind::I64 => Ati64(self.0).sub(offset, val, order),
                 AtomicKind::U64 => Atu64(self.0)
                     .sub(offset, val.try_into().unwrap(), order)
                     .try_into()
@@ -1434,7 +1428,7 @@ impl Atomics {
                 AtomicKind::U32 => Atu32(self.0)
                     .and(offset, val.try_into().unwrap(), order)
                     .into(),
-                AtomicKind::I64 => Ati64(self.0).and(offset, val, order).into(),
+                AtomicKind::I64 => Ati64(self.0).and(offset, val, order),
                 AtomicKind::U64 => Atu64(self.0)
                     .and(offset, val.try_into().unwrap(), order)
                     .try_into()
@@ -1465,7 +1459,7 @@ impl Atomics {
                 AtomicKind::U32 => Atu32(self.0)
                     .or(offset, val.try_into().unwrap(), order)
                     .into(),
-                AtomicKind::I64 => Ati64(self.0).or(offset, val, order).into(),
+                AtomicKind::I64 => Ati64(self.0).or(offset, val, order),
                 AtomicKind::U64 => Atu64(self.0)
                     .or(offset, val.try_into().unwrap(), order)
                     .try_into()
@@ -1496,7 +1490,7 @@ impl Atomics {
                 AtomicKind::U32 => Atu32(self.0)
                     .xor(offset, val.try_into().unwrap(), order)
                     .into(),
-                AtomicKind::I64 => Ati64(self.0).xor(offset, val, order).into(),
+                AtomicKind::I64 => Ati64(self.0).xor(offset, val, order),
                 AtomicKind::U64 => Atu64(self.0)
                     .xor(offset, val.try_into().unwrap(), order)
                     .try_into()
@@ -1522,8 +1516,8 @@ impl<T: Num> From<std::result::Result<T, T>> for CompareExchangeResult {
     fn from(result: std::result::Result<T, T>) -> Self {
         Self {
             success: result.is_ok(),
-            value: if result.is_ok() {
-                result.unwrap().to_i64()
+            value: if let std::result::Result::Ok(result) = result {
+                result.to_i64()
             } else {
                 result.unwrap_err().to_i64()
             },
