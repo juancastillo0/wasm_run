@@ -82,11 +82,6 @@ struct HostFunction {
     result_types: Vec<ValueTy>,
 }
 
-pub struct PointerAndLength {
-    pub pointer: usize,
-    pub length: usize,
-}
-
 #[derive(Debug, Clone, Copy)]
 pub struct WasmitModuleId(pub u32);
 
@@ -258,27 +253,13 @@ impl Write for ModuleIOWriter {
     }
 }
 
+type WorkerSendRecv = Arc<Mutex<(usize, Sender<FunctionCall>, Receiver<Vec<Val>>)>>;
+
 struct FunctionChannels {
     main_send: Sender<FunctionCall>,
     main_recv: Arc<Mutex<Receiver<FunctionCall>>>,
     workers_out: Vec<Sender<Vec<Val>>>,
     workers: Vec<WorkerSendRecv>,
-}
-
-type WorkerSendRecv = Arc<Mutex<(usize, Sender<FunctionCall>, Receiver<Vec<Val>>)>>;
-
-pub enum ParallelExec {
-    Ok(Vec<WasmVal>),
-    Err(String),
-    Call(FunctionCall),
-}
-
-pub struct FunctionCall {
-    pub args: Vec<WasmVal>,
-    pub function_id: u32,
-    pub function_pointer: usize,
-    pub num_results: usize,
-    pub worker_index: usize,
 }
 
 impl FunctionChannels {
@@ -1119,31 +1100,6 @@ pub fn wasm_runtime_features() -> SyncReturn<WasmRuntimeFeatures> {
     SyncReturn(WasmRuntimeFeatures::default())
 }
 
-/// Result of [SharedMemory.atomicWait32] and [SharedMemory.atomicWait64]
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
-#[allow(non_camel_case_types)]
-pub enum SharedMemoryWaitResult {
-    /// Indicates that a `wait` completed by being awoken by a different thread.
-    /// This means the thread went to sleep and didn't time out.
-    ok = 0,
-    /// Indicates that `wait` did not complete and instead returned due to the
-    /// value in memory not matching the expected value.
-    mismatch = 1,
-    /// Indicates that `wait` completed with a timeout, meaning that the
-    /// original value matched as expected but nothing ever called `notify`.
-    timedOut = 2,
-}
-
-impl From<WaitResult> for SharedMemoryWaitResult {
-    fn from(result: WaitResult) -> Self {
-        match result {
-            WaitResult::Ok => SharedMemoryWaitResult::ok,
-            WaitResult::Mismatch => SharedMemoryWaitResult::mismatch,
-            WaitResult::TimedOut => SharedMemoryWaitResult::timedOut,
-        }
-    }
-}
-
 #[derive(Debug, Clone)]
 pub struct WasmitSharedMemory(pub RustOpaque<Arc<RwLock<SharedMemory>>>);
 
@@ -1560,11 +1516,6 @@ impl Atomics {
             }
         }
     }
-}
-
-pub struct CompareExchangeResult {
-    pub success: bool,
-    pub value: i64,
 }
 
 impl<T: Num> From<std::result::Result<T, T>> for CompareExchangeResult {

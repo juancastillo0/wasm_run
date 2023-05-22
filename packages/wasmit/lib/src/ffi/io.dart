@@ -10,11 +10,18 @@ WasmitDart createWrapperImpl(ExternalLibrary dylib) => WasmitDartImpl(dylib);
 
 ExternalLibrary localTestingLibraryImpl() {
   final filename = getDesktopLibName();
+  bool isRelease = true;
+  assert(
+    (() {
+      isRelease = false;
+      return true;
+    })(),
+    '',
+  );
+  final buildProfile = isRelease ? 'release' : 'debug';
   for (final dir in [
-    '../../target/debug/$filename',
-    '../../../target/debug/$filename',
-    '../../target/release/$filename',
-    '../../../target/release/$filename',
+    '../../target/$buildProfile/$filename',
+    '../../../target/$buildProfile/$filename',
   ]) {
     if (!File(dir).existsSync()) continue;
     print('Using localTestingLibrary: ${File(dir).absolute.uri.toFilePath()}');
