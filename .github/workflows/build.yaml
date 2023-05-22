@@ -97,7 +97,8 @@ jobs:
         with:
           fail_ci_if_error: false
           verbose: true
-          files: "./packages/wasm_run/coverage/lcov.info"
+          files: ./packages/wasm_run/coverage/lcov.info
+          functionalities: 'search'
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v2
         if: always() && steps.coverage.outcome == 'success' && steps.upload_coverage_to_codecov.outcome != 'success'
