@@ -10,10 +10,10 @@ import 'package:uuid/uuid.dart';
 import 'bridge_generated.dart';
 export 'bridge_generated.dart';
 
-class WasmitDartPlatform extends FlutterRustBridgeBase<WasmitDartWire>
+class WasmRunDartPlatform extends FlutterRustBridgeBase<WasmRunDartWire>
     with FlutterRustBridgeSetupMixin {
-  WasmitDartPlatform(FutureOr<WasmModule> dylib)
-      : super(WasmitDartWire(dylib)) {
+  WasmRunDartPlatform(FutureOr<WasmModule> dylib)
+      : super(WasmRunDartWire(dylib)) {
     setupMixinConstructor();
   }
   Future<void> setup() => inner.init;
@@ -138,24 +138,25 @@ class WasmitDartPlatform extends FlutterRustBridgeBase<WasmitDartWire>
   }
 
   @protected
+  List<dynamic> api2wire_box_autoadd_wasm_run_instance_id(
+      WasmRunInstanceId raw) {
+    return api2wire_wasm_run_instance_id(raw);
+  }
+
+  @protected
+  List<dynamic> api2wire_box_autoadd_wasm_run_module_id(WasmRunModuleId raw) {
+    return api2wire_wasm_run_module_id(raw);
+  }
+
+  @protected
+  List<dynamic> api2wire_box_autoadd_wasm_run_shared_memory(
+      WasmRunSharedMemory raw) {
+    return api2wire_wasm_run_shared_memory(raw);
+  }
+
+  @protected
   List<dynamic> api2wire_box_autoadd_wasm_val(WasmVal raw) {
     return api2wire_wasm_val(raw);
-  }
-
-  @protected
-  List<dynamic> api2wire_box_autoadd_wasmit_instance_id(WasmitInstanceId raw) {
-    return api2wire_wasmit_instance_id(raw);
-  }
-
-  @protected
-  List<dynamic> api2wire_box_autoadd_wasmit_module_id(WasmitModuleId raw) {
-    return api2wire_wasmit_module_id(raw);
-  }
-
-  @protected
-  List<dynamic> api2wire_box_autoadd_wasmit_shared_memory(
-      WasmitSharedMemory raw) {
-    return api2wire_wasmit_shared_memory(raw);
   }
 
   @protected
@@ -183,7 +184,7 @@ class WasmitDartPlatform extends FlutterRustBridgeBase<WasmitDartWire>
       return [3, api2wire_Memory(raw.field0)];
     }
     if (raw is ExternalValue_SharedMemory) {
-      return [4, api2wire_box_autoadd_wasmit_shared_memory(raw.field0)];
+      return [4, api2wire_box_autoadd_wasm_run_shared_memory(raw.field0)];
     }
 
     throw Exception('unreachable');
@@ -388,6 +389,21 @@ class WasmitDartPlatform extends FlutterRustBridgeBase<WasmitDartWire>
   }
 
   @protected
+  List<dynamic> api2wire_wasm_run_instance_id(WasmRunInstanceId raw) {
+    return [api2wire_u32(raw.field0)];
+  }
+
+  @protected
+  List<dynamic> api2wire_wasm_run_module_id(WasmRunModuleId raw) {
+    return [api2wire_u32(raw.field0)];
+  }
+
+  @protected
+  List<dynamic> api2wire_wasm_run_shared_memory(WasmRunSharedMemory raw) {
+    return [api2wire_ArcRwLockSharedMemory(raw.field0)];
+  }
+
+  @protected
   List<dynamic> api2wire_wasm_val(WasmVal raw) {
     if (raw is WasmVal_i32) {
       return [0, api2wire_i32(raw.field0)];
@@ -412,21 +428,6 @@ class WasmitDartPlatform extends FlutterRustBridgeBase<WasmitDartWire>
     }
 
     throw Exception('unreachable');
-  }
-
-  @protected
-  List<dynamic> api2wire_wasmit_instance_id(WasmitInstanceId raw) {
-    return [api2wire_u32(raw.field0)];
-  }
-
-  @protected
-  List<dynamic> api2wire_wasmit_module_id(WasmitModuleId raw) {
-    return [api2wire_u32(raw.field0)];
-  }
-
-  @protected
-  List<dynamic> api2wire_wasmit_shared_memory(WasmitSharedMemory raw) {
-    return [api2wire_ArcRwLockSharedMemory(raw.field0)];
   }
 // Section: finalizer
 
@@ -455,13 +456,13 @@ class WasmitDartPlatform extends FlutterRustBridgeBase<WasmitDartWire>
 // Section: WASM wire module
 
 @JS('wasm_bindgen')
-external WasmitDartWasmModule get wasmModule;
+external WasmRunDartWasmModule get wasmModule;
 
 @JS()
 @anonymous
-class WasmitDartWasmModule implements WasmModule {
+class WasmRunDartWasmModule implements WasmModule {
   external Object /* Promise */ call([String? moduleName]);
-  external WasmitDartWasmModule bind(dynamic thisArg, String moduleName);
+  external WasmRunDartWasmModule bind(dynamic thisArg, String moduleName);
   external dynamic /* List<dynamic> */ wire_module_builder(
       List<dynamic> module, int? num_threads, List<dynamic>? wasi_config);
 
@@ -479,133 +480,132 @@ class WasmitDartWasmModule implements WasmModule {
 
   external dynamic /* List<dynamic> */ wire_wasm_runtime_features();
 
-  external dynamic /* List<dynamic> */ wire_exports__method__WasmitInstanceId(
+  external dynamic /* List<dynamic> */ wire_exports__method__WasmRunInstanceId(
       List<dynamic> that);
 
   external dynamic /* List<dynamic> */
-      wire_instantiate_sync__method__WasmitModuleId(List<dynamic> that);
+      wire_instantiate_sync__method__WasmRunModuleId(List<dynamic> that);
 
-  external dynamic /* void */ wire_instantiate__method__WasmitModuleId(
+  external dynamic /* void */ wire_instantiate__method__WasmRunModuleId(
       NativePortType port_, List<dynamic> that);
 
-  external dynamic /* void */ wire_link_imports__method__WasmitModuleId(
+  external dynamic /* void */ wire_link_imports__method__WasmRunModuleId(
       List<dynamic> that, List<dynamic> imports);
 
-  external dynamic /* void */ wire_stdio_stream__method__WasmitModuleId(
+  external dynamic /* void */ wire_stdio_stream__method__WasmRunModuleId(
       NativePortType port_, List<dynamic> that, int kind);
 
-  external dynamic /* void */ wire_dispose__method__WasmitModuleId(
+  external dynamic /* void */ wire_dispose__method__WasmRunModuleId(
       NativePortType port_, List<dynamic> that);
 
   external dynamic /* List<dynamic> */
-      wire_call_function_handle_sync__method__WasmitModuleId(
+      wire_call_function_handle_sync__method__WasmRunModuleId(
           List<dynamic> that, Object func, List<dynamic> args);
 
-  external dynamic /* void */ wire_call_function_handle__method__WasmitModuleId(
-      NativePortType port_,
-      List<dynamic> that,
-      Object func,
-      List<dynamic> args);
+  external dynamic /* void */
+      wire_call_function_handle__method__WasmRunModuleId(NativePortType port_,
+          List<dynamic> that, Object func, List<dynamic> args);
 
   external dynamic /* void */
-      wire_call_function_handle_parallel__method__WasmitModuleId(
+      wire_call_function_handle_parallel__method__WasmRunModuleId(
           NativePortType port_,
           List<dynamic> that,
           String func_name,
           List<dynamic> args,
           int num_tasks);
 
-  external dynamic /* void */ wire_worker_execution__method__WasmitModuleId(
+  external dynamic /* void */ wire_worker_execution__method__WasmRunModuleId(
       List<dynamic> that, int worker_index, List<dynamic> results);
 
   external dynamic /* List<dynamic> */
-      wire_get_function_type__method__WasmitModuleId(
+      wire_get_function_type__method__WasmRunModuleId(
           List<dynamic> that, Object func);
 
-  external dynamic /* Object */ wire_create_function__method__WasmitModuleId(
+  external dynamic /* Object */ wire_create_function__method__WasmRunModuleId(
       List<dynamic> that,
       int function_pointer,
       int function_id,
       List<dynamic> param_types,
       List<dynamic> result_types);
 
-  external dynamic /* Object */ wire_create_memory__method__WasmitModuleId(
+  external dynamic /* Object */ wire_create_memory__method__WasmRunModuleId(
       List<dynamic> that, List<dynamic> memory_type);
 
-  external dynamic /* Object */ wire_create_global__method__WasmitModuleId(
+  external dynamic /* Object */ wire_create_global__method__WasmRunModuleId(
       List<dynamic> that, List<dynamic> value, bool mutable);
 
-  external dynamic /* Object */ wire_create_table__method__WasmitModuleId(
+  external dynamic /* Object */ wire_create_table__method__WasmRunModuleId(
       List<dynamic> that, List<dynamic> value, List<dynamic> table_type);
 
   external dynamic /* List<dynamic> */
-      wire_get_global_type__method__WasmitModuleId(
+      wire_get_global_type__method__WasmRunModuleId(
           List<dynamic> that, Object global);
 
   external dynamic /* List<dynamic> */
-      wire_get_global_value__method__WasmitModuleId(
+      wire_get_global_value__method__WasmRunModuleId(
           List<dynamic> that, Object global);
 
-  external dynamic /* void */ wire_set_global_value__method__WasmitModuleId(
+  external dynamic /* void */ wire_set_global_value__method__WasmRunModuleId(
       List<dynamic> that, Object global, List<dynamic> value);
 
   external dynamic /* List<dynamic> */
-      wire_get_memory_type__method__WasmitModuleId(
+      wire_get_memory_type__method__WasmRunModuleId(
           List<dynamic> that, Object memory);
 
-  external dynamic /* Uint8List */ wire_get_memory_data__method__WasmitModuleId(
-      List<dynamic> that, Object memory);
+  external dynamic /* Uint8List */
+      wire_get_memory_data__method__WasmRunModuleId(
+          List<dynamic> that, Object memory);
 
   external dynamic /* int */
-      wire_get_memory_data_pointer__method__WasmitModuleId(
+      wire_get_memory_data_pointer__method__WasmRunModuleId(
           List<dynamic> that, Object memory);
 
   external dynamic /* List<dynamic> */
-      wire_get_memory_data_pointer_and_length__method__WasmitModuleId(
+      wire_get_memory_data_pointer_and_length__method__WasmRunModuleId(
           List<dynamic> that, Object memory);
 
-  external dynamic /* Uint8List */ wire_read_memory__method__WasmitModuleId(
+  external dynamic /* Uint8List */ wire_read_memory__method__WasmRunModuleId(
       List<dynamic> that, Object memory, int offset, int bytes);
 
-  external dynamic /* int */ wire_get_memory_pages__method__WasmitModuleId(
+  external dynamic /* int */ wire_get_memory_pages__method__WasmRunModuleId(
       List<dynamic> that, Object memory);
 
-  external dynamic /* void */ wire_write_memory__method__WasmitModuleId(
+  external dynamic /* void */ wire_write_memory__method__WasmRunModuleId(
       List<dynamic> that, Object memory, int offset, Uint8List buffer);
 
-  external dynamic /* int */ wire_grow_memory__method__WasmitModuleId(
+  external dynamic /* int */ wire_grow_memory__method__WasmRunModuleId(
       List<dynamic> that, Object memory, int pages);
 
-  external dynamic /* int */ wire_get_table_size__method__WasmitModuleId(
+  external dynamic /* int */ wire_get_table_size__method__WasmRunModuleId(
       List<dynamic> that, Object table);
 
   external dynamic /* List<dynamic> */
-      wire_get_table_type__method__WasmitModuleId(
+      wire_get_table_type__method__WasmRunModuleId(
           List<dynamic> that, Object table);
 
-  external dynamic /* int */ wire_grow_table__method__WasmitModuleId(
+  external dynamic /* int */ wire_grow_table__method__WasmRunModuleId(
       List<dynamic> that, Object table, int delta, List<dynamic> value);
 
-  external dynamic /* List<dynamic>? */ wire_get_table__method__WasmitModuleId(
+  external dynamic /* List<dynamic>? */ wire_get_table__method__WasmRunModuleId(
       List<dynamic> that, Object table, int index);
 
-  external dynamic /* void */ wire_set_table__method__WasmitModuleId(
+  external dynamic /* void */ wire_set_table__method__WasmRunModuleId(
       List<dynamic> that, Object table, int index, List<dynamic> value);
 
-  external dynamic /* void */ wire_fill_table__method__WasmitModuleId(
+  external dynamic /* void */ wire_fill_table__method__WasmRunModuleId(
       List<dynamic> that,
       Object table,
       int index,
       List<dynamic> value,
       int len);
 
-  external dynamic /* void */ wire_add_fuel__method__WasmitModuleId(
+  external dynamic /* void */ wire_add_fuel__method__WasmRunModuleId(
       List<dynamic> that, Object delta);
 
-  external dynamic /* Object? */ wire_fuel_consumed__method__WasmitModuleId(
+  external dynamic /* Object? */ wire_fuel_consumed__method__WasmRunModuleId(
       List<dynamic> that);
 
-  external dynamic /* Object */ wire_consume_fuel__method__WasmitModuleId(
+  external dynamic /* Object */ wire_consume_fuel__method__WasmRunModuleId(
       List<dynamic> that, Object delta);
 
   external dynamic /* List<dynamic> */
@@ -618,31 +618,31 @@ class WasmitDartWasmModule implements WasmModule {
   external dynamic /* List<dynamic> */
       wire_get_module_exports__method__CompiledModule(List<dynamic> that);
 
-  external dynamic /* List<dynamic> */ wire_ty__method__WasmitSharedMemory(
+  external dynamic /* List<dynamic> */ wire_ty__method__WasmRunSharedMemory(
       List<dynamic> that);
 
-  external dynamic /* Object */ wire_size__method__WasmitSharedMemory(
+  external dynamic /* Object */ wire_size__method__WasmRunSharedMemory(
       List<dynamic> that);
 
-  external dynamic /* int */ wire_data_size__method__WasmitSharedMemory(
+  external dynamic /* int */ wire_data_size__method__WasmRunSharedMemory(
       List<dynamic> that);
 
-  external dynamic /* int */ wire_data_pointer__method__WasmitSharedMemory(
+  external dynamic /* int */ wire_data_pointer__method__WasmRunSharedMemory(
       List<dynamic> that);
 
-  external dynamic /* Object */ wire_grow__method__WasmitSharedMemory(
+  external dynamic /* Object */ wire_grow__method__WasmRunSharedMemory(
       List<dynamic> that, Object delta);
 
-  external dynamic /* void */ wire_atomics__method__WasmitSharedMemory(
+  external dynamic /* void */ wire_atomics__method__WasmRunSharedMemory(
       NativePortType port_, List<dynamic> that);
 
-  external dynamic /* int */ wire_atomic_notify__method__WasmitSharedMemory(
+  external dynamic /* int */ wire_atomic_notify__method__WasmRunSharedMemory(
       List<dynamic> that, Object addr, int count);
 
-  external dynamic /* int */ wire_atomic_wait32__method__WasmitSharedMemory(
+  external dynamic /* int */ wire_atomic_wait32__method__WasmRunSharedMemory(
       List<dynamic> that, Object addr, int expected);
 
-  external dynamic /* int */ wire_atomic_wait64__method__WasmitSharedMemory(
+  external dynamic /* int */ wire_atomic_wait64__method__WasmRunSharedMemory(
       List<dynamic> that, Object addr, Object expected);
 
   external dynamic /* void */ wire_add__method__Atomics(NativePortType port_,
@@ -706,10 +706,10 @@ class WasmitDartWasmModule implements WasmModule {
 
 // Section: WASM wire connector
 
-class WasmitDartWire
-    extends FlutterRustBridgeWasmWireBase<WasmitDartWasmModule> {
-  WasmitDartWire(FutureOr<WasmModule> module)
-      : super(WasmModule.cast<WasmitDartWasmModule>(module));
+class WasmRunDartWire
+    extends FlutterRustBridgeWasmWireBase<WasmRunDartWasmModule> {
+  WasmRunDartWire(FutureOr<WasmModule> module)
+      : super(WasmModule.cast<WasmRunDartWasmModule>(module));
 
   dynamic /* List<dynamic> */ wire_module_builder(
           List<dynamic> module, int? num_threads, List<dynamic>? wasi_config) =>
@@ -733,171 +733,175 @@ class WasmitDartWire
   dynamic /* List<dynamic> */ wire_wasm_runtime_features() =>
       wasmModule.wire_wasm_runtime_features();
 
-  dynamic /* List<dynamic> */ wire_exports__method__WasmitInstanceId(
+  dynamic /* List<dynamic> */ wire_exports__method__WasmRunInstanceId(
           List<dynamic> that) =>
-      wasmModule.wire_exports__method__WasmitInstanceId(that);
+      wasmModule.wire_exports__method__WasmRunInstanceId(that);
 
-  dynamic /* List<dynamic> */ wire_instantiate_sync__method__WasmitModuleId(
+  dynamic /* List<dynamic> */ wire_instantiate_sync__method__WasmRunModuleId(
           List<dynamic> that) =>
-      wasmModule.wire_instantiate_sync__method__WasmitModuleId(that);
+      wasmModule.wire_instantiate_sync__method__WasmRunModuleId(that);
 
-  void wire_instantiate__method__WasmitModuleId(
+  void wire_instantiate__method__WasmRunModuleId(
           NativePortType port_, List<dynamic> that) =>
-      wasmModule.wire_instantiate__method__WasmitModuleId(port_, that);
+      wasmModule.wire_instantiate__method__WasmRunModuleId(port_, that);
 
-  dynamic /* void */ wire_link_imports__method__WasmitModuleId(
+  dynamic /* void */ wire_link_imports__method__WasmRunModuleId(
           List<dynamic> that, List<dynamic> imports) =>
-      wasmModule.wire_link_imports__method__WasmitModuleId(that, imports);
+      wasmModule.wire_link_imports__method__WasmRunModuleId(that, imports);
 
-  void wire_stdio_stream__method__WasmitModuleId(
+  void wire_stdio_stream__method__WasmRunModuleId(
           NativePortType port_, List<dynamic> that, int kind) =>
-      wasmModule.wire_stdio_stream__method__WasmitModuleId(port_, that, kind);
+      wasmModule.wire_stdio_stream__method__WasmRunModuleId(port_, that, kind);
 
-  void wire_dispose__method__WasmitModuleId(
+  void wire_dispose__method__WasmRunModuleId(
           NativePortType port_, List<dynamic> that) =>
-      wasmModule.wire_dispose__method__WasmitModuleId(port_, that);
+      wasmModule.wire_dispose__method__WasmRunModuleId(port_, that);
 
   dynamic /* List<dynamic> */
-      wire_call_function_handle_sync__method__WasmitModuleId(
+      wire_call_function_handle_sync__method__WasmRunModuleId(
               List<dynamic> that, Object func, List<dynamic> args) =>
-          wasmModule.wire_call_function_handle_sync__method__WasmitModuleId(
+          wasmModule.wire_call_function_handle_sync__method__WasmRunModuleId(
               that, func, args);
 
-  void wire_call_function_handle__method__WasmitModuleId(NativePortType port_,
+  void wire_call_function_handle__method__WasmRunModuleId(NativePortType port_,
           List<dynamic> that, Object func, List<dynamic> args) =>
-      wasmModule.wire_call_function_handle__method__WasmitModuleId(
+      wasmModule.wire_call_function_handle__method__WasmRunModuleId(
           port_, that, func, args);
 
-  void wire_call_function_handle_parallel__method__WasmitModuleId(
+  void wire_call_function_handle_parallel__method__WasmRunModuleId(
           NativePortType port_,
           List<dynamic> that,
           String func_name,
           List<dynamic> args,
           int num_tasks) =>
-      wasmModule.wire_call_function_handle_parallel__method__WasmitModuleId(
+      wasmModule.wire_call_function_handle_parallel__method__WasmRunModuleId(
           port_, that, func_name, args, num_tasks);
 
-  dynamic /* void */ wire_worker_execution__method__WasmitModuleId(
+  dynamic /* void */ wire_worker_execution__method__WasmRunModuleId(
           List<dynamic> that, int worker_index, List<dynamic> results) =>
-      wasmModule.wire_worker_execution__method__WasmitModuleId(
+      wasmModule.wire_worker_execution__method__WasmRunModuleId(
           that, worker_index, results);
 
-  dynamic /* List<dynamic> */ wire_get_function_type__method__WasmitModuleId(
+  dynamic /* List<dynamic> */ wire_get_function_type__method__WasmRunModuleId(
           List<dynamic> that, Object func) =>
-      wasmModule.wire_get_function_type__method__WasmitModuleId(that, func);
+      wasmModule.wire_get_function_type__method__WasmRunModuleId(that, func);
 
-  dynamic /* Object */ wire_create_function__method__WasmitModuleId(
+  dynamic /* Object */ wire_create_function__method__WasmRunModuleId(
           List<dynamic> that,
           int function_pointer,
           int function_id,
           List<dynamic> param_types,
           List<dynamic> result_types) =>
-      wasmModule.wire_create_function__method__WasmitModuleId(
+      wasmModule.wire_create_function__method__WasmRunModuleId(
           that, function_pointer, function_id, param_types, result_types);
 
-  dynamic /* Object */ wire_create_memory__method__WasmitModuleId(
+  dynamic /* Object */ wire_create_memory__method__WasmRunModuleId(
           List<dynamic> that, List<dynamic> memory_type) =>
-      wasmModule.wire_create_memory__method__WasmitModuleId(that, memory_type);
+      wasmModule.wire_create_memory__method__WasmRunModuleId(that, memory_type);
 
-  dynamic /* Object */ wire_create_global__method__WasmitModuleId(
+  dynamic /* Object */ wire_create_global__method__WasmRunModuleId(
           List<dynamic> that, List<dynamic> value, bool mutable) =>
-      wasmModule.wire_create_global__method__WasmitModuleId(
+      wasmModule.wire_create_global__method__WasmRunModuleId(
           that, value, mutable);
 
-  dynamic /* Object */ wire_create_table__method__WasmitModuleId(
+  dynamic /* Object */ wire_create_table__method__WasmRunModuleId(
           List<dynamic> that, List<dynamic> value, List<dynamic> table_type) =>
-      wasmModule.wire_create_table__method__WasmitModuleId(
+      wasmModule.wire_create_table__method__WasmRunModuleId(
           that, value, table_type);
 
-  dynamic /* List<dynamic> */ wire_get_global_type__method__WasmitModuleId(
+  dynamic /* List<dynamic> */ wire_get_global_type__method__WasmRunModuleId(
           List<dynamic> that, Object global) =>
-      wasmModule.wire_get_global_type__method__WasmitModuleId(that, global);
+      wasmModule.wire_get_global_type__method__WasmRunModuleId(that, global);
 
-  dynamic /* List<dynamic> */ wire_get_global_value__method__WasmitModuleId(
+  dynamic /* List<dynamic> */ wire_get_global_value__method__WasmRunModuleId(
           List<dynamic> that, Object global) =>
-      wasmModule.wire_get_global_value__method__WasmitModuleId(that, global);
+      wasmModule.wire_get_global_value__method__WasmRunModuleId(that, global);
 
-  dynamic /* void */ wire_set_global_value__method__WasmitModuleId(
+  dynamic /* void */ wire_set_global_value__method__WasmRunModuleId(
           List<dynamic> that, Object global, List<dynamic> value) =>
-      wasmModule.wire_set_global_value__method__WasmitModuleId(
+      wasmModule.wire_set_global_value__method__WasmRunModuleId(
           that, global, value);
 
-  dynamic /* List<dynamic> */ wire_get_memory_type__method__WasmitModuleId(
+  dynamic /* List<dynamic> */ wire_get_memory_type__method__WasmRunModuleId(
           List<dynamic> that, Object memory) =>
-      wasmModule.wire_get_memory_type__method__WasmitModuleId(that, memory);
+      wasmModule.wire_get_memory_type__method__WasmRunModuleId(that, memory);
 
-  dynamic /* Uint8List */ wire_get_memory_data__method__WasmitModuleId(
+  dynamic /* Uint8List */ wire_get_memory_data__method__WasmRunModuleId(
           List<dynamic> that, Object memory) =>
-      wasmModule.wire_get_memory_data__method__WasmitModuleId(that, memory);
+      wasmModule.wire_get_memory_data__method__WasmRunModuleId(that, memory);
 
-  dynamic /* int */ wire_get_memory_data_pointer__method__WasmitModuleId(
+  dynamic /* int */ wire_get_memory_data_pointer__method__WasmRunModuleId(
           List<dynamic> that, Object memory) =>
-      wasmModule.wire_get_memory_data_pointer__method__WasmitModuleId(
+      wasmModule.wire_get_memory_data_pointer__method__WasmRunModuleId(
           that, memory);
 
   dynamic /* List<dynamic> */
-      wire_get_memory_data_pointer_and_length__method__WasmitModuleId(
+      wire_get_memory_data_pointer_and_length__method__WasmRunModuleId(
               List<dynamic> that, Object memory) =>
           wasmModule
-              .wire_get_memory_data_pointer_and_length__method__WasmitModuleId(
+              .wire_get_memory_data_pointer_and_length__method__WasmRunModuleId(
                   that, memory);
 
-  dynamic /* Uint8List */ wire_read_memory__method__WasmitModuleId(
+  dynamic /* Uint8List */ wire_read_memory__method__WasmRunModuleId(
           List<dynamic> that, Object memory, int offset, int bytes) =>
-      wasmModule.wire_read_memory__method__WasmitModuleId(
+      wasmModule.wire_read_memory__method__WasmRunModuleId(
           that, memory, offset, bytes);
 
-  dynamic /* int */ wire_get_memory_pages__method__WasmitModuleId(
+  dynamic /* int */ wire_get_memory_pages__method__WasmRunModuleId(
           List<dynamic> that, Object memory) =>
-      wasmModule.wire_get_memory_pages__method__WasmitModuleId(that, memory);
+      wasmModule.wire_get_memory_pages__method__WasmRunModuleId(that, memory);
 
-  dynamic /* void */ wire_write_memory__method__WasmitModuleId(
+  dynamic /* void */ wire_write_memory__method__WasmRunModuleId(
           List<dynamic> that, Object memory, int offset, Uint8List buffer) =>
-      wasmModule.wire_write_memory__method__WasmitModuleId(
+      wasmModule.wire_write_memory__method__WasmRunModuleId(
           that, memory, offset, buffer);
 
-  dynamic /* int */ wire_grow_memory__method__WasmitModuleId(
+  dynamic /* int */ wire_grow_memory__method__WasmRunModuleId(
           List<dynamic> that, Object memory, int pages) =>
-      wasmModule.wire_grow_memory__method__WasmitModuleId(that, memory, pages);
+      wasmModule.wire_grow_memory__method__WasmRunModuleId(that, memory, pages);
 
-  dynamic /* int */ wire_get_table_size__method__WasmitModuleId(
+  dynamic /* int */ wire_get_table_size__method__WasmRunModuleId(
           List<dynamic> that, Object table) =>
-      wasmModule.wire_get_table_size__method__WasmitModuleId(that, table);
+      wasmModule.wire_get_table_size__method__WasmRunModuleId(that, table);
 
-  dynamic /* List<dynamic> */ wire_get_table_type__method__WasmitModuleId(
+  dynamic /* List<dynamic> */ wire_get_table_type__method__WasmRunModuleId(
           List<dynamic> that, Object table) =>
-      wasmModule.wire_get_table_type__method__WasmitModuleId(that, table);
+      wasmModule.wire_get_table_type__method__WasmRunModuleId(that, table);
 
-  dynamic /* int */ wire_grow_table__method__WasmitModuleId(
+  dynamic /* int */ wire_grow_table__method__WasmRunModuleId(
           List<dynamic> that, Object table, int delta, List<dynamic> value) =>
-      wasmModule.wire_grow_table__method__WasmitModuleId(
+      wasmModule.wire_grow_table__method__WasmRunModuleId(
           that, table, delta, value);
 
-  dynamic /* List<dynamic>? */ wire_get_table__method__WasmitModuleId(
+  dynamic /* List<dynamic>? */ wire_get_table__method__WasmRunModuleId(
           List<dynamic> that, Object table, int index) =>
-      wasmModule.wire_get_table__method__WasmitModuleId(that, table, index);
+      wasmModule.wire_get_table__method__WasmRunModuleId(that, table, index);
 
-  dynamic /* void */ wire_set_table__method__WasmitModuleId(
+  dynamic /* void */ wire_set_table__method__WasmRunModuleId(
           List<dynamic> that, Object table, int index, List<dynamic> value) =>
-      wasmModule.wire_set_table__method__WasmitModuleId(
+      wasmModule.wire_set_table__method__WasmRunModuleId(
           that, table, index, value);
 
-  dynamic /* void */ wire_fill_table__method__WasmitModuleId(List<dynamic> that,
-          Object table, int index, List<dynamic> value, int len) =>
-      wasmModule.wire_fill_table__method__WasmitModuleId(
+  dynamic /* void */ wire_fill_table__method__WasmRunModuleId(
+          List<dynamic> that,
+          Object table,
+          int index,
+          List<dynamic> value,
+          int len) =>
+      wasmModule.wire_fill_table__method__WasmRunModuleId(
           that, table, index, value, len);
 
-  dynamic /* void */ wire_add_fuel__method__WasmitModuleId(
+  dynamic /* void */ wire_add_fuel__method__WasmRunModuleId(
           List<dynamic> that, Object delta) =>
-      wasmModule.wire_add_fuel__method__WasmitModuleId(that, delta);
+      wasmModule.wire_add_fuel__method__WasmRunModuleId(that, delta);
 
-  dynamic /* Object? */ wire_fuel_consumed__method__WasmitModuleId(
+  dynamic /* Object? */ wire_fuel_consumed__method__WasmRunModuleId(
           List<dynamic> that) =>
-      wasmModule.wire_fuel_consumed__method__WasmitModuleId(that);
+      wasmModule.wire_fuel_consumed__method__WasmRunModuleId(that);
 
-  dynamic /* Object */ wire_consume_fuel__method__WasmitModuleId(
+  dynamic /* Object */ wire_consume_fuel__method__WasmRunModuleId(
           List<dynamic> that, Object delta) =>
-      wasmModule.wire_consume_fuel__method__WasmitModuleId(that, delta);
+      wasmModule.wire_consume_fuel__method__WasmRunModuleId(that, delta);
 
   dynamic /* List<dynamic> */ wire_create_shared_memory__method__CompiledModule(
           List<dynamic> that, List<dynamic> memory_type) =>
@@ -912,43 +916,43 @@ class WasmitDartWire
           List<dynamic> that) =>
       wasmModule.wire_get_module_exports__method__CompiledModule(that);
 
-  dynamic /* List<dynamic> */ wire_ty__method__WasmitSharedMemory(
+  dynamic /* List<dynamic> */ wire_ty__method__WasmRunSharedMemory(
           List<dynamic> that) =>
-      wasmModule.wire_ty__method__WasmitSharedMemory(that);
+      wasmModule.wire_ty__method__WasmRunSharedMemory(that);
 
-  dynamic /* Object */ wire_size__method__WasmitSharedMemory(
+  dynamic /* Object */ wire_size__method__WasmRunSharedMemory(
           List<dynamic> that) =>
-      wasmModule.wire_size__method__WasmitSharedMemory(that);
+      wasmModule.wire_size__method__WasmRunSharedMemory(that);
 
-  dynamic /* int */ wire_data_size__method__WasmitSharedMemory(
+  dynamic /* int */ wire_data_size__method__WasmRunSharedMemory(
           List<dynamic> that) =>
-      wasmModule.wire_data_size__method__WasmitSharedMemory(that);
+      wasmModule.wire_data_size__method__WasmRunSharedMemory(that);
 
-  dynamic /* int */ wire_data_pointer__method__WasmitSharedMemory(
+  dynamic /* int */ wire_data_pointer__method__WasmRunSharedMemory(
           List<dynamic> that) =>
-      wasmModule.wire_data_pointer__method__WasmitSharedMemory(that);
+      wasmModule.wire_data_pointer__method__WasmRunSharedMemory(that);
 
-  dynamic /* Object */ wire_grow__method__WasmitSharedMemory(
+  dynamic /* Object */ wire_grow__method__WasmRunSharedMemory(
           List<dynamic> that, Object delta) =>
-      wasmModule.wire_grow__method__WasmitSharedMemory(that, delta);
+      wasmModule.wire_grow__method__WasmRunSharedMemory(that, delta);
 
-  void wire_atomics__method__WasmitSharedMemory(
+  void wire_atomics__method__WasmRunSharedMemory(
           NativePortType port_, List<dynamic> that) =>
-      wasmModule.wire_atomics__method__WasmitSharedMemory(port_, that);
+      wasmModule.wire_atomics__method__WasmRunSharedMemory(port_, that);
 
-  dynamic /* int */ wire_atomic_notify__method__WasmitSharedMemory(
+  dynamic /* int */ wire_atomic_notify__method__WasmRunSharedMemory(
           List<dynamic> that, Object addr, int count) =>
-      wasmModule.wire_atomic_notify__method__WasmitSharedMemory(
+      wasmModule.wire_atomic_notify__method__WasmRunSharedMemory(
           that, addr, count);
 
-  dynamic /* int */ wire_atomic_wait32__method__WasmitSharedMemory(
+  dynamic /* int */ wire_atomic_wait32__method__WasmRunSharedMemory(
           List<dynamic> that, Object addr, int expected) =>
-      wasmModule.wire_atomic_wait32__method__WasmitSharedMemory(
+      wasmModule.wire_atomic_wait32__method__WasmRunSharedMemory(
           that, addr, expected);
 
-  dynamic /* int */ wire_atomic_wait64__method__WasmitSharedMemory(
+  dynamic /* int */ wire_atomic_wait64__method__WasmRunSharedMemory(
           List<dynamic> that, Object addr, Object expected) =>
-      wasmModule.wire_atomic_wait64__method__WasmitSharedMemory(
+      wasmModule.wire_atomic_wait64__method__WasmRunSharedMemory(
           that, addr, expected);
 
   void wire_add__method__Atomics(NativePortType port_, List<dynamic> that,

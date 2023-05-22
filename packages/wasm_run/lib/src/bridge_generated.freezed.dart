@@ -685,7 +685,7 @@ mixin _$ExternalValue {
     required TResult Function(Global field0) global,
     required TResult Function(Table field0) table,
     required TResult Function(Memory field0) memory,
-    required TResult Function(WasmitSharedMemory field0) sharedMemory,
+    required TResult Function(WasmRunSharedMemory field0) sharedMemory,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
@@ -694,7 +694,7 @@ mixin _$ExternalValue {
     TResult? Function(Global field0)? global,
     TResult? Function(Table field0)? table,
     TResult? Function(Memory field0)? memory,
-    TResult? Function(WasmitSharedMemory field0)? sharedMemory,
+    TResult? Function(WasmRunSharedMemory field0)? sharedMemory,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
@@ -703,7 +703,7 @@ mixin _$ExternalValue {
     TResult Function(Global field0)? global,
     TResult Function(Table field0)? table,
     TResult Function(Memory field0)? memory,
-    TResult Function(WasmitSharedMemory field0)? sharedMemory,
+    TResult Function(WasmRunSharedMemory field0)? sharedMemory,
     required TResult orElse(),
   }) =>
       throw _privateConstructorUsedError;
@@ -824,7 +824,7 @@ class _$ExternalValue_Func implements ExternalValue_Func {
     required TResult Function(Global field0) global,
     required TResult Function(Table field0) table,
     required TResult Function(Memory field0) memory,
-    required TResult Function(WasmitSharedMemory field0) sharedMemory,
+    required TResult Function(WasmRunSharedMemory field0) sharedMemory,
   }) {
     return func(field0);
   }
@@ -836,7 +836,7 @@ class _$ExternalValue_Func implements ExternalValue_Func {
     TResult? Function(Global field0)? global,
     TResult? Function(Table field0)? table,
     TResult? Function(Memory field0)? memory,
-    TResult? Function(WasmitSharedMemory field0)? sharedMemory,
+    TResult? Function(WasmRunSharedMemory field0)? sharedMemory,
   }) {
     return func?.call(field0);
   }
@@ -848,7 +848,7 @@ class _$ExternalValue_Func implements ExternalValue_Func {
     TResult Function(Global field0)? global,
     TResult Function(Table field0)? table,
     TResult Function(Memory field0)? memory,
-    TResult Function(WasmitSharedMemory field0)? sharedMemory,
+    TResult Function(WasmRunSharedMemory field0)? sharedMemory,
     required TResult orElse(),
   }) {
     if (func != null) {
@@ -977,7 +977,7 @@ class _$ExternalValue_Global implements ExternalValue_Global {
     required TResult Function(Global field0) global,
     required TResult Function(Table field0) table,
     required TResult Function(Memory field0) memory,
-    required TResult Function(WasmitSharedMemory field0) sharedMemory,
+    required TResult Function(WasmRunSharedMemory field0) sharedMemory,
   }) {
     return global(field0);
   }
@@ -989,7 +989,7 @@ class _$ExternalValue_Global implements ExternalValue_Global {
     TResult? Function(Global field0)? global,
     TResult? Function(Table field0)? table,
     TResult? Function(Memory field0)? memory,
-    TResult? Function(WasmitSharedMemory field0)? sharedMemory,
+    TResult? Function(WasmRunSharedMemory field0)? sharedMemory,
   }) {
     return global?.call(field0);
   }
@@ -1001,7 +1001,7 @@ class _$ExternalValue_Global implements ExternalValue_Global {
     TResult Function(Global field0)? global,
     TResult Function(Table field0)? table,
     TResult Function(Memory field0)? memory,
-    TResult Function(WasmitSharedMemory field0)? sharedMemory,
+    TResult Function(WasmRunSharedMemory field0)? sharedMemory,
     required TResult orElse(),
   }) {
     if (global != null) {
@@ -1131,7 +1131,7 @@ class _$ExternalValue_Table implements ExternalValue_Table {
     required TResult Function(Global field0) global,
     required TResult Function(Table field0) table,
     required TResult Function(Memory field0) memory,
-    required TResult Function(WasmitSharedMemory field0) sharedMemory,
+    required TResult Function(WasmRunSharedMemory field0) sharedMemory,
   }) {
     return table(field0);
   }
@@ -1143,7 +1143,7 @@ class _$ExternalValue_Table implements ExternalValue_Table {
     TResult? Function(Global field0)? global,
     TResult? Function(Table field0)? table,
     TResult? Function(Memory field0)? memory,
-    TResult? Function(WasmitSharedMemory field0)? sharedMemory,
+    TResult? Function(WasmRunSharedMemory field0)? sharedMemory,
   }) {
     return table?.call(field0);
   }
@@ -1155,7 +1155,7 @@ class _$ExternalValue_Table implements ExternalValue_Table {
     TResult Function(Global field0)? global,
     TResult Function(Table field0)? table,
     TResult Function(Memory field0)? memory,
-    TResult Function(WasmitSharedMemory field0)? sharedMemory,
+    TResult Function(WasmRunSharedMemory field0)? sharedMemory,
     required TResult orElse(),
   }) {
     if (table != null) {
@@ -1284,7 +1284,7 @@ class _$ExternalValue_Memory implements ExternalValue_Memory {
     required TResult Function(Global field0) global,
     required TResult Function(Table field0) table,
     required TResult Function(Memory field0) memory,
-    required TResult Function(WasmitSharedMemory field0) sharedMemory,
+    required TResult Function(WasmRunSharedMemory field0) sharedMemory,
   }) {
     return memory(field0);
   }
@@ -1296,7 +1296,7 @@ class _$ExternalValue_Memory implements ExternalValue_Memory {
     TResult? Function(Global field0)? global,
     TResult? Function(Table field0)? table,
     TResult? Function(Memory field0)? memory,
-    TResult? Function(WasmitSharedMemory field0)? sharedMemory,
+    TResult? Function(WasmRunSharedMemory field0)? sharedMemory,
   }) {
     return memory?.call(field0);
   }
@@ -1308,7 +1308,7 @@ class _$ExternalValue_Memory implements ExternalValue_Memory {
     TResult Function(Global field0)? global,
     TResult Function(Table field0)? table,
     TResult Function(Memory field0)? memory,
-    TResult Function(WasmitSharedMemory field0)? sharedMemory,
+    TResult Function(WasmRunSharedMemory field0)? sharedMemory,
     required TResult orElse(),
   }) {
     if (memory != null) {
@@ -1376,7 +1376,7 @@ abstract class _$$ExternalValue_SharedMemoryCopyWith<$Res> {
           $Res Function(_$ExternalValue_SharedMemory) then) =
       __$$ExternalValue_SharedMemoryCopyWithImpl<$Res>;
   @useResult
-  $Res call({WasmitSharedMemory field0});
+  $Res call({WasmRunSharedMemory field0});
 }
 
 /// @nodoc
@@ -1397,7 +1397,7 @@ class __$$ExternalValue_SharedMemoryCopyWithImpl<$Res>
       null == field0
           ? _value.field0
           : field0 // ignore: cast_nullable_to_non_nullable
-              as WasmitSharedMemory,
+              as WasmRunSharedMemory,
     ));
   }
 }
@@ -1408,7 +1408,7 @@ class _$ExternalValue_SharedMemory implements ExternalValue_SharedMemory {
   const _$ExternalValue_SharedMemory(this.field0);
 
   @override
-  final WasmitSharedMemory field0;
+  final WasmRunSharedMemory field0;
 
   @override
   String toString() {
@@ -1440,7 +1440,7 @@ class _$ExternalValue_SharedMemory implements ExternalValue_SharedMemory {
     required TResult Function(Global field0) global,
     required TResult Function(Table field0) table,
     required TResult Function(Memory field0) memory,
-    required TResult Function(WasmitSharedMemory field0) sharedMemory,
+    required TResult Function(WasmRunSharedMemory field0) sharedMemory,
   }) {
     return sharedMemory(field0);
   }
@@ -1452,7 +1452,7 @@ class _$ExternalValue_SharedMemory implements ExternalValue_SharedMemory {
     TResult? Function(Global field0)? global,
     TResult? Function(Table field0)? table,
     TResult? Function(Memory field0)? memory,
-    TResult? Function(WasmitSharedMemory field0)? sharedMemory,
+    TResult? Function(WasmRunSharedMemory field0)? sharedMemory,
   }) {
     return sharedMemory?.call(field0);
   }
@@ -1464,7 +1464,7 @@ class _$ExternalValue_SharedMemory implements ExternalValue_SharedMemory {
     TResult Function(Global field0)? global,
     TResult Function(Table field0)? table,
     TResult Function(Memory field0)? memory,
-    TResult Function(WasmitSharedMemory field0)? sharedMemory,
+    TResult Function(WasmRunSharedMemory field0)? sharedMemory,
     required TResult orElse(),
   }) {
     if (sharedMemory != null) {
@@ -1515,11 +1515,11 @@ class _$ExternalValue_SharedMemory implements ExternalValue_SharedMemory {
 }
 
 abstract class ExternalValue_SharedMemory implements ExternalValue {
-  const factory ExternalValue_SharedMemory(final WasmitSharedMemory field0) =
+  const factory ExternalValue_SharedMemory(final WasmRunSharedMemory field0) =
       _$ExternalValue_SharedMemory;
 
   @override
-  WasmitSharedMemory get field0;
+  WasmRunSharedMemory get field0;
   @JsonKey(ignore: true)
   _$$ExternalValue_SharedMemoryCopyWith<_$ExternalValue_SharedMemory>
       get copyWith => throw _privateConstructorUsedError;
