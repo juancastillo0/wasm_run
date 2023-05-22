@@ -1,4 +1,4 @@
-package com.example.flutter_wasm_run_example
+package com.example.wasm_run_flutter_example
 
 import io.flutter.embedding.android.FlutterActivity
 

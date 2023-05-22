@@ -27,7 +27,7 @@ jobs:
       - name: Create the new version(s)
         run: melos version --yes --ignore '*' \
           --manual-version wasm_run:${{ inputs.version_parameters }} \
-          --manual-version flutter_wasm_run:${{ inputs.version_parameters }}
+          --manual-version wasm_run_flutter:${{ inputs.version_parameters }}
 
       - name: Push created version commit
         run: git push

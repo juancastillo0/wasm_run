@@ -122,7 +122,7 @@ jobs:
         working-directory: packages/wasm_run
         if: always() && steps.chromedriver.outcome == 'success'
       - run: flutter drive --driver=test_driver/integration_test.dart --target=integration_test/main_test.dart -d web-server --browser-name=chrome --driver-port=4445
-        working-directory: packages/flutter_wasm_run/example
+        working-directory: packages/wasm_run_flutter/example
         if: always() && steps.chromedriver.outcome == 'success'
 
       # Firefox
@@ -134,7 +134,7 @@ jobs:
         id: firefoxdriver
         if: always()
       - run: flutter drive --driver=test_driver/integration_test.dart --target=integration_test/main_test.dart -d web-server --browser-name=firefox --driver-port=4446
-        working-directory: packages/flutter_wasm_run/example
+        working-directory: packages/wasm_run_flutter/example
         if: always() && steps.firefoxdriver.outcome == 'success'
       - run: |
           Xvfb :99 -screen 0 1024x768x16 &
@@ -162,14 +162,14 @@ jobs:
       - name: Copy the XCFramework to the needed location
         run: |
           CURR_VERSION=wasm_run-v`awk '/^version: /{print $2}' packages/wasm_run/pubspec.yaml`
-          cp platform-build/WasmRun.xcframework.zip packages/flutter_wasm_run/macos/Frameworks/$CURR_VERSION.zip
+          cp platform-build/WasmRun.xcframework.zip packages/wasm_run_flutter/macos/Frameworks/$CURR_VERSION.zip
           echo Copied file!
 
       - name: Build Flutter MacOS example
-        working-directory: packages/flutter_wasm_run/example
+        working-directory: packages/wasm_run_flutter/example
         run: flutter build macos --target=integration_test/main_test.dart --debug
       - name: Run Flutter integration tests
-        working-directory: packages/flutter_wasm_run/example
+        working-directory: packages/wasm_run_flutter/example
         run: flutter test -d macos integration_test --timeout "1200s" # 20 minutes
 
       # Web Browser tests
@@ -191,7 +191,7 @@ jobs:
         working-directory: packages/wasm_run
         if: always() && steps.safaridriver.outcome == 'success'
       - run: flutter drive --driver=test_driver/integration_test.dart --target=integration_test/main_test.dart -d web-server --browser-name=safari --driver-port=4444
-        working-directory: packages/flutter_wasm_run/example
+        working-directory: packages/wasm_run_flutter/example
         if: always() && steps.safaridriver.outcome == 'success'
 
       # Chrome
@@ -203,7 +203,7 @@ jobs:
         working-directory: packages/wasm_run
         if: always() && steps.chromedriver.outcome == 'success'
       - run: flutter drive --driver=test_driver/integration_test.dart --target=integration_test/main_test.dart -d web-server --browser-name=chrome --driver-port=4445
-        working-directory: packages/flutter_wasm_run/example
+        working-directory: packages/wasm_run_flutter/example
         if: always() && steps.chromedriver.outcome == 'success'
 
       # Firefox
@@ -215,7 +215,7 @@ jobs:
         working-directory: packages/wasm_run
         if: always() && steps.firefoxdriver.outcome == 'success'
       - run: flutter drive --driver=test_driver/integration_test.dart --target=integration_test/main_test.dart -d web-server --browser-name=firefox --driver-port=4446
-        working-directory: packages/flutter_wasm_run/example
+        working-directory: packages/wasm_run_flutter/example
         if: always() && steps.firefoxdriver.outcome == 'success'
 
   windows_integration_test:
@@ -242,11 +242,11 @@ jobs:
         shell: bash
         run: |
           CURR_VERSION=wasm_run-v`awk '/^version: /{print $2}' packages/wasm_run/pubspec.yaml`
-          cp platform-build/other.tar.gz packages/flutter_wasm_run/windows/$CURR_VERSION.tar.gz
+          cp platform-build/other.tar.gz packages/wasm_run_flutter/windows/$CURR_VERSION.tar.gz
           echo Copied file!
 
       - name: Run Flutter integration tests
-        working-directory: packages/flutter_wasm_run/example
+        working-directory: packages/wasm_run_flutter/example
         run: flutter test -d windows integration_test
 
   linux_integration_test:
@@ -275,11 +275,11 @@ jobs:
       - name: Copy the binaries to the needed location
         run: |
           CURR_VERSION=wasm_run-v`awk '/^version: /{print $2}' packages/wasm_run/pubspec.yaml`
-          cp platform-build/other.tar.gz packages/flutter_wasm_run/linux/$CURR_VERSION.tar.gz
+          cp platform-build/other.tar.gz packages/wasm_run_flutter/linux/$CURR_VERSION.tar.gz
           echo Copied file!
 
       - name: Run Flutter integration tests
-        working-directory: packages/flutter_wasm_run/example
+        working-directory: packages/wasm_run_flutter/example
         run: flutter test -d linux integration_test
 
   ios_integration_test:
@@ -307,11 +307,11 @@ jobs:
       - name: Copy the XCFramework to the needed location
         run: |
           CURR_VERSION=wasm_run-v`awk '/^version: /{print $2}' packages/wasm_run/pubspec.yaml`
-          cp platform-build/WasmRun.xcframework.zip packages/flutter_wasm_run/ios/Frameworks/$CURR_VERSION.zip
+          cp platform-build/WasmRun.xcframework.zip packages/wasm_run_flutter/ios/Frameworks/$CURR_VERSION.zip
           echo Copied file!
 
       - name: Run Flutter integration tests
-        working-directory: packages/flutter_wasm_run/example
+        working-directory: packages/wasm_run_flutter/example
         run: flutter test -d ${{ env.DEVICE_ID }} integration_test
 
   android_integration_test:
@@ -343,11 +343,11 @@ jobs:
       - name: Copy the binaries to the needed location
         run: |
           CURR_VERSION=wasm_run-v`awk '/^version: /{print $2}' packages/wasm_run/pubspec.yaml`
-          cp platform-build/android.tar.gz packages/flutter_wasm_run/android/$CURR_VERSION.tar.gz
+          cp platform-build/android.tar.gz packages/wasm_run_flutter/android/$CURR_VERSION.tar.gz
           echo Copied file!
 
       - name: Build Flutter Android APK example
-        working-directory: packages/flutter_wasm_run/example
+        working-directory: packages/wasm_run_flutter/example
         run: flutter build apk --target=integration_test/main_test.dart --debug
       - name: Run Flutter integration tests
         uses: Wandalen/wretry.action@master # sometimes android tests are flaky
@@ -361,7 +361,7 @@ jobs:
             ram-size: 1024M
             disk-size: 2048M
             arch: ${{ matrix.arch }}
-            working-directory: packages/flutter_wasm_run/example
+            working-directory: packages/wasm_run_flutter/example
             script: flutter test -d `flutter devices | grep android | tr ' ' '\n' | grep emulator-` integration_test
 
   android_integration_test_cached:
@@ -393,7 +393,7 @@ jobs:
       - name: Copy the binaries to the needed location
         run: |
           CURR_VERSION=wasm_run-v`awk '/^version: /{print $2}' packages/wasm_run/pubspec.yaml`
-          cp platform-build/android.tar.gz packages/flutter_wasm_run/android/$CURR_VERSION.tar.gz
+          cp platform-build/android.tar.gz packages/wasm_run_flutter/android/$CURR_VERSION.tar.gz
           echo Copied file!
 
       - name: Gradle cache
@@ -433,4 +433,4 @@ jobs:
           arch: ${{ matrix.arch }}
           ram-size: 1024M
           disk-size: 2048M
-          script: cd packages/flutter_wasm_run/example && flutter test -d `flutter devices | grep android | tr ' ' '\n' | grep emulator-` integration_test && echo "Finished Android integration tests"
+          script: cd packages/wasm_run_flutter/example && flutter test -d `flutter devices | grep android | tr ' ' '\n' | grep emulator-` integration_test && echo "Finished Android integration tests"

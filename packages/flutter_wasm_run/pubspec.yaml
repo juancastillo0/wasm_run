@@ -1,4 +1,4 @@
-name: flutter_wasm_run
+name: wasm_run_flutter
 description: This library contains the necessary platform bindings for executing `package:wasm_run`'s WASM API
 version: 0.0.1
 homepage: https://github.com/juancastillo0/wasm_interpreter
@@ -50,8 +50,8 @@ flutter:
       windows:
         ffiPlugin: true
       web:
-        pluginClass: FlutterWasmRunWeb
-        fileName: flutter_wasm_run_web.dart
+        pluginClass: WasmRunFlutterWeb
+        fileName: wasm_run_flutter_web.dart
 
   # To add assets to your plugin package, add an assets section, like this:
   # assets:

@@ -11,7 +11,7 @@ set(FLUTTER_TARGET_PLATFORM windows-x64)
 cmake_minimum_required(VERSION 3.14)
 
 # Project-level configuration.
-set(PROJECT_NAME "flutter_wasm_run")
+set(PROJECT_NAME "wasm_run_flutter")
 project(${PROJECT_NAME} LANGUAGES CXX)
 
 # Download the binaries if they are not already present.
@@ -36,7 +36,7 @@ execute_process(
 # List of absolute paths to libraries that should be bundled with the plugin.
 # This list could contain prebuilt libraries, or libraries created by an
 # external build triggered from this build file.
-set(flutter_wasm_run_bundled_libraries
+set(wasm_run_flutter_bundled_libraries
   "${LibRoot}/${FLUTTER_TARGET_PLATFORM}/wasm_run_dart.dll"
   PARENT_SCOPE
 )

@@ -2,7 +2,7 @@ import 'dart:html' as html;
 
 import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 
-class FlutterWasmRunWeb {
+class WasmRunFlutterWeb {
   static void registerWith(Registrar registrar) {
     _injectSrcScript('./packages/wasm_run/assets/wasm-feature-detect.js');
     _injectSrcScript(

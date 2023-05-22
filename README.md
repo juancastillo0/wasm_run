@@ -88,7 +88,7 @@ Currently it uses the [`wasmtime 8.0`](https://github.com/bytecodealliance/wasmt
 
 ### Flutter
 
-We provide [`package:flutter_wasm_run`](./packages/flutter_wasm_run/) to bundle the right binaries for your platform compilation targets.
+We provide [`package:wasm_run_flutter`](./packages/wasm_run_flutter/) to bundle the right binaries for your platform compilation targets.
 
 #### Runtime for Platform
 
@@ -218,7 +218,7 @@ When using Flutter:
 dependencies:
   flutter:
     sdk: flutter
-  flutter_wasm_run: 0.0.1
+  wasm_run_flutter: 0.0.1
 ```
 
 ## Usage

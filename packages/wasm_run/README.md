@@ -12,7 +12,7 @@ For pure Dart application (backend or cli, for example), you may download the co
 
 # Flutter
 
-When using it in a Flutter project you should use [`package:flutter_wasm_run`](https://pub.dev/packages/flutter_wasm_run) instead, since it will provide the right binaries for your platform.
+When using it in a Flutter project you should use [`package:wasm_run_flutter`](https://pub.dev/packages/wasm_run_flutter) instead, since it will provide the right binaries for your platform.
 
 # Dart Web (Not Flutter Web)
 

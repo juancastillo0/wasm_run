@@ -1,6 +1,6 @@
 // The Android Gradle Plugin builds the native code with the Android NDK.
 
-group 'com.example.flutter_wasm_run'
+group 'com.example.wasm_run_flutter'
 version '1.0'
 
 buildscript {

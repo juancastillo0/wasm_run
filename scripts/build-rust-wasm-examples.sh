@@ -11,7 +11,7 @@ if [[ $BUILD_PROFILE == "dev" ]]; then BUILD_PROFILE_PATH="debug"; fi
 rustup target add wasm32-wasi
 cargo build --target wasm32-wasi --profile $BUILD_PROFILE \
     --manifest-path packages/rust_wasi_example/Cargo.toml
-cp -fr packages/rust_wasi_example/target/wasm32-wasi/$BUILD_PROFILE_PATH/rust_wasi_example.wasm packages/flutter_wasm_run/example/assets/rust_wasi_example.wasm
+cp -fr packages/rust_wasi_example/target/wasm32-wasi/$BUILD_PROFILE_PATH/rust_wasi_example.wasm packages/wasm_run_flutter/example/assets/rust_wasi_example.wasm
 
 # rust_threads_example
 rustup +nightly target add wasm32-unknown-unknown
@@ -19,4 +19,4 @@ rustup +nightly component add rust-src
 RUSTFLAGS='-C target-feature=+atomics,+bulk-memory,+mutable-globals' \
     cargo +nightly build --target wasm32-unknown-unknown --profile $BUILD_PROFILE -Z build-std=std,panic_abort \
     --manifest-path packages/rust_threads_example/Cargo.toml
-cp -fr packages/rust_threads_example/target/wasm32-unknown-unknown/$BUILD_PROFILE_PATH/rust_threads_example.wasm packages/flutter_wasm_run/example/assets/rust_threads_example.wasm
+cp -fr packages/rust_threads_example/target/wasm32-unknown-unknown/$BUILD_PROFILE_PATH/rust_threads_example.wasm packages/wasm_run_flutter/example/assets/rust_threads_example.wasm

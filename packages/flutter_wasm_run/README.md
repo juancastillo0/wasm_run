@@ -1,4 +1,4 @@
-# flutter_wasm_run
+# wasm_run_flutter
 
 A Web Assembly executor for the Dart programming language.
 

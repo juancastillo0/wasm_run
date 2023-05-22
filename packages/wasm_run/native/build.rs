@@ -7,8 +7,8 @@ use lib_flutter_rust_bridge_codegen::{
 const RUST_INPUT: &str = "src/api.rs";
 const DART_OUTPUT: &str = "../lib/src/bridge_generated.dart";
 
-const IOS_C_OUTPUT: &str = "../../flutter_wasm_run/ios/Classes/frb.h";
-const MACOS_C_OUTPUT_DIR: &str = "../../flutter_wasm_run/macos/Classes/";
+const IOS_C_OUTPUT: &str = "../../wasm_run_flutter/ios/Classes/frb.h";
+const MACOS_C_OUTPUT_DIR: &str = "../../wasm_run_flutter/macos/Classes/";
 
 fn main() {
     // Tell Cargo that if the input Rust code changes, rerun this build script
