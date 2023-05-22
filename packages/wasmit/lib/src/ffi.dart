@@ -37,12 +37,14 @@ WasmitDart defaultInstance() {
       final externalLib = localTestingLibraryImpl();
       return createWrapper(externalLib);
     } catch (_) {
-      print(
-        'When building a pure Dart application (backend or cli, for example),'
-        ' you must call `setDynamicLibrary(<nativeLibraryForYourPlatform>)`'
-        ' before using the library. The <nativeLibraryForYourPlatform> can be download'
-        ' from the releases of the github repository of the package.',
-      );
+      if (!identical(0, 0.0)) {
+        print(
+          'When building a pure Dart application (backend or cli, for example),'
+          ' you must call `setDynamicLibrary(<nativeLibraryForYourPlatform>)`'
+          ' before using the library. The <nativeLibraryForYourPlatform> can be download'
+          ' from the releases of the github repository of the package.',
+        );
+      }
       rethrow;
     }
   }

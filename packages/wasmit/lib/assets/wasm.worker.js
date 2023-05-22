@@ -15,7 +15,7 @@ function sendMessage(data) {
 }
 
 /**
- * @typedef {Object} MapImportsArgs2
+ * @typedef {Object} MapImportsArgs
  * @property {WebAssembly.Imports} imports
  * @property {number} workerId
  * @property {WebAssembly.Module} module
@@ -124,7 +124,7 @@ onmessage = (e) => {
       if (data.workerMapImportsScriptUrl) {
         importScripts(data.workerMapImportsScriptUrl);
 
-        /** @type {MapImportsArgs2} */
+        /** @type {MapImportsArgs} */
         const args = {
           imports: wasmImports,
           module: data.wasmModule,

@@ -8,6 +8,7 @@ import 'dart:typed_data';
 import 'package:test/test.dart';
 import 'package:wasmit/wasmit.dart';
 import 'package:wasmit_example/main.dart';
+import 'package:wasmit_example/runner_identity/runner_identity.dart';
 import 'package:wasmit_example/threads_base64.dart';
 
 // dart test test/main_test -c source --release -n threads
@@ -116,31 +117,40 @@ void threadsTest({TestArgs? testArgs}) {
   test('threads-state web custom import', skip: !isWeb, () async {
     final workerMessages = <Object?>[];
     await threadsStateTest(onWorkerMessage: workerMessages.add);
-    if (isWeb) {
-      await Future<void>.delayed(const Duration(milliseconds: 10));
-      expect(
-        workerMessages.skip(workerMessages.length - 2).map(
-          (e_) {
-            final e = e_! as Map;
-            return {...e, 'arg': i64.toInt(e['arg'] as Object)};
-          },
-        ).toList(),
-        [
-          {
-            'kind': 'call',
-            'function': 'host_map_state',
-            'arg': 6,
-            'workerId': isA<int>(),
-          },
-          {
-            'kind': 'call',
-            'function': 'host_map_state',
-            'arg': 7,
-            'workerId': isA<int>(),
-          },
-        ],
+
+    final features = await wasmRuntimeFeatures();
+    if (getRunnerIdentity().contains('Chrome') &&
+        !features.supportedFeatures.threads) {
+      throw Exception(
+        'You should enable threads in Chrome'
+        ' by passing `--enable-features=SharedArrayBuffer` to Chrome',
       );
     }
+    if (!features.supportedFeatures.threads) return;
+
+    await Future<void>.delayed(const Duration(milliseconds: 10));
+    expect(
+      workerMessages.skip(workerMessages.length - 2).map(
+        (e_) {
+          final e = e_! as Map;
+          return {...e, 'arg': i64.toInt(e['arg'] as Object)};
+        },
+      ).toList(),
+      [
+        {
+          'kind': 'call',
+          'function': 'host_map_state',
+          'arg': 6,
+          'workerId': isA<int>(),
+        },
+        {
+          'kind': 'call',
+          'function': 'host_map_state',
+          'arg': 7,
+          'workerId': isA<int>(),
+        },
+      ],
+    );
   });
 }
 
