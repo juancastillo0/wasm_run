@@ -15,7 +15,7 @@ set(ArchivePath "${LibRoot}.tar.gz")
 
 if(NOT EXISTS ${ArchivePath})
   file(DOWNLOAD
-    "https://github.com/juancastillo0/wasm_interpreter/releases/download/${LibraryVersion}/other.tar.gz"
+    "https://github.com/juancastillo0/wasm_run/releases/download/${LibraryVersion}/other.tar.gz"
     ${ArchivePath}
     TLS_VERIFY ON
   )

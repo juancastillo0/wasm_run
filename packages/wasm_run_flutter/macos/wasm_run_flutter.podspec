@@ -4,7 +4,7 @@ release_tag_name = 'wasm_run-v0.0.1' # generated; do not edit
 # so we have to fetch the correct version here.
 framework_name = 'WasmRun.xcframework'
 remote_zip_name = "#{framework_name}.zip"
-url = "https://github.com/juancastillo0/wasm_interpreter/releases/download/#{release_tag_name}/#{remote_zip_name}"
+url = "https://github.com/juancastillo0/wasm_run/releases/download/#{release_tag_name}/#{remote_zip_name}"
 local_zip_name = "#{release_tag_name}.zip"
 `
 cd Frameworks
@@ -24,7 +24,7 @@ Pod::Spec.new do |s|
   s.version       = '0.0.1'
   s.summary       = 'iOS/macOS Flutter bindings for wasm_run'
   s.license       = { :file => '../LICENSE' }
-  s.homepage      = 'https://github.com/juancastillo0/wasm_interpreter'
+  s.homepage      = 'https://github.com/juancastillo0/wasm_run'
   s.authors       = { 'Juan Manuel Castillo' => '42351046+juancastillo0@users.noreply.github.com' }
 
   # This will ensure the source files in Classes/ are included in the native

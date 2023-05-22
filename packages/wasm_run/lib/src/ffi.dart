@@ -21,7 +21,7 @@ WasmRunDart createWrapper(ExternalLibrary lib) {
 /// you must call `setDynamicLibrary(<nativeLibraryForYourPlatform>)`
 /// before using the package. The <nativeLibraryForYourPlatform> can be
 /// downloaded from the releases of the Github repository of the package:
-/// https://github.com/juancastillo0/wasm_interpreter/releases
+/// https://github.com/juancastillo0/wasm_run/releases
 void setDynamicLibrary(ExternalLibrary lib) {
   createWrapper(lib);
 }

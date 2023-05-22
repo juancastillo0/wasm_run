@@ -6,7 +6,7 @@
 /// [`package:flutter_rust_bridge`](https://github.com/fzyzcjy/flutter_rust_bridge).
 ///
 /// For more information on usage and documentation, please visit the
-/// main repository: https://github.com/juancastillo0/wasm_interpreter.
+/// main repository: https://github.com/juancastillo0/wasm_run.
 library wasm_run;
 
 export 'src/ffi.dart' show setDynamicLibrary;

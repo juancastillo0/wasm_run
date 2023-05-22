@@ -1,6 +1,6 @@
 name: wasm_run
 
-repository: https://github.com/juancastillo0/wasm_interpreter
+repository: https://github.com/juancastillo0/wasm_run
 
 packages:
   - packages/**

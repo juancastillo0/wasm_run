@@ -11,10 +11,10 @@ and the Flutter guide for
 [developing packages and plugins](https://flutter.dev/developing-packages). 
 -->
 
-[![Code coverage Coveralls](https://coveralls.io/repos/github/juancastillo0/dart_interpreter/badge.svg?branch=main)](https://coveralls.io/github/juancastillo0/dart_interpreter?branch=main)
-[![Code coverage Codecov](https://codecov.io/gh/juancastillo0/dart_interpreter/branch/main/graph/badge.svg?token=QJLQSCIJ42)](https://codecov.io/gh/juancastillo0/dart_interpreter)
-[![Build & Test](https://github.com/juancastillo0/wasm_interpreter/actions/workflows/build.yaml/badge.svg)](https://github.com/juancastillo0/wasm_interpreter/actions/workflows/build.yaml)
-[![dart_interpreter is released under the MIT license.](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/juancastillo0/dart_interpreter/blob/main/LICENSE)
+[![Code coverage Coveralls](https://coveralls.io/repos/github/juancastillo0/wasm_run/badge.svg?branch=main)](https://coveralls.io/github/juancastillo0/wasm_run?branch=main)
+[![Code coverage Codecov](https://codecov.io/gh/juancastillo0/wasm_run/branch/main/graph/badge.svg?token=QJLQSCIJ42)](https://codecov.io/gh/juancastillo0/wasm_run)
+[![Build & Test](https://github.com/juancastillo0/wasm_run/actions/workflows/build.yaml/badge.svg)](https://github.com/juancastillo0/wasm_run/actions/workflows/build.yaml)
+[![wasm_run is released under the MIT license.](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/juancastillo0/wasm_run/blob/main/LICENSE)
 [![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](#contributing)
 
 # Dart Wasm Interpreter
@@ -106,7 +106,7 @@ We provide [`package:wasm_run_flutter`](./packages/wasm_run_flutter/) to bundle 
 
 ### Pure Dart (CLI/Backend/Web)
 
-For pure Dart application (backend or cli, for example), you may download the compiled dynamic libraries for each platform and specify the `ffi.DynamicLibrary` in the `setDynamicLibrary` function or execute the [script](./packages/wasm_run/bin/setup.dart) `dart run wasm_run:setup` to download the right library for your current platform and configure it so that you don't need to call `setDynamicLibrary` manually. The compiled libraries can be found in the [releases assets](https://github.com/juancastillo0/wasm_interpreter/releases) of this repository.
+For pure Dart application (backend or cli, for example), you may download the compiled dynamic libraries for each platform and specify the `ffi.DynamicLibrary` in the `setDynamicLibrary` function or execute the [script](./packages/wasm_run/bin/setup.dart) `dart run wasm_run:setup` to download the right library for your current platform and configure it so that you don't need to call `setDynamicLibrary` manually. The compiled libraries can be found in the [releases assets](https://github.com/juancastillo0/wasm_run/releases) of this repository.
 
 For the web platform we provide the same interface but it uses the WASM runtime provided by the browser instead of the native library (you may also use the Wasmi WASM module // TODO: not implemented yet).
 

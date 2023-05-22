@@ -1,7 +1,7 @@
 name: wasm_run
 description: A starting point for Dart libraries or applications.
 version: 0.0.1
-homepage: https://github.com/juancastillo0/wasm_interpreter
+homepage: https://github.com/juancastillo0/wasm_run
 
 environment:
   sdk: '>=2.19.0 <3.0.0'

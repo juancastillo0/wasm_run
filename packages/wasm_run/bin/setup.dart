@@ -33,7 +33,7 @@ Future<void> main() async {
   }
 
   const baseUrl =
-      'https://github.com/juancastillo0/wasm_interpreter/releases/download';
+      'https://github.com/juancastillo0/wasm_run/releases/download';
   const version = '0.0.1';
   final archiveName = Platform.isMacOS ? 'macos.tar.gz' : 'other.tar.gz';
   final archiveUrl = '$baseUrl/wasm_run-$version/$archiveName';
