@@ -138,7 +138,7 @@ WasmVal_funcRef _makeFunction(WasmFunction function, WasmitModuleId module) {
   final func = module.createFunction(
     functionPointer: _References.globalWasmFunctionPointer,
     functionId: functionId,
-    paramTypes: function.params.map((v) => v!).toList(growable: false),
+    paramTypes: function.params.cast(),
     resultTypes: function.results!,
   );
   return WasmVal_funcRef(func);
@@ -153,7 +153,7 @@ WasmExternalKind _toImpExpKind(ExternalType kind) {
   );
 }
 
-WasmFunction _toWasmFunction(WFunc func, WasmitModuleId module) {
+WasmFunction _toWasmFunction(WFunc func, WasmitModuleId module, String? name) {
   final type = module.getFunctionType(func: func);
   final params = type.parameters;
 
@@ -181,16 +181,7 @@ WasmFunction _toWasmFunction(WFunc func, WasmitModuleId module) {
     params: params,
     results: type.results,
     call: call,
-    callAsync: ([args]) async {
-      final result = await module.callFunctionHandle(
-        func: func,
-        args: mapArgs(args),
-      );
-      if (result.isEmpty) return const [];
-      return result
-          .map((r) => _References.dartValueFromWasm(r, module))
-          .toList();
-    },
+    name: name,
     makeFunctionNumArgs(
       params.length,
       (List<Object?> args) {
@@ -208,7 +199,7 @@ WasmExternal _toWasmExternal(ModuleExportValue value, _Instance instance) {
   final module = instance.builder.module;
   return value.value.when(
     sharedMemory: _SharedMemory.new,
-    func: (func) => _toWasmFunction(func, module),
+    func: (func) => _toWasmFunction(func, module, value.desc.name),
     global: (global) => _Global(global, module),
     table: (table) => _Table(table, module),
     memory: (memory) => _Memory(memory, module),
@@ -378,7 +369,7 @@ class _References {
       v128: (field0) => field0,
       funcRef: (func) {
         if (func == null) return null;
-        return _toWasmFunction(func, module);
+        return _toWasmFunction(func, module, null);
       },
       externRef: (id) => getReference(id, module),
     );
@@ -393,7 +384,7 @@ class _References {
       v128: WasmValue.v128,
       funcRef: (func) {
         if (func == null) return const WasmValue.funcRef(null);
-        return WasmValue.funcRef(_toWasmFunction(func, module));
+        return WasmValue.funcRef(_toWasmFunction(func, module, null));
       },
       externRef: (id) => WasmValue.externRef(getReference(id, module)),
     );
@@ -659,6 +650,7 @@ class _Instance extends WasmInstance {
                   .sublist(index * resultsLength, (index + 1) * resultsLength)
                   .map((e) => _References.dartValueFromWasm(e, runner))
                   .toList(growable: false),
+              growable: false,
             );
             completer.complete(mappedResults);
           },
@@ -822,7 +814,7 @@ class _WasmFunction extends WasmFunction {
     this.func, {
     required super.params,
     required super.results,
-    super.callAsync,
+    super.name,
     super.call,
   });
 

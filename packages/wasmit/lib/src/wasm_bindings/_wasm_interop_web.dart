@@ -455,7 +455,7 @@ class _Instance extends WasmInstance {
       Map.fromEntries(
         instance.functions.entries
             .map<MapEntry<String, WasmExternal>>(
-              (e) => MapEntry(e.key, _makeWasmFunction(e.value, this)),
+              (e) => MapEntry(e.key, _makeWasmFunction(e.value, e.key)),
             )
             .followedBy(
               instance.globals.entries
@@ -565,28 +565,38 @@ class _Instance extends WasmInstance {
   }
 }
 
-WasmExternal _makeWasmFunction(Function value, _Instance? instance) {
+WasmExternal _makeWasmFunction(Function value, String? name) {
   final ty = _getFuncType(value);
   final params = ty?.parameters.cast<ValueTy?>() ??
       List.filled(
         js_util.getProperty(value, 'length') as int,
         null,
       );
-  late final WasmFunction function;
-  function = WasmFunction(
+
+  bool hasBigInt64 = false;
+  try {
+    Function.apply(value, List.filled(params.length, 0));
+  } catch (e) {
+    hasBigInt64 =
+        e.toString().startsWith("NoSuchMethodError: method not found: 'call'");
+  }
+  final function = WasmFunction(
     value,
+    name: name,
     params: params,
+    call: ([args]) {
+      final Object? result;
+      if (hasBigInt64) {
+        result = js_util.callMethod<Object?>(value, 'apply', [null, args]);
+      } else {
+        result = Function.apply(value, args ?? const []);
+      }
+      if (result is List) return result;
+      if (isVoidReturn(result)) return const [];
+      return List.filled(1, result);
+    },
     // results is not supported on web https://github.com/WebAssembly/js-types/blob/main/proposals/js-types/Overview.md
     results: ty?.results,
-    callAsync: instance == null
-        ? null
-        : ([args]) async {
-            final result = await instance.runParallel(
-              function,
-              [args ?? const []],
-            );
-            return result[0];
-          },
   );
   return function;
 }
@@ -699,7 +709,6 @@ class _Table extends WasmTable {
     if (v is Function &&
         v is! WasmFunction &&
         js_util.hasProperty(v, 'length')) {
-      // TODO: support callAsync
       return _makeWasmFunction(v, null);
     }
     return v;

@@ -319,7 +319,7 @@ Future<void> main({bool onlyTest = false, TestArgs? testArgs}) async {
   final stopwatchWasm = Stopwatch()..start();
   List<Object?> asyncSum = [];
   for (int i = 0; i < count; i++) {
-    asyncSum = await sumFunc.callAsync!([pointer, numInts]);
+    asyncSum = sumFunc.call([pointer, numInts]);
   }
   stopwatchWasm.stop();
   print('wasm: ${stopwatchWasm.elapsedMilliseconds}ms, count: $count');

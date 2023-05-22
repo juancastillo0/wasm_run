@@ -563,7 +563,28 @@ void testAll({TestArgs? testArgs}) {
 
     final params = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(i64.fromInt).toList();
     expect(roundTripMany(params), params);
-    expect(Function.apply(roundTripMany.inner, params), params);
+    if (!isLibrary) {
+      // TODO: this throws in the browser:
+      // NoSuchMethodError: method not found: 'call'
+      // Receiver: Instance of 'JavaScriptFunction'
+      // Arguments: [Instance of 'BigInt', Instan
+      //
+      // But you may use roundTripMany.call(params) instead
+      expect(Function.apply(roundTripMany.inner, params), params);
+    }
+    final results = roundTripMany.inner(
+      i64.fromInt(1),
+      i64.fromInt(2),
+      i64.fromInt(3),
+      i64.fromInt(4),
+      i64.fromInt(5),
+      i64.fromInt(6),
+      i64.fromInt(7),
+      i64.fromInt(8),
+      i64.fromInt(9),
+      i64.fromInt(10),
+    );
+    expect(results, params);
   });
 
   /// SIMD v128 tests
@@ -604,47 +625,6 @@ void testAll({TestArgs? testArgs}) {
     final l = ['2'];
     table.set(1, WasmValue.externRef(l));
     expect(identical(l, table.get(1)), true);
-  });
-
-  test('call async', skip: !isLibrary, () async {
-    final binary = await getBinary(
-      wat: r'''
-(module
-  (func $fibonacci (param $n i32) (result i32)
-    (if
-      (i32.lt_s (local.get $n) (i32.const 2))
-      (return (local.get $n))
-    )
-    (i32.add
-      (call $fibonacci (i32.sub (local.get $n) (i32.const 1)))
-      (call $fibonacci (i32.sub (local.get $n) (i32.const 2)))
-    )
-  )
-  (export "fibonacci" (func $fibonacci))
-)
-''',
-      base64Binary:
-          'AGFzbQEAAAABBgFgAX8BfwMCAQAHDQEJZmlib25hY2NpAAAKHgEcACAAQQJIBEAgAA8LIABBAWsQACAAQQJrEABqCwAbBG5hbWUBDAEACWZpYm9uYWNjaQIGAQABAAFu',
-    );
-    final module = await compileWasmModule(binary);
-    final instance = await module.builder().build();
-
-    final fibonacci = instance.getFunction('fibonacci')!;
-
-    final result = await fibonacci.callAsync!([7]);
-    expect(result, [13]);
-
-    final values = await Future.wait([
-      fibonacci.callAsync!([7]),
-      fibonacci.callAsync!([8]),
-      fibonacci.callAsync!([9]),
-    ]);
-
-    expect(values, [
-      [13],
-      [21],
-      [34],
-    ]);
   });
 
   /// https://github.com/bytecodealliance/wasmtime/blob/main/examples/fuel.rs

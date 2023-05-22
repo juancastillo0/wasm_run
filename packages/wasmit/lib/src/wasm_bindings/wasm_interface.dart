@@ -433,7 +433,7 @@ class WasmFunction extends WasmExternal {
     this.inner, {
     required this.params,
     required this.results,
-    this.callAsync,
+    this.name,
     List<Object?> Function([List<Object?>? args])? call,
   }) : _call = call;
 
@@ -441,10 +441,13 @@ class WasmFunction extends WasmExternal {
   const WasmFunction.voidReturn(
     this.inner, {
     required this.params,
-    this.callAsync,
+    this.name,
     List<Object?> Function([List<Object?>? args])? call,
   })  : results = const [],
         _call = call;
+
+  /// Optional name for debugging purposes.
+  final String? name;
 
   /// The parameters of the function.
   /// The types may be null if the wasm runtime does not expose
@@ -467,12 +470,6 @@ class WasmFunction extends WasmExternal {
   /// parameters as the expected [params] and the return type will
   /// not be cast to a [List].
   final Function inner;
-
-  /// Same a [call] but asynchronous.
-  /// Should be used for long running computations that may block
-  /// the main thread and may be used for other functions that do not
-  /// require synchronous execution.
-  final Future<List<Object?>> Function([List<Object?>? args])? callAsync;
 
   final List<Object?> Function([List<Object?>? args])? _call;
 
@@ -501,7 +498,8 @@ class WasmFunction extends WasmExternal {
   int get hashCode => inner.hashCode;
 
   @override
-  String toString() => 'WasmFunction($inner, $params, $results)';
+  String toString() =>
+      'WasmFunction(${name == null ? '' : '$name, '}$inner, $params, $results)';
 }
 
 /// A WASM external value that can be imported or exported.
