@@ -7,8 +7,8 @@ import 'dart:ffi';
 
 import 'package:flutter_rust_bridge/flutter_rust_bridge.dart';
 import 'package:test/test.dart';
-import 'package:wasmit/src/bridge_generated.io.dart';
-import 'package:wasmit/src/ffi.dart';
+import 'package:wasm_run/src/bridge_generated.io.dart';
+import 'package:wasm_run/src/ffi.dart';
 
 int addOne(int v) => v + 1;
 
@@ -30,7 +30,7 @@ int mapWasmFunctionMut(
   print('dart output $output');
 
   final platform = WasmitDartPlatform(
-    DynamicLibrary.open('../../target/debug/libwasmit_dart.dylib'),
+    DynamicLibrary.open('../../target/debug/libwasm_run_dart.dylib'),
   );
   print('dart after platform $result');
   // TODO: this throws

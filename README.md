@@ -88,7 +88,7 @@ Currently it uses the [`wasmtime 8.0`](https://github.com/bytecodealliance/wasmt
 
 ### Flutter
 
-We provide [`package:flutter_wasmit`](./packages/flutter_wasmit/) to bundle the right binaries for your platform compilation targets.
+We provide [`package:flutter_wasm_run`](./packages/flutter_wasm_run/) to bundle the right binaries for your platform compilation targets.
 
 #### Runtime for Platform
 
@@ -106,7 +106,7 @@ We provide [`package:flutter_wasmit`](./packages/flutter_wasmit/) to bundle the 
 
 ### Pure Dart (CLI/Backend/Web)
 
-For pure Dart application (backend or cli, for example), you may download the compiled dynamic libraries for each platform and specify the `ffi.DynamicLibrary` in the `setDynamicLibrary` function or execute the [script](./packages/wasmit/bin/setup.dart) `dart run wasmit:setup` to download the right library for your current platform and configure it so that you don't need to call `setDynamicLibrary` manually. The compiled libraries can be found in the [releases assets](https://github.com/juancastillo0/wasm_interpreter/releases) of this repository.
+For pure Dart application (backend or cli, for example), you may download the compiled dynamic libraries for each platform and specify the `ffi.DynamicLibrary` in the `setDynamicLibrary` function or execute the [script](./packages/wasm_run/bin/setup.dart) `dart run wasm_run:setup` to download the right library for your current platform and configure it so that you don't need to call `setDynamicLibrary` manually. The compiled libraries can be found in the [releases assets](https://github.com/juancastillo0/wasm_interpreter/releases) of this repository.
 
 For the web platform we provide the same interface but it uses the WASM runtime provided by the browser instead of the native library (you may also use the Wasmi WASM module // TODO: not implemented yet).
 
@@ -119,8 +119,8 @@ However, in web browsers there is no support for the [WAT](https://developer.moz
 We use the [wasm-feature-detect JavaScript library](https://github.com/GoogleChromeLabs/wasm-feature-detect) for feature detection in the browser. To use this functionality in Dart web applications you will need to add the following script to your html (not necessary for Flutter):
 
 ```html
-<script src="./packages/wasmit/assets/wasm-feature-detect.js"></script>
-<script type="module" src="./packages/wasmit/assets/browser_wasi_shim.js"></script>
+<script src="./packages/wasm_run/assets/wasm-feature-detect.js"></script>
+<script type="module" src="./packages/wasm_run/assets/browser_wasi_shim.js"></script>
 ```
 
 
@@ -157,13 +157,13 @@ RUSTFLAGS='-C target-feature=+atomics,+bulk-memory,+mutable-globals' \
   cargo +nightly build --target wasm32-unknown-unknown --release -Z build-std=std,panic_abort
 ```
 
-The [threads_test.dart](./packages/wasmit/example/lib/threads_test.dart) contains a benchmark and multiple usage and configuration examples.
+The [threads_test.dart](./packages/wasm_run/example/lib/threads_test.dart) contains a benchmark and multiple usage and configuration examples.
 
 ### Web Workers configuration
 
-The [assets/wasm.worker.js](packages/wasmit/lib/assets/wasm.worker.js) is used as the script for implementing the worker, you may override it with the `workerScriptUrl` configuration in `WorkersConfig`.
+The [assets/wasm.worker.js](packages/wasm_run/lib/assets/wasm.worker.js) is used as the script for implementing the worker, you may override it with the `workerScriptUrl` configuration in `WorkersConfig`.
 
-Since functions cannot be passed to Web Workers, you will need provide the functions imported in the imported by using the `mapWorkerWasmImports` parameter. An example of the script can be found in [worker_map_imports.js](packages/wasmit/example/test/worker_map_imports.js), it exposes a `mapWorkerWasmImports` that receives the imports, the wasm module and other information, and returns the mapped wasm imports object.
+Since functions cannot be passed to Web Workers, you will need provide the functions imported in the imported by using the `mapWorkerWasmImports` parameter. An example of the script can be found in [worker_map_imports.js](packages/wasm_run/example/test/worker_map_imports.js), it exposes a `mapWorkerWasmImports` that receives the imports, the wasm module and other information, and returns the mapped wasm imports object.
 
 
 ## Web Assembly System Interface (WASI)
@@ -174,7 +174,7 @@ In the web platform we do not automatically support modules with WASI imports. H
 
 ### Examples
 
-Usage within Dart can be found in the [main test](./packages/wasmit/example/lib/main.dart).
+Usage within Dart can be found in the [main test](./packages/wasm_run/example/lib/main.dart).
 
 The WASI module used to execute the test is compiled from the [`rust_wasi_example` Rust project](./packages/rust_wasi_example/src/lib.rs) within this repo.
 
@@ -209,7 +209,7 @@ start using the package.
 
 ```yaml
 dependencies:
-  wasmit: 0.0.1
+  wasm_run: 0.0.1
 ```
 
 When using Flutter:
@@ -218,7 +218,7 @@ When using Flutter:
 dependencies:
   flutter:
     sdk: flutter
-  flutter_wasmit: 0.0.1
+  flutter_wasm_run: 0.0.1
 ```
 
 ## Usage

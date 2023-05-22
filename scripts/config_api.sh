@@ -8,6 +8,6 @@ if [[ $IMPL != "wasmtime" && $IMPL != "wasmi" ]]; then
     echo "Invalid WASM runtime: $IMPL"
     exit 1
 fi
-cp -fr packages/wasmit/native/Cargo.$IMPL.toml packages/wasmit/native/Cargo.toml
-cp -fr packages/wasmit/native/src/api_$IMPL.rs packages/wasmit/native/src/api.rs
+cp -fr packages/wasm_run/native/Cargo.$IMPL.toml packages/wasm_run/native/Cargo.toml
+cp -fr packages/wasm_run/native/src/api_$IMPL.rs packages/wasm_run/native/src/api.rs
 echo "Configured api for WASM runtime: $IMPL"

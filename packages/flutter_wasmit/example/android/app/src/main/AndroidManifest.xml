@@ -1,7 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.flutter_wasmit_example">
+    package="com.example.flutter_wasm_run_example">
    <application
-        android:label="flutter_wasmit_example"
+        android:label="flutter_wasm_run_example"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

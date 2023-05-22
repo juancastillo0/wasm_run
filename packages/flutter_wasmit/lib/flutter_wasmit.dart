@@ -1,1 +1,1 @@
-export 'package:wasmit/wasmit.dart';
+export 'package:wasm_run/wasm_run.dart';

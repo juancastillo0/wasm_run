@@ -3,13 +3,13 @@ import 'dart:js_util' as js_util;
 import 'dart:typed_data' show Uint8List;
 
 import 'package:wasm_interop/wasm_interop.dart';
-import 'package:wasmit/src/logger.dart';
-import 'package:wasmit/src/wasm_bindings/_atomics_web.dart';
-import 'package:wasmit/src/wasm_bindings/_wasi_web.dart';
+import 'package:wasm_run/src/logger.dart';
+import 'package:wasm_run/src/wasm_bindings/_atomics_web.dart';
+import 'package:wasm_run/src/wasm_bindings/_wasi_web.dart';
 
-import 'package:wasmit/src/wasm_bindings/_wasm_feature_detect_web.dart';
-import 'package:wasmit/src/wasm_bindings/_wasm_worker.dart';
-import 'package:wasmit/src/wasm_bindings/wasm.dart';
+import 'package:wasm_run/src/wasm_bindings/_wasm_feature_detect_web.dart';
+import 'package:wasm_run/src/wasm_bindings/_wasm_worker.dart';
+import 'package:wasm_run/src/wasm_bindings/wasm.dart';
 
 bool isVoidReturn(dynamic value) {
   switch (value) {

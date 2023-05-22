@@ -6,10 +6,10 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:test/test.dart';
-import 'package:wasmit/wasmit.dart';
-import 'package:wasmit_example/main.dart';
-import 'package:wasmit_example/runner_identity/runner_identity.dart';
-import 'package:wasmit_example/threads_base64.dart';
+import 'package:wasm_run/wasm_run.dart';
+import 'package:wasm_run_example/main.dart';
+import 'package:wasm_run_example/runner_identity/runner_identity.dart';
+import 'package:wasm_run_example/threads_base64.dart';
 
 // dart test test/main_test -c source --release -n threads
 void threadsTest({TestArgs? testArgs}) {

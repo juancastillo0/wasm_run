@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:dart_output/types.dart';
 import 'package:test/test.dart';
-import 'package:wasmit/wasmit.dart';
+import 'package:wasm_run/wasm_run.dart';
 
 void main() {
   group('group name', () {

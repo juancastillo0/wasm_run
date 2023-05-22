@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:test/test.dart';
-import 'package:wasmit/src/wasm_bindings/wasm.dart';
+import 'package:wasm_run/src/wasm_bindings/wasm.dart';
 
 import 'main.dart';
 

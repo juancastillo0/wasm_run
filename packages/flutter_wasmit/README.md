@@ -1,4 +1,4 @@
-# flutter_wasmit
+# flutter_wasm_run
 
 A Web Assembly executor for the Dart programming language.
 
@@ -6,7 +6,7 @@ Currently it uses the [`wasmtime 8.0`](https://github.com/bytecodealliance/wasmt
 
 For more information on usage and documentation, please visit the main repository: https://github.com/juancastillo0/wasm_interpreter.
 
-This Flutter library only contains the necessary binaries for executing `package:wasmit`'s WASM API. The WASM runtime used for each platform is selected according to the platform and architecture according to the following table:
+This Flutter library only contains the necessary binaries for executing `package:wasm_run`'s WASM API. The WASM runtime used for each platform is selected according to the platform and architecture according to the following table:
 
 | Platform | Architecture               | Runtime<sup>[1]</sup> |
 | -------- | -------------------------- | --------------------- |

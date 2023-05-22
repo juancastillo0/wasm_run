@@ -1,13 +1,13 @@
 import 'dart:io';
 
 /// The expected name of the Wasmit library when compiled for Apple devices.
-const appleLib = 'libwasmit_dart.dylib';
+const appleLib = 'libwasm_run_dart.dylib';
 
 /// The expected name of the Wasmit library when compiled for Linux devices.
-const linuxLib = 'libwasmit_dart.so';
+const linuxLib = 'libwasm_run_dart.so';
 
 /// The expected name of the Wasmit library when compiled for Windows devices.
-const windowsLib = 'wasmit_dart.dll';
+const windowsLib = 'wasm_run_dart.dll';
 
 /// Returns the name of the Wasmit library for the current platform.
 /// Throws an [UnsupportedError] if the current platform is not supported
@@ -36,10 +36,10 @@ Uri libBuildOutDir() {
       'Could not find package root with "$_pkgConfigFile".',
     );
   }
-  return pkgRoot.resolve(_wasmitToolDir);
+  return pkgRoot.resolve(_wasmRunToolDir);
 }
 
-const _wasmitToolDir = '.dart_tool/wasmit/';
+const _wasmRunToolDir = '.dart_tool/wasm_run/';
 
 const _pkgConfigFile = '.dart_tool/package_config.json';
 

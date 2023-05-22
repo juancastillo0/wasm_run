@@ -4,7 +4,7 @@
 
 import 'dart:typed_data';
 
-import 'package:wasmit/wasmit.dart';
+import 'package:wasm_run/wasm_run.dart';
 
 import 'component.dart';
 import 'canonical_abi.dart';

@@ -7,7 +7,7 @@
 ///
 /// For more information on usage and documentation, please visit the
 /// main repository: https://github.com/juancastillo0/wasm_interpreter.
-library wasmit;
+library wasm_run;
 
 export 'src/ffi.dart' show setDynamicLibrary;
 export 'src/wasm_bindings/wasm.dart';

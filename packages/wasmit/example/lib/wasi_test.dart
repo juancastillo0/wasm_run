@@ -3,9 +3,9 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:test/test.dart';
-import 'package:wasmit/wasmit.dart';
-import 'package:wasmit_example/main.dart';
-import 'package:wasmit_example/wasi_base64.dart';
+import 'package:wasm_run/wasm_run.dart';
+import 'package:wasm_run_example/main.dart';
+import 'package:wasm_run_example/wasi_base64.dart';
 
 Future<Uint8List> getWasiExample({
   required Future<Uint8List> Function()? getWasiExampleBytes,

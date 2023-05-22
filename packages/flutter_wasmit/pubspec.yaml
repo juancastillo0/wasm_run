@@ -1,5 +1,5 @@
-name: flutter_wasmit
-description: This library contains the necessary platform bindings for executing `package:wasmit`'s WASM API
+name: flutter_wasm_run
+description: This library contains the necessary platform bindings for executing `package:wasm_run`'s WASM API
 version: 0.0.1
 homepage: https://github.com/juancastillo0/wasm_interpreter
 
@@ -13,7 +13,7 @@ dependencies:
   plugin_platform_interface: ^2.0.2
   flutter_web_plugins:
     sdk: flutter
-  wasmit: 0.0.1
+  wasm_run: 0.0.1
 
 dev_dependencies:
   ffi: ^2.0.1
@@ -51,7 +51,7 @@ flutter:
         ffiPlugin: true
       web:
         pluginClass: FlutterWasmitWeb
-        fileName: flutter_wasmit_web.dart
+        fileName: flutter_wasm_run_web.dart
 
   # To add assets to your plugin package, add an assets section, like this:
   # assets:

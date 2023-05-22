@@ -1,4 +1,4 @@
-import 'package:wasmit_example/main.dart';
+import 'package:wasm_run_example/main.dart';
 
 void main() {
   testAll();

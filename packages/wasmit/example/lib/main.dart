@@ -7,12 +7,12 @@ import 'dart:typed_data';
 import 'package:test/test.dart';
 // TODO(wat): implement wat in main api
 // ignore: implementation_imports
-import 'package:wasmit/src/ffi.dart' show defaultInstance;
-import 'package:wasmit/wasmit.dart';
-import 'package:wasmit_example/runner_identity/runner_identity.dart';
-import 'package:wasmit_example/simd_test.dart' show simdTests;
-import 'package:wasmit_example/threads_test.dart';
-import 'package:wasmit_example/wasi_test.dart';
+import 'package:wasm_run/src/ffi.dart' show defaultInstance;
+import 'package:wasm_run/wasm_run.dart';
+import 'package:wasm_run_example/runner_identity/runner_identity.dart';
+import 'package:wasm_run_example/simd_test.dart' show simdTests;
+import 'package:wasm_run_example/threads_test.dart';
+import 'package:wasm_run_example/wasi_test.dart';
 
 const isWeb = identical(0, 0.0);
 const compiledWasmLibraryPath =

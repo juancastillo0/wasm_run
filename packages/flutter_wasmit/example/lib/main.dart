@@ -3,7 +3,7 @@
 import 'dart:convert' show base64Decode;
 import 'dart:typed_data' show Uint8List;
 
-import 'package:flutter_wasmit/flutter_wasmit.dart';
+import 'package:flutter_wasm_run/flutter_wasm_run.dart';
 
 Future<void> main() async {
   /// WASM WAT source:

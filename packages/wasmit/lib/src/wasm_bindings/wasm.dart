@@ -1,12 +1,12 @@
 import 'dart:typed_data';
 
-import 'package:wasmit/src/bridge_generated.dart';
-import 'package:wasmit/src/wasm_bindings/_wasm_interop_stub.dart'
+import 'package:wasm_run/src/bridge_generated.dart';
+import 'package:wasm_run/src/wasm_bindings/_wasm_interop_stub.dart'
     if (dart.library.io) '_wasm_interop_native.dart'
     if (dart.library.html) '_wasm_interop_web.dart' as platform_impl;
-import 'package:wasmit/src/wasm_bindings/wasm_interface.dart';
+import 'package:wasm_run/src/wasm_bindings/wasm_interface.dart';
 
-export 'package:wasmit/src/bridge_generated.dart'
+export 'package:wasm_run/src/bridge_generated.dart'
     show
         EnvVariable,
         ExternalType,
@@ -18,7 +18,7 @@ export 'package:wasmit/src/bridge_generated.dart'
         WasmFeatures,
         WasmRuntimeFeatures,
         WasmWasiFeatures;
-export 'package:wasmit/src/wasm_bindings/wasm_interface.dart';
+export 'package:wasm_run/src/wasm_bindings/wasm_interface.dart';
 
 // TODO(config): The default [ModuleConfig] used by [compileWasmModule].
 

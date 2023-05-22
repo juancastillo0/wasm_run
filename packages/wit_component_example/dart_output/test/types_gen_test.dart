@@ -5,7 +5,7 @@ import 'dart:io';
 import 'package:dart_output/component.dart';
 import 'package:dart_output/types_gen.dart';
 import 'package:test/test.dart';
-import 'package:wasmit/wasmit.dart';
+import 'package:wasm_run/wasm_run.dart';
 
 bool kReleaseMode = true;
 

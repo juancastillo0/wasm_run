@@ -2,12 +2,12 @@
 
 import 'dart:io';
 
-import 'package:wasmit/src/ffi/cpu_architecture.dart';
-import 'package:wasmit/src/ffi/library_locator.dart'
+import 'package:wasm_run/src/ffi/cpu_architecture.dart';
+import 'package:wasm_run/src/ffi/library_locator.dart'
     show getDesktopLibName, libBuildOutDir;
 
 /// Downloads the native dynamic library for the current platform.
-/// The output file will be written to `{projectRoot}/.dart_tool/wasmit/{dynamicLibrary}`.
+/// The output file will be written to `{projectRoot}/.dart_tool/wasm_run/{dynamicLibrary}`.
 /// This is used by the `WasmitDart` class to load the native library.
 Future<void> main() async {
   /// Get the CPU architecture.
@@ -36,7 +36,7 @@ Future<void> main() async {
       'https://github.com/juancastillo0/wasm_interpreter/releases/download';
   const version = '0.0.1';
   final archiveName = Platform.isMacOS ? 'macos.tar.gz' : 'other.tar.gz';
-  final archiveUrl = '$baseUrl/wasmit-$version/$archiveName';
+  final archiveUrl = '$baseUrl/wasm_run-$version/$archiveName';
   final libName = getDesktopLibName();
 
   /// Download archive.
@@ -61,7 +61,7 @@ Future<void> main() async {
   }
 
   /// Copy library.
-  /// `temp/windows-x64/wasmit_dart.dll`, `temp/macos-arm64/libwasmit_dart.dylib`
+  /// `temp/windows-x64/wasm_run_dart.dll`, `temp/macos-arm64/libwasm_run_dart.dylib`
   final inputFilePath =
       'temp/${Platform.operatingSystem}-${cpuArchitectureEnum.name}/$libName';
   final inputFile = File(root.resolve(inputFilePath).toFilePath());

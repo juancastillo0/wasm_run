@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 
-import 'package:wasmit/src/bridge_generated.dart';
-import 'package:wasmit/src/wasm_bindings/wasm_interface.dart';
+import 'package:wasm_run/src/bridge_generated.dart';
+import 'package:wasm_run/src/wasm_bindings/wasm_interface.dart';
 
 bool isVoidReturn(dynamic value) => throw UnimplementedError();
 

@@ -4,8 +4,8 @@ import 'dart:typed_data';
 import 'package:dart_output/canonical_abi.dart';
 import 'package:dart_output/canonical_abi_cache.dart';
 // TODO: ignore: implementation_imports
-import 'package:wasmit/src/wasm_bindings/make_function_num_args.dart';
-import 'package:wasmit/wasmit.dart';
+import 'package:wasm_run/src/wasm_bindings/make_function_num_args.dart';
+import 'package:wasm_run/wasm_run.dart';
 
 /// A Rust-style Result type.
 sealed class Result<O, E> {

@@ -2,8 +2,8 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:test/test.dart';
-import 'package:wasmit/src/ffi.dart';
-import 'package:wasmit/src/wasm_bindings/wasm.dart';
+import 'package:wasm_run/src/ffi.dart';
+import 'package:wasm_run/src/wasm_bindings/wasm.dart';
 
 void main() {
   group('wasm interface', () {

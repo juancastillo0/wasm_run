@@ -1,5 +1,5 @@
 [workspace]
-members = ["packages/wasmit/native"]
+members = ["packages/wasm_run/native"]
 exclude = [
     "packages/rust_wasi_example",
     "packages/wit_component_example",

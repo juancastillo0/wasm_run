@@ -1,4 +1,4 @@
-set(LibraryVersion "wasmit-v0.0.1") # generated; do not edit
+set(LibraryVersion "wasm_run-v0.0.1") # generated; do not edit
 
 # The Flutter tooling requires that developers have CMake 3.10 or later
 # installed. You should not increase this version, as doing so will cause
@@ -6,7 +6,7 @@ set(LibraryVersion "wasmit-v0.0.1") # generated; do not edit
 cmake_minimum_required(VERSION 3.10)
 
 # Project-level configuration.
-set(PROJECT_NAME "flutter_wasmit")
+set(PROJECT_NAME "flutter_wasm_run")
 project(${PROJECT_NAME} LANGUAGES CXX)
 
 # Download the binaries if they are not already present.
@@ -32,7 +32,7 @@ execute_process(
 # List of absolute paths to libraries that should be bundled with the plugin.
 # This list could contain prebuilt libraries, or libraries created by an
 # external build triggered from this build file.
-set(flutter_wasmit_bundled_libraries
-  "${LibRoot}/${FLUTTER_TARGET_PLATFORM}/libwasmit_dart.so"
+set(flutter_wasm_run_bundled_libraries
+  "${LibRoot}/${FLUTTER_TARGET_PLATFORM}/libwasm_run_dart.so"
   PARENT_SCOPE
 )

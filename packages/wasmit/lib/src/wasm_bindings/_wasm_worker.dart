@@ -8,8 +8,8 @@ import 'dart:typed_data';
 
 import 'package:flutter_rust_bridge/flutter_rust_bridge.dart'
     show JS, anonymous;
-import 'package:wasmit/src/wasm_bindings/_atomics_web.dart';
-import 'package:wasmit/src/wasm_bindings/wasm_interface.dart';
+import 'package:wasm_run/src/wasm_bindings/_atomics_web.dart';
+import 'package:wasm_run/src/wasm_bindings/wasm_interface.dart';
 
 /// A task that can be run in a [WasmWorker].
 class WorkerTask {

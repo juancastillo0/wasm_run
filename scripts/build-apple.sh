@@ -34,8 +34,8 @@ fi
 
 # Create XCFramework zip
 FRAMEWORK="Wasmit.xcframework"
-LIBNAME=libwasmit_dart.a
-DYNAMIC_LIBNAME=libwasmit_dart.dylib
+LIBNAME=libwasm_run_dart.a
+DYNAMIC_LIBNAME=libwasm_run_dart.dylib
 mkdir mac-lipo ios-sim-lipo
 IOS_SIM_LIPO=ios-sim-lipo/$LIBNAME
 MAC_LIPO=mac-lipo/$LIBNAME

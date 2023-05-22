@@ -38,7 +38,7 @@ jobs:
 
       # Rust
       - name: Check Rust format
-        working-directory: ./packages/wasmit/native/src
+        working-directory: ./packages/wasm_run/native/src
         run: rustfmt --check lib.rs
         if: always()
       - name: Rust code analysis
@@ -77,16 +77,16 @@ jobs:
         if: always() && steps.coverage.outcome == 'success'
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          path-to-lcov: "./packages/wasmit/coverage/lcov.info"
-          base-path: "packages/wasmit"
+          path-to-lcov: "./packages/wasm_run/coverage/lcov.info"
+          base-path: "packages/wasm_run"
       - id: upload_coverage_to_coveralls2
         name: Upload coverage to Coveralls
         uses: coverallsapp/github-action@v1
         if: always() && steps.coverage.outcome == 'success' && steps.upload_coverage_to_coveralls.outcome != 'success'
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          path-to-lcov: "./packages/wasmit/coverage/lcov.info"
-          base-path: "packages/wasmit/lib"
+          path-to-lcov: "./packages/wasm_run/coverage/lcov.info"
+          base-path: "packages/wasm_run/lib"
       - name: Upload coverage to Coveralls
         uses: coverallsapp/github-action@v2
         if: always() && steps.coverage.outcome == 'success' && steps.upload_coverage_to_coveralls.outcome != 'success' && steps.upload_coverage_to_coveralls2.outcome != 'success'
@@ -97,14 +97,14 @@ jobs:
         with:
           fail_ci_if_error: false
           verbose: true
-          files: "./packages/wasmit/coverage/lcov.info"
+          files: "./packages/wasm_run/coverage/lcov.info"
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v2
         if: always() && steps.coverage.outcome == 'success' && steps.upload_coverage_to_codecov.outcome != 'success'
         with:
           fail_ci_if_error: false
           verbose: true
-          files: ./packages/wasmit/coverage/lcov.info
+          files: ./packages/wasm_run/coverage/lcov.info
 
       # Web Browser tests
       - run: |
@@ -119,10 +119,10 @@ jobs:
         id: chromedriver
         if: always()
       - run: dart run test -p chrome
-        working-directory: packages/wasmit
+        working-directory: packages/wasm_run
         if: always() && steps.chromedriver.outcome == 'success'
       - run: flutter drive --driver=test_driver/integration_test.dart --target=integration_test/main_test.dart -d web-server --browser-name=chrome --driver-port=4445
-        working-directory: packages/flutter_wasmit/example
+        working-directory: packages/flutter_wasm_run/example
         if: always() && steps.chromedriver.outcome == 'success'
 
       # Firefox
@@ -134,13 +134,13 @@ jobs:
         id: firefoxdriver
         if: always()
       - run: flutter drive --driver=test_driver/integration_test.dart --target=integration_test/main_test.dart -d web-server --browser-name=firefox --driver-port=4446
-        working-directory: packages/flutter_wasmit/example
+        working-directory: packages/flutter_wasm_run/example
         if: always() && steps.firefoxdriver.outcome == 'success'
       - run: |
           Xvfb :99 -screen 0 1024x768x16 &
           export DISPLAY=:99
           dart run test -p firefox
-        working-directory: packages/wasmit
+        working-directory: packages/wasm_run
         if: always() && steps.firefoxdriver.outcome == 'success'
 
   macos_integration_test:
@@ -161,15 +161,15 @@ jobs:
         run: melos run build:apple -- dev
       - name: Copy the XCFramework to the needed location
         run: |
-          CURR_VERSION=wasmit-v`awk '/^version: /{print $2}' packages/wasmit/pubspec.yaml`
-          cp platform-build/Wasmit.xcframework.zip packages/flutter_wasmit/macos/Frameworks/$CURR_VERSION.zip
+          CURR_VERSION=wasm_run-v`awk '/^version: /{print $2}' packages/wasm_run/pubspec.yaml`
+          cp platform-build/Wasmit.xcframework.zip packages/flutter_wasm_run/macos/Frameworks/$CURR_VERSION.zip
           echo Copied file!
 
       - name: Build Flutter MacOS example
-        working-directory: packages/flutter_wasmit/example
+        working-directory: packages/flutter_wasm_run/example
         run: flutter build macos --target=integration_test/main_test.dart --debug
       - name: Run Flutter integration tests
-        working-directory: packages/flutter_wasmit/example
+        working-directory: packages/flutter_wasm_run/example
         run: flutter test -d macos integration_test --timeout "1200s" # 20 minutes
 
       # Web Browser tests
@@ -188,10 +188,10 @@ jobs:
       #   id: safaridriver
       #   if: always()
       - run: dart run test -p safari --timeout "600s" # 10 minutes
-        working-directory: packages/wasmit
+        working-directory: packages/wasm_run
         if: always() && steps.safaridriver.outcome == 'success'
       - run: flutter drive --driver=test_driver/integration_test.dart --target=integration_test/main_test.dart -d web-server --browser-name=safari --driver-port=4444
-        working-directory: packages/flutter_wasmit/example
+        working-directory: packages/flutter_wasm_run/example
         if: always() && steps.safaridriver.outcome == 'success'
 
       # Chrome
@@ -200,10 +200,10 @@ jobs:
         id: chromedriver
         if: always()
       - run: dart run test -p chrome
-        working-directory: packages/wasmit
+        working-directory: packages/wasm_run
         if: always() && steps.chromedriver.outcome == 'success'
       - run: flutter drive --driver=test_driver/integration_test.dart --target=integration_test/main_test.dart -d web-server --browser-name=chrome --driver-port=4445
-        working-directory: packages/flutter_wasmit/example
+        working-directory: packages/flutter_wasm_run/example
         if: always() && steps.chromedriver.outcome == 'success'
 
       # Firefox
@@ -212,10 +212,10 @@ jobs:
         id: firefoxdriver
         if: always()
       - run: dart run test -p firefox
-        working-directory: packages/wasmit
+        working-directory: packages/wasm_run
         if: always() && steps.firefoxdriver.outcome == 'success'
       - run: flutter drive --driver=test_driver/integration_test.dart --target=integration_test/main_test.dart -d web-server --browser-name=firefox --driver-port=4446
-        working-directory: packages/flutter_wasmit/example
+        working-directory: packages/flutter_wasm_run/example
         if: always() && steps.firefoxdriver.outcome == 'success'
 
   windows_integration_test:
@@ -241,12 +241,12 @@ jobs:
       - name: Copy the binaries to the needed location
         shell: bash
         run: |
-          CURR_VERSION=wasmit-v`awk '/^version: /{print $2}' packages/wasmit/pubspec.yaml`
-          cp platform-build/other.tar.gz packages/flutter_wasmit/windows/$CURR_VERSION.tar.gz
+          CURR_VERSION=wasm_run-v`awk '/^version: /{print $2}' packages/wasm_run/pubspec.yaml`
+          cp platform-build/other.tar.gz packages/flutter_wasm_run/windows/$CURR_VERSION.tar.gz
           echo Copied file!
 
       - name: Run Flutter integration tests
-        working-directory: packages/flutter_wasmit/example
+        working-directory: packages/flutter_wasm_run/example
         run: flutter test -d windows integration_test
 
   linux_integration_test:
@@ -274,12 +274,12 @@ jobs:
         run: melos run build:other -- dev
       - name: Copy the binaries to the needed location
         run: |
-          CURR_VERSION=wasmit-v`awk '/^version: /{print $2}' packages/wasmit/pubspec.yaml`
-          cp platform-build/other.tar.gz packages/flutter_wasmit/linux/$CURR_VERSION.tar.gz
+          CURR_VERSION=wasm_run-v`awk '/^version: /{print $2}' packages/wasm_run/pubspec.yaml`
+          cp platform-build/other.tar.gz packages/flutter_wasm_run/linux/$CURR_VERSION.tar.gz
           echo Copied file!
 
       - name: Run Flutter integration tests
-        working-directory: packages/flutter_wasmit/example
+        working-directory: packages/flutter_wasm_run/example
         run: flutter test -d linux integration_test
 
   ios_integration_test:
@@ -306,12 +306,12 @@ jobs:
         run: melos run build:apple -- dev
       - name: Copy the XCFramework to the needed location
         run: |
-          CURR_VERSION=wasmit-v`awk '/^version: /{print $2}' packages/wasmit/pubspec.yaml`
-          cp platform-build/Wasmit.xcframework.zip packages/flutter_wasmit/ios/Frameworks/$CURR_VERSION.zip
+          CURR_VERSION=wasm_run-v`awk '/^version: /{print $2}' packages/wasm_run/pubspec.yaml`
+          cp platform-build/Wasmit.xcframework.zip packages/flutter_wasm_run/ios/Frameworks/$CURR_VERSION.zip
           echo Copied file!
 
       - name: Run Flutter integration tests
-        working-directory: packages/flutter_wasmit/example
+        working-directory: packages/flutter_wasm_run/example
         run: flutter test -d ${{ env.DEVICE_ID }} integration_test
 
   android_integration_test:
@@ -342,12 +342,12 @@ jobs:
         run: melos run build:android -- dev
       - name: Copy the binaries to the needed location
         run: |
-          CURR_VERSION=wasmit-v`awk '/^version: /{print $2}' packages/wasmit/pubspec.yaml`
-          cp platform-build/android.tar.gz packages/flutter_wasmit/android/$CURR_VERSION.tar.gz
+          CURR_VERSION=wasm_run-v`awk '/^version: /{print $2}' packages/wasm_run/pubspec.yaml`
+          cp platform-build/android.tar.gz packages/flutter_wasm_run/android/$CURR_VERSION.tar.gz
           echo Copied file!
 
       - name: Build Flutter Android APK example
-        working-directory: packages/flutter_wasmit/example
+        working-directory: packages/flutter_wasm_run/example
         run: flutter build apk --target=integration_test/main_test.dart --debug
       - name: Run Flutter integration tests
         uses: Wandalen/wretry.action@master # sometimes android tests are flaky
@@ -361,7 +361,7 @@ jobs:
             ram-size: 1024M
             disk-size: 2048M
             arch: ${{ matrix.arch }}
-            working-directory: packages/flutter_wasmit/example
+            working-directory: packages/flutter_wasm_run/example
             script: flutter test -d `flutter devices | grep android | tr ' ' '\n' | grep emulator-` integration_test
 
   android_integration_test_cached:
@@ -392,8 +392,8 @@ jobs:
         run: melos run build:android -- dev
       - name: Copy the binaries to the needed location
         run: |
-          CURR_VERSION=wasmit-v`awk '/^version: /{print $2}' packages/wasmit/pubspec.yaml`
-          cp platform-build/android.tar.gz packages/flutter_wasmit/android/$CURR_VERSION.tar.gz
+          CURR_VERSION=wasm_run-v`awk '/^version: /{print $2}' packages/wasm_run/pubspec.yaml`
+          cp platform-build/android.tar.gz packages/flutter_wasm_run/android/$CURR_VERSION.tar.gz
           echo Copied file!
 
       - name: Gradle cache
@@ -433,4 +433,4 @@ jobs:
           arch: ${{ matrix.arch }}
           ram-size: 1024M
           disk-size: 2048M
-          script: cd packages/flutter_wasmit/example && flutter test -d `flutter devices | grep android | tr ' ' '\n' | grep emulator-` integration_test && echo "Finished Android integration tests"
+          script: cd packages/flutter_wasm_run/example && flutter test -d `flutter devices | grep android | tr ' ' '\n' | grep emulator-` integration_test && echo "Finished Android integration tests"

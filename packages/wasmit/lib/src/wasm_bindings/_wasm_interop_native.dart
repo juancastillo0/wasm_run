@@ -5,11 +5,11 @@ import 'dart:typed_data' show Uint8List;
 import 'package:flutter_rust_bridge/flutter_rust_bridge.dart'
     show WireSyncReturn, wireSyncReturnIntoDart;
 import 'package:meta/meta.dart';
-import 'package:wasmit/src/bridge_generated.io.dart';
-import 'package:wasmit/src/ffi.dart' show defaultInstance;
-import 'package:wasmit/src/logger.dart';
-import 'package:wasmit/src/wasm_bindings/make_function_num_args.dart';
-import 'package:wasmit/src/wasm_bindings/wasm_interface.dart';
+import 'package:wasm_run/src/bridge_generated.io.dart';
+import 'package:wasm_run/src/ffi.dart' show defaultInstance;
+import 'package:wasm_run/src/logger.dart';
+import 'package:wasm_run/src/wasm_bindings/make_function_num_args.dart';
+import 'package:wasm_run/src/wasm_bindings/wasm_interface.dart';
 
 final _noReturnPlaceholder = Object();
 

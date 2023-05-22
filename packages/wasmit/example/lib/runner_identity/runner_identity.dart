@@ -1,5 +1,5 @@
-import 'package:wasmit_example/runner_identity/io.dart'
-    if (dart.library.html) 'package:wasmit_example/runner_identity/web.dart'
+import 'package:wasm_run_example/runner_identity/io.dart'
+    if (dart.library.html) 'package:wasm_run_example/runner_identity/web.dart'
     as impl;
 
 /// Returns the identity of the current runner.

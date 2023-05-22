@@ -1,15 +1,15 @@
 # Run with `flutter pub run ffigen --config ffigen.yaml`.
 name: FlutterWasmitBindings
 description: |
-  Bindings for `src/flutter_wasmit.h`.
+  Bindings for `src/flutter_wasm_run.h`.
 
   Regenerate bindings with `flutter pub run ffigen --config ffigen.yaml`.
-output: 'lib/flutter_wasmit_bindings_generated.dart'
+output: 'lib/flutter_wasm_run_bindings_generated.dart'
 headers:
   entry-points:
-    - 'src/flutter_wasmit.h'
+    - 'src/flutter_wasm_run.h'
   include-directives:
-    - 'src/flutter_wasmit.h'
+    - 'src/flutter_wasm_run.h'
 preamble: |
   // ignore_for_file: always_specify_types
   // ignore_for_file: camel_case_types

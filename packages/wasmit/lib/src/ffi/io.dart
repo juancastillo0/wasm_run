@@ -1,8 +1,8 @@
 import 'dart:ffi';
 import 'dart:io';
 
-import 'package:wasmit/src/bridge_generated.dart';
-import 'package:wasmit/src/ffi/library_locator.dart';
+import 'package:wasm_run/src/bridge_generated.dart';
+import 'package:wasm_run/src/ffi/library_locator.dart';
 
 typedef ExternalLibrary = DynamicLibrary;
 
@@ -56,7 +56,7 @@ ExternalLibrary createLibraryImpl() {
     } catch (_) {}
 
     throw Exception(
-      'Wasmit library not found. Did you run `dart run wasmit:setup`?',
+      'Wasmit library not found. Did you run `dart run wasm_run:setup`?',
     );
   }
 }

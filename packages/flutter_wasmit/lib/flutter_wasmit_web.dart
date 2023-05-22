@@ -4,9 +4,9 @@ import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 
 class FlutterWasmitWeb {
   static void registerWith(Registrar registrar) {
-    _injectSrcScript('./packages/wasmit/assets/wasm-feature-detect.js');
+    _injectSrcScript('./packages/wasm_run/assets/wasm-feature-detect.js');
     _injectSrcScript(
-      './packages/wasmit/assets/browser_wasi_shim.js',
+      './packages/wasm_run/assets/browser_wasi_shim.js',
       type: 'module',
     );
   }

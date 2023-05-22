@@ -1,6 +1,6 @@
 import 'dart:typed_data';
 
-import 'package:wasmit/src/int64_bigint/_int64_bigint_stub.dart'
+import 'package:wasm_run/src/int64_bigint/_int64_bigint_stub.dart'
     if (dart.library.io) '_int64_bigint_native.dart'
     if (dart.library.html) '_int64_bigint_web.dart' as impl;
 

@@ -1,5 +1,5 @@
 [package]
-name = "wasmit_dart"
+name = "wasm_run_dart"
 version = "0.0.1"
 edition = "2021"
 

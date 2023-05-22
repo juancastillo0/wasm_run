@@ -1,4 +1,4 @@
-release_tag_name = 'wasmit-v0.0.1' # generated; do not edit
+release_tag_name = 'wasm_run-v0.0.1' # generated; do not edit
 
 # We cannot distribute the XCFramework alongside the library directly,
 # so we have to fetch the correct version here.
@@ -20,9 +20,9 @@ cd -
 `
 
 Pod::Spec.new do |s|
-  s.name          = 'flutter_wasmit'
+  s.name          = 'flutter_wasm_run'
   s.version       = '0.0.1'
-  s.summary       = 'iOS/macOS Flutter bindings for wasmit'
+  s.summary       = 'iOS/macOS Flutter bindings for wasm_run'
   s.license       = { :file => '../LICENSE' }
   s.homepage      = 'https://github.com/juancastillo0/wasm_interpreter'
   s.authors       = { 'Juan Manuel Castillo' => '42351046+juancastillo0@users.noreply.github.com' }

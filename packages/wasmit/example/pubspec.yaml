@@ -1,5 +1,5 @@
-name: wasmit_example
-description: Demonstrates how to use the wasmit package.
+name: wasm_run_example
+description: Demonstrates how to use the wasm_run package.
 publish_to: 'none'
 version: 1.0.0+1
 
@@ -7,7 +7,7 @@ environment:
   sdk: '>=2.19.0 <3.0.0'
 
 dependencies:
-  wasmit:
+  wasm_run:
     path: ../
   test: ^1.21.0
 

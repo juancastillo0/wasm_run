@@ -39,6 +39,6 @@ build/
 /platform-build
 .vscode/settings.json
 .fvm/flutter_sdk
-packages/wasmit/coverage
+packages/wasm_run/coverage
 packages/rust_wasi_example/Cargo.lock
 scripts/config_api.exe

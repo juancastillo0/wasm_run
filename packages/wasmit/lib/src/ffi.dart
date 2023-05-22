@@ -1,5 +1,5 @@
-import 'package:wasmit/src/bridge_generated.dart';
-import 'package:wasmit/src/ffi/stub.dart'
+import 'package:wasm_run/src/bridge_generated.dart';
+import 'package:wasm_run/src/ffi/stub.dart'
     if (dart.library.io) 'ffi/io.dart'
     if (dart.library.html) 'ffi/web.dart';
 
@@ -12,7 +12,7 @@ WasmitDart createWrapper(ExternalLibrary lib) {
 
 /// Sets the dynamic library to use for the native bindings.
 ///
-/// You may execute the script `dart run wasmit:setup`
+/// You may execute the script `dart run wasm_run:setup`
 /// to download the right library for your current platform
 /// and configure it so that you don't need to call [setDynamicLibrary]
 /// manually.

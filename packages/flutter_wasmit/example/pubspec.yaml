@@ -1,5 +1,5 @@
-name: flutter_wasmit_example
-description: Demonstrates how to use the flutter_wasmit plugin.
+name: flutter_wasm_run_example
+description: Demonstrates how to use the flutter_wasm_run plugin.
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: "none" # Remove this line if you wish to publish to pub.dev
@@ -31,9 +31,9 @@ dependencies:
   flutter:
     sdk: flutter
 
-  flutter_wasmit:
+  flutter_wasm_run:
     # When depending on this package from a real application you should use:
-    #   flutter_wasmit: ^x.y.z
+    #   flutter_wasm_run: ^x.y.z
     # See https://dart.dev/tools/pub/dependencies#version-constraints
     # The example app is bundled with the plugin so we use a path dependency on
     # the parent directory to use the current plugin's version.
@@ -46,8 +46,8 @@ dev_dependencies:
   integration_test:
     sdk: flutter
   very_good_analysis: ^4.0.0
-  wasmit_example:
-    path: ../../wasmit/example
+  wasm_run_example:
+    path: ../../wasm_run/example
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

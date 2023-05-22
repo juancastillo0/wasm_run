@@ -1,4 +1,4 @@
-set(LibraryVersion "wasmit-v0.0.1") # generated; do not edit
+set(LibraryVersion "wasm_run-v0.0.1") # generated; do not edit
 
 # TODO Remove this workaround once Flutter supports Windows ARM.
 # https://github.com/flutter/flutter/issues/116196
@@ -11,7 +11,7 @@ set(FLUTTER_TARGET_PLATFORM windows-x64)
 cmake_minimum_required(VERSION 3.14)
 
 # Project-level configuration.
-set(PROJECT_NAME "flutter_wasmit")
+set(PROJECT_NAME "flutter_wasm_run")
 project(${PROJECT_NAME} LANGUAGES CXX)
 
 # Download the binaries if they are not already present.
@@ -36,7 +36,7 @@ execute_process(
 # List of absolute paths to libraries that should be bundled with the plugin.
 # This list could contain prebuilt libraries, or libraries created by an
 # external build triggered from this build file.
-set(flutter_wasmit_bundled_libraries
-  "${LibRoot}/${FLUTTER_TARGET_PLATFORM}/wasmit_dart.dll"
+set(flutter_wasm_run_bundled_libraries
+  "${LibRoot}/${FLUTTER_TARGET_PLATFORM}/wasm_run_dart.dll"
   PARENT_SCOPE
 )

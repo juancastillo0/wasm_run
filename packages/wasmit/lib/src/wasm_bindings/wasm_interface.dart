@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:meta/meta.dart';
-import 'package:wasmit/src/bridge_generated.dart'
+import 'package:wasm_run/src/bridge_generated.dart'
     show
         EnvVariable,
         ExternalType,
@@ -14,12 +14,12 @@ import 'package:wasmit/src/bridge_generated.dart'
         ValueTy,
         WasiConfigNative,
         WasmFeatures;
-import 'package:wasmit/src/int64_bigint/int64_bigint.dart';
-import 'package:wasmit/src/wasm_bindings/_wasm_interop_stub.dart'
+import 'package:wasm_run/src/int64_bigint/int64_bigint.dart';
+import 'package:wasm_run/src/wasm_bindings/_wasm_interop_stub.dart'
     if (dart.library.io) '_wasm_interop_native.dart'
     if (dart.library.html) '_wasm_interop_web.dart' show isVoidReturn;
 
-export 'package:wasmit/src/bridge_generated.dart'
+export 'package:wasm_run/src/bridge_generated.dart'
     show
         EnvVariable,
         ExternalType,
@@ -32,7 +32,7 @@ export 'package:wasmit/src/bridge_generated.dart'
         U8Array16,
         ValueTy,
         WasmFeatures;
-export 'package:wasmit/src/int64_bigint/int64_bigint.dart';
+export 'package:wasm_run/src/int64_bigint/int64_bigint.dart';
 
 /// A compiled WASM module.
 /// You may introspect it by using [getImports] and [getExports].
@@ -109,7 +109,7 @@ class WorkersConfig {
   /// Configuration for spawning workers.
   WorkersConfig({
     required this.numberOfWorkers,
-    this.workerScriptUrl = './packages/wasmit/assets/wasm.worker.js',
+    this.workerScriptUrl = './packages/wasm_run/assets/wasm.worker.js',
     this.workerMapImportsScriptUrl,
     this.onWorkerMessage,
   });

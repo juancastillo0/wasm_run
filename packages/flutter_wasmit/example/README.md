@@ -1,6 +1,6 @@
-# flutter_wasmit_example
+# flutter_wasm_run_example
 
-Demonstrates how to use the flutter_wasmit plugin.
+Demonstrates how to use the flutter_wasm_run plugin.
 
 ## Getting Started
 
