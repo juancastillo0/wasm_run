@@ -52,8 +52,10 @@ struct StoreState {
     // TODO: add to stdin?
 }
 
-pub struct WasmitSharedMemory(pub RustOpaque<RwLock<SharedMemory>>);
+#[derive(Debug)]
+pub struct WasmitSharedMemory(pub RustOpaque<Arc<RwLock<SharedMemory>>>);
 
+#[derive(Debug)]
 pub struct SharedMemory;
 
 #[derive(Debug, Clone, Copy)]
@@ -64,11 +66,17 @@ pub struct WasmitInstanceId(pub u32);
 
 pub fn module_builder(
     module: CompiledModule,
+    num_threads: Option<usize>,
     wasi_config: Option<WasiConfigNative>,
 ) -> Result<SyncReturn<WasmitModuleId>> {
     if wasi_config.is_some() && !cfg!(feature = "wasi") {
         return Err(anyhow::Error::msg(
             "WASI feature is not enabled. Please enable it by adding `--features wasi` when building.",
+        ));
+    }
+    if num_threads.is_some() {
+        return Err(anyhow::Error::msg(
+            "Multi-threading is not supported for the wasmi runtime.",
         ));
     }
 
@@ -195,7 +203,7 @@ impl WasmitModuleId {
     }
     pub fn instantiate(&self) -> Result<WasmitInstanceId> {
         let mut state = ARRAY.write().unwrap();
-        let mut module = state.map.get_mut(&self.0).unwrap();
+        let module = state.map.get_mut(&self.0).unwrap();
         if module.instance.is_some() {
             return Err(anyhow::anyhow!("Instance already exists"));
         }
@@ -277,6 +285,30 @@ impl WasmitModuleId {
         })
     }
 
+    #[allow(unused_variables)]
+    pub fn call_function_handle_parallel(
+        &self,
+        func_name: String,
+        args: Vec<WasmVal>,
+        num_tasks: usize,
+        function_stream: StreamSink<ParallelExec>,
+    ) {
+        function_stream.add(ParallelExec::Err(
+            "Parallel execution is not supported for wasmit.".to_string(),
+        ));
+    }
+
+    #[allow(unused_variables)]
+    pub fn worker_execution(
+        &self,
+        worker_index: usize,
+        results: Vec<WasmVal>,
+    ) -> Result<SyncReturn<()>> {
+        Err(anyhow::anyhow!(
+            "Parallel execution is not supported for wasmit."
+        ))
+    }
+
     fn with_module_mut<T>(&self, f: impl FnOnce(StoreContextMut<'_, StoreState>) -> T) -> T {
         {
             let stack = CALLER_STACK.read().unwrap();
@@ -318,17 +350,15 @@ impl WasmitModuleId {
     }
 
     fn with_module<T>(&self, f: impl FnOnce(&StoreContext<'_, StoreState>) -> T) -> T {
-        // TODO: Only read
-        // {
-        //     let stack = CALLER_STACK.read().unwrap();
-        //     if let Some(caller) = stack.last() {
-        //         return f(&caller.read().unwrap().as_context());
-        //     }
-        // }
-        // let arr = ARRAY.read().unwrap();
-        // let value = &arr.map[&self.0];
-        // f(&value.store.as_context())
-        self.with_module_mut(|ctx| f(&ctx.as_context()))
+        {
+            let stack = CALLER_STACK.read().unwrap();
+            if let Some(caller) = stack.last() {
+                return f(&caller.read().unwrap().as_context());
+            }
+        }
+        let arr = ARRAY.read().unwrap();
+        let value = arr.map.get(&self.0).unwrap();
+        f(&value.store.as_context())
     }
 
     pub fn get_function_type(&self, func: RustOpaque<WFunc>) -> SyncReturn<FuncTy> {
@@ -400,11 +430,19 @@ impl WasmitModuleId {
     pub fn create_global(
         &self,
         value: WasmVal,
-        mutability: GlobalMutability,
+        mutable: bool,
     ) -> Result<SyncReturn<RustOpaque<Global>>> {
         self.with_module_mut(|mut store| {
             let mapped = value.to_value(&mut store);
-            let global = Global::new(&mut store, mapped, mutability.into());
+            let global = Global::new(
+                &mut store,
+                mapped,
+                if mutable {
+                    Mutability::Var
+                } else {
+                    Mutability::Const
+                },
+            );
             Ok(SyncReturn(RustOpaque::new(global)))
         })
     }
@@ -418,7 +456,7 @@ impl WasmitModuleId {
             let mapped_value = value.to_value(&mut store);
             let table = Table::new(
                 &mut store,
-                TableType::new(mapped_value.ty(), table_type.min, table_type.max),
+                TableType::new(mapped_value.ty(), table_type.minimum, table_type.maximum),
                 mapped_value,
             )
             .map_err(to_anyhow)?;
@@ -460,6 +498,18 @@ impl WasmitModuleId {
     }
     pub fn get_memory_data_pointer(&self, memory: RustOpaque<Memory>) -> SyncReturn<usize> {
         SyncReturn(self.with_module_mut(|store| memory.data_mut(store).as_mut_ptr() as usize))
+    }
+    pub fn get_memory_data_pointer_and_length(
+        &self,
+        memory: RustOpaque<Memory>,
+    ) -> SyncReturn<PointerAndLength> {
+        SyncReturn(self.with_module(|store| {
+            let data = memory.data(store);
+            PointerAndLength {
+                pointer: data.as_ptr() as usize,
+                length: data.len(),
+            }
+        }))
     }
     pub fn read_memory(
         &self,
@@ -746,21 +796,6 @@ impl WasmitSharedMemory {
     }
 }
 
-/// Result of [SharedMemory.atomicWait32] and [SharedMemory.atomicWait64]
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
-#[allow(unused)]
-pub enum SharedMemoryWaitResult {
-    /// Indicates that a `wait` completed by being awoken by a different thread.
-    /// This means the thread went to sleep and didn't time out.
-    Ok = 0,
-    /// Indicates that `wait` did not complete and instead returned due to the
-    /// value in memory not matching the expected value.
-    Mismatch = 1,
-    /// Indicates that `wait` completed with a timeout, meaning that the
-    /// original value matched as expected but nothing ever called `notify`.
-    TimedOut = 2,
-}
-
 #[allow(unused)]
 impl Atomics {
     /// Adds the provided value to the existing value at the specified index of the array. Returns the old value at that index.
@@ -815,9 +850,4 @@ impl Atomics {
     pub fn xor(&self, offset: usize, kind: AtomicKind, val: i64, order: AtomicOrdering) -> i64 {
         unreachable!()
     }
-}
-
-pub struct CompareExchangeResult {
-    pub success: bool,
-    pub value: i64,
 }

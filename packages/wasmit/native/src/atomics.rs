@@ -31,6 +31,37 @@ impl From<AtomicOrdering> for atomic::Ordering {
     }
 }
 
+/// Result of [SharedMemory.atomicWait32] and [SharedMemory.atomicWait64]
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[allow(non_camel_case_types)]
+pub enum SharedMemoryWaitResult {
+    /// Indicates that a `wait` completed by being awoken by a different thread.
+    /// This means the thread went to sleep and didn't time out.
+    ok = 0,
+    /// Indicates that `wait` did not complete and instead returned due to the
+    /// value in memory not matching the expected value.
+    mismatch = 1,
+    /// Indicates that `wait` completed with a timeout, meaning that the
+    /// original value matched as expected but nothing ever called `notify`.
+    timedOut = 2,
+}
+
+#[cfg(feature = "wasmtime")]
+impl From<wasmtime::WaitResult> for SharedMemoryWaitResult {
+    fn from(result: wasmtime::WaitResult) -> Self {
+        match result {
+            wasmtime::WaitResult::Ok => SharedMemoryWaitResult::ok,
+            wasmtime::WaitResult::Mismatch => SharedMemoryWaitResult::mismatch,
+            wasmtime::WaitResult::TimedOut => SharedMemoryWaitResult::timedOut,
+        }
+    }
+}
+
+pub struct CompareExchangeResult {
+    pub success: bool,
+    pub value: i64,
+}
+
 macro_rules! create_atomic {
     ($integer_struct:ty, $integer:ty, $integer_atomic:ty) => {
         impl $integer_struct {

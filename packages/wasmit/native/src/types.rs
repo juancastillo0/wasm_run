@@ -103,8 +103,8 @@ pub struct GlobalTy {
 impl From<&GlobalType> for GlobalTy {
     fn from(value: &GlobalType) -> Self {
         GlobalTy {
-            content: (&value.content()).into(),
-            mutability: value.mutability().into(),
+            value: (&value.content()).into(),
+            mutable: value.mutability() == Mutability::Var,
         }
     }
 }
@@ -238,26 +238,6 @@ pub struct ModuleImport {
     pub value: ExternalValue,
 }
 
-#[cfg(not(feature = "wasmtime"))]
-impl From<Mutability> for GlobalMutability {
-    fn from(value: Mutability) -> Self {
-        match value {
-            Mutability::Const => GlobalMutability::Const,
-            Mutability::Var => GlobalMutability::Var,
-        }
-    }
-}
-
-#[cfg(not(feature = "wasmtime"))]
-impl From<GlobalMutability> for Mutability {
-    fn from(value: GlobalMutability) -> Self {
-        match value {
-            GlobalMutability::Const => Mutability::Const,
-            GlobalMutability::Var => Mutability::Var,
-        }
-    }
-}
-
 /// The type of an external (imported or exported) WASM value.
 #[derive(Debug)]
 pub enum ExternalType {
@@ -350,6 +330,21 @@ impl From<&wasmtime::FuncType> for FuncTy {
             results: func.results().map(ValueTy::from).collect(),
         }
     }
+}
+
+#[allow(dead_code)]
+pub enum ParallelExec {
+    Ok(Vec<WasmVal>),
+    Err(String),
+    Call(FunctionCall),
+}
+
+pub struct FunctionCall {
+    pub args: Vec<WasmVal>,
+    pub function_id: u32,
+    pub function_pointer: usize,
+    pub num_results: usize,
+    pub worker_index: usize,
 }
 
 #[derive(Debug)]
@@ -470,6 +465,7 @@ impl From<&ExternalValue> for Extern {
             ExternalValue::Global(g) => Extern::Global(**g),
             ExternalValue::Table(t) => Extern::Table(**t),
             ExternalValue::Memory(m) => Extern::Memory(**m),
+            ExternalValue::SharedMemory(_) => unreachable!(),
         }
     }
     // fn to_extern<T>(&self, store: &mut Store<T>) -> Result<Extern> {
@@ -578,6 +574,11 @@ impl From<&wasmtime::MemoryType> for MemoryTy {
             shared: memory_type.is_shared(),
         }
     }
+}
+
+pub struct PointerAndLength {
+    pub pointer: usize,
+    pub length: usize,
 }
 
 pub fn to_anyhow<T: Display>(value: T) -> anyhow::Error {
