@@ -573,24 +573,12 @@ WasmExternal _makeWasmFunction(Function value, String? name) {
         null,
       );
 
-  bool hasBigInt64 = false;
-  try {
-    Function.apply(value, List.filled(params.length, 0));
-  } catch (e) {
-    hasBigInt64 =
-        e.toString().startsWith("NoSuchMethodError: method not found: 'call'");
-  }
   final function = WasmFunction(
     value,
     name: name,
     params: params,
     call: ([args]) {
-      final Object? result;
-      if (hasBigInt64) {
-        result = js_util.callMethod<Object?>(value, 'apply', [null, args]);
-      } else {
-        result = Function.apply(value, args ?? const []);
-      }
+      final result = js_util.callMethod<Object?>(value, 'apply', [null, args]);
       if (result is List) return result;
       if (isVoidReturn(result)) return const [];
       return List.filled(1, result);
