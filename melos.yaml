@@ -65,5 +65,5 @@ scripts:
       dir-exists: test
 
   test:coverage:
-    run: cd packages/wasm_run && dart pub global activate coverage && dart pub global run coverage:test_with_coverage --branch-coverage --function-coverage
+    run: cd packages/wasm_run && rm dart_test.yaml && flutter test --coverage ; cp example/dart_test.yaml dart_test.yaml
     description: Run all Dart & Flutter tests in this project and collect coverage.
