@@ -15,6 +15,7 @@ cp -fr packages/rust_wasi_example/target/wasm32-wasi/$BUILD_PROFILE_PATH/rust_wa
 
 # rust_threads_example
 rustup +nightly target add wasm32-unknown-unknown
+rustup +nightly component add rust-src
 RUSTFLAGS='-C target-feature=+atomics,+bulk-memory,+mutable-globals' \
     cargo +nightly build --target wasm32-unknown-unknown --profile $BUILD_PROFILE -Z build-std=std,panic_abort \
     --manifest-path packages/rust_threads_example/Cargo.toml
