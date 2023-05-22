@@ -6,7 +6,7 @@ import 'package:wasm_run/src/ffi/library_locator.dart';
 
 typedef ExternalLibrary = DynamicLibrary;
 
-WasmitDart createWrapperImpl(ExternalLibrary dylib) => WasmitDartImpl(dylib);
+WasmRunDart createWrapperImpl(ExternalLibrary dylib) => WasmRunDartImpl(dylib);
 
 ExternalLibrary localTestingLibraryImpl() {
   final filename = getDesktopLibName();
@@ -56,7 +56,7 @@ ExternalLibrary createLibraryImpl() {
     } catch (_) {}
 
     throw Exception(
-      'Wasmit library not found. Did you run `dart run wasm_run:setup`?',
+      'WasmRun library not found. Did you run `dart run wasm_run:setup`?',
     );
   }
 }

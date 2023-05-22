@@ -1,15 +1,15 @@
 import 'dart:io';
 
-/// The expected name of the Wasmit library when compiled for Apple devices.
+/// The expected name of the WasmRun library when compiled for Apple devices.
 const appleLib = 'libwasm_run_dart.dylib';
 
-/// The expected name of the Wasmit library when compiled for Linux devices.
+/// The expected name of the WasmRun library when compiled for Linux devices.
 const linuxLib = 'libwasm_run_dart.so';
 
-/// The expected name of the Wasmit library when compiled for Windows devices.
+/// The expected name of the WasmRun library when compiled for Windows devices.
 const windowsLib = 'wasm_run_dart.dll';
 
-/// Returns the name of the Wasmit library for the current platform.
+/// Returns the name of the WasmRun library for the current platform.
 /// Throws an [UnsupportedError] if the current platform is not supported
 /// or is not a desktop platform.
 String getDesktopLibName() {

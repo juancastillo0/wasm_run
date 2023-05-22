@@ -105,11 +105,11 @@ class _WasmModule extends WasmModule {
   }
 }
 
-WasmVal _fromWasmValue(WasmValue value, WasmitModuleId module) {
+WasmVal _fromWasmValue(WasmValue value, WasmRunModuleId module) {
   return _fromWasmValueRaw(value.type, value.value, module);
 }
 
-WasmVal _fromWasmValueRaw(ValueTy ty, Object? value, WasmitModuleId module) {
+WasmVal _fromWasmValueRaw(ValueTy ty, Object? value, WasmRunModuleId module) {
   switch (ty) {
     case ValueTy.i32:
       return WasmVal.i32(value! as int);
@@ -133,7 +133,7 @@ WasmVal _fromWasmValueRaw(ValueTy ty, Object? value, WasmitModuleId module) {
   }
 }
 
-WasmVal_funcRef _makeFunction(WasmFunction function, WasmitModuleId module) {
+WasmVal_funcRef _makeFunction(WasmFunction function, WasmRunModuleId module) {
   final functionId = _References.getOrCreateId(function, module);
   final func = module.createFunction(
     functionPointer: _References.globalWasmFunctionPointer,
@@ -153,7 +153,7 @@ WasmExternalKind _toImpExpKind(ExternalType kind) {
   );
 }
 
-WasmFunction _toWasmFunction(WFunc func, WasmitModuleId module, String? name) {
+WasmFunction _toWasmFunction(WFunc func, WasmRunModuleId module, String? name) {
   final type = module.getFunctionType(func: func);
   final params = type.parameters;
 
@@ -219,7 +219,7 @@ WasmExternal _toWasmExternal(ModuleExportValue value, _Instance instance) {
 
 @immutable
 class _ModuleObjectReference {
-  final WasmitModuleId module;
+  final WasmRunModuleId module;
   final Object value;
 
   const _ModuleObjectReference(this.module, this.value);
@@ -252,7 +252,7 @@ class _References {
   static final Map<int, _ModuleObjectReference> _idToReference = {};
   static final Map<_ModuleObjectReference, int> _referenceToId = {};
 
-  static int getOrCreateId(Object reference, WasmitModuleId module) {
+  static int getOrCreateId(Object reference, WasmRunModuleId module) {
     final ref = _ModuleObjectReference(module, reference);
     final id = _referenceToId.putIfAbsent(ref, () {
       final id = _lastId++;
@@ -262,7 +262,7 @@ class _References {
     return id;
   }
 
-  static Object? getReference(int? id, WasmitModuleId module) {
+  static Object? getReference(int? id, WasmRunModuleId module) {
     if (id == null) return null;
     final ref = _idToReference[id];
     assert(ref != null, 'Invalid reference: id $id module ${module.field0}');
@@ -314,7 +314,7 @@ class _References {
     try {
       final l = wireSyncReturnIntoDart(value);
       final input = _wire2api_list_wasm_val(l[0]);
-      final platform = (defaultInstance() as WasmitDartImpl).platform;
+      final platform = (defaultInstance() as WasmRunDartImpl).platform;
       final mapped = executeFunction(functionId, input);
       // TODO: null pointer when mapped is empty?
       // ignore: invalid_use_of_protected_member
@@ -360,7 +360,7 @@ class _References {
     }
   }
 
-  static Object? dartValueFromWasm(WasmVal raw, WasmitModuleId module) {
+  static Object? dartValueFromWasm(WasmVal raw, WasmRunModuleId module) {
     return raw.when(
       i32: (value) => value,
       i64: (value) => value,
@@ -375,7 +375,7 @@ class _References {
     );
   }
 
-  static WasmValue dartValueTypedFromWasm(WasmVal raw, WasmitModuleId module) {
+  static WasmValue dartValueTypedFromWasm(WasmVal raw, WasmRunModuleId module) {
     return raw.when(
       i32: WasmValue.i32,
       i64: WasmValue.i64,
@@ -393,7 +393,7 @@ class _References {
 
 class _Builder extends WasmInstanceBuilder {
   final _WasmModule compiledModule;
-  final WasmitModuleId module;
+  final WasmRunModuleId module;
   final WasiConfig? wasiConfig;
   final _WasmInstanceFuel? _fuel;
 
@@ -534,7 +534,7 @@ class _Builder extends WasmInstanceBuilder {
 }
 
 class _WasmInstanceFuel extends WasmInstanceFuel {
-  final WasmitModuleId module;
+  final WasmRunModuleId module;
   int _fuelAdded = 0;
 
   _WasmInstanceFuel(this.module);
@@ -560,7 +560,7 @@ class _WasmInstanceFuel extends WasmInstanceFuel {
 }
 
 class _Instance extends WasmInstance {
-  final WasmitInstanceId instance;
+  final WasmRunInstanceId instance;
   final _Builder builder;
   @override
   _WasmModule get module => builder.compiledModule;
@@ -704,7 +704,7 @@ class _Instance extends WasmInstance {
 
 class _Memory extends WasmMemory {
   final Memory memory;
-  final WasmitModuleId module;
+  final WasmRunModuleId module;
   PointerAndLength? _previous;
   late Uint8List _view;
 
@@ -751,7 +751,7 @@ class _Memory extends WasmMemory {
 }
 
 class _SharedMemory extends WasmSharedMemory {
-  final WasmitSharedMemory memory;
+  final WasmRunSharedMemory memory;
 
   _SharedMemory(this.memory);
 
@@ -824,7 +824,7 @@ class _WasmFunction extends WasmFunction {
 
 class _Global extends WasmGlobal {
   final Global global;
-  final WasmitModuleId module;
+  final WasmRunModuleId module;
 
   _Global(this.global, this.module);
 
@@ -846,7 +846,7 @@ class _Global extends WasmGlobal {
 
 class _Table extends WasmTable {
   final Table table;
-  final WasmitModuleId module;
+  final WasmRunModuleId module;
 
   _Table(this.table, this.module);
 

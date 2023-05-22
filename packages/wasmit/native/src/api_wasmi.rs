@@ -53,22 +53,22 @@ struct StoreState {
 }
 
 #[derive(Debug)]
-pub struct WasmitSharedMemory(pub RustOpaque<Arc<RwLock<SharedMemory>>>);
+pub struct WasmRunSharedMemory(pub RustOpaque<Arc<RwLock<SharedMemory>>>);
 
 #[derive(Debug)]
 pub struct SharedMemory;
 
 #[derive(Debug, Clone, Copy)]
-pub struct WasmitModuleId(pub u32);
+pub struct WasmRunModuleId(pub u32);
 
 #[derive(Debug, Clone, Copy)]
-pub struct WasmitInstanceId(pub u32);
+pub struct WasmRunInstanceId(pub u32);
 
 pub fn module_builder(
     module: CompiledModule,
     num_threads: Option<usize>,
     wasi_config: Option<WasiConfigNative>,
-) -> Result<SyncReturn<WasmitModuleId>> {
+) -> Result<SyncReturn<WasmRunModuleId>> {
     if wasi_config.is_some() && !cfg!(feature = "wasi") {
         return Err(anyhow::Error::msg(
             "WASI feature is not enabled. Please enable it by adding `--features wasi` when building.",
@@ -150,7 +150,7 @@ pub fn module_builder(
     };
     arr.map.insert(id, module_builder);
 
-    Ok(SyncReturn(WasmitModuleId(id)))
+    Ok(SyncReturn(WasmRunModuleId(id)))
 }
 
 struct ModuleIOWriter {
@@ -160,7 +160,7 @@ struct ModuleIOWriter {
 
 impl Write for ModuleIOWriter {
     fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
-        WasmitModuleId(self.id).with_module(|store| {
+        WasmRunModuleId(self.id).with_module(|store| {
             let data = store.data();
 
             let sink = if self.is_stdout {
@@ -183,7 +183,7 @@ impl Write for ModuleIOWriter {
     }
 }
 
-impl WasmitInstanceId {
+impl WasmRunInstanceId {
     pub fn exports(&self) -> SyncReturn<Vec<ModuleExportValue>> {
         let value = &ARRAY.read().unwrap().map[&self.0];
         SyncReturn(
@@ -197,11 +197,11 @@ impl WasmitInstanceId {
     }
 }
 
-impl WasmitModuleId {
-    pub fn instantiate_sync(&self) -> Result<SyncReturn<WasmitInstanceId>> {
+impl WasmRunModuleId {
+    pub fn instantiate_sync(&self) -> Result<SyncReturn<WasmRunInstanceId>> {
         Ok(SyncReturn(self.instantiate()?))
     }
-    pub fn instantiate(&self) -> Result<WasmitInstanceId> {
+    pub fn instantiate(&self) -> Result<WasmRunInstanceId> {
         let mut state = ARRAY.write().unwrap();
         let module = state.map.get_mut(&self.0).unwrap();
         if module.instance.is_some() {
@@ -213,7 +213,7 @@ impl WasmitModuleId {
             .start(&mut module.store)?;
 
         module.instance = Some(instance);
-        Ok(WasmitInstanceId(self.0))
+        Ok(WasmRunInstanceId(self.0))
     }
     pub fn link_imports(&self, imports: Vec<ModuleImport>) -> Result<SyncReturn<()>> {
         let mut arr = ARRAY.write().unwrap();
@@ -649,7 +649,7 @@ impl CompiledModule {
     pub fn create_shared_memory(
         &self,
         memory_type: MemoryTy,
-    ) -> Result<SyncReturn<WasmitSharedMemory>> {
+    ) -> Result<SyncReturn<WasmRunSharedMemory>> {
         Err(anyhow::Error::msg(
             "shared_memory is not supported for wasmi",
         ))
@@ -707,7 +707,7 @@ pub fn wasm_runtime_features() -> SyncReturn<WasmRuntimeFeatures> {
 }
 
 #[allow(unused)]
-impl WasmitSharedMemory {
+impl WasmRunSharedMemory {
     pub fn ty(&self) -> SyncReturn<MemoryTy> {
         unreachable!()
     }

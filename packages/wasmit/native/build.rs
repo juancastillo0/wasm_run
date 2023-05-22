@@ -41,8 +41,8 @@ fn main() {
     generated
         .write_all(
             "
-extension WasmitDartImplPlatform on WasmitDartImpl {
-    WasmitDartPlatform get platform => _platform;
+extension WasmRunDartImplPlatform on WasmRunDartImpl {
+    WasmRunDartPlatform get platform => _platform;
 }
 "
             .as_bytes(),

@@ -1,10 +1,10 @@
 import 'package:flutter_rust_bridge/flutter_rust_bridge.dart';
-import 'package:wasmit/src/bridge_generated.dart';
+import 'package:wasm_run/src/bridge_generated.dart';
 
 typedef ExternalLibrary = WasmModule;
 
-WasmitDart createWrapperImpl(ExternalLibrary module) =>
-    WasmitDartImpl.wasm(module);
+WasmRunDart createWrapperImpl(ExternalLibrary module) =>
+    WasmRunDartImpl.wasm(module);
 
 ExternalLibrary localTestingLibraryImpl() => throw UnimplementedError();
 

@@ -8,7 +8,7 @@ import 'package:wasm_run/src/ffi/library_locator.dart'
 
 /// Downloads the native dynamic library for the current platform.
 /// The output file will be written to `{projectRoot}/.dart_tool/wasm_run/{dynamicLibrary}`.
-/// This is used by the `WasmitDart` class to load the native library.
+/// This is used by the `WasmRunDart` class to load the native library.
 Future<void> main() async {
   /// Get the CPU architecture.
   final cpuArchitecture = await CpuArchitecture.currentCpuArchitecture();

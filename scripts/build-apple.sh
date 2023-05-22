@@ -33,7 +33,7 @@ if [[ $BUILD_RUST_WASM_EXAMPLES != false ]]; then
 fi
 
 # Create XCFramework zip
-FRAMEWORK="Wasmit.xcframework"
+FRAMEWORK="WasmRun.xcframework"
 LIBNAME=libwasm_run_dart.a
 DYNAMIC_LIBNAME=libwasm_run_dart.dylib
 mkdir mac-lipo ios-sim-lipo

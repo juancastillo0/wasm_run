@@ -1,6 +1,6 @@
 import 'package:logging/logging.dart';
 
-final logger = Logger('Wasmit');
+final logger = Logger('WasmRun');
 
 void logWasiNoStartOrInitialize() {
   logger.severe(

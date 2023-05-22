@@ -413,7 +413,7 @@ pub enum ExternalValue {
     Global(RustOpaque<wasmtime::Global>),
     Table(RustOpaque<wasmtime::Table>),
     Memory(RustOpaque<wasmtime::Memory>),
-    SharedMemory(crate::api::WasmitSharedMemory),
+    SharedMemory(crate::api::WasmRunSharedMemory),
 }
 
 #[cfg(not(feature = "wasmtime"))]
@@ -423,7 +423,7 @@ pub enum ExternalValue {
     Global(RustOpaque<Global>),
     Table(RustOpaque<Table>),
     Memory(RustOpaque<Memory>),
-    SharedMemory(crate::api::WasmitSharedMemory),
+    SharedMemory(crate::api::WasmRunSharedMemory),
 }
 
 impl Default for wire_ExternalValue {

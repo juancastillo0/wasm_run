@@ -1,5 +1,5 @@
 # Run with `flutter pub run ffigen --config ffigen.yaml`.
-name: FlutterWasmitBindings
+name: FlutterWasmRunBindings
 description: |
   Bindings for `src/flutter_wasm_run.h`.
 

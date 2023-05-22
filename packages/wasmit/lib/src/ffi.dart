@@ -3,9 +3,9 @@ import 'package:wasm_run/src/ffi/stub.dart'
     if (dart.library.io) 'ffi/io.dart'
     if (dart.library.html) 'ffi/web.dart';
 
-WasmitDart? _wrapper;
+WasmRunDart? _wrapper;
 
-WasmitDart createWrapper(ExternalLibrary lib) {
+WasmRunDart createWrapper(ExternalLibrary lib) {
   _wrapper ??= createWrapperImpl(lib);
   return _wrapper!;
 }
@@ -26,7 +26,7 @@ void setDynamicLibrary(ExternalLibrary lib) {
   createWrapper(lib);
 }
 
-WasmitDart defaultInstance() {
+WasmRunDart defaultInstance() {
   if (_wrapper != null) {
     return _wrapper!;
   }
@@ -50,4 +50,4 @@ WasmitDart defaultInstance() {
   }
 }
 
-WasmitDart createLib() => createWrapper(createLibraryImpl());
+WasmRunDart createLib() => createWrapper(createLibraryImpl());

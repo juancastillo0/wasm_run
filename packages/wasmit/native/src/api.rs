@@ -83,10 +83,10 @@ struct HostFunction {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub struct WasmitModuleId(pub u32);
+pub struct WasmRunModuleId(pub u32);
 
 #[derive(Debug, Clone, Copy)]
-pub struct WasmitInstanceId(pub u32);
+pub struct WasmRunInstanceId(pub u32);
 
 fn make_wasi_ctx(
     id: u32,
@@ -141,7 +141,7 @@ pub fn module_builder(
     module: CompiledModule,
     num_threads: Option<usize>,
     wasi_config: Option<WasiConfigNative>,
-) -> Result<SyncReturn<WasmitModuleId>> {
+) -> Result<SyncReturn<WasmRunModuleId>> {
     let guard = module.0.lock().unwrap();
     let engine = guard.engine();
 
@@ -217,7 +217,7 @@ pub fn module_builder(
     };
     arr.map.insert(id, module_builder);
 
-    Ok(SyncReturn(WasmitModuleId(id)))
+    Ok(SyncReturn(WasmRunModuleId(id)))
 }
 
 struct ModuleIOWriter {
@@ -227,7 +227,7 @@ struct ModuleIOWriter {
 
 impl Write for ModuleIOWriter {
     fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
-        WasmitModuleId(self.id).with_module(|store| {
+        WasmRunModuleId(self.id).with_module(|store| {
             let data = store.data();
 
             let sink = if self.is_stdout {
@@ -279,7 +279,7 @@ impl FunctionChannels {
     }
 }
 
-impl WasmitInstanceId {
+impl WasmRunInstanceId {
     pub fn exports(&self) -> SyncReturn<Vec<ModuleExportValue>> {
         let mut v = ARRAY.write().unwrap();
         let value = v.map.get_mut(&self.0).unwrap();
@@ -296,11 +296,11 @@ impl WasmitInstanceId {
     }
 }
 
-impl WasmitModuleId {
-    pub fn instantiate_sync(&self) -> Result<SyncReturn<WasmitInstanceId>> {
+impl WasmRunModuleId {
+    pub fn instantiate_sync(&self) -> Result<SyncReturn<WasmRunInstanceId>> {
         Ok(SyncReturn(self.instantiate()?))
     }
-    pub fn instantiate(&self) -> Result<WasmitInstanceId> {
+    pub fn instantiate(&self) -> Result<WasmRunInstanceId> {
         let mut state = ARRAY.write().unwrap();
         let module = state.map.get_mut(&self.0).unwrap();
         if module.instance.is_some() {
@@ -361,7 +361,7 @@ impl WasmitModuleId {
             //             .collect::<Vec<_>>();
 
             //         // TODO: use same module instance
-            //         WasmitModuleId(module_id)
+            //         WasmRunModuleId(module_id)
             //             .with_module_mut(|ctx| {
             //                 let f: WasmFunction =
             //                     unsafe { std::mem::transmute(req.function_pointer) };
@@ -374,7 +374,7 @@ impl WasmitModuleId {
             // });
         }
 
-        Ok(WasmitInstanceId(self.0))
+        Ok(WasmRunInstanceId(self.0))
     }
 
     fn map_function(
@@ -1040,7 +1040,7 @@ impl CompiledModule {
     pub fn create_shared_memory(
         &self,
         memory_type: MemoryTy,
-    ) -> Result<SyncReturn<WasmitSharedMemory>> {
+    ) -> Result<SyncReturn<WasmRunSharedMemory>> {
         let module = self.0.lock().unwrap();
         let memory = SharedMemory::new(module.engine(), memory_type.to_memory_type()?)?;
         Ok(SyncReturn(memory.into()))
@@ -1098,15 +1098,15 @@ pub fn wasm_runtime_features() -> SyncReturn<WasmRuntimeFeatures> {
 }
 
 #[derive(Debug, Clone)]
-pub struct WasmitSharedMemory(pub RustOpaque<Arc<RwLock<SharedMemory>>>);
+pub struct WasmRunSharedMemory(pub RustOpaque<Arc<RwLock<SharedMemory>>>);
 
-impl From<SharedMemory> for WasmitSharedMemory {
+impl From<SharedMemory> for WasmRunSharedMemory {
     fn from(memory: SharedMemory) -> Self {
-        WasmitSharedMemory(RustOpaque::new(Arc::new(RwLock::new(memory))))
+        WasmRunSharedMemory(RustOpaque::new(Arc::new(RwLock::new(memory))))
     }
 }
 
-impl WasmitSharedMemory {
+impl WasmRunSharedMemory {
     pub fn ty(&self) -> SyncReturn<MemoryTy> {
         SyncReturn((&self.0.read().unwrap().ty()).into())
     }

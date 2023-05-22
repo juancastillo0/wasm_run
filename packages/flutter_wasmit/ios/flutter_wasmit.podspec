@@ -2,7 +2,7 @@ release_tag_name = 'wasm_run-v0.0.1' # generated; do not edit
 
 # We cannot distribute the XCFramework alongside the library directly,
 # so we have to fetch the correct version here.
-framework_name = 'Wasmit.xcframework'
+framework_name = 'WasmRun.xcframework'
 remote_zip_name = "#{framework_name}.zip"
 url = "https://github.com/juancastillo0/wasm_interpreter/releases/download/#{release_tag_name}/#{remote_zip_name}"
 local_zip_name = "#{release_tag_name}.zip"

@@ -1,12 +1,12 @@
-import 'package:wasmit/src/bridge_generated.dart';
+import 'package:wasm_run/src/bridge_generated.dart';
 
-/// Represents the external library for wasmit
+/// Represents the external library for wasm_run
 ///
 /// Will be a DynamicLibrary for dart:io or WasmModule for dart:html
 typedef ExternalLibrary = Object;
 
 /// Creates a wrapper with the native bindings for the external library
-WasmitDart createWrapperImpl(ExternalLibrary lib) => throw UnimplementedError();
+WasmRunDart createWrapperImpl(ExternalLibrary lib) => throw UnimplementedError();
 
 /// Returns a library for testing purposes
 ExternalLibrary localTestingLibraryImpl() => throw UnimplementedError();
