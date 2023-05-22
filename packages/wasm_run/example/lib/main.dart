@@ -724,6 +724,97 @@ void testAll({TestArgs? testArgs}) {
   print('CONFIGURED ALL TEST IN ${getRunnerIdentity()}');
 }
 
+// TODO: more tests
+//   test('shared memory', () async {
+//     final binary = await getBinary(
+//       wat: r'''
+
+// ''',
+//       base64Binary: '',
+//     );
+//   });
+
+// shared table
+//   shared0.wat:
+
+// (module
+//   (import "js" "memory" (memory 1))
+//   (import "js" "table" (table 1 funcref))
+//   (elem (i32.const 0) $shared0func)
+//   (func $shared0func (result i32)
+//    i32.const 0
+//    i32.load)
+// )
+// shared1.wat:
+
+// (module
+//   (import "js" "memory" (memory 1))
+//   (import "js" "table" (table 1 funcref))
+//   (type $void_to_i32 (func (result i32)))
+//   (func (export "doIt") (result i32)
+//    i32.const 0
+//    i32.const 42
+//    i32.store  ;; store 42 at address 0
+//    i32.const 0
+//    call_indirect (type $void_to_i32))
+// )
+
+// Shared memories (memory 1 2 shared)
+
+//     test('memories', () async {
+//       final binary = await getBinary(
+// // https://github.com/bytecodealliance/wasmtime/blob/main/examples/multimemory.wat
+//         wat: r'''
+// (module
+//   (memory (export "memory0") 2 3)
+//   (memory (export "memory1") 2 4)
+
+//   (func (export "size0") (result i32) (memory.size 0))
+//   (func (export "load0") (param i32) (result i32)
+//     local.get 0
+//     i32.load8_s 0
+//   )
+//   (func (export "store0") (param i32 i32)
+//     local.get 0
+//     local.get 1
+//     i32.store8 0
+//   )
+//   (func (export "size1") (result i32) (memory.size 1))
+//   (func (export "load1") (param i32) (result i32)
+//     local.get 0
+//     i32.load8_s 1
+//   )
+//   (func (export "store1") (param i32 i32)
+//     local.get 0
+//     local.get 1
+//     i32.store8 1
+//   )
+
+//   (data (memory 0) (i32.const 0x1000) "\01\02\03\04")
+//   (data (memory 1) (i32.const 0x1000) "\04\03\02\01")
+// )
+//     ''',
+//         base64Binary:
+//             'AGFzbQEAAAABCAJgAX8AYAAAAg4BBGhvc3QFaGVsbG8AAAMCAQEHCQEFaGVsbG8AAQoIAQYAQQMQAAsAFARuYW1lAQ0BAApob3N0X2hlbGxv',
+//       );
+//     });
+//   });
+
+// https://github.com/bytecodealliance/wasmtime/blob/main/examples/memory.wat
+// (module
+//   (memory (export "memory") 2 3)
+
+//   (func (export "size") (result i32) (memory.size))
+//   (func (export "load") (param i32) (result i32)
+//     (i32.load8_s (local.get 0))
+//   )
+//   (func (export "store") (param i32 i32)
+//     (i32.store8 (local.get 0) (local.get 1))
+//   )
+
+//   (data (i32.const 0x1000) "\01\02\03\04")
+// )
+
 const endian = Endian.little;
 
 class Parser {

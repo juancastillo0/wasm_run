@@ -146,77 +146,77 @@ fn wire_wasm_runtime_features_impl() -> support::WireSyncReturn {
         move || Ok(wasm_runtime_features()),
     )
 }
-fn wire_exports__method__WasmitInstanceId_impl(
-    that: impl Wire2Api<WasmitInstanceId> + UnwindSafe,
+fn wire_exports__method__WasmRunInstanceId_impl(
+    that: impl Wire2Api<WasmRunInstanceId> + UnwindSafe,
 ) -> support::WireSyncReturn {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
         WrapInfo {
-            debug_name: "exports__method__WasmitInstanceId",
+            debug_name: "exports__method__WasmRunInstanceId",
             port: None,
             mode: FfiCallMode::Sync,
         },
         move || {
             let api_that = that.wire2api();
-            Ok(WasmitInstanceId::exports(&api_that))
+            Ok(WasmRunInstanceId::exports(&api_that))
         },
     )
 }
-fn wire_instantiate_sync__method__WasmitModuleId_impl(
-    that: impl Wire2Api<WasmitModuleId> + UnwindSafe,
+fn wire_instantiate_sync__method__WasmRunModuleId_impl(
+    that: impl Wire2Api<WasmRunModuleId> + UnwindSafe,
 ) -> support::WireSyncReturn {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
         WrapInfo {
-            debug_name: "instantiate_sync__method__WasmitModuleId",
+            debug_name: "instantiate_sync__method__WasmRunModuleId",
             port: None,
             mode: FfiCallMode::Sync,
         },
         move || {
             let api_that = that.wire2api();
-            WasmitModuleId::instantiate_sync(&api_that)
+            WasmRunModuleId::instantiate_sync(&api_that)
         },
     )
 }
-fn wire_instantiate__method__WasmitModuleId_impl(
+fn wire_instantiate__method__WasmRunModuleId_impl(
     port_: MessagePort,
-    that: impl Wire2Api<WasmitModuleId> + UnwindSafe,
+    that: impl Wire2Api<WasmRunModuleId> + UnwindSafe,
 ) {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap(
         WrapInfo {
-            debug_name: "instantiate__method__WasmitModuleId",
+            debug_name: "instantiate__method__WasmRunModuleId",
             port: Some(port_),
             mode: FfiCallMode::Normal,
         },
         move || {
             let api_that = that.wire2api();
-            move |task_callback| WasmitModuleId::instantiate(&api_that)
+            move |task_callback| WasmRunModuleId::instantiate(&api_that)
         },
     )
 }
-fn wire_link_imports__method__WasmitModuleId_impl(
-    that: impl Wire2Api<WasmitModuleId> + UnwindSafe,
+fn wire_link_imports__method__WasmRunModuleId_impl(
+    that: impl Wire2Api<WasmRunModuleId> + UnwindSafe,
     imports: impl Wire2Api<Vec<ModuleImport>> + UnwindSafe,
 ) -> support::WireSyncReturn {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
         WrapInfo {
-            debug_name: "link_imports__method__WasmitModuleId",
+            debug_name: "link_imports__method__WasmRunModuleId",
             port: None,
             mode: FfiCallMode::Sync,
         },
         move || {
             let api_that = that.wire2api();
             let api_imports = imports.wire2api();
-            WasmitModuleId::link_imports(&api_that, api_imports)
+            WasmRunModuleId::link_imports(&api_that, api_imports)
         },
     )
 }
-fn wire_stdio_stream__method__WasmitModuleId_impl(
+fn wire_stdio_stream__method__WasmRunModuleId_impl(
     port_: MessagePort,
-    that: impl Wire2Api<WasmitModuleId> + UnwindSafe,
+    that: impl Wire2Api<WasmRunModuleId> + UnwindSafe,
     kind: impl Wire2Api<StdIOKind> + UnwindSafe,
 ) {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap(
         WrapInfo {
-            debug_name: "stdio_stream__method__WasmitModuleId",
+            debug_name: "stdio_stream__method__WasmRunModuleId",
             port: Some(port_),
             mode: FfiCallMode::Stream,
         },
@@ -224,35 +224,35 @@ fn wire_stdio_stream__method__WasmitModuleId_impl(
             let api_that = that.wire2api();
             let api_kind = kind.wire2api();
             move |task_callback| {
-                WasmitModuleId::stdio_stream(&api_that, task_callback.stream_sink(), api_kind)
+                WasmRunModuleId::stdio_stream(&api_that, task_callback.stream_sink(), api_kind)
             }
         },
     )
 }
-fn wire_dispose__method__WasmitModuleId_impl(
+fn wire_dispose__method__WasmRunModuleId_impl(
     port_: MessagePort,
-    that: impl Wire2Api<WasmitModuleId> + UnwindSafe,
+    that: impl Wire2Api<WasmRunModuleId> + UnwindSafe,
 ) {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap(
         WrapInfo {
-            debug_name: "dispose__method__WasmitModuleId",
+            debug_name: "dispose__method__WasmRunModuleId",
             port: Some(port_),
             mode: FfiCallMode::Normal,
         },
         move || {
             let api_that = that.wire2api();
-            move |task_callback| WasmitModuleId::dispose(&api_that)
+            move |task_callback| WasmRunModuleId::dispose(&api_that)
         },
     )
 }
-fn wire_call_function_handle_sync__method__WasmitModuleId_impl(
-    that: impl Wire2Api<WasmitModuleId> + UnwindSafe,
+fn wire_call_function_handle_sync__method__WasmRunModuleId_impl(
+    that: impl Wire2Api<WasmRunModuleId> + UnwindSafe,
     func: impl Wire2Api<RustOpaque<WFunc>> + UnwindSafe,
     args: impl Wire2Api<Vec<WasmVal>> + UnwindSafe,
 ) -> support::WireSyncReturn {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
         WrapInfo {
-            debug_name: "call_function_handle_sync__method__WasmitModuleId",
+            debug_name: "call_function_handle_sync__method__WasmRunModuleId",
             port: None,
             mode: FfiCallMode::Sync,
         },
@@ -260,19 +260,19 @@ fn wire_call_function_handle_sync__method__WasmitModuleId_impl(
             let api_that = that.wire2api();
             let api_func = func.wire2api();
             let api_args = args.wire2api();
-            WasmitModuleId::call_function_handle_sync(&api_that, api_func, api_args)
+            WasmRunModuleId::call_function_handle_sync(&api_that, api_func, api_args)
         },
     )
 }
-fn wire_call_function_handle__method__WasmitModuleId_impl(
+fn wire_call_function_handle__method__WasmRunModuleId_impl(
     port_: MessagePort,
-    that: impl Wire2Api<WasmitModuleId> + UnwindSafe,
+    that: impl Wire2Api<WasmRunModuleId> + UnwindSafe,
     func: impl Wire2Api<RustOpaque<WFunc>> + UnwindSafe,
     args: impl Wire2Api<Vec<WasmVal>> + UnwindSafe,
 ) {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap(
         WrapInfo {
-            debug_name: "call_function_handle__method__WasmitModuleId",
+            debug_name: "call_function_handle__method__WasmRunModuleId",
             port: Some(port_),
             mode: FfiCallMode::Normal,
         },
@@ -280,20 +280,22 @@ fn wire_call_function_handle__method__WasmitModuleId_impl(
             let api_that = that.wire2api();
             let api_func = func.wire2api();
             let api_args = args.wire2api();
-            move |task_callback| WasmitModuleId::call_function_handle(&api_that, api_func, api_args)
+            move |task_callback| {
+                WasmRunModuleId::call_function_handle(&api_that, api_func, api_args)
+            }
         },
     )
 }
-fn wire_call_function_handle_parallel__method__WasmitModuleId_impl(
+fn wire_call_function_handle_parallel__method__WasmRunModuleId_impl(
     port_: MessagePort,
-    that: impl Wire2Api<WasmitModuleId> + UnwindSafe,
+    that: impl Wire2Api<WasmRunModuleId> + UnwindSafe,
     func_name: impl Wire2Api<String> + UnwindSafe,
     args: impl Wire2Api<Vec<WasmVal>> + UnwindSafe,
     num_tasks: impl Wire2Api<usize> + UnwindSafe,
 ) {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap(
         WrapInfo {
-            debug_name: "call_function_handle_parallel__method__WasmitModuleId",
+            debug_name: "call_function_handle_parallel__method__WasmRunModuleId",
             port: Some(port_),
             mode: FfiCallMode::Stream,
         },
@@ -303,7 +305,7 @@ fn wire_call_function_handle_parallel__method__WasmitModuleId_impl(
             let api_args = args.wire2api();
             let api_num_tasks = num_tasks.wire2api();
             move |task_callback| {
-                Ok(WasmitModuleId::call_function_handle_parallel(
+                Ok(WasmRunModuleId::call_function_handle_parallel(
                     &api_that,
                     api_func_name,
                     api_args,
@@ -314,14 +316,14 @@ fn wire_call_function_handle_parallel__method__WasmitModuleId_impl(
         },
     )
 }
-fn wire_worker_execution__method__WasmitModuleId_impl(
-    that: impl Wire2Api<WasmitModuleId> + UnwindSafe,
+fn wire_worker_execution__method__WasmRunModuleId_impl(
+    that: impl Wire2Api<WasmRunModuleId> + UnwindSafe,
     worker_index: impl Wire2Api<usize> + UnwindSafe,
     results: impl Wire2Api<Vec<WasmVal>> + UnwindSafe,
 ) -> support::WireSyncReturn {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
         WrapInfo {
-            debug_name: "worker_execution__method__WasmitModuleId",
+            debug_name: "worker_execution__method__WasmRunModuleId",
             port: None,
             mode: FfiCallMode::Sync,
         },
@@ -329,29 +331,29 @@ fn wire_worker_execution__method__WasmitModuleId_impl(
             let api_that = that.wire2api();
             let api_worker_index = worker_index.wire2api();
             let api_results = results.wire2api();
-            WasmitModuleId::worker_execution(&api_that, api_worker_index, api_results)
+            WasmRunModuleId::worker_execution(&api_that, api_worker_index, api_results)
         },
     )
 }
-fn wire_get_function_type__method__WasmitModuleId_impl(
-    that: impl Wire2Api<WasmitModuleId> + UnwindSafe,
+fn wire_get_function_type__method__WasmRunModuleId_impl(
+    that: impl Wire2Api<WasmRunModuleId> + UnwindSafe,
     func: impl Wire2Api<RustOpaque<WFunc>> + UnwindSafe,
 ) -> support::WireSyncReturn {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
         WrapInfo {
-            debug_name: "get_function_type__method__WasmitModuleId",
+            debug_name: "get_function_type__method__WasmRunModuleId",
             port: None,
             mode: FfiCallMode::Sync,
         },
         move || {
             let api_that = that.wire2api();
             let api_func = func.wire2api();
-            Ok(WasmitModuleId::get_function_type(&api_that, api_func))
+            Ok(WasmRunModuleId::get_function_type(&api_that, api_func))
         },
     )
 }
-fn wire_create_function__method__WasmitModuleId_impl(
-    that: impl Wire2Api<WasmitModuleId> + UnwindSafe,
+fn wire_create_function__method__WasmRunModuleId_impl(
+    that: impl Wire2Api<WasmRunModuleId> + UnwindSafe,
     function_pointer: impl Wire2Api<usize> + UnwindSafe,
     function_id: impl Wire2Api<u32> + UnwindSafe,
     param_types: impl Wire2Api<Vec<ValueTy>> + UnwindSafe,
@@ -359,7 +361,7 @@ fn wire_create_function__method__WasmitModuleId_impl(
 ) -> support::WireSyncReturn {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
         WrapInfo {
-            debug_name: "create_function__method__WasmitModuleId",
+            debug_name: "create_function__method__WasmRunModuleId",
             port: None,
             mode: FfiCallMode::Sync,
         },
@@ -369,7 +371,7 @@ fn wire_create_function__method__WasmitModuleId_impl(
             let api_function_id = function_id.wire2api();
             let api_param_types = param_types.wire2api();
             let api_result_types = result_types.wire2api();
-            WasmitModuleId::create_function(
+            WasmRunModuleId::create_function(
                 &api_that,
                 api_function_pointer,
                 api_function_id,
@@ -379,31 +381,31 @@ fn wire_create_function__method__WasmitModuleId_impl(
         },
     )
 }
-fn wire_create_memory__method__WasmitModuleId_impl(
-    that: impl Wire2Api<WasmitModuleId> + UnwindSafe,
+fn wire_create_memory__method__WasmRunModuleId_impl(
+    that: impl Wire2Api<WasmRunModuleId> + UnwindSafe,
     memory_type: impl Wire2Api<MemoryTy> + UnwindSafe,
 ) -> support::WireSyncReturn {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
         WrapInfo {
-            debug_name: "create_memory__method__WasmitModuleId",
+            debug_name: "create_memory__method__WasmRunModuleId",
             port: None,
             mode: FfiCallMode::Sync,
         },
         move || {
             let api_that = that.wire2api();
             let api_memory_type = memory_type.wire2api();
-            WasmitModuleId::create_memory(&api_that, api_memory_type)
+            WasmRunModuleId::create_memory(&api_that, api_memory_type)
         },
     )
 }
-fn wire_create_global__method__WasmitModuleId_impl(
-    that: impl Wire2Api<WasmitModuleId> + UnwindSafe,
+fn wire_create_global__method__WasmRunModuleId_impl(
+    that: impl Wire2Api<WasmRunModuleId> + UnwindSafe,
     value: impl Wire2Api<WasmVal> + UnwindSafe,
     mutable: impl Wire2Api<bool> + UnwindSafe,
 ) -> support::WireSyncReturn {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
         WrapInfo {
-            debug_name: "create_global__method__WasmitModuleId",
+            debug_name: "create_global__method__WasmRunModuleId",
             port: None,
             mode: FfiCallMode::Sync,
         },
@@ -411,18 +413,18 @@ fn wire_create_global__method__WasmitModuleId_impl(
             let api_that = that.wire2api();
             let api_value = value.wire2api();
             let api_mutable = mutable.wire2api();
-            WasmitModuleId::create_global(&api_that, api_value, api_mutable)
+            WasmRunModuleId::create_global(&api_that, api_value, api_mutable)
         },
     )
 }
-fn wire_create_table__method__WasmitModuleId_impl(
-    that: impl Wire2Api<WasmitModuleId> + UnwindSafe,
+fn wire_create_table__method__WasmRunModuleId_impl(
+    that: impl Wire2Api<WasmRunModuleId> + UnwindSafe,
     value: impl Wire2Api<WasmVal> + UnwindSafe,
     table_type: impl Wire2Api<TableArgs> + UnwindSafe,
 ) -> support::WireSyncReturn {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
         WrapInfo {
-            debug_name: "create_table__method__WasmitModuleId",
+            debug_name: "create_table__method__WasmRunModuleId",
             port: None,
             mode: FfiCallMode::Sync,
         },
@@ -430,52 +432,52 @@ fn wire_create_table__method__WasmitModuleId_impl(
             let api_that = that.wire2api();
             let api_value = value.wire2api();
             let api_table_type = table_type.wire2api();
-            WasmitModuleId::create_table(&api_that, api_value, api_table_type)
+            WasmRunModuleId::create_table(&api_that, api_value, api_table_type)
         },
     )
 }
-fn wire_get_global_type__method__WasmitModuleId_impl(
-    that: impl Wire2Api<WasmitModuleId> + UnwindSafe,
+fn wire_get_global_type__method__WasmRunModuleId_impl(
+    that: impl Wire2Api<WasmRunModuleId> + UnwindSafe,
     global: impl Wire2Api<RustOpaque<Global>> + UnwindSafe,
 ) -> support::WireSyncReturn {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
         WrapInfo {
-            debug_name: "get_global_type__method__WasmitModuleId",
+            debug_name: "get_global_type__method__WasmRunModuleId",
             port: None,
             mode: FfiCallMode::Sync,
         },
         move || {
             let api_that = that.wire2api();
             let api_global = global.wire2api();
-            Ok(WasmitModuleId::get_global_type(&api_that, api_global))
+            Ok(WasmRunModuleId::get_global_type(&api_that, api_global))
         },
     )
 }
-fn wire_get_global_value__method__WasmitModuleId_impl(
-    that: impl Wire2Api<WasmitModuleId> + UnwindSafe,
+fn wire_get_global_value__method__WasmRunModuleId_impl(
+    that: impl Wire2Api<WasmRunModuleId> + UnwindSafe,
     global: impl Wire2Api<RustOpaque<Global>> + UnwindSafe,
 ) -> support::WireSyncReturn {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
         WrapInfo {
-            debug_name: "get_global_value__method__WasmitModuleId",
+            debug_name: "get_global_value__method__WasmRunModuleId",
             port: None,
             mode: FfiCallMode::Sync,
         },
         move || {
             let api_that = that.wire2api();
             let api_global = global.wire2api();
-            Ok(WasmitModuleId::get_global_value(&api_that, api_global))
+            Ok(WasmRunModuleId::get_global_value(&api_that, api_global))
         },
     )
 }
-fn wire_set_global_value__method__WasmitModuleId_impl(
-    that: impl Wire2Api<WasmitModuleId> + UnwindSafe,
+fn wire_set_global_value__method__WasmRunModuleId_impl(
+    that: impl Wire2Api<WasmRunModuleId> + UnwindSafe,
     global: impl Wire2Api<RustOpaque<Global>> + UnwindSafe,
     value: impl Wire2Api<WasmVal> + UnwindSafe,
 ) -> support::WireSyncReturn {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
         WrapInfo {
-            debug_name: "set_global_value__method__WasmitModuleId",
+            debug_name: "set_global_value__method__WasmRunModuleId",
             port: None,
             mode: FfiCallMode::Sync,
         },
@@ -483,91 +485,91 @@ fn wire_set_global_value__method__WasmitModuleId_impl(
             let api_that = that.wire2api();
             let api_global = global.wire2api();
             let api_value = value.wire2api();
-            WasmitModuleId::set_global_value(&api_that, api_global, api_value)
+            WasmRunModuleId::set_global_value(&api_that, api_global, api_value)
         },
     )
 }
-fn wire_get_memory_type__method__WasmitModuleId_impl(
-    that: impl Wire2Api<WasmitModuleId> + UnwindSafe,
+fn wire_get_memory_type__method__WasmRunModuleId_impl(
+    that: impl Wire2Api<WasmRunModuleId> + UnwindSafe,
     memory: impl Wire2Api<RustOpaque<Memory>> + UnwindSafe,
 ) -> support::WireSyncReturn {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
         WrapInfo {
-            debug_name: "get_memory_type__method__WasmitModuleId",
+            debug_name: "get_memory_type__method__WasmRunModuleId",
             port: None,
             mode: FfiCallMode::Sync,
         },
         move || {
             let api_that = that.wire2api();
             let api_memory = memory.wire2api();
-            Ok(WasmitModuleId::get_memory_type(&api_that, api_memory))
+            Ok(WasmRunModuleId::get_memory_type(&api_that, api_memory))
         },
     )
 }
-fn wire_get_memory_data__method__WasmitModuleId_impl(
-    that: impl Wire2Api<WasmitModuleId> + UnwindSafe,
+fn wire_get_memory_data__method__WasmRunModuleId_impl(
+    that: impl Wire2Api<WasmRunModuleId> + UnwindSafe,
     memory: impl Wire2Api<RustOpaque<Memory>> + UnwindSafe,
 ) -> support::WireSyncReturn {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
         WrapInfo {
-            debug_name: "get_memory_data__method__WasmitModuleId",
+            debug_name: "get_memory_data__method__WasmRunModuleId",
             port: None,
             mode: FfiCallMode::Sync,
         },
         move || {
             let api_that = that.wire2api();
             let api_memory = memory.wire2api();
-            Ok(WasmitModuleId::get_memory_data(&api_that, api_memory))
+            Ok(WasmRunModuleId::get_memory_data(&api_that, api_memory))
         },
     )
 }
-fn wire_get_memory_data_pointer__method__WasmitModuleId_impl(
-    that: impl Wire2Api<WasmitModuleId> + UnwindSafe,
+fn wire_get_memory_data_pointer__method__WasmRunModuleId_impl(
+    that: impl Wire2Api<WasmRunModuleId> + UnwindSafe,
     memory: impl Wire2Api<RustOpaque<Memory>> + UnwindSafe,
 ) -> support::WireSyncReturn {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
         WrapInfo {
-            debug_name: "get_memory_data_pointer__method__WasmitModuleId",
+            debug_name: "get_memory_data_pointer__method__WasmRunModuleId",
             port: None,
             mode: FfiCallMode::Sync,
         },
         move || {
             let api_that = that.wire2api();
             let api_memory = memory.wire2api();
-            Ok(WasmitModuleId::get_memory_data_pointer(
+            Ok(WasmRunModuleId::get_memory_data_pointer(
                 &api_that, api_memory,
             ))
         },
     )
 }
-fn wire_get_memory_data_pointer_and_length__method__WasmitModuleId_impl(
-    that: impl Wire2Api<WasmitModuleId> + UnwindSafe,
+fn wire_get_memory_data_pointer_and_length__method__WasmRunModuleId_impl(
+    that: impl Wire2Api<WasmRunModuleId> + UnwindSafe,
     memory: impl Wire2Api<RustOpaque<Memory>> + UnwindSafe,
 ) -> support::WireSyncReturn {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
         WrapInfo {
-            debug_name: "get_memory_data_pointer_and_length__method__WasmitModuleId",
+            debug_name: "get_memory_data_pointer_and_length__method__WasmRunModuleId",
             port: None,
             mode: FfiCallMode::Sync,
         },
         move || {
             let api_that = that.wire2api();
             let api_memory = memory.wire2api();
-            Ok(WasmitModuleId::get_memory_data_pointer_and_length(
+            Ok(WasmRunModuleId::get_memory_data_pointer_and_length(
                 &api_that, api_memory,
             ))
         },
     )
 }
-fn wire_read_memory__method__WasmitModuleId_impl(
-    that: impl Wire2Api<WasmitModuleId> + UnwindSafe,
+fn wire_read_memory__method__WasmRunModuleId_impl(
+    that: impl Wire2Api<WasmRunModuleId> + UnwindSafe,
     memory: impl Wire2Api<RustOpaque<Memory>> + UnwindSafe,
     offset: impl Wire2Api<usize> + UnwindSafe,
     bytes: impl Wire2Api<usize> + UnwindSafe,
 ) -> support::WireSyncReturn {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
         WrapInfo {
-            debug_name: "read_memory__method__WasmitModuleId",
+            debug_name: "read_memory__method__WasmRunModuleId",
             port: None,
             mode: FfiCallMode::Sync,
         },
@@ -576,36 +578,36 @@ fn wire_read_memory__method__WasmitModuleId_impl(
             let api_memory = memory.wire2api();
             let api_offset = offset.wire2api();
             let api_bytes = bytes.wire2api();
-            WasmitModuleId::read_memory(&api_that, api_memory, api_offset, api_bytes)
+            WasmRunModuleId::read_memory(&api_that, api_memory, api_offset, api_bytes)
         },
     )
 }
-fn wire_get_memory_pages__method__WasmitModuleId_impl(
-    that: impl Wire2Api<WasmitModuleId> + UnwindSafe,
+fn wire_get_memory_pages__method__WasmRunModuleId_impl(
+    that: impl Wire2Api<WasmRunModuleId> + UnwindSafe,
     memory: impl Wire2Api<RustOpaque<Memory>> + UnwindSafe,
 ) -> support::WireSyncReturn {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
         WrapInfo {
-            debug_name: "get_memory_pages__method__WasmitModuleId",
+            debug_name: "get_memory_pages__method__WasmRunModuleId",
             port: None,
             mode: FfiCallMode::Sync,
         },
         move || {
             let api_that = that.wire2api();
             let api_memory = memory.wire2api();
-            Ok(WasmitModuleId::get_memory_pages(&api_that, api_memory))
+            Ok(WasmRunModuleId::get_memory_pages(&api_that, api_memory))
         },
     )
 }
-fn wire_write_memory__method__WasmitModuleId_impl(
-    that: impl Wire2Api<WasmitModuleId> + UnwindSafe,
+fn wire_write_memory__method__WasmRunModuleId_impl(
+    that: impl Wire2Api<WasmRunModuleId> + UnwindSafe,
     memory: impl Wire2Api<RustOpaque<Memory>> + UnwindSafe,
     offset: impl Wire2Api<usize> + UnwindSafe,
     buffer: impl Wire2Api<Vec<u8>> + UnwindSafe,
 ) -> support::WireSyncReturn {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
         WrapInfo {
-            debug_name: "write_memory__method__WasmitModuleId",
+            debug_name: "write_memory__method__WasmRunModuleId",
             port: None,
             mode: FfiCallMode::Sync,
         },
@@ -614,18 +616,18 @@ fn wire_write_memory__method__WasmitModuleId_impl(
             let api_memory = memory.wire2api();
             let api_offset = offset.wire2api();
             let api_buffer = buffer.wire2api();
-            WasmitModuleId::write_memory(&api_that, api_memory, api_offset, api_buffer)
+            WasmRunModuleId::write_memory(&api_that, api_memory, api_offset, api_buffer)
         },
     )
 }
-fn wire_grow_memory__method__WasmitModuleId_impl(
-    that: impl Wire2Api<WasmitModuleId> + UnwindSafe,
+fn wire_grow_memory__method__WasmRunModuleId_impl(
+    that: impl Wire2Api<WasmRunModuleId> + UnwindSafe,
     memory: impl Wire2Api<RustOpaque<Memory>> + UnwindSafe,
     pages: impl Wire2Api<u32> + UnwindSafe,
 ) -> support::WireSyncReturn {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
         WrapInfo {
-            debug_name: "grow_memory__method__WasmitModuleId",
+            debug_name: "grow_memory__method__WasmRunModuleId",
             port: None,
             mode: FfiCallMode::Sync,
         },
@@ -633,53 +635,53 @@ fn wire_grow_memory__method__WasmitModuleId_impl(
             let api_that = that.wire2api();
             let api_memory = memory.wire2api();
             let api_pages = pages.wire2api();
-            WasmitModuleId::grow_memory(&api_that, api_memory, api_pages)
+            WasmRunModuleId::grow_memory(&api_that, api_memory, api_pages)
         },
     )
 }
-fn wire_get_table_size__method__WasmitModuleId_impl(
-    that: impl Wire2Api<WasmitModuleId> + UnwindSafe,
+fn wire_get_table_size__method__WasmRunModuleId_impl(
+    that: impl Wire2Api<WasmRunModuleId> + UnwindSafe,
     table: impl Wire2Api<RustOpaque<Table>> + UnwindSafe,
 ) -> support::WireSyncReturn {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
         WrapInfo {
-            debug_name: "get_table_size__method__WasmitModuleId",
+            debug_name: "get_table_size__method__WasmRunModuleId",
             port: None,
             mode: FfiCallMode::Sync,
         },
         move || {
             let api_that = that.wire2api();
             let api_table = table.wire2api();
-            Ok(WasmitModuleId::get_table_size(&api_that, api_table))
+            Ok(WasmRunModuleId::get_table_size(&api_that, api_table))
         },
     )
 }
-fn wire_get_table_type__method__WasmitModuleId_impl(
-    that: impl Wire2Api<WasmitModuleId> + UnwindSafe,
+fn wire_get_table_type__method__WasmRunModuleId_impl(
+    that: impl Wire2Api<WasmRunModuleId> + UnwindSafe,
     table: impl Wire2Api<RustOpaque<Table>> + UnwindSafe,
 ) -> support::WireSyncReturn {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
         WrapInfo {
-            debug_name: "get_table_type__method__WasmitModuleId",
+            debug_name: "get_table_type__method__WasmRunModuleId",
             port: None,
             mode: FfiCallMode::Sync,
         },
         move || {
             let api_that = that.wire2api();
             let api_table = table.wire2api();
-            Ok(WasmitModuleId::get_table_type(&api_that, api_table))
+            Ok(WasmRunModuleId::get_table_type(&api_that, api_table))
         },
     )
 }
-fn wire_grow_table__method__WasmitModuleId_impl(
-    that: impl Wire2Api<WasmitModuleId> + UnwindSafe,
+fn wire_grow_table__method__WasmRunModuleId_impl(
+    that: impl Wire2Api<WasmRunModuleId> + UnwindSafe,
     table: impl Wire2Api<RustOpaque<Table>> + UnwindSafe,
     delta: impl Wire2Api<u32> + UnwindSafe,
     value: impl Wire2Api<WasmVal> + UnwindSafe,
 ) -> support::WireSyncReturn {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
         WrapInfo {
-            debug_name: "grow_table__method__WasmitModuleId",
+            debug_name: "grow_table__method__WasmRunModuleId",
             port: None,
             mode: FfiCallMode::Sync,
         },
@@ -688,18 +690,18 @@ fn wire_grow_table__method__WasmitModuleId_impl(
             let api_table = table.wire2api();
             let api_delta = delta.wire2api();
             let api_value = value.wire2api();
-            WasmitModuleId::grow_table(&api_that, api_table, api_delta, api_value)
+            WasmRunModuleId::grow_table(&api_that, api_table, api_delta, api_value)
         },
     )
 }
-fn wire_get_table__method__WasmitModuleId_impl(
-    that: impl Wire2Api<WasmitModuleId> + UnwindSafe,
+fn wire_get_table__method__WasmRunModuleId_impl(
+    that: impl Wire2Api<WasmRunModuleId> + UnwindSafe,
     table: impl Wire2Api<RustOpaque<Table>> + UnwindSafe,
     index: impl Wire2Api<u32> + UnwindSafe,
 ) -> support::WireSyncReturn {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
         WrapInfo {
-            debug_name: "get_table__method__WasmitModuleId",
+            debug_name: "get_table__method__WasmRunModuleId",
             port: None,
             mode: FfiCallMode::Sync,
         },
@@ -707,19 +709,19 @@ fn wire_get_table__method__WasmitModuleId_impl(
             let api_that = that.wire2api();
             let api_table = table.wire2api();
             let api_index = index.wire2api();
-            Ok(WasmitModuleId::get_table(&api_that, api_table, api_index))
+            Ok(WasmRunModuleId::get_table(&api_that, api_table, api_index))
         },
     )
 }
-fn wire_set_table__method__WasmitModuleId_impl(
-    that: impl Wire2Api<WasmitModuleId> + UnwindSafe,
+fn wire_set_table__method__WasmRunModuleId_impl(
+    that: impl Wire2Api<WasmRunModuleId> + UnwindSafe,
     table: impl Wire2Api<RustOpaque<Table>> + UnwindSafe,
     index: impl Wire2Api<u32> + UnwindSafe,
     value: impl Wire2Api<WasmVal> + UnwindSafe,
 ) -> support::WireSyncReturn {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
         WrapInfo {
-            debug_name: "set_table__method__WasmitModuleId",
+            debug_name: "set_table__method__WasmRunModuleId",
             port: None,
             mode: FfiCallMode::Sync,
         },
@@ -728,12 +730,12 @@ fn wire_set_table__method__WasmitModuleId_impl(
             let api_table = table.wire2api();
             let api_index = index.wire2api();
             let api_value = value.wire2api();
-            WasmitModuleId::set_table(&api_that, api_table, api_index, api_value)
+            WasmRunModuleId::set_table(&api_that, api_table, api_index, api_value)
         },
     )
 }
-fn wire_fill_table__method__WasmitModuleId_impl(
-    that: impl Wire2Api<WasmitModuleId> + UnwindSafe,
+fn wire_fill_table__method__WasmRunModuleId_impl(
+    that: impl Wire2Api<WasmRunModuleId> + UnwindSafe,
     table: impl Wire2Api<RustOpaque<Table>> + UnwindSafe,
     index: impl Wire2Api<u32> + UnwindSafe,
     value: impl Wire2Api<WasmVal> + UnwindSafe,
@@ -741,7 +743,7 @@ fn wire_fill_table__method__WasmitModuleId_impl(
 ) -> support::WireSyncReturn {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
         WrapInfo {
-            debug_name: "fill_table__method__WasmitModuleId",
+            debug_name: "fill_table__method__WasmRunModuleId",
             port: None,
             mode: FfiCallMode::Sync,
         },
@@ -751,56 +753,56 @@ fn wire_fill_table__method__WasmitModuleId_impl(
             let api_index = index.wire2api();
             let api_value = value.wire2api();
             let api_len = len.wire2api();
-            WasmitModuleId::fill_table(&api_that, api_table, api_index, api_value, api_len)
+            WasmRunModuleId::fill_table(&api_that, api_table, api_index, api_value, api_len)
         },
     )
 }
-fn wire_add_fuel__method__WasmitModuleId_impl(
-    that: impl Wire2Api<WasmitModuleId> + UnwindSafe,
+fn wire_add_fuel__method__WasmRunModuleId_impl(
+    that: impl Wire2Api<WasmRunModuleId> + UnwindSafe,
     delta: impl Wire2Api<u64> + UnwindSafe,
 ) -> support::WireSyncReturn {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
         WrapInfo {
-            debug_name: "add_fuel__method__WasmitModuleId",
+            debug_name: "add_fuel__method__WasmRunModuleId",
             port: None,
             mode: FfiCallMode::Sync,
         },
         move || {
             let api_that = that.wire2api();
             let api_delta = delta.wire2api();
-            WasmitModuleId::add_fuel(&api_that, api_delta)
+            WasmRunModuleId::add_fuel(&api_that, api_delta)
         },
     )
 }
-fn wire_fuel_consumed__method__WasmitModuleId_impl(
-    that: impl Wire2Api<WasmitModuleId> + UnwindSafe,
+fn wire_fuel_consumed__method__WasmRunModuleId_impl(
+    that: impl Wire2Api<WasmRunModuleId> + UnwindSafe,
 ) -> support::WireSyncReturn {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
         WrapInfo {
-            debug_name: "fuel_consumed__method__WasmitModuleId",
+            debug_name: "fuel_consumed__method__WasmRunModuleId",
             port: None,
             mode: FfiCallMode::Sync,
         },
         move || {
             let api_that = that.wire2api();
-            Ok(WasmitModuleId::fuel_consumed(&api_that))
+            Ok(WasmRunModuleId::fuel_consumed(&api_that))
         },
     )
 }
-fn wire_consume_fuel__method__WasmitModuleId_impl(
-    that: impl Wire2Api<WasmitModuleId> + UnwindSafe,
+fn wire_consume_fuel__method__WasmRunModuleId_impl(
+    that: impl Wire2Api<WasmRunModuleId> + UnwindSafe,
     delta: impl Wire2Api<u64> + UnwindSafe,
 ) -> support::WireSyncReturn {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
         WrapInfo {
-            debug_name: "consume_fuel__method__WasmitModuleId",
+            debug_name: "consume_fuel__method__WasmRunModuleId",
             port: None,
             mode: FfiCallMode::Sync,
         },
         move || {
             let api_that = that.wire2api();
             let api_delta = delta.wire2api();
-            WasmitModuleId::consume_fuel(&api_that, api_delta)
+            WasmRunModuleId::consume_fuel(&api_that, api_delta)
         },
     )
 }
@@ -851,107 +853,107 @@ fn wire_get_module_exports__method__CompiledModule_impl(
         },
     )
 }
-fn wire_ty__method__WasmitSharedMemory_impl(
-    that: impl Wire2Api<WasmitSharedMemory> + UnwindSafe,
+fn wire_ty__method__WasmRunSharedMemory_impl(
+    that: impl Wire2Api<WasmRunSharedMemory> + UnwindSafe,
 ) -> support::WireSyncReturn {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
         WrapInfo {
-            debug_name: "ty__method__WasmitSharedMemory",
+            debug_name: "ty__method__WasmRunSharedMemory",
             port: None,
             mode: FfiCallMode::Sync,
         },
         move || {
             let api_that = that.wire2api();
-            Ok(WasmitSharedMemory::ty(&api_that))
+            Ok(WasmRunSharedMemory::ty(&api_that))
         },
     )
 }
-fn wire_size__method__WasmitSharedMemory_impl(
-    that: impl Wire2Api<WasmitSharedMemory> + UnwindSafe,
+fn wire_size__method__WasmRunSharedMemory_impl(
+    that: impl Wire2Api<WasmRunSharedMemory> + UnwindSafe,
 ) -> support::WireSyncReturn {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
         WrapInfo {
-            debug_name: "size__method__WasmitSharedMemory",
+            debug_name: "size__method__WasmRunSharedMemory",
             port: None,
             mode: FfiCallMode::Sync,
         },
         move || {
             let api_that = that.wire2api();
-            Ok(WasmitSharedMemory::size(&api_that))
+            Ok(WasmRunSharedMemory::size(&api_that))
         },
     )
 }
-fn wire_data_size__method__WasmitSharedMemory_impl(
-    that: impl Wire2Api<WasmitSharedMemory> + UnwindSafe,
+fn wire_data_size__method__WasmRunSharedMemory_impl(
+    that: impl Wire2Api<WasmRunSharedMemory> + UnwindSafe,
 ) -> support::WireSyncReturn {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
         WrapInfo {
-            debug_name: "data_size__method__WasmitSharedMemory",
+            debug_name: "data_size__method__WasmRunSharedMemory",
             port: None,
             mode: FfiCallMode::Sync,
         },
         move || {
             let api_that = that.wire2api();
-            Ok(WasmitSharedMemory::data_size(&api_that))
+            Ok(WasmRunSharedMemory::data_size(&api_that))
         },
     )
 }
-fn wire_data_pointer__method__WasmitSharedMemory_impl(
-    that: impl Wire2Api<WasmitSharedMemory> + UnwindSafe,
+fn wire_data_pointer__method__WasmRunSharedMemory_impl(
+    that: impl Wire2Api<WasmRunSharedMemory> + UnwindSafe,
 ) -> support::WireSyncReturn {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
         WrapInfo {
-            debug_name: "data_pointer__method__WasmitSharedMemory",
+            debug_name: "data_pointer__method__WasmRunSharedMemory",
             port: None,
             mode: FfiCallMode::Sync,
         },
         move || {
             let api_that = that.wire2api();
-            Ok(WasmitSharedMemory::data_pointer(&api_that))
+            Ok(WasmRunSharedMemory::data_pointer(&api_that))
         },
     )
 }
-fn wire_grow__method__WasmitSharedMemory_impl(
-    that: impl Wire2Api<WasmitSharedMemory> + UnwindSafe,
+fn wire_grow__method__WasmRunSharedMemory_impl(
+    that: impl Wire2Api<WasmRunSharedMemory> + UnwindSafe,
     delta: impl Wire2Api<u64> + UnwindSafe,
 ) -> support::WireSyncReturn {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
         WrapInfo {
-            debug_name: "grow__method__WasmitSharedMemory",
+            debug_name: "grow__method__WasmRunSharedMemory",
             port: None,
             mode: FfiCallMode::Sync,
         },
         move || {
             let api_that = that.wire2api();
             let api_delta = delta.wire2api();
-            WasmitSharedMemory::grow(&api_that, api_delta)
+            WasmRunSharedMemory::grow(&api_that, api_delta)
         },
     )
 }
-fn wire_atomics__method__WasmitSharedMemory_impl(
+fn wire_atomics__method__WasmRunSharedMemory_impl(
     port_: MessagePort,
-    that: impl Wire2Api<WasmitSharedMemory> + UnwindSafe,
+    that: impl Wire2Api<WasmRunSharedMemory> + UnwindSafe,
 ) {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap(
         WrapInfo {
-            debug_name: "atomics__method__WasmitSharedMemory",
+            debug_name: "atomics__method__WasmRunSharedMemory",
             port: Some(port_),
             mode: FfiCallMode::Normal,
         },
         move || {
             let api_that = that.wire2api();
-            move |task_callback| Ok(WasmitSharedMemory::atomics(&api_that))
+            move |task_callback| Ok(WasmRunSharedMemory::atomics(&api_that))
         },
     )
 }
-fn wire_atomic_notify__method__WasmitSharedMemory_impl(
-    that: impl Wire2Api<WasmitSharedMemory> + UnwindSafe,
+fn wire_atomic_notify__method__WasmRunSharedMemory_impl(
+    that: impl Wire2Api<WasmRunSharedMemory> + UnwindSafe,
     addr: impl Wire2Api<u64> + UnwindSafe,
     count: impl Wire2Api<u32> + UnwindSafe,
 ) -> support::WireSyncReturn {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
         WrapInfo {
-            debug_name: "atomic_notify__method__WasmitSharedMemory",
+            debug_name: "atomic_notify__method__WasmRunSharedMemory",
             port: None,
             mode: FfiCallMode::Sync,
         },
@@ -959,18 +961,18 @@ fn wire_atomic_notify__method__WasmitSharedMemory_impl(
             let api_that = that.wire2api();
             let api_addr = addr.wire2api();
             let api_count = count.wire2api();
-            WasmitSharedMemory::atomic_notify(&api_that, api_addr, api_count)
+            WasmRunSharedMemory::atomic_notify(&api_that, api_addr, api_count)
         },
     )
 }
-fn wire_atomic_wait32__method__WasmitSharedMemory_impl(
-    that: impl Wire2Api<WasmitSharedMemory> + UnwindSafe,
+fn wire_atomic_wait32__method__WasmRunSharedMemory_impl(
+    that: impl Wire2Api<WasmRunSharedMemory> + UnwindSafe,
     addr: impl Wire2Api<u64> + UnwindSafe,
     expected: impl Wire2Api<u32> + UnwindSafe,
 ) -> support::WireSyncReturn {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
         WrapInfo {
-            debug_name: "atomic_wait32__method__WasmitSharedMemory",
+            debug_name: "atomic_wait32__method__WasmRunSharedMemory",
             port: None,
             mode: FfiCallMode::Sync,
         },
@@ -978,18 +980,18 @@ fn wire_atomic_wait32__method__WasmitSharedMemory_impl(
             let api_that = that.wire2api();
             let api_addr = addr.wire2api();
             let api_expected = expected.wire2api();
-            WasmitSharedMemory::atomic_wait32(&api_that, api_addr, api_expected)
+            WasmRunSharedMemory::atomic_wait32(&api_that, api_addr, api_expected)
         },
     )
 }
-fn wire_atomic_wait64__method__WasmitSharedMemory_impl(
-    that: impl Wire2Api<WasmitSharedMemory> + UnwindSafe,
+fn wire_atomic_wait64__method__WasmRunSharedMemory_impl(
+    that: impl Wire2Api<WasmRunSharedMemory> + UnwindSafe,
     addr: impl Wire2Api<u64> + UnwindSafe,
     expected: impl Wire2Api<u64> + UnwindSafe,
 ) -> support::WireSyncReturn {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync(
         WrapInfo {
-            debug_name: "atomic_wait64__method__WasmitSharedMemory",
+            debug_name: "atomic_wait64__method__WasmRunSharedMemory",
             port: None,
             mode: FfiCallMode::Sync,
         },
@@ -997,7 +999,7 @@ fn wire_atomic_wait64__method__WasmitSharedMemory_impl(
             let api_that = that.wire2api();
             let api_addr = addr.wire2api();
             let api_expected = expected.wire2api();
-            WasmitSharedMemory::atomic_wait64(&api_that, api_addr, api_expected)
+            WasmRunSharedMemory::atomic_wait64(&api_that, api_addr, api_expected)
         },
     )
 }
@@ -1581,6 +1583,27 @@ impl support::IntoDart for WasmFeatures {
 }
 impl support::IntoDartExceptPrimitive for WasmFeatures {}
 
+impl support::IntoDart for WasmRunInstanceId {
+    fn into_dart(self) -> support::DartAbi {
+        vec![self.0.into_dart()].into_dart()
+    }
+}
+impl support::IntoDartExceptPrimitive for WasmRunInstanceId {}
+
+impl support::IntoDart for WasmRunModuleId {
+    fn into_dart(self) -> support::DartAbi {
+        vec![self.0.into_dart()].into_dart()
+    }
+}
+impl support::IntoDartExceptPrimitive for WasmRunModuleId {}
+
+impl support::IntoDart for WasmRunSharedMemory {
+    fn into_dart(self) -> support::DartAbi {
+        vec![self.0.into_dart()].into_dart()
+    }
+}
+impl support::IntoDartExceptPrimitive for WasmRunSharedMemory {}
+
 impl support::IntoDart for WasmRuntimeFeatures {
     fn into_dart(self) -> support::DartAbi {
         vec![
@@ -1626,27 +1649,6 @@ impl support::IntoDart for WasmWasiFeatures {
     }
 }
 impl support::IntoDartExceptPrimitive for WasmWasiFeatures {}
-
-impl support::IntoDart for WasmitInstanceId {
-    fn into_dart(self) -> support::DartAbi {
-        vec![self.0.into_dart()].into_dart()
-    }
-}
-impl support::IntoDartExceptPrimitive for WasmitInstanceId {}
-
-impl support::IntoDart for WasmitModuleId {
-    fn into_dart(self) -> support::DartAbi {
-        vec![self.0.into_dart()].into_dart()
-    }
-}
-impl support::IntoDartExceptPrimitive for WasmitModuleId {}
-
-impl support::IntoDart for WasmitSharedMemory {
-    fn into_dart(self) -> support::DartAbi {
-        vec![self.0.into_dart()].into_dart()
-    }
-}
-impl support::IntoDartExceptPrimitive for WasmitSharedMemory {}
 
 // Section: executor
 
@@ -1698,96 +1700,102 @@ mod web {
     }
 
     #[wasm_bindgen]
-    pub fn wire_exports__method__WasmitInstanceId(that: JsValue) -> support::WireSyncReturn {
-        wire_exports__method__WasmitInstanceId_impl(that)
+    pub fn wire_exports__method__WasmRunInstanceId(that: JsValue) -> support::WireSyncReturn {
+        wire_exports__method__WasmRunInstanceId_impl(that)
     }
 
     #[wasm_bindgen]
-    pub fn wire_instantiate_sync__method__WasmitModuleId(that: JsValue) -> support::WireSyncReturn {
-        wire_instantiate_sync__method__WasmitModuleId_impl(that)
+    pub fn wire_instantiate_sync__method__WasmRunModuleId(
+        that: JsValue,
+    ) -> support::WireSyncReturn {
+        wire_instantiate_sync__method__WasmRunModuleId_impl(that)
     }
 
     #[wasm_bindgen]
-    pub fn wire_instantiate__method__WasmitModuleId(port_: MessagePort, that: JsValue) {
-        wire_instantiate__method__WasmitModuleId_impl(port_, that)
+    pub fn wire_instantiate__method__WasmRunModuleId(port_: MessagePort, that: JsValue) {
+        wire_instantiate__method__WasmRunModuleId_impl(port_, that)
     }
 
     #[wasm_bindgen]
-    pub fn wire_link_imports__method__WasmitModuleId(
+    pub fn wire_link_imports__method__WasmRunModuleId(
         that: JsValue,
         imports: JsValue,
     ) -> support::WireSyncReturn {
-        wire_link_imports__method__WasmitModuleId_impl(that, imports)
+        wire_link_imports__method__WasmRunModuleId_impl(that, imports)
     }
 
     #[wasm_bindgen]
-    pub fn wire_stdio_stream__method__WasmitModuleId(port_: MessagePort, that: JsValue, kind: i32) {
-        wire_stdio_stream__method__WasmitModuleId_impl(port_, that, kind)
+    pub fn wire_stdio_stream__method__WasmRunModuleId(
+        port_: MessagePort,
+        that: JsValue,
+        kind: i32,
+    ) {
+        wire_stdio_stream__method__WasmRunModuleId_impl(port_, that, kind)
     }
 
     #[wasm_bindgen]
-    pub fn wire_dispose__method__WasmitModuleId(port_: MessagePort, that: JsValue) {
-        wire_dispose__method__WasmitModuleId_impl(port_, that)
+    pub fn wire_dispose__method__WasmRunModuleId(port_: MessagePort, that: JsValue) {
+        wire_dispose__method__WasmRunModuleId_impl(port_, that)
     }
 
     #[wasm_bindgen]
-    pub fn wire_call_function_handle_sync__method__WasmitModuleId(
+    pub fn wire_call_function_handle_sync__method__WasmRunModuleId(
         that: JsValue,
         func: JsValue,
         args: JsValue,
     ) -> support::WireSyncReturn {
-        wire_call_function_handle_sync__method__WasmitModuleId_impl(that, func, args)
+        wire_call_function_handle_sync__method__WasmRunModuleId_impl(that, func, args)
     }
 
     #[wasm_bindgen]
-    pub fn wire_call_function_handle__method__WasmitModuleId(
+    pub fn wire_call_function_handle__method__WasmRunModuleId(
         port_: MessagePort,
         that: JsValue,
         func: JsValue,
         args: JsValue,
     ) {
-        wire_call_function_handle__method__WasmitModuleId_impl(port_, that, func, args)
+        wire_call_function_handle__method__WasmRunModuleId_impl(port_, that, func, args)
     }
 
     #[wasm_bindgen]
-    pub fn wire_call_function_handle_parallel__method__WasmitModuleId(
+    pub fn wire_call_function_handle_parallel__method__WasmRunModuleId(
         port_: MessagePort,
         that: JsValue,
         func_name: String,
         args: JsValue,
         num_tasks: usize,
     ) {
-        wire_call_function_handle_parallel__method__WasmitModuleId_impl(
+        wire_call_function_handle_parallel__method__WasmRunModuleId_impl(
             port_, that, func_name, args, num_tasks,
         )
     }
 
     #[wasm_bindgen]
-    pub fn wire_worker_execution__method__WasmitModuleId(
+    pub fn wire_worker_execution__method__WasmRunModuleId(
         that: JsValue,
         worker_index: usize,
         results: JsValue,
     ) -> support::WireSyncReturn {
-        wire_worker_execution__method__WasmitModuleId_impl(that, worker_index, results)
+        wire_worker_execution__method__WasmRunModuleId_impl(that, worker_index, results)
     }
 
     #[wasm_bindgen]
-    pub fn wire_get_function_type__method__WasmitModuleId(
+    pub fn wire_get_function_type__method__WasmRunModuleId(
         that: JsValue,
         func: JsValue,
     ) -> support::WireSyncReturn {
-        wire_get_function_type__method__WasmitModuleId_impl(that, func)
+        wire_get_function_type__method__WasmRunModuleId_impl(that, func)
     }
 
     #[wasm_bindgen]
-    pub fn wire_create_function__method__WasmitModuleId(
+    pub fn wire_create_function__method__WasmRunModuleId(
         that: JsValue,
         function_pointer: usize,
         function_id: u32,
         param_types: JsValue,
         result_types: JsValue,
     ) -> support::WireSyncReturn {
-        wire_create_function__method__WasmitModuleId_impl(
+        wire_create_function__method__WasmRunModuleId_impl(
             that,
             function_pointer,
             function_id,
@@ -1797,200 +1805,200 @@ mod web {
     }
 
     #[wasm_bindgen]
-    pub fn wire_create_memory__method__WasmitModuleId(
+    pub fn wire_create_memory__method__WasmRunModuleId(
         that: JsValue,
         memory_type: JsValue,
     ) -> support::WireSyncReturn {
-        wire_create_memory__method__WasmitModuleId_impl(that, memory_type)
+        wire_create_memory__method__WasmRunModuleId_impl(that, memory_type)
     }
 
     #[wasm_bindgen]
-    pub fn wire_create_global__method__WasmitModuleId(
+    pub fn wire_create_global__method__WasmRunModuleId(
         that: JsValue,
         value: JsValue,
         mutable: bool,
     ) -> support::WireSyncReturn {
-        wire_create_global__method__WasmitModuleId_impl(that, value, mutable)
+        wire_create_global__method__WasmRunModuleId_impl(that, value, mutable)
     }
 
     #[wasm_bindgen]
-    pub fn wire_create_table__method__WasmitModuleId(
+    pub fn wire_create_table__method__WasmRunModuleId(
         that: JsValue,
         value: JsValue,
         table_type: JsValue,
     ) -> support::WireSyncReturn {
-        wire_create_table__method__WasmitModuleId_impl(that, value, table_type)
+        wire_create_table__method__WasmRunModuleId_impl(that, value, table_type)
     }
 
     #[wasm_bindgen]
-    pub fn wire_get_global_type__method__WasmitModuleId(
+    pub fn wire_get_global_type__method__WasmRunModuleId(
         that: JsValue,
         global: JsValue,
     ) -> support::WireSyncReturn {
-        wire_get_global_type__method__WasmitModuleId_impl(that, global)
+        wire_get_global_type__method__WasmRunModuleId_impl(that, global)
     }
 
     #[wasm_bindgen]
-    pub fn wire_get_global_value__method__WasmitModuleId(
+    pub fn wire_get_global_value__method__WasmRunModuleId(
         that: JsValue,
         global: JsValue,
     ) -> support::WireSyncReturn {
-        wire_get_global_value__method__WasmitModuleId_impl(that, global)
+        wire_get_global_value__method__WasmRunModuleId_impl(that, global)
     }
 
     #[wasm_bindgen]
-    pub fn wire_set_global_value__method__WasmitModuleId(
+    pub fn wire_set_global_value__method__WasmRunModuleId(
         that: JsValue,
         global: JsValue,
         value: JsValue,
     ) -> support::WireSyncReturn {
-        wire_set_global_value__method__WasmitModuleId_impl(that, global, value)
+        wire_set_global_value__method__WasmRunModuleId_impl(that, global, value)
     }
 
     #[wasm_bindgen]
-    pub fn wire_get_memory_type__method__WasmitModuleId(
+    pub fn wire_get_memory_type__method__WasmRunModuleId(
         that: JsValue,
         memory: JsValue,
     ) -> support::WireSyncReturn {
-        wire_get_memory_type__method__WasmitModuleId_impl(that, memory)
+        wire_get_memory_type__method__WasmRunModuleId_impl(that, memory)
     }
 
     #[wasm_bindgen]
-    pub fn wire_get_memory_data__method__WasmitModuleId(
+    pub fn wire_get_memory_data__method__WasmRunModuleId(
         that: JsValue,
         memory: JsValue,
     ) -> support::WireSyncReturn {
-        wire_get_memory_data__method__WasmitModuleId_impl(that, memory)
+        wire_get_memory_data__method__WasmRunModuleId_impl(that, memory)
     }
 
     #[wasm_bindgen]
-    pub fn wire_get_memory_data_pointer__method__WasmitModuleId(
+    pub fn wire_get_memory_data_pointer__method__WasmRunModuleId(
         that: JsValue,
         memory: JsValue,
     ) -> support::WireSyncReturn {
-        wire_get_memory_data_pointer__method__WasmitModuleId_impl(that, memory)
+        wire_get_memory_data_pointer__method__WasmRunModuleId_impl(that, memory)
     }
 
     #[wasm_bindgen]
-    pub fn wire_get_memory_data_pointer_and_length__method__WasmitModuleId(
+    pub fn wire_get_memory_data_pointer_and_length__method__WasmRunModuleId(
         that: JsValue,
         memory: JsValue,
     ) -> support::WireSyncReturn {
-        wire_get_memory_data_pointer_and_length__method__WasmitModuleId_impl(that, memory)
+        wire_get_memory_data_pointer_and_length__method__WasmRunModuleId_impl(that, memory)
     }
 
     #[wasm_bindgen]
-    pub fn wire_read_memory__method__WasmitModuleId(
+    pub fn wire_read_memory__method__WasmRunModuleId(
         that: JsValue,
         memory: JsValue,
         offset: usize,
         bytes: usize,
     ) -> support::WireSyncReturn {
-        wire_read_memory__method__WasmitModuleId_impl(that, memory, offset, bytes)
+        wire_read_memory__method__WasmRunModuleId_impl(that, memory, offset, bytes)
     }
 
     #[wasm_bindgen]
-    pub fn wire_get_memory_pages__method__WasmitModuleId(
+    pub fn wire_get_memory_pages__method__WasmRunModuleId(
         that: JsValue,
         memory: JsValue,
     ) -> support::WireSyncReturn {
-        wire_get_memory_pages__method__WasmitModuleId_impl(that, memory)
+        wire_get_memory_pages__method__WasmRunModuleId_impl(that, memory)
     }
 
     #[wasm_bindgen]
-    pub fn wire_write_memory__method__WasmitModuleId(
+    pub fn wire_write_memory__method__WasmRunModuleId(
         that: JsValue,
         memory: JsValue,
         offset: usize,
         buffer: Box<[u8]>,
     ) -> support::WireSyncReturn {
-        wire_write_memory__method__WasmitModuleId_impl(that, memory, offset, buffer)
+        wire_write_memory__method__WasmRunModuleId_impl(that, memory, offset, buffer)
     }
 
     #[wasm_bindgen]
-    pub fn wire_grow_memory__method__WasmitModuleId(
+    pub fn wire_grow_memory__method__WasmRunModuleId(
         that: JsValue,
         memory: JsValue,
         pages: u32,
     ) -> support::WireSyncReturn {
-        wire_grow_memory__method__WasmitModuleId_impl(that, memory, pages)
+        wire_grow_memory__method__WasmRunModuleId_impl(that, memory, pages)
     }
 
     #[wasm_bindgen]
-    pub fn wire_get_table_size__method__WasmitModuleId(
+    pub fn wire_get_table_size__method__WasmRunModuleId(
         that: JsValue,
         table: JsValue,
     ) -> support::WireSyncReturn {
-        wire_get_table_size__method__WasmitModuleId_impl(that, table)
+        wire_get_table_size__method__WasmRunModuleId_impl(that, table)
     }
 
     #[wasm_bindgen]
-    pub fn wire_get_table_type__method__WasmitModuleId(
+    pub fn wire_get_table_type__method__WasmRunModuleId(
         that: JsValue,
         table: JsValue,
     ) -> support::WireSyncReturn {
-        wire_get_table_type__method__WasmitModuleId_impl(that, table)
+        wire_get_table_type__method__WasmRunModuleId_impl(that, table)
     }
 
     #[wasm_bindgen]
-    pub fn wire_grow_table__method__WasmitModuleId(
+    pub fn wire_grow_table__method__WasmRunModuleId(
         that: JsValue,
         table: JsValue,
         delta: u32,
         value: JsValue,
     ) -> support::WireSyncReturn {
-        wire_grow_table__method__WasmitModuleId_impl(that, table, delta, value)
+        wire_grow_table__method__WasmRunModuleId_impl(that, table, delta, value)
     }
 
     #[wasm_bindgen]
-    pub fn wire_get_table__method__WasmitModuleId(
+    pub fn wire_get_table__method__WasmRunModuleId(
         that: JsValue,
         table: JsValue,
         index: u32,
     ) -> support::WireSyncReturn {
-        wire_get_table__method__WasmitModuleId_impl(that, table, index)
+        wire_get_table__method__WasmRunModuleId_impl(that, table, index)
     }
 
     #[wasm_bindgen]
-    pub fn wire_set_table__method__WasmitModuleId(
+    pub fn wire_set_table__method__WasmRunModuleId(
         that: JsValue,
         table: JsValue,
         index: u32,
         value: JsValue,
     ) -> support::WireSyncReturn {
-        wire_set_table__method__WasmitModuleId_impl(that, table, index, value)
+        wire_set_table__method__WasmRunModuleId_impl(that, table, index, value)
     }
 
     #[wasm_bindgen]
-    pub fn wire_fill_table__method__WasmitModuleId(
+    pub fn wire_fill_table__method__WasmRunModuleId(
         that: JsValue,
         table: JsValue,
         index: u32,
         value: JsValue,
         len: u32,
     ) -> support::WireSyncReturn {
-        wire_fill_table__method__WasmitModuleId_impl(that, table, index, value, len)
+        wire_fill_table__method__WasmRunModuleId_impl(that, table, index, value, len)
     }
 
     #[wasm_bindgen]
-    pub fn wire_add_fuel__method__WasmitModuleId(
+    pub fn wire_add_fuel__method__WasmRunModuleId(
         that: JsValue,
         delta: u64,
     ) -> support::WireSyncReturn {
-        wire_add_fuel__method__WasmitModuleId_impl(that, delta)
+        wire_add_fuel__method__WasmRunModuleId_impl(that, delta)
     }
 
     #[wasm_bindgen]
-    pub fn wire_fuel_consumed__method__WasmitModuleId(that: JsValue) -> support::WireSyncReturn {
-        wire_fuel_consumed__method__WasmitModuleId_impl(that)
+    pub fn wire_fuel_consumed__method__WasmRunModuleId(that: JsValue) -> support::WireSyncReturn {
+        wire_fuel_consumed__method__WasmRunModuleId_impl(that)
     }
 
     #[wasm_bindgen]
-    pub fn wire_consume_fuel__method__WasmitModuleId(
+    pub fn wire_consume_fuel__method__WasmRunModuleId(
         that: JsValue,
         delta: u64,
     ) -> support::WireSyncReturn {
-        wire_consume_fuel__method__WasmitModuleId_impl(that, delta)
+        wire_consume_fuel__method__WasmRunModuleId_impl(that, delta)
     }
 
     #[wasm_bindgen]
@@ -2016,63 +2024,65 @@ mod web {
     }
 
     #[wasm_bindgen]
-    pub fn wire_ty__method__WasmitSharedMemory(that: JsValue) -> support::WireSyncReturn {
-        wire_ty__method__WasmitSharedMemory_impl(that)
+    pub fn wire_ty__method__WasmRunSharedMemory(that: JsValue) -> support::WireSyncReturn {
+        wire_ty__method__WasmRunSharedMemory_impl(that)
     }
 
     #[wasm_bindgen]
-    pub fn wire_size__method__WasmitSharedMemory(that: JsValue) -> support::WireSyncReturn {
-        wire_size__method__WasmitSharedMemory_impl(that)
+    pub fn wire_size__method__WasmRunSharedMemory(that: JsValue) -> support::WireSyncReturn {
+        wire_size__method__WasmRunSharedMemory_impl(that)
     }
 
     #[wasm_bindgen]
-    pub fn wire_data_size__method__WasmitSharedMemory(that: JsValue) -> support::WireSyncReturn {
-        wire_data_size__method__WasmitSharedMemory_impl(that)
+    pub fn wire_data_size__method__WasmRunSharedMemory(that: JsValue) -> support::WireSyncReturn {
+        wire_data_size__method__WasmRunSharedMemory_impl(that)
     }
 
     #[wasm_bindgen]
-    pub fn wire_data_pointer__method__WasmitSharedMemory(that: JsValue) -> support::WireSyncReturn {
-        wire_data_pointer__method__WasmitSharedMemory_impl(that)
+    pub fn wire_data_pointer__method__WasmRunSharedMemory(
+        that: JsValue,
+    ) -> support::WireSyncReturn {
+        wire_data_pointer__method__WasmRunSharedMemory_impl(that)
     }
 
     #[wasm_bindgen]
-    pub fn wire_grow__method__WasmitSharedMemory(
+    pub fn wire_grow__method__WasmRunSharedMemory(
         that: JsValue,
         delta: u64,
     ) -> support::WireSyncReturn {
-        wire_grow__method__WasmitSharedMemory_impl(that, delta)
+        wire_grow__method__WasmRunSharedMemory_impl(that, delta)
     }
 
     #[wasm_bindgen]
-    pub fn wire_atomics__method__WasmitSharedMemory(port_: MessagePort, that: JsValue) {
-        wire_atomics__method__WasmitSharedMemory_impl(port_, that)
+    pub fn wire_atomics__method__WasmRunSharedMemory(port_: MessagePort, that: JsValue) {
+        wire_atomics__method__WasmRunSharedMemory_impl(port_, that)
     }
 
     #[wasm_bindgen]
-    pub fn wire_atomic_notify__method__WasmitSharedMemory(
+    pub fn wire_atomic_notify__method__WasmRunSharedMemory(
         that: JsValue,
         addr: u64,
         count: u32,
     ) -> support::WireSyncReturn {
-        wire_atomic_notify__method__WasmitSharedMemory_impl(that, addr, count)
+        wire_atomic_notify__method__WasmRunSharedMemory_impl(that, addr, count)
     }
 
     #[wasm_bindgen]
-    pub fn wire_atomic_wait32__method__WasmitSharedMemory(
+    pub fn wire_atomic_wait32__method__WasmRunSharedMemory(
         that: JsValue,
         addr: u64,
         expected: u32,
     ) -> support::WireSyncReturn {
-        wire_atomic_wait32__method__WasmitSharedMemory_impl(that, addr, expected)
+        wire_atomic_wait32__method__WasmRunSharedMemory_impl(that, addr, expected)
     }
 
     #[wasm_bindgen]
-    pub fn wire_atomic_wait64__method__WasmitSharedMemory(
+    pub fn wire_atomic_wait64__method__WasmRunSharedMemory(
         that: JsValue,
         addr: u64,
         expected: u64,
     ) -> support::WireSyncReturn {
-        wire_atomic_wait64__method__WasmitSharedMemory_impl(that, addr, expected)
+        wire_atomic_wait64__method__WasmRunSharedMemory_impl(that, addr, expected)
     }
 
     #[wasm_bindgen]
@@ -2605,6 +2615,42 @@ mod web {
             }
         }
     }
+    impl Wire2Api<WasmRunInstanceId> for JsValue {
+        fn wire2api(self) -> WasmRunInstanceId {
+            let self_ = self.dyn_into::<JsArray>().unwrap();
+            assert_eq!(
+                self_.length(),
+                1,
+                "Expected 1 elements, got {}",
+                self_.length()
+            );
+            WasmRunInstanceId(self_.get(0).wire2api())
+        }
+    }
+    impl Wire2Api<WasmRunModuleId> for JsValue {
+        fn wire2api(self) -> WasmRunModuleId {
+            let self_ = self.dyn_into::<JsArray>().unwrap();
+            assert_eq!(
+                self_.length(),
+                1,
+                "Expected 1 elements, got {}",
+                self_.length()
+            );
+            WasmRunModuleId(self_.get(0).wire2api())
+        }
+    }
+    impl Wire2Api<WasmRunSharedMemory> for JsValue {
+        fn wire2api(self) -> WasmRunSharedMemory {
+            let self_ = self.dyn_into::<JsArray>().unwrap();
+            assert_eq!(
+                self_.length(),
+                1,
+                "Expected 1 elements, got {}",
+                self_.length()
+            );
+            WasmRunSharedMemory(self_.get(0).wire2api())
+        }
+    }
     impl Wire2Api<WasmVal> for JsValue {
         fn wire2api(self) -> WasmVal {
             let self_ = self.unchecked_into::<JsArray>();
@@ -2618,42 +2664,6 @@ mod web {
                 6 => WasmVal::externRef(self_.get(1).wire2api()),
                 _ => unreachable!(),
             }
-        }
-    }
-    impl Wire2Api<WasmitInstanceId> for JsValue {
-        fn wire2api(self) -> WasmitInstanceId {
-            let self_ = self.dyn_into::<JsArray>().unwrap();
-            assert_eq!(
-                self_.length(),
-                1,
-                "Expected 1 elements, got {}",
-                self_.length()
-            );
-            WasmitInstanceId(self_.get(0).wire2api())
-        }
-    }
-    impl Wire2Api<WasmitModuleId> for JsValue {
-        fn wire2api(self) -> WasmitModuleId {
-            let self_ = self.dyn_into::<JsArray>().unwrap();
-            assert_eq!(
-                self_.length(),
-                1,
-                "Expected 1 elements, got {}",
-                self_.length()
-            );
-            WasmitModuleId(self_.get(0).wire2api())
-        }
-    }
-    impl Wire2Api<WasmitSharedMemory> for JsValue {
-        fn wire2api(self) -> WasmitSharedMemory {
-            let self_ = self.dyn_into::<JsArray>().unwrap();
-            assert_eq!(
-                self_.length(),
-                1,
-                "Expected 1 elements, got {}",
-                self_.length()
-            );
-            WasmitSharedMemory(self_.get(0).wire2api())
         }
     }
     // Section: impl Wire2Api for JsValue
@@ -2872,110 +2882,110 @@ mod io {
     }
 
     #[no_mangle]
-    pub extern "C" fn wire_exports__method__WasmitInstanceId(
-        that: *mut wire_WasmitInstanceId,
+    pub extern "C" fn wire_exports__method__WasmRunInstanceId(
+        that: *mut wire_WasmRunInstanceId,
     ) -> support::WireSyncReturn {
-        wire_exports__method__WasmitInstanceId_impl(that)
+        wire_exports__method__WasmRunInstanceId_impl(that)
     }
 
     #[no_mangle]
-    pub extern "C" fn wire_instantiate_sync__method__WasmitModuleId(
-        that: *mut wire_WasmitModuleId,
+    pub extern "C" fn wire_instantiate_sync__method__WasmRunModuleId(
+        that: *mut wire_WasmRunModuleId,
     ) -> support::WireSyncReturn {
-        wire_instantiate_sync__method__WasmitModuleId_impl(that)
+        wire_instantiate_sync__method__WasmRunModuleId_impl(that)
     }
 
     #[no_mangle]
-    pub extern "C" fn wire_instantiate__method__WasmitModuleId(
+    pub extern "C" fn wire_instantiate__method__WasmRunModuleId(
         port_: i64,
-        that: *mut wire_WasmitModuleId,
+        that: *mut wire_WasmRunModuleId,
     ) {
-        wire_instantiate__method__WasmitModuleId_impl(port_, that)
+        wire_instantiate__method__WasmRunModuleId_impl(port_, that)
     }
 
     #[no_mangle]
-    pub extern "C" fn wire_link_imports__method__WasmitModuleId(
-        that: *mut wire_WasmitModuleId,
+    pub extern "C" fn wire_link_imports__method__WasmRunModuleId(
+        that: *mut wire_WasmRunModuleId,
         imports: *mut wire_list_module_import,
     ) -> support::WireSyncReturn {
-        wire_link_imports__method__WasmitModuleId_impl(that, imports)
+        wire_link_imports__method__WasmRunModuleId_impl(that, imports)
     }
 
     #[no_mangle]
-    pub extern "C" fn wire_stdio_stream__method__WasmitModuleId(
+    pub extern "C" fn wire_stdio_stream__method__WasmRunModuleId(
         port_: i64,
-        that: *mut wire_WasmitModuleId,
+        that: *mut wire_WasmRunModuleId,
         kind: i32,
     ) {
-        wire_stdio_stream__method__WasmitModuleId_impl(port_, that, kind)
+        wire_stdio_stream__method__WasmRunModuleId_impl(port_, that, kind)
     }
 
     #[no_mangle]
-    pub extern "C" fn wire_dispose__method__WasmitModuleId(
+    pub extern "C" fn wire_dispose__method__WasmRunModuleId(
         port_: i64,
-        that: *mut wire_WasmitModuleId,
+        that: *mut wire_WasmRunModuleId,
     ) {
-        wire_dispose__method__WasmitModuleId_impl(port_, that)
+        wire_dispose__method__WasmRunModuleId_impl(port_, that)
     }
 
     #[no_mangle]
-    pub extern "C" fn wire_call_function_handle_sync__method__WasmitModuleId(
-        that: *mut wire_WasmitModuleId,
+    pub extern "C" fn wire_call_function_handle_sync__method__WasmRunModuleId(
+        that: *mut wire_WasmRunModuleId,
         func: wire_WFunc,
         args: *mut wire_list_wasm_val,
     ) -> support::WireSyncReturn {
-        wire_call_function_handle_sync__method__WasmitModuleId_impl(that, func, args)
+        wire_call_function_handle_sync__method__WasmRunModuleId_impl(that, func, args)
     }
 
     #[no_mangle]
-    pub extern "C" fn wire_call_function_handle__method__WasmitModuleId(
+    pub extern "C" fn wire_call_function_handle__method__WasmRunModuleId(
         port_: i64,
-        that: *mut wire_WasmitModuleId,
+        that: *mut wire_WasmRunModuleId,
         func: wire_WFunc,
         args: *mut wire_list_wasm_val,
     ) {
-        wire_call_function_handle__method__WasmitModuleId_impl(port_, that, func, args)
+        wire_call_function_handle__method__WasmRunModuleId_impl(port_, that, func, args)
     }
 
     #[no_mangle]
-    pub extern "C" fn wire_call_function_handle_parallel__method__WasmitModuleId(
+    pub extern "C" fn wire_call_function_handle_parallel__method__WasmRunModuleId(
         port_: i64,
-        that: *mut wire_WasmitModuleId,
+        that: *mut wire_WasmRunModuleId,
         func_name: *mut wire_uint_8_list,
         args: *mut wire_list_wasm_val,
         num_tasks: usize,
     ) {
-        wire_call_function_handle_parallel__method__WasmitModuleId_impl(
+        wire_call_function_handle_parallel__method__WasmRunModuleId_impl(
             port_, that, func_name, args, num_tasks,
         )
     }
 
     #[no_mangle]
-    pub extern "C" fn wire_worker_execution__method__WasmitModuleId(
-        that: *mut wire_WasmitModuleId,
+    pub extern "C" fn wire_worker_execution__method__WasmRunModuleId(
+        that: *mut wire_WasmRunModuleId,
         worker_index: usize,
         results: *mut wire_list_wasm_val,
     ) -> support::WireSyncReturn {
-        wire_worker_execution__method__WasmitModuleId_impl(that, worker_index, results)
+        wire_worker_execution__method__WasmRunModuleId_impl(that, worker_index, results)
     }
 
     #[no_mangle]
-    pub extern "C" fn wire_get_function_type__method__WasmitModuleId(
-        that: *mut wire_WasmitModuleId,
+    pub extern "C" fn wire_get_function_type__method__WasmRunModuleId(
+        that: *mut wire_WasmRunModuleId,
         func: wire_WFunc,
     ) -> support::WireSyncReturn {
-        wire_get_function_type__method__WasmitModuleId_impl(that, func)
+        wire_get_function_type__method__WasmRunModuleId_impl(that, func)
     }
 
     #[no_mangle]
-    pub extern "C" fn wire_create_function__method__WasmitModuleId(
-        that: *mut wire_WasmitModuleId,
+    pub extern "C" fn wire_create_function__method__WasmRunModuleId(
+        that: *mut wire_WasmRunModuleId,
         function_pointer: usize,
         function_id: u32,
         param_types: *mut wire_list_value_ty,
         result_types: *mut wire_list_value_ty,
     ) -> support::WireSyncReturn {
-        wire_create_function__method__WasmitModuleId_impl(
+        wire_create_function__method__WasmRunModuleId_impl(
             that,
             function_pointer,
             function_id,
@@ -2985,202 +2995,202 @@ mod io {
     }
 
     #[no_mangle]
-    pub extern "C" fn wire_create_memory__method__WasmitModuleId(
-        that: *mut wire_WasmitModuleId,
+    pub extern "C" fn wire_create_memory__method__WasmRunModuleId(
+        that: *mut wire_WasmRunModuleId,
         memory_type: *mut wire_MemoryTy,
     ) -> support::WireSyncReturn {
-        wire_create_memory__method__WasmitModuleId_impl(that, memory_type)
+        wire_create_memory__method__WasmRunModuleId_impl(that, memory_type)
     }
 
     #[no_mangle]
-    pub extern "C" fn wire_create_global__method__WasmitModuleId(
-        that: *mut wire_WasmitModuleId,
+    pub extern "C" fn wire_create_global__method__WasmRunModuleId(
+        that: *mut wire_WasmRunModuleId,
         value: *mut wire_WasmVal,
         mutable: bool,
     ) -> support::WireSyncReturn {
-        wire_create_global__method__WasmitModuleId_impl(that, value, mutable)
+        wire_create_global__method__WasmRunModuleId_impl(that, value, mutable)
     }
 
     #[no_mangle]
-    pub extern "C" fn wire_create_table__method__WasmitModuleId(
-        that: *mut wire_WasmitModuleId,
+    pub extern "C" fn wire_create_table__method__WasmRunModuleId(
+        that: *mut wire_WasmRunModuleId,
         value: *mut wire_WasmVal,
         table_type: *mut wire_TableArgs,
     ) -> support::WireSyncReturn {
-        wire_create_table__method__WasmitModuleId_impl(that, value, table_type)
+        wire_create_table__method__WasmRunModuleId_impl(that, value, table_type)
     }
 
     #[no_mangle]
-    pub extern "C" fn wire_get_global_type__method__WasmitModuleId(
-        that: *mut wire_WasmitModuleId,
+    pub extern "C" fn wire_get_global_type__method__WasmRunModuleId(
+        that: *mut wire_WasmRunModuleId,
         global: wire_Global,
     ) -> support::WireSyncReturn {
-        wire_get_global_type__method__WasmitModuleId_impl(that, global)
+        wire_get_global_type__method__WasmRunModuleId_impl(that, global)
     }
 
     #[no_mangle]
-    pub extern "C" fn wire_get_global_value__method__WasmitModuleId(
-        that: *mut wire_WasmitModuleId,
+    pub extern "C" fn wire_get_global_value__method__WasmRunModuleId(
+        that: *mut wire_WasmRunModuleId,
         global: wire_Global,
     ) -> support::WireSyncReturn {
-        wire_get_global_value__method__WasmitModuleId_impl(that, global)
+        wire_get_global_value__method__WasmRunModuleId_impl(that, global)
     }
 
     #[no_mangle]
-    pub extern "C" fn wire_set_global_value__method__WasmitModuleId(
-        that: *mut wire_WasmitModuleId,
+    pub extern "C" fn wire_set_global_value__method__WasmRunModuleId(
+        that: *mut wire_WasmRunModuleId,
         global: wire_Global,
         value: *mut wire_WasmVal,
     ) -> support::WireSyncReturn {
-        wire_set_global_value__method__WasmitModuleId_impl(that, global, value)
+        wire_set_global_value__method__WasmRunModuleId_impl(that, global, value)
     }
 
     #[no_mangle]
-    pub extern "C" fn wire_get_memory_type__method__WasmitModuleId(
-        that: *mut wire_WasmitModuleId,
+    pub extern "C" fn wire_get_memory_type__method__WasmRunModuleId(
+        that: *mut wire_WasmRunModuleId,
         memory: wire_Memory,
     ) -> support::WireSyncReturn {
-        wire_get_memory_type__method__WasmitModuleId_impl(that, memory)
+        wire_get_memory_type__method__WasmRunModuleId_impl(that, memory)
     }
 
     #[no_mangle]
-    pub extern "C" fn wire_get_memory_data__method__WasmitModuleId(
-        that: *mut wire_WasmitModuleId,
+    pub extern "C" fn wire_get_memory_data__method__WasmRunModuleId(
+        that: *mut wire_WasmRunModuleId,
         memory: wire_Memory,
     ) -> support::WireSyncReturn {
-        wire_get_memory_data__method__WasmitModuleId_impl(that, memory)
+        wire_get_memory_data__method__WasmRunModuleId_impl(that, memory)
     }
 
     #[no_mangle]
-    pub extern "C" fn wire_get_memory_data_pointer__method__WasmitModuleId(
-        that: *mut wire_WasmitModuleId,
+    pub extern "C" fn wire_get_memory_data_pointer__method__WasmRunModuleId(
+        that: *mut wire_WasmRunModuleId,
         memory: wire_Memory,
     ) -> support::WireSyncReturn {
-        wire_get_memory_data_pointer__method__WasmitModuleId_impl(that, memory)
+        wire_get_memory_data_pointer__method__WasmRunModuleId_impl(that, memory)
     }
 
     #[no_mangle]
-    pub extern "C" fn wire_get_memory_data_pointer_and_length__method__WasmitModuleId(
-        that: *mut wire_WasmitModuleId,
+    pub extern "C" fn wire_get_memory_data_pointer_and_length__method__WasmRunModuleId(
+        that: *mut wire_WasmRunModuleId,
         memory: wire_Memory,
     ) -> support::WireSyncReturn {
-        wire_get_memory_data_pointer_and_length__method__WasmitModuleId_impl(that, memory)
+        wire_get_memory_data_pointer_and_length__method__WasmRunModuleId_impl(that, memory)
     }
 
     #[no_mangle]
-    pub extern "C" fn wire_read_memory__method__WasmitModuleId(
-        that: *mut wire_WasmitModuleId,
+    pub extern "C" fn wire_read_memory__method__WasmRunModuleId(
+        that: *mut wire_WasmRunModuleId,
         memory: wire_Memory,
         offset: usize,
         bytes: usize,
     ) -> support::WireSyncReturn {
-        wire_read_memory__method__WasmitModuleId_impl(that, memory, offset, bytes)
+        wire_read_memory__method__WasmRunModuleId_impl(that, memory, offset, bytes)
     }
 
     #[no_mangle]
-    pub extern "C" fn wire_get_memory_pages__method__WasmitModuleId(
-        that: *mut wire_WasmitModuleId,
+    pub extern "C" fn wire_get_memory_pages__method__WasmRunModuleId(
+        that: *mut wire_WasmRunModuleId,
         memory: wire_Memory,
     ) -> support::WireSyncReturn {
-        wire_get_memory_pages__method__WasmitModuleId_impl(that, memory)
+        wire_get_memory_pages__method__WasmRunModuleId_impl(that, memory)
     }
 
     #[no_mangle]
-    pub extern "C" fn wire_write_memory__method__WasmitModuleId(
-        that: *mut wire_WasmitModuleId,
+    pub extern "C" fn wire_write_memory__method__WasmRunModuleId(
+        that: *mut wire_WasmRunModuleId,
         memory: wire_Memory,
         offset: usize,
         buffer: *mut wire_uint_8_list,
     ) -> support::WireSyncReturn {
-        wire_write_memory__method__WasmitModuleId_impl(that, memory, offset, buffer)
+        wire_write_memory__method__WasmRunModuleId_impl(that, memory, offset, buffer)
     }
 
     #[no_mangle]
-    pub extern "C" fn wire_grow_memory__method__WasmitModuleId(
-        that: *mut wire_WasmitModuleId,
+    pub extern "C" fn wire_grow_memory__method__WasmRunModuleId(
+        that: *mut wire_WasmRunModuleId,
         memory: wire_Memory,
         pages: u32,
     ) -> support::WireSyncReturn {
-        wire_grow_memory__method__WasmitModuleId_impl(that, memory, pages)
+        wire_grow_memory__method__WasmRunModuleId_impl(that, memory, pages)
     }
 
     #[no_mangle]
-    pub extern "C" fn wire_get_table_size__method__WasmitModuleId(
-        that: *mut wire_WasmitModuleId,
+    pub extern "C" fn wire_get_table_size__method__WasmRunModuleId(
+        that: *mut wire_WasmRunModuleId,
         table: wire_Table,
     ) -> support::WireSyncReturn {
-        wire_get_table_size__method__WasmitModuleId_impl(that, table)
+        wire_get_table_size__method__WasmRunModuleId_impl(that, table)
     }
 
     #[no_mangle]
-    pub extern "C" fn wire_get_table_type__method__WasmitModuleId(
-        that: *mut wire_WasmitModuleId,
+    pub extern "C" fn wire_get_table_type__method__WasmRunModuleId(
+        that: *mut wire_WasmRunModuleId,
         table: wire_Table,
     ) -> support::WireSyncReturn {
-        wire_get_table_type__method__WasmitModuleId_impl(that, table)
+        wire_get_table_type__method__WasmRunModuleId_impl(that, table)
     }
 
     #[no_mangle]
-    pub extern "C" fn wire_grow_table__method__WasmitModuleId(
-        that: *mut wire_WasmitModuleId,
+    pub extern "C" fn wire_grow_table__method__WasmRunModuleId(
+        that: *mut wire_WasmRunModuleId,
         table: wire_Table,
         delta: u32,
         value: *mut wire_WasmVal,
     ) -> support::WireSyncReturn {
-        wire_grow_table__method__WasmitModuleId_impl(that, table, delta, value)
+        wire_grow_table__method__WasmRunModuleId_impl(that, table, delta, value)
     }
 
     #[no_mangle]
-    pub extern "C" fn wire_get_table__method__WasmitModuleId(
-        that: *mut wire_WasmitModuleId,
+    pub extern "C" fn wire_get_table__method__WasmRunModuleId(
+        that: *mut wire_WasmRunModuleId,
         table: wire_Table,
         index: u32,
     ) -> support::WireSyncReturn {
-        wire_get_table__method__WasmitModuleId_impl(that, table, index)
+        wire_get_table__method__WasmRunModuleId_impl(that, table, index)
     }
 
     #[no_mangle]
-    pub extern "C" fn wire_set_table__method__WasmitModuleId(
-        that: *mut wire_WasmitModuleId,
+    pub extern "C" fn wire_set_table__method__WasmRunModuleId(
+        that: *mut wire_WasmRunModuleId,
         table: wire_Table,
         index: u32,
         value: *mut wire_WasmVal,
     ) -> support::WireSyncReturn {
-        wire_set_table__method__WasmitModuleId_impl(that, table, index, value)
+        wire_set_table__method__WasmRunModuleId_impl(that, table, index, value)
     }
 
     #[no_mangle]
-    pub extern "C" fn wire_fill_table__method__WasmitModuleId(
-        that: *mut wire_WasmitModuleId,
+    pub extern "C" fn wire_fill_table__method__WasmRunModuleId(
+        that: *mut wire_WasmRunModuleId,
         table: wire_Table,
         index: u32,
         value: *mut wire_WasmVal,
         len: u32,
     ) -> support::WireSyncReturn {
-        wire_fill_table__method__WasmitModuleId_impl(that, table, index, value, len)
+        wire_fill_table__method__WasmRunModuleId_impl(that, table, index, value, len)
     }
 
     #[no_mangle]
-    pub extern "C" fn wire_add_fuel__method__WasmitModuleId(
-        that: *mut wire_WasmitModuleId,
+    pub extern "C" fn wire_add_fuel__method__WasmRunModuleId(
+        that: *mut wire_WasmRunModuleId,
         delta: u64,
     ) -> support::WireSyncReturn {
-        wire_add_fuel__method__WasmitModuleId_impl(that, delta)
+        wire_add_fuel__method__WasmRunModuleId_impl(that, delta)
     }
 
     #[no_mangle]
-    pub extern "C" fn wire_fuel_consumed__method__WasmitModuleId(
-        that: *mut wire_WasmitModuleId,
+    pub extern "C" fn wire_fuel_consumed__method__WasmRunModuleId(
+        that: *mut wire_WasmRunModuleId,
     ) -> support::WireSyncReturn {
-        wire_fuel_consumed__method__WasmitModuleId_impl(that)
+        wire_fuel_consumed__method__WasmRunModuleId_impl(that)
     }
 
     #[no_mangle]
-    pub extern "C" fn wire_consume_fuel__method__WasmitModuleId(
-        that: *mut wire_WasmitModuleId,
+    pub extern "C" fn wire_consume_fuel__method__WasmRunModuleId(
+        that: *mut wire_WasmRunModuleId,
         delta: u64,
     ) -> support::WireSyncReturn {
-        wire_consume_fuel__method__WasmitModuleId_impl(that, delta)
+        wire_consume_fuel__method__WasmRunModuleId_impl(that, delta)
     }
 
     #[no_mangle]
@@ -3206,74 +3216,74 @@ mod io {
     }
 
     #[no_mangle]
-    pub extern "C" fn wire_ty__method__WasmitSharedMemory(
-        that: *mut wire_WasmitSharedMemory,
+    pub extern "C" fn wire_ty__method__WasmRunSharedMemory(
+        that: *mut wire_WasmRunSharedMemory,
     ) -> support::WireSyncReturn {
-        wire_ty__method__WasmitSharedMemory_impl(that)
+        wire_ty__method__WasmRunSharedMemory_impl(that)
     }
 
     #[no_mangle]
-    pub extern "C" fn wire_size__method__WasmitSharedMemory(
-        that: *mut wire_WasmitSharedMemory,
+    pub extern "C" fn wire_size__method__WasmRunSharedMemory(
+        that: *mut wire_WasmRunSharedMemory,
     ) -> support::WireSyncReturn {
-        wire_size__method__WasmitSharedMemory_impl(that)
+        wire_size__method__WasmRunSharedMemory_impl(that)
     }
 
     #[no_mangle]
-    pub extern "C" fn wire_data_size__method__WasmitSharedMemory(
-        that: *mut wire_WasmitSharedMemory,
+    pub extern "C" fn wire_data_size__method__WasmRunSharedMemory(
+        that: *mut wire_WasmRunSharedMemory,
     ) -> support::WireSyncReturn {
-        wire_data_size__method__WasmitSharedMemory_impl(that)
+        wire_data_size__method__WasmRunSharedMemory_impl(that)
     }
 
     #[no_mangle]
-    pub extern "C" fn wire_data_pointer__method__WasmitSharedMemory(
-        that: *mut wire_WasmitSharedMemory,
+    pub extern "C" fn wire_data_pointer__method__WasmRunSharedMemory(
+        that: *mut wire_WasmRunSharedMemory,
     ) -> support::WireSyncReturn {
-        wire_data_pointer__method__WasmitSharedMemory_impl(that)
+        wire_data_pointer__method__WasmRunSharedMemory_impl(that)
     }
 
     #[no_mangle]
-    pub extern "C" fn wire_grow__method__WasmitSharedMemory(
-        that: *mut wire_WasmitSharedMemory,
+    pub extern "C" fn wire_grow__method__WasmRunSharedMemory(
+        that: *mut wire_WasmRunSharedMemory,
         delta: u64,
     ) -> support::WireSyncReturn {
-        wire_grow__method__WasmitSharedMemory_impl(that, delta)
+        wire_grow__method__WasmRunSharedMemory_impl(that, delta)
     }
 
     #[no_mangle]
-    pub extern "C" fn wire_atomics__method__WasmitSharedMemory(
+    pub extern "C" fn wire_atomics__method__WasmRunSharedMemory(
         port_: i64,
-        that: *mut wire_WasmitSharedMemory,
+        that: *mut wire_WasmRunSharedMemory,
     ) {
-        wire_atomics__method__WasmitSharedMemory_impl(port_, that)
+        wire_atomics__method__WasmRunSharedMemory_impl(port_, that)
     }
 
     #[no_mangle]
-    pub extern "C" fn wire_atomic_notify__method__WasmitSharedMemory(
-        that: *mut wire_WasmitSharedMemory,
+    pub extern "C" fn wire_atomic_notify__method__WasmRunSharedMemory(
+        that: *mut wire_WasmRunSharedMemory,
         addr: u64,
         count: u32,
     ) -> support::WireSyncReturn {
-        wire_atomic_notify__method__WasmitSharedMemory_impl(that, addr, count)
+        wire_atomic_notify__method__WasmRunSharedMemory_impl(that, addr, count)
     }
 
     #[no_mangle]
-    pub extern "C" fn wire_atomic_wait32__method__WasmitSharedMemory(
-        that: *mut wire_WasmitSharedMemory,
+    pub extern "C" fn wire_atomic_wait32__method__WasmRunSharedMemory(
+        that: *mut wire_WasmRunSharedMemory,
         addr: u64,
         expected: u32,
     ) -> support::WireSyncReturn {
-        wire_atomic_wait32__method__WasmitSharedMemory_impl(that, addr, expected)
+        wire_atomic_wait32__method__WasmRunSharedMemory_impl(that, addr, expected)
     }
 
     #[no_mangle]
-    pub extern "C" fn wire_atomic_wait64__method__WasmitSharedMemory(
-        that: *mut wire_WasmitSharedMemory,
+    pub extern "C" fn wire_atomic_wait64__method__WasmRunSharedMemory(
+        that: *mut wire_WasmRunSharedMemory,
         addr: u64,
         expected: u64,
     ) -> support::WireSyncReturn {
-        wire_atomic_wait64__method__WasmitSharedMemory_impl(that, addr, expected)
+        wire_atomic_wait64__method__WasmRunSharedMemory_impl(that, addr, expected)
     }
 
     #[no_mangle]
@@ -3499,23 +3509,23 @@ mod io {
     }
 
     #[no_mangle]
+    pub extern "C" fn new_box_autoadd_wasm_run_instance_id_0() -> *mut wire_WasmRunInstanceId {
+        support::new_leak_box_ptr(wire_WasmRunInstanceId::new_with_null_ptr())
+    }
+
+    #[no_mangle]
+    pub extern "C" fn new_box_autoadd_wasm_run_module_id_0() -> *mut wire_WasmRunModuleId {
+        support::new_leak_box_ptr(wire_WasmRunModuleId::new_with_null_ptr())
+    }
+
+    #[no_mangle]
+    pub extern "C" fn new_box_autoadd_wasm_run_shared_memory_0() -> *mut wire_WasmRunSharedMemory {
+        support::new_leak_box_ptr(wire_WasmRunSharedMemory::new_with_null_ptr())
+    }
+
+    #[no_mangle]
     pub extern "C" fn new_box_autoadd_wasm_val_0() -> *mut wire_WasmVal {
         support::new_leak_box_ptr(wire_WasmVal::new_with_null_ptr())
-    }
-
-    #[no_mangle]
-    pub extern "C" fn new_box_autoadd_wasmit_instance_id_0() -> *mut wire_WasmitInstanceId {
-        support::new_leak_box_ptr(wire_WasmitInstanceId::new_with_null_ptr())
-    }
-
-    #[no_mangle]
-    pub extern "C" fn new_box_autoadd_wasmit_module_id_0() -> *mut wire_WasmitModuleId {
-        support::new_leak_box_ptr(wire_WasmitModuleId::new_with_null_ptr())
-    }
-
-    #[no_mangle]
-    pub extern "C" fn new_box_autoadd_wasmit_shared_memory_0() -> *mut wire_WasmitSharedMemory {
-        support::new_leak_box_ptr(wire_WasmitSharedMemory::new_with_null_ptr())
     }
 
     #[no_mangle]
@@ -3798,28 +3808,28 @@ mod io {
             Wire2Api::<WasiStackLimits>::wire2api(*wrap).into()
         }
     }
+    impl Wire2Api<WasmRunInstanceId> for *mut wire_WasmRunInstanceId {
+        fn wire2api(self) -> WasmRunInstanceId {
+            let wrap = unsafe { support::box_from_leak_ptr(self) };
+            Wire2Api::<WasmRunInstanceId>::wire2api(*wrap).into()
+        }
+    }
+    impl Wire2Api<WasmRunModuleId> for *mut wire_WasmRunModuleId {
+        fn wire2api(self) -> WasmRunModuleId {
+            let wrap = unsafe { support::box_from_leak_ptr(self) };
+            Wire2Api::<WasmRunModuleId>::wire2api(*wrap).into()
+        }
+    }
+    impl Wire2Api<WasmRunSharedMemory> for *mut wire_WasmRunSharedMemory {
+        fn wire2api(self) -> WasmRunSharedMemory {
+            let wrap = unsafe { support::box_from_leak_ptr(self) };
+            Wire2Api::<WasmRunSharedMemory>::wire2api(*wrap).into()
+        }
+    }
     impl Wire2Api<WasmVal> for *mut wire_WasmVal {
         fn wire2api(self) -> WasmVal {
             let wrap = unsafe { support::box_from_leak_ptr(self) };
             Wire2Api::<WasmVal>::wire2api(*wrap).into()
-        }
-    }
-    impl Wire2Api<WasmitInstanceId> for *mut wire_WasmitInstanceId {
-        fn wire2api(self) -> WasmitInstanceId {
-            let wrap = unsafe { support::box_from_leak_ptr(self) };
-            Wire2Api::<WasmitInstanceId>::wire2api(*wrap).into()
-        }
-    }
-    impl Wire2Api<WasmitModuleId> for *mut wire_WasmitModuleId {
-        fn wire2api(self) -> WasmitModuleId {
-            let wrap = unsafe { support::box_from_leak_ptr(self) };
-            Wire2Api::<WasmitModuleId>::wire2api(*wrap).into()
-        }
-    }
-    impl Wire2Api<WasmitSharedMemory> for *mut wire_WasmitSharedMemory {
-        fn wire2api(self) -> WasmitSharedMemory {
-            let wrap = unsafe { support::box_from_leak_ptr(self) };
-            Wire2Api::<WasmitSharedMemory>::wire2api(*wrap).into()
         }
     }
     impl Wire2Api<CompiledModule> for wire_CompiledModule {
@@ -4036,6 +4046,21 @@ mod io {
             }
         }
     }
+    impl Wire2Api<WasmRunInstanceId> for wire_WasmRunInstanceId {
+        fn wire2api(self) -> WasmRunInstanceId {
+            WasmRunInstanceId(self.field0.wire2api())
+        }
+    }
+    impl Wire2Api<WasmRunModuleId> for wire_WasmRunModuleId {
+        fn wire2api(self) -> WasmRunModuleId {
+            WasmRunModuleId(self.field0.wire2api())
+        }
+    }
+    impl Wire2Api<WasmRunSharedMemory> for wire_WasmRunSharedMemory {
+        fn wire2api(self) -> WasmRunSharedMemory {
+            WasmRunSharedMemory(self.field0.wire2api())
+        }
+    }
     impl Wire2Api<WasmVal> for wire_WasmVal {
         fn wire2api(self) -> WasmVal {
             match self.tag {
@@ -4076,21 +4101,6 @@ mod io {
                 },
                 _ => unreachable!(),
             }
-        }
-    }
-    impl Wire2Api<WasmitInstanceId> for wire_WasmitInstanceId {
-        fn wire2api(self) -> WasmitInstanceId {
-            WasmitInstanceId(self.field0.wire2api())
-        }
-    }
-    impl Wire2Api<WasmitModuleId> for wire_WasmitModuleId {
-        fn wire2api(self) -> WasmitModuleId {
-            WasmitModuleId(self.field0.wire2api())
-        }
-    }
-    impl Wire2Api<WasmitSharedMemory> for wire_WasmitSharedMemory {
-        fn wire2api(self) -> WasmitSharedMemory {
-            WasmitSharedMemory(self.field0.wire2api())
         }
     }
     // Section: wire structs
@@ -4297,19 +4307,19 @@ mod io {
 
     #[repr(C)]
     #[derive(Clone)]
-    pub struct wire_WasmitInstanceId {
+    pub struct wire_WasmRunInstanceId {
         field0: u32,
     }
 
     #[repr(C)]
     #[derive(Clone)]
-    pub struct wire_WasmitModuleId {
+    pub struct wire_WasmRunModuleId {
         field0: u32,
     }
 
     #[repr(C)]
     #[derive(Clone)]
-    pub struct wire_WasmitSharedMemory {
+    pub struct wire_WasmRunSharedMemory {
         field0: wire_ArcRwLockSharedMemory,
     }
 
@@ -4356,7 +4366,7 @@ mod io {
     #[repr(C)]
     #[derive(Clone)]
     pub struct wire_ExternalValue_SharedMemory {
-        field0: *mut wire_WasmitSharedMemory,
+        field0: *mut wire_WasmRunSharedMemory,
     }
 
     #[repr(C)]
@@ -4418,7 +4428,6 @@ mod io {
     pub struct wire_WasmVal_externRef {
         field0: *mut u32,
     }
-
     // Section: impl NewWithNullPtr
 
     pub trait NewWithNullPtr {
@@ -4740,6 +4749,48 @@ mod io {
         }
     }
 
+    impl NewWithNullPtr for wire_WasmRunInstanceId {
+        fn new_with_null_ptr() -> Self {
+            Self {
+                field0: Default::default(),
+            }
+        }
+    }
+
+    impl Default for wire_WasmRunInstanceId {
+        fn default() -> Self {
+            Self::new_with_null_ptr()
+        }
+    }
+
+    impl NewWithNullPtr for wire_WasmRunModuleId {
+        fn new_with_null_ptr() -> Self {
+            Self {
+                field0: Default::default(),
+            }
+        }
+    }
+
+    impl Default for wire_WasmRunModuleId {
+        fn default() -> Self {
+            Self::new_with_null_ptr()
+        }
+    }
+
+    impl NewWithNullPtr for wire_WasmRunSharedMemory {
+        fn new_with_null_ptr() -> Self {
+            Self {
+                field0: wire_ArcRwLockSharedMemory::new_with_null_ptr(),
+            }
+        }
+    }
+
+    impl Default for wire_WasmRunSharedMemory {
+        fn default() -> Self {
+            Self::new_with_null_ptr()
+        }
+    }
+
     impl NewWithNullPtr for wire_WasmVal {
         fn new_with_null_ptr() -> Self {
             Self {
@@ -4812,48 +4863,6 @@ mod io {
         })
     }
 
-    impl NewWithNullPtr for wire_WasmitInstanceId {
-        fn new_with_null_ptr() -> Self {
-            Self {
-                field0: Default::default(),
-            }
-        }
-    }
-
-    impl Default for wire_WasmitInstanceId {
-        fn default() -> Self {
-            Self::new_with_null_ptr()
-        }
-    }
-
-    impl NewWithNullPtr for wire_WasmitModuleId {
-        fn new_with_null_ptr() -> Self {
-            Self {
-                field0: Default::default(),
-            }
-        }
-    }
-
-    impl Default for wire_WasmitModuleId {
-        fn default() -> Self {
-            Self::new_with_null_ptr()
-        }
-    }
-
-    impl NewWithNullPtr for wire_WasmitSharedMemory {
-        fn new_with_null_ptr() -> Self {
-            Self {
-                field0: wire_ArcRwLockSharedMemory::new_with_null_ptr(),
-            }
-        }
-    }
-
-    impl Default for wire_WasmitSharedMemory {
-        fn default() -> Self {
-            Self::new_with_null_ptr()
-        }
-    }
-
     // Section: sync execution mode utility
 
     #[no_mangle]
@@ -4865,3 +4874,20 @@ mod io {
 }
 #[cfg(not(target_family = "wasm"))]
 pub use io::*;
+
+    // ----------- DUMMY CODE FOR BINDGEN ----------
+
+    // copied from: allo-isolate
+    pub type DartPort = i64;
+    pub type DartPostCObjectFnType = unsafe extern "C" fn(port_id: DartPort, message: *mut std::ffi::c_void) -> bool;
+    #[no_mangle] pub unsafe extern "C" fn store_dart_post_cobject(ptr: DartPostCObjectFnType) { panic!("dummy code") }
+    #[no_mangle] pub unsafe extern "C" fn get_dart_object(ptr: usize) -> Dart_Handle { panic!("dummy code") }
+    #[no_mangle] pub unsafe extern "C" fn drop_dart_object(ptr: usize) { panic!("dummy code") }
+    #[no_mangle] pub unsafe extern "C" fn new_dart_opaque(handle: Dart_Handle) -> usize { panic!("dummy code") }
+    #[no_mangle] pub unsafe extern "C" fn init_frb_dart_api_dl(obj: *mut c_void) -> isize { panic!("dummy code") }
+
+    pub struct DartCObject;
+    pub type WireSyncReturn = *mut DartCObject;
+
+    // ---------------------------------------------
+    
