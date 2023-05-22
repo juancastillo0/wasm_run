@@ -28,7 +28,7 @@ for TARGET in \
         fi
 done
 
-if [[ $WASM_BUILD_RUST_WASI_EXAMPLE != false ]]; then
+if [[ $BUILD_RUST_WASM_EXAMPLES != false ]]; then
     bash ../scripts/build-rust-wasm-examples.sh $BUILD_PROFILE
 fi
 

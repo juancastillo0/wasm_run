@@ -51,8 +51,7 @@ jobs:
         run: cargo build -r
         id: build_rust
         if: always()
-      - run: cargo wasi build --release
-        working-directory: ./packages/rust_wasi_example
+      - run: melos run build:wasm_examples -- release
         if: always()
 
       # Dart/Flutter

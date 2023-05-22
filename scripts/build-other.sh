@@ -43,7 +43,7 @@ WINDOWS_LIBNAME=wasmit_dart.dll
 win_build aarch64-pc-windows-msvc windows-arm64 $WINDOWS_LIBNAME
 win_build x86_64-pc-windows-msvc windows-x64 $WINDOWS_LIBNAME
 
-if [[ $WASM_BUILD_RUST_WASI_EXAMPLE != false ]]; then
+if [[ $BUILD_RUST_WASM_EXAMPLES != false ]]; then
     bash ../scripts/build-rust-wasm-examples.sh $BUILD_PROFILE
 fi
 

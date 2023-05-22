@@ -1,4 +1,0 @@
-override_platforms:
-  chrome:
-    settings:
-      arguments: --enable-features=SharedArrayBuffer

@@ -35,7 +35,7 @@ for TARGET in armeabi-v7a arm64-v8a x86 x86_64; do
         fi
 done
 
-if [[ $WASM_BUILD_RUST_WASI_EXAMPLE != false ]]; then
+if [[ $BUILD_RUST_WASM_EXAMPLES != false ]]; then
     bash ../scripts/build-rust-wasm-examples.sh $BUILD_PROFILE
 fi
 

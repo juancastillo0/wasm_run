@@ -28,10 +28,10 @@ scripts:
     run: bash scripts/version.sh
 
   build:
-    run: melos run build:apple && melos run build:android && melos run build:other
+    run: melos run build:apple && melos run build:android && melos run build:other && melos run build:wasm_examples
     description: Build all native libraries for the project.
     env:
-      WASM_BUILD_RUST_WASI_EXAMPLE: false
+      BUILD_RUST_WASM_EXAMPLES: false
 
   build:apple:
     run: bash scripts/build-apple.sh
@@ -44,6 +44,10 @@ scripts:
   build:other:
     run: bash scripts/build-other.sh
     description: Build the .tar.gz for all other platforms.
+
+  build:wasm_examples:
+    run: bash scripts/build-rust-wasm-examples.sh
+    description: Build WASI and threads Rust WASM examples.
 
   test:
     run: melos run test:dart --no-select

@@ -50,7 +50,7 @@ extension WasmitDartImplPlatform on WasmitDartImpl {
         .unwrap();
 
     // Format the generated Dart code
-    _ = std::process::Command::new("flutter")
+    _ = std::process::Command::new("dart")
         .arg("format")
         .arg("..")
         .spawn();
