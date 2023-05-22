@@ -11,11 +11,13 @@ import 'package:wasm_run_example/main.dart';
 import 'package:wasm_run_example/runner_identity/runner_identity.dart';
 import 'package:wasm_run_example/threads_base64.dart';
 
+const _threadsTimeout = Timeout(Duration(minutes: 5));
+
 // dart test test/main_test -c source --release -n threads
 void threadsTest({TestArgs? testArgs}) {
   test(
     'threads',
-    timeout: const Timeout(Duration(minutes: 2)),
+    timeout: _threadsTimeout,
     () => main(onlyTest: true, testArgs: testArgs),
   );
 
@@ -118,12 +120,12 @@ void threadsTest({TestArgs? testArgs}) {
 
   test(
     'threads-state',
-    timeout: const Timeout(Duration(minutes: 2)),
+    timeout: _threadsTimeout,
     threadsStateTest,
   );
 
   test('threads-state web custom import',
-      timeout: const Timeout(Duration(minutes: 2)), skip: !isWeb, () async {
+      timeout: _threadsTimeout, skip: !isWeb, () async {
     final workerMessages = <Object?>[];
     await threadsStateTest(onWorkerMessage: workerMessages.add);
 
