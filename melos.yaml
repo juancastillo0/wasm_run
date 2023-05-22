@@ -28,7 +28,7 @@ scripts:
     run: bash scripts/version.sh
 
   build:
-    run: melos run build:apple && melos run build:android && melos run build:other && melos run build:wasm_examples
+    run: melos run build:apple && melos run build:android && melos run build:other
     description: Build all native libraries for the project.
     env:
       BUILD_RUST_WASM_EXAMPLES: false

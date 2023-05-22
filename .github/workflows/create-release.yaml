@@ -4,14 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       version_parameters:
-        description: 'Parameters to pass to "melos version"'
+        description: 'Parameters to pass to "melos version" (major, minor, patch or build) or an exact version for one or more packages'
         required: true
-        default: " "
-        type: choice
-        options:
-          - "--"
-          - "--prerelease"
-          - "--graduate"
+        type: string
 
 jobs:
   create_release:
@@ -30,7 +25,9 @@ jobs:
       - uses: bluefireteam/melos-action@v2
 
       - name: Create the new version(s)
-        run: melos version --yes ${{ inputs.version_parameters }}
+        run: melos version --yes --ignore '*' \
+          --manual-version wasmit:${{ inputs.version_parameters }} \
+          --manual-version flutter_wasmit:${{ inputs.version_parameters }}
 
       - name: Push created version commit
         run: git push
