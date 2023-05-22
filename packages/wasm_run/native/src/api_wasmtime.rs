@@ -12,7 +12,7 @@ use std::io::Write;
 use std::sync::mpsc::{self, Receiver, Sender};
 pub use std::sync::{Mutex, RwLock};
 use std::{cell::RefCell, collections::HashMap, fs, sync::Arc};
-use wasi_common::{file::FileCaps, pipe::WritePipe};
+use wasi_common::pipe::WritePipe;
 use wasmtime::*;
 pub use wasmtime::{Func, Global, GlobalType, Memory, Module, SharedMemory, Table};
 
@@ -99,21 +99,9 @@ fn make_wasi_ctx(
         if !wasi_config.preopened_files.is_empty() {
             for value in &wasi_config.preopened_files {
                 let file = fs::File::open(value)?;
-                // let vv = file.as_fd().as_raw_fd();
                 let wasm_file =
                     wasmtime_wasi::file::File::from_cap_std(cap_std::fs::File::from_std(file));
-                let caps = FileCaps::all();
-                // let mut caps = FileCaps::empty();
-                // caps.extend([
-                //     FileCaps::READ,
-                //     FileCaps::FILESTAT_SET_SIZE,
-                //     FileCaps::FILESTAT_GET,
-                // ]);
-
-                // vv.try_into().unwrap()
-                let table_size = wasi.table().push(Arc::new(false)).unwrap();
-                // TODO: not sure if this is correct
-                wasi.insert_file(table_size, Box::new(wasm_file), caps);
+                wasi.push_file(Box::new(wasm_file))?;
             }
         }
 
@@ -378,12 +366,12 @@ impl WasmRunModuleId {
     }
 
     fn map_function(
-        m: &WasmiModuleImpl,
+        m: &mut WasmiModuleImpl,
         func: &Func,
         thread_index: usize,
         new_context: StoreContextMut<'_, StoreState>,
     ) -> RustOpaque<WFunc> {
-        let raw_id = unsafe { func.to_raw(&m.store) };
+        let raw_id = unsafe { func.to_raw(&mut m.store) };
         let hf = m.store.data().functions.get(&raw_id).unwrap();
         let ff = Self::_create_function(
             new_context,
@@ -408,7 +396,7 @@ impl WasmRunModuleId {
             m.linker
                 .define(&mut m.store, &import.module, &import.name, &import.value)?;
         }
-        if let Some(threads) = m.threads.as_ref() {
+        if let Some(threads) = m.threads.clone().as_ref() {
             for (thread_index, thread) in &mut threads.lock().unwrap().iter_mut().enumerate() {
                 let thread = thread.as_mut().unwrap();
                 for import in imports.iter() {
@@ -767,7 +755,7 @@ impl WasmRunModuleId {
                 Ok(())
             },
         );
-        let raw_id = unsafe { func.to_raw(&store) };
+        let raw_id = unsafe { func.to_raw(&mut store) };
         store.data_mut().functions.insert(
             raw_id,
             HostFunction {

@@ -109,7 +109,7 @@ void testAll({TestArgs? testArgs}) {
         expect(runtime.isBrowser, false);
         break;
       case 'wasmtime':
-        expect(runtime.version, '8.0.0');
+        expect(runtime.version, '9.0.0');
         expect(runtime.isBrowser, false);
         break;
       case 'browser':
