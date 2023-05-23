@@ -7,7 +7,7 @@ import 'dart:math' as math;
 import 'dart:typed_data'
     show ByteData, Endian, Uint16List, Uint32List, Uint8List;
 
-import 'package:dart_output/canonical_abi_cache.dart';
+import 'package:wasm_wit_component/src/canonical_abi_cache.dart';
 
 final unreachableException = Exception('Unreachable');
 

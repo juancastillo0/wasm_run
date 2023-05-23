@@ -3,4 +3,5 @@
 /// More dartdocs go here.
 library wasm_wit_component;
 
-// TODO: Export any libraries intended for clients of this package.
+export 'src/canonical_abi.dart';
+export 'src/component.dart';

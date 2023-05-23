@@ -5,9 +5,7 @@
 import 'dart:typed_data';
 
 import 'package:wasm_run/wasm_run.dart';
-
-import 'component.dart';
-import 'canonical_abi.dart';
+import 'package:wasm_wit_component/wasm_wit_component.dart';
 
 typedef T9 = List<String>;
 typedef T8 = Result<void, void>;

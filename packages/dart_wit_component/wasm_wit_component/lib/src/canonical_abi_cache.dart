@@ -1,4 +1,4 @@
-import 'package:dart_output/canonical_abi.dart';
+import 'package:wasm_wit_component/src/canonical_abi.dart';
 
 class ComputedFuncTypeData {
   final CoreFuncType lowerCoreType;
