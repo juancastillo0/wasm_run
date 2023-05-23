@@ -64,14 +64,133 @@ class Ok<O, E> implements Result<O, E> {
 
   @override
   bool operator ==(Object other) =>
-      other is Ok<O, E> && other.runtimeType == runtimeType && ok == other.ok;
+      other is Ok<O, E> &&
+      other.runtimeType == runtimeType &&
+      comparator.areEqual(ok, other.ok);
 
   @override
-  int get hashCode => Object.hash(runtimeType, ok);
+  int get hashCode => runtimeType.hashCode ^ comparator.hashValue(ok);
 
   @override
   String toString() {
     return 'Ok<$O, $E>($ok)';
+  }
+}
+
+/// A Rust-style Result type's failure value.
+class Err<O, E> implements Result<O, E> {
+  @override
+  final E error;
+  const Err(this.error);
+
+  @override
+  bool get isOk => false;
+  @override
+  bool get isError => true;
+  @override
+  O? get ok => null;
+
+  @override
+  Map<String, Object?> toJson([
+    Object? Function(O value)? mapOk,
+    Object? Function(E value)? mapError,
+  ]) =>
+      {'error': mapError == null ? error : mapError(error)};
+
+  @override
+  bool operator ==(Object other) =>
+      other is Err<O, E> &&
+      other.runtimeType == runtimeType &&
+      comparator.areEqual(error, other.error);
+
+  @override
+  int get hashCode => runtimeType.hashCode ^ comparator.hashValue(error);
+
+  @override
+  String toString() {
+    return 'Err<$O, $E>($error)';
+  }
+}
+
+/// A Rust-style Option type.
+sealed class Option<T extends Object> {
+  const factory Option.some(T value) = Some;
+  const factory Option.none() = None;
+
+  factory Option.fromJson(Object? json, T Function(Object? json) some) {
+    return switch (json) {
+      null => None(),
+      {'none': null} || (0, null) => None(),
+      {'some': final o} || (1, final o) => Some(some(o)),
+      _ => throw Exception('Invalid JSON for Option: $json'),
+    };
+  }
+
+  /// Returns the contained [T] value, if present, otherwise returns null
+  T? get value;
+
+  /// Returns `true` if this is a [Some] instance
+  bool get isSome;
+
+  /// Returns `true` if this is a [None] instance
+  bool get isNone;
+
+  Map<String, Object?> toJson([Object? Function(T value)? mapValue]);
+}
+
+/// A Rust-style Option type's Some value.
+class Some<T extends Object> implements Option<T> {
+  @override
+  final T value;
+  const Some(this.value);
+
+  @override
+  bool get isSome => true;
+  @override
+  bool get isNone => false;
+
+  @override
+  Map<String, Object?> toJson([Object? Function(T value)? mapValue]) =>
+      {'some': mapValue == null ? value : mapValue(value)};
+
+  @override
+  bool operator ==(Object other) =>
+      other is Some<T> &&
+      other.runtimeType == runtimeType &&
+      comparator.areEqual(value, other.value);
+
+  @override
+  int get hashCode => runtimeType.hashCode ^ comparator.hashValue(value);
+
+  @override
+  String toString() {
+    return 'Some<$T>($value)';
+  }
+}
+
+/// A Rust-style Option type's None value.
+class None<T extends Object> implements Option<T> {
+  const None();
+  @override
+  T? get value => null;
+  @override
+  bool get isSome => false;
+  @override
+  bool get isNone => true;
+
+  @override
+  Map<String, Object?> toJson([Object? Function(T value)? mapValue]) =>
+      {'none': null};
+
+  @override
+  bool operator ==(Object other) => other is None;
+
+  @override
+  int get hashCode => (None).hashCode;
+
+  @override
+  String toString() {
+    return 'None<$T>()';
   }
 }
 
@@ -129,123 +248,6 @@ class ObjectComparator {
     } else {
       return e;
     }
-  }
-}
-
-/// A Rust-style Result type's failure value.
-class Err<O, E> implements Result<O, E> {
-  @override
-  final E error;
-  const Err(this.error);
-
-  @override
-  bool get isOk => false;
-  @override
-  bool get isError => true;
-  @override
-  O? get ok => null;
-
-  @override
-  Map<String, Object?> toJson([
-    Object? Function(O value)? mapOk,
-    Object? Function(E value)? mapError,
-  ]) =>
-      {'error': mapError == null ? error : mapError(error)};
-
-  @override
-  bool operator ==(Object other) =>
-      other is Err<O, E> &&
-      other.runtimeType == runtimeType &&
-      error == other.error;
-
-  @override
-  int get hashCode => Object.hash(runtimeType, error);
-
-  @override
-  String toString() {
-    return 'Err<$O, $E>($error)';
-  }
-}
-
-/// A Rust-style Option type.
-sealed class Option<T extends Object> {
-  const factory Option.some(T value) = Some;
-  const factory Option.none() = None;
-
-  factory Option.fromJson(Object? json, T Function(Object? json) some) {
-    return switch (json) {
-      null => None(),
-      {'none': null} || (0, null) => None(),
-      {'some': final o} || (1, final o) => Some(some(o)),
-      _ => throw Exception('Invalid JSON for Option: $json'),
-    };
-  }
-
-  /// Returns the contained [T] value, if present, otherwise returns null
-  T? get value;
-
-  /// Returns `true` if this is a [Some] instance
-  bool get isSome;
-
-  /// Returns `true` if this is a [None] instance
-  bool get isNone;
-
-  Map<String, Object?> toJson([Object? Function(T value)? mapValue]);
-}
-
-/// A Rust-style Option type's Some value.
-class Some<T extends Object> implements Option<T> {
-  @override
-  final T value;
-  const Some(this.value);
-
-  @override
-  bool get isSome => true;
-  @override
-  bool get isNone => false;
-
-  @override
-  Map<String, Object?> toJson([Object? Function(T value)? mapValue]) =>
-      {'some': mapValue == null ? value : mapValue(value)};
-
-  @override
-  bool operator ==(Object other) =>
-      other is Some<T> &&
-      other.runtimeType == runtimeType &&
-      value == other.value;
-
-  @override
-  int get hashCode => Object.hash(runtimeType, value);
-
-  @override
-  String toString() {
-    return 'Some<$T>($value)';
-  }
-}
-
-/// A Rust-style Option type's None value.
-class None<T extends Object> implements Option<T> {
-  const None();
-  @override
-  T? get value => null;
-  @override
-  bool get isSome => false;
-  @override
-  bool get isNone => true;
-
-  @override
-  Map<String, Object?> toJson([Object? Function(T value)? mapValue]) =>
-      {'none': null};
-
-  @override
-  bool operator ==(Object other) => other is None;
-
-  @override
-  int get hashCode => (None).hashCode;
-
-  @override
-  String toString() {
-    return 'None<$T>()';
   }
 }
 
