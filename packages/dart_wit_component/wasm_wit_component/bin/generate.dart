@@ -4,15 +4,19 @@ import 'package:wasm_run/wasm_run.dart';
 import 'package:wasm_wit_component/src/generator.dart';
 import 'package:wasm_wit_component/wasm_wit_component.dart';
 
+/// Generates Dart code from a Wasm WIT file.
+/// 
+/// ```bash
+/// dart run wasm_wit_component/bin/generate.dart wit/host.wit wasm_wit_component/bin/host.dart
+/// ```
 void main(List<String> arguments) async {
-  final witFilePath = arguments[1];
+  final witFilePath = arguments[0];
   final type = FileSystemEntity.typeSync(witFilePath);
   if (type == FileSystemEntityType.notFound) {
     throw Exception('wit file not found: $witFilePath');
   }
-
   // TODO: multiple files or directory
-  final dartFilePath = arguments.length > 2 ? arguments[2] : null;
+  final dartFilePath = arguments.length > 1 ? arguments[1] : null;
 
   final allowedDir = type == FileSystemEntityType.file
       ? File(witFilePath).parent
@@ -28,7 +32,10 @@ void main(List<String> arguments) async {
           WitGeneratorPaths(inputPath: witFilePath),
         );
 
-  final wasmFile = await File('lib/dart_wit_component.wasm').readAsBytes();
+  final packageDir = File.fromUri(Platform.script).parent.parent;
+  final wasmFile =
+      await File.fromUri(packageDir.uri.resolve('lib/dart_wit_component.wasm'))
+          .readAsBytes();
   final module = await compileWasmModule(wasmFile);
   final builder = module.builder(
     wasiConfig: WasiConfig(
@@ -70,6 +77,9 @@ void main(List<String> arguments) async {
         final outPath = dartFilePath ??
             file.path.replaceFirst(RegExp(r'(.wit)?$'), '.dart');
         await File(outPath).writeAsString(file.content);
+        try {
+          await Process.run('dart', ['format', outPath]);
+        } catch (_) {}
       }
     case Err(:final error):
       throw Exception(error);
