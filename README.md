@@ -203,7 +203,7 @@ The WASI modules can have access to the system clock and randomness.
 
 ## Wasm Components and Wasm Interface Type (WIT)
 
-An experimental Wasm Interface Type (WIT) code generator for Dart can be found in the [wit_component_example](./packages/wit_component_example/) directory.
+An experimental Wasm Interface Type (WIT) code generator for Dart can be found in the [dart_wit_component](./packages/dart_wit_component/) directory.
 
 This is a work in progress and we will provide a separate package or additional tools for using Wasm components.
 

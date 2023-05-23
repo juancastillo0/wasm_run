@@ -2,6 +2,6 @@
 members = ["packages/wasm_run/native"]
 exclude = [
     "packages/rust_wasi_example",
-    "packages/wit_component_example",
+    "packages/dart_wit_component",
     "packages/rust_threads_example",
 ]

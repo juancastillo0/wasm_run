@@ -1,5 +1,5 @@
 [package]
-name = "wit_component_example"
+name = "dart_wit_component"
 version = "0.0.1"
 edition = "2021"
 
