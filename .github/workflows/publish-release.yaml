@@ -3,7 +3,7 @@ name: Publish Release(s)
 on:
   push:
     tags:
-      - "*"
+      - "wasm_run-v*"
 
 jobs:
   publish_github_release:
