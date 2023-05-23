@@ -12,7 +12,7 @@ on:
 env:
   FLUTTER_CHANNEL: beta
   RUST_TOOLCHAIN: nightly
-  MELOS_VERSION: "3.0.1"
+  MELOS_VERSION: "3.1.0"
 
 jobs:
   # General build, check, and test steps

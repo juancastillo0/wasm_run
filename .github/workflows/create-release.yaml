@@ -13,7 +13,7 @@ permissions:
   packages: write
 
 env:
-  MELOS_VERSION: "3.0.1"
+  MELOS_VERSION: "3.1.0"
 
 jobs:
   create_release:
