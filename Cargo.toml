@@ -4,4 +4,5 @@ exclude = [
     "packages/rust_wasi_example",
     "packages/dart_wit_component",
     "packages/rust_threads_example",
+    "packages/dart_wit_component/wasm_wit_component/example/rust_wit_component_example/Cargo.toml",
 ]

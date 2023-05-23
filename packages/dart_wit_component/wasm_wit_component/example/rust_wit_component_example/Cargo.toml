@@ -1,0 +1,11 @@
+[package]
+name = "rust_wit_component_example"
+version = "0.0.1"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[lib]
+crate-type = ['cdylib']
+
+[dependencies]
+wit-bindgen = { git = "https://github.com/bytecodealliance/wit-bindgen", version = "0.6.0" }
