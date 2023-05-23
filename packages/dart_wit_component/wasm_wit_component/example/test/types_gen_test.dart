@@ -44,8 +44,8 @@ Future<TypesExampleWorld> initTypesWorld(
 ) async {
   final componentWasm = await File(
     kReleaseMode
-        ? '../target/wasm32-unknown-unknown/release/dart_wit_component.wasm'
-        : '../target/wasm32-unknown-unknown/debug/dart_wit_component.wasm',
+        ? 'rust_wit_component_example/target/wasm32-unknown-unknown/release/rust_wit_component_example.wasm'
+        : 'rust_wit_component_example/target/wasm32-unknown-unknown/debug/rust_wit_component_example.wasm',
   ).readAsBytes();
   final module = await compileWasmModule(componentWasm);
   print(module);
