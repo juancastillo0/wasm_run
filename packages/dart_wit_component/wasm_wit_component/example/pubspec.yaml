@@ -8,10 +8,14 @@ environment:
 
 dependencies:
   wasm_run:
-    path: ../../../wasm_run
   wasm_wit_component:
-    path: ../
 
 dev_dependencies:
   test: ^1.21.0
   very_good_analysis: ^4.0.0
+
+dependency_overrides:
+  wasm_run:
+    path: ../../../wasm_run
+  wasm_wit_component:
+    path: ../
