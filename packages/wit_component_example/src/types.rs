@@ -1,14 +1,8 @@
-use std::{collections::HashMap, fmt::format};
+use std::collections::HashMap;
 
 use crate::{generate::*, strings::Normalize};
 use wit_parser::*;
 
-pub struct DartType {
-    pub name: String,
-    pub ty: Type,
-    pub ffi_ty: String,
-    pub is_pointer: bool,
-}
 
 pub struct Parsed<'a>(
     pub &'a UnresolvedPackage,
@@ -16,35 +10,7 @@ pub struct Parsed<'a>(
 );
 
 impl Parsed<'_> {
-    pub fn type_to_ffi(&self, ty: &Type) -> String {
-        match ty {
-            Type::Id(ty_id) => {
-                let ty_def = self.0.types.get(*ty_id).unwrap();
-                ty_def.name.clone().unwrap()
-            }
-            Type::Bool => "Bool".to_string(),
-            Type::String => "String".to_string(),
-            Type::Char => "Uint32".to_string(),
-            Type::Float32 => "Float".to_string(),
-            Type::Float64 => "Double".to_string(),
-            Type::S8 => "Int8".to_string(),
-            Type::S16 => "Int16".to_string(),
-            Type::S32 => "Int32".to_string(),
-            Type::S64 => "Int64".to_string(),
-            Type::U8 => "Uint8".to_string(),
-            Type::U16 => "Uint16".to_string(),
-            Type::U32 => "Uint32".to_string(),
-            Type::U64 => "Uint64".to_string(),
-            // Type::USize => "usize".to_string(),
-            // Type::Alias(alias) => alias.type_.ffi_type(),
-            // Type::Handle(_resource_name) => self.as_lang(),
-            // Type::ConstPtr(_pointee) => _pointee.as_lang(),
-            // Type::MutPtr(_pointee) => _pointee.as_lang(),
-            // Type::Option(_) => todo!(),
-            // Type::Result(_) => todo!(),
-            // Type::Void => "Void".to_string(),
-        }
-    }
+    
 
     pub fn type_to_str(&self, ty: &Type) -> String {
         match ty {
