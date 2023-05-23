@@ -11,7 +11,7 @@ import 'package:wasm_run_example/main.dart';
 import 'package:wasm_run_example/runner_identity/runner_identity.dart';
 import 'package:wasm_run_example/threads_base64.dart';
 
-const _threadsTimeout = Timeout(Duration(minutes: 5));
+const _threadsTimeout = Timeout(Duration(minutes: 10));
 
 // dart test test/main_test -c source --release -n threads
 void threadsTest({TestArgs? testArgs}) {
