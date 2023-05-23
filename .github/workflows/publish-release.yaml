@@ -5,6 +5,9 @@ on:
     tags:
       - "wasm_run-v*"
 
+env:
+  MELOS_VERSION: "3.0.1"
+
 jobs:
   publish_github_release:
     # macOS because we can cross-compile to all other platforms from it
@@ -14,6 +17,8 @@ jobs:
       - uses: actions/checkout@v3
       - uses: subosito/flutter-action@v2
       - uses: bluefireteam/melos-action@v2
+        with:
+          melos-version: ${{ env.MELOS_VERSION }}
       - uses: goto-bus-stop/setup-zig@v2
       - uses: KyleMayes/install-llvm-action@v1
         with:
@@ -42,6 +47,8 @@ jobs:
       - uses: actions/checkout@v3
       - uses: subosito/flutter-action@v2
       - uses: bluefireteam/melos-action@v2
+        with:
+          melos-version: ${{ env.MELOS_VERSION }}
       - name: Setup pub.dev credentials
         run: |
           mkdir -p $HOME/.config/dart
