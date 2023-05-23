@@ -27,9 +27,7 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           channel: ${{ env.FLUTTER_CHANNEL }}
-      - uses: bluefireteam/melos-action@v2
-        with:
-          melos-version: ${{ env.MELOS_VERSION }}
+      - run: dart pub global activate melos@${{ env.MELOS_VERSION }} && melos bs
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{ env.RUST_TOOLCHAIN }}
@@ -155,9 +153,7 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           channel: ${{ env.FLUTTER_CHANNEL }}
-      - uses: bluefireteam/melos-action@v2
-        with:
-          melos-version: ${{ env.MELOS_VERSION }}
+      - run: dart pub global activate melos@${{ env.MELOS_VERSION }} && melos bs
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{ env.RUST_TOOLCHAIN }}
@@ -232,9 +228,7 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           channel: ${{ env.FLUTTER_CHANNEL }}
-      - uses: bluefireteam/melos-action@v2
-        with:
-          melos-version: ${{ env.MELOS_VERSION }}
+      - run: dart pub global activate melos@${{ env.MELOS_VERSION }} && melos bs
       - uses: goto-bus-stop/setup-zig@v2
       - uses: KyleMayes/install-llvm-action@v1
         with:
@@ -268,9 +262,7 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           channel: ${{ env.FLUTTER_CHANNEL }}
-      - uses: bluefireteam/melos-action@v2
-        with:
-          melos-version: ${{ env.MELOS_VERSION }}
+      - run: dart pub global activate melos@${{ env.MELOS_VERSION }} && melos bs
       - uses: goto-bus-stop/setup-zig@v2
       - uses: KyleMayes/install-llvm-action@v1
         with:
@@ -300,9 +292,7 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           channel: ${{ env.FLUTTER_CHANNEL }}
-      - uses: bluefireteam/melos-action@v2
-        with:
-          melos-version: ${{ env.MELOS_VERSION }}
+      - run: dart pub global activate melos@${{ env.MELOS_VERSION }} && melos bs
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{ env.RUST_TOOLCHAIN }}
@@ -340,9 +330,7 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           channel: ${{ env.FLUTTER_CHANNEL }}
-      - uses: bluefireteam/melos-action@v2
-        with:
-          melos-version: ${{ env.MELOS_VERSION }}
+      - run: dart pub global activate melos@${{ env.MELOS_VERSION }} && melos bs
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{ env.RUST_TOOLCHAIN }}
@@ -392,9 +380,7 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           channel: ${{ env.FLUTTER_CHANNEL }}
-      - uses: bluefireteam/melos-action@v2
-        with:
-          melos-version: ${{ env.MELOS_VERSION }}
+      - run: dart pub global activate melos@${{ env.MELOS_VERSION }} && melos bs
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{ env.RUST_TOOLCHAIN }}

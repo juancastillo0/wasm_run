@@ -16,9 +16,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: subosito/flutter-action@v2
-      - uses: bluefireteam/melos-action@v2
-        with:
-          melos-version: ${{ env.MELOS_VERSION }}
+      - run: dart pub global activate melos@${{ env.MELOS_VERSION }} && melos bs
       - uses: goto-bus-stop/setup-zig@v2
       - uses: KyleMayes/install-llvm-action@v1
         with:
@@ -46,9 +44,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: subosito/flutter-action@v2
-      - uses: bluefireteam/melos-action@v2
-        with:
-          melos-version: ${{ env.MELOS_VERSION }}
+      - run: dart pub global activate melos@${{ env.MELOS_VERSION }} && melos bs
       - name: Setup pub.dev credentials
         run: |
           mkdir -p $HOME/.config/dart
