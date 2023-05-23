@@ -2,7 +2,7 @@
 
 import 'dart:io';
 
-import 'package:dart_output/types_gen.dart';
+import 'package:wasm_wit_component_example/types_gen.dart';
 import 'package:test/test.dart';
 import 'package:wasm_run/wasm_run.dart';
 import 'package:wasm_wit_component/wasm_wit_component.dart';
