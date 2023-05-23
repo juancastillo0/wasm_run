@@ -312,9 +312,6 @@ jobs:
           cp platform-build/WasmRun.xcframework.zip packages/wasm_run_flutter/ios/Frameworks/$CURR_VERSION.zip
           echo Copied file!
 
-      - name: Build Flutter iOS example
-        working-directory: packages/wasm_run_flutter/example
-        run: flutter build ios --target=integration_test/main_test.dart --debug
       - name: Run Flutter integration tests
         working-directory: packages/wasm_run_flutter/example
         run: flutter test -d ${{ env.DEVICE_ID }} integration_test

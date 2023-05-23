@@ -8,6 +8,10 @@ on:
 env:
   MELOS_VERSION: "3.1.0"
 
+permissions:
+  contents: write
+  discussions: write
+
 jobs:
   publish_github_release:
     # macOS because we can cross-compile to all other platforms from it

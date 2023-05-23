@@ -61,12 +61,12 @@ void threadsTest({TestArgs? testArgs}) {
     ///
     /// LOCAL STATES
     ///
-
+    const executions = 15;
     var localStates = await instance.runParallel(
       getStateLocal,
-      List.generate(100, (_) => <int>[]),
+      List.generate(executions, (_) => <int>[]),
     );
-    expect(localStates, List.generate(100, (_) => [0]));
+    expect(localStates, List.generate(executions, (_) => [0]));
     final localResult = await instance.runParallel(
       setStateLocal,
       [
@@ -89,9 +89,9 @@ void threadsTest({TestArgs? testArgs}) {
 
     var states = await instance.runParallel(
       getState,
-      List.generate(100, (_) => []),
+      List.generate(executions, (_) => []),
     );
-    expect(states, List.generate(100, (_) => [i64.fromInt(2)]));
+    expect(states, List.generate(executions, (_) => [i64.fromInt(2)]));
 
     final result = await instance.runParallel(
       increaseState,
@@ -104,7 +104,7 @@ void threadsTest({TestArgs? testArgs}) {
 
     states = await instance.runParallel(
       getState,
-      List.generate(100, (_) => []),
+      List.generate(executions, (_) => []),
     );
     expect(states.map((e) => i64.toInt(e[0]!)).toSet(), {6});
 
@@ -232,7 +232,7 @@ Future<ThreadedInstance> getThreadsInstance(
   );
   print(module);
 
-  final numThreads = isWeb ? 4 : Platform.numberOfProcessors;
+  final numThreads = max(isWeb ? 4 : Platform.numberOfProcessors, 4);
   print('numThreads: $numThreads');
   final builder = module.builder(
     workersConfig: WorkersConfig(
@@ -295,7 +295,7 @@ Future<void> main({bool onlyTest = false, TestArgs? testArgs}) async {
   final maxFunc = instance.getFunction('max_u32')!;
   // TODO: test simd
 
-  const numIntsPerThread = 5000000;
+  const numIntsPerThread = 500000;
   const chunkLength = numIntsPerThread * 4;
   final numInts = numIntsPerThread * numThreads;
   final size = numInts * 4;

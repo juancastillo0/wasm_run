@@ -5,7 +5,7 @@ import 'package:wasm_wit_component/src/generator.dart';
 import 'package:wasm_wit_component/wasm_wit_component.dart';
 
 /// Generates Dart code from a Wasm WIT file.
-/// 
+///
 /// ```bash
 /// dart run wasm_wit_component/bin/generate.dart wit/host.wit wasm_wit_component/bin/host.dart
 /// ```
