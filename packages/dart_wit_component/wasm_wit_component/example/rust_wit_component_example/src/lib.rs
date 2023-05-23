@@ -1,8 +1,3 @@
-mod function;
-pub mod generate;
-mod strings;
-mod types;
-
 // Use a procedural macro to generate bindings for the world we specified in
 // `host.wit`
 wit_bindgen::generate!("types-example");

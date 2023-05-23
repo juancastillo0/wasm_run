@@ -1,0 +1,26 @@
+default world dart-wit-generator {
+    record wit-generator-config {
+        inputs: wit-generator-input,
+        json-serialization: bool,
+        copy-with: bool,
+        equality-and-hash-code: bool,
+        to-string: bool,
+    }
+
+    union wit-generator-input {
+        wit-generator-paths,
+        list<wit-file>,
+    }
+
+    record wit-generator-paths {
+        input-path: string,
+    }
+
+    record wit-file {
+        path: string,
+        content: string,
+    }
+
+    export generate: func(config: wit-generator-config) -> result<list<wit-file>, string>
+
+}

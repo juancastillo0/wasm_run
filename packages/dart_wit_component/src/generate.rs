@@ -1,5 +1,5 @@
 use crate::{function::FuncKind, strings::Normalize, types::*};
-use std::{collections::HashMap, fs::File, io::Write, path::Path};
+use std::collections::HashMap;
 use wit_parser::*;
 
 pub fn document_to_dart(parsed: &UnresolvedPackage) -> String {
@@ -89,7 +89,12 @@ pub fn document_to_dart(parsed: &UnresolvedPackage) -> String {
                     }
                 };
             });
-            constructor.push_str("});");
+            if constructor.ends_with("{") {
+                constructor.pop();
+                constructor.push_str(");");
+            } else {
+                constructor.push_str("});");
+            }
             s.push_str(&constructor);
         }
         s.push_str("}");
@@ -189,51 +194,70 @@ const HEADER: &str = "
 
 // ignore_for_file: require_trailing_commas, unnecessary_raw_strings
 
+// ignore: unused_import
 import 'dart:typed_data';
 
 import 'package:wasm_run/wasm_run.dart';
-
-import 'component.dart';
-import 'canonical_abi.dart';
+import 'package:wasm_wit_component/wasm_wit_component.dart';
 ";
 
-const PACKAGE_DIR: &str = env!("CARGO_MANIFEST_DIR");
+#[cfg(test)]
+mod tests {
+    use std::{fs::File, io::Write, path::Path};
+    const PACKAGE_DIR: &str = env!("CARGO_MANIFEST_DIR");
 
-#[test]
-pub fn parse_wit() {
-    let parsed = wit_parser::UnresolvedPackage::parse(
-        Path::new("../wit/host.wit"),
-        "
+    #[test]
+    pub fn parse_wit() {
+        let parsed = wit_parser::UnresolvedPackage::parse(
+            Path::new("../wit/host.wit"),
+            "
 default world host {
     import print: func(msg: string)
 
     export run: func()
 }
 ",
-    )
-    .unwrap();
-
-    let s = document_to_dart(&parsed);
-    println!("{}", s);
-}
-
-#[test]
-pub fn parse_wit_types() {
-    let path = format!("{}/wit/types-example.wit", PACKAGE_DIR);
-    let parsed = wit_parser::UnresolvedPackage::parse_file(Path::new(&path)).unwrap();
-
-    let s = document_to_dart(&parsed);
-    println!("{}", s);
-
-    let output_path = format!("{}/dart_output/lib/types_gen.dart", PACKAGE_DIR);
-    File::create(&output_path)
-        .unwrap()
-        .write(s.as_bytes())
+        )
         .unwrap();
 
-    std::process::Command::new("dart")
-        .arg("format")
-        .arg(&output_path)
-        .output()
-        .unwrap();
+        let s = super::document_to_dart(&parsed);
+        println!("{}", s);
+    }
+
+    fn parse_and_write_generation(path: &str, output_path: &str) {
+        let parsed = wit_parser::UnresolvedPackage::parse_file(Path::new(path)).unwrap();
+
+        let s = super::document_to_dart(&parsed);
+        println!("{}", s);
+        File::create(output_path)
+            .unwrap()
+            .write(s.as_bytes())
+            .unwrap();
+
+        std::process::Command::new("dart")
+            .arg("format")
+            .arg(output_path)
+            .output()
+            .unwrap();
+    }
+
+    #[test]
+    pub fn parse_wit_types() {
+        let path = format!(
+            "{}/wasm_wit_component/example/rust_wit_component_example/wit/types-example.wit",
+            PACKAGE_DIR
+        );
+        let output_path = format!(
+            "{}/wasm_wit_component/example/lib/types_gen.dart",
+            PACKAGE_DIR
+        );
+        parse_and_write_generation(&path, &output_path);
+    }
+
+    #[test]
+    pub fn parse_generator() {
+        let path = format!("{}/wit/dart-wit-generator.wit", PACKAGE_DIR);
+        let output_path = format!("{}/wasm_wit_component/lib/src/generator.dart", PACKAGE_DIR);
+        parse_and_write_generation(&path, &output_path);
+    }
 }

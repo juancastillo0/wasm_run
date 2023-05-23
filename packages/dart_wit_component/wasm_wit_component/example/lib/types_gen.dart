@@ -2,6 +2,7 @@
 
 // ignore_for_file: require_trailing_commas, unnecessary_raw_strings
 
+// ignore: unused_import
 import 'dart:typed_data';
 
 import 'package:wasm_run/wasm_run.dart';
