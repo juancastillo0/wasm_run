@@ -6,7 +6,10 @@ import 'package:wasm_run/src/ffi/library_locator.dart';
 
 typedef ExternalLibrary = DynamicLibrary;
 
-WasmRunDart createWrapperImpl(ExternalLibrary dylib) => WasmRunDartImpl(dylib);
+WasmRunDart createWrapperImpl(ExternalLibrary dylib) {
+  final validated = _validateLibrary(dylib);
+  return WasmRunDartImpl(validated);
+}
 
 ExternalLibrary localTestingLibraryImpl() {
   final filename = getDesktopLibName();
@@ -35,6 +38,10 @@ ExternalLibrary localTestingLibraryImpl() {
 }
 
 ExternalLibrary createLibraryImpl() {
+  final envPath = Platform.environment[dynamicLibraryEnvVariable];
+  if (envPath != null) {
+    return _validateLibrary(DynamicLibrary.open(envPath));
+  }
   try {
     final DynamicLibrary library;
     if (Platform.isIOS || Platform.isMacOS) {

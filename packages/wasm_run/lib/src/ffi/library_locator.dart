@@ -9,6 +9,9 @@ const linuxLib = 'libwasm_run_dart.so';
 /// The expected name of the WasmRun library when compiled for Windows devices.
 const windowsLib = 'wasm_run_dart.dll';
 
+/// The environment variable used to override the WasmRun library path.
+const dynamicLibraryEnvVariable = 'WASM_RUN_DART_DYNAMIC_LIBRARY';
+
 /// Returns the name of the WasmRun library for the current platform.
 /// Throws an [UnsupportedError] if the current platform is not supported
 /// or is not a desktop platform.
