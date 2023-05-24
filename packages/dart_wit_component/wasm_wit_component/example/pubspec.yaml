@@ -12,7 +12,7 @@ dependencies:
 
 dev_dependencies:
   test: ^1.21.0
-  very_good_analysis: ^4.0.0
+  very_good_analysis: ^5.0.0
 
 dependency_overrides:
   wasm_run:

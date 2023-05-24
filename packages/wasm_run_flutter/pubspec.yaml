@@ -3,8 +3,15 @@ description: This library contains the necessary platform bindings for executing
 version: 0.0.1
 homepage: https://github.com/juancastillo0/wasm_run
 
+topics:
+  - wasm
+  - interop
+  - runtime
+  - interpreter
+  - ffi
+
 environment:
-  sdk: ">=2.19.0 <3.0.0"
+  sdk: ">=2.19.0 <4.0.0"
   flutter: ">=2.11.0"
 
 dependencies:
@@ -13,12 +20,12 @@ dependencies:
   plugin_platform_interface: ^2.0.2
   flutter_web_plugins:
     sdk: flutter
-  wasm_run: 0.0.1
+  wasm_run: ^0.0.1
 
 dev_dependencies:
   ffi: ^2.0.1
   ffigen: ^6.1.2
-  very_good_analysis: ^4.0.0
+  very_good_analysis: ^5.0.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
