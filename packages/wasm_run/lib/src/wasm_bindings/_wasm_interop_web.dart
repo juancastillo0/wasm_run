@@ -145,12 +145,6 @@ class _WasmModule extends WasmModule {
   }
 
   @override
-  Future<WasmFeatures> features() async {
-    final f = await wasmRuntimeFeatures();
-    return f.defaultFeatures;
-  }
-
-  @override
   WasmSharedMemory createSharedMemory({
     required int minPages,
     required int maxPages,
@@ -180,7 +174,7 @@ class _WasmModule extends WasmModule {
           OpenFile(WasiWebFile(Uint8List(0))), // TODO: stdin
           stdout?.fd ?? OpenFile(WasiWebFile(Uint8List(0))),
           stderr?.fd ?? OpenFile(WasiWebFile(Uint8List(0))),
-          ...wasiConfig.browserFileSystem.entries.map(
+          ...wasiConfig.webBrowserFileSystem.entries.map(
             (e) => PreopenDirectory(
               e.key,
               js_util.jsify(_mapWasiFiles(e.value.items)) as Object,
@@ -205,7 +199,7 @@ class _WasmModule extends WasmModule {
             type: _getExternalType(e),
           ),
         )
-        .toList();
+        .toList(growable: false);
   }
 
   @override
@@ -218,7 +212,7 @@ class _WasmModule extends WasmModule {
             type: _getExternalType(e),
           ),
         )
-        .toList();
+        .toList(growable: false);
   }
 }
 

@@ -175,11 +175,8 @@ void wasiTest({TestArgs? testArgs}) {
         inheritArgs: false,
         args: args,
         env: [EnvVariable(name: 'name', value: 'value')],
-        // TODO: this doesn't work
-        // preopenedFiles: [File(wasmFile).absolute.path],
-        preopenedFiles: [],
         preopenedDirs: preopenedDirs,
-        browserFileSystem: {
+        webBrowserFileSystem: {
           directoryToAllow: WasiDirectory({
             'wasi.wasm': WasiFile(binary),
           })

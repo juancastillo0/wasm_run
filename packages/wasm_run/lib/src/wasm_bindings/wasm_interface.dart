@@ -12,8 +12,7 @@ import 'package:wasm_run/src/bridge_generated.dart'
         TableTy,
         U8Array16,
         ValueTy,
-        WasiConfigNative,
-        WasmFeatures;
+        WasiConfigNative;
 import 'package:wasm_run/src/int64_bigint/int64_bigint.dart';
 import 'package:wasm_run/src/wasm_bindings/_wasm_interop_stub.dart'
     if (dart.library.io) '_wasm_interop_native.dart'
@@ -46,8 +45,6 @@ abstract class WasmModule {
     WasiConfig? wasiConfig,
     WorkersConfig? workersConfig,
   });
-
-  Future<WasmFeatures> features();
 
   /// Creates a new memory with [minPages] and [maxPages].
   /// Not supported in the wasmi executor.
@@ -154,25 +151,24 @@ class WasiConfig implements WasiConfigNative {
   @override
   final List<EnvVariable> env;
   @override
-  final List<String> preopenedFiles;
+  List<String> get preopenedFiles => const [];
   @override
   final List<PreopenedDir> preopenedDirs;
 
   /// Not supported outside the browser executor.
-  final Map<String, WasiDirectory> browserFileSystem;
+  final Map<String, WasiDirectory> webBrowserFileSystem;
 
   /// The configuration and arguments for the WASI module.
   const WasiConfig({
-    required this.captureStdout,
-    required this.captureStderr,
-    required this.inheritStdin,
-    required this.inheritEnv,
-    required this.inheritArgs,
-    required this.args,
-    required this.env,
-    required this.preopenedFiles,
     required this.preopenedDirs,
-    required this.browserFileSystem,
+    required this.webBrowserFileSystem,
+    this.captureStdout = false,
+    this.captureStderr = false,
+    this.inheritStdin = false,
+    this.inheritEnv = false,
+    this.inheritArgs = false,
+    this.args = const [],
+    this.env = const [],
   });
 }
 

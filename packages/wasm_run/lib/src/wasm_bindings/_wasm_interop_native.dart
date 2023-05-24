@@ -45,13 +45,8 @@ WasmModule compileWasmModuleSync(
 class _WasmModule extends WasmModule {
   final CompiledModule module;
   final ModuleConfig config;
-  final WasmFeatures _features;
 
-  _WasmModule._(this.module, this.config)
-      : _features = defaultInstance().wasmFeaturesForConfig(config: config);
-
-  @override
-  Future<WasmFeatures> features() async => _features;
+  _WasmModule._(this.module, this.config);
 
   @override
   WasmSharedMemory createSharedMemory({
@@ -93,7 +88,7 @@ class _WasmModule extends WasmModule {
             type: e.ty,
           ),
         )
-        .toList();
+        .toList(growable: false);
   }
 
   @override
@@ -101,7 +96,7 @@ class _WasmModule extends WasmModule {
     final exports = module.getModuleExports();
     return exports
         .map((e) => WasmModuleExport(e.name, _toImpExpKind(e.ty), type: e.ty))
-        .toList();
+        .toList(growable: false);
   }
 }
 

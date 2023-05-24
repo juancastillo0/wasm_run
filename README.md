@@ -74,7 +74,7 @@ Currently it uses the [`wasmtime 9.0`](https://github.com/bytecodealliance/wasmt
 | garbage_collection            | ❌               | ❌          | 🏳                    |
 | memory_control                | ❌               | ❌          | ❌                    |
 | type_reflection               | ✅               | ✅          | 🏳                    |
-| wasi_snapshot_preview_1       | ✅               | ✅          | ❌                    |
+| wasi_snapshot_preview_1       | ✅               | ✅          | ✅                    |
 | wasi_nn                       | ❌<sup>[2]</sup> | ❌          | ❌                    |
 | wasi_crypto                   | ❌<sup>[2]</sup> | ❌          | ❌                    |
 | wasi_threads                  | ❌<sup>[2]</sup> | ❌          | ❌                    |
@@ -139,14 +139,16 @@ You may retrieve the names and types of each import and export defined in a WASM
 
 ## Execute WASM Function in Worker Threads
 
-Executes [function] with [argsLists] in parallel and returns the result.
+At the moment this is experimental and will not work in the Wasmi runtime. 
 
 The native implementation uses Rust's [rayon](https://docs.rs/rayon/latest/rayon/)
 crate to execute tasks with a [work-stealing](https://en.wikipedia.org/wiki/Work_stealing)
 scheduler. 
 
-The web implementation uses web workers for running the functions an a simple task
+The web implementation uses web workers for running the functions and a simple task
 queue for scheduling.
+
+Only shared memories can be accessed when running Wasm functions in workers. Regular memories, tables and globals will be instantiated separately for each worker and can not be easily accessed from the Dart API (imports will not be the same reference in Dart). Function imports will be correctly executed in the main Dart process (requires SharedBuffer support for web browsers). Wasm reference values will not work in the web browser and are not properly tested in native platforms.
 
 ### Threads Example
 
