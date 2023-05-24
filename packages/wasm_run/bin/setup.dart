@@ -33,7 +33,7 @@ Future<void> main() async {
   }
 
   const baseUrl = 'https://github.com/juancastillo0/wasm_run/releases/download';
-  const version = '0.0.1';
+  const version = 'v0.0.1';
   final archiveName = Platform.isMacOS ? 'macos.tar.gz' : 'other.tar.gz';
   final archiveUrl = '$baseUrl/wasm_run-$version/$archiveName';
   final libName = getDesktopLibName();
@@ -52,7 +52,10 @@ Future<void> main() async {
   print('Downloaded archive $archiveUrl to ${archiveFile.path}');
 
   /// Extract archive.
-  final info = await Process.run('tar', ['xzf', archiveFile.path]);
+  final info = await Process.run(
+    'tar',
+    ['xzf', archiveFile.path, '-C', root.resolve('temp').path],
+  );
   if (info.exitCode != 0) {
     throw Exception(
       'Could not extract archive "${archiveFile.path}": ${info.stderr}',
@@ -70,7 +73,10 @@ Future<void> main() async {
       ' in archive "${archiveFile.path}" from ($archiveUrl)',
     );
   }
-  final outputFile = await writeToFile(libName, inputFile.openRead());
+
+  final outputPath = Platform.environment['WASM_RUN_DART_DYNAMIC_LIBRARY'] ??
+      root.resolve(libName).toFilePath();
+  final outputFile = await inputFile.rename(outputPath);
   print('Extracted library $inputFilePath to ${outputFile.path}');
 
   /// Delete temp.
