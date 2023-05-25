@@ -84,7 +84,7 @@ class WasmFileUris {
   /// Loads the wasm file.
   ///
   /// May throw [WasmFileUrisException]
-  Future<WasmModule> load({
+  Future<WasmModule> loadModule({
     http.Client? httpClient,
     ModuleConfig? config,
   }) async {
@@ -97,7 +97,7 @@ class WasmFileUris {
     final List<ErrorWithTrace> exceptions = [];
     WasmModule? wasmModule;
 
-    if (isHttp) {
+    if (isHttp || isWeb) {
       try {
         final response = await client.get(uri);
         if (response.statusCode != 200) {
@@ -114,7 +114,7 @@ class WasmFileUris {
       } catch (e, s) {
         exceptions.add(ErrorWithTrace(e, s));
       }
-    } else if (!isWeb) {
+    } else {
       try {
         final wasmFile = await File.fromUri(uri).readAsBytes();
         if (wasmFile.isEmpty) {
@@ -124,18 +124,10 @@ class WasmFileUris {
       } catch (e, s) {
         exceptions.add(ErrorWithTrace(e, s));
       }
-    } else {
-      // TODO: support data uris
-      exceptions.add(
-        ErrorWithTrace(
-          'Invalid uri "$uri" only file or http uris are supported.',
-          StackTrace.current,
-        ),
-      );
     }
     if (wasmModule == null && fallback != null) {
       try {
-        wasmModule = await fallback!.load(
+        wasmModule = await fallback!.loadModule(
           config: config,
           httpClient: client,
         );

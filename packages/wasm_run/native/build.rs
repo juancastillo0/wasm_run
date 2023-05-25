@@ -48,6 +48,15 @@ extension WasmRunDartImplPlatform on WasmRunDartImpl {
             .as_bytes(),
         )
         .unwrap();
+    for file in [
+        "../lib/src/bridge_generated.dart",
+        "../lib/src/bridge_generated.io.dart",
+        "../lib/src/bridge_generated.web.dart",
+    ] {
+        let mut buf = std::fs::read_to_string(file).unwrap();
+        buf = buf.replace("\nimport 'package:uuid/uuid.dart';", "");
+        std::fs::write(file, buf).unwrap();
+    }
 
     // Format the generated Dart code
     _ = std::process::Command::new("dart")
