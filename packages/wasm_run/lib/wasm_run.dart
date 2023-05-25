@@ -9,5 +9,5 @@
 /// main repository: https://github.com/juancastillo0/wasm_run.
 library wasm_run;
 
-export 'src/ffi.dart' show WasmRunDynamicLibrary;
+export 'src/ffi.dart' show WasmRunLibrary;
 export 'src/wasm_bindings/wasm.dart';

@@ -2,6 +2,7 @@
 
 import 'dart:io';
 
+import 'package:wasm_run/src/ffi.dart' show WasmRunLibrary;
 import 'package:wasm_run/src/ffi/cpu_architecture.dart';
 import 'package:wasm_run/src/ffi/library_locator.dart'
     show dynamicLibraryEnvVariable, getDesktopLibName, libBuildOutDir;
@@ -33,9 +34,9 @@ Future<void> setUpDesktopDynamicLibrary() async {
   }
 
   const baseUrl = 'https://github.com/juancastillo0/wasm_run/releases/download';
-  const version = 'v0.0.1';
+  const version = WasmRunLibrary.version;
   final archiveName = Platform.isMacOS ? 'macos.tar.gz' : 'other.tar.gz';
-  final archiveUrl = '$baseUrl/wasm_run-$version/$archiveName';
+  final archiveUrl = '$baseUrl/wasm_run-v$version/$archiveName';
   final libName = getDesktopLibName();
 
   /// Download archive.

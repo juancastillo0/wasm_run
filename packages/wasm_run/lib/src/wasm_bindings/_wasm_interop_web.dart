@@ -3,6 +3,7 @@ import 'dart:js_util' as js_util;
 import 'dart:typed_data' show Uint8List;
 
 import 'package:wasm_interop/wasm_interop.dart';
+import 'package:wasm_run/src/ffi.dart' show WasmRunLibrary;
 import 'package:wasm_run/src/logger.dart';
 import 'package:wasm_run/src/wasm_bindings/_atomics_web.dart';
 import 'package:wasm_run/src/wasm_bindings/_wasi_web.dart';
@@ -87,7 +88,7 @@ Future<WasmRuntimeFeatures> _calculateFeatures() async {
 
   return WasmRuntimeFeatures(
     name: 'browser',
-    version: '0.0.1',
+    version: WasmRunLibrary.version,
     isBrowser: true,
     supportedFeatures: wasmFeatures,
     defaultFeatures: wasmFeatures,

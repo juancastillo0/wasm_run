@@ -18,12 +18,17 @@ WasmRunDart _createWrapper(ExternalLibrary lib) {
 WasmRunDart _createLib() => _createWrapper(createLibraryImpl());
 
 /// Static namespace for configuring the dynamic library for wasm_run
-class WasmRunDynamicLibrary {
-  const WasmRunDynamicLibrary._();
+class WasmRunLibrary {
+  const WasmRunLibrary._();
+
+  /// The current version of the package.
+  static const version = '0.0.1';
+
+  static const _isWeb = identical(0, 0.0);
 
   /// Sets the dynamic library to use for the native bindings.
   ///
-  /// You may execute the script `dart run wasm_run:setup`
+  /// You may call [setUp] or execute the script `dart run wasm_run:setup`
   /// to download the right library for your current platform
   /// and configure it so that you don't need to call [set]
   /// manually.
@@ -41,7 +46,7 @@ class WasmRunDynamicLibrary {
   /// for the current application or in the WASM_RUN_DART_DYNAMIC_LIBRARY
   /// environment variable.
   static bool isReachable() {
-    if (_wrapper != null) return true;
+    if (_isWeb || _wrapper != null) return true;
     try {
       createLibraryImpl();
       return true;
@@ -53,6 +58,7 @@ class WasmRunDynamicLibrary {
   /// Sets up the dynamic library to use for the native bindings.
   /// If [override] is true, it will override the current library if it exists.
   static Future<void> setUp({required bool override}) async {
+    if (_isWeb) return setUpLibraryImpl(features: true, wasi: true);
     if (override && _wrapper != null) throw _alreadyInitialized;
     if (!override && isReachable()) return;
     await setUpDesktopDynamicLibrary();
@@ -70,12 +76,13 @@ WasmRunDart defaultInstance() {
       final externalLib = localTestingLibraryImpl();
       return _createWrapper(externalLib);
     } catch (_) {
-      if (!identical(0, 0.0)) {
+      if (!WasmRunLibrary._isWeb) {
         print(
           'When building a pure Dart application (backend or cli, for example),'
           ' you must call `setDynamicLibrary(<nativeLibraryForYourPlatform>)`'
-          ' before using the library. The <nativeLibraryForYourPlatform> can be download'
-          ' from the releases of the github repository of the package.',
+          ' before using the library. The <nativeLibraryForYourPlatform> can'
+          ' be downloaded from the releases of the github repository'
+          ' of the package.',
         );
       }
       rethrow;

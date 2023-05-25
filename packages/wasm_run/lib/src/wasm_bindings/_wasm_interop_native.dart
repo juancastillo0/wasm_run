@@ -355,13 +355,15 @@ class _References {
     }
   }
 
+  static T _self<T>(T value) => value;
+
   static Object? dartValueFromWasm(WasmVal raw, WasmRunModuleId module) {
     return raw.when(
-      i32: (value) => value,
-      i64: (value) => value,
-      f32: (value) => value,
-      f64: (value) => value,
-      v128: (field0) => field0,
+      i32: _self,
+      i64: _self,
+      f32: _self,
+      f64: _self,
+      v128: _self,
       funcRef: (func) {
         if (func == null) return null;
         return _toWasmFunction(func, module, null);

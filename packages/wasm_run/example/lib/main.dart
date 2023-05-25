@@ -113,7 +113,7 @@ void testAll({TestArgs? testArgs}) {
         expect(runtime.isBrowser, false);
         break;
       case 'browser':
-        expect(runtime.version, '0.0.1');
+        expect(runtime.version, WasmRunLibrary.version);
         expect(runtime.isBrowser, true);
         break;
       default:

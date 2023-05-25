@@ -3,8 +3,12 @@ import 'dart:io';
 
 import 'package:wasm_run/src/bridge_generated.dart';
 import 'package:wasm_run/src/ffi/library_locator.dart';
+import 'package:wasm_run/src/ffi/setup_dynamic_library.dart';
 
 typedef ExternalLibrary = DynamicLibrary;
+
+Future<void> setUpLibraryImpl({required bool features, required bool wasi}) =>
+    setUpDesktopDynamicLibrary();
 
 WasmRunDart createWrapperImpl(ExternalLibrary dylib) {
   final validated = _validateLibrary(dylib);
