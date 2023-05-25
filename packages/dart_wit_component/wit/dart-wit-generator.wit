@@ -1,26 +1,49 @@
 default world dart-wit-generator {
     record wit-generator-config {
+        /// The file inputs to use for the code generation.
         inputs: wit-generator-input,
+        /// Whether to generate json serialization for the types in the world.
         json-serialization: bool,
+        /// Whether to generate a copyWith method for the types in the world.
         copy-with: bool,
+        /// Whether to generate equality and hash code getters for the types in the world.
         equality-and-hash-code: bool,
+        /// Whether to generate toString methods for the types in the world.
         to-string: bool,
     }
 
+    /// The file inputs to use for the code generation.
     union wit-generator-input {
-        wit-generator-paths,
-        list<wit-file>,
+        file-system-paths,
+        in-memory-files,
     }
 
-    record wit-generator-paths {
+    record file-system-paths {
+        /// May be a file or a directory.
+        /// When it is a directory, all files in the directory will be used as input.
+        /// When it is a file, only that file will be used as input, and
+        /// you will not be able to use `use pkg` imports.
+        /// The file name will be used as the name of the generated world.
         input-path: string,
     }
 
-    record wit-file {
-        path: string,
-        content: string,
+    record in-memory-files {
+        /// The file to use as the world file.
+        world-file: wit-file,
+        /// The files to use as the package files for the world.
+        /// You will be able to import with `use pkg` from these files.
+        pkg-files: list<wit-file>,
     }
 
-    export generate: func(config: wit-generator-config) -> result<list<wit-file>, string>
+    record wit-file {
+        /// The file path.
+        /// The file name will be used as the name of the generated world.
+        path: string,
+        /// The contents of the file.
+        contents: string,
+    }
+
+    /// Generates a world from the given configuration.
+    export generate: func(config: wit-generator-config) -> result<wit-file, string>
 
 }

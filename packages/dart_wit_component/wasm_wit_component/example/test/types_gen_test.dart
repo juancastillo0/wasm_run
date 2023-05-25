@@ -3,7 +3,6 @@
 import 'dart:io';
 
 import 'package:test/test.dart';
-import 'package:wasm_run/wasm_run.dart';
 import 'package:wasm_wit_component/wasm_wit_component.dart';
 import 'package:wasm_wit_component_example/types_gen.dart';
 

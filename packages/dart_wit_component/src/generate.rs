@@ -197,7 +197,6 @@ const HEADER: &str = "
 // ignore: unused_import
 import 'dart:typed_data';
 
-import 'package:wasm_run/wasm_run.dart';
 import 'package:wasm_wit_component/wasm_wit_component.dart';
 ";
 

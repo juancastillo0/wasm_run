@@ -5,57 +5,19 @@
 // ignore: unused_import
 import 'dart:typed_data';
 
-import 'package:wasm_run/wasm_run.dart';
 import 'package:wasm_wit_component/wasm_wit_component.dart';
 
-class WitGeneratorPaths {
-  final String inputPath;
-
-  const WitGeneratorPaths({
-    required this.inputPath,
-  });
-
-  factory WitGeneratorPaths.fromJson(Object? json_) {
-    final json = json_ is Map
-        ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
-        : json_;
-    return switch (json) {
-      [final inputPath] || (final inputPath,) => WitGeneratorPaths(
-          inputPath: inputPath is String
-              ? inputPath
-              : (inputPath! as ParsedString).value,
-        ),
-      _ => throw Exception('Invalid JSON $json_')
-    };
-  }
-  Map<String, Object?> toJson() => {
-        'input-path': inputPath,
-      };
-  WitGeneratorPaths copyWith({
-    String? inputPath,
-  }) =>
-      WitGeneratorPaths(inputPath: inputPath ?? this.inputPath);
-  List<Object?> get props => [inputPath];
-  @override
-  String toString() =>
-      'WitGeneratorPaths${Map.fromIterables(_spec.fields.map((f) => f.label), props)}';
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is WitGeneratorPaths &&
-          comparator.arePropsEqual(props, other.props);
-  @override
-  int get hashCode => comparator.hashProps(props);
-  static const _spec = Record([(label: 'input-path', t: StringType())]);
-}
-
 class WitFile {
+  /// The file path.
+  /// The file name will be used as the name of the generated world.
   final String path;
-  final String content;
+
+  /// The contents of the file.
+  final String contents;
 
   const WitFile({
     required this.path,
-    required this.content,
+    required this.contents,
   });
 
   factory WitFile.fromJson(Object? json_) {
@@ -63,24 +25,24 @@ class WitFile {
         ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
         : json_;
     return switch (json) {
-      [final path, final content] || (final path, final content) => WitFile(
+      [final path, final contents] || (final path, final contents) => WitFile(
           path: path is String ? path : (path! as ParsedString).value,
-          content:
-              content is String ? content : (content! as ParsedString).value,
+          contents:
+              contents is String ? contents : (contents! as ParsedString).value,
         ),
       _ => throw Exception('Invalid JSON $json_')
     };
   }
   Map<String, Object?> toJson() => {
         'path': path,
-        'content': content,
+        'contents': contents,
       };
   WitFile copyWith({
     String? path,
-    String? content,
+    String? contents,
   }) =>
-      WitFile(path: path ?? this.path, content: content ?? this.content);
-  List<Object?> get props => [path, content];
+      WitFile(path: path ?? this.path, contents: contents ?? this.contents);
+  List<Object?> get props => [path, contents];
   @override
   String toString() =>
       'WitFile${Map.fromIterables(_spec.fields.map((f) => f.label), props)}';
@@ -91,9 +53,122 @@ class WitFile {
   @override
   int get hashCode => comparator.hashProps(props);
   static const _spec = Record(
-      [(label: 'path', t: StringType()), (label: 'content', t: StringType())]);
+      [(label: 'path', t: StringType()), (label: 'contents', t: StringType())]);
 }
 
+class InMemoryFiles {
+  /// The file to use as the world file.
+  final WitFile worldFile;
+
+  /// The files to use as the package files for the world.
+  /// You will be able to import with `use pkg` from these files.
+  final List<WitFile> pkgFiles;
+
+  const InMemoryFiles({
+    required this.worldFile,
+    required this.pkgFiles,
+  });
+
+  factory InMemoryFiles.fromJson(Object? json_) {
+    final json = json_ is Map
+        ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
+        : json_;
+    return switch (json) {
+      [final worldFile, final pkgFiles] ||
+      (final worldFile, final pkgFiles) =>
+        InMemoryFiles(
+          worldFile: WitFile.fromJson(worldFile),
+          pkgFiles:
+              (pkgFiles! as Iterable).map((e) => WitFile.fromJson(e)).toList(),
+        ),
+      _ => throw Exception('Invalid JSON $json_')
+    };
+  }
+  Map<String, Object?> toJson() => {
+        'world-file': worldFile.toJson(),
+        'pkg-files': pkgFiles.map((e) => e.toJson()).toList(),
+      };
+  InMemoryFiles copyWith({
+    WitFile? worldFile,
+    List<WitFile>? pkgFiles,
+  }) =>
+      InMemoryFiles(
+          worldFile: worldFile ?? this.worldFile,
+          pkgFiles: pkgFiles ?? this.pkgFiles);
+  List<Object?> get props => [worldFile, pkgFiles];
+  @override
+  String toString() =>
+      'InMemoryFiles${Map.fromIterables(_spec.fields.map((f) => f.label), props)}';
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is InMemoryFiles && comparator.arePropsEqual(props, other.props);
+  @override
+  int get hashCode => comparator.hashProps(props);
+  static const _spec = Record([
+    (
+      label: 'world-file',
+      t: Record([
+        (label: 'path', t: StringType()),
+        (label: 'contents', t: StringType())
+      ])
+    ),
+    (
+      label: 'pkg-files',
+      t: ListType(Record([
+        (label: 'path', t: StringType()),
+        (label: 'contents', t: StringType())
+      ]))
+    )
+  ]);
+}
+
+class FileSystemPaths {
+  /// May be a file or a directory.
+  /// When it is a directory, all files in the directory will be used as input.
+  /// When it is a file, only that file will be used as input, and
+  /// you will not be able to use `use pkg` imports.
+  /// The file name will be used as the name of the generated world.
+  final String inputPath;
+
+  const FileSystemPaths({
+    required this.inputPath,
+  });
+
+  factory FileSystemPaths.fromJson(Object? json_) {
+    final json = json_ is Map
+        ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
+        : json_;
+    return switch (json) {
+      [final inputPath] || (final inputPath,) => FileSystemPaths(
+          inputPath: inputPath is String
+              ? inputPath
+              : (inputPath! as ParsedString).value,
+        ),
+      _ => throw Exception('Invalid JSON $json_')
+    };
+  }
+  Map<String, Object?> toJson() => {
+        'input-path': inputPath,
+      };
+  FileSystemPaths copyWith({
+    String? inputPath,
+  }) =>
+      FileSystemPaths(inputPath: inputPath ?? this.inputPath);
+  List<Object?> get props => [inputPath];
+  @override
+  String toString() =>
+      'FileSystemPaths${Map.fromIterables(_spec.fields.map((f) => f.label), props)}';
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FileSystemPaths && comparator.arePropsEqual(props, other.props);
+  @override
+  int get hashCode => comparator.hashProps(props);
+  static const _spec = Record([(label: 'input-path', t: StringType())]);
+}
+
+/// The file inputs to use for the code generation.
 sealed class WitGeneratorInput {
   factory WitGeneratorInput.fromJson(Object? json_) {
     Object? json = json_;
@@ -103,63 +178,84 @@ sealed class WitGeneratorInput {
     }
     return switch (json) {
       (0, final value) =>
-        WitGeneratorInputWitGeneratorPaths(WitGeneratorPaths.fromJson(value)),
-      (1, final value) => WitGeneratorInputListWitFile(
-          (value! as Iterable).map((e) => WitFile.fromJson(e)).toList()),
+        WitGeneratorInputFileSystemPaths(FileSystemPaths.fromJson(value)),
+      (1, final value) =>
+        WitGeneratorInputInMemoryFiles(InMemoryFiles.fromJson(value)),
       _ => throw Exception('Invalid JSON $json_'),
     };
   }
-  const factory WitGeneratorInput.witGeneratorPaths(WitGeneratorPaths value) =
-      WitGeneratorInputWitGeneratorPaths;
-  const factory WitGeneratorInput.listWitFile(List<WitFile> value) =
-      WitGeneratorInputListWitFile;
+  const factory WitGeneratorInput.fileSystemPaths(FileSystemPaths value) =
+      WitGeneratorInputFileSystemPaths;
+  const factory WitGeneratorInput.inMemoryFiles(InMemoryFiles value) =
+      WitGeneratorInputInMemoryFiles;
 
   Map<String, Object?> toJson();
 // ignore: unused_field
   static const _spec = Union([
     Record([(label: 'input-path', t: StringType())]),
-    ListType(Record([
-      (label: 'path', t: StringType()),
-      (label: 'content', t: StringType())
-    ]))
+    Record([
+      (
+        label: 'world-file',
+        t: Record([
+          (label: 'path', t: StringType()),
+          (label: 'contents', t: StringType())
+        ])
+      ),
+      (
+        label: 'pkg-files',
+        t: ListType(Record([
+          (label: 'path', t: StringType()),
+          (label: 'contents', t: StringType())
+        ]))
+      )
+    ])
   ]);
 }
 
-class WitGeneratorInputWitGeneratorPaths implements WitGeneratorInput {
-  final WitGeneratorPaths value;
-  const WitGeneratorInputWitGeneratorPaths(this.value);
+class WitGeneratorInputFileSystemPaths implements WitGeneratorInput {
+  final FileSystemPaths value;
+  const WitGeneratorInputFileSystemPaths(this.value);
   @override
   Map<String, Object?> toJson() => {'0': value.toJson()};
   @override
-  String toString() => 'WitGeneratorInputWitGeneratorPaths($value)';
+  String toString() => 'WitGeneratorInputFileSystemPaths($value)';
   @override
   bool operator ==(Object other) =>
-      other is WitGeneratorInputWitGeneratorPaths &&
+      other is WitGeneratorInputFileSystemPaths &&
       comparator.areEqual(other.value, value);
   @override
   int get hashCode => comparator.hashValue(value);
 }
 
-class WitGeneratorInputListWitFile implements WitGeneratorInput {
-  final List<WitFile> value;
-  const WitGeneratorInputListWitFile(this.value);
+class WitGeneratorInputInMemoryFiles implements WitGeneratorInput {
+  final InMemoryFiles value;
+  const WitGeneratorInputInMemoryFiles(this.value);
   @override
-  Map<String, Object?> toJson() => {'1': value.map((e) => e.toJson()).toList()};
+  Map<String, Object?> toJson() => {'1': value.toJson()};
   @override
-  String toString() => 'WitGeneratorInputListWitFile($value)';
+  String toString() => 'WitGeneratorInputInMemoryFiles($value)';
   @override
   bool operator ==(Object other) =>
-      other is WitGeneratorInputListWitFile &&
+      other is WitGeneratorInputInMemoryFiles &&
       comparator.areEqual(other.value, value);
   @override
   int get hashCode => comparator.hashValue(value);
 }
 
 class WitGeneratorConfig {
+  /// The file inputs to use for the code generation.
   final WitGeneratorInput inputs;
+
+  /// Whether to generate json serialization for the types in the world.
   final bool jsonSerialization;
+
+  /// Whether to generate a copyWith method for the types in the world.
   final bool copyWith_;
+
+  /// Whether to generate equality and hash code getters for the types in the world.
   final bool equalityAndHashCode;
+
+  /// Whether to generate toString methods for the types in the world.
   final bool toString_;
 
   const WitGeneratorConfig({
@@ -236,10 +332,22 @@ class WitGeneratorConfig {
       label: 'inputs',
       t: Union([
         Record([(label: 'input-path', t: StringType())]),
-        ListType(Record([
-          (label: 'path', t: StringType()),
-          (label: 'content', t: StringType())
-        ]))
+        Record([
+          (
+            label: 'world-file',
+            t: Record([
+              (label: 'path', t: StringType()),
+              (label: 'contents', t: StringType())
+            ])
+          ),
+          (
+            label: 'pkg-files',
+            t: ListType(Record([
+              (label: 'path', t: StringType()),
+              (label: 'contents', t: StringType())
+            ]))
+          )
+        ])
       ])
     ),
     (label: 'json-serialization', t: Bool()),
@@ -270,10 +378,22 @@ class DartWitGeneratorWorld {
                   label: 'inputs',
                   t: Union([
                     Record([(label: 'input-path', t: StringType())]),
-                    ListType(Record([
-                      (label: 'path', t: StringType()),
-                      (label: 'content', t: StringType())
-                    ]))
+                    Record([
+                      (
+                        label: 'world-file',
+                        t: Record([
+                          (label: 'path', t: StringType()),
+                          (label: 'contents', t: StringType())
+                        ])
+                      ),
+                      (
+                        label: 'pkg-files',
+                        t: ListType(Record([
+                          (label: 'path', t: StringType()),
+                          (label: 'contents', t: StringType())
+                        ]))
+                      )
+                    ])
                   ])
                 ),
                 (label: 'json-serialization', t: Bool()),
@@ -286,10 +406,10 @@ class DartWitGeneratorWorld {
             (
               '',
               ResultType(
-                  ListType(Record([
+                  Record([
                     (label: 'path', t: StringType()),
-                    (label: 'content', t: StringType())
-                  ])),
+                    (label: 'contents', t: StringType())
+                  ]),
                   StringType())
             )
           ]),
@@ -309,14 +429,14 @@ class DartWitGeneratorWorld {
   }
 
   final ListValue Function(ListValue) _generate;
-  Result<List<WitFile>, String> generate({
+
+  /// Generates a world from the given configuration.
+  Result<WitFile, String> generate({
     required WitGeneratorConfig config,
   }) {
     final results = _generate([config.toJson()]);
     final result = results[0];
-    return Result.fromJson(
-        result,
-        (ok) => (ok! as Iterable).map((e) => WitFile.fromJson(e)).toList(),
+    return Result.fromJson(result, (ok) => WitFile.fromJson(ok),
         (error) => error is String ? error : (error! as ParsedString).value);
   }
 }

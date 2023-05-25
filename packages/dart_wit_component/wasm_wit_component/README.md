@@ -37,3 +37,11 @@ const like = 'sample';
 TODO: Tell users more about the package: where to find more information, how to 
 contribute to the package, how to file issues, what response they can expect 
 from the package authors, and more.
+
+## Build Wasm Module
+
+```
+cargo wasi build --release
+cp target/wasm32-wasi/release/dart_wit_component.wasm wasm_wit_component/lib/dart_wit_component.wasm
+dart run wasm_wit_component/bin/generate.dart wit/dart-wit-generator.wit wasm_wit_component/lib/src/generator.dart
+```
