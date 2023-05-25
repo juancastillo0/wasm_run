@@ -360,8 +360,7 @@ class WasmLibrary {
   /// May be used to grow or shrink the memory.
   int realloc(int ptr, int sizeInitial, int alignment, int sizeFinal) {
     final pointer = _realloc(ptr, sizeInitial, alignment, sizeFinal) as int;
-    _view = wasmMemory.getView();
-    _byteData = ByteData.sublistView(_view!);
+    _updateMemoryView();
     return pointer;
   }
 
@@ -372,8 +371,14 @@ class WasmLibrary {
   ByteData? _byteData;
   ByteData _getByteData() => _byteData ??= ByteData.sublistView(_getView());
 
+  void _updateMemoryView() {
+    _view = wasmMemory.getView();
+    _byteData = ByteData.sublistView(_view!);
+  }
+
   CanonicalOptions _functionOptions(void Function(List<Value>)? postReturn) {
     final options = CanonicalOptions(
+      _updateMemoryView,
       _getView,
       _getByteData,
       stringEncoding,

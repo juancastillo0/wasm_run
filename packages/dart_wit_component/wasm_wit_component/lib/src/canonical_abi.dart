@@ -510,6 +510,7 @@ class CanonicalOptions {
   final StringEncoding string_encoding;
   final Uint8List Function() getMemory;
   final ByteData Function() getByteData;
+  final void Function() _updateMemoryView;
 
   /// "cabi_realloc" export
   final int Function(
@@ -529,6 +530,7 @@ class CanonicalOptions {
 
   ///
   CanonicalOptions(
+    this._updateMemoryView,
     this.getMemory,
     this.getByteData,
     this.string_encoding,
@@ -2218,6 +2220,7 @@ List<Value> lower_values(
     trap(e, s);
   }
 
+  opts._updateMemoryView();
   final results = lift_values(
     cx,
     MAX_FLAT_RESULTS,
@@ -2320,6 +2323,7 @@ List<Value> canon_lower(
 
   final (results, post_return) = callee(args);
 
+  opts._updateMemoryView();
   inst.may_leave = false;
   final flat_results = lower_values(
     cx,

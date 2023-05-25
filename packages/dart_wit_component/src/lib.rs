@@ -1,4 +1,4 @@
-use std::{path::Path, vec};
+use std::path::Path;
 
 mod function;
 pub mod generate;
@@ -6,7 +6,7 @@ mod strings;
 mod types;
 
 // Use a procedural macro to generate bindings for the world we specified in
-// `host.wit`
+// `with/dart-wit-generator.wit`
 wit_bindgen::generate!("dart-wit-generator");
 
 // Define a custom type and implement the generated `Host` trait for it which
@@ -15,36 +15,47 @@ wit_bindgen::generate!("dart-wit-generator");
 struct GeneratorImpl;
 
 impl DartWitGenerator for GeneratorImpl {
-    fn generate(config: WitGeneratorConfig) -> Result<Vec<WitFile>, String> {
-        let files = match config.inputs {
-            WitGeneratorInput::WitFileList(inputs) => {
-                let mut files = vec![];
-                for input in inputs {
-                    let pkg = wit_parser::UnresolvedPackage::parse(
-                        Path::new(&input.path),
-                        &input.content,
-                    )
-                    .map_err(|e| e.to_string())?;
-                    files.push((input.path, pkg));
+    fn generate(config: WitGeneratorConfig) -> Result<WitFile, String> {
+        let (path, pkg) = match config.inputs {
+            WitGeneratorInput::InMemoryFiles(inputs) => {
+                let mut source_map = wit_parser::SourceMap::new();
+                let world_path = inputs.world_file.path.clone();
+                let world_filename = file_name_from_path(&Path::new(&world_path))?;
+                for input in inputs.pkg_files.into_iter().chain([inputs.world_file]) {
+                    let path = Path::new(&input.path);
+                    let filename = file_name_from_path(path)?;
+                    let name = match filename.find('.') {
+                        Some(i) => &filename[..i],
+                        None => filename,
+                    };
+                    source_map.push(&path, name, input.contents);
                 }
-                files
+                let parsed = source_map
+                    .parse(world_filename, None)
+                    .map_err(|e| e.to_string())?;
+                (world_path, parsed)
             }
-            WitGeneratorInput::WitGeneratorPaths(p) => {
+            WitGeneratorInput::FileSystemPaths(p) => {
                 let parsed = wit_parser::UnresolvedPackage::parse_path(Path::new(&p.input_path))
                     .map_err(|e| e.to_string())?;
-
-                vec![(p.input_path, parsed)]
+                (p.input_path, parsed)
             }
         };
-        let output_files = files
-            .into_iter()
-            .map(|(path, pkg)| {
-                let content = generate::document_to_dart(&pkg);
-                WitFile { path, content }
-            })
-            .collect::<Vec<_>>();
-        Ok(output_files)
+        let contents = generate::document_to_dart(&pkg);
+        Ok(WitFile { path, contents })
     }
 }
 
 export_dart_wit_generator!(GeneratorImpl);
+
+fn file_name_from_path(path: &Path) -> Result<&str, String> {
+    path.file_name()
+        .ok_or_else(|| format!("WithFile.path {} should have a file name.", path.display()))?
+        .to_str()
+        .ok_or_else(|| {
+            format!(
+                "WithFile.path {} should be a valid UTF-8 string.",
+                path.display()
+            )
+        })
+}
