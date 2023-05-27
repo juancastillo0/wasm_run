@@ -1,12 +1,12 @@
 // ignore_for_file: avoid_print
 
-import 'dart:io';
-
 import 'package:test/test.dart';
+import 'package:wasm_run/load_module.dart';
 import 'package:wasm_wit_component/wasm_wit_component.dart';
 import 'package:wasm_wit_component_example/types_gen.dart';
 
 bool kReleaseMode = true;
+const isWeb = identical(0, 0.0);
 
 void main() async {
   // ignore: prefer_asserts_with_message
@@ -41,12 +41,19 @@ void main() async {
 Future<TypesExampleWorld> initTypesWorld(
   TypesExampleWorldImports imports,
 ) async {
-  final componentWasm = await File(
-    kReleaseMode
-        ? 'rust_wit_component_example/target/wasm32-unknown-unknown/release/rust_wit_component_example.wasm'
-        : 'rust_wit_component_example/target/wasm32-unknown-unknown/debug/rust_wit_component_example.wasm',
-  ).readAsBytes();
-  final module = await compileWasmModule(componentWasm);
+  if (isWeb) {
+    await WasmRunLibrary.setUp(override: false);
+  }
+  final wasmUris = WasmFileUris(
+    uri: Uri.parse(
+      isWeb
+          ? './packages/wasm_wit_component_example/rust_wit_component_example.wasm'
+          : kReleaseMode
+              ? 'rust_wit_component_example/target/wasm32-unknown-unknown/release/rust_wit_component_example.wasm'
+              : 'rust_wit_component_example/target/wasm32-unknown-unknown/debug/rust_wit_component_example.wasm',
+    ),
+  );
+  final module = await wasmUris.loadModule();
   print(module);
   final builder = module.builder();
 
@@ -84,17 +91,35 @@ class ImportsImpl implements Imports {
   }
 }
 
+class RoundTripNumbersHostImpl implements RoundTripNumbersHost {
+  final List<RoundTripNumbersData> roundTripNumbersData = [];
+
+  @override
+  RoundTripNumbersData roundTripNumbers({required RoundTripNumbersData data}) {
+    roundTripNumbersData.add(data);
+    return data;
+  }
+}
+
 class TypesWorldTest {
   final TypesExampleWorld world;
   final InlineImpl inlineImpl;
   final ImportsImpl importsImpl;
+  final RoundTripNumbersHostImpl roundTripNumbersHostImpl;
   final List<(LogLevel, String)> printed;
 
-  TypesWorldTest(this.world, this.inlineImpl, this.importsImpl, this.printed);
+  TypesWorldTest(
+    this.world,
+    this.inlineImpl,
+    this.importsImpl,
+    this.roundTripNumbersHostImpl,
+    this.printed,
+  );
 
   static Future<TypesWorldTest> init() async {
     final inlineImpl = InlineImpl();
     final importsImpl = ImportsImpl();
+    final roundTripNumbersHostImpl = RoundTripNumbersHostImpl();
     final List<(LogLevel, String)> printed = [];
 
     final imports = TypesExampleWorldImports(
@@ -103,9 +128,16 @@ class TypesWorldTest {
         printed.add((level, message));
       },
       imports: importsImpl,
+      roundTripNumbersHost: roundTripNumbersHostImpl,
     );
     final world = await initTypesWorld(imports);
-    return TypesWorldTest(world, inlineImpl, importsImpl, printed);
+    return TypesWorldTest(
+      world,
+      inlineImpl,
+      importsImpl,
+      roundTripNumbersHostImpl,
+      printed,
+    );
   }
 
   void test({required void Function(Object?, Object?) expect}) {
@@ -336,6 +368,111 @@ class TypesWorldTest {
         importsImpl.apiA1B2Data[5].map((e) => e.toJson()),
         [const HumanApiImports.baby().toJson()],
       );
+    }
+
+    const baseData = RoundTripNumbersData(
+      f32: 0,
+      f64: 0,
+      si8: 0,
+      si16: 0,
+      si32: 0,
+      si64: 0,
+      un8: 0,
+      un16: 0,
+      un32: 0,
+      un64: 0,
+    );
+    {
+      const data = baseData;
+      final result = world.roundTripNumbers.roundTripNumbers(data: data);
+      expect(result, data);
+      expect(roundTripNumbersHostImpl.roundTripNumbersData[0], data);
+    }
+    {
+      const data = RoundTripNumbersData(
+        f32: 1,
+        f64: 1,
+        si8: 1,
+        si16: 1,
+        si32: 1,
+        si64: 1,
+        un8: 1,
+        un16: 1,
+        un32: 1,
+        un64: 1,
+      );
+      final result = world.roundTripNumbers.roundTripNumbers(data: data);
+      expect(result, data);
+      expect(roundTripNumbersHostImpl.roundTripNumbersData[1], data);
+    }
+    const maxInteger = identical(0, 0.0) ? 9007199254740991 : (1 << 63) - 1;
+    {
+      const data = RoundTripNumbersData(
+        f32: double.maxFinite,
+        f64: double.maxFinite,
+        si8: 127,
+        si16: 32767,
+        si32: 2147483647,
+        si64: maxInteger,
+        un8: 255,
+        un16: 65535,
+        un32: 4294967295,
+        un64: maxInteger,
+      );
+      final result = world.roundTripNumbers.roundTripNumbers(data: data);
+      final expectedData = data.copyWith(f32: double.infinity);
+      expect(
+        roundTripNumbersHostImpl.roundTripNumbersData[2],
+        expectedData,
+      );
+      expect(result, expectedData);
+    }
+    {
+      const data = RoundTripNumbersData(
+        f32: double.minPositive,
+        f64: double.minPositive,
+        si8: -128,
+        si16: -32768,
+        si32: -2147483648,
+        si64: isWeb ? -9007199254740991 : -9223372036854775808,
+        un8: 255,
+        un16: 65535,
+        un32: 4294967295,
+        un64: maxInteger,
+      );
+      final result = world.roundTripNumbers.roundTripNumbers(data: data);
+      final expectedData = data.copyWith(f32: 0);
+      expect(result, expectedData);
+      expect(roundTripNumbersHostImpl.roundTripNumbersData[3], expectedData);
+    }
+    {
+      final data = baseData.copyWith(
+        f32: double.nan,
+        f64: double.nan,
+      );
+      final result = world.roundTripNumbers.roundTripNumbers(data: data);
+      expect(result.f32, isNaN);
+      expect(result.f64, isNaN);
+      expect(roundTripNumbersHostImpl.roundTripNumbersData[4].f32, isNaN);
+      expect(roundTripNumbersHostImpl.roundTripNumbersData[4].f64, isNaN);
+    }
+    {
+      final data = baseData.copyWith(
+        f32: double.infinity,
+        f64: double.infinity,
+      );
+      final result = world.roundTripNumbers.roundTripNumbers(data: data);
+      expect(result, data);
+      expect(roundTripNumbersHostImpl.roundTripNumbersData[5], data);
+    }
+    {
+      final data = baseData.copyWith(
+        f32: double.negativeInfinity,
+        f64: double.negativeInfinity,
+      );
+      final result = world.roundTripNumbers.roundTripNumbers(data: data);
+      expect(result, data);
+      expect(roundTripNumbersHostImpl.roundTripNumbersData[6], data);
     }
   }
 }
