@@ -5,20 +5,20 @@ import 'package:wasm_run/load_module.dart';
 import 'package:wasm_wit_component/wasm_wit_component.dart';
 import 'package:wasm_wit_component_example/types_gen.dart';
 
-bool kReleaseMode = true;
-const isWeb = identical(0, 0.0);
+bool _kReleaseMode = true;
+const _isWeb = identical(0, 0.0);
 
-void main() async {
+void typesGenWitComponentTests() async {
   // ignore: prefer_asserts_with_message
   assert(
     (() {
-      kReleaseMode = false;
+      _kReleaseMode = false;
       return true;
     })(),
   );
 
-  if (kReleaseMode) {
-    final test = await TypesWorldTest.init();
+  if (_kReleaseMode) {
+    final test = await _TypesWorldTest.init();
     final clock = Stopwatch()..start();
     const count = 10000;
     for (int i = 0; i < count; i++) {
@@ -31,7 +31,7 @@ void main() async {
   } else {
     group('types gen', () {
       test('test types', () async {
-        final test = await TypesWorldTest.init();
+        final test = await _TypesWorldTest.init();
         test.test(expect: expect);
       });
     });
@@ -41,14 +41,14 @@ void main() async {
 Future<TypesExampleWorld> initTypesWorld(
   TypesExampleWorldImports imports,
 ) async {
-  if (isWeb) {
+  if (_isWeb) {
     await WasmRunLibrary.setUp(override: false);
   }
   final wasmUris = WasmFileUris(
     uri: Uri.parse(
-      isWeb
+      _isWeb
           ? './packages/wasm_wit_component_example/rust_wit_component_example.wasm'
-          : kReleaseMode
+          : _kReleaseMode
               ? 'rust_wit_component_example/target/wasm32-unknown-unknown/release/rust_wit_component_example.wasm'
               : 'rust_wit_component_example/target/wasm32-unknown-unknown/debug/rust_wit_component_example.wasm',
     ),
@@ -64,7 +64,7 @@ Future<TypesExampleWorld> initTypesWorld(
   return world;
 }
 
-class InlineImpl implements Inline {
+class _InlineImpl implements Inline {
   final List<List<Option<String>>> inlineImpData = [];
   @override
   Result<void, String> inlineImp({required List<Option<String>> args}) {
@@ -80,7 +80,7 @@ class InlineImpl implements Inline {
   }
 }
 
-class ImportsImpl implements Imports {
+class _ImportsImpl implements Imports {
   final List<List<HumanApiImports>> apiA1B2Data = [];
   @override
   ({T7 h1, HumanApiImports val2}) apiA1B2({
@@ -91,7 +91,7 @@ class ImportsImpl implements Imports {
   }
 }
 
-class RoundTripNumbersHostImpl implements RoundTripNumbersHost {
+class _RoundTripNumbersHostImpl implements RoundTripNumbersHost {
   final List<RoundTripNumbersData> roundTripNumbersData = [];
 
   @override
@@ -101,14 +101,14 @@ class RoundTripNumbersHostImpl implements RoundTripNumbersHost {
   }
 }
 
-class TypesWorldTest {
+class _TypesWorldTest {
   final TypesExampleWorld world;
-  final InlineImpl inlineImpl;
-  final ImportsImpl importsImpl;
-  final RoundTripNumbersHostImpl roundTripNumbersHostImpl;
+  final _InlineImpl inlineImpl;
+  final _ImportsImpl importsImpl;
+  final _RoundTripNumbersHostImpl roundTripNumbersHostImpl;
   final List<(LogLevel, String)> printed;
 
-  TypesWorldTest(
+  _TypesWorldTest(
     this.world,
     this.inlineImpl,
     this.importsImpl,
@@ -116,10 +116,10 @@ class TypesWorldTest {
     this.printed,
   );
 
-  static Future<TypesWorldTest> init() async {
-    final inlineImpl = InlineImpl();
-    final importsImpl = ImportsImpl();
-    final roundTripNumbersHostImpl = RoundTripNumbersHostImpl();
+  static Future<_TypesWorldTest> init() async {
+    final inlineImpl = _InlineImpl();
+    final importsImpl = _ImportsImpl();
+    final roundTripNumbersHostImpl = _RoundTripNumbersHostImpl();
     final List<(LogLevel, String)> printed = [];
 
     final imports = TypesExampleWorldImports(
@@ -131,7 +131,7 @@ class TypesWorldTest {
       roundTripNumbersHost: roundTripNumbersHostImpl,
     );
     final world = await initTypesWorld(imports);
-    return TypesWorldTest(
+    return _TypesWorldTest(
       world,
       inlineImpl,
       importsImpl,
@@ -434,7 +434,7 @@ class TypesWorldTest {
         si8: -128,
         si16: -32768,
         si32: -2147483648,
-        si64: isWeb ? -9007199254740991 : -9223372036854775808,
+        si64: _isWeb ? -9007199254740991 : -9223372036854775808,
         un8: 255,
         un16: 65535,
         un32: 4294967295,
