@@ -11,20 +11,36 @@ import 'package:wasm_wit_component_example/host_wit_generation.dart';
 
 final formatter = DartFormatter();
 
+Directory getRootDirectory() {
+  var dir = Directory.current;
+  while (!File('${dir.path}${Platform.pathSeparator}melos.yaml').existsSync()) {
+    if (dir.path == '/' || dir.path == '' || dir.path == dir.parent.path) {
+      throw Exception('Could not find root directory');
+    }
+    dir = dir.parent;
+  }
+  return dir;
+}
+
 void witDartGeneratorTests() {
   group('wit generator', () {
     test('generate cli', testOn: 'windows || mac-os || linux', () async {
-      final output = File('test/temp/generator.dart');
+      final root = getRootDirectory();
+      final base = '${root.path}/packages/dart_wit_component';
+
+      final output = File('$base/wasm_wit_component/test/temp/generator.dart');
       try {
         // 'dart run wasm_wit_component/bin/generate.dart wit/dart-wit-generator.wit wasm_wit_component/lib/src/generator.dart'
         await generateCli([
-          '../wit/dart-wit-generator.wit',
+          '$base/wit/dart-wit-generator.wit',
           output.path,
         ]);
 
         final content = await output.readAsString();
         final formatted = formatter.format(content);
-        final expected = await File('lib/src/generator.dart').readAsString();
+        final expected =
+            await File('$base/wasm_wit_component/lib/src/generator.dart')
+                .readAsString();
         expect(formatted, expected);
       } finally {
         output.deleteSync();
@@ -51,7 +67,9 @@ default world host {
 
     test('file system input', () async {
       const isWeb = identical(0, 0.0);
-      const witPath = isWeb ? 'host' : '../wit/host.wit';
+      final witPath = isWeb
+          ? 'host'
+          : '${getRootDirectory().path}/packages/dart_wit_component/wit/host.wit';
       final wasiConfig = wasiConfigFromPath(
         witPath,
         webBrowserDirectory: isWeb
@@ -63,7 +81,7 @@ default world host {
             : WasiDirectory({}),
       );
       final g = await generator(wasiConfig: wasiConfig);
-      const inputs = WitGeneratorInput.fileSystemPaths(
+      final inputs = WitGeneratorInput.fileSystemPaths(
         FileSystemPaths(inputPath: witPath),
       );
 

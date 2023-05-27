@@ -6,6 +6,7 @@ import 'package:test/test.dart';
 import 'package:wasm_run/load_module.dart';
 import 'package:wasm_wit_component/wasm_wit_component.dart';
 import 'package:wasm_wit_component_example/types_gen.dart';
+import 'package:wasm_wit_component_example/wit_generator_test.dart';
 
 bool _kReleaseMode = true;
 const _isWeb = identical(0, 0.0);
@@ -42,6 +43,15 @@ void typesGenWitComponentTests({
   }
 }
 
+String _getWitComponentExample() {
+  final root = getRootDirectory();
+  final base =
+      '${root.path}/packages/dart_wit_component/wasm_wit_component/example/rust_wit_component_example';
+  return _kReleaseMode
+      ? '$base/target/wasm32-unknown-unknown/release/rust_wit_component_example.wasm'
+      : '$base/target/wasm32-unknown-unknown/debug/rust_wit_component_example.wasm';
+}
+
 Future<TypesExampleWorld> initTypesWorld(
   TypesExampleWorldImports imports,
   Future<Uint8List> Function()? getWitComponentExampleBytes,
@@ -58,9 +68,7 @@ Future<TypesExampleWorld> initTypesWorld(
       uri: Uri.parse(
         _isWeb
             ? './packages/wasm_wit_component_example/rust_wit_component_example.wasm'
-            : _kReleaseMode
-                ? 'rust_wit_component_example/target/wasm32-unknown-unknown/release/rust_wit_component_example.wasm'
-                : 'rust_wit_component_example/target/wasm32-unknown-unknown/debug/rust_wit_component_example.wasm',
+            : _getWitComponentExample(),
       ),
     );
     module = await wasmUris.loadModule();

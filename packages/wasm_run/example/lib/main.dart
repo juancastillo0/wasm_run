@@ -14,6 +14,7 @@ import 'package:wasm_run_example/simd_test.dart' show simdTests;
 import 'package:wasm_run_example/threads_test.dart';
 import 'package:wasm_run_example/wasi_test.dart';
 import 'package:wasm_wit_component_example/types_gen_test.dart';
+import 'package:wasm_wit_component_example/wit_generator_test.dart';
 
 const isWeb = identical(0, 0.0);
 const compiledWasmLibraryPath =
@@ -509,6 +510,9 @@ void testAll({TestArgs? testArgs}) {
   typesGenWitComponentTests(
     getWitComponentExampleBytes: testArgs?.getWitComponentExampleBytes,
   );
+
+  /// WIT Component Generator tests
+  witDartGeneratorTests();
 
   /// WASI tests
   wasiTest(testArgs: testArgs);
