@@ -5,7 +5,6 @@
 // ignore: unused_import
 import 'dart:typed_data';
 
-import 'package:wasm_run/wasm_run.dart';
 import 'package:wasm_wit_component/wasm_wit_component.dart';
 
 typedef T9 = List<String>;
@@ -310,6 +309,136 @@ typedef T7 = Result<String /*Char*/, ErrnoTypesInterface>;
 /// no "ok" type
 typedef T5TypesInterface = Result<void, ErrnoTypesInterface>;
 
+class RoundTripNumbersData {
+  final int /*U8*/ un8;
+  final int /*U16*/ un16;
+  final int /*U32*/ un32;
+  final int /*U64*/ un64;
+  final int /*S8*/ si8;
+  final int /*S16*/ si16;
+  final int /*S32*/ si32;
+  final int /*S64*/ si64;
+  final double /*F32*/ f32;
+  final double /*F64*/ f64;
+
+  const RoundTripNumbersData({
+    required this.un8,
+    required this.un16,
+    required this.un32,
+    required this.un64,
+    required this.si8,
+    required this.si16,
+    required this.si32,
+    required this.si64,
+    required this.f32,
+    required this.f64,
+  });
+
+  factory RoundTripNumbersData.fromJson(Object? json_) {
+    final json = json_ is Map
+        ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
+        : json_;
+    return switch (json) {
+      [
+        final un8,
+        final un16,
+        final un32,
+        final un64,
+        final si8,
+        final si16,
+        final si32,
+        final si64,
+        final f32,
+        final f64
+      ] ||
+      (
+        final un8,
+        final un16,
+        final un32,
+        final un64,
+        final si8,
+        final si16,
+        final si32,
+        final si64,
+        final f32,
+        final f64
+      ) =>
+        RoundTripNumbersData(
+          un8: un8! as int,
+          un16: un16! as int,
+          un32: un32! as int,
+          un64: un64! as int,
+          si8: si8! as int,
+          si16: si16! as int,
+          si32: si32! as int,
+          si64: si64! as int,
+          f32: f32! as double,
+          f64: f64! as double,
+        ),
+      _ => throw Exception('Invalid JSON $json_')
+    };
+  }
+  Map<String, Object?> toJson() => {
+        'un8': un8,
+        'un16': un16,
+        'un32': un32,
+        'un64': un64,
+        'si8': si8,
+        'si16': si16,
+        'si32': si32,
+        'si64': si64,
+        'f32': f32,
+        'f64': f64,
+      };
+  RoundTripNumbersData copyWith({
+    int /*U8*/ ? un8,
+    int /*U16*/ ? un16,
+    int /*U32*/ ? un32,
+    int /*U64*/ ? un64,
+    int /*S8*/ ? si8,
+    int /*S16*/ ? si16,
+    int /*S32*/ ? si32,
+    int /*S64*/ ? si64,
+    double /*F32*/ ? f32,
+    double /*F64*/ ? f64,
+  }) =>
+      RoundTripNumbersData(
+          un8: un8 ?? this.un8,
+          un16: un16 ?? this.un16,
+          un32: un32 ?? this.un32,
+          un64: un64 ?? this.un64,
+          si8: si8 ?? this.si8,
+          si16: si16 ?? this.si16,
+          si32: si32 ?? this.si32,
+          si64: si64 ?? this.si64,
+          f32: f32 ?? this.f32,
+          f64: f64 ?? this.f64);
+  List<Object?> get props =>
+      [un8, un16, un32, un64, si8, si16, si32, si64, f32, f64];
+  @override
+  String toString() =>
+      'RoundTripNumbersData${Map.fromIterables(_spec.fields.map((f) => f.label), props)}';
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is RoundTripNumbersData &&
+          comparator.arePropsEqual(props, other.props);
+  @override
+  int get hashCode => comparator.hashProps(props);
+  static const _spec = Record([
+    (label: 'un8', t: U8()),
+    (label: 'un16', t: U16()),
+    (label: 'un32', t: U32()),
+    (label: 'un64', t: U64()),
+    (label: 'si8', t: S8()),
+    (label: 'si16', t: S16()),
+    (label: 'si32', t: S32()),
+    (label: 'si64', t: S64()),
+    (label: 'f32', t: Float32()),
+    (label: 'f64', t: Float64())
+  ]);
+}
+
 /// Same name as the type in `types-interface`, but this is a different type
 sealed class HumanApiImports {
   factory HumanApiImports.fromJson(Object? json_) {
@@ -554,6 +683,12 @@ abstract class Inline {
   });
 }
 
+abstract class RoundTripNumbersHost {
+  RoundTripNumbersData roundTripNumbers({
+    required RoundTripNumbersData data,
+  });
+}
+
 class TypesExampleWorldImports {
   final Imports imports;
   final void Function({
@@ -561,11 +696,61 @@ class TypesExampleWorldImports {
     required LogLevel level,
   }) print;
   final Inline inline;
+  final RoundTripNumbersHost roundTripNumbersHost;
   const TypesExampleWorldImports({
     required this.imports,
     required this.print,
     required this.inline,
+    required this.roundTripNumbersHost,
   });
+}
+
+class RoundTripNumbers {
+  RoundTripNumbers(WasmLibrary library)
+      : _roundTripNumbers = library.getComponentFunction(
+          'round-trip-numbers#round-trip-numbers',
+          const FuncType([
+            (
+              'data',
+              Record([
+                (label: 'un8', t: U8()),
+                (label: 'un16', t: U16()),
+                (label: 'un32', t: U32()),
+                (label: 'un64', t: U64()),
+                (label: 'si8', t: S8()),
+                (label: 'si16', t: S16()),
+                (label: 'si32', t: S32()),
+                (label: 'si64', t: S64()),
+                (label: 'f32', t: Float32()),
+                (label: 'f64', t: Float64())
+              ])
+            )
+          ], [
+            (
+              '',
+              Record([
+                (label: 'un8', t: U8()),
+                (label: 'un16', t: U16()),
+                (label: 'un32', t: U32()),
+                (label: 'un64', t: U64()),
+                (label: 'si8', t: S8()),
+                (label: 'si16', t: S16()),
+                (label: 'si32', t: S32()),
+                (label: 'si64', t: S64()),
+                (label: 'f32', t: Float32()),
+                (label: 'f64', t: Float64())
+              ])
+            )
+          ]),
+        )!;
+  final ListValue Function(ListValue) _roundTripNumbers;
+  RoundTripNumbersData roundTripNumbers({
+    required RoundTripNumbersData data,
+  }) {
+    final results = _roundTripNumbers([data.toJson()]);
+    final result = results[0];
+    return RoundTripNumbersData.fromJson(result);
+  }
 }
 
 class Api {
@@ -663,12 +848,14 @@ class Api {
 class TypesExampleWorld {
   final TypesExampleWorldImports imports;
   final WasmLibrary library;
+  final RoundTripNumbers roundTripNumbers;
   final Api api;
 
   TypesExampleWorld({
     required this.imports,
     required this.library,
-  })  : api = Api(library),
+  })  : roundTripNumbers = RoundTripNumbers(library),
+        api = Api(library),
         _fF1 = library.getComponentFunction(
           'f-f1',
           const FuncType([('typedef', ListType(StringType()))],
@@ -763,8 +950,8 @@ class TypesExampleWorld {
         );
       }
 
-      final lowered =
-          loweredImportFunction(ft, execImportsImportsApiA1b2, getLib);
+      final lowered = loweredImportFunction(
+          r'imports#api-a1-b2', ft, execImportsImportsApiA1b2, getLib);
       builder.addImport(r'imports', 'api-a1-b2', lowered);
     }
     {
@@ -780,9 +967,60 @@ class TypesExampleWorld {
         return ([results.toJson(null, null)], () {});
       }
 
-      final lowered =
-          loweredImportFunction(ft, execImportsInlineInlineImp, getLib);
+      final lowered = loweredImportFunction(
+          r'inline#inline-imp', ft, execImportsInlineInlineImp, getLib);
       builder.addImport(r'inline', 'inline-imp', lowered);
+    }
+    {
+      const ft = FuncType([
+        (
+          'data',
+          Record([
+            (label: 'un8', t: U8()),
+            (label: 'un16', t: U16()),
+            (label: 'un32', t: U32()),
+            (label: 'un64', t: U64()),
+            (label: 'si8', t: S8()),
+            (label: 'si16', t: S16()),
+            (label: 'si32', t: S32()),
+            (label: 'si64', t: S64()),
+            (label: 'f32', t: Float32()),
+            (label: 'f64', t: Float64())
+          ])
+        )
+      ], [
+        (
+          '',
+          Record([
+            (label: 'un8', t: U8()),
+            (label: 'un16', t: U16()),
+            (label: 'un32', t: U32()),
+            (label: 'un64', t: U64()),
+            (label: 'si8', t: S8()),
+            (label: 'si16', t: S16()),
+            (label: 'si32', t: S32()),
+            (label: 'si64', t: S64()),
+            (label: 'f32', t: Float32()),
+            (label: 'f64', t: Float64())
+          ])
+        )
+      ]);
+
+      (ListValue, void Function())
+          execImportsRoundTripNumbersHostRoundTripNumbers(ListValue args) {
+        final args0 = args[0];
+        final results = imports.roundTripNumbersHost
+            .roundTripNumbers(data: RoundTripNumbersData.fromJson(args0));
+        return ([results.toJson()], () {});
+      }
+
+      final lowered = loweredImportFunction(
+          r'round-trip-numbers-host#round-trip-numbers',
+          ft,
+          execImportsRoundTripNumbersHostRoundTripNumbers,
+          getLib);
+      builder.addImport(
+          r'round-trip-numbers-host', 'round-trip-numbers', lowered);
     }
     {
       const ft = FuncType([
@@ -799,7 +1037,8 @@ class TypesExampleWorld {
         return (const [], () {});
       }
 
-      final lowered = loweredImportFunction(ft, execImportsPrint, getLib);
+      final lowered =
+          loweredImportFunction(r'$root#print', ft, execImportsPrint, getLib);
       builder.addImport(r'$root', 'print', lowered);
     }
 

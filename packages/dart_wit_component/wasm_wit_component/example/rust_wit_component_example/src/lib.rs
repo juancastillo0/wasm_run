@@ -99,4 +99,26 @@ impl api::Api for MyHost {
     }
 }
 
+impl round_trip_numbers::RoundTripNumbers for MyHost {
+    fn round_trip_numbers(
+        data: round_trip_numbers::RoundTripNumbersData,
+    ) -> round_trip_numbers::RoundTripNumbersData {
+        round_trip_numbers_host::round_trip_numbers(
+            round_trip_numbers_host::RoundTripNumbersData {
+                f32: data.f32,
+                f64: data.f64,
+                si8: data.si8,
+                un8: data.un8,
+                si16: data.si16,
+                un16: data.un16,
+                si32: data.si32,
+                un32: data.un32,
+                si64: data.si64,
+                un64: data.un64,
+            },
+        );
+        data
+    }
+}
+
 export_types_example!(MyHost);

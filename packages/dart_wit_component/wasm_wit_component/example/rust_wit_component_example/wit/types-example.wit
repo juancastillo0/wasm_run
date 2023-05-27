@@ -52,6 +52,23 @@ default interface types-interface {
   type t10 = t9
 }
 
+interface round-trip-numbers {
+  record round-trip-numbers-data {
+    un8: u8,
+    un16: u16,
+    un32: u32,
+    un64: u64,
+    si8: s8,
+    si16: s16,
+    si32: s32,
+    si64: s64,
+    f32: float32,
+    f64: float64,
+  }
+
+  round-trip-numbers: func(data: round-trip-numbers-data) -> round-trip-numbers-data
+}
+
 /// Comment for import interface
 interface api-imports {
   use self.types-interface.{t7}
@@ -95,6 +112,8 @@ default world types-example {
       /// Comment for import inline function
       inline-imp: func(args: list<option<char>>) -> result<_, char>
     }
+    import round-trip-numbers-host: self.round-trip-numbers
+    export round-trip-numbers: self.round-trip-numbers
 
     export api: self.api
 
