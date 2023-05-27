@@ -9,7 +9,7 @@ import 'package:wasm_wit_component/src/component.dart';
 /// ```bash
 /// dart run wasm_wit_component/bin/generate.dart wit/host.wit wasm_wit_component/bin/host.dart
 /// ```
-Future<void> main(List<String> arguments) async {
+Future<void> generateCli(List<String> arguments) async {
   final positional = arguments.where((e) => !e.startsWith('-')).toList();
   final witPath = positional[0];
   // TODO: multiple files or directory
