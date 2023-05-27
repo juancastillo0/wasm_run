@@ -14,7 +14,7 @@ impl Parsed<'_> {
         let getter = format!(
             "imports.{}{}",
             interface_name
-                .map(|v| format!("{v}."))
+                .map(|v| format!("{}.", v.as_var()))
                 .unwrap_or("".to_string()),
             id.as_var(),
         );
@@ -22,7 +22,7 @@ impl Parsed<'_> {
             "{{
                 const ft = {ft};
                 {exec}
-                final lowered = loweredImportFunction(ft, exec{exec_name}, getLib);
+                final lowered = loweredImportFunction(r'{interface_name_m}#{id}', ft, exec{exec_name}, getLib);
                 builder.addImport(r'{interface_name_m}', '{id}', lowered);
             }}",
             ft = self.function_spec(f),

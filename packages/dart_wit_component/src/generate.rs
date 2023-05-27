@@ -75,14 +75,15 @@ pub fn document_to_dart(parsed: &UnresolvedPackage) -> String {
         } else {
             let mut constructor = format!("const {w_name}WorldImports({{",);
             w.imports.iter().for_each(|(id, i)| {
+                let id_name = id.as_var();
                 match i {
                     WorldItem::Interface(_interface_id) => {
-                        constructor.push_str(&format!("required this.{id},"));
-                        s.push_str(&format!("final {} {id};", heck::AsPascalCase(id)));
+                        constructor.push_str(&format!("required this.{id_name},"));
+                        s.push_str(&format!("final {} {id_name};", heck::AsPascalCase(id)));
                     }
                     WorldItem::Type(_type_id) => {}
                     WorldItem::Function(f) => {
-                        constructor.push_str(&format!("required this.{id},")); // TODO: should be name
+                        constructor.push_str(&format!("required this.{id_name},"));
                         p.add_function(&mut s, f, FuncKind::Field);
 
                         func_imports.push_str(&p.function_import(None, id, f));
