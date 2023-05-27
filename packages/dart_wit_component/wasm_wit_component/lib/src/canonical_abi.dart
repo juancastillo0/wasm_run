@@ -921,7 +921,8 @@ ParsedString load_string(Context cx, int ptr) {
 /// in [StringEncoding.latin1utf16]
 ///
 /// See [store_string_into_range].
-const int UTF16_TAG = 1 << 31;
+/// UTF16_TAG = 1 << 31
+const int UTF16_TAG = 2147483648;
 
 ParsedString load_string_from_range(
     Context cx, int ptr, int tagged_code_units) {
@@ -1304,7 +1305,8 @@ PointerAndSize store_string_into_range(Context cx, ParsedString v) {
 
 /// The choice of MAX_STRING_BYTE_LENGTH constant ensures that the
 /// high bit of a string's byte length is never set, keeping it clear for [UTF16_TAG].
-const int MAX_STRING_BYTE_LENGTH = (1 << 31) - 1;
+/// MAX_STRING_BYTE_LENGTH = (1 << 31) - 1
+const int MAX_STRING_BYTE_LENGTH = UTF16_TAG - 1;
 
 /// The simplest 4 cases above can compute the exact destination size and
 /// then copy with a simply loop (that possibly inflates Latin-1 to UTF-16
@@ -1766,6 +1768,8 @@ abstract class ValueIter {
 extension ValueIterExt on ValueIter {
   int nextInt(FlattenType t) => next(t) as int;
 
+  int nextInt32() => next(FlattenType.i32) as int;
+
   double nextDouble(FlattenType t) => next(t) as double;
 }
 
@@ -1790,7 +1794,7 @@ class _ValueIter implements ValueIter {
 Object? lift_flat(Context cx, ValueIter vi, ValType t) {
   final _t = despecialize(t);
   return switch (_t) {
-    Bool() => convert_int_to_bool(vi.nextInt(FlattenType.i32)),
+    Bool() => convert_int_to_bool(vi.nextInt32()),
     U8() => lift_flat_unsigned(vi, 32, 8),
     U16() => lift_flat_unsigned(vi, 32, 16),
     U32() => lift_flat_unsigned(vi, 32, 32),
@@ -1801,14 +1805,14 @@ Object? lift_flat(Context cx, ValueIter vi, ValType t) {
     S64() => lift_flat_signed(vi, 64, 64),
     Float32() => canonicalize32(vi.nextDouble(FlattenType.f32)),
     Float64() => canonicalize64(vi.nextDouble(FlattenType.f64)),
-    Char() => convert_i32_to_char(cx, vi.nextInt(FlattenType.i32)),
+    Char() => convert_i32_to_char(cx, vi.nextInt32()),
     StringType() => lift_flat_string(cx, vi),
     ListType(:final t) => lift_flat_list(cx, vi, t),
     Record(:final fields) => lift_flat_record(cx, vi, fields),
     final Variant t => lift_flat_variant(cx, vi, t),
     Flags(:final labels) => lift_flat_flags(vi, labels),
-    Own() => lift_own(cx, vi.nextInt(FlattenType.i32), _t),
-    Borrow() => lift_borrow(cx, vi.nextInt(FlattenType.i32), _t),
+    Own() => lift_own(cx, vi.nextInt32(), _t),
+    Borrow() => lift_borrow(cx, vi.nextInt32(), _t),
   };
 }
 // #
@@ -1843,8 +1847,8 @@ int lift_flat_signed(ValueIter vi, int core_width, int t_width) {
 /// the only difference is that the pointer and length come
 /// from i32 values instead of from linear memory:
 ParsedString lift_flat_string(Context cx, ValueIter vi) {
-  final int ptr = vi.nextInt(FlattenType.i32);
-  final int packed_length = vi.nextInt(FlattenType.i32);
+  final int ptr = vi.nextInt32();
+  final int packed_length = vi.nextInt32();
   return load_string_from_range(cx, ptr, packed_length);
 }
 
@@ -1853,8 +1857,8 @@ ParsedString lift_flat_string(Context cx, ValueIter vi) {
 /// the only difference is that the pointer and length come
 /// from i32 values instead of from linear memory:
 ListValue lift_flat_list(Context cx, ValueIter vi, ValType elem_type) {
-  final int ptr = vi.nextInt(FlattenType.i32);
-  final int length = vi.nextInt(FlattenType.i32);
+  final int ptr = vi.nextInt32();
+  final int length = vi.nextInt32();
   return load_list_from_range(cx, ptr, length, elem_type);
 }
 
@@ -1906,7 +1910,7 @@ VariantValue lift_flat_variant(Context cx, ValueIter vi, Variant variant) {
   final cases = variant.cases;
   final flat_types = flatten_type(variant); // flatten_variant(cases);
   assert(flat_types[0] == FlattenType.i32);
-  final case_index = vi.nextInt(FlattenType.i32);
+  final case_index = vi.nextInt32();
   trap_if(case_index >= cases.length);
 
   final c = cases[case_index];
@@ -1935,7 +1939,7 @@ FlagsValue lift_flat_flags(ValueIter vi, List<String> labels) {
   final list = Uint32List(num_i32_flags(labels));
   final data = ByteData.sublistView(list);
   for (int i = 0; i < list.length; i++) {
-    final value = vi.nextInt(FlattenType.i32);
+    final value = vi.nextInt32();
     data.setUint32(i * 4, value, Endian.little);
   }
   return list;
@@ -2090,7 +2094,7 @@ ListValue lift_values(
 }) {
   final flat_types = computedTypes?.flatTypes ?? flatten_types(ts);
   if (flat_types.length > max_flat) {
-    final ptr = vi.nextInt(FlattenType.i32);
+    final ptr = vi.nextInt32();
     final tuple_type = computedTypes?.tupleType ?? Tuple(ts);
     trap_if(ptr != align_to(ptr, alignment(tuple_type)));
     trap_if(ptr + size(tuple_type) > cx.opts.memory.length);
@@ -2130,7 +2134,7 @@ List<Value> lower_values(
     if (out_param == null) {
       ptr = cx.opts.realloc(0, 0, tuple_alignment, tuple_size);
     } else {
-      ptr = out_param.nextInt(FlattenType.i32);
+      ptr = out_param.nextInt32();
     }
     trap_if(ptr != align_to(ptr, tuple_alignment));
     trap_if(ptr + tuple_size > cx.opts.memory.length);
