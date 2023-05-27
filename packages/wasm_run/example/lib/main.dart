@@ -13,6 +13,7 @@ import 'package:wasm_run_example/runner_identity/runner_identity.dart';
 import 'package:wasm_run_example/simd_test.dart' show simdTests;
 import 'package:wasm_run_example/threads_test.dart';
 import 'package:wasm_run_example/wasi_test.dart';
+import 'package:wasm_wit_component_example/types_gen_test.dart';
 
 const isWeb = identical(0, 0.0);
 const compiledWasmLibraryPath =
@@ -501,6 +502,9 @@ void testAll({TestArgs? testArgs}) {
       [-1.4, i64.fromBigInt(BigInt.from(5))],
     );
   });
+
+  /// WIT Component tests
+  typesGenWitComponentTests();
 
   /// WASI tests
   wasiTest(testArgs: testArgs);

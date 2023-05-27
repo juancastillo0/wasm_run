@@ -9,9 +9,9 @@ environment:
 dependencies:
   wasm_run:
   wasm_wit_component:
+  test: ^1.21.0
 
 dev_dependencies:
-  test: ^1.21.0
   very_good_analysis: ^5.0.0
 
 dependency_overrides:

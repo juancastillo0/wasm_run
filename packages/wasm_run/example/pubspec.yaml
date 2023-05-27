@@ -9,6 +9,8 @@ environment:
 dependencies:
   wasm_run:
     path: ../
+  wasm_wit_component_example:
+    path: ../../dart_wit_component/wasm_wit_component/example
   test: ^1.21.0
 
 dev_dependencies:
