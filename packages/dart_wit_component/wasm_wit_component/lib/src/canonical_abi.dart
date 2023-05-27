@@ -527,6 +527,24 @@ class CanonicalOptions {
   /// matching the callee's return type and empty results.
   final void Function(List<Value> flat_results)? post_return;
 
+  // TODO: these methods may change if we use BigInt
+
+  int getUint64(ByteData data, int ptr) => _isWeb
+      ? i64.toInt(i64.getUint64(data, ptr, Endian.little))
+      : data.getUint64(ptr, Endian.little);
+
+  int getInt64(ByteData data, int ptr) => _isWeb
+      ? i64.toInt(i64.getInt64(data, ptr, Endian.little))
+      : data.getInt64(ptr, Endian.little);
+
+  void setUint64(ByteData data, int ptr, int v) => _isWeb
+      ? i64.setUint64(data, ptr, i64.fromInt(v), Endian.little)
+      : data.setUint64(ptr, v, Endian.little);
+
+  void setInt64(ByteData data, int ptr, int v) => _isWeb
+      ? i64.setInt64(data, ptr, i64.fromInt(v), Endian.little)
+      : data.setInt64(ptr, v, Endian.little);
+
   ///
   CanonicalOptions(
     this._updateMemoryView,
@@ -726,11 +744,11 @@ int load_int(Context cx, int ptr, int nbytes, {bool signed = false}) {
     (1, false) => data.getUint8(ptr),
     (2, false) => data.getUint16(ptr, Endian.little),
     (4, false) => data.getUint32(ptr, Endian.little),
-    (8, false) => data.getUint64(ptr, Endian.little),
+    (8, false) => cx.opts.getUint64(data, ptr),
     (1, true) => data.getInt8(ptr),
     (2, true) => data.getInt16(ptr, Endian.little),
     (4, true) => data.getInt32(ptr, Endian.little),
-    (8, true) => data.getInt64(ptr, Endian.little),
+    (8, true) => cx.opts.getInt64(data, ptr),
     _ => throw unreachableException,
   };
 }
@@ -743,11 +761,11 @@ int load_int_type(Context cx, int ptr, IntType type) {
     U8() => data.getUint8(ptr),
     U16() => data.getUint16(ptr, Endian.little),
     U32() => data.getUint32(ptr, Endian.little),
-    U64() => data.getUint64(ptr, Endian.little),
+    U64() => cx.opts.getUint64(data, ptr),
     S8() => data.getInt8(ptr),
     S16() => data.getInt16(ptr, Endian.little),
     S32() => data.getInt32(ptr, Endian.little),
-    S64() => data.getInt64(ptr, Endian.little),
+    S64() => cx.opts.getInt64(data, ptr),
   };
 }
 
@@ -1193,11 +1211,11 @@ void store_int(Context cx, int v, int ptr, int nbytes, {bool signed = false}) {
     (1, false) => data.setUint8(ptr, v),
     (2, false) => data.setUint16(ptr, v, Endian.little),
     (4, false) => data.setUint32(ptr, v, Endian.little),
-    (8, false) => data.setUint64(ptr, v, Endian.little),
+    (8, false) => cx.opts.setUint64(data, ptr, v),
     (1, true) => data.setInt8(ptr, v),
     (2, true) => data.setInt16(ptr, v, Endian.little),
     (4, true) => data.setInt32(ptr, v, Endian.little),
-    (8, true) => data.setInt64(ptr, v, Endian.little),
+    (8, true) => cx.opts.setInt64(data, ptr, v),
     _ => throw unreachableException,
   };
 }
