@@ -12,24 +12,39 @@ const _isWeb = identical(0, 0.0);
 /// It setsUp the dynamic library for wasm_run for native platforms and
 /// loads the dart_wit_component WASM module from the file system or
 /// from the releases of wasm_run repository.
+///
+/// If [loadModule] is provided, it will be used to load the WASM module.
+/// This can be useful if you want to provide a different configuration
+/// or implementation, or you are loading it from Flutter assets or
+/// from a different HTTP endpoint. By default, it will load the WASM module
+/// from the file system in `lib/dart_wit_component.wasm` either reading it directly
+/// in native platforms or with a GET request for Dart web. As a fallback
+/// it will use the releases from the wasm_run repository.
 Future<DartWitGeneratorWorld> generator({
   required WasiConfig wasiConfig,
+  Future<WasmModule> Function()? loadModule,
 }) async {
   await WasmRunLibrary.setUp(override: false);
 
-  const baseUrl = 'https://github.com/juancastillo0/wasm_run/releases/download';
-  const wasmUrl = _isWeb
-      ? './packages/wasm_wit_component/dart_wit_component.wasm'
-      : '$baseUrl/wasm_run-v${WasmRunLibrary.version}/dart_wit_component.wasm';
+  final WasmModule module;
+  if (loadModule != null) {
+    module = await loadModule();
+  } else {
+    const baseUrl =
+        'https://github.com/juancastillo0/wasm_run/releases/download';
+    const wasmUrl = _isWeb
+        ? './packages/wasm_wit_component/dart_wit_component.wasm'
+        : '$baseUrl/wasm_run-v${WasmRunLibrary.version}/dart_wit_component.wasm';
 
-  WasmFileUris uris = WasmFileUris(uri: Uri.parse(wasmUrl));
-  if (!_isWeb) {
-    final packageDir = File.fromUri(Platform.script).parent.parent;
-    final wasmFile = packageDir.uri.resolve('lib/dart_wit_component.wasm');
-    uris = WasmFileUris(uri: wasmFile, fallback: uris);
+    WasmFileUris uris = WasmFileUris(uri: Uri.parse(wasmUrl));
+    if (!_isWeb) {
+      final packageDir = File.fromUri(Platform.script).parent.parent;
+      final wasmFile = packageDir.uri.resolve('lib/dart_wit_component.wasm');
+      uris = WasmFileUris(uri: wasmFile, fallback: uris);
+    }
+
+    module = await uris.loadModule();
   }
-
-  final module = await uris.loadModule();
   final builder = module.builder(
     wasiConfig: wasiConfig,
   );
