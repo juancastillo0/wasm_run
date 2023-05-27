@@ -51,11 +51,13 @@ Future<Uint8List> getBinary({
 class TestArgs {
   final Future<Uint8List> Function()? getWasiExampleBytes;
   final Future<Uint8List> Function()? getThreadsExampleBytes;
+  final Future<Uint8List> Function()? getWitComponentExampleBytes;
   final Future<Directory> Function()? getDirectory;
 
   TestArgs({
     required this.getWasiExampleBytes,
     required this.getThreadsExampleBytes,
+    required this.getWitComponentExampleBytes,
     required this.getDirectory,
   });
 }
@@ -504,7 +506,9 @@ void testAll({TestArgs? testArgs}) {
   });
 
   /// WIT Component tests
-  typesGenWitComponentTests();
+  typesGenWitComponentTests(
+    getWitComponentExampleBytes: testArgs?.getWitComponentExampleBytes,
+  );
 
   /// WASI tests
   wasiTest(testArgs: testArgs);

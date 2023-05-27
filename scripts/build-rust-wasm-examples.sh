@@ -20,3 +20,12 @@ RUSTFLAGS='-C target-feature=+atomics,+bulk-memory,+mutable-globals' \
     cargo +nightly build --target wasm32-unknown-unknown --profile $BUILD_PROFILE -Z build-std=std,panic_abort \
     --manifest-path packages/rust_threads_example/Cargo.toml
 cp -fr packages/rust_threads_example/target/wasm32-unknown-unknown/$BUILD_PROFILE_PATH/rust_threads_example.wasm packages/wasm_run_flutter/example/assets/rust_threads_example.wasm
+
+# rust_wit_component_example
+rustup target add wasm32-unknown-unknown
+cargo build --target wasm32-unknown-unknown --profile $BUILD_PROFILE \
+    --manifest-path packages/dart_wit_component/wasm_wit_component/example/rust_wit_component_example/Cargo.toml
+cp -fr packages/dart_wit_component/wasm_wit_component/example/rust_wit_component_example/target/wasm32-unknown-unknown/$BUILD_PROFILE_PATH/rust_wit_component_example.wasm \
+    packages/wasm_run_flutter/example/assets/rust_wit_component_example.wasm
+cp -fr packages/dart_wit_component/wasm_wit_component/example/rust_wit_component_example/target/wasm32-unknown-unknown/$BUILD_PROFILE_PATH/rust_wit_component_example.wasm \
+    packages/dart_wit_component/wasm_wit_component/example/lib/rust_wit_component_example.wasm

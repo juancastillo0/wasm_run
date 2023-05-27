@@ -1,5 +1,7 @@
 // ignore_for_file: avoid_print
 
+import 'dart:typed_data';
+
 import 'package:test/test.dart';
 import 'package:wasm_run/load_module.dart';
 import 'package:wasm_wit_component/wasm_wit_component.dart';
@@ -8,7 +10,9 @@ import 'package:wasm_wit_component_example/types_gen.dart';
 bool _kReleaseMode = true;
 const _isWeb = identical(0, 0.0);
 
-void typesGenWitComponentTests() async {
+void typesGenWitComponentTests({
+  Future<Uint8List> Function()? getWitComponentExampleBytes,
+}) async {
   // ignore: prefer_asserts_with_message
   assert(
     (() {
@@ -31,7 +35,7 @@ void typesGenWitComponentTests() async {
   } else {
     group('types gen', () {
       test('test types', () async {
-        final test = await _TypesWorldTest.init();
+        final test = await _TypesWorldTest.init(getWitComponentExampleBytes);
         test.test(expect: expect);
       });
     });
@@ -40,20 +44,27 @@ void typesGenWitComponentTests() async {
 
 Future<TypesExampleWorld> initTypesWorld(
   TypesExampleWorldImports imports,
+  Future<Uint8List> Function()? getWitComponentExampleBytes,
 ) async {
   if (_isWeb) {
     await WasmRunLibrary.setUp(override: false);
   }
-  final wasmUris = WasmFileUris(
-    uri: Uri.parse(
-      _isWeb
-          ? './packages/wasm_wit_component_example/rust_wit_component_example.wasm'
-          : _kReleaseMode
-              ? 'rust_wit_component_example/target/wasm32-unknown-unknown/release/rust_wit_component_example.wasm'
-              : 'rust_wit_component_example/target/wasm32-unknown-unknown/debug/rust_wit_component_example.wasm',
-    ),
-  );
-  final module = await wasmUris.loadModule();
+  final WasmModule module;
+  if (getWitComponentExampleBytes != null) {
+    final bytes = await getWitComponentExampleBytes();
+    module = await compileWasmModule(bytes);
+  } else {
+    final wasmUris = WasmFileUris(
+      uri: Uri.parse(
+        _isWeb
+            ? './packages/wasm_wit_component_example/rust_wit_component_example.wasm'
+            : _kReleaseMode
+                ? 'rust_wit_component_example/target/wasm32-unknown-unknown/release/rust_wit_component_example.wasm'
+                : 'rust_wit_component_example/target/wasm32-unknown-unknown/debug/rust_wit_component_example.wasm',
+      ),
+    );
+    module = await wasmUris.loadModule();
+  }
   print(module);
   final builder = module.builder();
 
@@ -116,7 +127,9 @@ class _TypesWorldTest {
     this.printed,
   );
 
-  static Future<_TypesWorldTest> init() async {
+  static Future<_TypesWorldTest> init([
+    Future<Uint8List> Function()? getWitComponentExampleBytes,
+  ]) async {
     final inlineImpl = _InlineImpl();
     final importsImpl = _ImportsImpl();
     final roundTripNumbersHostImpl = _RoundTripNumbersHostImpl();
@@ -130,7 +143,7 @@ class _TypesWorldTest {
       imports: importsImpl,
       roundTripNumbersHost: roundTripNumbersHostImpl,
     );
-    final world = await initTypesWorld(imports);
+    final world = await initTypesWorld(imports, getWitComponentExampleBytes);
     return _TypesWorldTest(
       world,
       inlineImpl,
