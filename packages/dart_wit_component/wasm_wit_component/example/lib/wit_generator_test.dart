@@ -4,19 +4,20 @@ import 'dart:io';
 import 'package:dart_style/dart_style.dart';
 import 'package:test/test.dart';
 import 'package:wasm_wit_component/generator.dart';
+// ignore: implementation_imports
+import 'package:wasm_wit_component/src/generate_cli.dart';
 import 'package:wasm_wit_component/wasm_wit_component.dart';
-import '../bin/generate.dart' as generate;
-import 'host.dart';
+import 'package:wasm_wit_component_example/host_wit_generation.dart';
 
 final formatter = DartFormatter();
 
-void main() {
+void witDartGeneratorTests() {
   group('wit generator', () {
-    test('generate cli', testOn: '!browser', () async {
+    test('generate cli', testOn: 'windows || mac-os || linux', () async {
       final output = File('test/temp/generator.dart');
       try {
         // 'dart run wasm_wit_component/bin/generate.dart wit/dart-wit-generator.wit wasm_wit_component/lib/src/generator.dart'
-        await generate.main([
+        await generateCli([
           '../wit/dart-wit-generator.wit',
           output.path,
         ]);

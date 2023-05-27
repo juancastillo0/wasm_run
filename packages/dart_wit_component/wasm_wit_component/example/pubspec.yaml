@@ -10,6 +10,7 @@ dependencies:
   wasm_run:
   wasm_wit_component:
   test: ^1.21.0
+  dart_style: ^2.3.0
 
 dev_dependencies:
   very_good_analysis: ^5.0.0
