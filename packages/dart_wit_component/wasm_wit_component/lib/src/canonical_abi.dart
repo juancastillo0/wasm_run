@@ -8,6 +8,7 @@ import 'dart:typed_data'
     show ByteData, Endian, Uint16List, Uint32List, Uint8List;
 
 import 'package:wasm_wit_component/src/canonical_abi_cache.dart';
+import 'package:wasm_wit_component/wasm_wit_component.dart' show i64;
 
 final unreachableException = Exception('Unreachable');
 
@@ -28,8 +29,6 @@ class Trap implements Exception {
     return 'Trap($sourceError, $stackTrace)';
   }
 }
-
-class CoreWebAssemblyException implements Exception {}
 
 Never trap([Object? sourceError, StackTrace? stackTrace]) =>
     throw Trap(sourceError, stackTrace);
@@ -399,7 +398,7 @@ int alignment_variant(List<Case> cases) {
 IntType discriminant_type(List<Case> cases) {
   final int n = cases.length;
   assert(0 < n);
-  assert(n < (1 << 32));
+  assert(n < _unpresentableU32);
   return switch (((math.log(n) / math.ln2) / 8).ceil()) {
     0 => const U8(),
     1 => const U8(),
@@ -693,6 +692,11 @@ class HandleTables {
 
 // ### Loading
 
+const _isWeb = identical(0, 0.0);
+
+/// (1 << 32)
+const _unpresentableU32 = 4294967296;
+
 /// Defines how to read a value of a given value type [t] out of linear memory
 /// starting at offset [ptr], returning the value represented as a Dart value
 Object? load(Context cx, int ptr, ValType t) {
@@ -703,7 +707,7 @@ Object? load(Context cx, int ptr, ValType t) {
     Bool() => convert_int_to_bool(load_int(cx, ptr, 1)),
     IntType() => load_int_type(cx, ptr, _t),
     Float32() => canonicalize32(reinterpret_i32_as_float(load_int(cx, ptr, 4))),
-    Float64() => canonicalize64(reinterpret_i64_as_float(load_int(cx, ptr, 8))),
+    Float64() => canonicalize64(loadFloat64(cx, ptr)),
     Char() => convert_i32_to_char(cx, load_int(cx, ptr, 4)),
     StringType() => load_string(cx, ptr),
     ListType(:final t) => load_list(cx, ptr, t),
@@ -767,9 +771,21 @@ double reinterpret_i32_as_float(int i) {
 }
 
 /// return struct.unpack('!d', struct.pack('!Q', i))[0] # f64.reinterpret_i64
-double reinterpret_i64_as_float(int i) {
-  final data = ByteData(8)..setInt64(0, i, Endian.little);
+double reinterpret_i64_as_float(Object i) {
+  final data = ByteData(8);
+  if (_isWeb) {
+    // TODO: `i is int ? ...` should not be necessary, it is only for CANONICAL_FLOAT64_NAN
+    i64.setUint64(data, 0, i is int ? i64.fromInt(i) : i, Endian.little);
+  } else {
+    data.setInt64(0, i as int, Endian.little);
+  }
   return data.getFloat64(0, Endian.little);
+}
+
+double loadFloat64(Context cx, int ptr) {
+  final data = cx.opts.getByteData();
+  final value = i64.getInt64(data, ptr, Endian.little);
+  return reinterpret_i64_as_float(value);
 }
 
 const int CANONICAL_FLOAT32_NAN = 0x7fc00000;
@@ -1135,8 +1151,7 @@ void store(Context cx, Object? v, ValType t, int ptr) {
       store_int(
           cx, reinterpret_float_as_i32(canonicalize32(v! as double)), ptr, 4);
     case Float64():
-      store_int(
-          cx, reinterpret_float_as_i64(canonicalize64(v! as double)), ptr, 8);
+      storeFloat64(cx, canonicalize64(v! as double), ptr);
     case Char():
       store_int(cx, char_to_i32(v! as String), ptr, 4);
     case StringType():
@@ -1196,8 +1211,19 @@ int reinterpret_float_as_i32(double f) =>
     (ByteData(4)..setFloat32(0, f, Endian.little)).getInt32(0, Endian.little);
 
 /// return struct.unpack('!Q', struct.pack('!d', f))[0] # i64.reinterpret_f64
-int reinterpret_float_as_i64(double f) =>
-    (ByteData(8)..setFloat64(0, f, Endian.little)).getInt64(0, Endian.little);
+Object reinterpret_float_as_i64(double f) {
+  final data = (ByteData(8)..setFloat64(0, f, Endian.little));
+  if (_isWeb) {
+    return i64.getInt64(data, 0, Endian.little);
+  }
+  return data.getInt64(0, Endian.little);
+}
+
+void storeFloat64(Context cx, double v, int ptr) {
+  final data = cx.opts.getByteData();
+  final intV = reinterpret_float_as_i64(v);
+  i64.setInt64(data, ptr, intV, Endian.little);
+}
 
 // #
 
@@ -1502,7 +1528,7 @@ PointerAndSize store_list_into_range(
   final alignment_elem = alignment(elem_type);
 
   final byte_length = v.length * size_elem;
-  trap_if(byte_length >= (1 << 32));
+  trap_if(byte_length >= _unpresentableU32);
   final ptr = cx.opts.realloc(0, 0, alignment_elem, byte_length);
   trap_if(ptr != align_to(ptr, alignment_elem));
   trap_if(ptr + byte_length > cx.opts.memory.length);
@@ -1742,7 +1768,9 @@ FlattenType join(FlattenType a, FlattenType b) {
 // typedef Value = ({FlattenType t, num v});
 class Value {
   final FlattenType t;
-  final num v;
+
+  /// int, double or JsBigInt
+  final Object v;
 
   Value(this.t, this.v);
 }
@@ -1762,11 +1790,11 @@ class Value {
 abstract class ValueIter {
   factory ValueIter(List<Value> values) = _ValueIter;
 
-  num next(FlattenType t);
+  Object next(FlattenType t);
 }
 
 extension ValueIterExt on ValueIter {
-  int nextInt(FlattenType t) => next(t) as int;
+  Object nextInt(FlattenType t) => next(t);
 
   int nextInt32() => next(FlattenType.i32) as int;
 
@@ -1779,7 +1807,7 @@ class _ValueIter implements ValueIter {
 
   _ValueIter(this._values);
 
-  num next(FlattenType t) {
+  Object next(FlattenType t) {
     final v = _values[_i];
     _i++;
     assert(v.t == t);
@@ -1826,20 +1854,27 @@ Object? lift_flat(Context cx, ValueIter vi, ValType t) {
 /// type performs a manual 2s complement conversion in the Python
 /// (which would be a no-op in hardware).
 int lift_flat_unsigned(ValueIter vi, int core_width, int t_width) {
-  final i = vi.nextInt(core_width == 32 ? FlattenType.i32 : FlattenType.i64);
-  assert(0 <= i);
-  assert(i < (1 << core_width));
-  return i % (1 << t_width);
+  if (core_width == 32) {
+    final i = vi.nextInt32();
+    final maxValue = t_width == 32 ? _unpresentableU32 : 1 << t_width;
+    return i % maxValue;
+  } else {
+    final i = vi.nextInt(FlattenType.i64);
+    // TODO: this could change if we represent them as BigInt
+    return i64.toInt(i);
+  }
 }
 
 int lift_flat_signed(ValueIter vi, int core_width, int t_width) {
-  int i = vi.nextInt(core_width == 32 ? FlattenType.i32 : FlattenType.i64);
-  assert(0 <= i);
-  assert(i < (1 << core_width));
-  i %= 1 << t_width;
-  if (i >= (1 << (t_width - 1))) return i - (1 << t_width);
-  return i;
+  if (core_width == 32) {
+    return vi.nextInt32();
+  } else {
+    final i = vi.nextInt(FlattenType.i64);
+    // TODO: this could change if we represent them as BigInt
+    return i64.toInt(i);
+  }
 }
+
 // #
 
 /// The contents of strings and lists are always stored in memory
@@ -1881,18 +1916,19 @@ class _CoerceValueIter implements ValueIter {
 
   _CoerceValueIter(this.vi, this.flat_types, this._i);
 
-  num next(FlattenType want) {
+  @override
+  Object next(FlattenType want) {
     final have = flat_types[_i++];
     final x = vi.next(have);
     switch ((have, want)) {
       case (FlattenType.i32, FlattenType.f32):
         return reinterpret_i32_as_float(x as int);
       case (FlattenType.i64, FlattenType.i32):
-        return wrap_i64_to_i32(x as int);
+        return wrap_i64_to_i32(i64.toInt(x));
       case (FlattenType.i64, FlattenType.f32):
-        return reinterpret_i32_as_float(wrap_i64_to_i32(x as int));
+        return reinterpret_i32_as_float(wrap_i64_to_i32(i64.toInt(x)));
       case (FlattenType.i64, FlattenType.f64):
-        return reinterpret_i64_as_float(x as int);
+        return reinterpret_i64_as_float(x);
       case _:
         return x;
     }
@@ -1925,9 +1961,7 @@ VariantValue lift_flat_variant(Context cx, ValueIter vi, Variant variant) {
 }
 
 int wrap_i64_to_i32(int i) {
-  assert(0 <= i);
-  assert(i < (1 << 64));
-  return i % (1 << 32);
+  return i % _unpresentableU32;
 }
 
 // #
@@ -1988,9 +2022,6 @@ List<Value> lower_flat(Context cx, Object? v, ValType t) {
 /// Signed integer values are converted to unsigned core i32s
 /// by 2s complement arithmetic (which again would be a no-op in hardware)
 List<Value> lower_flat_signed(int i, int core_bits) {
-  if (i < 0) {
-    i += 1 << core_bits;
-  }
   return singleList(
     Value(core_bits == 32 ? FlattenType.i32 : FlattenType.i64, i),
   );
