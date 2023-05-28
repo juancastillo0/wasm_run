@@ -41,11 +41,11 @@ class i64 {
   static I64 getUint64(ByteData bytes, int offset, Endian endian) =>
       impl.getUint64Bytes(bytes, offset, endian);
 
-  /// Write [value] ([I64]) from [bytes] ([ByteData]) in [offset]
+  /// Write [value] ([I64]) in [bytes] ([ByteData]) in [offset]
   static void setInt64(ByteData bytes, int offset, I64 value, Endian endian) =>
       impl.setInt64Bytes(bytes, offset, value, endian);
 
-  /// Write unsigned [value] ([I64]) from [bytes] ([ByteData]) in [offset]
+  /// Write unsigned [value] ([I64]) in [bytes] ([ByteData]) in [offset]
   static void setUint64(ByteData bytes, int offset, I64 value, Endian endian) =>
       impl.setUint64Bytes(bytes, offset, value, endian);
 }

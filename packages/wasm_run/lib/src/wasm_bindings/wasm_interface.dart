@@ -267,6 +267,7 @@ abstract class WasmInstance {
   /// - Each list in the returned list will contain the return values
   /// of the corresponding call to [function].
   ///
+  @experimental
   Future<List<List<Object?>>> runParallel(
     WasmFunction function,
     List<List<Object?>> argsLists,
@@ -336,6 +337,7 @@ abstract class WasmMemory extends WasmExternal {
   }
 }
 
+@experimental
 abstract class WasmSharedMemory extends WasmMemory {
   int atomicNotify(int addr, int count);
   SharedMemoryWaitResult atomicWait32(int addr, int expected);
