@@ -47,7 +47,13 @@ Future<WasmRuntimeFeatures> _calculateFeatures() async {
   bool typeReflection;
   try {
     final type = _getGlobalType(Global.i32(value: 0, mutable: true).jsObject);
-    typeReflection = (type?.mutable ?? false) && type?.value == ValueTy.i32;
+    final hasFunctionProperty = js_util.hasProperty(
+      js_util.getProperty(js_util.globalThis, 'WebAssembly'),
+      'Function',
+    );
+    typeReflection = (type?.mutable ?? false) &&
+        type?.value == ValueTy.i32 &&
+        hasFunctionProperty;
   } catch (_) {
     typeReflection = false;
   }
@@ -616,9 +622,11 @@ class _SharedMemory extends _Memory implements WasmSharedMemory {
 
 class _Memory extends WasmMemory {
   final Memory memory;
-  final MemoryTy? _type;
+  @override
+  final MemoryTy? type;
 
-  _Memory(this.memory, this._type);
+  _Memory(this.memory, MemoryTy? type)
+      : type = type ?? _getMemoryType(memory.jsObject);
 
   @override
   void grow(int deltaPages) {
@@ -646,17 +654,16 @@ class _Memory extends WasmMemory {
   void write({required int offset, required Uint8List buffer}) {
     List.copyRange(view, offset, buffer);
   }
-
-  @override
-  MemoryTy? get type => _type ?? _getMemoryType(memory.jsObject);
 }
 
 class _Global extends WasmGlobal {
   final Global global;
-  final GlobalTy? _type;
+  @override
+  final GlobalTy? type;
   final WasmValue? _initialValue;
 
-  _Global(this.global, this._type, this._initialValue);
+  _Global(this.global, GlobalTy? type, this._initialValue)
+      : type = type ?? _getGlobalType(global.jsObject);
 
   @override
   Object? get() => global.jsObject.value;
@@ -665,17 +672,16 @@ class _Global extends WasmGlobal {
   void set(WasmValue value) {
     global.jsObject.value = value.value;
   }
-
-  @override
-  GlobalTy? get type => _type ?? _getGlobalType(global.jsObject);
 }
 
 class _Table extends WasmTable {
   final Table table;
-  final TableTy? _type;
+  @override
+  final TableTy? type;
   final WasmValue? _initialValue;
 
-  _Table(this.table, this._type, this._initialValue);
+  _Table(this.table, TableTy? type, this._initialValue)
+      : type = type ?? _getTableType(table.jsObject);
 
   @override
   void set(int index, WasmValue value) {
@@ -711,9 +717,6 @@ class _Table extends WasmTable {
     }
     return previous;
   }
-
-  @override
-  TableTy? get type => _type ?? _getTableType(table.jsObject);
 }
 
 ExternalType? _getExternalType(Object value) {
