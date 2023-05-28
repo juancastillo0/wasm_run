@@ -337,10 +337,24 @@ abstract class WasmMemory extends WasmExternal {
   }
 }
 
+/// A linear memory (array of bytes) that can be used to share data
+/// with the WASM module.
+/// This memory can be shared between multiple instances of the same module
+/// in different threads.
 @experimental
 abstract class WasmSharedMemory extends WasmMemory {
+  /// Wakes up sleeping agents that are waiting on the given [addr]
+  /// of the memory, returning the number of agents that were awoken.
+  /// [addr] The offset in the memory to wake up on.
+  /// [count] The number of sleeping agents to notify. Defaults to +Infinity.
   int atomicNotify(int addr, int count);
+
+  /// If the value at the given position in the array is equal to the
+  /// [expected] value, the current agent is put to sleep causing execution
+  /// to suspend until the timeout expires
   SharedMemoryWaitResult atomicWait32(int addr, int expected);
+
+  /// Same as [atomicWait32] but for 64-bit values.
   SharedMemoryWaitResult atomicWait64(int addr, int expected);
 
   @override
