@@ -240,7 +240,7 @@ void wasiTest({TestArgs? testArgs}) {
 
     T withBufferOffset<T>(Uint8List buffer, T Function(int offset) f) {
       final offset = alloc(buffer.length);
-      memory.write(offset: offset, buffer: buffer);
+      memory.view.setAll(offset, buffer);
       final result = f(offset);
       dealloc(offset, buffer.length);
       return result;
@@ -263,7 +263,7 @@ void wasiTest({TestArgs? testArgs}) {
       buffer[buffer.length - 1] = 0; // C string null terminator
 
       final offset = alloc(buffer.length);
-      memory.write(offset: offset, buffer: buffer);
+      memory.view.setAll(offset, buffer);
       int size;
       try {
         size = i64.toInt(readFileSize([offset]).first!);
@@ -290,12 +290,8 @@ void wasiTest({TestArgs? testArgs}) {
       );
 
       final data = Parser(
-        memory.read(
-          offset: dataOffset,
-          length: memory.lengthInBytes - dataOffset,
-        ),
-        0,
-        viewDelta: dataOffset,
+        memory.view,
+        dataOffset,
       ).parse(FileData.fromParser, dealloc: dealloc);
 
       print(data);

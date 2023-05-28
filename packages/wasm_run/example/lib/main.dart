@@ -352,7 +352,7 @@ void testAll({TestArgs? testArgs}) {
     m.setRange(0, 2, utf8.encode('Hi'));
     expect(memory.view, m);
 
-    memory.write(offset: 1, buffer: utf8.encoder.convert('o'));
+    memory.view[1] = utf8.encoder.convert('o')[0];
     // memory[1] = utf8.encode('o').first;
     expect(writeHi([]), <dynamic>[]);
     expect(result, 'Ho');

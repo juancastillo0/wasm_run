@@ -640,20 +640,7 @@ class _Memory extends WasmMemory {
   int get lengthInPages => memory.lengthInPages;
 
   @override
-  Uint8List getView() => Uint8List.view(memory.buffer);
-
-  @override
   Uint8List get view => Uint8List.view(memory.buffer);
-
-  @override
-  Uint8List read({required int offset, required int length}) {
-    return view.sublist(offset, offset + length);
-  }
-
-  @override
-  void write({required int offset, required Uint8List buffer}) {
-    List.copyRange(view, offset, buffer);
-  }
 }
 
 class _Global extends WasmGlobal {

@@ -203,7 +203,7 @@ abstract class WasmInstanceBuilder {
 
   /// Adds multiple imports to the module.
   /// May throw if some of the imports are not found or the type definition
-  /// does not match any the expected value.
+  /// does not match the import value.
   WasmInstanceBuilder addImports(List<WasmImport> imports) {
     for (final import in imports) {
       addImport(import.moduleName, import.name, import.value);
@@ -298,14 +298,6 @@ abstract class WasmInstance {
 /// A linear memory (array of bytes) that can be used to share data
 /// with the WASM module.
 abstract class WasmMemory extends WasmExternal {
-  /// Reads [length] bytes starting from [offset]
-  /// and returns them as a [Uint8List].
-  Uint8List read({required int offset, required int length});
-
-  // ignore: comment_references
-  /// Writes [buffer] from [offset] to [buffer.length].
-  void write({required int offset, required Uint8List buffer});
-
   /// Grows the memory by [deltaPages] pages.
   /// May throw if the memory cannot be grown.
   void grow(int deltaPages);
@@ -318,9 +310,6 @@ abstract class WasmMemory extends WasmExternal {
 
   /// A view of the memory as a [Uint8List].
   Uint8List get view;
-
-  /// A view of the memory as a [Uint8List].
-  Uint8List getView();
 
   /// The number of bytes per page in a wasm memory.
   /// The maximum size of the memory in pages.
@@ -417,8 +406,8 @@ abstract class WasmGlobal extends WasmExternal {
 /// ```dart
 /// final wasmFunction = WasmFunction(
 ///   (int a, int b) => a + b,
-///   params: [WasmValueType.i32, WasmValueType.i32],
-///   results: [WasmValueType.i32],
+///   params: [ValueTy.i32, ValueTy.i32],
+///   results: [ValueTy.i32],
 /// );
 /// final result = wasmFunction([1, 2]);
 /// assert(result.first == 3);
@@ -433,8 +422,8 @@ class WasmFunction extends WasmExternal {
   /// ```dart
   /// final wasmFunction = WasmFunction(
   ///   (int a, int b) => a + b,
-  ///   params: [WasmValueType.i32, WasmValueType.i32],
-  ///   results: [WasmValueType.i32],
+  ///   params: [ValueTy.i32, ValueTy.i32],
+  ///   results: [ValueTy.i32],
   /// );
   /// final result = wasmFunction([1, 2]);
   /// assert(result.first == 3);

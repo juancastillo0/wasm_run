@@ -388,12 +388,12 @@ class WasmLibrary {
   /// The [WasmMemory] for this [instance].
   final WasmMemory wasmMemory;
   Uint8List? _view;
-  Uint8List _getView() => _view ??= wasmMemory.getView();
+  Uint8List _getView() => _view ??= wasmMemory.view;
   ByteData? _byteData;
   ByteData _getByteData() => _byteData ??= ByteData.sublistView(_getView());
 
   void _updateMemoryView() {
-    _view = wasmMemory.getView();
+    _view = wasmMemory.view;
     _byteData = ByteData.sublistView(_view!);
   }
 

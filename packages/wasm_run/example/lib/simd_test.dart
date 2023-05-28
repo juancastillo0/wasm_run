@@ -6,7 +6,7 @@ import 'package:wasm_run/src/wasm_bindings/wasm.dart';
 import 'package:wasm_run_example/main.dart';
 
 void simdTests() {
-  group('simd v128', () {
+  group('simd-v128', () {
     test('base', () async {
       final runtime = await wasmRuntimeFeatures();
       if (!runtime.supportedFeatures.simd) return;
