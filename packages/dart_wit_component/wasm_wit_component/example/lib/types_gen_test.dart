@@ -83,7 +83,7 @@ Future<TypesExampleWorld> initTypesWorld(
   return world;
 }
 
-class _InlineImpl implements Inline {
+class _InlineImpl implements InlineImport {
   final List<List<Option<String>>> inlineImpData = [];
   @override
   Result<void, String> inlineImp({required List<Option<String>> args}) {
@@ -99,7 +99,7 @@ class _InlineImpl implements Inline {
   }
 }
 
-class _ImportsImpl implements Imports {
+class _ImportsImpl implements ApiImportsImport {
   final List<List<HumanApiImports>> apiA1B2Data = [];
   @override
   ({T7 h1, HumanApiImports val2}) apiA1B2({
@@ -110,7 +110,7 @@ class _ImportsImpl implements Imports {
   }
 }
 
-class _RoundTripNumbersHostImpl implements RoundTripNumbersHost {
+class _RoundTripNumbersHostImpl implements RoundTripNumbersImport {
   final List<RoundTripNumbersData> roundTripNumbersData = [];
 
   @override
@@ -148,8 +148,8 @@ class _TypesWorldTest {
       print: ({required LogLevel level, required String message}) {
         printed.add((level, message));
       },
-      imports: importsImpl,
-      roundTripNumbersHost: roundTripNumbersHostImpl,
+      apiImports: importsImpl,
+      roundTripNumbers: roundTripNumbersHostImpl,
     );
     final world = await initTypesWorld(imports, getWitComponentExampleBytes);
     return _TypesWorldTest(
@@ -240,7 +240,7 @@ class _TypesWorldTest {
     // API
     //
     {
-      final (valOne: (d,), :val2) = world.api.f1();
+      final (valOne: (d,), :val2) = world.api.f12();
       expect(val2, 'hello');
       expect(d, 1);
     }

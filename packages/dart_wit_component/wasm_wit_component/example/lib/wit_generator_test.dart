@@ -43,14 +43,16 @@ void witDartGeneratorTests() {
                 .readAsString();
         expect(formatted, expected);
       } finally {
-        output.deleteSync();
+        if (output.existsSync()) {
+          output.deleteSync();
+        }
       }
     });
 
     group('cli args', () {
       test('--no-default', () {
-        const pathToWit = 'wit/host.wit';
-        const pathToDartFile = 'lib/host.dart';
+        const pathToWit = 'wit/file.wit';
+        const pathToDartFile = 'lib/file.dart';
         final args = GeneratorCLIArgs.fromArgs(
           [pathToWit, pathToDartFile, '--no-default', '--json-serialization'],
         );
@@ -75,7 +77,7 @@ void witDartGeneratorTests() {
       });
 
       test('--no-copy-with --json-serialization=false', () {
-        const pathToWit = 'wit/host.wit';
+        const pathToWit = 'wit/file.wit';
         final args = GeneratorCLIArgs.fromArgs(
           [
             pathToWit,
@@ -113,15 +115,15 @@ void witDartGeneratorTests() {
         }
 
         hasError(
-          ['wit/host.wit', '-no-copy-with'],
+          ['wit/file.wit', '-no-copy-with'],
           'Invalid argument (1, -no-copy-with). Should be --<name>',
         );
         hasError(
-          ['host.wit', '--no-copy-with', '--copy-with'],
+          ['file.wit', '--no-copy-with', '--copy-with'],
           'Duplicate argument (2, --copy-with).',
         );
         hasError(
-          ['/wit/host.wit', '--watch', '--copy-with=no'],
+          ['/wit/file.wit', '--watch', '--copy-with=no'],
           'Invalid argument (2, --copy-with=no). Should be true or false.',
         );
         hasError(
@@ -132,7 +134,9 @@ void witDartGeneratorTests() {
     });
 
     const hostWitContents = '''
-default world host {
+package host-namespace:host-pkg
+
+world host {
   import print: func(msg: string)
 
   record record-test {
@@ -153,7 +157,7 @@ default world host {
       const isWeb = identical(0, 0.0);
       final witPath = isWeb
           ? 'host'
-          : '${getRootDirectory().path}/packages/dart_wit_component/wit/host.wit';
+          : '${getRootDirectory().path}/packages/dart_wit_component/wasm_wit_component/example/lib/host.wit';
       final wasiConfig = wasiConfigFromPath(
         witPath,
         webBrowserDirectory: isWeb

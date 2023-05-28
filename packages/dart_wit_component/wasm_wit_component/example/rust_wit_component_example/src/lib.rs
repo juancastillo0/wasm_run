@@ -2,6 +2,11 @@
 // `host.wit`
 wit_bindgen::generate!("types-example");
 
+use exports::types_example_namespace::types_example_pkg::*;
+use types_example_namespace::types_example_pkg::{
+    api_imports as imports, round_trip_numbers as round_trip_numbers_host,
+};
+
 // Define a custom type and implement the generated `Host` trait for it which
 // represents implementing all the necesssary exported interfaces for this
 // component.
@@ -47,7 +52,7 @@ impl TypesExample for MyHost {
 }
 
 impl api::Api for MyHost {
-    fn f1() -> ((i32,), String) {
+    fn f12() -> ((i32,), String) {
         ((1,), "hello".to_string())
     }
 

@@ -5,12 +5,11 @@ use wit_parser::*;
 
 
 pub struct Parsed<'a>(
-    pub &'a UnresolvedPackage,
+    pub &'a Resolve,
     pub HashMap<&'a str, Vec<&'a TypeDef>>,
 );
 
 impl Parsed<'_> {
-    
 
     pub fn type_to_str(&self, ty: &Type) -> String {
         match ty {

@@ -170,7 +170,8 @@ class HostWorld {
         return (const [], () {});
       }
 
-      final lowered = loweredImportFunction(ft, execImportsPrint, getLib);
+      final lowered =
+          loweredImportFunction(r'$root#print', ft, execImportsPrint, getLib);
       builder.addImport(r'$root', 'print', lowered);
     }
 

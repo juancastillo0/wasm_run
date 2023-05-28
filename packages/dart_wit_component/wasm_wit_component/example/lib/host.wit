@@ -1,4 +1,6 @@
-default world host {
+package host-namespace:host-pkg
+
+world host {
   import print: func(msg: string)
 
   record record-test {

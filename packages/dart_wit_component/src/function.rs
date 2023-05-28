@@ -9,8 +9,12 @@ pub enum FuncKind {
 }
 
 impl Parsed<'_> {
-    pub fn function_import(&self, interface_name: Option<&str>, id: &str, f: &Function) -> String {
-        let interface_name_m = interface_name.unwrap_or("$root");
+    pub fn function_import(&self, key: Option<&WorldKey>, id: &str, f: &Function) -> String {
+        let interface_name_m = match key {
+            Some(k) => self.0.name_world_key(k),
+            None => "$root".to_string(),
+        };
+        let interface_name = key.map(|key| self.world_key_type_name(key));
         let getter = format!(
             "imports.{}{}",
             interface_name
@@ -104,17 +108,27 @@ impl Parsed<'_> {
         )
     }
 
+    pub fn world_key_type_name<'a>(&'a self, key: &'a WorldKey) -> &'a str {
+        match key {
+            WorldKey::Name(name) => name,
+            WorldKey::Interface(id) => {
+                let interface = self.0.interfaces.get(*id).unwrap();
+                interface.name.as_ref().unwrap()
+            }
+        }
+    }
+
     pub fn add_interfaces(
         &self,
         mut s: &mut String,
-        map: &mut dyn Iterator<Item = (&String, &WorldItem)>,
+        map: &mut dyn Iterator<Item = (&WorldKey, &WorldItem)>,
         is_export: bool,
         mut func_imports: Option<&mut String>,
     ) {
-        map.for_each(|(id, item)| match item {
+        map.for_each(|(key, item)| match item {
             WorldItem::Interface(interface_id) => {
                 let interface = self.0.interfaces.get(*interface_id).unwrap();
-                self.add_interface(&mut s, id, interface, is_export, &mut func_imports)
+                self.add_interface(&mut s, key, interface, is_export, &mut func_imports)
             }
             _ => {}
         });
@@ -123,11 +137,13 @@ impl Parsed<'_> {
     pub fn add_interface(
         &self,
         mut s: &mut String,
-        interface_id: &str,
+        key: &WorldKey,
         interface: &Interface,
         is_export: bool,
         func_imports: &mut Option<&mut String>,
     ) {
+        let world_prefix = self.0.name_world_key(key);
+        let interface_id = self.world_key_type_name(key);
         let name = heck::AsPascalCase(interface_id);
         add_docs(&mut s, &interface.docs);
         if is_export {
@@ -142,7 +158,7 @@ impl Parsed<'_> {
                     .enumerate()
                     .for_each(|(index, (id, f))| {
                         s.push_str(&format!(
-                            "_{} = library.getComponentFunction('{interface_id}#{id}', const {},)!",
+                            "_{} = library.getComponentFunction('{world_prefix}#{id}', const {},)!",
                             id.as_var(),
                             self.function_spec(f)
                         ));
@@ -158,14 +174,14 @@ impl Parsed<'_> {
             });
             s.push_str("}");
         } else {
-            s.push_str(&format!(
-                "abstract class {name} {{",
-                // interface.name.as_ref().unwrap())
-            ));
+            if interface.functions.is_empty() {
+                return;
+            }
+            s.push_str(&format!("abstract class {name}Import {{",));
             interface.functions.iter().for_each(|(id, f)| {
                 self.add_function(&mut s, f, FuncKind::Method);
                 if let Some(func_imports) = func_imports {
-                    func_imports.push_str(&self.function_import(Some(interface_id), id, f));
+                    func_imports.push_str(&self.function_import(Some(key), id, f));
                 }
             });
             s.push_str("}");

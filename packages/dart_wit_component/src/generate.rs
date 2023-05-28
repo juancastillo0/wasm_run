@@ -5,25 +5,22 @@ use wit_parser::*;
 pub fn document_to_dart(parsed: &UnresolvedPackage) -> String {
     let mut s = String::new();
 
-    s.push_str(&format!(
-        "{}\n{}",
-        parsed
-            .url
-            .as_deref()
-            .map(|url| format!("// WIT url: {}", url))
-            .unwrap_or("".to_string()),
-        HEADER,
-    ));
+    s.push_str(&format!("{HEADER}"));
+
+    let mut resolve = Resolve::new();
+    resolve
+        .push(parsed.clone())
+        .expect("Failed to resolve package");
 
     let names = HashMap::<&str, Vec<&TypeDef>>::new();
-    let mut p = Parsed(&parsed, names);
+    let mut p = Parsed(&resolve, names);
 
     // parsed.documents
     // parsed.foreign_deps
     // parsed.interfaces
     // parsed.types
 
-    parsed.types.iter().for_each(|(_id, ty)| {
+    resolve.types.iter().for_each(|(_id, ty)| {
         if matches!(ty.kind, TypeDefKind::Type(_)) {
             return;
         }
@@ -34,13 +31,13 @@ pub fn document_to_dart(parsed: &UnresolvedPackage) -> String {
     });
     p.1.retain(|_k, v| v.len() > 1);
 
-    parsed.types.iter().for_each(|(_id, ty)| {
+    resolve.types.iter().for_each(|(_id, ty)| {
         if let (TypeDefKind::Type(ty), Some(name)) =
             (&ty.kind, p.type_def_to_name_definition(ty).as_ref())
         {
             // Renamed imports and typedefs
             if let Type::Id(ref_id) = ty {
-                let ty = parsed.types.get(*ref_id).unwrap();
+                let ty = resolve.types.get(*ref_id).unwrap();
                 if let Some(ref_name) = p.type_def_to_name_definition(ty).as_ref() {
                     if ref_name != name {
                         s.push_str(&format!("typedef {name} = {ref_name};"));
@@ -57,7 +54,7 @@ pub fn document_to_dart(parsed: &UnresolvedPackage) -> String {
         }
     });
 
-    parsed.worlds.iter().for_each(|(_id, w)| {
+    resolve.worlds.iter().for_each(|(_id, w)| {
         let w_name = heck::AsPascalCase(&w.name);
 
         let mut func_imports = String::new();
@@ -74,12 +71,20 @@ pub fn document_to_dart(parsed: &UnresolvedPackage) -> String {
             s.push_str(&format!("const {w_name}WorldImports();"));
         } else {
             let mut constructor = format!("const {w_name}WorldImports({{",);
-            w.imports.iter().for_each(|(id, i)| {
+            w.imports.iter().for_each(|(key, i)| {
+                let id = p.world_key_type_name(key);
                 let id_name = id.as_var();
                 match i {
-                    WorldItem::Interface(_interface_id) => {
+                    WorldItem::Interface(interface_id) => {
+                        let interface = p.0.interfaces.get(*interface_id).unwrap();
+                        if interface.functions.is_empty() {
+                            return;
+                        }
                         constructor.push_str(&format!("required this.{id_name},"));
-                        s.push_str(&format!("final {} {id_name};", heck::AsPascalCase(id)));
+                        s.push_str(&format!(
+                            "final {}Import {id_name};",
+                            heck::AsPascalCase(id)
+                        ));
                     }
                     WorldItem::Type(_type_id) => {}
                     WorldItem::Function(f) => {
@@ -113,25 +118,18 @@ pub fn document_to_dart(parsed: &UnresolvedPackage) -> String {
         ));
         let mut constructor: Vec<String> = vec![];
         let mut methods = String::new();
-        w.exports.iter().for_each(|(id, i)| {
+        w.exports.iter().for_each(|(key, i)| {
+            let id = p.world_key_type_name(key);
+            let id_name = id.as_var();
             match i {
                 WorldItem::Interface(_interface_id) => {
-                    constructor.push(format!(
-                        "{} = {}(library)",
-                        id.as_var(),
-                        heck::AsPascalCase(id)
-                    ));
-                    s.push_str(&format!(
-                        "final {} {};",
-                        heck::AsPascalCase(id),
-                        id.as_var()
-                    ));
+                    constructor.push(format!("{id_name} = {}(library)", heck::AsPascalCase(id)));
+                    s.push_str(&format!("final {} {id_name};", heck::AsPascalCase(id),));
                 }
                 WorldItem::Type(_type_id) => {}
                 WorldItem::Function(f) => {
                     constructor.push(format!(
-                        "_{} = library.getComponentFunction('{id}', const {},)!",
-                        id.as_var(),
+                        "_{id_name} = library.getComponentFunction('{id}', const {},)!",
                         p.function_spec(f)
                     ));
                     p.add_function(&mut methods, f, FuncKind::MethodCall);
@@ -209,7 +207,7 @@ mod tests {
     #[test]
     pub fn parse_wit() {
         let parsed = wit_parser::UnresolvedPackage::parse(
-            Path::new("../wit/host.wit"),
+            Path::new("../wasm_wit_component/example/lib/host.wit"),
             "
 default world host {
     import print: func(msg: string)

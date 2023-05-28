@@ -1,4 +1,6 @@
-default world dart-wit-generator {
+package wasm-run-dart:dart-wit-generator
+
+world dart-wit-generator {
     record wit-generator-config {
         /// The file inputs to use for the code generation.
         inputs: wit-generator-input,

@@ -669,46 +669,46 @@ class Empty {
 }
 
 /// Comment for import interface
-abstract class Imports {
+abstract class ApiImportsImport {
   ({T7 h1, HumanApiImports val2}) apiA1B2({
     required List<HumanApiImports> arg,
   });
 }
 
 /// Comment for import inline
-abstract class Inline {
+abstract class InlineImport {
   /// Comment for import inline function
   Result<void, String /*Char*/ > inlineImp({
     required List<Option<String /*Char*/ >> args,
   });
 }
 
-abstract class RoundTripNumbersHost {
+abstract class RoundTripNumbersImport {
   RoundTripNumbersData roundTripNumbers({
     required RoundTripNumbersData data,
   });
 }
 
 class TypesExampleWorldImports {
-  final Imports imports;
+  final ApiImportsImport apiImports;
+  final InlineImport inline;
+  final RoundTripNumbersImport roundTripNumbers;
   final void Function({
     required String message,
     required LogLevel level,
   }) print;
-  final Inline inline;
-  final RoundTripNumbersHost roundTripNumbersHost;
   const TypesExampleWorldImports({
-    required this.imports,
-    required this.print,
+    required this.apiImports,
     required this.inline,
-    required this.roundTripNumbersHost,
+    required this.roundTripNumbers,
+    required this.print,
   });
 }
 
 class RoundTripNumbers {
   RoundTripNumbers(WasmLibrary library)
       : _roundTripNumbers = library.getComponentFunction(
-          'round-trip-numbers#round-trip-numbers',
+          'types-example-namespace:types-example-pkg/round-trip-numbers#round-trip-numbers',
           const FuncType([
             (
               'data',
@@ -755,15 +755,15 @@ class RoundTripNumbers {
 
 class Api {
   Api(WasmLibrary library)
-      : _f1 = library.getComponentFunction(
-          'api#f1',
+      : _f12 = library.getComponentFunction(
+          'types-example-namespace:types-example-pkg/api#f12',
           const FuncType([], [
             ('val-one', Tuple([S32()])),
             ('val2', StringType())
           ]),
         )!,
         _class_ = library.getComponentFunction(
-          'api#class',
+          'types-example-namespace:types-example-pkg/api#class',
           const FuncType([
             (
               'break',
@@ -781,7 +781,7 @@ class Api {
           ]),
         )!,
         _continue_ = library.getComponentFunction(
-          'api#continue',
+          'types-example-namespace:types-example-pkg/api#continue',
           const FuncType([
             (
               'abstract',
@@ -799,11 +799,11 @@ class Api {
             ('implements', OptionType(Tuple([])))
           ]),
         )!;
-  final ListValue Function(ListValue) _f1;
+  final ListValue Function(ListValue) _f12;
 
   /// Comment for export function
-  ({(int /*S32*/,) valOne, String val2}) f1() {
-    final results = _f1([]);
+  ({(int /*S32*/,) valOne, String val2}) f12() {
+    final results = _f12([]);
     final r0 = results[0];
     final r1 = results[1];
     return (
@@ -935,9 +935,10 @@ class TypesExampleWorld {
         )
       ]);
 
-      (ListValue, void Function()) execImportsImportsApiA1b2(ListValue args) {
+      (ListValue, void Function()) execImportsApiImportsApiA1b2(
+          ListValue args) {
         final args0 = args[0];
-        final results = imports.imports.apiA1B2(
+        final results = imports.apiImports.apiA1B2(
             arg: (args0! as Iterable)
                 .map((e) => HumanApiImports.fromJson(e))
                 .toList());
@@ -951,8 +952,14 @@ class TypesExampleWorld {
       }
 
       final lowered = loweredImportFunction(
-          r'imports#api-a1-b2', ft, execImportsImportsApiA1b2, getLib);
-      builder.addImport(r'imports', 'api-a1-b2', lowered);
+          r'types-example-namespace:types-example-pkg/api-imports#api-a1-b2',
+          ft,
+          execImportsApiImportsApiA1b2,
+          getLib);
+      builder.addImport(
+          r'types-example-namespace:types-example-pkg/api-imports',
+          'api-a1-b2',
+          lowered);
     }
     {
       const ft = FuncType([('args', ListType(OptionType(Char())))],
@@ -1006,21 +1013,23 @@ class TypesExampleWorld {
         )
       ]);
 
-      (ListValue, void Function())
-          execImportsRoundTripNumbersHostRoundTripNumbers(ListValue args) {
+      (ListValue, void Function()) execImportsRoundTripNumbersRoundTripNumbers(
+          ListValue args) {
         final args0 = args[0];
-        final results = imports.roundTripNumbersHost
+        final results = imports.roundTripNumbers
             .roundTripNumbers(data: RoundTripNumbersData.fromJson(args0));
         return ([results.toJson()], () {});
       }
 
       final lowered = loweredImportFunction(
-          r'round-trip-numbers-host#round-trip-numbers',
+          r'types-example-namespace:types-example-pkg/round-trip-numbers#round-trip-numbers',
           ft,
-          execImportsRoundTripNumbersHostRoundTripNumbers,
+          execImportsRoundTripNumbersRoundTripNumbers,
           getLib);
       builder.addImport(
-          r'round-trip-numbers-host', 'round-trip-numbers', lowered);
+          r'types-example-namespace:types-example-pkg/round-trip-numbers',
+          'round-trip-numbers',
+          lowered);
     }
     {
       const ft = FuncType([
@@ -1083,7 +1092,7 @@ class TypesExampleWorld {
 
   final ListValue Function(ListValue) _reNamed;
 
-  /// t2 has been renamed with `use self.types-interface.{t2 as t2-renamed}`
+  /// t2 has been renamed with `use types-interface.{t2 as t2-renamed}`
   T2Renamed reNamed({
     Option<Permissions> perm = const None(),
     Option<Empty> e = const None(),
