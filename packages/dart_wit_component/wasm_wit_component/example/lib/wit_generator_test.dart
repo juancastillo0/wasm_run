@@ -43,7 +43,7 @@ void witDartGeneratorTests({Future<Directory> Function()? getDirectory}) {
         final expected =
             await File('$base/wasm_wit_component/lib/src/generator.dart')
                 .readAsString();
-        expect(formatted, expected);
+        expect(formatted, expected.replaceAll('\r\n', '\n'));
       } finally {
         if (output.existsSync()) {
           output.deleteSync();
@@ -165,7 +165,9 @@ world host {
           ..writeAsStringSync(hostWitContents);
         addTearDown(file.deleteSync);
 
-        witPath = file.path;
+        witPath = Platform.isWindows
+            ? (file.path.split(r'\')..[0] = '').join('/')
+            : file.path;
       } else {
         witPath = isWeb
             ? 'host/host.wit'
