@@ -17,25 +17,9 @@
 library browser_wasi_shim;
 
 import 'dart:async';
-import 'dart:html' as html;
 import 'dart:js_util';
 
 import 'package:flutter_rust_bridge/flutter_rust_bridge.dart';
-
-Future<Object> initWasi() async {
-  const module = '''
-import { WASI, Fd, File, Directory, OpenFile, OpenDirectory, PreopenDirectory, strace } from "https://cdn.jsdelivr.net/npm/@bjorn3/browser_wasi_shim@0.2.8/dist/index.min.js";
-window.browser_wasi_shim = { WASI, Fd, File, Directory, OpenFile, OpenDirectory, PreopenDirectory, strace };
-''';
-
-  final script = html.ScriptElement()
-    ..type = 'module'
-    ..text = module
-    ..defer = true;
-  // script.async = true;
-  html.document.head!.append(script);
-  return script.onLoad.first;
-}
 
 @JS('File')
 abstract class WasiWebFile {

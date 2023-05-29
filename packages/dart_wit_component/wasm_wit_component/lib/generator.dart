@@ -63,7 +63,7 @@ Future<DartWitGeneratorWorld> generator({
 /// as the root of the web browser file system.
 WasiConfig wasiConfigFromPath(
   String witPath, {
-  WasiDirectory? webBrowserDirectory,
+  Map<String, WasiDirectory>? webBrowserFileSystem,
 }) {
   String allowedPath = witPath;
   if (!_isWeb) {
@@ -85,10 +85,6 @@ WasiConfig wasiConfigFromPath(
         wasmGuestPath: allowedPath,
       ),
     ],
-    webBrowserFileSystem: webBrowserDirectory == null
-        ? const {}
-        : {
-            allowedPath: webBrowserDirectory,
-          },
+    webBrowserFileSystem: webBrowserFileSystem ?? {},
   );
 }

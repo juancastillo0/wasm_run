@@ -158,7 +158,7 @@ world host {
     test('file system input', () async {
       const isWeb = identical(0, 0.0);
       final String witPath;
-      if (getDirectory != null) {
+      if (!isWeb && getDirectory != null) {
         final dir = await getDirectory();
         final file = File(dir.uri.resolve('host.wit').toFilePath())
           ..createSync(recursive: true)
@@ -168,18 +168,19 @@ world host {
         witPath = file.path;
       } else {
         witPath = isWeb
-            ? 'host'
+            ? 'host/host.wit'
             : '${getRootDirectory().path}/packages/dart_wit_component/wasm_wit_component/example/lib/host.wit';
       }
       final wasiConfig = wasiConfigFromPath(
         witPath,
-        webBrowserDirectory: isWeb
-            ? WasiDirectory({
-                'host.wit': WasiFile(
-                  const Utf8Encoder().convert(hostWitContents),
-                )
-              })
-            : WasiDirectory({}),
+        webBrowserFileSystem: {
+          if (isWeb)
+            'host': WasiDirectory({
+              'host.wit': WasiFile(
+                const Utf8Encoder().convert(hostWitContents),
+              )
+            })
+        },
       );
       final g = await generator(wasiConfig: wasiConfig);
       final inputs = WitGeneratorInput.fileSystemPaths(
