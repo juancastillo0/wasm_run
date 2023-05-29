@@ -22,9 +22,11 @@ Directory getRootDirectory() {
   return dir;
 }
 
-void witDartGeneratorTests() {
+void witDartGeneratorTests({Future<Directory> Function()? getDirectory}) {
   group('wit generator', () {
     test('generate cli', testOn: 'windows || mac-os || linux', () async {
+      if (Platform.isAndroid || Platform.isIOS) return;
+
       final root = getRootDirectory();
       final base = '${root.path}/packages/dart_wit_component';
 
@@ -155,9 +157,20 @@ world host {
 
     test('file system input', () async {
       const isWeb = identical(0, 0.0);
-      final witPath = isWeb
-          ? 'host'
-          : '${getRootDirectory().path}/packages/dart_wit_component/wasm_wit_component/example/lib/host.wit';
+      final String witPath;
+      if (getDirectory != null) {
+        final dir = await getDirectory();
+        final file = File(dir.uri.resolve('host.wit').toFilePath())
+          ..createSync(recursive: true)
+          ..writeAsStringSync(hostWitContents);
+        addTearDown(file.deleteSync);
+
+        witPath = file.path;
+      } else {
+        witPath = isWeb
+            ? 'host'
+            : '${getRootDirectory().path}/packages/dart_wit_component/wasm_wit_component/example/lib/host.wit';
+      }
       final wasiConfig = wasiConfigFromPath(
         witPath,
         webBrowserDirectory: isWeb

@@ -1,5 +1,6 @@
 // ignore_for_file: avoid_print
 
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:test/test.dart';
@@ -47,9 +48,13 @@ String _getWitComponentExample() {
   final root = getRootDirectory();
   final base =
       '${root.path}/packages/dart_wit_component/wasm_wit_component/example/rust_wit_component_example';
-  return _kReleaseMode
-      ? '$base/target/wasm32-unknown-unknown/release/rust_wit_component_example.wasm'
-      : '$base/target/wasm32-unknown-unknown/debug/rust_wit_component_example.wasm';
+  final releasePath =
+      '$base/target/wasm32-unknown-unknown/release/rust_wit_component_example.wasm';
+  if (_kReleaseMode) return releasePath;
+  final debugPath =
+      '$base/target/wasm32-unknown-unknown/debug/rust_wit_component_example.wasm';
+  if (File(debugPath).existsSync()) return debugPath;
+  return releasePath;
 }
 
 Future<TypesExampleWorld> initTypesWorld(

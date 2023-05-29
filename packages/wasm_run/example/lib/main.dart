@@ -512,7 +512,7 @@ void testAll({TestArgs? testArgs}) {
   );
 
   /// WIT Component Generator tests
-  witDartGeneratorTests();
+  witDartGeneratorTests(getDirectory: testArgs?.getDirectory);
 
   /// WASI tests
   wasiTest(testArgs: testArgs);

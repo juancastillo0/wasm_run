@@ -20,16 +20,6 @@ type Value = wasmtime::Val;
 type ValueType = wasmtime::ValType;
 
 static ARRAY: Lazy<RwLock<GlobalState>> = Lazy::new(|| RwLock::new(Default::default()));
-// TODO: make it module independent
-static CALLER_STACK: Lazy<RwLock<Vec<RwLock<StoreContextMut<'_, StoreState>>>>> =
-    Lazy::new(|| RwLock::new(Default::default()));
-
-// static RUNTIME: Lazy<tokio::runtime::Runtime> = Lazy::new(|| {
-//     tokio::runtime::Builder::new_current_thread()
-//         .enable_all()
-//         .build()
-//         .unwrap()
-// });
 
 thread_local!(static STORE: RefCell<Option<WasmiModuleImpl>> = RefCell::new(None));
 
@@ -61,20 +51,16 @@ struct WasmiModuleImpl {
     channels: Option<Arc<Mutex<FunctionChannels>>>,
 }
 
-// impl Debug for WasmiModuleImpl {
-//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-//         f.debug_struct("WasmiModuleImpl").finish()
-//     }
-// }
-
 struct StoreState {
     wasi_ctx: Option<wasi_common::WasiCtx>,
     stdout: Option<StreamSink<Vec<u8>>>,
     stderr: Option<StreamSink<Vec<u8>>>,
     functions: HashMap<usize, HostFunction>,
+    stack: CallStack,
     // TODO: add to stdin?
 }
 
+#[derive(Clone)]
 struct HostFunction {
     function_pointer: usize,
     function_id: u32,
@@ -82,14 +68,17 @@ struct HostFunction {
     result_types: Vec<ValueTy>,
 }
 
-#[derive(Debug, Clone, Copy)]
-pub struct WasmRunModuleId(pub u32);
+#[derive(Clone)]
+pub struct WasmRunModuleId(pub u32, pub RustOpaque<CallStack>);
+
+#[derive(Clone, Default)]
+pub struct CallStack(Arc<RwLock<Vec<RwLock<StoreContextMut<'static, StoreState>>>>>);
 
 #[derive(Debug, Clone, Copy)]
 pub struct WasmRunInstanceId(pub u32);
 
 fn make_wasi_ctx(
-    id: u32,
+    id: &WasmRunModuleId,
     wasi_config: &Option<WasiConfigNative>,
 ) -> Result<Option<wasi_common::WasiCtx>> {
     let mut wasi_ctx = None;
@@ -107,14 +96,14 @@ fn make_wasi_ctx(
 
         if wasi_config.capture_stdout {
             let stdout_handler = ModuleIOWriter {
-                id,
+                id: id.clone(),
                 is_stdout: true,
             };
             wasi.set_stdout(Box::new(WritePipe::new(stdout_handler)));
         }
         if wasi_config.capture_stderr {
             let stderr_handler = ModuleIOWriter {
-                id,
+                id: id.clone(),
                 is_stdout: false,
             };
             wasi.set_stderr(Box::new(WritePipe::new(stderr_handler)));
@@ -138,8 +127,11 @@ pub fn module_builder(
 
     let id = arr.last_id;
 
+    let stack: CallStack = Default::default();
+    let module_id = WasmRunModuleId(id, RustOpaque::new(stack.clone()));
+
     let mut linker = <Linker<StoreState>>::new(engine);
-    let wasi_ctx = make_wasi_ctx(id, &wasi_config)?;
+    let wasi_ctx = make_wasi_ctx(&module_id, &wasi_config)?;
     if wasi_ctx.is_some() {
         wasmtime_wasi::add_to_linker(&mut linker, |ctx| ctx.wasi_ctx.as_mut().unwrap())?;
     }
@@ -151,6 +143,7 @@ pub fn module_builder(
             stdout: None,
             stderr: None,
             functions: Default::default(),
+            stack,
         },
     );
     let wasm_module = Arc::clone(&module.0);
@@ -178,6 +171,7 @@ pub fn module_builder(
                             stdout: None,
                             stderr: None,
                             functions: Default::default(),
+                            stack: Default::default(),
                         },
                     ),
                     instance: None,
@@ -205,17 +199,17 @@ pub fn module_builder(
     };
     arr.map.insert(id, module_builder);
 
-    Ok(SyncReturn(WasmRunModuleId(id)))
+    Ok(SyncReturn(module_id))
 }
 
 struct ModuleIOWriter {
-    id: u32,
+    id: WasmRunModuleId,
     is_stdout: bool,
 }
 
 impl Write for ModuleIOWriter {
     fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
-        WasmRunModuleId(self.id).with_module(|store| {
+        self.id.with_module(|store| {
             let data = store.data();
 
             let sink = if self.is_stdout {
@@ -375,10 +369,7 @@ impl WasmRunModuleId {
         let hf = m.store.data().functions.get(&raw_id).unwrap();
         let ff = Self::_create_function(
             new_context,
-            hf.function_pointer,
-            hf.function_id,
-            hf.param_types.clone(),
-            hf.result_types.clone(),
+            hf.clone(),
             Some(m.channels.as_ref().unwrap().lock().unwrap().workers[thread_index].clone()),
         )
         .unwrap()
@@ -660,7 +651,7 @@ impl WasmRunModuleId {
 
     fn with_module_mut<T>(&self, f: impl FnOnce(StoreContextMut<'_, StoreState>) -> T) -> T {
         {
-            let stack = CALLER_STACK.read().unwrap();
+            let stack = self.1 .0.read().unwrap();
             if let Some(caller) = stack.last() {
                 return f(caller.write().unwrap().as_context_mut());
             }
@@ -671,16 +662,16 @@ impl WasmRunModuleId {
         let mut ctx = value.store.as_context_mut();
         {
             let v = RwLock::new(unsafe { std::mem::transmute(ctx.as_context_mut()) });
-            CALLER_STACK.write().unwrap().push(v);
+            self.1 .0.write().unwrap().push(v);
         }
         let result = f(ctx);
-        CALLER_STACK.write().unwrap().pop();
+        self.1 .0.write().unwrap().pop();
         result
     }
 
     fn with_module<T>(&self, f: impl FnOnce(&StoreContext<'_, StoreState>) -> T) -> T {
         {
-            let stack = CALLER_STACK.read().unwrap();
+            let stack = self.1 .0.read().unwrap();
             if let Some(caller) = stack.last() {
                 return f(&caller.read().unwrap().as_context());
             }
@@ -704,10 +695,12 @@ impl WasmRunModuleId {
         self.with_module_mut(|store| {
             Self::_create_function(
                 store,
-                function_pointer,
-                function_id,
-                param_types,
-                result_types,
+                HostFunction {
+                    function_pointer,
+                    function_id,
+                    param_types,
+                    result_types,
+                },
                 None,
             )
         })
@@ -715,18 +708,15 @@ impl WasmRunModuleId {
 
     fn _create_function(
         mut store: StoreContextMut<'_, StoreState>,
-        function_pointer: usize,
-        function_id: u32,
-        param_types: Vec<ValueTy>,
-        result_types: Vec<ValueTy>,
+        hf: HostFunction,
         worker_channel: Option<WorkerSendRecv>,
     ) -> Result<SyncReturn<RustOpaque<WFunc>>> {
-        let f: WasmFunction = unsafe { std::mem::transmute(function_pointer) };
+        let f: WasmFunction = unsafe { std::mem::transmute(hf.function_pointer) };
         let func = Func::new(
             store.as_context_mut(),
             FuncType::new(
-                param_types.iter().cloned().map(ValueType::from),
-                result_types.iter().cloned().map(ValueType::from),
+                hf.param_types.iter().cloned().map(ValueType::from),
+                hf.result_types.iter().cloned().map(ValueType::from),
             ),
             move |mut caller, params, results| {
                 let mapped: Vec<WasmVal> = params
@@ -738,8 +728,8 @@ impl WasmRunModuleId {
                     // TODO: use StreamSink directly
                     guard.1.send(FunctionCall {
                         args: mapped,
-                        function_id,
-                        function_pointer,
+                        function_id: hf.function_id,
+                        function_pointer: hf.function_pointer,
                         num_results: results.len(),
                         worker_index: guard.0,
                     })?;
@@ -751,20 +741,18 @@ impl WasmRunModuleId {
                     return Ok(());
                 }
 
-                Self::execute_function(caller.as_context_mut(), mapped, f, function_id, results)?;
+                Self::execute_function(
+                    caller.as_context_mut(),
+                    mapped,
+                    f,
+                    hf.function_id,
+                    results,
+                )?;
                 Ok(())
             },
         );
         let raw_id = unsafe { func.to_raw(&mut store) };
-        store.data_mut().functions.insert(
-            raw_id,
-            HostFunction {
-                function_pointer,
-                function_id,
-                param_types,
-                result_types,
-            },
-        );
+        store.data_mut().functions.insert(raw_id, hf);
         Ok(SyncReturn(RustOpaque::new(func.into())))
     }
 
@@ -776,10 +764,12 @@ impl WasmRunModuleId {
         results: &mut [Val],
     ) -> Result<()> {
         let inputs = vec![mapped].into_dart();
-        {
+        let stack = {
+            let stack = caller.data().stack.clone();
             let v = RwLock::new(unsafe { std::mem::transmute(caller) });
-            CALLER_STACK.write().unwrap().push(v);
-        }
+            stack.0.write().unwrap().push(v);
+            stack
+        };
 
         let output: Vec<WasmVal> = unsafe {
             let pointer = new_leak_box_ptr(inputs);
@@ -788,7 +778,7 @@ impl WasmRunModuleId {
             result.wire2api()
         };
         // TODO: use Drop for this
-        let last_caller = CALLER_STACK.write().unwrap().pop();
+        let last_caller = stack.0.write().unwrap().pop();
 
         if output.len() != results.len() {
             return Err(anyhow::anyhow!("Invalid output length"));
