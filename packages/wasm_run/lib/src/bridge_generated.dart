@@ -537,6 +537,10 @@ abstract class WasmRunDart {
   ShareFnType get shareOpaqueArcStdSyncMutexModule;
   OpaqueTypeFinalizer get ArcStdSyncMutexModuleFinalizer;
 
+  DropFnType get dropOpaqueCallStack;
+  ShareFnType get shareOpaqueCallStack;
+  OpaqueTypeFinalizer get CallStackFinalizer;
+
   DropFnType get dropOpaqueGlobal;
   ShareFnType get shareOpaqueGlobal;
   OpaqueTypeFinalizer get GlobalFinalizer;
@@ -584,6 +588,20 @@ class ArcStdSyncMutexModule extends FrbOpaque {
   @override
   OpaqueTypeFinalizer get staticFinalizer =>
       bridge.ArcStdSyncMutexModuleFinalizer;
+}
+
+@sealed
+class CallStack extends FrbOpaque {
+  final WasmRunDart bridge;
+  CallStack.fromRaw(int ptr, int size, this.bridge) : super.unsafe(ptr, size);
+  @override
+  DropFnType get dropFn => bridge.dropOpaqueCallStack;
+
+  @override
+  ShareFnType get shareFn => bridge.shareOpaqueCallStack;
+
+  @override
+  OpaqueTypeFinalizer get staticFinalizer => bridge.CallStackFinalizer;
 }
 
 @sealed
@@ -1341,7 +1359,7 @@ class WasmFeatures {
   final bool relaxedSimd;
 
   /// The WebAssembly threads proposal, shared memory and atomics
-  /// https://docs.rs/wasmtime/9.0.0/wasmtime/struct.Config.html#method.wasm_threads
+  /// https://docs.rs/wasmtime/9.0.2/wasmtime/struct.Config.html#method.wasm_threads
   final bool threads;
 
   /// The WebAssembly tail-call proposal
@@ -1429,10 +1447,12 @@ class WasmRunInstanceId {
 class WasmRunModuleId {
   final WasmRunDart bridge;
   final int field0;
+  final CallStack field1;
 
   const WasmRunModuleId({
     required this.bridge,
     required this.field0,
+    required this.field1,
   });
 
   WasmRunInstanceId instantiateSync({dynamic hint}) =>
@@ -1809,7 +1829,7 @@ class WasmRuntimeFeatures {
   final String name;
 
   /// The version of the runtime.
-  /// For example, "0.29.0" or "9.0.0".
+  /// For example, "0.30.0" or "9.0.2".
   final String version;
 
   /// Is `true` if the runtime is the one provided by the browser.
@@ -3383,6 +3403,11 @@ class WasmRunDartImpl implements WasmRunDart {
   OpaqueTypeFinalizer get ArcStdSyncMutexModuleFinalizer =>
       _platform.ArcStdSyncMutexModuleFinalizer;
 
+  DropFnType get dropOpaqueCallStack => _platform.inner.drop_opaque_CallStack;
+  ShareFnType get shareOpaqueCallStack =>
+      _platform.inner.share_opaque_CallStack;
+  OpaqueTypeFinalizer get CallStackFinalizer => _platform.CallStackFinalizer;
+
   DropFnType get dropOpaqueGlobal => _platform.inner.drop_opaque_Global;
   ShareFnType get shareOpaqueGlobal => _platform.inner.share_opaque_Global;
   OpaqueTypeFinalizer get GlobalFinalizer => _platform.GlobalFinalizer;
@@ -3410,6 +3435,10 @@ class WasmRunDartImpl implements WasmRunDart {
 
   ArcStdSyncMutexModule _wire2api_ArcStdSyncMutexModule(dynamic raw) {
     return ArcStdSyncMutexModule.fromRaw(raw[0], raw[1], this);
+  }
+
+  CallStack _wire2api_CallStack(dynamic raw) {
+    return CallStack.fromRaw(raw[0], raw[1], this);
   }
 
   Global _wire2api_Global(dynamic raw) {
@@ -3808,11 +3837,12 @@ class WasmRunDartImpl implements WasmRunDart {
 
   WasmRunModuleId _wire2api_wasm_run_module_id(dynamic raw) {
     final arr = raw as List<dynamic>;
-    if (arr.length != 1)
-      throw Exception('unexpected arr length: expect 1 but see ${arr.length}');
+    if (arr.length != 2)
+      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
     return WasmRunModuleId(
       bridge: this,
       field0: _wire2api_u32(arr[0]),
+      field1: _wire2api_CallStack(arr[1]),
     );
   }
 

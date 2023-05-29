@@ -10,17 +10,14 @@ use flutter_rust_bridge::{
 use once_cell::sync::Lazy;
 use std::io::Write;
 pub use std::sync::RwLock;
-use std::{collections::HashMap, fs, sync::Arc};
+use std::{collections::HashMap, sync::Arc};
 #[cfg(feature = "wasi")]
-use wasi_common::{file::FileCaps, pipe::WritePipe};
+use wasi_common::pipe::WritePipe;
 use wasmi::core::Trap;
 pub use wasmi::{core::Pages, Func, Global, GlobalType, Memory, Module, Table};
 use wasmi::{core::ValueType, *};
 
 static ARRAY: Lazy<RwLock<GlobalState>> = Lazy::new(|| RwLock::new(Default::default()));
-// TODO: make it module independent
-static CALLER_STACK: Lazy<RwLock<Vec<RwLock<StoreContextMut<'_, StoreState>>>>> =
-    Lazy::new(|| RwLock::new(Default::default()));
 
 static CALLER_STACK2: Lazy<RwLock<Vec<RwLock<&mut Store<StoreState>>>>> =
     Lazy::new(|| RwLock::new(Default::default()));
@@ -38,17 +35,12 @@ struct WasmiModuleImpl {
     instance: Option<Instance>,
 }
 
-// impl Debug for WasmiModuleImpl {
-//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-//         f.debug_struct("WasmiModuleImpl").finish()
-//     }
-// }
-
 struct StoreState {
     #[cfg(feature = "wasi")]
     wasi_ctx: Option<wasi_common::WasiCtx>,
     stdout: Option<StreamSink<Vec<u8>>>,
     stderr: Option<StreamSink<Vec<u8>>>,
+    stack: CallStack,
     // TODO: add to stdin?
 }
 
@@ -58,11 +50,42 @@ pub struct WasmRunSharedMemory(pub RustOpaque<Arc<RwLock<SharedMemory>>>);
 #[derive(Debug)]
 pub struct SharedMemory;
 
-#[derive(Debug, Clone, Copy)]
-pub struct WasmRunModuleId(pub u32);
+#[derive(Clone)]
+pub struct WasmRunModuleId(pub u32, pub RustOpaque<CallStack>);
+
+#[derive(Clone, Default)]
+pub struct CallStack(Arc<RwLock<Vec<RwLock<StoreContextMut<'static, StoreState>>>>>);
 
 #[derive(Debug, Clone, Copy)]
 pub struct WasmRunInstanceId(pub u32);
+
+fn make_wasi_ctx(
+    id: &WasmRunModuleId,
+    wasi_config: &Option<WasiConfigNative>,
+) -> Result<Option<wasi_common::WasiCtx>> {
+    let mut wasi_ctx = None;
+    if let Some(wasi_config) = wasi_config {
+        let mut wasi = wasi_config.to_wasi_ctx()?;
+
+        if wasi_config.capture_stdout {
+            let stdout_handler = ModuleIOWriter {
+                id: id.clone(),
+                is_stdout: true,
+            };
+            wasi.set_stdout(Box::new(WritePipe::new(stdout_handler)));
+        }
+        if wasi_config.capture_stderr {
+            let stderr_handler = ModuleIOWriter {
+                id: id.clone(),
+                is_stdout: false,
+            };
+            wasi.set_stderr(Box::new(WritePipe::new(stderr_handler)));
+        }
+        wasi_ctx = Some(wasi);
+    }
+
+    Ok(wasi_ctx)
+}
 
 pub fn module_builder(
     module: CompiledModule,
@@ -88,49 +111,15 @@ pub fn module_builder(
     arr.last_id += 1;
 
     let id = arr.last_id;
+
+    let stack: CallStack = Default::default();
+    let module_id = WasmRunModuleId(id, RustOpaque::new(stack.clone()));
+
     #[cfg(feature = "wasi")]
-    let mut wasi_ctx = None;
+    let wasi_ctx = make_wasi_ctx(&module_id, &wasi_config)?;
     #[cfg(feature = "wasi")]
-    if let Some(wasi_config) = wasi_config {
+    if wasi_ctx.is_some() {
         wasmi_wasi::add_to_linker(&mut linker, |ctx| ctx.wasi_ctx.as_mut().unwrap())?;
-        let mut wasi = wasi_config.to_wasi_ctx()?;
-
-        if !wasi_config.preopened_files.is_empty() {
-            for value in wasi_config.preopened_files {
-                let file = fs::File::open(value)?;
-                // let vv = file.as_fd().as_raw_fd();
-                let wasm_file =
-                    wasmi_wasi::file::File::from_cap_std(cap_std::fs::File::from_std(file));
-                let caps = FileCaps::all();
-                // let mut caps = FileCaps::empty();
-                // caps.extend([
-                //     FileCaps::READ,
-                //     FileCaps::FILESTAT_SET_SIZE,
-                //     FileCaps::FILESTAT_GET,
-                // ]);
-
-                // vv.try_into().unwrap()
-                let table_size = wasi.table().push(Box::new(false)).unwrap();
-                // TODO: not sure if this is correct
-                wasi.insert_file(table_size, Box::new(wasm_file), caps);
-            }
-        }
-
-        if wasi_config.capture_stdout {
-            let stdout_handler = ModuleIOWriter {
-                id,
-                is_stdout: true,
-            };
-            wasi.set_stdout(Box::new(WritePipe::new(stdout_handler)));
-        }
-        if wasi_config.capture_stderr {
-            let stderr_handler = ModuleIOWriter {
-                id,
-                is_stdout: false,
-            };
-            wasi.set_stderr(Box::new(WritePipe::new(stderr_handler)));
-        }
-        wasi_ctx = Some(wasi);
     }
 
     let store = Store::new(
@@ -140,6 +129,7 @@ pub fn module_builder(
             wasi_ctx,
             stdout: None,
             stderr: None,
+            stack,
         },
     );
     let module_builder = WasmiModuleImpl {
@@ -150,17 +140,17 @@ pub fn module_builder(
     };
     arr.map.insert(id, module_builder);
 
-    Ok(SyncReturn(WasmRunModuleId(id)))
+    Ok(SyncReturn(module_id))
 }
 
 struct ModuleIOWriter {
-    id: u32,
+    id: WasmRunModuleId,
     is_stdout: bool,
 }
 
 impl Write for ModuleIOWriter {
     fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
-        WasmRunModuleId(self.id).with_module(|store| {
+        self.id.with_module(|store| {
             let data = store.data();
 
             let sink = if self.is_stdout {
@@ -311,7 +301,7 @@ impl WasmRunModuleId {
 
     fn with_module_mut<T>(&self, f: impl FnOnce(StoreContextMut<'_, StoreState>) -> T) -> T {
         {
-            let stack = CALLER_STACK.read().unwrap();
+            let stack = self.1 .0.read().unwrap();
             if let Some(caller) = stack.last() {
                 return f(caller.write().unwrap().as_context_mut());
             }
@@ -322,10 +312,10 @@ impl WasmRunModuleId {
         let mut ctx = value.store.as_context_mut();
         {
             let v = RwLock::new(unsafe { std::mem::transmute(ctx.as_context_mut()) });
-            CALLER_STACK.write().unwrap().push(v);
+            self.1 .0.write().unwrap().push(v);
         }
         let result = f(ctx);
-        CALLER_STACK.write().unwrap().pop();
+        self.1 .0.write().unwrap().pop();
         result
     }
 
@@ -351,7 +341,7 @@ impl WasmRunModuleId {
 
     fn with_module<T>(&self, f: impl FnOnce(&StoreContext<'_, StoreState>) -> T) -> T {
         {
-            let stack = CALLER_STACK.read().unwrap();
+            let stack = self.1 .0.read().unwrap();
             if let Some(caller) = stack.last() {
                 return f(&caller.read().unwrap().as_context());
             }
@@ -386,18 +376,20 @@ impl WasmRunModuleId {
                         .map(|a| WasmVal::from_value(a, &caller))
                         .collect();
                     let inputs = vec![mapped].into_dart();
-                    {
+                    let stack = {
+                        let stack = caller.data().stack.clone();
                         let v =
                             RwLock::new(unsafe { std::mem::transmute(caller.as_context_mut()) });
-                        CALLER_STACK.write().unwrap().push(v);
-                    }
+                        stack.0.write().unwrap().push(v);
+                        stack
+                    };
                     let output: Vec<WasmVal> = unsafe {
                         let pointer = new_leak_box_ptr(inputs);
                         let result = f(function_id, pointer);
                         pointer.drop_in_place();
                         result.wire2api()
                     };
-                    let last_caller = CALLER_STACK.write().unwrap().pop();
+                    let last_caller = stack.0.write().unwrap().pop();
 
                     if output.len() != results.len() {
                         return std::result::Result::Err(Trap::new("Invalid output length"));

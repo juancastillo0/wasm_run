@@ -1592,7 +1592,7 @@ impl support::IntoDartExceptPrimitive for WasmRunInstanceId {}
 
 impl support::IntoDart for WasmRunModuleId {
     fn into_dart(self) -> support::DartAbi {
-        vec![self.0.into_dart()].into_dart()
+        vec![self.0.into_dart(), self.1.into_dart()].into_dart()
     }
 }
 impl support::IntoDartExceptPrimitive for WasmRunModuleId {}
@@ -2231,6 +2231,21 @@ mod web {
     }
 
     #[wasm_bindgen]
+    pub fn drop_opaque_CallStack(ptr: *const c_void) {
+        unsafe {
+            Arc::<CallStack>::decrement_strong_count(ptr as _);
+        }
+    }
+
+    #[wasm_bindgen]
+    pub fn share_opaque_CallStack(ptr: *const c_void) -> *const c_void {
+        unsafe {
+            Arc::<CallStack>::increment_strong_count(ptr as _);
+            ptr
+        }
+    }
+
+    #[wasm_bindgen]
     pub fn drop_opaque_Global(ptr: *const c_void) {
         unsafe {
             Arc::<Global>::decrement_strong_count(ptr as _);
@@ -2632,11 +2647,11 @@ mod web {
             let self_ = self.dyn_into::<JsArray>().unwrap();
             assert_eq!(
                 self_.length(),
-                1,
-                "Expected 1 elements, got {}",
+                2,
+                "Expected 2 elements, got {}",
                 self_.length()
             );
-            WasmRunModuleId(self_.get(0).wire2api())
+            WasmRunModuleId(self_.get(0).wire2api(), self_.get(1).wire2api())
         }
     }
     impl Wire2Api<WasmRunSharedMemory> for JsValue {
@@ -2680,6 +2695,16 @@ mod web {
     }
     impl Wire2Api<RustOpaque<Arc<std::sync::Mutex<Module>>>> for JsValue {
         fn wire2api(self) -> RustOpaque<Arc<std::sync::Mutex<Module>>> {
+            #[cfg(target_pointer_width = "64")]
+            {
+                compile_error!("64-bit pointers are not supported.");
+            }
+
+            unsafe { support::opaque_from_dart((self.as_f64().unwrap() as usize) as _) }
+        }
+    }
+    impl Wire2Api<RustOpaque<CallStack>> for JsValue {
+        fn wire2api(self) -> RustOpaque<CallStack> {
             #[cfg(target_pointer_width = "64")]
             {
                 compile_error!("64-bit pointers are not supported.");
@@ -3410,6 +3435,11 @@ mod io {
     }
 
     #[no_mangle]
+    pub extern "C" fn new_CallStack() -> wire_CallStack {
+        wire_CallStack::new_with_null_ptr()
+    }
+
+    #[no_mangle]
     pub extern "C" fn new_Global() -> wire_Global {
         wire_Global::new_with_null_ptr()
     }
@@ -3615,6 +3645,21 @@ mod io {
     }
 
     #[no_mangle]
+    pub extern "C" fn drop_opaque_CallStack(ptr: *const c_void) {
+        unsafe {
+            Arc::<CallStack>::decrement_strong_count(ptr as _);
+        }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn share_opaque_CallStack(ptr: *const c_void) -> *const c_void {
+        unsafe {
+            Arc::<CallStack>::increment_strong_count(ptr as _);
+            ptr
+        }
+    }
+
+    #[no_mangle]
     pub extern "C" fn drop_opaque_Global(ptr: *const c_void) {
         unsafe {
             Arc::<Global>::decrement_strong_count(ptr as _);
@@ -3683,6 +3728,11 @@ mod io {
     }
     impl Wire2Api<RustOpaque<Arc<std::sync::Mutex<Module>>>> for wire_ArcStdSyncMutexModule {
         fn wire2api(self) -> RustOpaque<Arc<std::sync::Mutex<Module>>> {
+            unsafe { support::opaque_from_dart(self.ptr as _) }
+        }
+    }
+    impl Wire2Api<RustOpaque<CallStack>> for wire_CallStack {
+        fn wire2api(self) -> RustOpaque<CallStack> {
             unsafe { support::opaque_from_dart(self.ptr as _) }
         }
     }
@@ -4053,7 +4103,7 @@ mod io {
     }
     impl Wire2Api<WasmRunModuleId> for wire_WasmRunModuleId {
         fn wire2api(self) -> WasmRunModuleId {
-            WasmRunModuleId(self.field0.wire2api())
+            WasmRunModuleId(self.field0.wire2api(), self.field1.wire2api())
         }
     }
     impl Wire2Api<WasmRunSharedMemory> for wire_WasmRunSharedMemory {
@@ -4114,6 +4164,12 @@ mod io {
     #[repr(C)]
     #[derive(Clone)]
     pub struct wire_ArcStdSyncMutexModule {
+        ptr: *const core::ffi::c_void,
+    }
+
+    #[repr(C)]
+    #[derive(Clone)]
+    pub struct wire_CallStack {
         ptr: *const core::ffi::c_void,
     }
 
@@ -4315,6 +4371,7 @@ mod io {
     #[derive(Clone)]
     pub struct wire_WasmRunModuleId {
         field0: u32,
+        field1: wire_CallStack,
     }
 
     #[repr(C)]
@@ -4448,6 +4505,13 @@ mod io {
         }
     }
     impl NewWithNullPtr for wire_ArcStdSyncMutexModule {
+        fn new_with_null_ptr() -> Self {
+            Self {
+                ptr: core::ptr::null(),
+            }
+        }
+    }
+    impl NewWithNullPtr for wire_CallStack {
         fn new_with_null_ptr() -> Self {
             Self {
                 ptr: core::ptr::null(),
@@ -4767,6 +4831,7 @@ mod io {
         fn new_with_null_ptr() -> Self {
             Self {
                 field0: Default::default(),
+                field1: wire_CallStack::new_with_null_ptr(),
             }
         }
     }
@@ -4874,3 +4939,20 @@ mod io {
 }
 #[cfg(not(target_family = "wasm"))]
 pub use io::*;
+
+    // ----------- DUMMY CODE FOR BINDGEN ----------
+
+    // copied from: allo-isolate
+    pub type DartPort = i64;
+    pub type DartPostCObjectFnType = unsafe extern "C" fn(port_id: DartPort, message: *mut std::ffi::c_void) -> bool;
+    #[no_mangle] pub unsafe extern "C" fn store_dart_post_cobject(ptr: DartPostCObjectFnType) { panic!("dummy code") }
+    #[no_mangle] pub unsafe extern "C" fn get_dart_object(ptr: usize) -> Dart_Handle { panic!("dummy code") }
+    #[no_mangle] pub unsafe extern "C" fn drop_dart_object(ptr: usize) { panic!("dummy code") }
+    #[no_mangle] pub unsafe extern "C" fn new_dart_opaque(handle: Dart_Handle) -> usize { panic!("dummy code") }
+    #[no_mangle] pub unsafe extern "C" fn init_frb_dart_api_dl(obj: *mut c_void) -> isize { panic!("dummy code") }
+
+    pub struct DartCObject;
+    pub type WireSyncReturn = *mut DartCObject;
+
+    // ---------------------------------------------
+    

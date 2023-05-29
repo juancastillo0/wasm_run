@@ -30,6 +30,11 @@ class WasmRunDartPlatform extends FlutterRustBridgeBase<WasmRunDartWire>
   }
 
   @protected
+  Object api2wire_CallStack(CallStack raw) {
+    return raw.shareOrMove();
+  }
+
+  @protected
   Object api2wire_Global(Global raw) {
     return raw.shareOrMove();
   }
@@ -394,7 +399,7 @@ class WasmRunDartPlatform extends FlutterRustBridgeBase<WasmRunDartWire>
 
   @protected
   List<dynamic> api2wire_wasm_run_module_id(WasmRunModuleId raw) {
-    return [api2wire_u32(raw.field0)];
+    return [api2wire_u32(raw.field0), api2wire_CallStack(raw.field1)];
   }
 
   @protected
@@ -438,6 +443,9 @@ class WasmRunDartPlatform extends FlutterRustBridgeBase<WasmRunDartWire>
       Finalizer<PlatformPointer>(inner.drop_opaque_ArcStdSyncMutexModule);
   Finalizer<PlatformPointer> get ArcStdSyncMutexModuleFinalizer =>
       _ArcStdSyncMutexModuleFinalizer;
+  late final Finalizer<PlatformPointer> _CallStackFinalizer =
+      Finalizer<PlatformPointer>(inner.drop_opaque_CallStack);
+  Finalizer<PlatformPointer> get CallStackFinalizer => _CallStackFinalizer;
   late final Finalizer<PlatformPointer> _GlobalFinalizer =
       Finalizer<PlatformPointer>(inner.drop_opaque_Global);
   Finalizer<PlatformPointer> get GlobalFinalizer => _GlobalFinalizer;
@@ -685,6 +693,10 @@ class WasmRunDartWasmModule implements WasmModule {
   external dynamic /*  */ drop_opaque_ArcStdSyncMutexModule(ptr);
 
   external int /* *const c_void */ share_opaque_ArcStdSyncMutexModule(ptr);
+
+  external dynamic /*  */ drop_opaque_CallStack(ptr);
+
+  external int /* *const c_void */ share_opaque_CallStack(ptr);
 
   external dynamic /*  */ drop_opaque_Global(ptr);
 
@@ -1016,6 +1028,12 @@ class WasmRunDartWire
 
   int /* *const c_void */ share_opaque_ArcStdSyncMutexModule(ptr) =>
       wasmModule.share_opaque_ArcStdSyncMutexModule(ptr);
+
+  dynamic /*  */ drop_opaque_CallStack(ptr) =>
+      wasmModule.drop_opaque_CallStack(ptr);
+
+  int /* *const c_void */ share_opaque_CallStack(ptr) =>
+      wasmModule.share_opaque_CallStack(ptr);
 
   dynamic /*  */ drop_opaque_Global(ptr) => wasmModule.drop_opaque_Global(ptr);
 

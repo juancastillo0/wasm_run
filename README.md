@@ -21,7 +21,7 @@ and the Flutter guide for
 
 A Web Assembly executor for the Dart programming language.
 
-Currently it uses the [`wasmtime 9.0`](https://github.com/bytecodealliance/wasmtime) or [`wasmi 0.29`](https://github.com/paritytech/wasmi) Rust crates for parsing and executing WASM modules. Bindings are created using [`package:flutter_rust_bridge`](https://github.com/fzyzcjy/flutter_rust_bridge).
+Currently it uses the [`wasmtime 9.0`](https://github.com/bytecodealliance/wasmtime) or [`wasmi 0.30`](https://github.com/paritytech/wasmi) Rust crates for parsing and executing WASM modules. Bindings are created using [`package:flutter_rust_bridge`](https://github.com/fzyzcjy/flutter_rust_bridge).
 
 - [Dart Wasm Run](#dart-wasm-run)
 - [Features](#features)
@@ -62,7 +62,7 @@ Currently it uses the [`wasmtime 9.0`](https://github.com/bytecodealliance/wasmt
 
 ## Supported Wasm Features
 
-| Feature\Runtime               | Wasmtime 9.0    | Wasmi 0.29 | Chrome<sup>[1]</sup> |
+| Feature\Runtime               | Wasmtime 9.0    | Wasmi 0.30 | Chrome<sup>[1]</sup> |
 | ----------------------------- | --------------- | ---------- | -------------------- |
 | multi_value                   | ✅               | ✅          | ✅                    |
 | bulk_memory                   | ✅               | ✅          | ✅                    |
@@ -106,12 +106,12 @@ We provide [`package:wasm_run_flutter`](./packages/wasm_run_flutter/) to bundle 
 | Linux    | aarch64 x86_64             | Wasmtime 9.0          |
 | MacOS    | aarch64 x86_64             | Wasmtime 9.0          |
 | Windows  | aarch64 x86_64             | Wasmtime 9.0          |
-| iOS      | aarch64 x86_64 aarch64-sim | Wasmi 0.29            |
-| Android  | armeabi-v7a x86 x86_64     | Wasmi 0.29            |
+| iOS      | aarch64 x86_64 aarch64-sim | Wasmi 0.30            |
+| Android  | armeabi-v7a x86 x86_64     | Wasmi 0.30            |
 | Android  | arm64-v8a                  | Wasmtime 9.0          |
-| Web      | N/A                        | Browser/Wasmi 0.29    |
+| Web      | N/A                        | Browser/Wasmi 0.30    |
 
-- [1]: Wasmi 0.29 supports any platform that Rust could be compiled to.
+- [1]: Wasmi 0.30 supports any platform that Rust could be compiled to.
 
 ### Pure Dart (CLI/Backend/Web)
 
@@ -178,7 +178,7 @@ You may also configure the WASM imports are by using the `mapWorkerWasmImports` 
 
 ## Web Assembly System Interface (WASI)
 
-We support [WASI](https://github.com/WebAssembly/WASI) [wasi_snapshot_preview1](https://github.com/WebAssembly/WASI/blob/main/legacy/preview1/docs.md) through the [wasmtime_wasi](https://docs.rs/wasmtime-wasi/9.0.0/wasmtime_wasi/) or [wasmi_wasi](https://docs.rs/wasmi_wasi/0.29.0/wasmi_wasi) Rust crates, [chosen depending on the target platform](#runtime-for-platform). 
+We support [WASI](https://github.com/WebAssembly/WASI) [wasi_snapshot_preview1](https://github.com/WebAssembly/WASI/blob/main/legacy/preview1/docs.md) through the [wasmtime_wasi](https://docs.rs/wasmtime-wasi/9.0.2/wasmtime_wasi/) or [wasmi_wasi](https://docs.rs/wasmi_wasi/0.30.0/wasmi_wasi) Rust crates, [chosen depending on the target platform](#runtime-for-platform). 
 
 In the web platform we support WASI modules by using [bjorn3/browser_wasi_shim](https://github.com/bjorn3/browser_wasi_shim). The file system directories exported by the host are in-memory Maps where the files are represented as `Uint8List` buffers. Other APIs, such as time and random are implemented using the JavaScript browser APIs.
 
@@ -237,7 +237,7 @@ dart run wasm_wit_component:generate wit/input-file.wit lib/generated-world.dart
 | Argument           | Kind       | Description                                                 | Default                      |
 | ------------------ | ---------- | ----------------------------------------------------------- | ---------------------------- |
 | inputWitPath       | positional | The path to the wit directory or file                       | none (Required)              |
-| outputDartPath     | positional | The path to the dart file that will be generated             | next to the wit file         |
+| outputDartPath     | positional | The path to the dart file that will be generated            | next to the wit file         |
 | watch              | named      | Whether to watch for changes in the wit path and regenerate | false                        |
 | no-default         | named      | Whether to set to false other generator configurations      | false                        |
 | json-serialization | named      | Whether to generate toJson and fromJson                     | true (false if --no-default) |
@@ -255,8 +255,11 @@ Another example with multiple tests can be found in the [example directory](pack
 
 - Wit Component World: [rust_wit_component_example/wit/types-example.wit](packages/dart_wit_component/wasm_wit_component/example/rust_wit_component_example/wit/types-example.wit)
 - Rust Implementation: [rust_wit_component_example/src/lib.rs](packages/dart_wit_component/wasm_wit_component/example/rust_wit_component_example/src/lib.rs)
-- Dart Generated Code: [lib/types_gen.dart](packages/dart_wit_component/wasm_wit_component/example/lib/types_gen.dart)
-  - generated using `dart run wasm_wit_component:generate rust_wit_component_example/wit/types-example.wit lib/types_gen.dart`
+- Dart Generated Code: [lib/types_gen.dart](packages/dart_wit_component/wasm_wit_component/example/lib/types_gen.dart). Generated using:
+
+```sh
+dart run wasm_wit_component:generate rust_wit_component_example/wit/types-example.wit lib/types_gen.dart
+```
 - Tests and Usage: [lib/types_gen_test.dart](packages/dart_wit_component/wasm_wit_component/example/lib/types_gen_test.dart)
 
 # Documentation

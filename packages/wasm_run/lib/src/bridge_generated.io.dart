@@ -32,6 +32,13 @@ class WasmRunDartPlatform extends FlutterRustBridgeBase<WasmRunDartWire> {
   }
 
   @protected
+  wire_CallStack api2wire_CallStack(CallStack raw) {
+    final ptr = inner.new_CallStack();
+    _api_fill_to_wire_CallStack(raw, ptr);
+    return ptr;
+  }
+
+  @protected
   wire_Global api2wire_Global(Global raw) {
     final ptr = inner.new_Global();
     _api_fill_to_wire_Global(raw, ptr);
@@ -340,6 +347,9 @@ class WasmRunDartPlatform extends FlutterRustBridgeBase<WasmRunDartWire> {
       OpaqueTypeFinalizer(inner._drop_opaque_ArcStdSyncMutexModulePtr);
   OpaqueTypeFinalizer get ArcStdSyncMutexModuleFinalizer =>
       _ArcStdSyncMutexModuleFinalizer;
+  late final OpaqueTypeFinalizer _CallStackFinalizer =
+      OpaqueTypeFinalizer(inner._drop_opaque_CallStackPtr);
+  OpaqueTypeFinalizer get CallStackFinalizer => _CallStackFinalizer;
   late final OpaqueTypeFinalizer _GlobalFinalizer =
       OpaqueTypeFinalizer(inner._drop_opaque_GlobalPtr);
   OpaqueTypeFinalizer get GlobalFinalizer => _GlobalFinalizer;
@@ -361,6 +371,10 @@ class WasmRunDartPlatform extends FlutterRustBridgeBase<WasmRunDartWire> {
 
   void _api_fill_to_wire_ArcStdSyncMutexModule(
       ArcStdSyncMutexModule apiObj, wire_ArcStdSyncMutexModule wireObj) {
+    wireObj.ptr = apiObj.shareOrMove();
+  }
+
+  void _api_fill_to_wire_CallStack(CallStack apiObj, wire_CallStack wireObj) {
     wireObj.ptr = apiObj.shareOrMove();
   }
 
@@ -651,6 +665,7 @@ class WasmRunDartPlatform extends FlutterRustBridgeBase<WasmRunDartWire> {
   void _api_fill_to_wire_wasm_run_module_id(
       WasmRunModuleId apiObj, wire_WasmRunModuleId wireObj) {
     wireObj.field0 = api2wire_u32(apiObj.field0);
+    wireObj.field1 = api2wire_CallStack(apiObj.field1);
   }
 
   void _api_fill_to_wire_wasm_run_shared_memory(
@@ -2149,6 +2164,15 @@ class WasmRunDartWire implements FlutterRustBridgeWireBase {
   late final _new_ArcStdSyncMutexModule = _new_ArcStdSyncMutexModulePtr
       .asFunction<wire_ArcStdSyncMutexModule Function()>();
 
+  wire_CallStack new_CallStack() {
+    return _new_CallStack();
+  }
+
+  late final _new_CallStackPtr =
+      _lookup<ffi.NativeFunction<wire_CallStack Function()>>('new_CallStack');
+  late final _new_CallStack =
+      _new_CallStackPtr.asFunction<wire_CallStack Function()>();
+
   wire_Global new_Global() {
     return _new_Global();
   }
@@ -2554,6 +2578,35 @@ class WasmRunDartWire implements FlutterRustBridgeWireBase {
   late final _share_opaque_ArcStdSyncMutexModule =
       _share_opaque_ArcStdSyncMutexModulePtr
           .asFunction<ffi.Pointer<ffi.Void> Function(ffi.Pointer<ffi.Void>)>();
+
+  void drop_opaque_CallStack(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _drop_opaque_CallStack(
+      ptr,
+    );
+  }
+
+  late final _drop_opaque_CallStackPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'drop_opaque_CallStack');
+  late final _drop_opaque_CallStack = _drop_opaque_CallStackPtr
+      .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  ffi.Pointer<ffi.Void> share_opaque_CallStack(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _share_opaque_CallStack(
+      ptr,
+    );
+  }
+
+  late final _share_opaque_CallStackPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Pointer<ffi.Void> Function(
+              ffi.Pointer<ffi.Void>)>>('share_opaque_CallStack');
+  late final _share_opaque_CallStack = _share_opaque_CallStackPtr
+      .asFunction<ffi.Pointer<ffi.Void> Function(ffi.Pointer<ffi.Void>)>();
 
   void drop_opaque_Global(
     ffi.Pointer<ffi.Void> ptr,
@@ -2962,9 +3015,15 @@ class wire_WasmRunInstanceId extends ffi.Struct {
   external int field0;
 }
 
+class wire_CallStack extends ffi.Struct {
+  external ffi.Pointer<ffi.Void> ptr;
+}
+
 class wire_WasmRunModuleId extends ffi.Struct {
   @ffi.Uint32()
   external int field0;
+
+  external wire_CallStack field1;
 }
 
 class wire_WFunc extends ffi.Struct {

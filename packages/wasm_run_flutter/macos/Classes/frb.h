@@ -109,8 +109,13 @@ typedef struct wire_WasmRunInstanceId {
   uint32_t field0;
 } wire_WasmRunInstanceId;
 
+typedef struct wire_CallStack {
+  const void *ptr;
+} wire_CallStack;
+
 typedef struct wire_WasmRunModuleId {
   uint32_t field0;
+  struct wire_CallStack field1;
 } wire_WasmRunModuleId;
 
 typedef struct wire_WFunc {
@@ -504,6 +509,8 @@ struct wire_ArcRwLockSharedMemory new_ArcRwLockSharedMemory(void);
 
 struct wire_ArcStdSyncMutexModule new_ArcStdSyncMutexModule(void);
 
+struct wire_CallStack new_CallStack(void);
+
 struct wire_Global new_Global(void);
 
 struct wire_Memory new_Memory(void);
@@ -569,6 +576,10 @@ const void *share_opaque_ArcRwLockSharedMemory(const void *ptr);
 void drop_opaque_ArcStdSyncMutexModule(const void *ptr);
 
 const void *share_opaque_ArcStdSyncMutexModule(const void *ptr);
+
+void drop_opaque_CallStack(const void *ptr);
+
+const void *share_opaque_CallStack(const void *ptr);
 
 void drop_opaque_Global(const void *ptr);
 
@@ -678,6 +689,7 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) wire_xor__method__Atomics);
     dummy_var ^= ((int64_t) (void*) new_ArcRwLockSharedMemory);
     dummy_var ^= ((int64_t) (void*) new_ArcStdSyncMutexModule);
+    dummy_var ^= ((int64_t) (void*) new_CallStack);
     dummy_var ^= ((int64_t) (void*) new_Global);
     dummy_var ^= ((int64_t) (void*) new_Memory);
     dummy_var ^= ((int64_t) (void*) new_StringList_0);
@@ -711,6 +723,8 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) share_opaque_ArcRwLockSharedMemory);
     dummy_var ^= ((int64_t) (void*) drop_opaque_ArcStdSyncMutexModule);
     dummy_var ^= ((int64_t) (void*) share_opaque_ArcStdSyncMutexModule);
+    dummy_var ^= ((int64_t) (void*) drop_opaque_CallStack);
+    dummy_var ^= ((int64_t) (void*) share_opaque_CallStack);
     dummy_var ^= ((int64_t) (void*) drop_opaque_Global);
     dummy_var ^= ((int64_t) (void*) share_opaque_Global);
     dummy_var ^= ((int64_t) (void*) drop_opaque_Memory);
