@@ -200,10 +200,10 @@ void wasiTest({TestArgs? testArgs}) {
 
     final currentTime = instance1.getFunction('current_time')!;
     final now1 = DateTime.now().millisecondsSinceEpoch;
-    await Future<void>.delayed(const Duration(milliseconds: 1));
+    await Future<void>.delayed(const Duration(milliseconds: 10));
     final t = i64.toInt(currentTime().first!);
     expect(now1, lessThan(t));
-    await Future<void>.delayed(const Duration(milliseconds: 1));
+    await Future<void>.delayed(const Duration(milliseconds: 10));
     expect(DateTime.now().millisecondsSinceEpoch, greaterThan(t));
 
     final memory = instance1.getMemory('memory')!;
