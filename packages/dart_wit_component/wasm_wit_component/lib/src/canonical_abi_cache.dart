@@ -1,4 +1,5 @@
 import 'package:wasm_wit_component/src/canonical_abi.dart';
+import 'package:wasm_wit_component/src/canonical_abi_flat.dart';
 
 class ComputedFuncTypeData {
   final CoreFuncType lowerCoreType;
@@ -49,7 +50,7 @@ class ComputedFuncTypeData {
 }
 
 class FuncTypesData {
-  final List<FlattenType> flatTypes;
+  final List<FlatType> flatTypes;
   final Tuple tupleType;
 
   FuncTypesData(this.flatTypes, this.tupleType);
@@ -65,7 +66,7 @@ class ComputedTypeData {
   final int size_;
   final int align;
   final DespecializedValType despecialized;
-  final List<FlattenType> flatType;
+  final List<FlatType> flatType;
 
   ///
   const ComputedTypeData({

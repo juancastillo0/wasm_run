@@ -2,7 +2,8 @@ import 'dart:developer' as developer;
 import 'dart:io';
 
 import 'package:wasm_wit_component/generator.dart';
-import 'package:wasm_wit_component/src/component.dart';
+import 'package:wasm_wit_component/src/option.dart';
+import 'package:wasm_wit_component/src/result.dart';
 
 /// Generates Dart code from a Wasm WIT file.
 ///
