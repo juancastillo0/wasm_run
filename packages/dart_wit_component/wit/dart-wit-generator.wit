@@ -6,12 +6,25 @@ world dart-wit-generator {
         inputs: wit-generator-input,
         /// Whether to generate json serialization for the types in the world.
         json-serialization: bool,
-        /// Whether to generate a copyWith method for the types in the world.
+        /// Whether to generate a `copyWith` method for the types in the world.
         copy-with: bool,
-        /// Whether to generate equality and hash code getters for the types in the world.
+        /// Whether to generate equality and the `hashCode` getter for the types in the world.
         equality-and-hash-code: bool,
-        /// Whether to generate toString methods for the types in the world.
+        /// Whether to generate `toString` methods for the types in the world.
         to-string: bool,
+        /// Whether to generate documentation for methods within the types in the world.
+        /// For example, for the `toJson`, `copyWith` and `fromJson` methods.
+        generate-docs: bool,
+        /// Custom imports, comments or code to be added at the top of the generated file.
+        file-header: option<string>,
+        /// [ObjectComparator] used to compute the generated types equality and hashCode.
+        /// You will need to add a custom import in [fileHeader] to use this.
+        object-comparator: option<string>,
+        /// Whether to use `null` for optional types when possible.
+        /// For example when there is a single unnested option type.
+        use-null-for-option: bool,
+        /// The type to use for 64 bit integers.
+        int64-type: int64-type-config,
     }
 
     /// The file inputs to use for the code generation.
@@ -20,6 +33,7 @@ world dart-wit-generator {
         in-memory-files,
     }
 
+    /// The paths in the file system that contain the wit files.
     record file-system-paths {
         /// May be a file or a directory.
         /// When it is a directory, all files in the directory will be used as input.
@@ -29,12 +43,27 @@ world dart-wit-generator {
         input-path: string,
     }
 
+    /// Files paths and their contents.
     record in-memory-files {
         /// The file to use as the world file.
         world-file: wit-file,
         /// The files to use as the package files for the world.
         /// You will be able to import with `use pkg` from these files.
         pkg-files: list<wit-file>,
+    }
+
+    /// Configures how 64 bit integers are represented in the generated Dart code.
+    enum int64-type-config {
+        /// Use the native JavaScript BigInt type and [int] for native platforms.
+        /// You will need to cast it with the [i64] utility functions.
+        native-object,
+        /// Use the [BigInt] type for signed and unsigned 64 bit integers.
+        big-int,
+        /// Use the [BigInt] type only for unsigned 64 bit integers.
+        /// [int] is used for signed 64 bit integers.
+        big-int-unsigned-only,
+        /// Use the [int] type.
+        core-int,
     }
 
     record wit-file {
@@ -47,5 +76,8 @@ world dart-wit-generator {
 
     /// Generates a world from the given configuration.
     export generate: func(config: wit-generator-config) -> result<wit-file, string>
+
+    /// Generates a world from the given configuration to the [filePath].
+    export generate-to-file: func(config: wit-generator-config, file-path: string) -> result<_, string>
 
 }

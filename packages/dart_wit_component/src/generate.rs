@@ -1,19 +1,25 @@
-use crate::{function::FuncKind, strings::Normalize, types::*};
+use crate::{function::FuncKind, strings::Normalize, types::*, WitGeneratorConfig};
 use std::collections::HashMap;
 use wit_parser::*;
 
-pub fn document_to_dart(parsed: &UnresolvedPackage) -> String {
+pub fn document_to_dart(
+    parsed: &UnresolvedPackage,
+    config: WitGeneratorConfig,
+) -> Result<String, String> {
     let mut s = String::new();
 
-    s.push_str(&format!("{HEADER}"));
+    s.push_str(&format!(
+        "{HEADER}{}",
+        config.file_header.as_deref().unwrap_or("")
+    ));
 
     let mut resolve = Resolve::new();
     resolve
         .push(parsed.clone())
-        .expect("Failed to resolve package");
+        .map_err(|err| err.to_string())?;
 
     let names = HashMap::<&str, Vec<&TypeDef>>::new();
-    let mut p = Parsed(&resolve, names);
+    let mut p = Parsed(&resolve, names, config);
 
     // parsed.documents
     // parsed.foreign_deps
@@ -170,7 +176,7 @@ pub fn document_to_dart(parsed: &UnresolvedPackage) -> String {
         ));
         s.push_str("}");
     });
-    s
+    Ok(s)
 }
 
 pub fn add_docs(s: &mut String, docs: &Docs) {
@@ -202,7 +208,27 @@ import 'package:wasm_wit_component/wasm_wit_component.dart';
 #[cfg(test)]
 mod tests {
     use std::{fs::File, io::Write, path::Path};
+
+    use crate::WitGeneratorConfig;
+
     const PACKAGE_DIR: &str = env!("CARGO_MANIFEST_DIR");
+
+    fn default_wit_config() -> WitGeneratorConfig {
+        WitGeneratorConfig {
+            inputs: crate::WitGeneratorInput::FileSystemPaths(crate::FileSystemPaths {
+                input_path: "".to_string(),
+            }),
+            copy_with: true,
+            equality_and_hash_code: true,
+            generate_docs: true,
+            json_serialization: true,
+            to_string: true,
+            file_header: None,
+            use_null_for_option: false,
+            object_comparator: None,
+            int64_type: crate::Int64TypeConfig::CoreInt,
+        }
+    }
 
     #[test]
     pub fn parse_wit() {
@@ -218,14 +244,14 @@ default world host {
         )
         .unwrap();
 
-        let s = super::document_to_dart(&parsed);
+        let s = super::document_to_dart(&parsed, default_wit_config()).unwrap();
         println!("{}", s);
     }
 
     fn parse_and_write_generation(path: &str, output_path: &str) {
         let parsed = wit_parser::UnresolvedPackage::parse_file(Path::new(path)).unwrap();
 
-        let s = super::document_to_dart(&parsed);
+        let s = super::document_to_dart(&parsed, default_wit_config()).unwrap();
         println!("{}", s);
         File::create(output_path)
             .unwrap()

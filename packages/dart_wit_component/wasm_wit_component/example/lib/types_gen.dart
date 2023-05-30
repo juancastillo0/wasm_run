@@ -82,16 +82,18 @@ class R {
         c,
   }) =>
       R(a: a ?? this.a, b: b ?? this.b, c: c ?? this.c);
-  List<Object?> get props => [a, b, c];
-  @override
-  String toString() =>
-      'R${Map.fromIterables(_spec.fields.map((f) => f.label), props)}';
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is R && comparator.arePropsEqual(props, other.props);
+      other is R && comparator.arePropsEqual(_props, other._props);
   @override
-  int get hashCode => comparator.hashProps(props);
+  int get hashCode => comparator.hashProps(_props);
+
+  @override
+  String toString() =>
+      'R${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
+// ignore: unused_field
+  List<Object?> get _props => [a, b, c];
   static const _spec = Record([
     (label: 'a', t: U32()),
     (label: 'b', t: StringType()),
@@ -174,8 +176,9 @@ sealed class Input {
       json = (k is int ? k : int.parse(k! as String), json.values.first);
     }
     return switch (json) {
-      (0, final value) => InputIntU64(value! as int),
-      (1, final value) =>
+      (0, final value) || [0, final value] => InputIntU64(value! as int),
+      (1, final value) ||
+      [1, final value] =>
         InputString(value is String ? value : (value! as ParsedString).value),
       _ => throw Exception('Invalid JSON $json_'),
     };
@@ -413,18 +416,20 @@ class RoundTripNumbersData {
           si64: si64 ?? this.si64,
           f32: f32 ?? this.f32,
           f64: f64 ?? this.f64);
-  List<Object?> get props =>
-      [un8, un16, un32, un64, si8, si16, si32, si64, f32, f64];
-  @override
-  String toString() =>
-      'RoundTripNumbersData${Map.fromIterables(_spec.fields.map((f) => f.label), props)}';
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is RoundTripNumbersData &&
-          comparator.arePropsEqual(props, other.props);
+          comparator.arePropsEqual(_props, other._props);
   @override
-  int get hashCode => comparator.hashProps(props);
+  int get hashCode => comparator.hashProps(_props);
+
+  @override
+  String toString() =>
+      'RoundTripNumbersData${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
+// ignore: unused_field
+  List<Object?> get _props =>
+      [un8, un16, un32, un64, si8, si16, si32, si64, f32, f64];
   static const _spec = Record([
     (label: 'un8', t: U8()),
     (label: 'un16', t: U16()),
@@ -608,16 +613,18 @@ class ErrnoApi {
           listS1: listS1 ?? this.listS1,
           str: str ?? this.str,
           c: c ?? this.c);
-  List<Object?> get props => [aU1, listS1, str, c];
-  @override
-  String toString() =>
-      'ErrnoApi${Map.fromIterables(_spec.fields.map((f) => f.label), props)}';
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is ErrnoApi && comparator.arePropsEqual(props, other.props);
+      other is ErrnoApi && comparator.arePropsEqual(_props, other._props);
   @override
-  int get hashCode => comparator.hashProps(props);
+  int get hashCode => comparator.hashProps(_props);
+
+  @override
+  String toString() =>
+      'ErrnoApi${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
+// ignore: unused_field
+  List<Object?> get _props => [aU1, listS1, str, c];
   static const _spec = Record([
     (label: 'a-u1', t: U64()),
     (label: 'list-s1', t: ListType(S64())),
@@ -655,16 +662,18 @@ class Empty {
   factory Empty.fromJson(Object? _) => const Empty();
   Map<String, Object?> toJson() => {};
   Empty copyWith() => Empty();
-  List<Object?> get props => [];
-  @override
-  String toString() =>
-      'Empty${Map.fromIterables(_spec.fields.map((f) => f.label), props)}';
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is Empty && comparator.arePropsEqual(props, other.props);
+      other is Empty && comparator.arePropsEqual(_props, other._props);
   @override
-  int get hashCode => comparator.hashProps(props);
+  int get hashCode => comparator.hashProps(_props);
+
+  @override
+  String toString() =>
+      'Empty${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
+// ignore: unused_field
+  List<Object?> get _props => [];
   static const _spec = Record([]);
 }
 

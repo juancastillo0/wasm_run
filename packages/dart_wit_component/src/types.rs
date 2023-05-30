@@ -1,16 +1,15 @@
 use std::collections::HashMap;
 
-use crate::{generate::*, strings::Normalize};
+use crate::{generate::*, strings::Normalize, Int64TypeConfig, WitGeneratorConfig};
 use wit_parser::*;
-
 
 pub struct Parsed<'a>(
     pub &'a Resolve,
     pub HashMap<&'a str, Vec<&'a TypeDef>>,
+    pub WitGeneratorConfig,
 );
 
 impl Parsed<'_> {
-
     pub fn type_to_str(&self, ty: &Type) -> String {
         match ty {
             Type::Id(ty_id) => {
@@ -25,11 +24,21 @@ impl Parsed<'_> {
             Type::S8 => "int /*S8*/".to_string(),
             Type::S16 => "int /*S16*/".to_string(),
             Type::S32 => "int /*S32*/".to_string(),
-            Type::S64 => "int /*S64*/".to_string(),
+            Type::S64 => match self.2.int64_type {
+                Int64TypeConfig::BigInt => "BigInt /*S64*/".to_string(),
+                Int64TypeConfig::NativeObject => "Object /*S64*/".to_string(),
+                Int64TypeConfig::BigIntUnsignedOnly => "int /*S64*/".to_string(),
+                Int64TypeConfig::CoreInt => "int /*S64*/".to_string(),
+            },
             Type::U8 => "int /*U8*/".to_string(),
             Type::U16 => "int /*U16*/".to_string(),
             Type::U32 => "int /*U32*/".to_string(),
-            Type::U64 => "int /*U64*/".to_string(),
+            Type::U64 => match self.2.int64_type {
+                Int64TypeConfig::BigInt => "BigInt /*U64*/".to_string(),
+                Int64TypeConfig::NativeObject => "Object /*U64*/".to_string(),
+                Int64TypeConfig::BigIntUnsignedOnly => "BigInt /*U64*/".to_string(),
+                Int64TypeConfig::CoreInt => "int /*U64*/".to_string(),
+            },
         }
     }
 
@@ -47,11 +56,21 @@ impl Parsed<'_> {
             Type::S8 => getter.to_string(),
             Type::S16 => getter.to_string(),
             Type::S32 => getter.to_string(),
-            Type::S64 => getter.to_string(),
+            Type::S64 => match self.2.int64_type {
+                Int64TypeConfig::BigInt => format!("{getter}.toString()"),
+                Int64TypeConfig::NativeObject => format!("i64.toBigInt({getter}).toString()"),
+                Int64TypeConfig::BigIntUnsignedOnly => getter.to_string(),
+                Int64TypeConfig::CoreInt => getter.to_string(),
+            },
             Type::U8 => getter.to_string(),
             Type::U16 => getter.to_string(),
             Type::U32 => getter.to_string(),
-            Type::U64 => getter.to_string(),
+            Type::U64 => match self.2.int64_type {
+                Int64TypeConfig::BigInt => format!("{getter}.toString()"),
+                Int64TypeConfig::NativeObject => format!("i64.toBigInt({getter}).toString()"),
+                Int64TypeConfig::BigIntUnsignedOnly => format!("{getter}.toString()"),
+                Int64TypeConfig::CoreInt => getter.to_string(),
+            },
         }
     }
 
@@ -230,11 +249,21 @@ impl Parsed<'_> {
             Type::S8 => format!("{getter}! as int"),
             Type::S16 => format!("{getter}! as int"),
             Type::S32 => format!("{getter}! as int"),
-            Type::S64 => format!("{getter}! as int"),
+            Type::S64 => match self.2.int64_type {
+                Int64TypeConfig::BigInt => format!("bigIntFromJson({getter})"),
+                Int64TypeConfig::NativeObject => format!("{getter}!"),
+                Int64TypeConfig::BigIntUnsignedOnly => format!("{getter}! as int"),
+                Int64TypeConfig::CoreInt => format!("{getter}! as int"),
+            },
             Type::U8 => format!("{getter}! as int"),
             Type::U16 => format!("{getter}! as int"),
             Type::U32 => format!("{getter}! as int"),
-            Type::U64 => format!("{getter}! as int"),
+            Type::U64 => match self.2.int64_type {
+                Int64TypeConfig::BigInt => format!("bigIntFromJson({getter})"),
+                Int64TypeConfig::NativeObject => format!("{getter}!"),
+                Int64TypeConfig::BigIntUnsignedOnly => format!("bigIntFromJson({getter})"),
+                Int64TypeConfig::CoreInt => format!("{getter}! as int"),
+            },
         }
     }
 
@@ -411,6 +440,31 @@ impl Parsed<'_> {
         }
     }
 
+    fn add_methods_trait<T: crate::methods::GeneratedMethodsTrait>(
+        &self,
+        s: &mut String,
+        name: &str,
+        methods: &T,
+    ) {
+        if self.2.json_serialization {
+            s.push_str(&methods.from_json(name, self));
+            s.push_str(&methods.to_json(name, self));
+        }
+        if self.2.copy_with {
+            s.push_str(&methods.copy_with(name, self));
+        }
+        if self.2.equality_and_hash_code {
+            s.push_str(&methods.equality_hash_code(name, self));
+        }
+        if self.2.to_string {
+            s.push_str(&methods.to_string(name, self));
+        }
+    }
+
+    pub fn comparator(&self) -> &str {
+        self.2.object_comparator.as_deref().unwrap_or("comparator")
+    }
+
     pub fn type_def_to_definition(&self, ty: &TypeDef) -> String {
         let name = self.type_def_to_name_definition(ty);
 
@@ -437,80 +491,19 @@ impl Parsed<'_> {
                     });
                     s.push_str("});");
                 }
-                if r.fields.is_empty() {
-                    s.push_str(&format!(
-                        "\n\nfactory {name}.fromJson(Object? _) => const {name}();"
-                    ));
-                } else {
-                    let spread = r
-                        .fields
-                        .iter()
-                        .map(|f| format!("final {}", f.name.as_var()))
-                        .collect::<Vec<_>>()
-                        .join(",");
-                    let s_comma = if r.fields.len() == 1 { "," } else { "" };
-                    s.push_str(&format!(
-                        "\n\nfactory {name}.fromJson(Object? json_) {{
-                        final json = json_ is Map ? _spec.fields.map((f) => json_[f.label]).toList(growable: false) : json_;
-                        return switch (json) {{
-                            [{spread}] || ({spread}{s_comma}) => {name}({}),
-                            _ => throw Exception('Invalid JSON $json_')}};
-                        }}",
-                        r.fields
-                            .iter()
-                            .map(|f| format!(
-                                "{}: {},",
-                                f.name.as_var(),
-                                self.type_from_json(&f.name.as_var(), &f.ty)
-                            ))
-                            .collect::<String>()
-                    ));
-                }
+
+                self.add_methods_trait(&mut s, &name, r);
+
                 s.push_str(&format!(
-                    "\nMap<String, Object?> toJson() => {{{}}};
-                    {name} copyWith({copy_with_params}) => {name}({copy_with_content});
-                    List<Object?> get props => [{fields}];
-                    @override\nString toString() => '{name}${{Map.fromIterables(_spec.fields.map((f) => f.label), props)}}';
-                    @override\nbool operator ==(Object other) => identical(this, other) || other is {name} && comparator.arePropsEqual(props, other.props);
-                    @override\nint get hashCode => comparator.hashProps(props);
-                    ",
-                    r.fields
-                        .iter()
-                        .map(|f| format!(
-                            "'{}': {},",
-                            f.name,
-                            self.type_to_json(&f.name.as_var(), &f.ty)
-                        ))
-                        .collect::<String>(),
+                    "// ignore: unused_field
+                    List<Object?> get _props => [{fields}];",
                     fields = r
                         .fields
                         .iter()
                         .map(|f| f.name.as_var())
                         .collect::<Vec<_>>()
                         .join(","),
-                    copy_with_params = if r.fields.is_empty() { 
-                        "".to_string() 
-                    } else { 
-                        format!("{{{}}}", r
-                                .fields
-                                .iter()
-                                .map(|f| format!("{}? {},", self.type_to_str(&f.ty), f.name.as_var(), ))
-                                .collect::<String>()
-                        )
-                    },
-                    copy_with_content = if r.fields.is_empty() { 
-                        "".to_string()
-                     } else { 
-                        r
-                        .fields
-                        .iter()
-                        .map(|f| format!("{}: {} ?? this.{}", f.name.as_var(), f.name.as_var(), f.name.as_var()))
-                        .collect::<Vec<_>>()
-                        .join(",")
-                    },
-                
                 ));
-
                 s.push_str(&format!(
                     "static const _spec = {};",
                     self.type_def_to_spec(&ty)
@@ -567,7 +560,7 @@ impl Parsed<'_> {
                             let ty = self.type_to_str(&v.ty);
                             let inner_name = heck::AsPascalCase(&ty);
                             format!(
-                                "({i}, final value) => {name}{inner_name}({}),",
+                                "({i}, final value) || [{i}, final value] => {name}{inner_name}({}),",
                                 self.type_from_json("value", &v.ty),
                             )
                         })
