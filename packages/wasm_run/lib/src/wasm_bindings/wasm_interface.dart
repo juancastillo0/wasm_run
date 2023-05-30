@@ -356,7 +356,7 @@ abstract class WasmSharedMemory extends WasmMemory {
 /// A Table that can be used to store object references and functions.
 abstract class WasmTable extends WasmExternal {
   /// Sets the value at [index] to [value].
-  void set(int index, WasmValue value);
+  void set(int index, WasmValueRef value);
 
   /// Returns the value at [index].
   Object? get(int index);
@@ -365,14 +365,14 @@ abstract class WasmTable extends WasmExternal {
   Object? operator [](int index) => get(index);
 
   /// Sets the value at [index] to [value].
-  void operator []=(int index, WasmValue value) => set(index, value);
+  void operator []=(int index, WasmValueRef value) => set(index, value);
 
   /// The amount of available positions in the table.
   int get length;
 
   /// Grows the table by [delta] elements and populates the
   /// new indexes with [fillValue].
-  int grow(int delta, WasmValue fillValue);
+  int grow(int delta, WasmValueRef fillValue);
 
   /// Returns the type of the table.
   TableTy? get type;
@@ -572,7 +572,6 @@ class WasmImport {
   String toString() => 'WasmImport($moduleName, $value, $value)';
 }
 
-// TODO(type): separate into WasmValueRef
 /// A WASM value.
 @immutable
 class WasmValue {
@@ -624,14 +623,14 @@ class WasmValue {
   ) : type = ValueTy.v128;
 
   /// A nullable function reference.
-  const WasmValue.funcRef(
-    WasmFunction? this.value,
-  ) : type = ValueTy.funcRef;
+  const factory WasmValue.funcRef(
+    WasmFunction? value,
+  ) = WasmValueRef.funcRef;
 
   /// A nullable external object reference.
-  const WasmValue.externRef(
-    this.value,
-  ) : type = ValueTy.externRef;
+  const factory WasmValue.externRef(
+    Object? value,
+  ) = WasmValueRef.externRef;
 
   @override
   String toString() => 'WasmValue($value, $type)';
@@ -646,6 +645,33 @@ class WasmValue {
 
   @override
   int get hashCode => Object.hash(runtimeType, value, type);
+}
+
+/// A WASM reference value.
+class WasmValueRef implements WasmValue {
+  /// The Dart value.
+  ///
+  /// Cloud be an:
+  /// - [WasmFunction]? for [ValueTy.funcRef]
+  /// - [Object]? for [ValueTy.externRef]
+  ///
+  @override
+  final Object? value;
+
+  /// The Wasm type of the value.
+  /// Either [ValueTy.funcRef] or [ValueTy.externRef]
+  @override
+  final ValueTy type;
+
+  /// A nullable function reference.
+  const WasmValueRef.funcRef(
+    WasmFunction? this.value,
+  ) : type = ValueTy.funcRef;
+
+  /// A nullable external object reference.
+  const WasmValueRef.externRef(
+    this.value,
+  ) : type = ValueTy.externRef;
 }
 
 /// Returns the fuel that can be used to limit the amount of

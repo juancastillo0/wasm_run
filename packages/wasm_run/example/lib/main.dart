@@ -460,7 +460,7 @@ void testAll({TestArgs? testArgs}) {
       i64.fromBigInt(BigInt.from(208302802 + 9)),
     );
 
-    table[1] = WasmValue.funcRef(f42);
+    table[1] = WasmValueRef.funcRef(f42);
     expect((table.get(1)! as WasmFunction)(), [42]);
     if (!isLibrary) {
       // Can's update table with user created functions in web browsers.
@@ -477,8 +477,8 @@ void testAll({TestArgs? testArgs}) {
       params: [],
       results: [ValueTy.f64],
     );
-    table[0] = WasmValue.funcRef(f43);
-    table[1] = WasmValue.funcRef(f84);
+    table[0] = WasmValueRef.funcRef(f43);
+    table[1] = WasmValueRef.funcRef(f84);
 
     expect(table[0], isNot(f42));
     expect(table[0], isNot(null));
@@ -488,7 +488,7 @@ void testAll({TestArgs? testArgs}) {
 
     table.set(
       0,
-      WasmValue.funcRef(WasmFunction(
+      WasmValueRef.funcRef(WasmFunction(
         (I64 p) => [-1.4, p],
         params: [ValueTy.i64],
         results: [ValueTy.f64, ValueTy.i64],
@@ -625,7 +625,7 @@ void testAll({TestArgs? testArgs}) {
 
     expect(table.length, 10);
     expect(table[0], isNull);
-    table[0] = WasmValue.externRef(1);
+    table[0] = WasmValueRef.externRef(1);
     expect(table[0], 1);
 
     expect(global.get(), isNull);
@@ -635,7 +635,7 @@ void testAll({TestArgs? testArgs}) {
     expect(func.inner('3'), '3');
 
     final l = ['2'];
-    table.set(1, WasmValue.externRef(l));
+    table.set(1, WasmValueRef.externRef(l));
     expect(identical(l, table.get(1)), true);
   });
 
