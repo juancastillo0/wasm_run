@@ -23,6 +23,13 @@ A Web Assembly executor for the Dart programming language.
 
 Currently it uses the [`wasmtime 9.0`](https://github.com/bytecodealliance/wasmtime) or [`wasmi 0.30`](https://github.com/paritytech/wasmi) Rust crates for parsing and executing WASM modules. Bindings are created using [`package:flutter_rust_bridge`](https://github.com/fzyzcjy/flutter_rust_bridge).
 
+| Pub                                                                                                            | Source                                                                  | Description                                                    |
+| -------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- | -------------------------------------------------------------- |
+| [![version](https://img.shields.io/pub/v/wasm_run.svg)](https://pub.dev/packages/wasm_run)                     | [wasm_run](./packages/wasm_run/)                                        | Wasm executor and utilities                                    |
+| [![version](https://img.shields.io/pub/v/wasm_run_flutter.svg)](https://pub.dev/packages/wasm_run_flutter)     | [wasm_run_flutter](./packages/wasm_run_flutter/)                        | Native libraries to use `package:wasm_run` in Flutter projects |
+| [![version](https://img.shields.io/pub/v/wasm_wit_component.svg)](https://pub.dev/packages/wasm_wit_component) | [wasm_wit_component](./packages/dart_wit_component/wasm_wit_component/) | Wit bindings and code generator for Wasm components            |
+
+
 - [Dart Wasm Run](#dart-wasm-run)
 - [Features](#features)
   - [Supported Wasm Features](#supported-wasm-features)

@@ -1,5 +1,5 @@
 name: wasm_run
-description: A starting point for Dart libraries or applications.
+description: Web Assembly executor. Uses Rust's wasmtime optimizing runtime or wasmi interpreter.
 version: 0.0.1
 homepage: https://github.com/juancastillo0/wasm_run
 
