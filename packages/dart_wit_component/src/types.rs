@@ -447,17 +447,25 @@ impl Parsed<'_> {
         methods: &T,
     ) {
         if self.2.json_serialization {
-            s.push_str(&methods.from_json(name, self));
+            if let Some(m) = methods.from_json(name, self) {
+                s.push_str(&m);
+            }
             s.push_str(&methods.to_json(name, self));
         }
         if self.2.copy_with {
-            s.push_str(&methods.copy_with(name, self));
+            if let Some(m) = methods.copy_with(name, self) {
+                s.push_str(&m);
+            }
         }
         if self.2.equality_and_hash_code {
-            s.push_str(&methods.equality_hash_code(name, self));
+            if let Some(m) = methods.equality_hash_code(name, self) {
+                s.push_str(&m);
+            }
         }
         if self.2.to_string {
-            s.push_str(&methods.to_string(name, self));
+            if let Some(m) = methods.to_string(name, self) {
+                s.push_str(&m);
+            }
         }
     }
 
@@ -523,16 +531,7 @@ impl Parsed<'_> {
                     ));
                 });
 
-                s.push_str(&format!(
-                    "factory {name}.fromJson(Object? json_) {{
-                        final json = json_ is Map ? json_.keys.first : json_;
-                        if (json is String) {{
-                            final index = _spec.labels.indexOf(json);
-                            return index != -1 ? values[index] : values.byName(json);
-                        }}
-                        return values[json! as int];}}",
-                ));
-                s.push_str("\nObject? toJson() => _spec.labels[index];\n");
+                self.add_methods_trait(&mut s, &name, e);
 
                 s.push_str(&format!(
                     "static const _spec = {};",
@@ -675,9 +674,9 @@ impl Parsed<'_> {
                         _spec,
                       );
                     factory {name}.fromBool({{{from_bool}}}) {{
-                        final _value = {name}.none();
+                        final value_ = {name}.none();
                         {from_bool_content}
-                        return _value;
+                        return value_;
                     }}
 
                     factory {name}.fromJson(Object? json) {{
@@ -702,7 +701,7 @@ impl Parsed<'_> {
                     }}
                     ",
                     from_bool = f.flags.iter().map(|v| format!("bool {} = false", v.name.as_var())).collect::<Vec<_>>().join(", "),
-                    from_bool_content = f.flags.iter().map(|v| format!("if ({}) _value.{} = true;", v.name.as_var(), v.name.as_var())).collect::<String>(),
+                    from_bool_content = f.flags.iter().map(|v| format!("if ({}) value_.{} = true;", v.name.as_var(), v.name.as_var())).collect::<String>(),
                     to_string_content = f.flags.iter().map(|v| format!("if ({}) '{}',", v.name.as_var(), v.name.as_var())).collect::<String>(),
                 ));
                 f.flags.iter().enumerate().for_each(|(i, v)| {

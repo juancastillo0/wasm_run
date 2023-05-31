@@ -3,10 +3,10 @@ use wit_parser::*;
 
 pub trait GeneratedMethodsTrait {
     fn to_json(&self, name: &str, p: &Parsed) -> String;
-    fn from_json(&self, name: &str, p: &Parsed) -> String;
-    fn to_string(&self, name: &str, p: &Parsed) -> String;
-    fn copy_with(&self, name: &str, p: &Parsed) -> String;
-    fn equality_hash_code(&self, name: &str, p: &Parsed) -> String;
+    fn from_json(&self, name: &str, p: &Parsed) -> Option<String>;
+    fn to_string(&self, name: &str, p: &Parsed) -> Option<String>;
+    fn copy_with(&self, name: &str, p: &Parsed) -> Option<String>;
+    fn equality_hash_code(&self, name: &str, p: &Parsed) -> Option<String>;
 }
 
 impl GeneratedMethodsTrait for Record {
@@ -19,11 +19,12 @@ impl GeneratedMethodsTrait for Record {
                 .collect::<String>(),
         )
     }
-
-    fn from_json(&self, name: &str, p: &Parsed) -> String {
+    fn from_json(&self, name: &str, p: &Parsed) -> Option<String> {
         if self.fields.is_empty() {
             // TODO: add comments
-            format!("\n\nfactory {name}.fromJson(Object? _) => const {name}();\n")
+            Some(format!(
+                "\n\nfactory {name}.fromJson(Object? _) => const {name}();\n"
+            ))
         } else {
             let spread = self
                 .fields
@@ -32,7 +33,7 @@ impl GeneratedMethodsTrait for Record {
                 .collect::<Vec<_>>()
                 .join(",");
             let s_comma = if self.fields.len() == 1 { "," } else { "" };
-            format!(
+            Some(format!(
                 "\n\nfactory {name}.fromJson(Object? json_) {{
                 final json = json_ is Map ? _spec.fields.map((f) => json_[f.label]).toList(growable: false) : json_;
                 return switch (json) {{
@@ -47,18 +48,16 @@ impl GeneratedMethodsTrait for Record {
                         p.type_from_json(&f.name.as_var(), &f.ty)
                     ))
                     .collect::<String>(),
-            )
+            ))
         }
     }
-
-    fn to_string(&self, name: &str, _p: &Parsed) -> String {
-        format!("
+    fn to_string(&self, name: &str, _p: &Parsed) -> Option<String> {
+        Some(format!("
         @override\nString toString() => '{name}${{Map.fromIterables(_spec.fields.map((f) => f.label), _props)}}';\n"
-    )
+        ))
     }
-
-    fn copy_with(&self, name: &str, p: &Parsed) -> String {
-        format!(
+    fn copy_with(&self, name: &str, p: &Parsed) -> Option<String> {
+        Some(format!(
             "{name} copyWith({copy_with_params}) => {name}({copy_with_content});",
             copy_with_params = if self.fields.is_empty() {
                 "".to_string()
@@ -87,14 +86,93 @@ impl GeneratedMethodsTrait for Record {
                     .collect::<Vec<_>>()
                     .join(",")
             },
-        )
+        ))
     }
-
-    fn equality_hash_code(&self, name: &str, p: &Parsed) -> String {
+    fn equality_hash_code(&self, name: &str, p: &Parsed) -> Option<String> {
         let comparator = p.comparator();
-        format!("
+        Some(format!("
         @override\nbool operator ==(Object other) => identical(this, other) || other is {name} && {comparator}.arePropsEqual(_props, other._props);
         @override\nint get hashCode => {comparator}.hashProps(_props);\n
-        ")
+        "))
+    }
+}
+
+impl GeneratedMethodsTrait for Enum {
+    fn to_json(&self, _name: &str, _p: &Parsed) -> String {
+        "\nObject? toJson() => _spec.labels[index];\n".to_string()
+    }
+    fn from_json(&self, name: &str, _p: &Parsed) -> Option<String> {
+        Some(format!(
+            "factory {name}.fromJson(Object? json_) {{
+                final json = json_ is Map ? json_.keys.first : json_;
+                if (json is String) {{
+                    final index = _spec.labels.indexOf(json);
+                    return index != -1 ? values[index] : values.byName(json);
+                }}
+                return values[json! as int];}}",
+        ))
+    }
+    fn to_string(&self, _name: &str, _p: &Parsed) -> Option<String> {
+        None
+    }
+    fn copy_with(&self, _name: &str, _p: &Parsed) -> Option<String> {
+        None
+    }
+    fn equality_hash_code(&self, _name: &str, _p: &Parsed) -> Option<String> {
+        None
+    }
+}
+
+fn base_string_case(self_: &Case, name: &str, p: &Parsed) -> String {
+    if let Some(ty) = self_.ty {
+        format!(
+    "@override\nMap<String, Object?> toJson() => {{'{}': {}}};
+    @override\nString toString() => '{name}($value)';
+    @override\nbool operator ==(Object other) => other is {name} && comparator.areEqual(other.value, value);
+    @override\nint get hashCode => comparator.hashValue(value);
+ }}", self_.name,  p.type_to_json("value", &ty)
+)
+    } else {
+        format!(
+            "@override\nMap<String, Object?> toJson() => {{'{}': null}};
+    @override\nString toString() => '{name}()';
+    @override\nbool operator ==(Object other) => other is {name};
+    @override\nint get hashCode => ({name}).hashCode;
+}}",
+            self_.name,
+        )
+    }
+}
+
+impl GeneratedMethodsTrait for Case {
+    fn to_json(&self, name: &str, p: &Parsed) -> String {
+        base_string_case(self, name, p)
+            .split("\n")
+            .nth(0)
+            .unwrap()
+            .to_string()
+    }
+    fn from_json(&self, _name: &str, _p: &Parsed) -> Option<String> {
+        None
+    }
+    fn to_string(&self, name: &str, p: &Parsed) -> Option<String> {
+        Some(
+            base_string_case(self, name, p)
+                .split("\n")
+                .nth(1)
+                .unwrap()
+                .to_string(),
+        )
+    }
+    fn copy_with(&self, _name: &str, _p: &Parsed) -> Option<String> {
+        None
+    }
+    fn equality_hash_code(&self, name: &str, p: &Parsed) -> Option<String> {
+        Some(
+            base_string_case(self, name, p)
+                .split("\n")
+                .skip(2)
+                .collect(),
+        )
     }
 }
