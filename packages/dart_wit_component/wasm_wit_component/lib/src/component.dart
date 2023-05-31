@@ -124,12 +124,16 @@ List<FlatValue> _mapFlatToValues(List<Object?> values, List<FlatType> types) {
   }).toList(growable: false);
 }
 
-List<Object?> _mapValuesToFlat(List<FlatValue> values) {
+List<Object?> _mapValuesToFlat(Int64TypeConfig config, List<FlatValue> values) {
   return values.map((e) {
-    // TODO: this may change if we use BigInt
-    const isWeb = identical(0, 0.0);
-    if (isWeb && e.t == FlatType.i64 && e.v is int) {
-      return i64.fromInt(e.v as int);
+    if (e.t == FlatType.i64) {
+      return switch (config) {
+        Int64TypeConfig.bigInt => i64.fromBigInt(e.v as BigInt),
+        Int64TypeConfig.bigIntUnsignedOnly =>
+          e.v is int ? i64.fromInt(e.v as int) : i64.fromBigInt(e.v as BigInt),
+        Int64TypeConfig.coreInt => i64.fromInt(e.v as int),
+        Int64TypeConfig.nativeObject => e.v,
+      };
     }
     return e.v;
   }).toList(growable: false);
@@ -160,7 +164,7 @@ WasmFunction loweredImportFunction(
       computedFt: computedFt,
     );
     if (results.isEmpty) return const [];
-    return _mapValuesToFlat(results);
+    return _mapValuesToFlat(library.componentInstance.int64Type, results);
   }
 
   final lowered = WasmFunction(
@@ -249,7 +253,7 @@ class WasmLibrary {
     final postFunc = instance.getFunction('cabi_post_$functionName');
     if (postFunc == null) return null;
     return (flatResults) {
-      postFunc(_mapValuesToFlat(flatResults));
+      postFunc(_mapValuesToFlat(componentInstance.int64Type, flatResults));
     };
   }
 
@@ -268,7 +272,7 @@ class WasmLibrary {
     final flattenedFt = computedFt.liftCoreType;
     final postFunc = postReturnFunction(name);
     List<FlatValue> coreFunc(List<FlatValue> p) {
-      final args = _mapValuesToFlat(p);
+      final args = _mapValuesToFlat(componentInstance.int64Type, p);
       final results = func.call(args);
       if (results.isEmpty) return const [];
       return _mapFlatToValues(results, flattenedFt.results);

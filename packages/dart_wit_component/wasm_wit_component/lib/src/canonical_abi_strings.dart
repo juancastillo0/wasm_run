@@ -5,6 +5,7 @@ import 'dart:typed_data' show ByteData, Endian, Uint16List, Uint8List;
 
 import 'package:wasm_wit_component/src/canonical_abi.dart';
 import 'package:wasm_wit_component/src/canonical_abi_load_store.dart';
+import 'package:wasm_wit_component/src/canonical_abi_utils.dart';
 
 /// Storing strings is complicated by the goal of attempting to optimize the different transcoding cases.
 /// In particular, one challenge is choosing the linear memory allocation size before examining
@@ -51,37 +52,37 @@ PointerAndSize store_string_into_range(Context cx, ParsedString v) {
     case StringEncoding.utf8:
       switch (src_simple_encoding) {
         case StringEncoding.utf8:
-          return store_string_copy(
+          return _store_string_copy(
               cx, src, src_code_units, 1, 1, StringEncoding.utf8);
         case StringEncoding.utf16:
-          return store_utf16_to_utf8(cx, src, src_code_units);
+          return _store_utf16_to_utf8(cx, src, src_code_units);
         case StringEncoding.latin1utf16:
-          return store_latin1_to_utf8(cx, src, src_code_units);
+          return _store_latin1_to_utf8(cx, src, src_code_units);
       }
     case StringEncoding.utf16:
       switch (src_simple_encoding) {
         case StringEncoding.utf8:
-          return store_utf8_to_utf16(cx, src, src_code_units);
+          return _store_utf8_to_utf16(cx, src, src_code_units);
         case StringEncoding.utf16:
-          return store_string_copy(
+          return _store_string_copy(
               cx, src, src_code_units, 2, 2, StringEncoding.utf16);
         case StringEncoding.latin1utf16:
-          return store_string_copy(
+          return _store_string_copy(
               cx, src, src_code_units, 2, 2, StringEncoding.utf16);
       }
     case StringEncoding.latin1utf16:
       switch (src_encoding) {
         case StringEncoding.utf8:
-          return store_string_to_latin1_or_utf16(cx, src, src_code_units);
+          return _store_string_to_latin1_or_utf16(cx, src, src_code_units);
         case StringEncoding.utf16:
-          return store_string_to_latin1_or_utf16(cx, src, src_code_units);
+          return _store_string_to_latin1_or_utf16(cx, src, src_code_units);
         case StringEncoding.latin1utf16:
           switch (src_simple_encoding) {
             case StringEncoding.latin1utf16:
-              return store_string_copy(
+              return _store_string_copy(
                   cx, src, src_code_units, 1, 2, StringEncoding.latin1utf16);
             case StringEncoding.utf16:
-              return store_probably_utf16_to_latin1_or_utf16(
+              return _store_probably_utf16_to_latin1_or_utf16(
                   cx, src, src_code_units);
             case _:
               throw unreachableException;
@@ -99,7 +100,7 @@ const int MAX_STRING_BYTE_LENGTH = UTF16_TAG - 1;
 /// The simplest 4 cases above can compute the exact destination size and
 /// then copy with a simply loop (that possibly inflates Latin-1 to UTF-16
 /// by injecting a 0 byte after every Latin-1 byte).
-PointerAndSize store_string_copy(
+PointerAndSize _store_string_copy(
   Context cx,
   String src,
   int src_code_units,
@@ -119,22 +120,23 @@ PointerAndSize store_string_copy(
 }
 // #
 
-PointerAndSize store_utf16_to_utf8(Context cx, String src, int src_code_units) {
+PointerAndSize _store_utf16_to_utf8(
+    Context cx, String src, int src_code_units) {
   final worst_case_size = src_code_units * 3;
-  return store_string_to_utf8(cx, src, src_code_units, worst_case_size);
+  return _store_string_to_utf8(cx, src, src_code_units, worst_case_size);
 }
 
-PointerAndSize store_latin1_to_utf8(
+PointerAndSize _store_latin1_to_utf8(
     Context cx, String src, int src_code_units) {
   final worst_case_size = src_code_units * 2;
-  return store_string_to_utf8(cx, src, src_code_units, worst_case_size);
+  return _store_string_to_utf8(cx, src, src_code_units, worst_case_size);
 }
 
 /// The 2 cases of transcoding into UTF-8 share an algorithm that starts
 /// by optimistically assuming that each code unit of the source string fits
 /// in a single UTF-8 byte and then, failing that, reallocates to a worst-case size,
 /// finishes the copy, and then finishes with a shrinking reallocation.
-PointerAndSize store_string_to_utf8(
+PointerAndSize _store_string_to_utf8(
     Context cx, String src, int src_code_units, int worst_case_size) {
   assert(src_code_units <= MAX_STRING_BYTE_LENGTH);
   int ptr = cx.opts.realloc(0, 0, 1, src_code_units);
@@ -167,7 +169,8 @@ PointerAndSize store_string_to_utf8(
 /// (assuming each UTF-8 byte encodes a whole code point that inflates into
 /// a two-byte UTF-16 code unit) and then does a shrinking reallocation at the
 /// end if multiple UTF-8 bytes were collapsed into a single 2-byte UTF-16 code unit
-PointerAndSize store_utf8_to_utf16(Context cx, String src, int src_code_units) {
+PointerAndSize _store_utf8_to_utf16(
+    Context cx, String src, int src_code_units) {
   final worst_case_size = 2 * src_code_units;
   trap_if(worst_case_size > MAX_STRING_BYTE_LENGTH);
   int ptr = cx.opts.realloc(0, 0, 2, worst_case_size);
@@ -195,7 +198,7 @@ PointerAndSize store_utf8_to_utf16(Context cx, String src, int src_code_units) {
 /// the previously-copied Latin-1 bytes are inflated in place,
 /// inserting a 0 byte after every Latin-1 byte
 /// (iterating in reverse to avoid clobbering later bytes)
-PointerAndSize store_string_to_latin1_or_utf16(
+PointerAndSize _store_string_to_latin1_or_utf16(
     Context cx, String src, int src_code_units) {
   assert(src_code_units <= MAX_STRING_BYTE_LENGTH);
   int ptr = cx.opts.realloc(0, 0, 2, src_code_units);
@@ -249,7 +252,7 @@ PointerAndSize store_string_to_latin1_or_utf16(
 /// are all using latin1+utf16 and one component over-uses UTF-16,
 /// other components can recover the Latin-1 compression.
 /// (The Latin-1 check can be inexpensively fused with the UTF-16 validate+copy loop.)
-PointerAndSize store_probably_utf16_to_latin1_or_utf16(
+PointerAndSize _store_probably_utf16_to_latin1_or_utf16(
     Context cx, String src, int src_code_units) {
   final src_byte_length = 2 * src_code_units;
   trap_if(src_byte_length > MAX_STRING_BYTE_LENGTH);
@@ -273,9 +276,15 @@ PointerAndSize store_probably_utf16_to_latin1_or_utf16(
 }
 // #
 
+/// The encoding used to [load_string] and [store_string] from wasm memory.
 enum StringEncoding {
+  /// [Utf8Codec]
   utf8,
+
+  /// [String.fromCharCodes] little endian
   utf16,
+
+  /// [latin1]
   latin1utf16;
 
   factory StringEncoding.fromJson(Object? json) {
@@ -298,6 +307,7 @@ enum StringEncoding {
     };
   }
 
+  /// Decodes the given little endian bytes into a Dart [String].
   String decode(Uint8List bytes) {
     switch (this) {
       case StringEncoding.utf8:
@@ -318,6 +328,7 @@ enum StringEncoding {
     }
   }
 
+  /// Encodes the given Dart [String] into little endian bytes.
   Uint8List encode(String string) {
     switch (this) {
       case StringEncoding.utf8:
@@ -340,12 +351,18 @@ enum StringEncoding {
 }
 
 class ParsedString {
+  /// The string value.
   final String value;
+
+  /// The encoding of the string when it was parsed from wasm's memory.
   final StringEncoding encoding;
+
+  /// The number of code units in the string.
   final int tagged_code_units;
 
   const ParsedString(this.value, this.encoding, this.tagged_code_units);
 
+  /// Creates a [ParsedString] from a Dart [String] with [StringEncoding.utf16].
   factory ParsedString.fromString(String value) =>
       ParsedString(value, StringEncoding.utf16, value.length);
 
@@ -423,7 +440,8 @@ ParsedString load_string_from_range(
   trap_if(ptr + byte_length > cx.opts.memory.length);
   final String s;
   try {
-    final codeUnits = cx.opts.view(ptr, ptr + byte_length);
+    final codeUnits =
+        Uint8List.sublistView(cx.opts.memory, ptr, ptr + byte_length);
     s = encoding.decode(codeUnits);
   }
   // TODO: on UnicodeError

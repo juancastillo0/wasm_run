@@ -77,12 +77,12 @@ class ComputedTypeData {
   });
 
   factory ComputedTypeData.fromType(ValType t) {
-    final despecialized = despecialize(t);
+    final despecialized = t.despecialized();
     return ComputedTypeData(
-      align: alignment(despecialized),
-      size_: size(despecialized),
+      align: despecialized.alignment(),
+      size_: despecialized.size(),
       despecialized: despecialized,
-      flatType: flatten_type(despecialized),
+      flatType: despecialized.flatTypes(),
     );
   }
 
@@ -114,7 +114,7 @@ class ComputedTypeData {
   }
 
   static Iterable<ValType> childrenType(ValType t) {
-    final self = singleList(t);
+    final self = List.filled(1, t);
     return switch (t) {
       Bool() ||
       IntType() ||
@@ -143,30 +143,5 @@ class ComputedTypeData {
             .followedBy(error == null ? const <ValType>[] : childrenType(error))
             .followedBy(self),
     };
-  }
-}
-
-class LRUMap {
-  final int maxLength;
-  LRUMap(this.maxLength);
-
-  Map<ValType, ComputedTypeData> map = Map.identity();
-  Map<ValType, ComputedTypeData> prevMap = Map.identity();
-
-  ComputedTypeData? get(ValType ty) {
-    final value = map[ty];
-    if (value != null) return value;
-    final prevValue = prevMap.remove(ty);
-    if (prevValue == null) return null;
-    set(ty, prevValue);
-    return prevValue;
-  }
-
-  void set(ValType ty, ComputedTypeData computed) {
-    map[ty] = computed;
-    if (map.length >= maxLength) {
-      prevMap = map;
-      map = Map.identity();
-    }
   }
 }

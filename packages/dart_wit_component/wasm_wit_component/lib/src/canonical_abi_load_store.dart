@@ -7,31 +7,29 @@ import 'dart:typed_data' show ByteData, Endian, Uint32List;
 import 'package:wasm_run/wasm_run.dart' show i64;
 import 'package:wasm_wit_component/src/canonical_abi.dart';
 import 'package:wasm_wit_component/src/canonical_abi_strings.dart';
+import 'package:wasm_wit_component/src/canonical_abi_utils.dart';
 
 const _isWeb = identical(0, 0.0);
-
-/// (1 << 32)
-const unpresentableU32 = 4294967296;
 
 /// Defines how to read a value of a given value type [t] out of linear memory
 /// starting at offset [ptr], returning the value represented as a Dart value
 Object? load(Context cx, int ptr, ValType t) {
-  assert(ptr == align_to(ptr, alignment(t)));
-  assert(ptr + size(t) <= cx.opts.memory.length);
-  final _t = despecialize(t);
-  return switch (_t) {
+  assert(ptr == align_to(ptr, t.alignment()));
+  assert(ptr + t.size() <= cx.opts.memory.length);
+  final t_ = t.despecialized();
+  return switch (t_) {
     Bool() => convert_int_to_bool(load_int(cx, ptr, 1)),
-    IntType() => load_int_type(cx, ptr, _t),
+    IntType() => _load_int_type(cx, ptr, t_),
     Float32() => canonicalize32(reinterpret_i32_as_float(load_int(cx, ptr, 4))),
-    Float64() => canonicalize64(loadFloat64(cx, ptr)),
+    Float64() => canonicalize64(_loadFloat64(cx, ptr)),
     Char() => convert_i32_to_char(cx, load_int(cx, ptr, 4)),
     StringType() => load_string(cx, ptr),
-    ListType(:final t) => load_list(cx, ptr, t),
-    Record(:final fields) => load_record(cx, ptr, fields),
-    Variant(:final cases) => load_variant(cx, ptr, cases),
-    Flags(:final labels) => load_flags(cx, ptr, labels),
-    Own() => lift_own(cx, load_int(cx, ptr, 4), _t),
-    Borrow() => lift_borrow(cx, load_int(cx, ptr, 4), _t),
+    ListType(:final t) => _load_list(cx, ptr, t),
+    Record(:final fields) => _load_record(cx, ptr, fields),
+    Variant(:final cases) => _load_variant(cx, ptr, cases),
+    Flags(:final labels) => _load_flags(cx, ptr, labels),
+    Own() => lift_own(cx, load_int(cx, ptr, 4), t_),
+    Borrow() => lift_borrow(cx, load_int(cx, ptr, 4), t_),
   };
 }
 // #
@@ -42,28 +40,28 @@ int load_int(Context cx, int ptr, int nbytes, {bool signed = false}) {
     (1, false) => data.getUint8(ptr),
     (2, false) => data.getUint16(ptr, Endian.little),
     (4, false) => data.getUint32(ptr, Endian.little),
-    (8, false) => cx.opts.getUint64(data, ptr),
+    (8, false) => throw unreachableException,
     (1, true) => data.getInt8(ptr),
     (2, true) => data.getInt16(ptr, Endian.little),
     (4, true) => data.getInt32(ptr, Endian.little),
-    (8, true) => cx.opts.getInt64(data, ptr),
+    (8, true) => throw unreachableException,
     _ => throw unreachableException,
   };
 }
 
 /// Integers are loaded directly from memory, with their high-order
 /// bit interpreted according to the signedness of the type.
-int load_int_type(Context cx, int ptr, IntType type) {
+Object _load_int_type(Context cx, int ptr, IntType type) {
   final data = cx.opts.getByteData();
   return switch (type) {
     U8() => data.getUint8(ptr),
     U16() => data.getUint16(ptr, Endian.little),
     U32() => data.getUint32(ptr, Endian.little),
-    U64() => cx.opts.getUint64(data, ptr),
+    U64() => cx.inst.getUint64(data, ptr),
     S8() => data.getInt8(ptr),
     S16() => data.getInt16(ptr, Endian.little),
     S32() => data.getInt32(ptr, Endian.little),
-    S64() => cx.opts.getInt64(data, ptr),
+    S64() => cx.inst.getInt64(data, ptr),
   };
 }
 
@@ -98,7 +96,7 @@ double reinterpret_i64_as_float(Object i) {
   return data.getFloat64(0, Endian.little);
 }
 
-double loadFloat64(Context cx, int ptr) {
+double _loadFloat64(Context cx, int ptr) {
   final data = cx.opts.getByteData();
   final value = i64.getInt64(data, ptr, Endian.little);
   return reinterpret_i64_as_float(value);
@@ -138,7 +136,7 @@ typedef TupleValue = RecordValue;
 // #
 
 /// Lists are loaded by recursively loading their elements
-ListValue load_list(Context cx, int ptr, ValType elem_type) {
+ListValue _load_list(Context cx, int ptr, ValType elem_type) {
   final int begin = load_int(cx, ptr, 4);
   final int length = load_int(cx, ptr + 4, 4);
   return load_list_from_range(cx, begin, length, elem_type);
@@ -150,8 +148,8 @@ ListValue load_list_from_range(
   int length,
   ValType elem_type,
 ) {
-  final elem_size = size(elem_type);
-  trap_if(ptr != align_to(ptr, alignment(elem_type)));
+  final elem_size = elem_type.size();
+  trap_if(ptr != align_to(ptr, elem_type.alignment()));
   trap_if(ptr + length * elem_size > cx.opts.memory.length);
   final a = List.generate(
     length,
@@ -162,12 +160,12 @@ ListValue load_list_from_range(
 }
 
 /// Records are loaded by recursively loading their fields
-RecordValue load_record(Context cx, int ptr, List<Field> fields) {
+RecordValue _load_record(Context cx, int ptr, List<Field> fields) {
   final record = <String, Object?>{};
   for (final field in fields) {
-    ptr = align_to(ptr, alignment(field.t));
+    ptr = align_to(ptr, field.t.alignment());
     record[field.label] = load(cx, ptr, field.t);
-    ptr += size(field.t);
+    ptr += field.t.size();
   }
   return record;
 }
@@ -183,12 +181,12 @@ RecordValue load_record(Context cx, int ptr, List<Field> fields) {
 /// to find a case label it knows about. While the code below appears to perform case-label
 /// lookup at runtime, a normal implementation can build the appropriate index tables
 /// at compile-time so that variant-passing is always O(1) and not involving string operations.
-VariantValue load_variant(
+VariantValue _load_variant(
   Context cx,
   int ptr,
   List<Case> cases,
 ) {
-  final disc_size = size(discriminant_type(cases));
+  final disc_size = discriminant_type(cases).size();
   final case_index = load_int(cx, ptr, disc_size);
   ptr += disc_size;
   trap_if(case_index >= cases.length);
@@ -203,13 +201,13 @@ String case_label_with_refinements(Case c, List<Case> cases) {
   if (c.refines == null) return c.label;
   final List<String> labels = [c.label];
   while (c.refines != null) {
-    c = cases[find_case(c.refines!, cases)];
+    c = cases[_find_case(c.refines!, cases)];
     labels.add(c.label);
   }
   return labels.join('|');
 }
 
-int find_case(String label, List<Case> cases) {
+int _find_case(String label, List<Case> cases) {
   final matchIndex = cases.indexWhere((e) => e.label == label);
   return matchIndex;
 }
@@ -218,7 +216,7 @@ int find_case(String label, List<Case> cases) {
 
 /// Flags are converted from a bit-vector to a dictionary whose keys are
 /// derived from the ordered labels of the flags type.
-FlagsValue load_flags(Context cx, int ptr, List<String> labels) {
+FlagsValue _load_flags(Context cx, int ptr, List<String> labels) {
   final size = size_flags(labels);
   final elem_size = size >= 4 ? 4 : size;
   final v = Uint32List(num_i32_flags(labels));
@@ -259,18 +257,18 @@ BorrowHandle lift_borrow(Context cx, int i, Resource t) {
 }
 // ### Storing
 
-int truthyInt(Object? v) => v == false || v == 0 || v == null ? 0 : 1;
+int _truthyInt(Object? v) => v == false || v == 0 || v == null ? 0 : 1;
 
 /// The store function defines how to write a value [v] of a given value
 /// type [t] into linear memory starting at offset [ptr].
 /// Presenting the definition of store piecewise.
 void store(Context cx, Object? v, ValType t, int ptr) {
-  assert(ptr == align_to(ptr, alignment(t)));
-  assert(ptr + size(t) <= cx.opts.memory.length);
-  final _t = despecialize(t);
-  switch (_t) {
+  assert(ptr == align_to(ptr, t.alignment()));
+  assert(ptr + t.size() <= cx.opts.memory.length);
+  final t_ = t.despecialized();
+  switch (t_) {
     case Bool():
-      store_int(cx, truthyInt(v), ptr, 1);
+      store_int(cx, _truthyInt(v), ptr, 1);
     case U8():
       store_int(cx, v! as int, ptr, 1);
     case U16():
@@ -278,7 +276,7 @@ void store(Context cx, Object? v, ValType t, int ptr) {
     case U32():
       store_int(cx, v! as int, ptr, 4);
     case U64():
-      store_int(cx, v! as int, ptr, 8);
+      cx.inst.setUint64(cx.opts.getByteData(), ptr, v!);
     case S8():
       store_int(cx, v! as int, ptr, 1, signed: true);
     case S16():
@@ -286,12 +284,12 @@ void store(Context cx, Object? v, ValType t, int ptr) {
     case S32():
       store_int(cx, v! as int, ptr, 4, signed: true);
     case S64():
-      store_int(cx, v! as int, ptr, 8, signed: true);
+      cx.inst.setInt64(cx.opts.getByteData(), ptr, v!);
     case Float32():
       store_int(
           cx, reinterpret_float_as_i32(canonicalize32(v! as double)), ptr, 4);
     case Float64():
-      storeFloat64(cx, canonicalize64(v! as double), ptr);
+      _storeFloat64(cx, canonicalize64(v! as double), ptr);
     case Char():
       store_int(cx, char_to_i32(v! as String), ptr, 4);
     case StringType():
@@ -301,9 +299,9 @@ void store(Context cx, Object? v, ValType t, int ptr) {
         ptr,
       );
     case ListType(:final t):
-      store_list(cx, v! as ListValue, ptr, t);
+      _store_list(cx, v! as ListValue, ptr, t);
     case Record(:final fields):
-      store_record(
+      _store_record(
         cx,
         v is List
             ? Map.fromIterables(fields.map((e) => e.label), v)
@@ -312,13 +310,13 @@ void store(Context cx, Object? v, ValType t, int ptr) {
         fields,
       );
     case Variant(:final cases):
-      store_variant(cx, v! as VariantValue, ptr, cases);
+      _store_variant(cx, v! as VariantValue, ptr, cases);
     case Flags(:final labels):
-      store_flags(cx, v! as FlagsValue, ptr, labels);
+      _store_flags(cx, v! as FlagsValue, ptr, labels);
     case Own():
-      store_int(cx, lower_own(cx, v! as Handle, _t), ptr, 4);
+      store_int(cx, lower_own(cx, v! as Handle, t_), ptr, 4);
     case Borrow():
-      store_int(cx, lower_borrow(cx, v! as Handle, _t), ptr, 4);
+      store_int(cx, lower_borrow(cx, v! as Handle, t_), ptr, 4);
   }
 }
 // #
@@ -333,11 +331,11 @@ void store_int(Context cx, int v, int ptr, int nbytes, {bool signed = false}) {
     (1, false) => data.setUint8(ptr, v),
     (2, false) => data.setUint16(ptr, v, Endian.little),
     (4, false) => data.setUint32(ptr, v, Endian.little),
-    (8, false) => cx.opts.setUint64(data, ptr, v),
+    (8, false) => throw unreachableException,
     (1, true) => data.setInt8(ptr, v),
     (2, true) => data.setInt16(ptr, v, Endian.little),
     (4, true) => data.setInt32(ptr, v, Endian.little),
-    (8, true) => cx.opts.setInt64(data, ptr, v),
+    (8, true) => throw unreachableException,
     _ => throw unreachableException,
   };
 }
@@ -359,7 +357,7 @@ Object reinterpret_float_as_i64(double f) {
   return data.getInt64(0, Endian.little);
 }
 
-void storeFloat64(Context cx, double v, int ptr) {
+void _storeFloat64(Context cx, double v, int ptr) {
   final data = cx.opts.getByteData();
   final intV = reinterpret_float_as_i64(v);
   i64.setInt64(data, ptr, intV, Endian.little);
@@ -389,7 +387,7 @@ typedef PointerAndSize = (int, int);
 ///
 /// Unlike strings, lists can simply allocate based on the up-front
 /// knowledge of length and static element size.
-void store_list(Context cx, ListValue v, int ptr, ValType elem_type) {
+void _store_list(Context cx, ListValue v, int ptr, ValType elem_type) {
   final (begin, length) = store_list_into_range(cx, v, elem_type);
   store_int(cx, begin, ptr, 4);
   store_int(cx, length, ptr + 4, 4);
@@ -397,8 +395,8 @@ void store_list(Context cx, ListValue v, int ptr, ValType elem_type) {
 
 PointerAndSize store_list_into_range(
     Context cx, ListValue v, ValType elem_type) {
-  final size_elem = size(elem_type);
-  final alignment_elem = alignment(elem_type);
+  final size_elem = elem_type.size();
+  final alignment_elem = elem_type.alignment();
 
   final byte_length = v.length * size_elem;
   trap_if(byte_length >= unpresentableU32);
@@ -413,16 +411,16 @@ PointerAndSize store_list_into_range(
 
 /// Lists and records are stored by recursively storing their elements
 /// and are symmetric to the loading functions.
-void store_record(
+void _store_record(
   Context cx,
   RecordValue v,
   int ptr,
   List<Field> fields,
 ) {
   for (final f in fields) {
-    ptr = align_to(ptr, alignment(f.t));
+    ptr = align_to(ptr, f.t.alignment());
     store(cx, v[f.label], f.t, ptr);
-    ptr += size(f.t);
+    ptr += f.t.size();
   }
 }
 // #
@@ -434,9 +432,9 @@ void store_record(
 /// can statically fuse store_variant with its matching load_variant
 /// to ultimately build a dense array that maps producer's case indices
 /// to the consumer's case indices.
-void store_variant(Context cx, VariantValue v, int ptr, List<Case> cases) {
+void _store_variant(Context cx, VariantValue v, int ptr, List<Case> cases) {
   final (case_index, case_value) = match_case(v, cases);
-  final disc_size = size(discriminant_type(cases));
+  final disc_size = discriminant_type(cases).size();
   store_int(cx, case_index, ptr, disc_size);
   ptr += disc_size;
   ptr = align_to(ptr, max_case_alignment(cases));
@@ -449,7 +447,7 @@ void store_variant(Context cx, VariantValue v, int ptr, List<Case> cases) {
   final key = v.keys.first;
   final value = v.values.first;
   for (final label in key.split('|')) {
-    final case_index = find_case(label, cases);
+    final case_index = _find_case(label, cases);
     if (case_index != -1) return (case_index, value);
   }
   throw Exception('no case matches ${v} ${cases}');
@@ -462,7 +460,7 @@ void store_variant(Context cx, VariantValue v, int ptr, List<Case> cases) {
 /// Flag lifting/lowering can be statically fused into array/integer operations
 /// (with a simple byte copy when the case lists are the same) to avoid any
 /// string operations in a similar manner to variants.
-void store_flags(Context cx, FlagsValue v, int ptr, List<String> labels) {
+void _store_flags(Context cx, FlagsValue v, int ptr, List<String> labels) {
   final size = size_flags(labels);
   final elem_size = size >= 4 ? 4 : size;
   assert(elem_size * v.length == size);

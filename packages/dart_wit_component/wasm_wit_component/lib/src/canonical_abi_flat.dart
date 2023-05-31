@@ -10,6 +10,7 @@ import 'package:wasm_wit_component/src/canonical_abi.dart';
 import 'package:wasm_wit_component/src/canonical_abi_cache.dart';
 import 'package:wasm_wit_component/src/canonical_abi_load_store.dart';
 import 'package:wasm_wit_component/src/canonical_abi_strings.dart';
+import 'package:wasm_wit_component/src/canonical_abi_utils.dart';
 
 const int MAX_FLAT_PARAMS = 16;
 const int MAX_FLAT_RESULTS = 1;
@@ -85,7 +86,7 @@ List<FlatType> flatten_type(ValType t) {
     final cached = ComputedTypeData.cache[t];
     if (cached != null) return cached.flatType;
   }
-  return switch (despecialize(t)) {
+  return switch (t.despecialized()) {
     Bool() => const [FlatType.i32],
     U8() || U16() || U32() => const [FlatType.i32],
     S8() || S16() || S32() => const [FlatType.i32],
@@ -94,8 +95,8 @@ List<FlatType> flatten_type(ValType t) {
     Float64() => const [FlatType.f64],
     Char() => const [FlatType.i32],
     StringType() || ListType() => const [FlatType.i32, FlatType.i32],
-    Record(:final fields) => flatten_record(fields),
-    Variant(:final cases) => flatten_variant(cases),
+    Record(:final fields) => _flatten_record(fields),
+    Variant(:final cases) => _flatten_variant(cases),
     Flags(:final labels) =>
       List.filled(num_i32_flags(labels), FlatType.i32, growable: false),
     Own() || Borrow() => const [FlatType.i32],
@@ -104,7 +105,7 @@ List<FlatType> flatten_type(ValType t) {
 // #
 
 /// Record flattening simply flattens each field in sequence.
-List<FlatType> flatten_record(List<Field> fields) {
+List<FlatType> _flatten_record(List<Field> fields) {
   final flat = fields.expand((f) => flatten_type(f.t)).toList(growable: false);
   return flat;
 }
@@ -113,17 +114,17 @@ List<FlatType> flatten_record(List<Field> fields) {
 /// Variant flattening is more involved due to the fact that each case payload
 /// can have a totally different flattening. Rather than giving up when there
 /// is a type mismatch, the Canonical ABI relies on the fact that the 4 core
-/// value types can be easily bit-cast between each other and defines a [join]
+/// value types can be easily bit-cast between each other and defines a [_join]
 /// operator to pick the tightest approximation. What this means is that,
 /// regardless of the dynamic case, all flattened variants are passed with
 /// the same static set of core types, which may involve, e.g.,
 /// reinterpreting an f32 as an i32 or zero-extending an i32 into an i64.
-List<FlatType> flatten_variant(List<Case> cases) {
+List<FlatType> _flatten_variant(List<Case> cases) {
   final List<FlatType> flat = [];
   for (final c in cases.where((c) => c.t != null)) {
     for (final (i, ft) in flatten_type(c.t!).indexed) {
       if (i < flat.length) {
-        flat[i] = join(flat[i], ft);
+        flat[i] = _join(flat[i], ft);
       } else {
         flat.add(ft);
       }
@@ -132,7 +133,7 @@ List<FlatType> flatten_variant(List<Case> cases) {
   return flatten_type(discriminant_type(cases)) + flat;
 }
 
-FlatType join(FlatType a, FlatType b) {
+FlatType _join(FlatType a, FlatType b) {
   if (a == b) return a;
   if ((a == FlatType.i32 && b == FlatType.f32) ||
       (a == FlatType.f32 && b == FlatType.i32)) return FlatType.i32;
@@ -151,18 +152,6 @@ class FlatValue {
   FlatValue(this.t, this.v);
 }
 
-// @dataclass
-// class ValueIter:
-//   values: [Value]
-//   i = 0
-//   def next(self, t):
-//     v = self.values[self.i]
-//     self.i += 1
-//     assert(v.t == t)
-//     return v.v
-
-// typedef IteratorValues = Iterator<Value>;
-
 abstract class ValueIter {
   factory ValueIter(List<FlatValue> values) = _ValueIter;
 
@@ -170,7 +159,7 @@ abstract class ValueIter {
 }
 
 extension ValueIterExt on ValueIter {
-  Object nextInt(FlatType t) => next(t);
+  Object nextInt64() => next(FlatType.i64);
 
   int nextInt32() => next(FlatType.i32) as int;
 
@@ -197,27 +186,27 @@ class _ValueIter implements ValueIter {
 /// iterator [vi] that iterates over a complete parameter or result list and
 /// asserts that the expected and actual types line up.
 Object? lift_flat(Context cx, ValueIter vi, ValType t) {
-  final _t = despecialize(t);
-  return switch (_t) {
+  final t_ = t.despecialized();
+  return switch (t_) {
     Bool() => convert_int_to_bool(vi.nextInt32()),
-    U8() => lift_flat_unsigned(vi, 32, 8),
-    U16() => lift_flat_unsigned(vi, 32, 16),
-    U32() => lift_flat_unsigned(vi, 32, 32),
-    U64() => lift_flat_unsigned(vi, 64, 64),
-    S8() => lift_flat_signed(vi, 32, 8),
-    S16() => lift_flat_signed(vi, 32, 16),
-    S32() => lift_flat_signed(vi, 32, 32),
-    S64() => lift_flat_signed(vi, 64, 64),
+    U8() => _lift_flat_unsigned_i32(vi, 8),
+    U16() => _lift_flat_unsigned_i32(vi, 16),
+    U32() => _lift_flat_unsigned_i32(vi, 32),
+    U64() => cx.inst.liftUnsignedI64(vi.nextInt64()),
+    S8() => _lift_flat_signed_i32(vi, 8),
+    S16() => _lift_flat_signed_i32(vi, 16),
+    S32() => _lift_flat_signed_i32(vi, 32),
+    S64() => cx.inst.liftSignedI64(vi.nextInt64()),
     Float32() => canonicalize32(vi.nextDouble(FlatType.f32)),
     Float64() => canonicalize64(vi.nextDouble(FlatType.f64)),
     Char() => convert_i32_to_char(cx, vi.nextInt32()),
-    StringType() => lift_flat_string(cx, vi),
-    ListType(:final t) => lift_flat_list(cx, vi, t),
-    Record(:final fields) => lift_flat_record(cx, vi, fields),
-    final Variant t => lift_flat_variant(cx, vi, t),
-    Flags(:final labels) => lift_flat_flags(vi, labels),
-    Own() => lift_own(cx, vi.nextInt32(), _t),
-    Borrow() => lift_borrow(cx, vi.nextInt32(), _t),
+    StringType() => _lift_flat_string(cx, vi),
+    ListType(:final t) => _lift_flat_list(cx, vi, t),
+    Record(:final fields) => _lift_flat_record(cx, vi, fields),
+    final Variant t => _lift_flat_variant(cx, vi, t),
+    Flags(:final labels) => _lift_flat_flags(vi, labels),
+    Own() => lift_own(cx, vi.nextInt32(), t_),
+    Borrow() => lift_borrow(cx, vi.nextInt32(), t_),
   };
 }
 // #
@@ -230,26 +219,14 @@ Object? lift_flat(Context cx, ValueIter vi, ValType t) {
 /// represented as unsigned Python ints and thus lifting to a signed
 /// type performs a manual 2s complement conversion in the Python
 /// (which would be a no-op in hardware).
-int lift_flat_unsigned(ValueIter vi, int core_width, int t_width) {
-  if (core_width == 32) {
-    final i = vi.nextInt32();
-    final maxValue = t_width == 32 ? unpresentableU32 : 1 << t_width;
-    return i % maxValue;
-  } else {
-    final i = vi.nextInt(FlatType.i64);
-    // TODO: this could change if we represent them as BigInt
-    return i64.toInt(i);
-  }
+int _lift_flat_unsigned_i32(ValueIter vi, int t_width) {
+  final i = vi.nextInt32();
+  final maxValue = t_width == 32 ? unpresentableU32 : 1 << t_width;
+  return i % maxValue;
 }
 
-int lift_flat_signed(ValueIter vi, int core_width, int t_width) {
-  if (core_width == 32) {
-    return vi.nextInt32();
-  } else {
-    final i = vi.nextInt(FlatType.i64);
-    // TODO: this could change if we represent them as BigInt
-    return i64.toInt(i);
-  }
+int _lift_flat_signed_i32(ValueIter vi, int t_width) {
+  return vi.nextInt32();
 }
 
 // #
@@ -258,7 +235,7 @@ int lift_flat_signed(ValueIter vi, int core_width, int t_width) {
 /// so lifting these types is essentially the same as loading them from memory;
 /// the only difference is that the pointer and length come
 /// from i32 values instead of from linear memory:
-ParsedString lift_flat_string(Context cx, ValueIter vi) {
+ParsedString _lift_flat_string(Context cx, ValueIter vi) {
   final int ptr = vi.nextInt32();
   final int packed_length = vi.nextInt32();
   return load_string_from_range(cx, ptr, packed_length);
@@ -268,7 +245,7 @@ ParsedString lift_flat_string(Context cx, ValueIter vi) {
 /// so lifting these types is essentially the same as loading them from memory;
 /// the only difference is that the pointer and length come
 /// from i32 values instead of from linear memory:
-ListValue lift_flat_list(Context cx, ValueIter vi, ValType elem_type) {
+ListValue _lift_flat_list(Context cx, ValueIter vi, ValType elem_type) {
   final int ptr = vi.nextInt32();
   final int length = vi.nextInt32();
   return load_list_from_range(cx, ptr, length, elem_type);
@@ -277,7 +254,7 @@ ListValue lift_flat_list(Context cx, ValueIter vi, ValType elem_type) {
 // #
 
 /// Records are lifted by recursively lifting their fields:
-RecordValue lift_flat_record(Context cx, ValueIter vi, List<Field> fields) {
+RecordValue _lift_flat_record(Context cx, ValueIter vi, List<Field> fields) {
   final RecordValue record = {};
   for (final f in fields) {
     record[f.label] = lift_flat(cx, vi, f.t);
@@ -313,13 +290,13 @@ class _CoerceValueIter implements ValueIter {
 }
 
 /// Variants are also lifted recursively. Lifting a variant must carefully
-/// follow the definition of [flatten_variant] above, consuming the exact
+/// follow the definition of [_flatten_variant] above, consuming the exact
 /// same core types regardless of the dynamic case payload being lifted.
-/// Because of the [join] performed by [flatten_variant], we need a
+/// Because of the [_join] performed by [_flatten_variant], we need a
 /// more-permissive value iterator ([_CoerceValueIter]) that reinterprets
 /// between the different types appropriately and also traps if the
 /// high bits of an i64 are set for a 32-bit type:
-VariantValue lift_flat_variant(Context cx, ValueIter vi, Variant variant) {
+VariantValue _lift_flat_variant(Context cx, ValueIter vi, Variant variant) {
   final cases = variant.cases;
   final flat_types = flatten_type(variant); // flatten_variant(cases);
   assert(flat_types[0] == FlatType.i32);
@@ -346,7 +323,7 @@ int wrap_i64_to_i32(int i) {
 /// Finally, flags are lifted by OR-ing together all the flattened i32 values
 /// and then lifting to a record the same way as when loading flags
 /// from linear memory.
-FlagsValue lift_flat_flags(ValueIter vi, List<String> labels) {
+FlagsValue _lift_flat_flags(ValueIter vi, List<String> labels) {
   final list = Uint32List(num_i32_flags(labels));
   final data = ByteData.sublistView(list);
   for (int i = 0; i < list.length; i++) {
@@ -361,34 +338,34 @@ FlagsValue lift_flat_flags(ValueIter vi, List<String> labels) {
 /// of a given type [t] into zero or more core [FlatValue]s.
 /// Presenting the definition of lower_flat piecewise.
 List<FlatValue> lower_flat(Context cx, Object? v, ValType t) {
-  final _t = despecialize(t);
-  return switch (_t) {
+  final t_ = t.despecialized();
+  return switch (t_) {
     Bool() => singleList(FlatValue(FlatType.i32, v == 0 || v == false ? 0 : 1)),
     U8() || U16() || U32() => singleList(FlatValue(FlatType.i32, v! as int)),
     U64() => singleList(FlatValue(FlatType.i64, v! as int)),
-    S8() || S16() || S32() => lower_flat_signed(v! as int, 32),
-    S64() => lower_flat_signed(v! as int, 64),
+    S8() || S16() || S32() => _lower_flat_signed(v! as int, 32),
+    S64() => _lower_flat_signed(v! as int, 64),
     Float32() =>
       singleList(FlatValue(FlatType.f32, canonicalize32(v! as double))),
     Float64() =>
       singleList(FlatValue(FlatType.f64, canonicalize64(v! as double))),
     Char() => singleList(FlatValue(FlatType.i32, char_to_i32(v! as String))),
-    StringType() => lower_flat_string(
+    StringType() => _lower_flat_string(
         cx,
         v is String ? ParsedString.fromString(v) : v! as ParsedString,
       ),
-    ListType(:final t) => lower_flat_list(cx, v! as ListValue, t),
-    Record(:final fields) => lower_flat_record(
+    ListType(:final t) => _lower_flat_list(cx, v! as ListValue, t),
+    Record(:final fields) => _lower_flat_record(
         cx,
         v is List
             ? Map.fromIterables(fields.map((e) => e.label), v)
             : v! as RecordValue,
         fields,
       ),
-    final Variant t => lower_flat_variant(cx, v! as VariantValue, t),
-    Flags(:final labels) => lower_flat_flags(v! as FlagsValue, labels),
-    Own() => [FlatValue(FlatType.i32, lower_own(cx, v! as Handle, _t))],
-    Borrow() => [FlatValue(FlatType.i32, lower_borrow(cx, v! as Handle, _t))],
+    final Variant t => _lower_flat_variant(cx, v! as VariantValue, t),
+    Flags(:final labels) => _lower_flat_flags(v! as FlagsValue, labels),
+    Own() => [FlatValue(FlatType.i32, lower_own(cx, v! as Handle, t_))],
+    Borrow() => [FlatValue(FlatType.i32, lower_borrow(cx, v! as Handle, t_))],
   };
 }
 // #
@@ -398,7 +375,8 @@ List<FlatValue> lower_flat(Context cx, Object? v, ValType t) {
 /// unsigned integer values need no extra conversion.
 /// Signed integer values are converted to unsigned core i32s
 /// by 2s complement arithmetic (which again would be a no-op in hardware)
-List<FlatValue> lower_flat_signed(int i, int core_bits) {
+List<FlatValue> _lower_flat_signed(int i, int core_bits) {
+  // TODO: this will need to change to support 64-bit integers
   return singleList(
     FlatValue(core_bits == 32 ? FlatType.i32 : FlatType.i64, i),
   );
@@ -409,7 +387,7 @@ List<FlatValue> lower_flat_signed(int i, int core_bits) {
 /// the previous definitions;
 /// only the resulting pointers are returned differently
 /// (as i32 values instead of as a pair in linear memory)
-List<FlatValue> lower_flat_string(Context cx, ParsedString v) {
+List<FlatValue> _lower_flat_string(Context cx, ParsedString v) {
   final (ptr, packed_length) = store_string_into_range(cx, v);
   return [FlatValue(FlatType.i32, ptr), FlatValue(FlatType.i32, packed_length)];
 }
@@ -418,14 +396,14 @@ List<FlatValue> lower_flat_string(Context cx, ParsedString v) {
 /// the previous definitions;
 /// only the resulting pointers are returned differently
 /// (as i32 values instead of as a pair in linear memory)
-List<FlatValue> lower_flat_list(Context cx, ListValue v, ValType elem_type) {
+List<FlatValue> _lower_flat_list(Context cx, ListValue v, ValType elem_type) {
   final (ptr, length) = store_list_into_range(cx, v, elem_type);
   return [FlatValue(FlatType.i32, ptr), FlatValue(FlatType.i32, length)];
 }
 // #
 
 /// Records are lowered by recursively lowering their fields
-List<FlatValue> lower_flat_record(
+List<FlatValue> _lower_flat_record(
     Context cx, RecordValue v, List<Field> fields) {
   final List<FlatValue> flat = fields
       .expand((f) => lower_flat(cx, v[f.label], f.t))
@@ -435,17 +413,17 @@ List<FlatValue> lower_flat_record(
 // #
 
 /// Variants are also lowered recursively.
-/// Symmetric to [lift_flat_variant] above, lower_flat_variant
-/// must consume all flattened types of [flatten_variant],
-/// manually coercing the otherwise-incompatible type pairings allowed by [join]
-List<FlatValue> lower_flat_variant(
+/// Symmetric to [_lift_flat_variant] above, _lower_flat_variant
+/// must consume all flattened types of [_flatten_variant],
+/// manually coercing the otherwise-incompatible type pairings allowed by [_join]
+List<FlatValue> _lower_flat_variant(
     Context cx, VariantValue v, Variant variant) {
   final cases = variant.cases;
   final (case_index, case_value) = match_case(v, cases);
   final flat_types = flatten_type(variant); // flatten_variant(cases);
   int flat_index = 0;
-  final _disc = flat_types[flat_index++];
-  assert(_disc == FlatType.i32);
+  final disc = flat_types[flat_index++];
+  assert(disc == FlatType.i32);
   final c = cases[case_index];
   final List<FlatValue> payload =
       c.t == null ? [] : lower_flat(cx, case_value, c.t!);
@@ -479,7 +457,7 @@ List<FlatValue> lower_flat_variant(
 // #
 
 /// Finally, flags are lowered by slicing the bit vector into i32 chunks:
-List<FlatValue> lower_flat_flags(FlagsValue v, List<String> labels) {
+List<FlatValue> _lower_flat_flags(FlagsValue v, List<String> labels) {
   final List<FlatValue> flat = [];
   final data = ByteData.sublistView(v);
   assert(v.length == num_i32_flags(labels));
@@ -506,8 +484,8 @@ ListValue lift_values(
   if (flat_types.length > max_flat) {
     final ptr = vi.nextInt32();
     final tuple_type = computedTypes?.tupleType ?? Tuple(ts);
-    trap_if(ptr != align_to(ptr, alignment(tuple_type)));
-    trap_if(ptr + size(tuple_type) > cx.opts.memory.length);
+    trap_if(ptr != align_to(ptr, tuple_type.alignment()));
+    trap_if(ptr + tuple_type.size() > cx.opts.memory.length);
     final tuple_value = load(cx, ptr, tuple_type)! as TupleValue;
 
     return tuple_value.values.toList(growable: LIST_GROWABLE);
@@ -538,8 +516,8 @@ List<FlatValue> lower_values(
       Iterable.generate(vs.length, (i) => i.toString()),
       vs,
     );
-    final tuple_size = size(tuple_type);
-    final tuple_alignment = alignment(tuple_type);
+    final tuple_size = tuple_type.size();
+    final tuple_alignment = tuple_type.alignment();
     final int ptr;
     if (out_param == null) {
       ptr = cx.opts.realloc(0, 0, tuple_alignment, tuple_size);

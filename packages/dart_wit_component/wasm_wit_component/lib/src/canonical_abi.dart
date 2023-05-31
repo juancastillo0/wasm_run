@@ -10,7 +10,8 @@ import 'package:wasm_wit_component/src/canonical_abi_flat.dart';
 import 'package:wasm_wit_component/src/canonical_abi_load_store.dart';
 import 'package:wasm_wit_component/src/canonical_abi_strings.dart';
 import 'package:wasm_wit_component/src/canonical_abi_types.dart';
-import 'package:wasm_wit_component/src/generator.dart';
+import 'package:wasm_wit_component/src/canonical_abi_utils.dart';
+import 'package:wasm_wit_component/src/generator.dart' show Int64TypeConfig;
 
 export 'package:wasm_wit_component/src/canonical_abi_flat.dart'
     show FlatType, FlatValue;
@@ -42,40 +43,6 @@ class Trap implements Exception {
   }
 }
 
-Never trap([Object? sourceError, StackTrace? stackTrace]) =>
-    throw Trap(sourceError, stackTrace);
-
-// ignore: avoid_positional_boolean_parameters
-void trap_if(bool condition) {
-  if (condition) throw Trap('trap_if');
-}
-
-const LIST_GROWABLE =
-    bool.fromEnvironment('CANONICAL_ABI_LIST_GROWABLE', defaultValue: false);
-
-List<T> singleList<T>(T value) => List.filled(1, value, growable: false);
-
-const _isWeb = identical(0, 0.0);
-
-// ### Context
-
-class Context {
-  final CanonicalOptions opts;
-
-  /// Represents the component instance that the currently-executing
-  /// canonical definition is defined to execute inside.
-  final ComponentInstance inst;
-
-  /// TODO(generator): The lenders and borrow_count fields will be used below for dynamically enforcing
-  /// the rules of borrow handles. The one thing to mention here is that the lenders
-  /// list usually has a fixed size (in all cases except when a function signature
-  /// has borrows in lists) and thus can be stored inline in the native stack frame.
-  final List<Handle> lenders = [];
-  int borrow_count = 0;
-
-  Context(this.opts, this.inst);
-}
-
 // #
 
 class CanonicalOptions {
@@ -101,24 +68,6 @@ class CanonicalOptions {
   /// matching the callee's return type and empty results.
   final void Function(List<FlatValue> flat_results)? post_return;
 
-  // TODO: these methods may change if we use BigInt
-
-  int getUint64(ByteData data, int ptr) => _isWeb
-      ? i64.toInt(i64.getUint64(data, ptr, Endian.little))
-      : data.getUint64(ptr, Endian.little);
-
-  int getInt64(ByteData data, int ptr) => _isWeb
-      ? i64.toInt(i64.getInt64(data, ptr, Endian.little))
-      : data.getInt64(ptr, Endian.little);
-
-  void setUint64(ByteData data, int ptr, int v) => _isWeb
-      ? i64.setUint64(data, ptr, i64.fromInt(v), Endian.little)
-      : data.setUint64(ptr, v, Endian.little);
-
-  void setInt64(ByteData data, int ptr, int v) => _isWeb
-      ? i64.setInt64(data, ptr, i64.fromInt(v), Endian.little)
-      : data.setInt64(ptr, v, Endian.little);
-
   ///
   CanonicalOptions(
     this._updateMemoryView,
@@ -128,10 +77,6 @@ class CanonicalOptions {
     this.realloc,
     this.post_return,
   );
-
-  Uint8List view(int start, int end) {
-    return Uint8List.sublistView(memory, start, end);
-  }
 }
 
 // #
@@ -148,36 +93,34 @@ class ComponentInstance {
 
   final Int64TypeConfig int64Type;
 
+  Object liftUnsignedI64(Object i) {
+    return switch (int64Type) {
+      Int64TypeConfig.bigInt ||
+      Int64TypeConfig.bigIntUnsignedOnly =>
+        i64.toBigInt(i).toUnsigned(64),
+      Int64TypeConfig.coreInt => i64.toInt(i),
+      Int64TypeConfig.nativeObject => i,
+    };
+  }
+
+  Object liftSignedI64(Object i) {
+    return switch (int64Type) {
+      Int64TypeConfig.bigInt => i64.toBigInt(i),
+      Int64TypeConfig.bigIntUnsignedOnly ||
+      Int64TypeConfig.coreInt =>
+        i64.toInt(i),
+      Int64TypeConfig.nativeObject => i,
+    };
+  }
+
   Object getUint64(ByteData data, int ptr) {
-    if (_isWeb) {
-      final value = i64.getUint64(data, ptr, Endian.little);
-      return switch (int64Type) {
-        Int64TypeConfig.bigInt ||
-        Int64TypeConfig.bigIntUnsignedOnly =>
-          i64.toBigInt(value),
-        Int64TypeConfig.coreInt => i64.toInt(value),
-        Int64TypeConfig.nativeObject => value,
-      };
-    } else {
-      final value = data.getUint64(ptr, Endian.little);
-      return switch (int64Type) {
-        Int64TypeConfig.bigInt ||
-        Int64TypeConfig.bigIntUnsignedOnly =>
-          BigInt.from(value).toUnsigned(64),
-        Int64TypeConfig.coreInt || Int64TypeConfig.nativeObject => value,
-      };
-    }
+    final value = i64.getUint64(data, ptr, Endian.little);
+    return liftUnsignedI64(value);
   }
 
   Object getInt64(ByteData data, int ptr) {
     final value = i64.getInt64(data, ptr, Endian.little);
-    return switch (int64Type) {
-      Int64TypeConfig.bigInt => i64.toBigInt(value),
-      Int64TypeConfig.bigIntUnsignedOnly ||
-      Int64TypeConfig.coreInt =>
-        i64.toInt(value),
-      Int64TypeConfig.nativeObject => value,
-    };
+    return liftSignedI64(value);
   }
 
   void setUint64(ByteData data, int ptr, Object v) {
