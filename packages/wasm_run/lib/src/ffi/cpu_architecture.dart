@@ -30,7 +30,7 @@ class CpuArchitecture {
   static const x86_64 = 'x86_64';
 
   /// The environment variable that contains the CPU architecture on Windows.
-  static const PROCESSOR_ARCHITECTURE = 'PROCESSOR_ARCHITECTURE';
+  static const processorArchitectureEnvVariable = 'PROCESSOR_ARCHITECTURE';
 
   /// Returns the current CPU architecture.
   ///
@@ -40,17 +40,17 @@ class CpuArchitecture {
   /// Taken from https://gist.github.com/corbindavenport/d04085e2ac42da303efbaccaa717f223
   static Future<CpuArchitecture> currentCpuArchitecture() async {
     if (Platform.isWindows) {
-      final cpu = Platform.environment[PROCESSOR_ARCHITECTURE];
+      final cpu = Platform.environment[processorArchitectureEnvVariable];
       return CpuArchitecture(cpu!);
     } else {
       final info = await Process.run('uname', ['-m']);
       if (info.exitCode != 0) {
-        final cpu = Platform.environment[PROCESSOR_ARCHITECTURE];
+        final cpu = Platform.environment[processorArchitectureEnvVariable];
         if (cpu != null) return CpuArchitecture(cpu);
 
         throw Exception(
           'Could not find CPU architecture: ${info.stderr}.'
-          '\n You may use the $PROCESSOR_ARCHITECTURE environment variable',
+          '\n You may use the $processorArchitectureEnvVariable environment variable',
         );
       }
       final cpu = info.stdout.toString().replaceAll('\n', '');

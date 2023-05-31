@@ -371,21 +371,6 @@ class _References {
       externRef: (id) => getReference(id, module),
     );
   }
-
-  static WasmValue dartValueTypedFromWasm(WasmVal raw, WasmRunModuleId module) {
-    return raw.when(
-      i32: WasmValue.i32,
-      i64: WasmValue.i64,
-      f32: WasmValue.f32,
-      f64: WasmValue.f64,
-      v128: WasmValue.v128,
-      funcRef: (func) {
-        if (func == null) return const WasmValue.funcRef(null);
-        return WasmValue.funcRef(_toWasmFunction(func, module, null));
-      },
-      externRef: (id) => WasmValue.externRef(getReference(id, module)),
-    );
-  }
 }
 
 class _Builder extends WasmInstanceBuilder {
