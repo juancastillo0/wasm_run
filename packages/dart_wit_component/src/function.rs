@@ -198,6 +198,23 @@ impl Parsed<'_> {
         }
     }
 
+    pub fn type_param(&self, name: &str, ty: &Type, is_constructor: bool) -> String {
+        let type_or_this = if is_constructor {
+            "this.".to_string()
+        } else {
+            self.type_to_str(ty)
+        };
+        if !self.2.required_option && self.is_option(ty) {
+            if self.2.use_null_for_option {
+                format!("{type_or_this} {},", name.as_var())
+            } else {
+                format!("{type_or_this} {} = const None(),", name.as_var())
+            }
+        } else {
+            format!("required {type_or_this} {},", name.as_var())
+        }
+    }
+
     pub fn is_unit(&self, ty: &Type) -> bool {
         match ty {
             Type::Id(ty_id) => {
@@ -216,13 +233,7 @@ impl Parsed<'_> {
         let mut params = f
             .params
             .iter()
-            .map(|(name, ty)| {
-                if self.is_option(ty) {
-                    format!("{} {} = const None(),", self.type_to_str(ty), name.as_var())
-                } else {
-                    format!("required {} {},", self.type_to_str(ty), name.as_var())
-                }
-            })
+            .map(|(name, ty)| self.type_param(name, ty, false))
             .collect::<String>();
         if params.len() > 0 {
             params = format!("{{{}}}", params);

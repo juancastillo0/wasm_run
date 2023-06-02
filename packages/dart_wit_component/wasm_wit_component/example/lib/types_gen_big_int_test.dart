@@ -12,7 +12,7 @@ import 'package:wasm_wit_component_example/wit_generator_test.dart';
 bool _kReleaseMode = true;
 const _isWeb = identical(0, 0.0);
 
-void typesGenWitComponentTests({
+void typesGenBigIntWitComponentTests({
   Future<Uint8List> Function()? getWitComponentExampleBytes,
 }) async {
   // ignore: prefer_asserts_with_message
@@ -196,26 +196,24 @@ class _TypesWorldTest {
       expect(b, 1);
     }
     {
-      final (a, b) = world.reNamed(e: const Some(Empty()));
+      final (a, b) = world.reNamed(e: const Empty());
       expect(a, 0);
       expect(b, 0);
     }
     {
       final (a, b) = world.reNamed(
-        perm: Some(Permissions.all()),
-        e: const Some(Empty()),
+        perm: Permissions.all(),
+        e: const Empty(),
       );
       expect(a, 7);
       expect(b, 0);
     }
     {
       final (a, b) = world.reNamed(
-        perm: Some(
-          Permissions.none()
-            ..read = true
-            ..write = true,
-        ),
-        e: const None(),
+        perm: Permissions.none()
+          ..read = true
+          ..write = true,
+        e: null,
       );
       expect(a, 3);
       expect(b, 1);
@@ -256,38 +254,38 @@ class _TypesWorldTest {
       expect(inlineImpl.inlineImpData, isEmpty);
     }
     {
-      world.api.class_(break_: const Some(None()));
+      world.api.class_(break_: const None());
       expect(inlineImpl.inlineImpData[0], <Object?>[]);
     }
     {
-      world.api.class_(break_: const Some(Some(Ok(null))));
+      world.api.class_(break_: const Some(Ok(null)));
       expect(inlineImpl.inlineImpData[1], const [None()]);
       expect(inlineImpl.inlineImpData[2], const [Some('v')]);
     }
     {
       world.api.class_(
-        break_: Some(Some(
+        break_: Some(
           Err(Some(ErrnoApi(
             aU1: BigInt.from(1),
             listS1: [BigInt.from(1)],
-            str: Some('str'),
-            c: Some('c'),
+            str: 'str',
+            c: 'c',
           ))),
-        )),
+        ),
       );
       expect(inlineImpl.inlineImpData[3], const [Some('c')]);
       expect(inlineImpl.inlineImpData[4], const [Some('e')]);
     }
     {
       world.api.class_(
-        break_: Some(Some(
+        break_: Some(
           Err(Some(ErrnoApi(
             aU1: BigInt.from(1),
             listS1: [BigInt.from(34)],
-            str: Some('str'),
-            c: Some('o'),
+            str: 'str',
+            c: 'o',
           ))),
-        )),
+        ),
       );
       expect(inlineImpl.inlineImpData[5], const [Some('o')]);
       expect(inlineImpl.inlineImpData[6], const [None(), None()]);
@@ -302,7 +300,7 @@ class _TypesWorldTest {
     {
       final (:implements_) = world.api.continue_(
         extends_: (),
-        abstract_: const Some(Ok(null)),
+        abstract_: const Ok(null),
       );
       expect(importsImpl.apiA1B2Data[0], <Object?>[]);
       expect(implements_, const Some(()));
@@ -310,14 +308,14 @@ class _TypesWorldTest {
     {
       world.api.continue_(
         extends_: (),
-        abstract_: Some(Err(
+        abstract_: Err(
           ErrnoApi(
             aU1: BigInt.from(2),
-            c: None(),
+            c: null,
             listS1: [BigInt.from(33), BigInt.from(21)],
-            str: Some('ss'),
+            str: 'ss',
           ),
-        )),
+        ),
       );
       expect(
         importsImpl.apiA1B2Data[1].map((e) => e.toJson()),
@@ -327,14 +325,14 @@ class _TypesWorldTest {
     {
       world.api.continue_(
         extends_: (),
-        abstract_: Some(Err(
+        abstract_: Err(
           ErrnoApi(
             aU1: BigInt.from(2),
-            c: Some('K'),
+            c: 'K',
             listS1: [BigInt.from(-33), BigInt.from(21)],
-            str: None(),
+            str: null,
           ),
-        )),
+        ),
       );
       expect(
         importsImpl.apiA1B2Data[2].map((e) => e.toJson()),
@@ -347,14 +345,14 @@ class _TypesWorldTest {
     {
       world.api.continue_(
         extends_: (),
-        abstract_: Some(Err(
+        abstract_: Err(
           ErrnoApi(
             aU1: BigInt.from(2),
-            c: Some('k'),
+            c: 'k',
             listS1: [BigInt.from(34943), BigInt.from(21)],
-            str: Some('poi'),
+            str: 'poi',
           ),
-        )),
+        ),
       );
       expect(
         importsImpl.apiA1B2Data[3].map((e) => e.toJson()),
@@ -368,14 +366,14 @@ class _TypesWorldTest {
     {
       world.api.continue_(
         extends_: (),
-        abstract_: Some(Err(
+        abstract_: Err(
           ErrnoApi(
             aU1: BigInt.from(2),
-            c: None(),
+            c: null,
             listS1: [BigInt.from(34943), BigInt.from(21)],
-            str: None(),
+            str: null,
           ),
-        )),
+        ),
       );
       expect(
         importsImpl.apiA1B2Data[4].map((e) => e.toJson()),
@@ -385,14 +383,14 @@ class _TypesWorldTest {
     {
       world.api.continue_(
         extends_: (),
-        abstract_: Some(Err(
+        abstract_: Err(
           ErrnoApi(
             aU1: BigInt.from(2),
-            c: None(),
+            c: null,
             listS1: [],
-            str: Some(''),
+            str: '',
           ),
-        )),
+        ),
       );
       expect(
         importsImpl.apiA1B2Data[5].map((e) => e.toJson()),

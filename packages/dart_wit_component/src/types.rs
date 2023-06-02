@@ -14,6 +14,27 @@ impl Parsed<'_> {
         match ty {
             Type::Id(ty_id) => {
                 let ty_def = self.0.types.get(*ty_id).unwrap();
+
+                if let (TypeDefKind::Option(ty), true) = (&ty_def.kind, self.2.use_null_for_option)
+                {
+                    let value = format!("{}?", self.type_to_str_inner(ty));
+                    // TODO: remove when this ships https://github.com/dart-lang/sdk/issues/52591
+                    if value == "()?" {
+                        "Object?".to_string()
+                    } else {
+                        value
+                    }
+                } else {
+                    self.type_def_to_name(ty_def, true)
+                }
+            }
+            _ => self.type_to_str_inner(ty),
+        }
+    }
+    fn type_to_str_inner(&self, ty: &Type) -> String {
+        match ty {
+            Type::Id(ty_id) => {
+                let ty_def = self.0.types.get(*ty_id).unwrap();
                 self.type_def_to_name(ty_def, true)
             }
             Type::Bool => "bool".to_string(),
@@ -48,6 +69,16 @@ impl Parsed<'_> {
                 let ty_def = self.0.types.get(*ty_id).unwrap();
                 self.type_def_to_json(getter, ty_def)
             }
+            _ => self.type_to_json_inner(getter, ty),
+        }
+    }
+
+    fn type_to_json_inner(&self, getter: &str, ty: &Type) -> String {
+        match ty {
+            Type::Id(ty_id) => {
+                let ty_def = self.0.types.get(*ty_id).unwrap();
+                self.type_def_to_json_inner(getter, ty_def)
+            }
             Type::Bool => getter.to_string(),
             Type::String => getter.to_string(),
             Type::Char => getter.to_string(),
@@ -74,23 +105,44 @@ impl Parsed<'_> {
         }
     }
 
-    pub fn type_def_to_json(&self, getter: &str, ty: &TypeDef) -> String {
+    fn type_def_to_json(&self, getter: &str, ty: &TypeDef) -> String {
+        match &ty.kind {
+            TypeDefKind::Option(ty) => {
+                if self.2.use_null_for_option {
+                    format!(
+                        "({getter} == null ? const None().toJson() : Some({getter}!).toJson((some) => {}))",
+                        self.type_to_json_inner("some", &ty)
+                    )
+                } else {
+                    format!(
+                        "{getter}.toJson((some) => {})",
+                        self.type_to_json_inner("some", &ty)
+                    )
+                }
+            }
+            _ => self.type_def_to_json_inner(getter, ty),
+        }
+    }
+
+    fn type_def_to_json_inner(&self, getter: &str, ty: &TypeDef) -> String {
         match &ty.kind {
             TypeDefKind::Record(_record) => format!("{getter}.toJson()"),
             TypeDefKind::Enum(_enum_) => format!("{getter}.toJson()"),
             TypeDefKind::Union(_union) => format!("{getter}.toJson()"),
             TypeDefKind::Flags(_flags) => format!("{getter}.toJson()"),
             TypeDefKind::Variant(_variant) => format!("{getter}.toJson()"),
-            TypeDefKind::Option(ty) => format!(
-                "{getter}.toJson((some) => {})",
-                self.type_to_json("some", &ty)
-            ),
+            TypeDefKind::Option(ty) => {
+                format!(
+                    "{getter}.toJson((some) => {})",
+                    self.type_to_json_inner("some", &ty)
+                )
+            }
             TypeDefKind::Result(r) => format!(
                 "{getter}.toJson({}, {})",
                 r.ok.map_or_else(
                     || "null".to_string(),
                     |ok| {
-                        let to_json = self.type_to_json("ok", &ok);
+                        let to_json = self.type_to_json_inner("ok", &ok);
                         if to_json == "ok" {
                             return "null".to_string();
                         }
@@ -100,7 +152,7 @@ impl Parsed<'_> {
                 r.err.map_or_else(
                     || "null".to_string(),
                     |error| {
-                        let to_json = self.type_to_json("error", &error);
+                        let to_json = self.type_to_json_inner("error", &error);
                         if to_json == "error" {
                             return "null".to_string();
                         }
@@ -114,7 +166,8 @@ impl Parsed<'_> {
                     t.types
                         .iter()
                         .enumerate()
-                        .map(|(i, t)| self.type_to_json(&format!("{getter}.${ind}", ind = i + 1), t))
+                        .map(|(i, t)| self
+                            .type_to_json_inner(&format!("{getter}.${ind}", ind = i + 1), t))
                         .collect::<Vec<_>>()
                         .join(", "),
                 )
@@ -122,11 +175,11 @@ impl Parsed<'_> {
             TypeDefKind::List(ty) => format!(
                 // TODO: if {} is just e, maybe don't copy
                 "{getter}.map((e) => {}).toList()",
-                self.type_to_json("e", &ty)
+                self.type_to_json_inner("e", &ty)
             ),
             TypeDefKind::Future(_ty) => unreachable!("Future"),
             TypeDefKind::Stream(_s) => unreachable!("Stream"),
-            TypeDefKind::Type(ty) => self.type_to_json(getter, &ty),
+            TypeDefKind::Type(ty) => self.type_to_json_inner(getter, &ty),
             TypeDefKind::Unknown => unimplemented!("Unknown type"),
         }
     }
@@ -237,6 +290,27 @@ impl Parsed<'_> {
         match ty {
             Type::Id(ty_id) => {
                 let ty_def = self.0.types.get(*ty_id).unwrap();
+
+                match &ty_def.kind {
+                    TypeDefKind::Option(_ty) => {
+                        let val = self.type_def_from_json(getter, ty_def);
+                        if self.2.use_null_for_option {
+                            format!("{val}.value")
+                        } else {
+                            val
+                        }
+                    }
+                    _ => self.type_def_from_json(getter, ty_def),
+                }
+            }
+            _ => self.type_from_json_inner(getter, ty),
+        }
+    }
+
+    fn type_from_json_inner(&self, getter: &str, ty: &Type) -> String {
+        match ty {
+            Type::Id(ty_id) => {
+                let ty_def = self.0.types.get(*ty_id).unwrap();
                 self.type_def_from_json(getter, ty_def)
             }
             Type::Bool => format!("{getter}! as bool"),
@@ -267,12 +341,12 @@ impl Parsed<'_> {
         }
     }
 
-    pub fn type_def_from_json_option(&self, getter: &str, r: Option<Type>) -> String {
-        r.map(|ty| self.type_from_json(getter, &ty))
+    fn type_def_from_json_option(&self, getter: &str, r: Option<Type>) -> String {
+        r.map(|ty| self.type_from_json_inner(getter, &ty))
             .unwrap_or("null".to_string())
     }
 
-    pub fn type_def_from_json(&self, getter: &str, ty: &TypeDef) -> String {
+    fn type_def_from_json(&self, getter: &str, ty: &TypeDef) -> String {
         let name = self.type_def_to_name_definition(ty);
         match &ty.kind {
             TypeDefKind::Record(_record) => format!("{}.fromJson({getter})", name.unwrap()),
@@ -300,7 +374,7 @@ impl Parsed<'_> {
                         t.types
                             .iter()
                             .enumerate()
-                            .map(|(i, t)| self.type_from_json(&format!("v{i}"), t))
+                            .map(|(i, t)| self.type_from_json_inner(&format!("v{i}"), t))
                             .collect::<Vec<_>>()
                             .join(", "),
                         length = t.types.len(),
@@ -309,7 +383,7 @@ impl Parsed<'_> {
             }
             TypeDefKind::Option(ty) => format!(
                 "Option.fromJson({getter}, (some) => {})",
-                self.type_from_json("some", &ty)
+                self.type_from_json_inner("some", &ty)
             ),
             TypeDefKind::Result(r) => format!(
                 "Result.fromJson({getter}, (ok) => {}, (error) => {})",
@@ -318,7 +392,7 @@ impl Parsed<'_> {
             ),
             // TypeDefKind::Option(ty) => format!(
             //     "{getter} == null ? none : {}",
-            //     self.type_from_json(getter, &ty)
+            //     self.type_from_json_inner(getter, &ty)
             // ),
             // TypeDefKind::Result(r) => format!(
             //     "({getter} as Map).containsKey('ok') ? Ok({}) : Err({})",
@@ -327,7 +401,7 @@ impl Parsed<'_> {
             // ),
             TypeDefKind::List(ty) => format!(
                 "({getter}! as Iterable).map((e) => {}).toList()",
-                self.type_from_json("e", &ty)
+                self.type_from_json_inner("e", &ty)
             ),
             TypeDefKind::Future(ty) => {
                 format!(
@@ -340,7 +414,7 @@ impl Parsed<'_> {
                 // TODO: stream.end
                 self.type_def_from_json_option(getter, s.element),
             ),
-            TypeDefKind::Type(ty) => self.type_from_json(getter, &ty),
+            TypeDefKind::Type(ty) => self.type_from_json_inner(getter, &ty),
             TypeDefKind::Unknown => unimplemented!("Unknown type"),
         }
     }
@@ -367,7 +441,7 @@ impl Parsed<'_> {
         }
     }
 
-    pub fn type_def_to_name(&self, ty: &TypeDef, allow_alias: bool) -> String {
+    fn type_def_to_name(&self, ty: &TypeDef, allow_alias: bool) -> String {
         let name = self.type_def_to_name_definition(ty);
         if allow_alias && name.is_some() {
             return name.unwrap();
@@ -384,36 +458,36 @@ impl Parsed<'_> {
                     t.types
                         .iter()
                         .map(|t| {
-                            let mut s = self.type_to_str(t);
+                            let mut s = self.type_to_str_inner(t);
                             s.push_str(", ");
                             s
                         })
                         .collect::<String>()
                 )
             }
-            TypeDefKind::Option(ty) => format!("Option<{}>", self.type_to_str(&ty)),
+            TypeDefKind::Option(ty) => format!("Option<{}>", self.type_to_str_inner(&ty)),
             TypeDefKind::Result(r) => format!(
                 "Result<{}, {}>",
-                r.ok.map(|ty| self.type_to_str(&ty))
+                r.ok.map(|ty| self.type_to_str_inner(&ty))
                     .unwrap_or("void".to_string()),
                 r.err
-                    .map(|ty| self.type_to_str(&ty))
+                    .map(|ty| self.type_to_str_inner(&ty))
                     .unwrap_or("void".to_string())
             ),
-            TypeDefKind::List(ty) => format!("List<{}>", self.type_to_str(&ty)),
+            TypeDefKind::List(ty) => format!("List<{}>", self.type_to_str_inner(&ty)),
             TypeDefKind::Future(ty) => format!(
                 "Future<{}>",
-                ty.map(|ty| self.type_to_str(&ty))
+                ty.map(|ty| self.type_to_str_inner(&ty))
                     .unwrap_or("void".to_string())
             ),
             TypeDefKind::Stream(s) => format!(
                 "Stream<{}>",
                 // TODO: stream.end
                 s.element
-                    .map(|ty| self.type_to_str(&ty))
+                    .map(|ty| self.type_to_str_inner(&ty))
                     .unwrap_or("void".to_string()),
             ),
-            TypeDefKind::Type(ty) => self.type_to_str(&ty),
+            TypeDefKind::Type(ty) => self.type_to_str_inner(&ty),
             TypeDefKind::Unknown => unimplemented!("Unknown type"),
         }
     }
@@ -452,6 +526,11 @@ impl Parsed<'_> {
             }
             s.push_str(&methods.to_json(name, self));
         }
+        if self.2.to_string {
+            if let Some(m) = methods.to_string(name, self) {
+                s.push_str(&m);
+            }
+        }
         if self.2.copy_with {
             if let Some(m) = methods.copy_with(name, self) {
                 s.push_str(&m);
@@ -459,11 +538,6 @@ impl Parsed<'_> {
         }
         if self.2.equality_and_hash_code {
             if let Some(m) = methods.equality_hash_code(name, self) {
-                s.push_str(&m);
-            }
-        }
-        if self.2.to_string {
-            if let Some(m) = methods.to_string(name, self) {
                 s.push_str(&m);
             }
         }
@@ -495,7 +569,7 @@ impl Parsed<'_> {
                 } else {
                     s.push_str(&format!("\n\nconst {name}({{",));
                     r.fields.iter().for_each(|f| {
-                        s.push_str(&format!("required this.{},", f.name.as_var()));
+                        s.push_str(&self.type_param(&f.name, &f.ty, true));
                     });
                     s.push_str("});");
                 }

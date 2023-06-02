@@ -1,4 +1,6 @@
-use crate::{function::FuncKind, strings::Normalize, types::*, WitGeneratorConfig};
+use crate::{
+    function::FuncKind, strings::Normalize, types::*, Int64TypeConfig, WitGeneratorConfig,
+};
 use std::collections::HashMap;
 use wit_parser::*;
 
@@ -167,12 +169,18 @@ pub fn document_to_dart(
 
                     final instance = await builder.build();
 
-                    library = WasmLibrary(instance);
+                    library = WasmLibrary(instance, int64Type: {int64_type});
                     return {w_name}World(imports: imports, library: library);
                 }}
 
                 {methods}
             ",
+            int64_type = match p.2.int64_type {
+                Int64TypeConfig::BigInt => "Int64TypeConfig.bigInt",
+                Int64TypeConfig::BigIntUnsignedOnly => "Int64TypeConfig.bigIntUnsignedOnly",
+                Int64TypeConfig::CoreInt => "Int64TypeConfig.coreInt",
+                Int64TypeConfig::NativeObject => "Int64TypeConfig.nativeObject",
+            }
         ));
         s.push_str("}");
     });
@@ -197,7 +205,7 @@ pub fn add_docs(s: &mut String, docs: &Docs) {
 const HEADER: &str = "
 // FILE GENERATED FROM WIT
 
-// ignore_for_file: require_trailing_commas, unnecessary_raw_strings
+// ignore_for_file: require_trailing_commas, unnecessary_raw_strings, unnecessary_non_null_assertion
 
 // ignore: unused_import
 import 'dart:typed_data';
@@ -209,11 +217,11 @@ import 'package:wasm_wit_component/wasm_wit_component.dart';
 mod tests {
     use std::{fs::File, io::Write, path::Path};
 
-    use crate::WitGeneratorConfig;
+    use crate::{Int64TypeConfig, WitGeneratorConfig};
 
     const PACKAGE_DIR: &str = env!("CARGO_MANIFEST_DIR");
 
-    fn default_wit_config() -> WitGeneratorConfig {
+    fn default_wit_config(int64_type: Int64TypeConfig) -> WitGeneratorConfig {
         WitGeneratorConfig {
             inputs: crate::WitGeneratorInput::FileSystemPaths(crate::FileSystemPaths {
                 input_path: "".to_string(),
@@ -224,9 +232,10 @@ mod tests {
             json_serialization: true,
             to_string: true,
             file_header: None,
-            use_null_for_option: false,
+            use_null_for_option: true,
             object_comparator: None,
-            int64_type: crate::Int64TypeConfig::CoreInt,
+            required_option: false,
+            int64_type,
         }
     }
 
@@ -244,14 +253,15 @@ default world host {
         )
         .unwrap();
 
-        let s = super::document_to_dart(&parsed, default_wit_config()).unwrap();
+        let s =
+            super::document_to_dart(&parsed, default_wit_config(Int64TypeConfig::BigInt)).unwrap();
         println!("{}", s);
     }
 
-    fn parse_and_write_generation(path: &str, output_path: &str) {
+    fn parse_and_write_generation(path: &str, output_path: &str, int64_type: Int64TypeConfig) {
         let parsed = wit_parser::UnresolvedPackage::parse_file(Path::new(path)).unwrap();
 
-        let s = super::document_to_dart(&parsed, default_wit_config()).unwrap();
+        let s = super::document_to_dart(&parsed, default_wit_config(int64_type)).unwrap();
         println!("{}", s);
         File::create(output_path)
             .unwrap()
@@ -275,13 +285,26 @@ default world host {
             "{}/wasm_wit_component/example/lib/types_gen.dart",
             PACKAGE_DIR
         );
-        parse_and_write_generation(&path, &output_path);
+        parse_and_write_generation(&path, &output_path, Int64TypeConfig::CoreInt);
+    }
+
+    #[test]
+    pub fn parse_wit_types_big_int() {
+        let path = format!(
+            "{}/wasm_wit_component/example/rust_wit_component_example/wit/types-example.wit",
+            PACKAGE_DIR
+        );
+        let output_path = format!(
+            "{}/wasm_wit_component/example/lib/types_gen_big_int.dart",
+            PACKAGE_DIR
+        );
+        parse_and_write_generation(&path, &output_path, Int64TypeConfig::BigInt);
     }
 
     #[test]
     pub fn parse_generator() {
         let path = format!("{}/wit/dart-wit-generator.wit", PACKAGE_DIR);
         let output_path = format!("{}/wasm_wit_component/lib/src/generator.dart", PACKAGE_DIR);
-        parse_and_write_generation(&path, &output_path);
+        parse_and_write_generation(&path, &output_path, Int64TypeConfig::BigInt);
     }
 }

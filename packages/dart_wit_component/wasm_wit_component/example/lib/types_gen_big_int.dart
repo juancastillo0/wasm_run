@@ -1,6 +1,6 @@
 // FILE GENERATED FROM WIT
 
-// ignore_for_file: require_trailing_commas, unnecessary_raw_strings
+// ignore_for_file: require_trailing_commas, unnecessary_raw_strings, unnecessary_non_null_assertion
 
 // ignore: unused_import
 import 'dart:typed_data';
@@ -71,6 +71,9 @@ class R {
                 [e.$1, e.$2.toJson((some) => some.toJson((some) => some))])
             .toList(),
       };
+  @override
+  String toString() =>
+      'R${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
   R copyWith({
     int /*U32*/ ? a,
     String? b,
@@ -89,10 +92,7 @@ class R {
   @override
   int get hashCode => comparator.hashProps(_props);
 
-  @override
-  String toString() =>
-      'R${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
-// ignore: unused_field
+  // ignore: unused_field
   List<Object?> get _props => [a, b, c];
   static const _spec = Record([
     (label: 'a', t: U32()),
@@ -106,32 +106,23 @@ class R {
 
 /// a bitflags type
 class Permissions {
-  final ByteData flagBits;
-  const Permissions(this.flagBits);
-  Permissions.none() : flagBits = ByteData(4);
-  Permissions.all()
-      : flagBits = flagBitsFromJson(
-          Map.fromIterables(
-            _spec.labels,
-            List.filled(_spec.labels.length, true),
-          ),
-          _spec,
-        );
+  final FlagsBits flagsBits;
+  const Permissions(this.flagsBits);
+  Permissions.none() : flagsBits = FlagsBits.none(numFlags: 3);
+  Permissions.all() : flagsBits = FlagsBits.all(numFlags: 3);
   factory Permissions.fromBool(
       {bool read = false, bool write = false, bool exec = false}) {
-    final _value = Permissions.none();
-    if (read) _value.read = true;
-    if (write) _value.write = true;
-    if (exec) _value.exec = true;
-    return _value;
+    final value_ = Permissions.none();
+    if (read) value_.read = true;
+    if (write) value_.write = true;
+    if (exec) value_.exec = true;
+    return value_;
   }
-
   factory Permissions.fromJson(Object? json) {
-    final flagBits = flagBitsFromJson(json, _spec);
-    return Permissions(flagBits);
+    final flagsBits = FlagsBits.fromJson(json, flagsKeys: _spec.labels);
+    return Permissions(flagsBits);
   }
-
-  Object toJson() => Uint32List.sublistView(flagBits);
+  Object toJson() => flagsBits.toJson();
   @override
   String toString() => 'Permissions(${[
         if (read) 'read',
@@ -140,28 +131,22 @@ class Permissions {
       ].join(', ')})';
   @override
   bool operator ==(Object other) =>
-      other is Permissions &&
-      comparator.areEqual(Uint32List.sublistView(flagBits),
-          Uint32List.sublistView(other.flagBits));
+      other is Permissions && comparator.areEqual(flagsBits, other.flagsBits);
   @override
-  int get hashCode => comparator.hashValue(Uint32List.sublistView(flagBits));
-
-  int _index(int i) => flagBits.getUint32(i, Endian.little);
-  void _setIndex(int i, int flag, bool enable) {
-    final currentValue = _index(i);
-    flagBits.setUint32(
-      i,
-      enable ? (flag | currentValue) : ((~flag) & currentValue),
-      Endian.little,
-    );
-  }
-
-  bool get read => (_index(0) & 1) != 0;
-  set read(bool enable) => _setIndex(0, 1, enable);
-  bool get write => (_index(0) & 2) != 0;
-  set write(bool enable) => _setIndex(0, 2, enable);
-  bool get exec => (_index(0) & 4) != 0;
-  set exec(bool enable) => _setIndex(0, 4, enable);
+  int get hashCode => comparator.hashValue(flagsBits);
+  Permissions operator &(Permissions other) =>
+      Permissions(flagsBits & other.flagsBits);
+  Permissions operator |(Permissions other) =>
+      Permissions(flagsBits | other.flagsBits);
+  Permissions operator ^(Permissions other) =>
+      Permissions(flagsBits ^ other.flagsBits);
+  Permissions operator ~() => Permissions(~flagsBits);
+  bool get read => flagsBits[0];
+  set read(bool enable) => flagsBits[0] = enable;
+  bool get write => flagsBits[1];
+  set write(bool enable) => flagsBits[1] = enable;
+  bool get exec => flagsBits[2];
+  set exec(bool enable) => flagsBits[2] = enable;
   static const _spec = Flags(['read', 'write', 'exec']);
 }
 
@@ -233,9 +218,11 @@ sealed class HumanTypesInterface {
       );
     }
     return switch (json) {
-      (0, null) => const HumanTypesInterfaceBaby(),
-      (1, final value) => HumanTypesInterfaceChild(value! as int),
-      (2, null) => const HumanTypesInterfaceAdult(),
+      (0, null) || [0, null] => const HumanTypesInterfaceBaby(),
+      (1, final value) ||
+      [1, final value] =>
+        HumanTypesInterfaceChild(value! as int),
+      (2, null) || [2, null] => const HumanTypesInterfaceAdult(),
       _ => throw Exception('Invalid JSON $json_'),
     };
   }
@@ -395,6 +382,9 @@ class RoundTripNumbersData {
         'f32': f32,
         'f64': f64,
       };
+  @override
+  String toString() =>
+      'RoundTripNumbersData${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
   RoundTripNumbersData copyWith({
     int /*U8*/ ? un8,
     int /*U16*/ ? un16,
@@ -426,10 +416,7 @@ class RoundTripNumbersData {
   @override
   int get hashCode => comparator.hashProps(_props);
 
-  @override
-  String toString() =>
-      'RoundTripNumbersData${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
-// ignore: unused_field
+  // ignore: unused_field
   List<Object?> get _props =>
       [un8, un16, un32, un64, si8, si16, si32, si64, f32, f64];
   static const _spec = Record([
@@ -458,9 +445,11 @@ sealed class HumanApiImports {
       );
     }
     return switch (json) {
-      (0, null) => const HumanApiImportsBaby(),
-      (1, final value) => HumanApiImportsChild(bigIntFromJson(value)),
-      (2, final value) => HumanApiImportsAdult((() {
+      (0, null) || [0, null] => const HumanApiImportsBaby(),
+      (1, final value) ||
+      [1, final value] =>
+        HumanApiImportsChild(bigIntFromJson(value)),
+      (2, final value) || [2, final value] => HumanApiImportsAdult((() {
           final l = value is Map
               ? List.generate(3, (i) => value[i.toString()], growable: false)
               : value;
@@ -572,14 +561,14 @@ class ErrnoApi {
 
   /// A list of signed 64-bit integers
   final List<BigInt /*S64*/ > listS1;
-  final Option<String> str;
-  final Option<String /*Char*/ > c;
+  final String? str;
+  final String /*Char*/ ? c;
 
   const ErrnoApi({
     required this.aU1,
     required this.listS1,
-    required this.str,
-    required this.c,
+    this.str,
+    this.c,
   });
 
   factory ErrnoApi.fromJson(Object? json_) {
@@ -592,9 +581,11 @@ class ErrnoApi {
         ErrnoApi(
           aU1: bigIntFromJson(aU1),
           listS1: (listS1! as Iterable).map((e) => bigIntFromJson(e)).toList(),
-          str: Option.fromJson(str,
-              (some) => some is String ? some : (some! as ParsedString).value),
-          c: Option.fromJson(c, (some) => some! as String),
+          str: Option.fromJson(
+              str,
+              (some) =>
+                  some is String ? some : (some! as ParsedString).value).value,
+          c: Option.fromJson(c, (some) => some! as String).value,
         ),
       _ => throw Exception('Invalid JSON $json_')
     };
@@ -602,14 +593,21 @@ class ErrnoApi {
   Map<String, Object?> toJson() => {
         'a-u1': aU1.toString(),
         'list-s1': listS1.map((e) => e.toString()).toList(),
-        'str': str.toJson((some) => some),
-        'c': c.toJson((some) => some),
+        'str': (str == null
+            ? const None().toJson()
+            : Some(str!).toJson((some) => some)),
+        'c': (c == null
+            ? const None().toJson()
+            : Some(c!).toJson((some) => some)),
       };
+  @override
+  String toString() =>
+      'ErrnoApi${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
   ErrnoApi copyWith({
     BigInt /*U64*/ ? aU1,
     List<BigInt /*S64*/ >? listS1,
-    Option<String>? str,
-    Option<String /*Char*/ >? c,
+    String? str,
+    String /*Char*/ ? c,
   }) =>
       ErrnoApi(
           aU1: aU1 ?? this.aU1,
@@ -623,10 +621,7 @@ class ErrnoApi {
   @override
   int get hashCode => comparator.hashProps(_props);
 
-  @override
-  String toString() =>
-      'ErrnoApi${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
-// ignore: unused_field
+  // ignore: unused_field
   List<Object?> get _props => [aU1, listS1, str, c];
   static const _spec = Record([
     (label: 'a-u1', t: U64()),
@@ -664,6 +659,9 @@ class Empty {
 
   factory Empty.fromJson(Object? _) => const Empty();
   Map<String, Object?> toJson() => {};
+  @override
+  String toString() =>
+      'Empty${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
   Empty copyWith() => Empty();
   @override
   bool operator ==(Object other) =>
@@ -672,10 +670,7 @@ class Empty {
   @override
   int get hashCode => comparator.hashProps(_props);
 
-  @override
-  String toString() =>
-      'Empty${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
-// ignore: unused_field
+  // ignore: unused_field
   List<Object?> get _props => [];
   static const _spec = Record([]);
 }
@@ -834,26 +829,31 @@ class Api {
 
   final ListValue Function(ListValue) _class_;
   () class_({
-    Option<Option<T5Api>> break_ = const None(),
+    Option<T5Api>? break_,
   }) {
     _class_([
-      break_.toJson((some) => some.toJson((some) =>
-          some.toJson(null, (error) => error.toJson((some) => some.toJson()))))
+      (break_ == null
+          ? const None().toJson()
+          : Some(break_!).toJson((some) => some.toJson((some) => some.toJson(
+              null, (error) => error.toJson((some) => some.toJson())))))
     ]);
     return ();
   }
 
   final ListValue Function(ListValue) _continue_;
-  ({Option<()> implements_}) continue_({
-    Option<Result<void, ErrnoApi>> abstract_ = const None(),
+  ({Object? implements_}) continue_({
+    Result<void, ErrnoApi>? abstract_,
     required () extends_,
   }) {
     final results = _continue_([
-      abstract_.toJson((some) => some.toJson(null, (error) => error.toJson())),
+      (abstract_ == null
+          ? const None().toJson()
+          : Some(abstract_!)
+              .toJson((some) => some.toJson(null, (error) => error.toJson()))),
       []
     ]);
     final r0 = results[0];
-    return (implements_: Option.fromJson(r0, (some) => ()),);
+    return (implements_: Option.fromJson(r0, (some) => ()).value,);
   }
 }
 
@@ -1065,7 +1065,7 @@ class TypesExampleWorld {
 
     final instance = await builder.build();
 
-    library = WasmLibrary(instance);
+    library = WasmLibrary(instance, int64Type: Int64TypeConfig.bigInt);
     return TypesExampleWorld(imports: imports, library: library);
   }
 
@@ -1106,12 +1106,16 @@ class TypesExampleWorld {
 
   /// t2 has been renamed with `use types-interface.{t2 as t2-renamed}`
   T2Renamed reNamed({
-    Option<Permissions> perm = const None(),
-    Option<Empty> e = const None(),
+    Permissions? perm,
+    Empty? e,
   }) {
     final results = _reNamed([
-      perm.toJson((some) => some.toJson()),
-      e.toJson((some) => some.toJson())
+      (perm == null
+          ? const None().toJson()
+          : Some(perm!).toJson((some) => some.toJson())),
+      (e == null
+          ? const None().toJson()
+          : Some(e!).toJson((some) => some.toJson()))
     ]);
     final result = results[0];
     return (() {

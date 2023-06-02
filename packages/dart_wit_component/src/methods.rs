@@ -66,7 +66,14 @@ impl GeneratedMethodsTrait for Record {
                     "{{{}}}",
                     self.fields
                         .iter()
-                        .map(|f| format!("{}? {},", p.type_to_str(&f.ty), f.name.as_var(),))
+                        .map(|f| {
+                            let tt = p.type_to_str(&f.ty);
+                            format!(
+                                "{tt}{} {},",
+                                if tt.ends_with("?") { "" } else { "?" },
+                                f.name.as_var(),
+                            )
+                        })
                         .collect::<String>()
                 )
             },
