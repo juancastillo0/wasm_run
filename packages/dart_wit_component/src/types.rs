@@ -647,17 +647,12 @@ impl Parsed<'_> {
             }
             TypeDefKind::Flags(f) => {
                 let name = name.unwrap();
-                let num_bytes = ((f.flags.len() + 32 - 1) / 32) * 4;
+                let num_flags = f.flags.len();
                 s.push_str(&format!(
-                    "class {name} {{ final ByteData flagBits; const {name}(this.flagBits);
-                    {name}.none(): flagBits = ByteData({num_bytes});
-                    {name}.all(): flagBits = flagBitsFromJson(
-                        Map.fromIterables(
-                          _spec.labels,
-                          List.filled(_spec.labels.length, true),
-                        ),
-                        _spec,
-                      );
+                    "class {name} {{ 
+                    final FlagsBits flagsBits; const {name}(this.flagsBits);
+                    {name}.none(): flagsBits = FlagsBits.none(numFlags: {num_flags});
+                    {name}.all(): flagsBits = FlagsBits.all(numFlags: {num_flags});
                     factory {name}.fromBool({{{from_bool}}}) {{
                         final value_ = {name}.none();
                         {from_bool_content}
@@ -680,20 +675,21 @@ impl Parsed<'_> {
                         .collect::<String>(),
                 ));
                 self.add_methods_trait(&mut s, &name, f);
+
+                s.push_str(&format!(
+                    "
+{name} operator &({name} other) => {name}(flagsBits & other.flagsBits);
+{name} operator |({name} other) => {name}(flagsBits | other.flagsBits);
+{name} operator ^({name} other) => {name}(flagsBits ^ other.flagsBits);
+{name} operator ~() => {name}(~flagsBits);"
                 ));
+
                 f.flags.iter().enumerate().for_each(|(i, v)| {
                     let property = v.name.as_var();
-                    let index = (i / 32) * 4;
-                    let flag = 2_u32.pow(i.try_into().unwrap());
-                    let getter = format!("_index({index})");
-                    // s.push_str(&format!(
-                    //     "\n\nstatic const {property}IndexAndFlag = (index:{index}, flag:{flag});"
-                    // ));
-
                     add_docs(&mut s, &v.docs);
-                    s.push_str(&format!("bool get {property} => ({getter} & {flag}) != 0;"));
                     s.push_str(&format!(
-                        "set {property}(bool enable) => _setIndex({index}, {flag}, enable);",
+                        "bool get {property} => flagsBits[{i}];
+                         set {property}(bool enable) => flagsBits[{i}] = enable;"
                     ));
                 });
                 s.push_str(&format!(

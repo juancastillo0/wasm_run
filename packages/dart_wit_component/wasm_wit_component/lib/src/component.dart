@@ -9,6 +9,7 @@ import 'package:wasm_run/src/wasm_bindings/make_function_num_args.dart';
 import 'package:wasm_run/wasm_run.dart';
 
 export 'package:wasm_wit_component/generator.dart' show Int64TypeConfig;
+export 'package:wasm_wit_component/src/flags_bits.dart' show FlagsBits;
 
 /// The [ObjectComparator] used to compare equality between objects
 /// and calculate their hash codes.
@@ -198,17 +199,21 @@ class WasmLibrary {
   /// A [WasmLibrary] is a wrapper around a [WasmInstance] that provides
   /// convenience methods for interacting with the instance that implements
   /// the WASM component model.
-  WasmLibrary(this.instance, {this.stringEncoding = StringEncoding.utf8})
-      : _realloc = instance.getFunction('cabi_realloc')!.inner,
+  WasmLibrary(
+    this.instance, {
+    // TODO: get encoding from instance exports
+    this.stringEncoding = StringEncoding.utf8,
+    Int64TypeConfig int64Type = Int64TypeConfig.bigInt,
+  })  : _realloc = instance.getFunction('cabi_realloc')!.inner,
         wasmMemory = instance.getMemory('memory') ??
-            instance.exports.values.whereType<WasmMemory>().first;
+            instance.exports.values.whereType<WasmMemory>().first,
+        componentInstance = ComponentInstance(int64Type: int64Type);
 
   /// The [WasmInstance] that implements the WASM component model.
   final WasmInstance instance;
 
   /// The [ComponentInstance] for tracking handles and checking invariants.
-  final ComponentInstance componentInstance =
-      ComponentInstance(int64Type: Int64TypeConfig.coreInt);
+  final ComponentInstance componentInstance;
 
   /// The [StringEncoding] to use for strings.
   final StringEncoding stringEncoding;
