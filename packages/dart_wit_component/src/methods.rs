@@ -126,19 +126,17 @@ impl GeneratedMethodsTrait for Enum {
 fn base_string_case(self_: &Case, name: &str, p: &Parsed) -> String {
     if let Some(ty) = self_.ty {
         format!(
-    "@override\nMap<String, Object?> toJson() => {{'{}': {}}};
-    @override\nString toString() => '{name}($value)';
-    @override\nbool operator ==(Object other) => other is {name} && comparator.areEqual(other.value, value);
-    @override\nint get hashCode => comparator.hashValue(value);
- }}", self_.name,  p.type_to_json("value", &ty)
+    "@override Map<String, Object?> toJson() => {{'{}': {}}};
+    @override String toString() => '{name}($value)';
+    @override bool operator ==(Object other) => other is {name} && comparator.areEqual(other.value, value);
+    @override int get hashCode => comparator.hashValue(value);", self_.name,  p.type_to_json("value", &ty)
 )
     } else {
         format!(
-            "@override\nMap<String, Object?> toJson() => {{'{}': null}};
-    @override\nString toString() => '{name}()';
-    @override\nbool operator ==(Object other) => other is {name};
-    @override\nint get hashCode => ({name}).hashCode;
-}}",
+            "@override Map<String, Object?> toJson() => {{'{}': null}};
+    @override String toString() => '{name}()';
+    @override bool operator ==(Object other) => other is {name};
+    @override int get hashCode => ({name}).hashCode;",
             self_.name,
         )
     }
@@ -173,6 +171,67 @@ impl GeneratedMethodsTrait for Case {
                 .split("\n")
                 .skip(2)
                 .collect(),
+        )
+    }
+}
+
+impl GeneratedMethodsTrait for (usize, &UnionCase) {
+    fn to_json(&self, _name: &str, p: &Parsed) -> String {
+        format!(
+            "@override\nMap<String, Object?> toJson() => {{'{}': {}}};",
+            self.0,
+            p.type_to_json("value", &self.1.ty)
+        )
+    }
+    fn from_json(&self, _name: &str, _p: &Parsed) -> Option<String> {
+        None
+    }
+    fn to_string(&self, name: &str, _p: &Parsed) -> Option<String> {
+        Some(format!("@override\nString toString() => '{name}($value)';"))
+    }
+    fn copy_with(&self, _name: &str, _p: &Parsed) -> Option<String> {
+        None
+    }
+    fn equality_hash_code(&self, name: &str, _p: &Parsed) -> Option<String> {
+        Some(
+            format!("
+            @override\nbool operator ==(Object other) => other is {name} && comparator.areEqual(other.value, value);
+            @override\nint get hashCode => comparator.hashValue(value);",)
+        )
+    }
+}
+
+impl GeneratedMethodsTrait for Flags {
+    fn to_json(&self, _name: &str, _p: &Parsed) -> String {
+        "Object toJson() => flagsBits.toJson();".to_string()
+    }
+    fn from_json(&self, name: &str, _p: &Parsed) -> Option<String> {
+        Some(format!(
+            "
+            factory {name}.fromJson(Object? json) {{
+                final flagsBits = FlagsBits.fromJson(json, flagsKeys: _spec.labels);
+                return {name}(flagsBits);
+            }}"
+        ))
+    }
+    fn to_string(&self, name: &str, _p: &Parsed) -> Option<String> {
+        Some(format!(
+            "@override\nString toString() => '{name}(${{[{to_string_content}].join(', ')}})';",
+            to_string_content = self
+                .flags
+                .iter()
+                .map(|v| format!("if ({}) '{}',", v.name.as_var(), v.name.as_var()))
+                .collect::<String>(),
+        ))
+    }
+    fn copy_with(&self, _name: &str, _p: &Parsed) -> Option<String> {
+        None
+    }
+    fn equality_hash_code(&self, name: &str, _p: &Parsed) -> Option<String> {
+        Some(
+            format!("
+            @override\nbool operator ==(Object other) => other is {name} && comparator.areEqual(flagsBits, other.flagsBits);
+            @override\nint get hashCode => comparator.hashValue(flagsBits);",)
         )
     }
 }
