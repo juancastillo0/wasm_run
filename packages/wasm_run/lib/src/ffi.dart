@@ -58,7 +58,18 @@ class WasmRunLibrary {
   /// Sets up the dynamic library to use for the native bindings.
   /// If [override] is true, it will override the current library if it exists.
   static Future<void> setUp({required bool override}) async {
-    if (_isWeb) return setUpLibraryImpl(features: true, wasi: true);
+    if (_isWeb) {
+      return setUpLibraryImpl(
+        features: const bool.fromEnvironment(
+          'WASM_RUN_WEB_FEATURE_DETECT_LIBRARY',
+          defaultValue: true,
+        ),
+        wasi: const bool.fromEnvironment(
+          'WASM_RUN_WEB_WASI_SHIM_LIBRARY',
+          defaultValue: true,
+        ),
+      );
+    }
     if (override && _wrapper != null) throw _alreadyInitialized;
     if (!override && isReachable()) return;
     await setUpDesktopDynamicLibrary();
