@@ -73,10 +73,11 @@ void witDartGeneratorTests({Future<Directory> Function()? getDirectory}) {
               copyWith_: false,
               equalityAndHashCode: false,
               toString_: false,
-              fileHeader: None(),
+              fileHeader: null,
               generateDocs: true,
               int64Type: Int64TypeConfig.bigInt,
               useNullForOption: false,
+              requiredOption: false,
             ),
           ),
         );
@@ -107,10 +108,11 @@ void witDartGeneratorTests({Future<Directory> Function()? getDirectory}) {
               copyWith_: false,
               equalityAndHashCode: true,
               toString_: true,
-              fileHeader: None(),
+              fileHeader: null,
               generateDocs: true,
               int64Type: Int64TypeConfig.bigInt,
               useNullForOption: false,
+              requiredOption: false,
             ),
           ),
         );
@@ -229,10 +231,11 @@ WitGeneratorConfig _defaultConfig(WitGeneratorInput inputs) {
     equalityAndHashCode: true,
     jsonSerialization: true,
     toString_: true,
-    fileHeader: const None(),
+    fileHeader: null,
     generateDocs: true,
     int64Type: Int64TypeConfig.bigInt,
     useNullForOption: false,
+    requiredOption: false,
   );
 }
 

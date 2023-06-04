@@ -21,9 +21,8 @@ impl GeneratedMethodsTrait for Record {
     }
     fn from_json(&self, name: &str, p: &Parsed) -> Option<String> {
         if self.fields.is_empty() {
-            // TODO: add comments
             Some(format!(
-                "\n\nfactory {name}.fromJson(Object? _) => const {name}();\n"
+                "factory {name}.fromJson(Object? _) => const {name}();\n"
             ))
         } else {
             let spread = self
@@ -33,21 +32,25 @@ impl GeneratedMethodsTrait for Record {
                 .collect::<Vec<_>>()
                 .join(",");
             let s_comma = if self.fields.len() == 1 { "," } else { "" };
-            Some(format!(
-                "\n\nfactory {name}.fromJson(Object? json_) {{
-                final json = json_ is Map ? _spec.fields.map((f) => json_[f.label]).toList(growable: false) : json_;
-                return switch (json) {{
-                    [{spread}] || ({spread}{s_comma}) => {name}({}),
-                    _ => throw Exception('Invalid JSON $json_')}};
-                }}",
-                self.fields
-                    .iter()
-                    .map(|f| format!(
+            let from_json_items = self
+                .fields
+                .iter()
+                .map(|f| {
+                    format!(
                         "{}: {},",
                         f.name.as_var(),
                         p.type_from_json(&f.name.as_var(), &f.ty)
-                    ))
-                    .collect::<String>(),
+                    )
+                })
+                .collect::<String>();
+
+            Some(format!(
+                "factory {name}.fromJson(Object? json_) {{
+                final json = json_ is Map ? _spec.fields.map((f) => json_[f.label]).toList(growable: false) : json_;
+                return switch (json) {{
+                    [{spread}] || ({spread}{s_comma}) => {name}({from_json_items}),
+                    _ => throw Exception('Invalid JSON $json_')}};
+                }}",
             ))
         }
     }
@@ -57,42 +60,47 @@ impl GeneratedMethodsTrait for Record {
         ))
     }
     fn copy_with(&self, name: &str, p: &Parsed) -> Option<String> {
-        Some(format!(
-            "{name} copyWith({copy_with_params}) => {name}({copy_with_content});",
-            copy_with_params = if self.fields.is_empty() {
-                "".to_string()
-            } else {
-                format!(
-                    "{{{}}}",
-                    self.fields
-                        .iter()
-                        .map(|f| {
-                            let tt = p.type_to_str(&f.ty);
-                            format!(
-                                "{tt}{} {},",
-                                if tt.ends_with("?") { "" } else { "?" },
-                                f.name.as_var(),
-                            )
-                        })
-                        .collect::<String>()
-                )
-            },
-            copy_with_content = if self.fields.is_empty() {
-                "".to_string()
-            } else {
-                self.fields
-                    .iter()
-                    .map(|f| {
+        let copy_with_params = if self.fields.is_empty() {
+            "".to_string()
+        } else {
+            let params = self
+                .fields
+                .iter()
+                .map(|f| {
+                    let mut tt = p.type_to_str(&f.ty);
+                    if tt.ends_with("?") {
+                        tt.pop();
+                        format!("Option<{tt}>? {},", f.name.as_var(),)
+                    } else {
                         format!(
-                            "{}: {} ?? this.{}",
+                            "{tt}{} {},",
+                            if tt.ends_with("?") { "" } else { "?" },
                             f.name.as_var(),
-                            f.name.as_var(),
-                            f.name.as_var()
                         )
-                    })
-                    .collect::<Vec<_>>()
-                    .join(",")
-            },
+                    }
+                })
+                .collect::<String>();
+            format!("{{{params}}}",)
+        };
+        let copy_with_content = if self.fields.is_empty() {
+            "".to_string()
+        } else {
+            self.fields
+                .iter()
+                .map(|f| {
+                    let field = f.name.as_var();
+                    if let (true, true) = (p.2.use_null_for_option, p.is_option(&f.ty)) {
+                        format!("{field}: {field} != null ? {field}.value : this.{field}")
+                    } else {
+                        format!("{field}: {field} ?? this.{field}")
+                    }
+                })
+                .collect::<Vec<_>>()
+                .join(",")
+        };
+
+        Some(format!(
+            "{name} copyWith({copy_with_params}) => {name}({copy_with_content});"
         ))
     }
     fn equality_hash_code(&self, name: &str, p: &Parsed) -> Option<String> {
@@ -106,7 +114,7 @@ impl GeneratedMethodsTrait for Record {
 
 impl GeneratedMethodsTrait for Enum {
     fn to_json(&self, _name: &str, _p: &Parsed) -> String {
-        "\nObject? toJson() => _spec.labels[index];\n".to_string()
+        "Object? toJson() => _spec.labels[index];\n".to_string()
     }
     fn from_json(&self, name: &str, _p: &Parsed) -> Option<String> {
         Some(format!(
@@ -214,8 +222,7 @@ impl GeneratedMethodsTrait for Flags {
     }
     fn from_json(&self, name: &str, _p: &Parsed) -> Option<String> {
         Some(format!(
-            "
-            factory {name}.fromJson(Object? json) {{
+            "factory {name}.fromJson(Object? json) {{
                 final flagsBits = FlagsBits.fromJson(json, flagsKeys: _spec.labels);
                 return {name}(flagsBits);
             }}"

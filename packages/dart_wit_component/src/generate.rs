@@ -188,17 +188,26 @@ pub fn document_to_dart(
 }
 
 pub fn add_docs(s: &mut String, docs: &Docs) {
+    if let Some(docs) = extract_dart_docs(docs) {
+        s.push_str(&docs);
+    }
+}
+
+pub fn extract_dart_docs(docs: &Docs) -> Option<String> {
     if let Some(docs) = &docs.contents {
         let mut m = docs.clone();
         if m.ends_with('\n') {
             m.replace_range(m.len() - 1.., "");
         }
-        s.push_str(
-            &m.split("\n")
+
+        Some(
+            m.split("\n")
                 .map(|l| format!("/// {}\n", l))
                 .collect::<Vec<_>>()
                 .join(""),
-        );
+        )
+    } else {
+        None
     }
 }
 

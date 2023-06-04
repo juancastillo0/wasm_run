@@ -2,7 +2,10 @@ import 'package:wasm_wit_component/src/component.dart';
 
 /// A Rust-style Result type.
 sealed class Result<O, E> {
+  /// A Rust-style Result type's success value.
   const factory Result.ok(O ok) = Ok<O, E>;
+
+  /// A Rust-style Result type's failure value.
   const factory Result.err(E error) = Err<O, E>;
 
   /// Returns `true` if this is an [Ok] instance
@@ -17,6 +20,10 @@ sealed class Result<O, E> {
   /// Returns the contained [E] error value, if present, otherwise returns null
   E? get error;
 
+  /// Creates a result from a JSON value.
+  /// The JSON value must be a map with a single key, either "ok" or "error".
+  ///
+  /// May throw an exception if the JSON value is invalid.
   factory Result.fromJson(
     Object? json,
     O Function(Object? json) ok,
@@ -29,6 +36,7 @@ sealed class Result<O, E> {
     };
   }
 
+  /// Returns a JSON representation of the result.
   Map<String, Object?> toJson([
     Object? Function(O value)? mapOk,
     Object? Function(E value)? mapError,
@@ -39,6 +47,8 @@ sealed class Result<O, E> {
 class Ok<O, E> implements Result<O, E> {
   @override
   final O ok;
+
+  /// A Rust-style Result type's success value.
   const Ok(this.ok);
 
   @override
@@ -74,6 +84,8 @@ class Ok<O, E> implements Result<O, E> {
 class Err<O, E> implements Result<O, E> {
   @override
   final E error;
+
+  /// A Rust-style Result type's failure value.
   const Err(this.error);
 
   @override

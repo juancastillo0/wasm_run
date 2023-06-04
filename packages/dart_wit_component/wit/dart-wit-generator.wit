@@ -17,7 +17,7 @@ world dart-wit-generator {
         generate-docs: bool,
         /// Custom imports, ignore comments or code to be added at the top of the generated file.
         file-header: option<string>,
-        /// [ObjectComparator] used to compute the generated types equality and hashCode.
+        /// [ObjectComparator] used to implement the generated equality and hashCode overrides.
         /// You will need to add a custom import in [fileHeader] to use this.
         object-comparator: option<string>,
         /// Whether to use `null` for `option` types when possible.
@@ -58,13 +58,31 @@ world dart-wit-generator {
     enum int64-type-config {
         /// Use the native JavaScript BigInt type and [int] for native platforms.
         /// You will need to cast it with the [i64] utility functions.
+        /// 
+        /// This is not safe for native platforms, because the unsigned 64 bit integers
+        /// can not be represented properly in Dart's core int type unless you only care about the bits.
+        /// For example, the maximum U64 `18446744073709551615` will be represented as `-1`. Although you do
+        /// not lose any information (the bits are the same), the methods used over the [int] type
+        /// will not work as expected for values greater than the maximum signed 64 bit integer.
+        /// Safe, but cumbersome for web platforms, since you will need to cast the JsBigInt
+        /// to the wanted value using [i64]. 
         native-object,
         /// Use the [BigInt] type for signed and unsigned 64 bit integers.
+        /// 
+        /// Safe in all platforms.
         big-int,
         /// Use the [BigInt] type only for unsigned 64 bit integers.
         /// [int] is used for signed 64 bit integers.
+        /// 
+        /// Unsafe for web platforms since the signed 64 bit integers
+        /// are represented as a double in JavaScript.
+        /// Safe for native, see [nativeObject].
         big-int-unsigned-only,
         /// Use the [int] type.
+        ///
+        /// Unsafe in all platforms. 
+        /// Web can not represent 64 bit integers since it uses doubles for all numbers.
+        /// Native cannot represent unsigned 64 big integers, see [nativeObject].
         core-int,
     }
 

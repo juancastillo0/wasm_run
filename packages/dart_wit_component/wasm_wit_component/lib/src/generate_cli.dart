@@ -122,7 +122,8 @@ class GeneratorCLIArgs {
       equalityAndHashCode: args.namedBool[_Arg.equality] ?? enableDefault,
       toString_: args.namedBool[_Arg.toString_] ?? enableDefault,
       generateDocs: args.namedBool[_Arg.generateDocs] ?? enableDefault,
-      fileHeader: const None(),
+      fileHeader: null,
+      requiredOption: false,
       useNullForOption: false,
       int64Type: Int64TypeConfig.values.firstWhere(
         (e) => e.name == int64Type,

@@ -2,9 +2,17 @@ import 'package:wasm_wit_component/src/component.dart';
 
 /// A Rust-style Option type.
 sealed class Option<T extends Object> {
+  /// A Rust-style Option type's Some value.
   const factory Option.some(T value) = Some;
+
+  /// A Rust-style Option type's None value.
   const factory Option.none() = None;
 
+  /// Creates an option from a JSON representation.
+  /// The JSON value must `null` or a map with a single key,
+  /// either "none" or "some".
+  ///
+  /// May throw an exception if the JSON value is invalid.
   factory Option.fromJson(Object? json, T Function(Object? json) some) {
     return switch (json) {
       null => None(),
@@ -12,6 +20,16 @@ sealed class Option<T extends Object> {
       {'some': final o} || (1, final o) => Some(some(o)),
       _ => throw Exception('Invalid JSON for Option: $json'),
     };
+  }
+
+  /// Creates an option from a nullable [value].
+  /// Some(value) if value is not null, None() otherwise.
+  factory Option.fromValue(T? value) {
+    if (value == null) {
+      return const None();
+    } else {
+      return Some(value);
+    }
   }
 
   /// Returns the contained [T] value, if present, otherwise returns null
@@ -23,6 +41,7 @@ sealed class Option<T extends Object> {
   /// Returns `true` if this is a [None] instance
   bool get isNone;
 
+  /// Returns a JSON representation of the option.
   Map<String, Object?> toJson([Object? Function(T value)? mapValue]);
 }
 
@@ -30,6 +49,8 @@ sealed class Option<T extends Object> {
 class Some<T extends Object> implements Option<T> {
   @override
   final T value;
+
+  /// A Rust-style Option type's Some value.
   const Some(this.value);
 
   @override
@@ -58,6 +79,7 @@ class Some<T extends Object> implements Option<T> {
 
 /// A Rust-style Option type's None value.
 class None<T extends Object> implements Option<T> {
+  /// A Rust-style Option type's None value.
   const None();
   @override
   T? get value => null;
