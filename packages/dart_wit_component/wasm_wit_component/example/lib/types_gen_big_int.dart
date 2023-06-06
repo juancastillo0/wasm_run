@@ -24,21 +24,32 @@ class R {
   final List<
       (
         String,
-        Option<T4>,
+        T4?,
       )> c;
+  final Option<
+      (
+        List<BigInt /*S64*/ >,
+        Option<BigInt /*U64*/ >?,
+      )>? d;
 
+  /// "package of named fields"
   const R({
     required this.a,
     required this.b,
     required this.c,
+    this.d,
   });
 
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
   factory R.fromJson(Object? json_) {
     final json = json_ is Map
         ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
         : json_;
     return switch (json) {
-      [final a, final b, final c] || (final a, final b, final c) => R(
+      [final a, final b, final c, final d] ||
+      (final a, final b, final c, final d) =>
+        R(
           a: a! as int,
           b: b is String ? b : (b! as ParsedString).value,
           c: (c! as Iterable)
@@ -53,38 +64,90 @@ class R {
                           Option.fromJson(
                               v1,
                               (some) => Option.fromJson(
-                                  some, (some) => some! as int)),
+                                  some, (some) => some! as int)).value,
                         ),
                       _ => throw Exception('Invalid JSON $e')
                     };
                   })())
               .toList(),
+          d: Option.fromJson(
+              d,
+              (some) => Option.fromJson(
+                  some,
+                  (some) => (() {
+                        final l = some is Map
+                            ? List.generate(2, (i) => some[i.toString()],
+                                growable: false)
+                            : some;
+                        return switch (l) {
+                          [final v0, final v1] || (final v0, final v1) => (
+                              (v0! as Iterable)
+                                  .map((e) => bigIntFromJson(e))
+                                  .toList(),
+                              Option.fromJson(
+                                      v1,
+                                      (some) => Option.fromJson(
+                                          some, (some) => bigIntFromJson(some)))
+                                  .value,
+                            ),
+                          _ => throw Exception('Invalid JSON $some')
+                        };
+                      })())).value,
         ),
       _ => throw Exception('Invalid JSON $json_')
     };
   }
+
+  /// Returns this as a serializable JSON value.
   Map<String, Object?> toJson() => {
         'a': a,
         'b': b,
         'c': c
-            .map((e) =>
-                [e.$1, e.$2.toJson((some) => some.toJson((some) => some))])
+            .map((e) => [
+                  e.$1,
+                  (e.$2 == null
+                      ? const None().toJson()
+                      : Option.fromValue(e.$2)
+                          .toJson((some) => some.toJson((some) => some)))
+                ])
             .toList(),
+        'd': (d == null
+            ? const None().toJson()
+            : Option.fromValue(d).toJson((some) => some.toJson((some) => [
+                  some.$1.map((e) => e.toString()).toList(),
+                  (some.$2 == null
+                      ? const None().toJson()
+                      : Option.fromValue(some.$2).toJson(
+                          (some) => some.toJson((some) => some.toString())))
+                ]))),
       };
   @override
   String toString() =>
       'R${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
+
+  /// Returns a new instance by overriding the values passed as arguments
   R copyWith({
     int /*U32*/ ? a,
     String? b,
     List<
             (
               String,
-              Option<T4>,
+              T4?,
             )>?
         c,
+    Option<
+            Option<
+                (
+                  List<BigInt /*S64*/ >,
+                  Option<BigInt /*U64*/ >?,
+                )>>?
+        d,
   }) =>
-      R(a: a ?? this.a, b: b ?? this.b, c: c ?? this.c);
+      R(
+          a: a ?? this.a,
+          b: b ?? this.b,
+          c: c ?? this.c,
+          d: d != null ? d.value : this.d);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -93,23 +156,38 @@ class R {
   int get hashCode => comparator.hashProps(_props);
 
   // ignore: unused_field
-  List<Object?> get _props => [a, b, c];
-  static const _spec = Record([
+  List<Object?> get _props => [a, b, c, d];
+  static const _spec = RecordType([
     (label: 'a', t: U32()),
     (label: 'b', t: StringType()),
     (
       label: 'c',
       t: ListType(Tuple([StringType(), OptionType(OptionType(U32()))]))
+    ),
+    (
+      label: 'd',
+      t: OptionType(
+          OptionType(Tuple([ListType(S64()), OptionType(OptionType(U64()))])))
     )
   ]);
 }
 
 /// a bitflags type
 class Permissions {
+  /// The flags represented as a set of bits.
   final FlagsBits flagsBits;
-  const Permissions(this.flagsBits);
+
+  /// Creates an instance where the flags are represented by [flagsBits].
+  /// The number of flags must match the number of flags in the type (3).
+  Permissions(this.flagsBits) : assert(flagsBits.numFlags == 3);
+
+  /// An instance where all flags are set to `false`.
   Permissions.none() : flagsBits = FlagsBits.none(numFlags: 3);
+
+  /// An instance where all flags are set to `true`.
   Permissions.all() : flagsBits = FlagsBits.all(numFlags: 3);
+
+  /// Creates an instance with flags booleans passed as arguments.
   factory Permissions.fromBool(
       {bool read = false, bool write = false, bool exec = false}) {
     final value_ = Permissions.none();
@@ -118,10 +196,15 @@ class Permissions {
     if (exec) value_.exec = true;
     return value_;
   }
+
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
   factory Permissions.fromJson(Object? json) {
     final flagsBits = FlagsBits.fromJson(json, flagsKeys: _spec.labels);
     return Permissions(flagsBits);
   }
+
+  /// Returns this as a serializable JSON value.
   Object toJson() => flagsBits.toJson();
   @override
   String toString() => 'Permissions(${[
@@ -134,12 +217,20 @@ class Permissions {
       other is Permissions && comparator.areEqual(flagsBits, other.flagsBits);
   @override
   int get hashCode => comparator.hashValue(flagsBits);
+
+  /// Returns the bitwise AND of the flags in this and [other].
   Permissions operator &(Permissions other) =>
       Permissions(flagsBits & other.flagsBits);
+
+  /// Returns the bitwise OR of the flags in this and [other].
   Permissions operator |(Permissions other) =>
       Permissions(flagsBits | other.flagsBits);
+
+  /// Returns the bitwise XOR of the flags in this and [other].
   Permissions operator ^(Permissions other) =>
       Permissions(flagsBits ^ other.flagsBits);
+
+  /// Returns the flags inverted (negated).
   Permissions operator ~() => Permissions(~flagsBits);
   bool get read => flagsBits[0];
   set read(bool enable) => flagsBits[0] = enable;
@@ -154,6 +245,8 @@ class Permissions {
 /// have a type payload -- note that this is not a C union, it still has a
 /// discriminant
 sealed class Input {
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
   factory Input.fromJson(Object? json_) {
     Object? json = json_;
     if (json is Map) {
@@ -173,6 +266,7 @@ sealed class Input {
   const factory Input.bigIntU64(BigInt /*U64*/ value) = InputBigIntU64;
   const factory Input.string(String value) = InputString;
 
+  /// Returns this as a serializable JSON value.
   Map<String, Object?> toJson();
 // ignore: unused_field
   static const _spec = Union([U64(), StringType()]);
@@ -181,6 +275,8 @@ sealed class Input {
 class InputBigIntU64 implements Input {
   final BigInt /*U64*/ value;
   const InputBigIntU64(this.value);
+
+  /// Returns this as a serializable JSON value.
   @override
   Map<String, Object?> toJson() => {'0': value.toString()};
   @override
@@ -195,6 +291,8 @@ class InputBigIntU64 implements Input {
 class InputString implements Input {
   final String value;
   const InputString(this.value);
+
+  /// Returns this as a serializable JSON value.
   @override
   Map<String, Object?> toJson() => {'1': value};
   @override
@@ -208,6 +306,8 @@ class InputString implements Input {
 
 /// values of this type will be one of the specified cases
 sealed class HumanTypesInterface {
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
   factory HumanTypesInterface.fromJson(Object? json_) {
     Object? json = json_;
     if (json is Map) {
@@ -231,6 +331,7 @@ sealed class HumanTypesInterface {
       HumanTypesInterfaceChild;
   const factory HumanTypesInterface.adult() = HumanTypesInterfaceAdult;
 
+  /// Returns this as a serializable JSON value.
   Map<String, Object?> toJson();
   static const _spec =
       Variant([Case('baby', null), Case('child', U32()), Case('adult', null)]);
@@ -238,6 +339,8 @@ sealed class HumanTypesInterface {
 
 class HumanTypesInterfaceBaby implements HumanTypesInterface {
   const HumanTypesInterfaceBaby();
+
+  /// Returns this as a serializable JSON value.
   @override
   Map<String, Object?> toJson() => {'baby': null};
   @override
@@ -251,7 +354,11 @@ class HumanTypesInterfaceBaby implements HumanTypesInterface {
 /// type payload
 class HumanTypesInterfaceChild implements HumanTypesInterface {
   final int /*U32*/ value;
+
+  /// type payload
   const HumanTypesInterfaceChild(this.value);
+
+  /// Returns this as a serializable JSON value.
   @override
   Map<String, Object?> toJson() => {'child': value};
   @override
@@ -266,6 +373,8 @@ class HumanTypesInterfaceChild implements HumanTypesInterface {
 
 class HumanTypesInterfaceAdult implements HumanTypesInterface {
   const HumanTypesInterfaceAdult();
+
+  /// Returns this as a serializable JSON value.
   @override
   Map<String, Object?> toJson() => {'adult': null};
   @override
@@ -283,6 +392,8 @@ enum ErrnoTypesInterface {
   tooFast,
   tooSlow;
 
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
   factory ErrnoTypesInterface.fromJson(Object? json_) {
     final json = json_ is Map ? json_.keys.first : json_;
     if (json is String) {
@@ -291,6 +402,8 @@ enum ErrnoTypesInterface {
     }
     return values[json! as int];
   }
+
+  /// Returns this as a serializable JSON value.
   Object? toJson() => _spec.labels[index];
   static const _spec =
       EnumType(['too-big', 'too-small', 'too-fast', 'too-slow']);
@@ -300,6 +413,211 @@ typedef T7 = Result<String /*Char*/, ErrnoTypesInterface>;
 
 /// no "ok" type
 typedef T5TypesInterface = Result<void, ErrnoTypesInterface>;
+
+class RoundTripNumbersListData {
+  final Uint8List un8;
+  final Uint16List un16;
+  final Uint32List un32;
+  final List<BigInt /*U64*/ > un64;
+  final Int8List si8;
+  final Int16List si16;
+  final Int32List si32;
+  final List<BigInt /*S64*/ > si64;
+  final List<List<BigInt /*S64*/ >> si64List;
+  final List<List<BigInt /*U64*/ >> un64List;
+  final List<Uint8List> un8List;
+  final Float32List f32;
+  final Float64List f64;
+  const RoundTripNumbersListData({
+    required this.un8,
+    required this.un16,
+    required this.un32,
+    required this.un64,
+    required this.si8,
+    required this.si16,
+    required this.si32,
+    required this.si64,
+    required this.si64List,
+    required this.un64List,
+    required this.un8List,
+    required this.f32,
+    required this.f64,
+  });
+
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
+  factory RoundTripNumbersListData.fromJson(Object? json_) {
+    final json = json_ is Map
+        ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
+        : json_;
+    return switch (json) {
+      [
+        final un8,
+        final un16,
+        final un32,
+        final un64,
+        final si8,
+        final si16,
+        final si32,
+        final si64,
+        final si64List,
+        final un64List,
+        final un8List,
+        final f32,
+        final f64
+      ] ||
+      (
+        final un8,
+        final un16,
+        final un32,
+        final un64,
+        final si8,
+        final si16,
+        final si32,
+        final si64,
+        final si64List,
+        final un64List,
+        final un8List,
+        final f32,
+        final f64
+      ) =>
+        RoundTripNumbersListData(
+          un8: (un8 is Uint8List
+              ? un8
+              : Uint8List.fromList((un8! as List).cast())),
+          un16: (un16 is Uint16List
+              ? un16
+              : Uint16List.fromList((un16! as List).cast())),
+          un32: (un32 is Uint32List
+              ? un32
+              : Uint32List.fromList((un32! as List).cast())),
+          un64: (un64! as Iterable).map((e) => bigIntFromJson(e)).toList(),
+          si8: (si8 is Int8List
+              ? si8
+              : Int8List.fromList((si8! as List).cast())),
+          si16: (si16 is Int16List
+              ? si16
+              : Int16List.fromList((si16! as List).cast())),
+          si32: (si32 is Int32List
+              ? si32
+              : Int32List.fromList((si32! as List).cast())),
+          si64: (si64! as Iterable).map((e) => bigIntFromJson(e)).toList(),
+          si64List: (si64List! as Iterable)
+              .map((e) =>
+                  (e! as Iterable).map((e) => bigIntFromJson(e)).toList())
+              .toList(),
+          un64List: (un64List! as Iterable)
+              .map((e) =>
+                  (e! as Iterable).map((e) => bigIntFromJson(e)).toList())
+              .toList(),
+          un8List: (un8List! as Iterable)
+              .map((e) => (e is Uint8List
+                  ? e
+                  : Uint8List.fromList((e! as List).cast())))
+              .toList(),
+          f32: (f32 is Float32List
+              ? f32
+              : Float32List.fromList((f32! as List).cast())),
+          f64: (f64 is Float64List
+              ? f64
+              : Float64List.fromList((f64! as List).cast())),
+        ),
+      _ => throw Exception('Invalid JSON $json_')
+    };
+  }
+
+  /// Returns this as a serializable JSON value.
+  Map<String, Object?> toJson() => {
+        'un8': un8.toList(),
+        'un16': un16.toList(),
+        'un32': un32.toList(),
+        'un64': un64.map((e) => e.toString()).toList(),
+        'si8': si8.toList(),
+        'si16': si16.toList(),
+        'si32': si32.toList(),
+        'si64': si64.map((e) => e.toString()).toList(),
+        'si64-list':
+            si64List.map((e) => e.map((e) => e.toString()).toList()).toList(),
+        'un64-list':
+            un64List.map((e) => e.map((e) => e.toString()).toList()).toList(),
+        'un8-list': un8List.map((e) => e.toList()).toList(),
+        'f32': f32.toList(),
+        'f64': f64.toList(),
+      };
+  @override
+  String toString() =>
+      'RoundTripNumbersListData${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
+
+  /// Returns a new instance by overriding the values passed as arguments
+  RoundTripNumbersListData copyWith({
+    Uint8List? un8,
+    Uint16List? un16,
+    Uint32List? un32,
+    List<BigInt /*U64*/ >? un64,
+    Int8List? si8,
+    Int16List? si16,
+    Int32List? si32,
+    List<BigInt /*S64*/ >? si64,
+    List<List<BigInt /*S64*/ >>? si64List,
+    List<List<BigInt /*U64*/ >>? un64List,
+    List<Uint8List>? un8List,
+    Float32List? f32,
+    Float64List? f64,
+  }) =>
+      RoundTripNumbersListData(
+          un8: un8 ?? this.un8,
+          un16: un16 ?? this.un16,
+          un32: un32 ?? this.un32,
+          un64: un64 ?? this.un64,
+          si8: si8 ?? this.si8,
+          si16: si16 ?? this.si16,
+          si32: si32 ?? this.si32,
+          si64: si64 ?? this.si64,
+          si64List: si64List ?? this.si64List,
+          un64List: un64List ?? this.un64List,
+          un8List: un8List ?? this.un8List,
+          f32: f32 ?? this.f32,
+          f64: f64 ?? this.f64);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is RoundTripNumbersListData &&
+          comparator.arePropsEqual(_props, other._props);
+  @override
+  int get hashCode => comparator.hashProps(_props);
+
+  // ignore: unused_field
+  List<Object?> get _props => [
+        un8,
+        un16,
+        un32,
+        un64,
+        si8,
+        si16,
+        si32,
+        si64,
+        si64List,
+        un64List,
+        un8List,
+        f32,
+        f64
+      ];
+  static const _spec = RecordType([
+    (label: 'un8', t: ListType(U8())),
+    (label: 'un16', t: ListType(U16())),
+    (label: 'un32', t: ListType(U32())),
+    (label: 'un64', t: ListType(U64())),
+    (label: 'si8', t: ListType(S8())),
+    (label: 'si16', t: ListType(S16())),
+    (label: 'si32', t: ListType(S32())),
+    (label: 'si64', t: ListType(S64())),
+    (label: 'si64-list', t: ListType(ListType(S64()))),
+    (label: 'un64-list', t: ListType(ListType(U64()))),
+    (label: 'un8-list', t: ListType(ListType(U8()))),
+    (label: 'f32', t: ListType(Float32())),
+    (label: 'f64', t: ListType(Float64()))
+  ]);
+}
 
 class RoundTripNumbersData {
   final int /*U8*/ un8;
@@ -312,7 +630,6 @@ class RoundTripNumbersData {
   final BigInt /*S64*/ si64;
   final double /*F32*/ f32;
   final double /*F64*/ f64;
-
   const RoundTripNumbersData({
     required this.un8,
     required this.un16,
@@ -326,6 +643,8 @@ class RoundTripNumbersData {
     required this.f64,
   });
 
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
   factory RoundTripNumbersData.fromJson(Object? json_) {
     final json = json_ is Map
         ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
@@ -370,6 +689,8 @@ class RoundTripNumbersData {
       _ => throw Exception('Invalid JSON $json_')
     };
   }
+
+  /// Returns this as a serializable JSON value.
   Map<String, Object?> toJson() => {
         'un8': un8,
         'un16': un16,
@@ -385,6 +706,8 @@ class RoundTripNumbersData {
   @override
   String toString() =>
       'RoundTripNumbersData${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
+
+  /// Returns a new instance by overriding the values passed as arguments
   RoundTripNumbersData copyWith({
     int /*U8*/ ? un8,
     int /*U16*/ ? un16,
@@ -419,7 +742,7 @@ class RoundTripNumbersData {
   // ignore: unused_field
   List<Object?> get _props =>
       [un8, un16, un32, un64, si8, si16, si32, si64, f32, f64];
-  static const _spec = Record([
+  static const _spec = RecordType([
     (label: 'un8', t: U8()),
     (label: 'un16', t: U16()),
     (label: 'un32', t: U32()),
@@ -435,6 +758,8 @@ class RoundTripNumbersData {
 
 /// Same name as the type in `types-interface`, but this is a different type
 sealed class HumanApiImports {
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
   factory HumanApiImports.fromJson(Object? json_) {
     Object? json = json_;
     if (json is Map) {
@@ -464,7 +789,7 @@ sealed class HumanApiImports {
                         some,
                         (some) => some is String
                             ? some
-                            : (some! as ParsedString).value)),
+                            : (some! as ParsedString).value)).value,
                 (() {
                   final l = v2 is Map
                       ? List.generate(1, (i) => v2[i.toString()],
@@ -488,10 +813,11 @@ sealed class HumanApiImports {
   const factory HumanApiImports.adult(
       (
         String,
-        Option<Option<String>>,
+        Option<String>?,
         (BigInt /*S64*/,),
       ) value) = HumanApiImportsAdult;
 
+  /// Returns this as a serializable JSON value.
   Map<String, Object?> toJson();
   static const _spec = Variant([
     Case('baby', null),
@@ -508,6 +834,8 @@ sealed class HumanApiImports {
 
 class HumanApiImportsBaby implements HumanApiImports {
   const HumanApiImportsBaby();
+
+  /// Returns this as a serializable JSON value.
   @override
   Map<String, Object?> toJson() => {'baby': null};
   @override
@@ -521,6 +849,8 @@ class HumanApiImportsBaby implements HumanApiImports {
 class HumanApiImportsChild implements HumanApiImports {
   final BigInt /*U64*/ value;
   const HumanApiImportsChild(this.value);
+
+  /// Returns this as a serializable JSON value.
   @override
   Map<String, Object?> toJson() => {'child': value.toString()};
   @override
@@ -535,15 +865,20 @@ class HumanApiImportsChild implements HumanApiImports {
 class HumanApiImportsAdult implements HumanApiImports {
   final (
     String,
-    Option<Option<String>>,
+    Option<String>?,
     (BigInt /*S64*/,),
   ) value;
   const HumanApiImportsAdult(this.value);
+
+  /// Returns this as a serializable JSON value.
   @override
   Map<String, Object?> toJson() => {
         'adult': [
           value.$1,
-          value.$2.toJson((some) => some.toJson((some) => some)),
+          (value.$2 == null
+              ? const None().toJson()
+              : Option.fromValue(value.$2)
+                  .toJson((some) => some.toJson((some) => some))),
           [value.$3.$1.toString()]
         ]
       };
@@ -563,7 +898,6 @@ class ErrnoApi {
   final List<BigInt /*S64*/ > listS1;
   final String? str;
   final String /*Char*/ ? c;
-
   const ErrnoApi({
     required this.aU1,
     required this.listS1,
@@ -571,6 +905,8 @@ class ErrnoApi {
     this.c,
   });
 
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
   factory ErrnoApi.fromJson(Object? json_) {
     final json = json_ is Map
         ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
@@ -590,30 +926,34 @@ class ErrnoApi {
       _ => throw Exception('Invalid JSON $json_')
     };
   }
+
+  /// Returns this as a serializable JSON value.
   Map<String, Object?> toJson() => {
         'a-u1': aU1.toString(),
         'list-s1': listS1.map((e) => e.toString()).toList(),
         'str': (str == null
             ? const None().toJson()
-            : Some(str!).toJson((some) => some)),
+            : Option.fromValue(str).toJson((some) => some)),
         'c': (c == null
             ? const None().toJson()
-            : Some(c!).toJson((some) => some)),
+            : Option.fromValue(c).toJson((some) => some)),
       };
   @override
   String toString() =>
       'ErrnoApi${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
+
+  /// Returns a new instance by overriding the values passed as arguments
   ErrnoApi copyWith({
     BigInt /*U64*/ ? aU1,
     List<BigInt /*S64*/ >? listS1,
-    String? str,
-    String /*Char*/ ? c,
+    Option<String>? str,
+    Option<String /*Char*/ >? c,
   }) =>
       ErrnoApi(
           aU1: aU1 ?? this.aU1,
           listS1: listS1 ?? this.listS1,
-          str: str ?? this.str,
-          c: c ?? this.c);
+          str: str != null ? str.value : this.str,
+          c: c != null ? c.value : this.c);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -623,7 +963,7 @@ class ErrnoApi {
 
   // ignore: unused_field
   List<Object?> get _props => [aU1, listS1, str, c];
-  static const _spec = Record([
+  static const _spec = RecordType([
     (label: 'a-u1', t: U64()),
     (label: 'list-s1', t: ListType(S64())),
     (label: 'str', t: OptionType(StringType())),
@@ -632,7 +972,7 @@ class ErrnoApi {
 }
 
 /// Comment for t5 in api
-typedef T5Api = Result<void, Option<ErrnoApi>>;
+typedef T5Api = Result<void, ErrnoApi?>;
 typedef T2Renamed = T2;
 
 enum LogLevel {
@@ -642,6 +982,8 @@ enum LogLevel {
   warn,
   error;
 
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
   factory LogLevel.fromJson(Object? json_) {
     final json = json_ is Map ? json_.keys.first : json_;
     if (json is String) {
@@ -650,6 +992,8 @@ enum LogLevel {
     }
     return values[json! as int];
   }
+
+  /// Returns this as a serializable JSON value.
   Object? toJson() => _spec.labels[index];
   static const _spec = EnumType(['debug', 'info', 'warn', 'error']);
 }
@@ -657,11 +1001,17 @@ enum LogLevel {
 class Empty {
   const Empty();
 
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
   factory Empty.fromJson(Object? _) => const Empty();
+
+  /// Returns this as a serializable JSON value.
   Map<String, Object?> toJson() => {};
   @override
   String toString() =>
       'Empty${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
+
+  /// Returns a new instance by overriding the values passed as arguments
   Empty copyWith() => Empty();
   @override
   bool operator ==(Object other) =>
@@ -672,7 +1022,7 @@ class Empty {
 
   // ignore: unused_field
   List<Object?> get _props => [];
-  static const _spec = Record([]);
+  static const _spec = RecordType([]);
 }
 
 /// Comment for import interface
@@ -686,13 +1036,16 @@ abstract class ApiImportsImport {
 abstract class InlineImport {
   /// Comment for import inline function
   Result<void, String /*Char*/ > inlineImp({
-    required List<Option<String /*Char*/ >> args,
+    required List<String /*Char*/ ?> args,
   });
 }
 
 abstract class RoundTripNumbersImport {
   RoundTripNumbersData roundTripNumbers({
     required RoundTripNumbersData data,
+  });
+  RoundTripNumbersListData roundTripNumbersList({
+    required RoundTripNumbersListData data,
   });
 }
 
@@ -719,7 +1072,7 @@ class RoundTripNumbers {
           const FuncType([
             (
               'data',
-              Record([
+              RecordType([
                 (label: 'un8', t: U8()),
                 (label: 'un16', t: U16()),
                 (label: 'un32', t: U32()),
@@ -735,7 +1088,7 @@ class RoundTripNumbers {
           ], [
             (
               '',
-              Record([
+              RecordType([
                 (label: 'un8', t: U8()),
                 (label: 'un16', t: U16()),
                 (label: 'un32', t: U32()),
@@ -749,6 +1102,48 @@ class RoundTripNumbers {
               ])
             )
           ]),
+        )!,
+        _roundTripNumbersList = library.getComponentFunction(
+          'types-example-namespace:types-example-pkg/round-trip-numbers#round-trip-numbers-list',
+          const FuncType([
+            (
+              'data',
+              RecordType([
+                (label: 'un8', t: ListType(U8())),
+                (label: 'un16', t: ListType(U16())),
+                (label: 'un32', t: ListType(U32())),
+                (label: 'un64', t: ListType(U64())),
+                (label: 'si8', t: ListType(S8())),
+                (label: 'si16', t: ListType(S16())),
+                (label: 'si32', t: ListType(S32())),
+                (label: 'si64', t: ListType(S64())),
+                (label: 'si64-list', t: ListType(ListType(S64()))),
+                (label: 'un64-list', t: ListType(ListType(U64()))),
+                (label: 'un8-list', t: ListType(ListType(U8()))),
+                (label: 'f32', t: ListType(Float32())),
+                (label: 'f64', t: ListType(Float64()))
+              ])
+            )
+          ], [
+            (
+              '',
+              RecordType([
+                (label: 'un8', t: ListType(U8())),
+                (label: 'un16', t: ListType(U16())),
+                (label: 'un32', t: ListType(U32())),
+                (label: 'un64', t: ListType(U64())),
+                (label: 'si8', t: ListType(S8())),
+                (label: 'si16', t: ListType(S16())),
+                (label: 'si32', t: ListType(S32())),
+                (label: 'si64', t: ListType(S64())),
+                (label: 'si64-list', t: ListType(ListType(S64()))),
+                (label: 'un64-list', t: ListType(ListType(U64()))),
+                (label: 'un8-list', t: ListType(ListType(U8()))),
+                (label: 'f32', t: ListType(Float32())),
+                (label: 'f64', t: ListType(Float64()))
+              ])
+            )
+          ]),
         )!;
   final ListValue Function(ListValue) _roundTripNumbers;
   RoundTripNumbersData roundTripNumbers({
@@ -757,6 +1152,15 @@ class RoundTripNumbers {
     final results = _roundTripNumbers([data.toJson()]);
     final result = results[0];
     return RoundTripNumbersData.fromJson(result);
+  }
+
+  final ListValue Function(ListValue) _roundTripNumbersList;
+  RoundTripNumbersListData roundTripNumbersList({
+    required RoundTripNumbersListData data,
+  }) {
+    final results = _roundTripNumbersList([data.toJson()]);
+    final result = results[0];
+    return RoundTripNumbersListData.fromJson(result);
   }
 }
 
@@ -776,7 +1180,7 @@ class Api {
               'break',
               OptionType(OptionType(ResultType(
                   null,
-                  OptionType(Record([
+                  OptionType(RecordType([
                     (label: 'a-u1', t: U64()),
                     (label: 'list-s1', t: ListType(S64())),
                     (label: 'str', t: OptionType(StringType())),
@@ -794,7 +1198,7 @@ class Api {
               'abstract',
               OptionType(ResultType(
                   null,
-                  Record([
+                  RecordType([
                     (label: 'a-u1', t: U64()),
                     (label: 'list-s1', t: ListType(S64())),
                     (label: 'str', t: OptionType(StringType())),
@@ -834,8 +1238,13 @@ class Api {
     _class_([
       (break_ == null
           ? const None().toJson()
-          : Some(break_!).toJson((some) => some.toJson((some) => some.toJson(
-              null, (error) => error.toJson((some) => some.toJson())))))
+          : Option.fromValue(break_).toJson((some) => some.toJson((some) =>
+              some.toJson(
+                  null,
+                  (error) => (error == null
+                      ? const None().toJson()
+                      : Option.fromValue(error)
+                          .toJson((some) => some.toJson()))))))
     ]);
     return ();
   }
@@ -848,7 +1257,7 @@ class Api {
     final results = _continue_([
       (abstract_ == null
           ? const None().toJson()
-          : Some(abstract_!)
+          : Option.fromValue(abstract_)
               .toJson((some) => some.toJson(null, (error) => error.toJson()))),
       []
     ]);
@@ -887,7 +1296,7 @@ class TypesExampleWorld {
           're-named',
           const FuncType([
             ('perm', OptionType(Flags(['read', 'write', 'exec']))),
-            ('e', OptionType(Record([])))
+            ('e', OptionType(RecordType([])))
           ], [
             ('', Tuple([U32(), U64()]))
           ]),
@@ -896,7 +1305,7 @@ class TypesExampleWorld {
           're-named2',
           const FuncType([
             ('tup', Tuple([ListType(U16())])),
-            ('e', Record([]))
+            ('e', RecordType([]))
           ], [
             ('', Tuple([OptionType(U8()), S8()]))
           ]),
@@ -981,7 +1390,7 @@ class TypesExampleWorld {
         final args0 = args[0];
         final results = imports.inline.inlineImp(
             args: (args0! as Iterable)
-                .map((e) => Option.fromJson(e, (some) => some! as String))
+                .map((e) => Option.fromJson(e, (some) => some! as String).value)
                 .toList());
         return ([results.toJson(null, null)], () {});
       }
@@ -994,7 +1403,7 @@ class TypesExampleWorld {
       const ft = FuncType([
         (
           'data',
-          Record([
+          RecordType([
             (label: 'un8', t: U8()),
             (label: 'un16', t: U16()),
             (label: 'un32', t: U32()),
@@ -1010,7 +1419,7 @@ class TypesExampleWorld {
       ], [
         (
           '',
-          Record([
+          RecordType([
             (label: 'un8', t: U8()),
             (label: 'un16', t: U16()),
             (label: 'un32', t: U32()),
@@ -1045,6 +1454,65 @@ class TypesExampleWorld {
     }
     {
       const ft = FuncType([
+        (
+          'data',
+          RecordType([
+            (label: 'un8', t: ListType(U8())),
+            (label: 'un16', t: ListType(U16())),
+            (label: 'un32', t: ListType(U32())),
+            (label: 'un64', t: ListType(U64())),
+            (label: 'si8', t: ListType(S8())),
+            (label: 'si16', t: ListType(S16())),
+            (label: 'si32', t: ListType(S32())),
+            (label: 'si64', t: ListType(S64())),
+            (label: 'si64-list', t: ListType(ListType(S64()))),
+            (label: 'un64-list', t: ListType(ListType(U64()))),
+            (label: 'un8-list', t: ListType(ListType(U8()))),
+            (label: 'f32', t: ListType(Float32())),
+            (label: 'f64', t: ListType(Float64()))
+          ])
+        )
+      ], [
+        (
+          '',
+          RecordType([
+            (label: 'un8', t: ListType(U8())),
+            (label: 'un16', t: ListType(U16())),
+            (label: 'un32', t: ListType(U32())),
+            (label: 'un64', t: ListType(U64())),
+            (label: 'si8', t: ListType(S8())),
+            (label: 'si16', t: ListType(S16())),
+            (label: 'si32', t: ListType(S32())),
+            (label: 'si64', t: ListType(S64())),
+            (label: 'si64-list', t: ListType(ListType(S64()))),
+            (label: 'un64-list', t: ListType(ListType(U64()))),
+            (label: 'un8-list', t: ListType(ListType(U8()))),
+            (label: 'f32', t: ListType(Float32())),
+            (label: 'f64', t: ListType(Float64()))
+          ])
+        )
+      ]);
+
+      (ListValue, void Function())
+          execImportsRoundTripNumbersRoundTripNumbersList(ListValue args) {
+        final args0 = args[0];
+        final results = imports.roundTripNumbers.roundTripNumbersList(
+            data: RoundTripNumbersListData.fromJson(args0));
+        return ([results.toJson()], () {});
+      }
+
+      final lowered = loweredImportFunction(
+          r'types-example-namespace:types-example-pkg/round-trip-numbers#round-trip-numbers-list',
+          ft,
+          execImportsRoundTripNumbersRoundTripNumbersList,
+          getLib);
+      builder.addImport(
+          r'types-example-namespace:types-example-pkg/round-trip-numbers',
+          'round-trip-numbers-list',
+          lowered);
+    }
+    {
+      const ft = FuncType([
         ('message', StringType()),
         ('level', EnumType(['debug', 'info', 'warn', 'error']))
       ], []);
@@ -1073,7 +1541,7 @@ class TypesExampleWorld {
   T10 fF1({
     required T10 typedef_,
   }) {
-    final results = _fF1([typedef_.map((e) => e).toList()]);
+    final results = _fF1([typedef_.toList()]);
     final result = results[0];
     return (result! as Iterable)
         .map((e) => e is String ? e : (e! as ParsedString).value)
@@ -1112,10 +1580,10 @@ class TypesExampleWorld {
     final results = _reNamed([
       (perm == null
           ? const None().toJson()
-          : Some(perm!).toJson((some) => some.toJson())),
+          : Option.fromValue(perm).toJson((some) => some.toJson())),
       (e == null
           ? const None().toJson()
-          : Some(e!).toJson((some) => some.toJson()))
+          : Option.fromValue(e).toJson((some) => some.toJson()))
     ]);
     final result = results[0];
     return (() {
@@ -1134,14 +1602,14 @@ class TypesExampleWorld {
 
   final ListValue Function(ListValue) _reNamed2;
   (
-    Option<int /*U8*/ >,
+    int /*U8*/ ?,
     int /*S8*/,
   ) reNamed2({
-    required (List<int /*U16*/ >,) tup,
+    required (Uint16List,) tup,
     required Empty e,
   }) {
     final results = _reNamed2([
-      [tup.$1.map((e) => e).toList()],
+      [tup.$1.toList()],
       e.toJson()
     ]);
     final result = results[0];
@@ -1151,7 +1619,7 @@ class TypesExampleWorld {
           : result;
       return switch (l) {
         [final v0, final v1] || (final v0, final v1) => (
-            Option.fromJson(v0, (some) => some! as int),
+            Option.fromJson(v0, (some) => some! as int).value,
             v1! as int,
           ),
         _ => throw Exception('Invalid JSON $result')

@@ -124,6 +124,29 @@ impl round_trip_numbers::RoundTripNumbers for MyHost {
         );
         data
     }
+
+    fn round_trip_numbers_list(
+        data: round_trip_numbers::RoundTripNumbersListData,
+    ) -> round_trip_numbers::RoundTripNumbersListData {
+        round_trip_numbers_host::round_trip_numbers_list(
+            &round_trip_numbers_host::RoundTripNumbersListData {
+                f32: data.f32.clone(),
+                f64: data.f64.clone(),
+                si8: data.si8.clone(),
+                un8: data.un8.clone(),
+                si16: data.si16.clone(),
+                un16: data.un16.clone(),
+                si32: data.si32.clone(),
+                un32: data.un32.clone(),
+                si64: data.si64.clone(),
+                un64: data.un64.clone(),
+                si64_list: data.si64_list.clone(),
+                un64_list: data.un64_list.clone(),
+                un8_list: data.un8_list.clone(),
+            },
+        );
+        data
+    }
 }
 
 export_types_example!(MyHost);

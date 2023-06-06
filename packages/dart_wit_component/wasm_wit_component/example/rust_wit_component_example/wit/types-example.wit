@@ -5,7 +5,8 @@ interface types-interface {
   record r {
     a: u32,
     b: string,
-    c: list<tuple<string, option<t4>>>
+    c: list<tuple<string, option<t4>>>,
+    d: option<option<tuple<list<s64>, option<option<u64>>>>>,
   }
 
   /// values of this type will be one of the specified cases
@@ -68,7 +69,25 @@ interface round-trip-numbers {
     f64: float64,
   }
 
+  record round-trip-numbers-list-data {
+    un8: list<u8>,
+    un16: list<u16>,
+    un32: list<u32>,
+    un64: list<u64>,
+    si8: list<s8>,
+    si16: list<s16>,
+    si32: list<s32>,
+    si64: list<s64>,
+    si64-list: list<list<s64>>,
+    un64-list: list<list<u64>>,
+    un8-list: list<list<u8>>,
+    f32: list<float32>,
+    f64: list<float64>,
+  }
+
   round-trip-numbers: func(data: round-trip-numbers-data) -> round-trip-numbers-data
+
+  round-trip-numbers-list: func(data: round-trip-numbers-list-data) -> round-trip-numbers-list-data
 }
 
 /// Comment for import interface
