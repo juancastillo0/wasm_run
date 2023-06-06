@@ -10,7 +10,7 @@ import 'package:wasm_run/src/ffi/library_locator.dart'
 /// Downloads the native dynamic library for the current platform.
 /// The output file will be written to `{projectRoot}/.dart_tool/wasm_run/{dynamicLibrary}`.
 /// This is used by the `WasmRunDart` class to load the native library.
-Future<void> setUpDesktopDynamicLibrary() async {
+Future<void> setUpDesktopDynamicLibrary({String? dynamicLibraryPath}) async {
   /// Get the CPU architecture.
   final cpuArchitecture = await CpuArchitecture.currentCpuArchitecture();
   final cpuArchitectureEnum = cpuArchitecture.value;
@@ -75,7 +75,8 @@ Future<void> setUpDesktopDynamicLibrary() async {
     );
   }
 
-  final outputPath = Platform.environment[dynamicLibraryEnvVariable] ??
+  final outputPath = dynamicLibraryPath ??
+      Platform.environment[dynamicLibraryEnvVariable] ??
       root.resolve(libName).toFilePath();
   final outputFile = await inputFile.rename(outputPath);
   print('Extracted library $inputFilePath to ${outputFile.path}');

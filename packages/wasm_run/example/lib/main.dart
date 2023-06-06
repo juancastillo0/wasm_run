@@ -1,13 +1,18 @@
 // ignore_for_file: avoid_print, prefer_const_literals_to_create_immutables
 
 import 'dart:convert';
+import 'dart:ffi' as ffi;
 import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:test/test.dart';
+import 'package:wasm_run/load_module.dart';
 // TODO(wat): implement wat in main api
 // ignore: implementation_imports
 import 'package:wasm_run/src/ffi.dart' show defaultInstance;
+// ignore: implementation_imports
+import 'package:wasm_run/src/ffi/setup_dynamic_library.dart'
+    show setUpDesktopDynamicLibrary;
 import 'package:wasm_run/wasm_run.dart';
 import 'package:wasm_run_example/runner_identity/runner_identity.dart';
 import 'package:wasm_run_example/simd_test.dart' show simdTests;
@@ -525,6 +530,35 @@ void testAll({TestArgs? testArgs}) {
 
   /// Threads tests
   threadsTest(testArgs: testArgs);
+
+  test(
+    'setUpDesktopDynamicLibrary',
+    testOn: 'windows || mac-os || linux',
+    () async {
+      if (Platform.isAndroid || Platform.isIOS) return;
+
+      final library = Directory.current.uri
+          .resolve('dart_wasm_run_dynamic_library')
+          .toFilePath();
+      await setUpDesktopDynamicLibrary(dynamicLibraryPath: library);
+      addTearDown(() => File(library).deleteSync());
+
+      final dynLib = ffi.DynamicLibrary.open(library);
+      expect(WasmRunLibrary.isReachable(), true);
+      WasmRunLibrary.set(dynLib);
+      expect(WasmRunLibrary.isReachable(), true);
+      expect(
+        () => WasmRunLibrary.setUp(override: true),
+        throwsA(
+          predicate(
+            (p0) => p0
+                .toString()
+                .contains('WasmRun bindings were already configured'),
+          ),
+        ),
+      );
+    },
+  );
 
   test('multi value', () async {
     final binary = await getBinary(
