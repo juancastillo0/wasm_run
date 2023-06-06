@@ -94,7 +94,7 @@ class R {
       'R${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
 // ignore: unused_field
   List<Object?> get _props => [a, b, c];
-  static const _spec = Record([
+  static const _spec = RecordType([
     (label: 'a', t: U32()),
     (label: 'b', t: StringType()),
     (
@@ -430,7 +430,7 @@ class RoundTripNumbersData {
 // ignore: unused_field
   List<Object?> get _props =>
       [un8, un16, un32, un64, si8, si16, si32, si64, f32, f64];
-  static const _spec = Record([
+  static const _spec = RecordType([
     (label: 'un8', t: U8()),
     (label: 'un16', t: U16()),
     (label: 'un32', t: U32()),
@@ -625,7 +625,7 @@ class ErrnoApi {
       'ErrnoApi${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
 // ignore: unused_field
   List<Object?> get _props => [aU1, listS1, str, c];
-  static const _spec = Record([
+  static const _spec = RecordType([
     (label: 'a-u1', t: U64()),
     (label: 'list-s1', t: ListType(S64())),
     (label: 'str', t: OptionType(StringType())),
@@ -674,7 +674,7 @@ class Empty {
       'Empty${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
 // ignore: unused_field
   List<Object?> get _props => [];
-  static const _spec = Record([]);
+  static const _spec = RecordType([]);
 }
 
 /// Comment for import interface
@@ -721,7 +721,7 @@ class RoundTripNumbers {
           const FuncType([
             (
               'data',
-              Record([
+              RecordType([
                 (label: 'un8', t: U8()),
                 (label: 'un16', t: U16()),
                 (label: 'un32', t: U32()),
@@ -737,7 +737,7 @@ class RoundTripNumbers {
           ], [
             (
               '',
-              Record([
+              RecordType([
                 (label: 'un8', t: U8()),
                 (label: 'un16', t: U16()),
                 (label: 'un32', t: U32()),
@@ -778,7 +778,7 @@ class Api {
               'break',
               OptionType(OptionType(ResultType(
                   null,
-                  OptionType(Record([
+                  OptionType(RecordType([
                     (label: 'a-u1', t: U64()),
                     (label: 'list-s1', t: ListType(S64())),
                     (label: 'str', t: OptionType(StringType())),
@@ -796,7 +796,7 @@ class Api {
               'abstract',
               OptionType(ResultType(
                   null,
-                  Record([
+                  RecordType([
                     (label: 'a-u1', t: U64()),
                     (label: 'list-s1', t: ListType(S64())),
                     (label: 'str', t: OptionType(StringType())),
@@ -884,7 +884,7 @@ class TypesExampleWorld {
           're-named',
           const FuncType([
             ('perm', OptionType(Flags(['read', 'write', 'exec']))),
-            ('e', OptionType(Record([])))
+            ('e', OptionType(RecordType([])))
           ], [
             ('', Tuple([U32(), U64()]))
           ]),
@@ -893,7 +893,7 @@ class TypesExampleWorld {
           're-named2',
           const FuncType([
             ('tup', Tuple([ListType(U16())])),
-            ('e', Record([]))
+            ('e', RecordType([]))
           ], [
             ('', Tuple([OptionType(U8()), S8()]))
           ]),
@@ -991,7 +991,7 @@ class TypesExampleWorld {
       const ft = FuncType([
         (
           'data',
-          Record([
+          RecordType([
             (label: 'un8', t: U8()),
             (label: 'un16', t: U16()),
             (label: 'un32', t: U32()),
@@ -1007,7 +1007,7 @@ class TypesExampleWorld {
       ], [
         (
           '',
-          Record([
+          RecordType([
             (label: 'un8', t: U8()),
             (label: 'un16', t: U16()),
             (label: 'un32', t: U32()),

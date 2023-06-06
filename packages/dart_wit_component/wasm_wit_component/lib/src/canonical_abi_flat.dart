@@ -95,7 +95,7 @@ List<FlatType> flatten_type(ValType t) {
     Float64() => const [FlatType.f64],
     Char() => const [FlatType.i32],
     StringType() || ListType() => const [FlatType.i32, FlatType.i32],
-    Record(:final fields) => _flatten_record(fields),
+    RecordType(:final fields) => _flatten_record(fields),
     Variant(:final cases) => _flatten_variant(cases),
     Flags(:final labels) =>
       List.filled(num_i32_flags(labels), FlatType.i32, growable: false),
@@ -202,7 +202,7 @@ Object? lift_flat(Context cx, ValueIter vi, ValType t) {
     Char() => convert_i32_to_char(vi.nextInt32()),
     StringType() => _lift_flat_string(cx, vi),
     ListType(:final t) => _lift_flat_list(cx, vi, t),
-    Record(:final fields) => _lift_flat_record(cx, vi, fields),
+    RecordType(:final fields) => _lift_flat_record(cx, vi, fields),
     final Variant t => _lift_flat_variant(cx, vi, t),
     Flags(:final labels) => _lift_flat_flags(vi, labels),
     Own() => lift_own(cx, vi.nextInt32(), t_),
@@ -357,7 +357,7 @@ List<FlatValue> lower_flat(Context cx, Object? v, ValType t) {
         v is String ? ParsedString.fromString(v) : v! as ParsedString,
       ),
     ListType(:final t) => _lower_flat_list(cx, v! as ListValue, t),
-    Record(:final fields) => _lower_flat_record(
+    RecordType(:final fields) => _lower_flat_record(
         cx,
         v is List
             ? Map.fromIterables(fields.map((e) => e.label), v)

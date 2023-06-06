@@ -74,7 +74,7 @@ void witDartGeneratorTests({Future<Directory> Function()? getDirectory}) {
               equalityAndHashCode: false,
               toString_: false,
               fileHeader: null,
-              generateDocs: true,
+              generateDocs: false,
               int64Type: Int64TypeConfig.bigInt,
               useNullForOption: false,
               requiredOption: false,

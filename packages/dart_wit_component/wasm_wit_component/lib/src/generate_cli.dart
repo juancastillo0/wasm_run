@@ -158,6 +158,12 @@ class GeneratorCLIArgs {
       witInputPath.hashCode ^
       dartFilePath.hashCode ^
       watch.hashCode;
+
+  @override
+  String toString() {
+    return 'GeneratorCLIArgs{config: $config, witInputPath: $witInputPath,'
+        ' dartFilePath: $dartFilePath, watch: $watch}';
+  }
 }
 
 class _Arg {

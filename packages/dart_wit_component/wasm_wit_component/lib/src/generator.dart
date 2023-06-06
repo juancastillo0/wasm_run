@@ -59,7 +59,7 @@ class WitFile {
 
   // ignore: unused_field
   List<Object?> get _props => [path, contents];
-  static const _spec = Record(
+  static const _spec = RecordType(
       [(label: 'path', t: StringType()), (label: 'contents', t: StringType())]);
 }
 
@@ -173,17 +173,17 @@ class InMemoryFiles {
 
   // ignore: unused_field
   List<Object?> get _props => [worldFile, pkgFiles];
-  static const _spec = Record([
+  static const _spec = RecordType([
     (
       label: 'world-file',
-      t: Record([
+      t: RecordType([
         (label: 'path', t: StringType()),
         (label: 'contents', t: StringType())
       ])
     ),
     (
       label: 'pkg-files',
-      t: ListType(Record([
+      t: ListType(RecordType([
         (label: 'path', t: StringType()),
         (label: 'contents', t: StringType())
       ]))
@@ -244,7 +244,7 @@ class FileSystemPaths {
 
   // ignore: unused_field
   List<Object?> get _props => [inputPath];
-  static const _spec = Record([(label: 'input-path', t: StringType())]);
+  static const _spec = RecordType([(label: 'input-path', t: StringType())]);
 }
 
 /// The file inputs to use for the code generation.
@@ -276,18 +276,18 @@ sealed class WitGeneratorInput {
   Map<String, Object?> toJson();
 // ignore: unused_field
   static const _spec = Union([
-    Record([(label: 'input-path', t: StringType())]),
-    Record([
+    RecordType([(label: 'input-path', t: StringType())]),
+    RecordType([
       (
         label: 'world-file',
-        t: Record([
+        t: RecordType([
           (label: 'path', t: StringType()),
           (label: 'contents', t: StringType())
         ])
       ),
       (
         label: 'pkg-files',
-        t: ListType(Record([
+        t: ListType(RecordType([
           (label: 'path', t: StringType()),
           (label: 'contents', t: StringType())
         ]))
@@ -508,22 +508,22 @@ class WitGeneratorConfig {
         requiredOption,
         int64Type
       ];
-  static const _spec = Record([
+  static const _spec = RecordType([
     (
       label: 'inputs',
       t: Union([
-        Record([(label: 'input-path', t: StringType())]),
-        Record([
+        RecordType([(label: 'input-path', t: StringType())]),
+        RecordType([
           (
             label: 'world-file',
-            t: Record([
+            t: RecordType([
               (label: 'path', t: StringType()),
               (label: 'contents', t: StringType())
             ])
           ),
           (
             label: 'pkg-files',
-            t: ListType(Record([
+            t: ListType(RecordType([
               (label: 'path', t: StringType()),
               (label: 'contents', t: StringType())
             ]))
@@ -564,22 +564,22 @@ class DartWitGeneratorWorld {
           const FuncType([
             (
               'config',
-              Record([
+              RecordType([
                 (
                   label: 'inputs',
                   t: Union([
-                    Record([(label: 'input-path', t: StringType())]),
-                    Record([
+                    RecordType([(label: 'input-path', t: StringType())]),
+                    RecordType([
                       (
                         label: 'world-file',
-                        t: Record([
+                        t: RecordType([
                           (label: 'path', t: StringType()),
                           (label: 'contents', t: StringType())
                         ])
                       ),
                       (
                         label: 'pkg-files',
-                        t: ListType(Record([
+                        t: ListType(RecordType([
                           (label: 'path', t: StringType()),
                           (label: 'contents', t: StringType())
                         ]))
@@ -611,7 +611,7 @@ class DartWitGeneratorWorld {
             (
               '',
               ResultType(
-                  Record([
+                  RecordType([
                     (label: 'path', t: StringType()),
                     (label: 'contents', t: StringType())
                   ]),
@@ -624,22 +624,22 @@ class DartWitGeneratorWorld {
           const FuncType([
             (
               'config',
-              Record([
+              RecordType([
                 (
                   label: 'inputs',
                   t: Union([
-                    Record([(label: 'input-path', t: StringType())]),
-                    Record([
+                    RecordType([(label: 'input-path', t: StringType())]),
+                    RecordType([
                       (
                         label: 'world-file',
-                        t: Record([
+                        t: RecordType([
                           (label: 'path', t: StringType()),
                           (label: 'contents', t: StringType())
                         ])
                       ),
                       (
                         label: 'pkg-files',
-                        t: ListType(Record([
+                        t: ListType(RecordType([
                           (label: 'path', t: StringType()),
                           (label: 'contents', t: StringType())
                         ]))

@@ -260,33 +260,49 @@ typedef Field = ({
   ValType t,
 });
 
-// @dataclass
-class Record extends DespecializedValType {
+/// A collection of named fields.
+/// `record` in wit and a `class` or `Map<String, Object?>` in Dart.
+class RecordType extends DespecializedValType {
+  /// The named fields in the record.
   final List<Field> fields;
 
-  const Record(this.fields);
+  /// A collection of named fields.
+  /// `record` in wit and a `class` or `Map<String, Object?>` in Dart.
+  const RecordType(this.fields);
 }
 
-// @dataclass
+/// A collection of values.
+/// `tuple` in wit and `Record` or `(value1, ...)` in Dart.
 class Tuple extends ValType {
+  /// The types of the values.
   final List<ValType> ts;
 
+  /// A collection of values.
+  /// `tuple` in wit and `Record` or `(value1, ...)` in Dart.
   const Tuple(this.ts);
 }
 
-// @dataclass
+/// One of the options within a [Variant]
 class Case {
+  /// The identifier of the case.
   final String label;
+
+  /// The type of the case.
   final ValType? t;
+
+  /// The type that this case refines (supertype).
   final String? refines;
 
+  /// One of the options within a [Variant]
   const Case(this.label, this.t, [this.refines]);
 }
 
-// @dataclass
+/// A type that can be one of several different [Case].
 class Variant extends DespecializedValType {
+  /// The cases of the variant.
   final List<Case> cases;
 
+  /// A type that can be one of several different [Case].
   const Variant(this.cases);
 }
 
@@ -386,7 +402,7 @@ class Borrow extends Resource {
 /// [Char]
 /// [StringType]
 /// [ListType]
-/// [Record] : [Tuple]
+/// [RecordType] : [Tuple]
 /// [Variant] : [Union], [EnumType], [OptionType], [ResultType]
 /// [Flags]
 /// [Own]
@@ -405,7 +421,7 @@ DespecializedValType _despecialize(ValType t) {
   return switch (t) {
     DespecializedValType() => t,
     Tuple(:final ts) =>
-      Record([...ts.indexed.map((t) => (label: t.$1.toString(), t: t.$2))]),
+      RecordType([...ts.indexed.map((t) => (label: t.$1.toString(), t: t.$2))]),
     Union(:final ts) =>
       Variant([...ts.indexed.map((t) => Case(t.$1.toString(), t.$2))]),
     EnumType(:final labels) => Variant([...labels.map((e) => Case(e, null))]),
@@ -433,7 +449,7 @@ int _alignment(ValType t) {
     Float64() => 8,
     Char() => 4,
     StringType() || ListType() => 4,
-    Record(:final fields) => _alignment_record(fields),
+    RecordType(:final fields) => _alignment_record(fields),
     Variant(:final cases) => _alignment_variant(cases),
     Flags(:final labels) => _alignment_flags(labels),
     Own() || Borrow() => 4,
@@ -502,7 +518,7 @@ int _size(ValType t) {
     Float64() => 8,
     Char() => 4,
     StringType() || ListType() => 8,
-    Record(:final fields) => _size_record(fields),
+    RecordType(:final fields) => _size_record(fields),
     Variant(:final cases) => _size_variant(cases),
     Flags(:final labels) => size_flags(labels),
     Own() || Borrow() => 4,

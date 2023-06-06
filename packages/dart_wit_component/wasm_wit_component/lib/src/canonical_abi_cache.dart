@@ -133,7 +133,7 @@ class ComputedTypeData {
       Tuple(:final ts) ||
       Union(:final ts) =>
         ts.expand(childrenType).followedBy(self),
-      Record(:final fields) =>
+      RecordType(:final fields) =>
         fields.expand((e) => childrenType(e.t)).followedBy(self),
       Variant(:final cases) => cases
           .expand((e) => e.t == null ? const <ValType>[] : childrenType(e.t!))
