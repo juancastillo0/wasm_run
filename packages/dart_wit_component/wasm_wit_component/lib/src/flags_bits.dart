@@ -54,8 +54,6 @@ class FlagsBits {
     return FlagsBits(flagBits, numFlags: flagsKeys.length);
   }
 
-  // loading indicator after ending
-
   factory FlagsBits._fromMap(
     Map<Object?, Object?> map,
     List<Object> flagsKeys,
@@ -71,11 +69,14 @@ class FlagsBits {
   }
 
   /// Gets the flag at [i]
-  bool getFlag(int i) => (_index(i ~/ 32) & (i % 32)) != 0;
+  bool getFlag(int i) {
+    final flagBit = 1 << (i % 32);
+    return (_index(i ~/ 32) & flagBit) != 0;
+  }
 
   /// Sets the flag at [i] to [enable].
   // ignore: avoid_positional_boolean_parameters
-  void setFlag(int i, bool enable) => _setIndex(i ~/ 32, i % 32, enable);
+  void setFlag(int i, bool enable) => _setIndex(i ~/ 32, 1 << (i % 32), enable);
 
   /// Gets the flag at [i]
   bool operator [](int i) => getFlag(i);
@@ -102,14 +103,15 @@ class FlagsBits {
       );
     }
     final c = ByteData(data.lengthInBytes);
-    final lastIndex = data.lengthInBytes ~/ 4;
-    for (var i = 0; i < lastIndex; i++) {
+    final lastIndex = data.lengthInBytes ~/ 4 - 1;
+    for (var i = 0; i <= lastIndex; i++) {
       c.setUint32(i * 4, merge(_index(i), other._index(i)), Endian.little);
     }
     // zero-out unused last 32 bits
+    final mask = 0xFFFFFFFF >> (32 - numFlags % 32);
     c.setUint32(
-      lastIndex,
-      c.getUint32(lastIndex, Endian.little) & (0x0000FFFF >> (32 - numFlags)),
+      lastIndex * 4,
+      c.getUint32(lastIndex * 4, Endian.little) & mask,
       Endian.little,
     );
     return FlagsBits(c, numFlags: numFlags);

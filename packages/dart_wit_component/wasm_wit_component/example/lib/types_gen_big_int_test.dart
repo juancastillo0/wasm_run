@@ -35,10 +35,81 @@ void typesGenBigIntWitComponentTests({
     }
     print('count $count ${clock.elapsedMilliseconds}ms');
   } else {
-    group('types gen', () {
-      test('test types', () async {
+    void expectEq_(
+      Object? a,
+      Object? b, [
+      Object? Function(Object? json)? fromJson,
+    ]) {
+      if (b is Matcher) {
+        expect(a, b);
+        return;
+      }
+      expect(a, b);
+      try {
+        // JSBigInt cant be printed
+        expect(a.toString(), b.toString());
+      } catch (_) {}
+      expect(comparator.hashValue(a), comparator.hashValue(b));
+      if (fromJson != null) {
+        final jsonValue = (a as dynamic).toJson();
+        expect(jsonValue, (b as dynamic).toJson());
+        expect(fromJson(jsonValue), b);
+      }
+      if (a is! int && a is! String && a is! bool && a is! BigInt) {
+        try {
+          expect(jsonEncode({'data': a}), jsonEncode({'data': b}));
+        } catch (_) {
+          if (a is! RoundTripNumbersData) {
+            rethrow;
+          }
+        }
+      }
+    }
+
+    group('types bigint gen', () {
+      test('types', () async {
         final test = await _TypesWorldTest.init(getWitComponentExampleBytes);
-        test.test(expect: expect);
+        test.test(expect: expectEq_);
+      });
+
+      test('flags', () async {
+        void expectEq(Object? a, Object? b) =>
+            expectEq_(a, b, Permissions.fromJson);
+
+        final allFlags = Permissions.all();
+        final noneFlags = Permissions.none();
+        expectEq(
+          allFlags,
+          Permissions.fromBool(read: true, write: true, exec: true),
+        );
+        expectEq(allFlags, ~noneFlags);
+        expectEq(~allFlags, noneFlags);
+        expectEq(allFlags | noneFlags, allFlags);
+        expectEq(allFlags & noneFlags, noneFlags);
+        expectEq(allFlags ^ noneFlags, allFlags);
+        expectEq(allFlags ^ allFlags, noneFlags);
+        expectEq(noneFlags ^ noneFlags, noneFlags);
+
+        final onlyWrite = Permissions.fromBool(write: true);
+        expectEq(onlyWrite, Permissions.none()..write = true);
+        expectEq(onlyWrite & onlyWrite, onlyWrite);
+        expectEq(onlyWrite | noneFlags, onlyWrite);
+        expectEq(onlyWrite & allFlags, onlyWrite);
+        expectEq(onlyWrite & noneFlags, noneFlags);
+        expectEq(onlyWrite | allFlags, allFlags);
+
+        final onlyRead = Permissions.fromBool(read: true);
+        expectEq(
+          onlyWrite | onlyRead,
+          Permissions.fromBool(write: true, read: true),
+        );
+        expectEq(onlyWrite & onlyRead, noneFlags);
+
+        expect(noneFlags.toString(), 'Permissions()');
+        expect(allFlags.toString(), 'Permissions(read, write, exec)');
+        expect((onlyWrite | onlyRead).toString(), 'Permissions(read, write)');
+        expect(onlyWrite.toString(), 'Permissions(write)');
+        expect(onlyRead.toString(), 'Permissions(read)');
       });
     });
   }
