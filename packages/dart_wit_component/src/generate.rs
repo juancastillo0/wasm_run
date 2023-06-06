@@ -244,6 +244,7 @@ mod tests {
             use_null_for_option: true,
             object_comparator: None,
             required_option: false,
+            typed_number_lists: true,
             int64_type,
         }
     }

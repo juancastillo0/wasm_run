@@ -27,6 +27,11 @@ world dart-wit-generator {
         required-option: bool,
         /// The type to use for 64 bit integers.
         int64-type: int64-type-config,
+        /// Whether to use `dart:typed_data`'s numeric lists.
+        /// For example, `Uint8List` instead of `List<int>` for `list<u8>`.
+        /// This does not affect `list<u64>` and `list<s64>`, they will
+        /// use a `List<[int64Type]>`.
+        typed-number-lists: bool
     }
 
     /// The file inputs to use for the code generation.

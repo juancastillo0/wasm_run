@@ -75,6 +75,23 @@ impl Parsed<'_> {
         }
     }
 
+    fn list_typed_data(&self, ty: &Type) -> Option<String> {
+        if !self.2.typed_number_lists {
+            return None;
+        }
+        match ty {
+            Type::Float32 => Some("Float32List".to_string()),
+            Type::Float64 => Some("Float64List".to_string()),
+            Type::S8 => Some("Int8List".to_string()),
+            Type::S16 => Some("Int16List".to_string()),
+            Type::S32 => Some("Int32List".to_string()),
+            Type::U8 => Some("Uint8List".to_string()),
+            Type::U16 => Some("Uint16List".to_string()),
+            Type::U32 => Some("Uint32List".to_string()),
+            _ => None,
+        }
+    }
+
     pub fn type_to_json(&self, getter: &str, ty: &Type) -> String {
         match ty {
             Type::Id(ty_id) => {
@@ -122,7 +139,7 @@ impl Parsed<'_> {
             TypeDefKind::Option(ty) => {
                 if self.2.use_null_for_option {
                     format!(
-                        "({getter} == null ? const None().toJson() : Some({getter}!).toJson((some) => {}))",
+                        "({getter} == null ? const None().toJson() : Option.fromValue({getter}).toJson((some) => {}))",
                         self.type_to_json_inner("some", &ty)
                     )
                 } else {
@@ -154,7 +171,7 @@ impl Parsed<'_> {
                 r.ok.map_or_else(
                     || "null".to_string(),
                     |ok| {
-                        let to_json = self.type_to_json_inner("ok", &ok);
+                        let to_json = self.type_to_json("ok", &ok);
                         if to_json == "ok" {
                             return "null".to_string();
                         }
@@ -164,7 +181,7 @@ impl Parsed<'_> {
                 r.err.map_or_else(
                     || "null".to_string(),
                     |error| {
-                        let to_json = self.type_to_json_inner("error", &error);
+                        let to_json = self.type_to_json("error", &error);
                         if to_json == "error" {
                             return "null".to_string();
                         }
@@ -179,16 +196,19 @@ impl Parsed<'_> {
                         .iter()
                         .enumerate()
                         .map(|(i, t)| self
-                            .type_to_json_inner(&format!("{getter}.${ind}", ind = i + 1), t))
+                            .type_to_json(&format!("{getter}.${ind}", ind = i + 1), t))
                         .collect::<Vec<_>>()
                         .join(", "),
                 )
             }
-            TypeDefKind::List(ty) => format!(
-                // TODO: if {} is just e, maybe don't copy
-                "{getter}.map((e) => {}).toList()",
-                self.type_to_json_inner("e", &ty)
-            ),
+            TypeDefKind::List(ty) => {
+                let inner = self.type_to_json("e", &ty);
+                if inner == "e" {
+                    format!("{getter}.toList()")
+                } else {
+                    format!("{getter}.map((e) => {inner}).toList()")
+                }
+            }
             TypeDefKind::Future(_ty) => unreachable!("Future"),
             TypeDefKind::Stream(_s) => unreachable!("Stream"),
             TypeDefKind::Type(ty) => self.type_to_json_inner(getter, &ty),
@@ -226,7 +246,7 @@ impl Parsed<'_> {
     pub fn type_def_to_spec(&self, ty: &TypeDef) -> String {
         match &ty.kind {
             TypeDefKind::Record(record) => format!(
-                "Record([{}])",
+                "RecordType([{}])",
                 record
                     .fields
                     .iter()
@@ -354,7 +374,7 @@ impl Parsed<'_> {
     }
 
     fn type_def_from_json_option(&self, getter: &str, r: Option<Type>) -> String {
-        r.map(|ty| self.type_from_json_inner(getter, &ty))
+        r.map(|ty| self.type_from_json(getter, &ty))
             .unwrap_or("null".to_string())
     }
 
@@ -386,7 +406,7 @@ impl Parsed<'_> {
                         t.types
                             .iter()
                             .enumerate()
-                            .map(|(i, t)| self.type_from_json_inner(&format!("v{i}"), t))
+                            .map(|(i, t)| self.type_from_json(&format!("v{i}"), t))
                             .collect::<Vec<_>>()
                             .join(", "),
                         length = t.types.len(),
@@ -411,10 +431,19 @@ impl Parsed<'_> {
             //     self.type_def_from_json_option(&format!("({getter} as Map)['ok']"), r.ok),
             //     self.type_def_from_json_option(&format!("({getter} as Map)['error']"), r.err),
             // ),
-            TypeDefKind::List(ty) => format!(
-                "({getter}! as Iterable).map((e) => {}).toList()",
-                self.type_from_json_inner("e", &ty)
-            ),
+            TypeDefKind::List(ty) => self
+                .list_typed_data(ty)
+                .map(|type_data| 
+                    format!("({getter} is {type_data} ? {getter} : {type_data}.fromList(({getter}! as List).cast()))")
+                )
+                .unwrap_or_else(|| {
+                    let inner = self.type_from_json("e", &ty);
+                    if inner == "e" {
+                        format!("({getter}! as Iterable).toList()")
+                    } else {
+                        format!("({getter}! as Iterable).map((e) => {inner}).toList()")
+                    }
+                }),
             TypeDefKind::Future(ty) => {
                 format!(
                     "FutureType({})",
@@ -470,7 +499,7 @@ impl Parsed<'_> {
                     t.types
                         .iter()
                         .map(|t| {
-                            let mut s = self.type_to_str_inner(t);
+                            let mut s = self.type_to_str(t);
                             s.push_str(", ");
                             s
                         })
@@ -480,23 +509,25 @@ impl Parsed<'_> {
             TypeDefKind::Option(ty) => format!("Option<{}>", self.type_to_str_inner(&ty)),
             TypeDefKind::Result(r) => format!(
                 "Result<{}, {}>",
-                r.ok.map(|ty| self.type_to_str_inner(&ty))
+                r.ok.map(|ty| self.type_to_str(&ty))
                     .unwrap_or("void".to_string()),
                 r.err
-                    .map(|ty| self.type_to_str_inner(&ty))
+                    .map(|ty| self.type_to_str(&ty))
                     .unwrap_or("void".to_string())
             ),
-            TypeDefKind::List(ty) => format!("List<{}>", self.type_to_str_inner(&ty)),
+            TypeDefKind::List(ty) => self
+                .list_typed_data(ty)
+                .unwrap_or_else(|| format!("List<{}>", self.type_to_str(&ty))),
             TypeDefKind::Future(ty) => format!(
                 "Future<{}>",
-                ty.map(|ty| self.type_to_str_inner(&ty))
+                ty.map(|ty| self.type_to_str(&ty))
                     .unwrap_or("void".to_string())
             ),
             TypeDefKind::Stream(s) => format!(
                 "Stream<{}>",
                 // TODO: stream.end
                 s.element
-                    .map(|ty| self.type_to_str_inner(&ty))
+                    .map(|ty| self.type_to_str(&ty))
                     .unwrap_or("void".to_string()),
             ),
             TypeDefKind::Type(ty) => self.type_to_str_inner(&ty),
@@ -798,9 +829,13 @@ impl Parsed<'_> {
 
                 s.push_str(&format!(
                     "
+/// Returns the bitwise AND of the flags in this and [other].
 {name} operator &({name} other) => {name}(flagsBits & other.flagsBits);
+/// Returns the bitwise OR of the flags in this and [other].
 {name} operator |({name} other) => {name}(flagsBits | other.flagsBits);
+/// Returns the bitwise XOR of the flags in this and [other].
 {name} operator ^({name} other) => {name}(flagsBits ^ other.flagsBits);
+/// Returns the flags inverted (negated).
 {name} operator ~() => {name}(~flagsBits);"
                 ));
 
