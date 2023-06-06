@@ -199,7 +199,7 @@ Object? lift_flat(Context cx, ValueIter vi, ValType t) {
     S64() => cx.inst.liftSignedI64(vi.nextInt64()),
     Float32() => canonicalize32(vi.nextDouble(FlatType.f32)),
     Float64() => canonicalize64(vi.nextDouble(FlatType.f64)),
-    Char() => convert_i32_to_char(cx, vi.nextInt32()),
+    Char() => convert_i32_to_char(vi.nextInt32()),
     StringType() => _lift_flat_string(cx, vi),
     ListType(:final t) => _lift_flat_list(cx, vi, t),
     Record(:final fields) => _lift_flat_record(cx, vi, fields),
@@ -342,9 +342,11 @@ List<FlatValue> lower_flat(Context cx, Object? v, ValType t) {
   return switch (t_) {
     Bool() => singleList(FlatValue(FlatType.i32, v == 0 || v == false ? 0 : 1)),
     U8() || U16() || U32() => singleList(FlatValue(FlatType.i32, v! as int)),
-    U64() => singleList(FlatValue(FlatType.i64, v! as int)),
     S8() || S16() || S32() => _lower_flat_signed(v! as int, 32),
-    S64() => _lower_flat_signed(v! as int, 64),
+    // TODO: remove this
+    U64() ||
+    S64() =>
+      singleList(FlatValue(FlatType.i64, v is String ? BigInt.parse(v) : v!)),
     Float32() =>
       singleList(FlatValue(FlatType.f32, canonicalize32(v! as double))),
     Float64() =>
@@ -435,7 +437,7 @@ List<FlatValue> _lower_flat_variant(
         payload[i] =
             FlatValue(FlatType.i32, reinterpret_float_as_i32(have.v as double));
       case (FlatType.i32, FlatType.i64):
-        payload[i] = FlatValue(FlatType.i64, have.v);
+        payload[i] = FlatValue(FlatType.i64, i64.fromInt(have.v as int));
       case (FlatType.f32, FlatType.i64):
         payload[i] =
             FlatValue(FlatType.i64, reinterpret_float_as_i32(have.v as double));

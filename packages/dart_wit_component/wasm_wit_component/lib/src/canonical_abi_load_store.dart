@@ -2,7 +2,7 @@
 
 // ignore_for_file: non_constant_identifier_names, constant_identifier_names, parameter_assignments
 
-import 'dart:typed_data' show ByteData, Endian, Uint32List;
+import 'dart:typed_data';
 
 import 'package:wasm_run/wasm_run.dart' show i64;
 import 'package:wasm_wit_component/src/canonical_abi.dart';
@@ -22,14 +22,33 @@ Object? load(Context cx, int ptr, ValType t) {
     IntType() => _load_int_type(cx, ptr, t_),
     Float32() => canonicalize32(reinterpret_i32_as_float(load_int(cx, ptr, 4))),
     Float64() => canonicalize64(_loadFloat64(cx, ptr)),
-    Char() => convert_i32_to_char(cx, load_int(cx, ptr, 4)),
+    Char() => convert_i32_to_char(load_int(cx, ptr, 4)),
     StringType() => load_string(cx, ptr),
     ListType(:final t) => _load_list(cx, ptr, t),
-    Record(:final fields) => _load_record(cx, ptr, fields),
+    RecordType(:final fields) => _load_record(cx, ptr, fields),
     Variant(:final cases) => _load_variant(cx, ptr, cases),
     Flags(:final labels) => _load_flags(cx, ptr, labels),
     Own() => lift_own(cx, load_int(cx, ptr, 4), t_),
     Borrow() => lift_borrow(cx, load_int(cx, ptr, 4), t_),
+  };
+}
+
+Object? Function(int ptr) _loadFunction(Context cx, ValType t) {
+  final t_ = t.despecialized();
+  return switch (t_) {
+    Bool() => (ptr) => convert_int_to_bool(load_int(cx, ptr, 1)),
+    IntType() => (ptr) => _load_int_type(cx, ptr, t_),
+    Float32() => (ptr) =>
+        canonicalize32(reinterpret_i32_as_float(load_int(cx, ptr, 4))),
+    Float64() => (ptr) => canonicalize64(_loadFloat64(cx, ptr)),
+    Char() => (ptr) => convert_i32_to_char(load_int(cx, ptr, 4)),
+    StringType() => (ptr) => load_string(cx, ptr),
+    ListType(:final t) => (ptr) => _load_list(cx, ptr, t),
+    RecordType(:final fields) => (ptr) => _load_record(cx, ptr, fields),
+    Variant(:final cases) => (ptr) => _load_variant(cx, ptr, cases),
+    Flags(:final labels) => (ptr) => _load_flags(cx, ptr, labels),
+    Own() => (ptr) => lift_own(cx, load_int(cx, ptr, 4), t_),
+    Borrow() => (ptr) => lift_borrow(cx, load_int(cx, ptr, 4), t_),
   };
 }
 // #
@@ -62,6 +81,25 @@ Object _load_int_type(Context cx, int ptr, IntType type) {
     S16() => data.getInt16(ptr, Endian.little),
     S32() => data.getInt32(ptr, Endian.little),
     S64() => cx.inst.getInt64(data, ptr),
+  };
+}
+
+num Function(int ptr) _load_num_type_func(
+  Context cx,
+  ByteData data,
+  NumType type,
+) {
+  return switch (type) {
+    U8() => (ptr) => data.getUint8(ptr),
+    U16() => (ptr) => data.getUint16(ptr, Endian.little),
+    U32() => (ptr) => data.getUint32(ptr, Endian.little),
+    U64() => throw unreachableException,
+    S8() => (ptr) => data.getInt8(ptr),
+    S16() => (ptr) => data.getInt16(ptr, Endian.little),
+    S32() => (ptr) => data.getInt32(ptr, Endian.little),
+    S64() => throw unreachableException,
+    Float32() => (ptr) => data.getFloat32(ptr, Endian.little),
+    Float64() => (ptr) => data.getFloat64(ptr, Endian.little),
   };
 }
 
@@ -119,7 +157,7 @@ double canonicalize64(double f) {
 /// An i32 is converted to a char (a Unicode Scalar Value) by dynamically testing
 /// that its unsigned integral value is in the valid
 /// Unicode Code Point range and not a Surrogate
-String convert_i32_to_char(Context cx, int i) {
+String convert_i32_to_char(int i) {
   trap_if(i >= 0x110000);
   trap_if(0xD800 <= i && i <= 0xDFFF);
   return String.fromCharCode(i);
@@ -150,13 +188,56 @@ ListValue load_list_from_range(
 ) {
   final elem_size = elem_type.size();
   trap_if(ptr != align_to(ptr, elem_type.alignment()));
-  trap_if(ptr + length * elem_size > cx.opts.memory.length);
-  final a = List.generate(
-    length,
-    (i) => load(cx, ptr + i * elem_size, elem_type),
-    growable: LIST_GROWABLE,
-  );
-  return a;
+  final end = ptr + length * elem_size;
+  trap_if(end > cx.opts.memory.length);
+
+  Uint8List bytes() => cx.opts.memory.sublist(ptr, end);
+  return switch (elem_type) {
+    U8() => bytes(),
+    U16() => _loadNumList(cx, Uint16List.sublistView(bytes()), elem_type),
+    U32() => _loadNumList(cx, Uint32List.sublistView(bytes()), elem_type),
+    S8() => Int8List.sublistView(bytes()),
+    S16() => _loadNumList(cx, Int16List.sublistView(bytes()), elem_type),
+    S32() => _loadNumList(cx, Int32List.sublistView(bytes()), elem_type),
+    // TODO: implement these
+    // U64() => _load_num_list(cx, Uint64List.sublistView(bytes()), elem_type),
+    // S64() => _load_num_list(cx, Int64List.sublistView(bytes()), elem_type),
+    Float32() => _loadNumList(cx, Float32List.sublistView(bytes()), elem_type),
+    Float64() => _loadNumList(cx, Float64List.sublistView(bytes()), elem_type),
+    Bool() => bytes().map(convert_int_to_bool).toList(growable: false),
+    Char() => (_loadNumList(
+        cx,
+        Uint32List.sublistView(bytes()),
+        const U32(),
+      ) as Uint32List)
+          .map(convert_i32_to_char)
+          .toList(growable: false),
+    _ => (() {
+        final function = _loadFunction(cx, elem_type);
+        return List.generate(
+          length,
+          (i) => function(ptr + i * elem_size),
+          growable: LIST_GROWABLE,
+        );
+      })()
+  };
+}
+
+ListValue _loadNumList(
+  Context cx,
+  TypedData data,
+  NumType type,
+) {
+  final list = data as List<num>;
+  if (Endian.host != Endian.little) {
+    final getFunc = _load_num_type_func(cx, data.buffer.asByteData(), type);
+    final width = type.size();
+    for (int i = 0; i < list.length; i++) {
+      final offset = i * width;
+      list[i] = getFunc(offset);
+    }
+  }
+  return list;
 }
 
 /// Records are loaded by recursively loading their fields
@@ -266,58 +347,81 @@ void store(Context cx, Object? v, ValType t, int ptr) {
   assert(ptr == align_to(ptr, t.alignment()));
   assert(ptr + t.size() <= cx.opts.memory.length);
   final t_ = t.despecialized();
-  switch (t_) {
-    case Bool():
-      store_int(cx, _truthyInt(v), ptr, 1);
-    case U8():
-      store_int(cx, v! as int, ptr, 1);
-    case U16():
-      store_int(cx, v! as int, ptr, 2);
-    case U32():
-      store_int(cx, v! as int, ptr, 4);
-    case U64():
-      cx.inst.setUint64(cx.opts.getByteData(), ptr, v!);
-    case S8():
-      store_int(cx, v! as int, ptr, 1, signed: true);
-    case S16():
-      store_int(cx, v! as int, ptr, 2, signed: true);
-    case S32():
-      store_int(cx, v! as int, ptr, 4, signed: true);
-    case S64():
-      cx.inst.setInt64(cx.opts.getByteData(), ptr, v!);
-    case Float32():
-      store_int(
-          cx, reinterpret_float_as_i32(canonicalize32(v! as double)), ptr, 4);
-    case Float64():
-      _storeFloat64(cx, canonicalize64(v! as double), ptr);
-    case Char():
-      store_int(cx, char_to_i32(v! as String), ptr, 4);
-    case StringType():
-      store_string(
+  return switch (t_) {
+    Bool() => store_int(cx, _truthyInt(v), ptr, 1),
+    U8() => store_int(cx, v! as int, ptr, 1),
+    U16() => store_int(cx, v! as int, ptr, 2),
+    U32() => store_int(cx, v! as int, ptr, 4),
+    U64() => cx.inst.setUint64(cx.opts.getByteData(), ptr, v!),
+    S8() => store_int(cx, v! as int, ptr, 1, signed: true),
+    S16() => store_int(cx, v! as int, ptr, 2, signed: true),
+    S32() => store_int(cx, v! as int, ptr, 4, signed: true),
+    S64() => cx.inst.setInt64(cx.opts.getByteData(), ptr, v!),
+    Float32() => store_int(
+        cx, reinterpret_float_as_i32(canonicalize32(v! as double)), ptr, 4),
+    Float64() => _storeFloat64(cx, canonicalize64(v! as double), ptr),
+    Char() => store_int(cx, char_to_i32(v! as String), ptr, 4),
+    StringType() => store_string(
         cx,
         v is String ? ParsedString.fromString(v) : v! as ParsedString,
         ptr,
-      );
-    case ListType(:final t):
-      _store_list(cx, v! as ListValue, ptr, t);
-    case Record(:final fields):
-      _store_record(
+      ),
+    ListType(:final t) => _store_list(cx, v! as ListValue, ptr, t),
+    RecordType(:final fields) => _store_record(
         cx,
         v is List
             ? Map.fromIterables(fields.map((e) => e.label), v)
             : v! as RecordValue,
         ptr,
         fields,
-      );
-    case Variant(:final cases):
-      _store_variant(cx, v! as VariantValue, ptr, cases);
-    case Flags(:final labels):
-      _store_flags(cx, v! as FlagsValue, ptr, labels);
-    case Own():
-      store_int(cx, lower_own(cx, v! as Handle, t_), ptr, 4);
-    case Borrow():
-      store_int(cx, lower_borrow(cx, v! as Handle, t_), ptr, 4);
-  }
+      ),
+    Variant(:final cases) => _store_variant(
+        cx, v is String ? {v: null} : v! as VariantValue, ptr, cases),
+    Flags(:final labels) => _store_flags(cx, v! as FlagsValue, ptr, labels),
+    Own() => store_int(cx, lower_own(cx, v! as Handle, t_), ptr, 4),
+    Borrow() => store_int(cx, lower_borrow(cx, v! as Handle, t_), ptr, 4),
+  };
+}
+
+void Function(Object? v, int ptr) _storeFunction(Context cx, ValType t) {
+  final t_ = t.despecialized();
+  return switch (t_) {
+    Bool() => (v, ptr) => store_int(cx, _truthyInt(v), ptr, 1),
+    U8() => (v, ptr) => store_int(cx, v! as int, ptr, 1),
+    U16() => (v, ptr) => store_int(cx, v! as int, ptr, 2),
+    U32() => (v, ptr) => store_int(cx, v! as int, ptr, 4),
+    U64() => (v, ptr) => cx.inst.setUint64(cx.opts.getByteData(), ptr, v!),
+    S8() => (v, ptr) => store_int(cx, v! as int, ptr, 1, signed: true),
+    S16() => (v, ptr) => store_int(cx, v! as int, ptr, 2, signed: true),
+    S32() => (v, ptr) => store_int(cx, v! as int, ptr, 4, signed: true),
+    S64() => (v, ptr) => cx.inst.setInt64(cx.opts.getByteData(), ptr, v!),
+    Float32() => (v, ptr) => store_int(
+        cx, reinterpret_float_as_i32(canonicalize32(v! as double)), ptr, 4),
+    Float64() => (v, ptr) =>
+        _storeFloat64(cx, canonicalize64(v! as double), ptr),
+    Char() => (v, ptr) => store_int(cx, char_to_i32(v! as String), ptr, 4),
+    StringType() => (v, ptr) => store_string(
+          cx,
+          v is String ? ParsedString.fromString(v) : v! as ParsedString,
+          ptr,
+        ),
+    ListType(:final t) => (v, ptr) => _store_list(cx, v! as ListValue, ptr, t),
+    RecordType(:final fields) => (v, ptr) => _store_record(
+          cx,
+          v is List
+              ? Map.fromIterables(fields.map((e) => e.label), v)
+              : v! as RecordValue,
+          ptr,
+          fields,
+        ),
+    Variant(:final cases) => (v, ptr) => _store_variant(
+        cx, v is String ? {v: null} : v! as VariantValue, ptr, cases),
+    Flags(:final labels) => (v, ptr) =>
+        _store_flags(cx, v! as FlagsValue, ptr, labels),
+    Own() => (v, ptr) => store_int(cx, lower_own(cx, v! as Handle, t_), ptr, 4),
+    Borrow() => (v, ptr) =>
+        store_int(cx, lower_borrow(cx, v! as Handle, t_), ptr, 4),
+  };
 }
 // #
 
@@ -359,6 +463,7 @@ Object reinterpret_float_as_i64(double f) {
 
 void _storeFloat64(Context cx, double v, int ptr) {
   final data = cx.opts.getByteData();
+  // TODO: use bytedata set float64 directly
   final intV = reinterpret_float_as_i64(v);
   i64.setInt64(data, ptr, intV, Endian.little);
 }
@@ -403,8 +508,20 @@ PointerAndSize store_list_into_range(
   final ptr = cx.opts.realloc(0, 0, alignment_elem, byte_length);
   trap_if(ptr != align_to(ptr, alignment_elem));
   trap_if(ptr + byte_length > cx.opts.memory.length);
-  for (final (i, e) in v.indexed) {
-    store(cx, e, elem_type, ptr + i * size_elem);
+  switch ((elem_type, v, Endian.host)) {
+    case (Bool(), final List<bool> boolList, _):
+      cx.opts.memory.setAll(ptr, boolList.map((e) => e ? 1 : 0));
+    case (NumType(), final TypedData data, Endian.little):
+      // TODO: more efficient big endian implementation
+      cx.opts.memory.setAll(ptr, Uint8List.sublistView(data));
+    case (Char(), final List<String> chars, Endian.little):
+      Uint32List.view(cx.opts.memory.buffer, ptr, chars.length)
+          .setAll(0, chars.map(char_to_i32));
+    default:
+      final function = _storeFunction(cx, elem_type);
+      for (final (i, e) in v.indexed) {
+        function(e, ptr + i * size_elem);
+      }
   }
   return (ptr, v.length);
 }

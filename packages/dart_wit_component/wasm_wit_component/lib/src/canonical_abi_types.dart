@@ -85,7 +85,15 @@ class Bool extends DespecializedValType {
   List<FlatType> flatTypes() => const [FlatType.i32];
 }
 
-sealed class IntType extends DespecializedValType {
+sealed class NumType extends DespecializedValType {
+  const NumType();
+}
+
+sealed class FloatType extends NumType {
+  const FloatType();
+}
+
+sealed class IntType extends NumType {
   const IntType();
 }
 
@@ -186,7 +194,7 @@ class U64 extends IntType {
 }
 
 /// Represents a Float32 value. [double] in Dart.
-class Float32 extends DespecializedValType {
+class Float32 extends FloatType {
   /// Represents a Float32 value. [double] in Dart.
   const Float32();
   @override
@@ -198,7 +206,7 @@ class Float32 extends DespecializedValType {
 }
 
 /// Represents a Float64 value. [double] in Dart.
-class Float64 extends DespecializedValType {
+class Float64 extends FloatType {
   /// Represents a Float64 value. [double] in Dart.
   const Float64();
   @override

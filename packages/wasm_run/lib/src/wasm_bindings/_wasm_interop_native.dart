@@ -109,7 +109,9 @@ WasmVal _fromWasmValueRaw(ValueTy ty, Object? value, WasmRunModuleId module) {
     case ValueTy.i32:
       return WasmVal.i32(value! as int);
     case ValueTy.i64:
-      return WasmVal.i64(value is int ? value : (value! as BigInt).toInt());
+      return WasmVal.i64(
+        value is int ? value : (value! as BigInt).toSigned(64).toInt(),
+      );
     case ValueTy.f32:
       return WasmVal.f32(value! as double);
     case ValueTy.f64:

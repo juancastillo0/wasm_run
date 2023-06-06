@@ -443,9 +443,7 @@ ParsedString load_string_from_range(
     final codeUnits =
         Uint8List.sublistView(cx.opts.memory, ptr, ptr + byte_length);
     s = encoding.decode(codeUnits);
-  }
-  // TODO: on UnicodeError
-  catch (e, s) {
+  } catch (e, s) {
     trap(e, s);
   }
 

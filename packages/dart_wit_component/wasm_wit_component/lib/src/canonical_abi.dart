@@ -127,7 +127,13 @@ class ComponentInstance {
     return switch (int64Type) {
       Int64TypeConfig.bigInt ||
       Int64TypeConfig.bigIntUnsignedOnly =>
-        i64.setUint64(data, ptr, i64.fromBigInt(v as BigInt), Endian.little),
+        i64.setUint64(
+          data,
+          ptr,
+          // TODO: remove this
+          i64.fromBigInt(v is String ? BigInt.parse(v) : v as BigInt),
+          Endian.little,
+        ),
       Int64TypeConfig.coreInt =>
         i64.setUint64(data, ptr, i64.fromInt(v as int), Endian.little),
       Int64TypeConfig.nativeObject =>
@@ -137,8 +143,13 @@ class ComponentInstance {
 
   void setInt64(ByteData data, int ptr, Object v) {
     return switch (int64Type) {
-      Int64TypeConfig.bigInt =>
-        i64.setInt64(data, ptr, i64.fromBigInt(v as BigInt), Endian.little),
+      Int64TypeConfig.bigInt => i64.setInt64(
+          data,
+          ptr,
+          // TODO: remove this
+          i64.fromBigInt(v is String ? BigInt.parse(v) : v as BigInt),
+          Endian.little,
+        ),
       Int64TypeConfig.coreInt ||
       Int64TypeConfig.bigIntUnsignedOnly =>
         i64.setInt64(data, ptr, i64.fromInt(v as int), Endian.little),

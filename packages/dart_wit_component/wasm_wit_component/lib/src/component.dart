@@ -127,15 +127,15 @@ List<FlatValue> _mapFlatToValues(List<Object?> values, List<FlatType> types) {
 
 List<Object?> _mapValuesToFlat(Int64TypeConfig config, List<FlatValue> values) {
   return values.map((e) {
-    if (e.t == FlatType.i64) {
-      return switch (config) {
-        Int64TypeConfig.bigInt => i64.fromBigInt(e.v as BigInt),
-        Int64TypeConfig.bigIntUnsignedOnly =>
-          e.v is int ? i64.fromInt(e.v as int) : i64.fromBigInt(e.v as BigInt),
-        Int64TypeConfig.coreInt => i64.fromInt(e.v as int),
-        Int64TypeConfig.nativeObject => e.v,
-      };
-    }
+    // if (e.t == FlatType.i64) {
+    //   return switch (config) {
+    //     Int64TypeConfig.bigInt => i64.fromBigInt(e.v as BigInt),
+    //     Int64TypeConfig.bigIntUnsignedOnly =>
+    //       e.v is int ? i64.fromInt(e.v as int) : i64.fromBigInt(e.v as BigInt),
+    //     Int64TypeConfig.coreInt => i64.fromInt(e.v as int),
+    //     Int64TypeConfig.nativeObject => e.v,
+    //   };
+    // }
     return e.v;
   }).toList(growable: false);
 }
