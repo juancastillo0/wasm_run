@@ -1,0 +1,224 @@
+package wasm-run-dart:image-rs
+
+interface types {
+
+    record image-ref {
+        id: u32,
+        format: image-format,
+        color: color-type,
+        width: u32,
+        height: u32,
+    }
+
+    record image {
+        bytes: list<u8>,
+    }
+
+    record image-size {
+        width: u32,
+        height: u32,
+    }
+
+    enum color-type {
+        l8,
+        la8,
+        rgb8,
+        rgba8,
+        l16,
+        la16,
+        rgb16,
+        rgba16,
+        rgb32f,
+        rgba32f,
+        unknown,
+    }
+
+    enum image-format {
+        /// All supported color types	Same as decoding
+        png,
+        /// Baseline and progressive	Baseline JPEG
+        jpeg,
+        /// Yes	Yes
+        gif,
+        /// Yes	Rgb8, Rgba8, Gray8, GrayA8
+        bmp,
+        /// Yes	Yes
+        ico,
+        /// Baseline(no fax support) + LZW + PackBits	Rgb8, Rgba8, Gray8
+        tiff,
+        /// Yes	Rgb8, Rgba8*
+        web-p,
+        ///	No**	Lossy
+        avif,
+        /// PBM, PGM, PPM, standard PAM	Yes
+        pnm,
+        /// DXT1, DXT3, DXT5	No
+        dds,
+        /// Yes	Rgb8, Rgba8, Bgr8, Bgra8, Gray8, GrayA8
+        tga,
+        /// Rgb32F, Rgba32F (no dwa compression)	Rgb32F, Rgba32F (no dwa compression)
+        open-exr,
+        /// Yes	Yes
+        farbfeld,
+        hdr,
+        qoi,
+        unknown,
+    }
+
+    enum pixel-type {
+        /// RGB pixel
+        rgb, 
+        /// RGB with alpha (RGBA pixel)
+        rgba, 
+        /// Grayscale pixel
+        luma, 
+        /// Grayscale with alpha
+        luma-a, 
+    }
+}
+
+world image-rs {
+    use types.{image-ref, image, image-size, image-format} 
+
+    export operations
+    
+    export guess-buffer-format: func(buffer: list<u8>) -> result<image-format, string>
+
+    export file-image-size: func(path: string) -> result<image-size, string>
+
+    export image-buffer-pointer-and-size: func(image-ref: image-ref) -> tuple<u32, u32>
+
+    export copy-image-buffer: func(image-ref: image-ref) -> image
+
+    export dispose-image: func(image: image-ref) -> result<u32, string>
+
+    /// Create a new image from a byte slice
+    /// Makes an educated guess about the image format.
+    export read-buffer: func(buffer: list<u8>) -> result<image-ref, string>
+
+    /// Open the image located at the path specified.
+    /// The image's format is determined from the path's file extension.
+    export read-file: func(path: string) -> result<image-ref, string>
+
+    /// Saves the buffer to a file at the path specified. 
+    /// The image format is derived from the file extension.
+    export save-file: func(image: image-ref, path: string) -> result<u32, string>
+
+
+    variant image-error {
+        /// An error was encountered while decoding.
+        ///
+        /// This means that the input data did not conform to the specification of some image format,
+        /// or that no format could be determined, or that it did not match format specific
+        /// requirements set by the caller.
+        decoding(string),
+
+        /// An error was encountered while encoding.
+        ///
+        /// The input image can not be encoded with the chosen format, for example because the
+        /// specification has no representation for its color space or because a necessary conversion
+        /// is ambiguous. In some cases it might also happen that the dimensions can not be used with
+        /// the format.
+        encoding(string),
+
+        /// An error was encountered in input arguments.
+        ///
+        /// This is a catch-all case for strictly internal operations such as scaling, conversions,
+        /// etc. that involve no external format specifications.
+        parameter(string),
+
+        /// Completing the operation would have required more resources than allowed.
+        ///
+        /// Errors of this type are limits set by the user or environment, *not* inherent in a specific
+        /// format or operation that was executed.
+        limits(string),
+
+        /// An operation can not be completed by the chosen abstraction.
+        ///
+        /// This means that it might be possible for the operation to succeed in general but
+        /// * it requires a disabled feature,
+        /// * the implementation does not yet exist, or
+        /// * no abstraction for a lower level could be found.
+        unsupported(string),
+
+        /// An error occurred while interacting with the environment.
+        io-error(string),
+    }
+}
+
+interface operations {
+    use types.{image-ref, image-size}
+
+    enum filter-type {
+        /// Nearest Neighbor
+        nearest,
+        /// Linear Filter
+        triangle,
+        /// Cubic Filter
+        catmull-rom,
+        /// Gaussian Filter
+        gaussian,
+        /// Lanczos with window 3
+        lanczos3,
+    }
+
+    record image-crop {
+        x: u32,
+        y: u32,
+        width: u32,
+        height: u32,
+    }
+
+    /// Performs a Gaussian blur on the supplied image.
+    blur: func(image-ref: image-ref, value: float32) -> image-ref
+    /// Brighten the supplied image.
+    brighten: func(image-ref: image-ref, value: s32) -> image-ref
+    /// Hue rotate the supplied image by degrees.
+    huerotate: func(image-ref: image-ref, value: s32) -> image-ref
+    /// Adjust the contrast of the supplied image.
+    adjust-contrast: func(image-ref: image-ref, c: float32) -> image-ref
+    /// Return a mutable view into an image.
+    crop: func(image-ref: image-ref, image-crop: image-crop) -> image-ref
+    /// Perform a 3x3 box filter on the supplied image.
+    filter3x3: func(image-ref: image-ref, kernel: list<float32>) -> image-ref
+    /// Flip an image horizontally.
+    flip-horizontal: func(image-ref: image-ref) -> image-ref
+    /// Flip an image vertically.
+    flip-vertical: func(image-ref: image-ref) -> image-ref
+    /// Convert the supplied image to grayscale.
+    grayscale: func(image-ref: image-ref) -> image-ref
+    /// Invert each pixel within the supplied image This function operates in place.
+    invert: func(image-ref: image-ref) -> image-ref
+    /// Resize the supplied image to the specified dimensions.
+    /// The image's aspect ratio is preserved.
+    resize: func(image-ref: image-ref, size: image-size, filter: filter-type) -> image-ref
+    /// Resize the supplied image to the specified dimensions.
+    /// Does not preserve aspect ratio.
+    resize-exact: func(image-ref: image-ref, size: image-size, filter: filter-type) -> image-ref
+    /// Resize the supplied image to the specified dimensions.
+    /// The image's aspect ratio is preserved. The image is scaled to the 
+    /// maximum possible size that fits within the larger (relative to aspect ratio)
+    /// of the bounds specified by nwidth and nheight, then cropped to fit within the other bound.
+    resize-to-fill: func(image-ref: image-ref, size: image-size, filter: filter-type) -> image-ref
+    /// Rotate an image 180 degrees clockwise.
+    rotate180: func(image-ref: image-ref) -> image-ref
+    /// Rotate an image 270 degrees clockwise.
+    rotate270: func(image-ref: image-ref) -> image-ref
+    /// Rotate an image 90 degrees clockwise.
+    rotate90: func(image-ref: image-ref) -> image-ref
+    /// Performs an unsharpen mask on the supplied image.
+    unsharpen: func(image-ref: image-ref, sigma: float32, threshold: s32) -> image-ref
+    /// Scale this image down to fit within a specific size. Returns a new image.
+    /// The image's aspect ratio is preserved.
+    thumbnail: func(image-ref: image-ref, size: image-size) -> image-ref
+    /// Scale this image down to a specific size. Returns a new image.
+    /// Does not preserve aspect ratio. 
+    thumbnail-exact: func(image-ref: image-ref, size: image-size) -> image-ref
+
+    /// Overlay an image at a given coordinate (x, y)
+    overlay: func(image-ref: image-ref, other: image-ref, x: u32, y: u32) -> image-ref
+    /// Replace the contents of an image at a given coordinate (x, y)
+    replace: func(image-ref: image-ref, other: image-ref, x: u32, y: u32) -> image-ref
+
+    
+}
