@@ -168,8 +168,38 @@ String convert_i32_to_char(int i) {
 typedef ListValue = List<Object?>;
 typedef RecordValue = Map<String, Object?>;
 typedef VariantValue = RecordValue;
-typedef FlagsValue = Uint32List;
+typedef FlagsValue = Uint32List; // TODO endianness
 typedef TupleValue = RecordValue;
+
+typedef VariantValue2 = (int, Object?);
+
+VariantValue2 toVariantValue(Object? value, List<Case> cases) {
+  if (value is VariantValue2) return value;
+  final VariantValue2 v;
+  if (value is int) {
+    v = (value, null);
+  } else if (value is String) {
+    v = (cases.indexWhere((c) => c.label == value), null);
+  } else if (value is Map) {
+    final label = value.keys.first;
+    final index = cases.indexWhere((c) => c.label == label);
+    v = (index, value.values.first);
+  } else {
+    throw Exception('invalid variant value: $value');
+  }
+  if (v.$1 == -1) {
+    throw Exception(
+      'invalid variant value: $value. label not found in cases $cases',
+    );
+  }
+  return v;
+}
+
+RecordValue toRecordValue(Object? v, List<Field> fields) {
+  return v is List
+      ? Map.fromIterables(fields.map((e) => e.label), v)
+      : v! as RecordValue;
+}
 
 // #
 
@@ -230,7 +260,7 @@ ListValue _loadNumList(
 ) {
   final list = data as List<num>;
   if (Endian.host != Endian.little) {
-    final getFunc = _load_num_type_func(cx, data.buffer.asByteData(), type);
+    final getFunc = _load_num_type_func(cx, ByteData.sublistView(data), type);
     final width = type.size();
     for (int i = 0; i < list.length; i++) {
       final offset = i * width;
@@ -262,7 +292,7 @@ RecordValue _load_record(Context cx, int ptr, List<Field> fields) {
 /// to find a case label it knows about. While the code below appears to perform case-label
 /// lookup at runtime, a normal implementation can build the appropriate index tables
 /// at compile-time so that variant-passing is always O(1) and not involving string operations.
-VariantValue _load_variant(
+VariantValue2 _load_variant(
   Context cx,
   int ptr,
   List<Case> cases,
@@ -273,9 +303,9 @@ VariantValue _load_variant(
   trap_if(case_index >= cases.length);
   final c = cases[case_index];
   ptr = align_to(ptr, max_case_alignment(cases));
-  final case_label = case_label_with_refinements(c, cases);
-  if (c.t == null) return {case_label: null};
-  return {case_label: load(cx, ptr, c.t!)};
+  // TODO: final case_label = case_label_with_refinements(c, cases);
+  if (c.t == null) return (case_index, null);
+  return (case_index, load(cx, ptr, c.t!));
 }
 
 String case_label_with_refinements(Case c, List<Case> cases) {
@@ -361,22 +391,12 @@ void store(Context cx, Object? v, ValType t, int ptr) {
         cx, reinterpret_float_as_i32(canonicalize32(v! as double)), ptr, 4),
     Float64() => _storeFloat64(cx, canonicalize64(v! as double), ptr),
     Char() => store_int(cx, char_to_i32(v! as String), ptr, 4),
-    StringType() => store_string(
-        cx,
-        v is String ? ParsedString.fromString(v) : v! as ParsedString,
-        ptr,
-      ),
+    StringType() => store_string(cx, ParsedString.fromJson(v), ptr),
     ListType(:final t) => _store_list(cx, v! as ListValue, ptr, t),
-    RecordType(:final fields) => _store_record(
-        cx,
-        v is List
-            ? Map.fromIterables(fields.map((e) => e.label), v)
-            : v! as RecordValue,
-        ptr,
-        fields,
-      ),
-    Variant(:final cases) => _store_variant(
-        cx, v is String ? {v: null} : v! as VariantValue, ptr, cases),
+    RecordType(:final fields) =>
+      _store_record(cx, toRecordValue(v, fields), ptr, fields),
+    Variant(:final cases) =>
+      _store_variant(cx, toVariantValue(v, cases), ptr, cases),
     Flags(:final labels) => _store_flags(cx, v! as FlagsValue, ptr, labels),
     Own() => store_int(cx, lower_own(cx, v! as Handle, t_), ptr, 4),
     Borrow() => store_int(cx, lower_borrow(cx, v! as Handle, t_), ptr, 4),
@@ -400,22 +420,12 @@ void Function(Object? v, int ptr) _storeFunction(Context cx, ValType t) {
     Float64() => (v, ptr) =>
         _storeFloat64(cx, canonicalize64(v! as double), ptr),
     Char() => (v, ptr) => store_int(cx, char_to_i32(v! as String), ptr, 4),
-    StringType() => (v, ptr) => store_string(
-          cx,
-          v is String ? ParsedString.fromString(v) : v! as ParsedString,
-          ptr,
-        ),
+    StringType() => (v, ptr) => store_string(cx, ParsedString.fromJson(v), ptr),
     ListType(:final t) => (v, ptr) => _store_list(cx, v! as ListValue, ptr, t),
-    RecordType(:final fields) => (v, ptr) => _store_record(
-          cx,
-          v is List
-              ? Map.fromIterables(fields.map((e) => e.label), v)
-              : v! as RecordValue,
-          ptr,
-          fields,
-        ),
-    Variant(:final cases) => (v, ptr) => _store_variant(
-        cx, v is String ? {v: null} : v! as VariantValue, ptr, cases),
+    RecordType(:final fields) => (v, ptr) =>
+        _store_record(cx, toRecordValue(v, fields), ptr, fields),
+    Variant(:final cases) => (v, ptr) =>
+        _store_variant(cx, toVariantValue(v, cases), ptr, cases),
     Flags(:final labels) => (v, ptr) =>
         _store_flags(cx, v! as FlagsValue, ptr, labels),
     Own() => (v, ptr) => store_int(cx, lower_own(cx, v! as Handle, t_), ptr, 4),
@@ -549,8 +559,9 @@ void _store_record(
 /// can statically fuse store_variant with its matching load_variant
 /// to ultimately build a dense array that maps producer's case indices
 /// to the consumer's case indices.
-void _store_variant(Context cx, VariantValue v, int ptr, List<Case> cases) {
-  final (case_index, case_value) = match_case(v, cases);
+void _store_variant(Context cx, VariantValue2 v, int ptr, List<Case> cases) {
+  // TODO: support variant refines
+  final (case_index, case_value) = v;
   final disc_size = discriminant_type(cases).size();
   store_int(cx, case_index, ptr, disc_size);
   ptr += disc_size;
@@ -559,6 +570,7 @@ void _store_variant(Context cx, VariantValue v, int ptr, List<Case> cases) {
   if (c.t != null) store(cx, case_value, c.t!, ptr);
 }
 
+// unused
 (int, Object?) match_case(VariantValue v, List<Case> cases) {
   assert(v.length == 1);
   final key = v.keys.first;

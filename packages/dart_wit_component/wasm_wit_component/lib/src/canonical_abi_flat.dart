@@ -296,7 +296,7 @@ class _CoerceValueIter implements ValueIter {
 /// more-permissive value iterator ([_CoerceValueIter]) that reinterprets
 /// between the different types appropriately and also traps if the
 /// high bits of an i64 are set for a 32-bit type:
-VariantValue _lift_flat_variant(Context cx, ValueIter vi, Variant variant) {
+VariantValue2 _lift_flat_variant(Context cx, ValueIter vi, Variant variant) {
   final cases = variant.cases;
   final flat_types = flatten_type(variant); // flatten_variant(cases);
   assert(flat_types[0] == FlatType.i32);
@@ -311,7 +311,8 @@ VariantValue _lift_flat_variant(Context cx, ValueIter vi, Variant variant) {
   while (index < flat_types.length) {
     vi.next(flat_types[index++]);
   }
-  return {case_label_with_refinements(c, cases): v};
+  return (case_index, v);
+  // TODO: support case refines return {case_label_with_refinements(c, cases): v};
 }
 
 int wrap_i64_to_i32(int i) {
@@ -352,19 +353,11 @@ List<FlatValue> lower_flat(Context cx, Object? v, ValType t) {
     Float64() =>
       singleList(FlatValue(FlatType.f64, canonicalize64(v! as double))),
     Char() => singleList(FlatValue(FlatType.i32, char_to_i32(v! as String))),
-    StringType() => _lower_flat_string(
-        cx,
-        v is String ? ParsedString.fromString(v) : v! as ParsedString,
-      ),
+    StringType() => _lower_flat_string(cx, ParsedString.fromJson(v)),
     ListType(:final t) => _lower_flat_list(cx, v! as ListValue, t),
-    RecordType(:final fields) => _lower_flat_record(
-        cx,
-        v is List
-            ? Map.fromIterables(fields.map((e) => e.label), v)
-            : v! as RecordValue,
-        fields,
-      ),
-    final Variant t => _lower_flat_variant(cx, v! as VariantValue, t),
+    RecordType(:final fields) =>
+      _lower_flat_record(cx, toRecordValue(v, fields), fields),
+    final Variant t => _lower_flat_variant(cx, toVariantValue(v, t.cases), t),
     Flags(:final labels) => _lower_flat_flags(v! as FlagsValue, labels),
     Own() => [FlatValue(FlatType.i32, lower_own(cx, v! as Handle, t_))],
     Borrow() => [FlatValue(FlatType.i32, lower_borrow(cx, v! as Handle, t_))],
@@ -419,9 +412,9 @@ List<FlatValue> _lower_flat_record(
 /// must consume all flattened types of [_flatten_variant],
 /// manually coercing the otherwise-incompatible type pairings allowed by [_join]
 List<FlatValue> _lower_flat_variant(
-    Context cx, VariantValue v, Variant variant) {
+    Context cx, VariantValue2 v, Variant variant) {
   final cases = variant.cases;
-  final (case_index, case_value) = match_case(v, cases);
+  final (case_index, case_value) = v;
   final flat_types = flatten_type(variant); // flatten_variant(cases);
   int flat_index = 0;
   final disc = flat_types[flat_index++];

@@ -367,6 +367,7 @@ class ParsedString {
       ParsedString(value, StringEncoding.utf16, value.length);
 
   factory ParsedString.fromJson(Object? json) {
+    if (json is ParsedString) return json;
     if (json is String) return ParsedString.fromString(json);
     final map = json! as Map<String, Object?>;
     return ParsedString(
