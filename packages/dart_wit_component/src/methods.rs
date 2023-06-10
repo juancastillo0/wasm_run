@@ -2,6 +2,7 @@ use crate::{strings::Normalize, types::Parsed};
 use wit_parser::*;
 
 pub trait GeneratedMethodsTrait {
+    fn to_wasm(&self, name: &str, p: &Parsed) -> String;
     fn to_json(&self, name: &str, p: &Parsed) -> String;
     fn from_json(&self, name: &str, p: &Parsed) -> Option<String>;
     fn to_string(&self, name: &str, p: &Parsed) -> Option<String>;
@@ -10,6 +11,15 @@ pub trait GeneratedMethodsTrait {
 }
 
 impl GeneratedMethodsTrait for Record {
+    fn to_wasm(&self, _name: &str, p: &Parsed) -> String {
+        let props = self
+            .fields
+            .iter()
+            .map(|f| p.type_to_wasm(&f.name.as_var(), &f.ty))
+            .collect::<Vec<_>>()
+            .join(",");
+        format!("List<Object?> toWasm() => [{props}];")
+    }
     fn to_json(&self, _name: &str, p: &Parsed) -> String {
         format!(
             "Map<String, Object?> toJson() => {{{}}};",
@@ -113,6 +123,9 @@ impl GeneratedMethodsTrait for Record {
 }
 
 impl GeneratedMethodsTrait for Enum {
+    fn to_wasm(&self, _name: &str, _p: &Parsed) -> String {
+        "int toWasm() => index;".to_string()
+    }
     fn to_json(&self, _name: &str, _p: &Parsed) -> String {
         "Object? toJson() => _spec.labels[index];\n".to_string()
     }
@@ -124,7 +137,7 @@ impl GeneratedMethodsTrait for Enum {
                     final index = _spec.labels.indexOf(json);
                     return index != -1 ? values[index] : values.byName(json);
                 }}
-                return values[json! as int];}}",
+                return json is (int, Object?) ? values[json.$1] : values[json! as int];}}",
         ))
     }
     fn to_string(&self, _name: &str, _p: &Parsed) -> Option<String> {
@@ -138,13 +151,15 @@ impl GeneratedMethodsTrait for Enum {
     }
 }
 
-fn base_string_case(self_: &Case, name: &str, p: &Parsed) -> String {
+fn base_string_case(data: &(usize, &Case), name: &str, p: &Parsed) -> String {
+    let self_ = data.1;
+    let comparator = p.comparator();
     if let Some(ty) = self_.ty {
         format!(
     "@override Map<String, Object?> toJson() => {{'{}': {}}};
     @override String toString() => '{name}($value)';
-    @override bool operator ==(Object other) => other is {name} && comparator.areEqual(other.value, value);
-    @override int get hashCode => comparator.hashValue(value);", self_.name,  p.type_to_json("value", &ty)
+    @override bool operator ==(Object other) => other is {name} && {comparator}.areEqual(other.value, value);
+    @override int get hashCode => {comparator}.hashValue(value);", self_.name,  p.type_to_json("value", &ty)
 )
     } else {
         format!(
@@ -157,7 +172,18 @@ fn base_string_case(self_: &Case, name: &str, p: &Parsed) -> String {
     }
 }
 
-impl GeneratedMethodsTrait for Case {
+impl GeneratedMethodsTrait for (usize, &Case) {
+    fn to_wasm(&self, _name: &str, p: &Parsed) -> String {
+        let index = self.0;
+        if let Some(ty) = self.1.ty {
+            format!(
+                "@override (int, Object?) toWasm() => ({index}, {});",
+                p.type_to_wasm("value", &ty)
+            )
+        } else {
+            format!("@override (int, Object?) toWasm() => ({index}, null);")
+        }
+    }
     fn to_json(&self, name: &str, p: &Parsed) -> String {
         base_string_case(self, name, p)
             .split("\n")
@@ -191,6 +217,13 @@ impl GeneratedMethodsTrait for Case {
 }
 
 impl GeneratedMethodsTrait for (usize, &UnionCase) {
+    fn to_wasm(&self, _name: &str, p: &Parsed) -> String {
+        format!(
+            "@override (int, Object?) toWasm() => ({}, {});",
+            self.0,
+            p.type_to_wasm("value", &self.1.ty)
+        )
+    }
     fn to_json(&self, _name: &str, p: &Parsed) -> String {
         format!(
             "@override\nMap<String, Object?> toJson() => {{'{}': {}}};",
@@ -207,16 +240,20 @@ impl GeneratedMethodsTrait for (usize, &UnionCase) {
     fn copy_with(&self, _name: &str, _p: &Parsed) -> Option<String> {
         None
     }
-    fn equality_hash_code(&self, name: &str, _p: &Parsed) -> Option<String> {
+    fn equality_hash_code(&self, name: &str, p: &Parsed) -> Option<String> {
+        let comparator = p.comparator();
         Some(
             format!("
-            @override\nbool operator ==(Object other) => other is {name} && comparator.areEqual(other.value, value);
-            @override\nint get hashCode => comparator.hashValue(value);",)
+            @override\nbool operator ==(Object other) => other is {name} && {comparator}.areEqual(other.value, value);
+            @override\nint get hashCode => {comparator}.hashValue(value);",)
         )
     }
 }
 
 impl GeneratedMethodsTrait for Flags {
+    fn to_wasm(&self, _name: &str, _p: &Parsed) -> String {
+        "Uint32List toWasm() => Uint32List.sublistView(flagsBits.data);".to_string()
+    }
     fn to_json(&self, _name: &str, _p: &Parsed) -> String {
         "Object toJson() => flagsBits.toJson();".to_string()
     }
@@ -241,11 +278,12 @@ impl GeneratedMethodsTrait for Flags {
     fn copy_with(&self, _name: &str, _p: &Parsed) -> Option<String> {
         None
     }
-    fn equality_hash_code(&self, name: &str, _p: &Parsed) -> Option<String> {
+    fn equality_hash_code(&self, name: &str, p: &Parsed) -> Option<String> {
+        let comparator = p.comparator();
         Some(
             format!("
-            @override\nbool operator ==(Object other) => other is {name} && comparator.areEqual(flagsBits, other.flagsBits);
-            @override\nint get hashCode => comparator.hashValue(flagsBits);",)
+            @override\nbool operator ==(Object other) => other is {name} && {comparator}.areEqual(flagsBits, other.flagsBits);
+            @override\nint get hashCode => {comparator}.hashValue(flagsBits);",)
         )
     }
 }

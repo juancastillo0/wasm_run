@@ -43,6 +43,9 @@ sealed class Option<T extends Object> {
 
   /// Returns a JSON representation of the option.
   Map<String, Object?> toJson([Object? Function(T value)? mapValue]);
+
+  /// Returns the Wasm canonical abi representation of the option.
+  (int, Object?) toWasm([Object? Function(T value)? mapValue]);
 }
 
 /// A Rust-style Option type's Some value.
@@ -61,6 +64,10 @@ class Some<T extends Object> implements Option<T> {
   @override
   Map<String, Object?> toJson([Object? Function(T value)? mapValue]) =>
       {'some': mapValue == null ? value : mapValue(value)};
+
+  @override
+  (int, Object?) toWasm([Object? Function(T value)? mapValue]) =>
+      (1, mapValue == null ? value : mapValue(value));
 
   @override
   bool operator ==(Object other) =>
@@ -91,6 +98,9 @@ class None<T extends Object> implements Option<T> {
   @override
   Map<String, Object?> toJson([Object? Function(T value)? mapValue]) =>
       {'none': null};
+
+  @override
+  (int, Object?) toWasm([Object? Function(T value)? mapValue]) => (0, null);
 
   @override
   bool operator ==(Object other) => other is None;

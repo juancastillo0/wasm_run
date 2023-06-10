@@ -287,7 +287,7 @@ impl Parsed<'_> {
                     params = f
                         .params
                         .iter()
-                        .map(|(name, ty)| self.type_to_json(&name.as_var(), ty))
+                        .map(|(name, ty)| self.type_to_wasm(&name.as_var(), ty))
                         .collect::<Vec<_>>()
                         .join(", "),
                     ret = match &f.results {

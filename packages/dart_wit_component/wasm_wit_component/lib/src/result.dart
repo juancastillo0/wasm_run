@@ -41,6 +41,12 @@ sealed class Result<O, E> {
     Object? Function(O value)? mapOk,
     Object? Function(E value)? mapError,
   ]);
+
+  /// Returns a Wasm canonical abi representation of the result.
+  (int, Object?) toWasm([
+    Object? Function(O value)? mapOk,
+    Object? Function(E value)? mapError,
+  ]);
 }
 
 /// A Rust-style Result type's success value.
@@ -64,6 +70,13 @@ class Ok<O, E> implements Result<O, E> {
     Object? Function(E value)? mapError,
   ]) =>
       {'ok': mapOk == null ? ok : mapOk(ok)};
+
+  @override
+  (int, Object?) toWasm([
+    Object? Function(O value)? mapOk,
+    Object? Function(E value)? mapError,
+  ]) =>
+      (0, mapOk == null ? ok : mapOk(ok));
 
   @override
   bool operator ==(Object other) =>
@@ -101,6 +114,13 @@ class Err<O, E> implements Result<O, E> {
     Object? Function(E value)? mapError,
   ]) =>
       {'error': mapError == null ? error : mapError(error)};
+
+  @override
+  (int, Object?) toWasm([
+    Object? Function(O value)? mapOk,
+    Object? Function(E value)? mapError,
+  ]) =>
+      (1, mapError == null ? error : mapError(error));
 
   @override
   bool operator ==(Object other) =>

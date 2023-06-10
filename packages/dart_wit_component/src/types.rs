@@ -12,12 +12,14 @@ pub struct Parsed<'a>(
 const FROM_JSON_COMMENT: &str = "/// Returns a new instance from a JSON value.
 /// May throw if the value does not have the expected structure.\n";
 const TO_JSON_COMMENT: &str = "/// Returns this as a serializable JSON value.\n";
+const TO_WASM_COMMENT: &str = "/// Returns this as a WASM canonical abi value.\n";
 const COPY_WITH_COMMENT: &str =
     "/// Returns a new instance by overriding the values passed as arguments\n";
 
 enum MethodComment {
     FromJson,
     ToJson,
+    ToWasm,
     CopyWith,
 }
 
@@ -161,10 +163,12 @@ impl Parsed<'_> {
             TypeDefKind::Flags(_flags) => format!("{getter}.toJson()"),
             TypeDefKind::Variant(_variant) => format!("{getter}.toJson()"),
             TypeDefKind::Option(ty) => {
-                format!(
-                    "{getter}.toJson((some) => {})",
-                    self.type_to_json_inner("some", &ty)
-                )
+                let inner = self.type_to_json_inner("some", &ty);
+                if inner == "some" {
+                    format!( "{getter}.toJson()")
+                } else {
+                    format!( "{getter}.toJson((some) => {inner})")
+                }
             }
             TypeDefKind::Result(r) => format!(
                 "{getter}.toJson({}, {})",
@@ -205,6 +209,9 @@ impl Parsed<'_> {
                 let inner = self.type_to_json("e", &ty);
                 if inner == "e" {
                     format!("{getter}.toList()")
+                } else if inner.ends_with("(e)") {
+                    let inner_func = inner.trim_end_matches("(e)");
+                    format!("{getter}.map({inner_func}).toList()")
                 } else {
                     format!("{getter}.map((e) => {inner}).toList()")
                 }
@@ -212,6 +219,121 @@ impl Parsed<'_> {
             TypeDefKind::Future(_ty) => unreachable!("Future"),
             TypeDefKind::Stream(_s) => unreachable!("Stream"),
             TypeDefKind::Type(ty) => self.type_to_json_inner(getter, &ty),
+            TypeDefKind::Unknown => unimplemented!("Unknown type"),
+        }
+    }
+
+    pub fn type_to_wasm(&self, getter: &str, ty: &Type) -> String {
+        match ty {
+            Type::Id(ty_id) => {
+                let ty_def = self.0.types.get(*ty_id).unwrap();
+                self.type_def_to_wasm(getter, ty_def)
+            }
+            _ => self.type_to_wasm_inner(getter, ty),
+        }
+    }
+
+    fn type_to_wasm_inner(&self, getter: &str, ty: &Type) -> String {
+        match ty {
+            Type::Id(ty_id) => {
+                let ty_def = self.0.types.get(*ty_id).unwrap();
+                self.type_def_to_wasm_inner(getter, ty_def)
+            }
+            Type::Bool => getter.to_string(),
+            Type::String => getter.to_string(),
+            Type::Char => getter.to_string(),
+            Type::Float32 => getter.to_string(),
+            Type::Float64 => getter.to_string(),
+            Type::S8 => getter.to_string(),
+            Type::S16 => getter.to_string(),
+            Type::S32 => getter.to_string(),
+            Type::S64 => getter.to_string(),
+            Type::U8 => getter.to_string(),
+            Type::U16 => getter.to_string(),
+            Type::U32 => getter.to_string(),
+            Type::U64 => getter.to_string(),
+        }
+    }
+
+    fn type_def_to_wasm(&self, getter: &str, ty: &TypeDef) -> String {
+        match &ty.kind {
+            TypeDefKind::Option(ty) => {
+                if self.2.use_null_for_option {
+                    format!(
+                        "({getter} == null ? const None().toWasm() : Option.fromValue({getter}).toWasm((some) => {}))",
+                        self.type_to_wasm_inner("some", &ty)
+                    )
+                } else {
+                    format!(
+                        "{getter}.toWasm((some) => {})",
+                        self.type_to_wasm_inner("some", &ty)
+                    )
+                }
+            }
+            _ => self.type_def_to_wasm_inner(getter, ty),
+        }
+    }
+
+    fn type_def_to_wasm_inner(&self, getter: &str, ty: &TypeDef) -> String {
+        match &ty.kind {
+            // TODO: toWasm()
+            TypeDefKind::Record(_record) => format!("{getter}.toWasm()"),
+            TypeDefKind::Enum(_enum_) => format!("{getter}.toWasm()"),
+            TypeDefKind::Union(_union) => format!("{getter}.toWasm()"),
+            TypeDefKind::Flags(_flags) => format!("{getter}.toWasm()"),
+            TypeDefKind::Variant(_variant) => format!("{getter}.toWasm()"),
+            TypeDefKind::Option(ty) => {
+                format!(
+                    "{getter}.toWasm((some) => {})",
+                    self.type_to_wasm_inner("some", &ty)
+                )
+            }
+            TypeDefKind::Result(r) => format!(
+                "{getter}.toWasm({}, {})",
+                r.ok.map_or_else(
+                    || "null".to_string(),
+                    |ok| {
+                        let to_wasm = self.type_to_wasm("ok", &ok);
+                        if to_wasm == "ok" {
+                            return "null".to_string();
+                        }
+                        format!("(ok) => {to_wasm}")
+                    }
+                ),
+                r.err.map_or_else(
+                    || "null".to_string(),
+                    |error| {
+                        let to_wasm = self.type_to_wasm("error", &error);
+                        if to_wasm == "error" {
+                            return "null".to_string();
+                        }
+                        format!("(error) => {to_wasm}")
+                    }
+                )
+            ),
+            TypeDefKind::Tuple(t) => {
+                format!(
+                    "[{}]",
+                    t.types
+                        .iter()
+                        .enumerate()
+                        .map(|(i, t)| self
+                            .type_to_wasm(&format!("{getter}.${ind}", ind = i + 1), t))
+                        .collect::<Vec<_>>()
+                        .join(", "),
+                )
+            }
+            TypeDefKind::List(ty) => {
+                let inner = self.type_to_wasm("e", &ty);
+                if inner == "e" {
+                    format!("{getter}")
+                } else {
+                    format!("{getter}.map((e) => {inner}).toList()")
+                }
+            }
+            TypeDefKind::Future(_ty) => unreachable!("Future"),
+            TypeDefKind::Stream(_s) => unreachable!("Stream"),
+            TypeDefKind::Type(ty) => self.type_to_wasm_inner(getter, &ty),
             TypeDefKind::Unknown => unimplemented!("Unknown type"),
         }
     }
@@ -562,6 +684,7 @@ impl Parsed<'_> {
             match comment {
                 MethodComment::CopyWith => COPY_WITH_COMMENT,
                 MethodComment::ToJson => TO_JSON_COMMENT,
+                MethodComment::ToWasm =>TO_WASM_COMMENT,
                 MethodComment::FromJson => FROM_JSON_COMMENT,
             }
         } else {
@@ -583,6 +706,10 @@ impl Parsed<'_> {
             s.push_str(self.method_comment(MethodComment::ToJson));
             s.push_str(&methods.to_json(name, self));
         }
+        
+        s.push_str(self.method_comment(MethodComment::ToWasm));
+        s.push_str(&methods.to_wasm(name, self));
+
         if self.2.to_string {
             if let Some(m) = methods.to_string(name, self) {
                 s.push_str(&m);
@@ -722,6 +849,8 @@ impl Parsed<'_> {
 
                 s.push_str(self.method_comment(MethodComment::ToJson));
                 s.push_str("Map<String, Object?> toJson();\n");
+                s.push_str(self.method_comment(MethodComment::ToWasm));
+                s.push_str("(int, Object?) toWasm();\n");
 
                 s.push_str(&format!(
                     "// ignore: unused_field\nstatic const _spec = {};",
@@ -762,7 +891,7 @@ impl Parsed<'_> {
                         .collect::<String>()
                 ));
                 let mut cases_string = String::new();
-                a.cases.iter().for_each(|v| {
+                a.cases.iter().enumerate().for_each(|(i, v)| {
                 let docs = extract_dart_docs(&v.docs).unwrap_or("".to_string());
                 cases_string.push_str(&docs);
                     let inner_name =  heck::AsPascalCase(&v.name);
@@ -776,11 +905,13 @@ impl Parsed<'_> {
                         cases_string.push_str(&format!("class {class_name} implements {name} {{ {docs}const {class_name}();" ));
                         s.push_str(&format!("const factory {name}.{}() = {class_name};", v.name.as_var()));
                     }
-                    self.add_methods_trait(&mut cases_string, &class_name,v);
+                    self.add_methods_trait(&mut cases_string, &class_name,&(i, v));
                     cases_string.push_str("}");
                 });
                 s.push_str(self.method_comment(MethodComment::ToJson));
                 s.push_str("Map<String, Object?> toJson();\n");
+                s.push_str(self.method_comment(MethodComment::ToWasm));
+                s.push_str("(int, Object?) toWasm();\n");
                 s.push_str(&format!(
                     "static const _spec = {};",
                     self.type_def_to_spec(&ty)
