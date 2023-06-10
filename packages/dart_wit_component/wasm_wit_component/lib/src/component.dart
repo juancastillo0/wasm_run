@@ -7,6 +7,7 @@ import 'package:wasm_wit_component/src/canonical_abi_cache.dart';
 // TODO: ignore: implementation_imports
 import 'package:wasm_run/src/wasm_bindings/make_function_num_args.dart';
 import 'package:wasm_run/wasm_run.dart';
+import 'package:wasm_wit_component/src/record_equality.dart' show recordToList;
 
 export 'package:wasm_wit_component/generator.dart' show Int64TypeConfig;
 export 'package:wasm_wit_component/src/flags_bits.dart' show FlagsBits;
@@ -39,6 +40,8 @@ class ObjectComparator {
                   areEqual(otherValue, e.value);
             },
           );
+    } else if (a is Record && b is Record) {
+      return areEqual(recordToList(a), recordToList(b));
     } else {
       return a == b;
     }
@@ -66,6 +69,8 @@ class ObjectComparator {
       return Object.hashAllUnordered(
         e.entries.map((e) => hashProps([e.key, e.value])),
       );
+    } else if (e is Record) {
+      return hashProps(recordToList(e));
     } else {
       return e;
     }

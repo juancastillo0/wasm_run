@@ -29,7 +29,7 @@ class FlagsBits {
   factory FlagsBits.fromBooleans(List<bool> flags) {
     final value = FlagsBits.none(numFlags: flags.length);
     for (var i = 0; i < flags.length; i++) {
-      value.setFlag(i, flags[i]);
+      if (flags[i]) value.setFlag(i, true);
     }
     return value;
   }
@@ -42,8 +42,7 @@ class FlagsBits {
   }) {
     if (json_ is Map) {
       return FlagsBits._fromMap(json_, flagsKeys);
-    }
-    if (json_ is List && json_.first is bool) {
+    } else if (json_ is List && json_.first is bool) {
       return FlagsBits.fromBooleans(json_.cast<bool>());
     }
     final json = (json_! as List).cast<int>();
@@ -51,7 +50,9 @@ class FlagsBits {
     for (var i = 0; i < json.length; i++) {
       flagBits.setUint32(i * 4, json[i], Endian.little);
     }
-    return FlagsBits(flagBits, numFlags: flagsKeys.length);
+    final flags = FlagsBits(flagBits, numFlags: flagsKeys.length);
+    flags._zeroOutUnusedBits();
+    return flags;
   }
 
   factory FlagsBits._fromMap(
@@ -103,18 +104,22 @@ class FlagsBits {
       );
     }
     final c = ByteData(data.lengthInBytes);
-    final lastIndex = data.lengthInBytes ~/ 4 - 1;
-    for (var i = 0; i <= lastIndex; i++) {
+    for (var i = 0; i < data.lengthInBytes ~/ 4; i++) {
       c.setUint32(i * 4, merge(_index(i), other._index(i)), Endian.little);
     }
+    _zeroOutUnusedBits();
+    return FlagsBits(c, numFlags: numFlags);
+  }
+
+  void _zeroOutUnusedBits() {
+    final lastOffset = data.lengthInBytes - 4;
     // zero-out unused last 32 bits
     final mask = 0xFFFFFFFF >> (32 - numFlags % 32);
-    c.setUint32(
-      lastIndex * 4,
-      c.getUint32(lastIndex * 4, Endian.little) & mask,
+    data.setUint32(
+      lastOffset,
+      data.getUint32(lastOffset, Endian.little) & mask,
       Endian.little,
     );
-    return FlagsBits(c, numFlags: numFlags);
   }
 
   int _index(int i) => data.getUint32(i * 4, Endian.little);
