@@ -1,5 +1,6 @@
 import 'dart:html' as html;
 import 'dart:js_util' as js_util;
+import 'dart:typed_data';
 
 import 'package:flutter_rust_bridge/flutter_rust_bridge.dart' as frb;
 import 'package:wasm_run/src/bridge_generated.dart';
@@ -59,4 +60,16 @@ Future<void> _injectSrcScript(
   assert(html.document.head != null, 'html.document.head is null');
   html.document.head!.append(script);
   return script.onLoad.first;
+}
+
+Future<Uint8List> getUriBodyBytesImpl(Uri uri) async {
+  final req = await html.HttpRequest.request(
+    uri.toString(),
+    responseType: 'arraybuffer',
+  );
+  final response = req.response;
+  if (response is! ByteBuffer) {
+    throw Exception('Failed to fetch $uri: ${req.status}');
+  }
+  return response.asUint8List();
 }

@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:wasm_run/src/bridge_generated.dart';
 import 'package:wasm_run/src/ffi/setup_dynamic_library.dart';
 import 'package:wasm_run/src/ffi/stub.dart'
@@ -16,6 +18,9 @@ WasmRunDart _createWrapper(ExternalLibrary lib) {
 }
 
 WasmRunDart _createLib() => _createWrapper(createLibraryImpl());
+
+/// Executes a GET request to the [uri] and returns the body bytes.
+Future<Uint8List> getUriBodyBytes(Uri uri) => getUriBodyBytesImpl(uri);
 
 /// Static namespace for configuring the dynamic library for wasm_run
 class WasmRunLibrary {

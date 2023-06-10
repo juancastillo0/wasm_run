@@ -1,6 +1,7 @@
 import 'dart:io';
+import 'dart:typed_data';
 
-import 'package:http/http.dart' as http;
+import 'package:wasm_run/src/ffi.dart' show getUriBodyBytes;
 import 'package:wasm_run/wasm_run.dart';
 
 /// A class that represents a wasm module to be loaded.
@@ -85,10 +86,9 @@ class WasmFileUris {
   ///
   /// May throw [WasmFileUrisException]
   Future<WasmModule> loadModule({
-    http.Client? httpClient,
+    Future<Uint8List> Function(Uri uri) getUriBodyBytes = getUriBodyBytes,
     ModuleConfig? config,
   }) async {
-    final client = httpClient ?? http.Client();
     final features = await wasmRuntimeFeatures();
     final uri = uriForFeatures(features);
     final isHttp = uri.isScheme('http') || uri.isScheme('https');
@@ -99,14 +99,7 @@ class WasmFileUris {
 
     if (isHttp || isWeb) {
       try {
-        final response = await client.get(uri);
-        if (response.statusCode != 200) {
-          throw Exception(
-            'Could not download wasm file "$uri":'
-            ' ${response.statusCode} ${response.reasonPhrase}',
-          );
-        }
-        final wasmFile = response.bodyBytes;
+        final wasmFile = await getUriBodyBytes(uri);
         if (wasmFile.isEmpty) {
           throw Exception('Url "$uri" returned an empty body.');
         }
@@ -129,7 +122,7 @@ class WasmFileUris {
       try {
         wasmModule = await fallback!.loadModule(
           config: config,
-          httpClient: client,
+          getUriBodyBytes: getUriBodyBytes,
         );
       } catch (e, s) {
         exceptions.add(ErrorWithTrace(e, s));

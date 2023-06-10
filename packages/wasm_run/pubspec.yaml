@@ -21,7 +21,6 @@ dependencies:
   wasm_interop: ^2.0.1
   logging: ^1.1.0
   collection: ^1.17.0
-  http: ^0.13.5
 
 dev_dependencies:
   ffigen: ^7.2.10
