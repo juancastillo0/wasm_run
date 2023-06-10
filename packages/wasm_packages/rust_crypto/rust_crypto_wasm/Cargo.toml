@@ -1,0 +1,17 @@
+[package]
+name = "rust_crypto_wasm"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+crate-type = ['cdylib']
+
+[dependencies]
+wit-bindgen = { git = "https://github.com/bytecodealliance/wit-bindgen", version = "0.7.0", rev = "8bab26e857ef24455d7b9b38795d34857ed57099" }
+aes-gcm-siv = "0.11.1"
+argon2 = "0.5.0"
+blake3 = { "version" = "1.3.3", features = ["std", "digest"] }
+hmac = "0.12.1"
+sha2 = "0.10.6"
