@@ -1,8 +1,8 @@
+import 'dart:convert' show jsonDecode;
 import 'dart:developer' as developer;
 import 'dart:io';
 
 import 'package:wasm_wit_component/generator.dart';
-import 'package:wasm_wit_component/src/option.dart';
 import 'package:wasm_wit_component/src/result.dart';
 
 /// Generates Dart code from a Wasm WIT file.
@@ -103,14 +103,6 @@ class GeneratorCLIArgs {
     final dartFilePath = positional.length > 1 ? positional[1] : null;
     final watch = args.namedBool[_Arg.watch] ?? false;
     final enableDefault = args.namedBool[_Arg.default_] ?? true;
-    final int64TypeList =
-        args.namedValues[_Arg.int64Type] ?? [Int64TypeConfig.bigInt.name];
-    if (int64TypeList.length > 1) {
-      throw Exception(
-        'Too many values for argument `int64Type`. $int64TypeList',
-      );
-    }
-    final int64Type = int64TypeList.first;
 
     final config = WitGeneratorConfig(
       inputs: WitGeneratorInput.fileSystemPaths(
@@ -122,16 +114,13 @@ class GeneratorCLIArgs {
       equalityAndHashCode: args.namedBool[_Arg.equality] ?? enableDefault,
       toString_: args.namedBool[_Arg.toString_] ?? enableDefault,
       generateDocs: args.namedBool[_Arg.generateDocs] ?? enableDefault,
-      fileHeader: null,
-      requiredOption: false,
-      useNullForOption: false,
-      int64Type: Int64TypeConfig.values.firstWhere(
-        (e) => e.name == int64Type,
-        orElse: () => throw Exception(
-          'Unknown int64 type: $int64Type. Options: '
-          '${Int64TypeConfig.values.map((e) => e.name).join(', ')}',
-        ),
-      ),
+      fileHeader: args.singleArgValue(_Arg.fileHeader),
+      requiredOption: args.namedBool[_Arg.requiredOption] ?? false,
+      useNullForOption: args.namedBool[_Arg.useNullForOption] ?? true,
+      typedNumberLists: args.namedBool[_Arg.typedNumberLists] ?? true,
+      objectComparator: args.singleArgValue(_Arg.objectComparator),
+      int64Type: args.singleArgEnum(_Arg.int64Type, Int64TypeConfig.values) ??
+          Int64TypeConfig.bigInt,
     );
 
     return GeneratorCLIArgs(
@@ -173,9 +162,15 @@ class _Arg {
   static const equality = 'equality';
   static const toString_ = 'to-string';
   static const generateDocs = 'generate-docs';
+  static const requiredOption = 'required-option';
+  static const useNullForOption = 'null-for-option';
+  static const typedNumberLists = 'typed-number-lists';
   static const watch = 'watch';
 
+  static const fileHeader = 'file-header';
+  static const objectComparator = 'object-comparator';
   static const int64Type = 'int64-type';
+  static const configFile = 'config-file';
 
   static const allBool = [
     default_,
@@ -184,11 +179,17 @@ class _Arg {
     equality,
     toString_,
     generateDocs,
+    useNullForOption,
+    typedNumberLists,
+    requiredOption,
     watch,
   ];
 
   static const allValues = [
     int64Type,
+    fileHeader,
+    objectComparator,
+    configFile,
   ];
 }
 
@@ -231,7 +232,7 @@ class _CLIArgs {
         } else if (parts.length == 2) {
           list.add(parts[1]);
         } else {
-          throw Exception('Invalid value argument $arg.');
+          list.add(parts.sublist(1).join('='));
         }
       } else {
         // Bool
@@ -254,5 +255,28 @@ class _CLIArgs {
         }
       }
     }
+  }
+
+  String? singleArgValue(String name) {
+    final values = namedValues[name];
+    if (values != null && values.length > 1) {
+      throw Exception(
+        'Too many values for argument `name`. $values',
+      );
+    }
+    return values?[0];
+  }
+
+  T? singleArgEnum<T extends Enum>(String name, List<T> options) {
+    final value = singleArgValue(name);
+    if (value == null) return null;
+
+    return options.firstWhere(
+      (e) => e.name == value,
+      orElse: () => throw Exception(
+        'Unknown $name: $value. Options: '
+        '${options.map((e) => e.name).join(', ')}',
+      ),
+    );
   }
 }

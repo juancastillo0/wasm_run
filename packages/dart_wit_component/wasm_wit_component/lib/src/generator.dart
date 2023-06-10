@@ -366,6 +366,12 @@ class WitGeneratorConfig {
 
   /// The type to use for 64 bit integers.
   final Int64TypeConfig int64Type;
+
+  /// Whether to use `dart:typed_data`'s numeric lists.
+  /// For example, `Uint8List` instead of `List<int>` for `list<u8>`.
+  /// This does not affect `list<u64>` and `list<s64>`, they will
+  /// use a `List<[int64Type]>`.
+  final bool typedNumberLists;
   const WitGeneratorConfig({
     required this.inputs,
     required this.jsonSerialization,
@@ -378,6 +384,7 @@ class WitGeneratorConfig {
     required this.useNullForOption,
     required this.requiredOption,
     required this.int64Type,
+    required this.typedNumberLists,
   });
 
   /// Returns a new instance from a JSON value.
@@ -398,7 +405,8 @@ class WitGeneratorConfig {
         final objectComparator,
         final useNullForOption,
         final requiredOption,
-        final int64Type
+        final int64Type,
+        final typedNumberLists
       ] ||
       (
         final inputs,
@@ -411,7 +419,8 @@ class WitGeneratorConfig {
         final objectComparator,
         final useNullForOption,
         final requiredOption,
-        final int64Type
+        final int64Type,
+        final typedNumberLists
       ) =>
         WitGeneratorConfig(
           inputs: WitGeneratorInput.fromJson(inputs),
@@ -431,6 +440,7 @@ class WitGeneratorConfig {
           useNullForOption: useNullForOption! as bool,
           requiredOption: requiredOption! as bool,
           int64Type: Int64TypeConfig.fromJson(int64Type),
+          typedNumberLists: typedNumberLists! as bool,
         ),
       _ => throw Exception('Invalid JSON $json_')
     };
@@ -446,13 +456,14 @@ class WitGeneratorConfig {
         'generate-docs': generateDocs,
         'file-header': (fileHeader == null
             ? const None().toJson()
-            : Some(fileHeader!).toJson((some) => some)),
+            : Option.fromValue(fileHeader).toJson((some) => some)),
         'object-comparator': (objectComparator == null
             ? const None().toJson()
-            : Some(objectComparator!).toJson((some) => some)),
+            : Option.fromValue(objectComparator).toJson((some) => some)),
         'use-null-for-option': useNullForOption,
         'required-option': requiredOption,
         'int64-type': int64Type.toJson(),
+        'typed-number-lists': typedNumberLists,
       };
   @override
   String toString() =>
@@ -471,6 +482,7 @@ class WitGeneratorConfig {
     bool? useNullForOption,
     bool? requiredOption,
     Int64TypeConfig? int64Type,
+    bool? typedNumberLists,
   }) =>
       WitGeneratorConfig(
           inputs: inputs ?? this.inputs,
@@ -485,7 +497,8 @@ class WitGeneratorConfig {
               : this.objectComparator,
           useNullForOption: useNullForOption ?? this.useNullForOption,
           requiredOption: requiredOption ?? this.requiredOption,
-          int64Type: int64Type ?? this.int64Type);
+          int64Type: int64Type ?? this.int64Type,
+          typedNumberLists: typedNumberLists ?? this.typedNumberLists);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -506,7 +519,8 @@ class WitGeneratorConfig {
         objectComparator,
         useNullForOption,
         requiredOption,
-        int64Type
+        int64Type,
+        typedNumberLists
       ];
   static const _spec = RecordType([
     (
@@ -544,7 +558,8 @@ class WitGeneratorConfig {
       label: 'int64-type',
       t: EnumType(
           ['native-object', 'big-int', 'big-int-unsigned-only', 'core-int'])
-    )
+    ),
+    (label: 'typed-number-lists', t: Bool())
   ]);
 }
 
@@ -604,7 +619,8 @@ class DartWitGeneratorWorld {
                     'big-int-unsigned-only',
                     'core-int'
                   ])
-                )
+                ),
+                (label: 'typed-number-lists', t: Bool())
               ])
             )
           ], [
@@ -664,7 +680,8 @@ class DartWitGeneratorWorld {
                     'big-int-unsigned-only',
                     'core-int'
                   ])
-                )
+                ),
+                (label: 'typed-number-lists', t: Bool())
               ])
             ),
             ('file-path', StringType())

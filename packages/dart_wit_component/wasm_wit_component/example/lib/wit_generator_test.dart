@@ -78,6 +78,7 @@ void witDartGeneratorTests({Future<Directory> Function()? getDirectory}) {
               int64Type: Int64TypeConfig.bigInt,
               useNullForOption: false,
               requiredOption: false,
+              typedNumberLists: true,
             ),
           ),
         );
@@ -113,6 +114,7 @@ void witDartGeneratorTests({Future<Directory> Function()? getDirectory}) {
               int64Type: Int64TypeConfig.bigInt,
               useNullForOption: false,
               requiredOption: false,
+              typedNumberLists: true,
             ),
           ),
         );
@@ -236,6 +238,7 @@ WitGeneratorConfig _defaultConfig(WitGeneratorInput inputs) {
     int64Type: Int64TypeConfig.bigInt,
     useNullForOption: false,
     requiredOption: false,
+    typedNumberLists: true,
   );
 }
 

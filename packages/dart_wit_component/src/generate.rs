@@ -268,10 +268,10 @@ default world host {
         println!("{}", s);
     }
 
-    fn parse_and_write_generation(path: &str, output_path: &str, int64_type: Int64TypeConfig) {
+    fn parse_and_write_generation(path: &str, output_path: &str, config: WitGeneratorConfig) {
         let parsed = wit_parser::UnresolvedPackage::parse_file(Path::new(path)).unwrap();
 
-        let s = super::document_to_dart(&parsed, default_wit_config(int64_type)).unwrap();
+        let s = super::document_to_dart(&parsed, config).unwrap();
         println!("{}", s);
         File::create(output_path)
             .unwrap()
@@ -295,7 +295,17 @@ default world host {
             "{}/wasm_wit_component/example/lib/types_gen.dart",
             PACKAGE_DIR
         );
-        parse_and_write_generation(&path, &output_path, Int64TypeConfig::CoreInt);
+        let mut config = default_wit_config(Int64TypeConfig::CoreInt);
+        config.file_header = Some(
+            "// CUSTOM FILE HEADER
+             const objectComparator = ObjectComparator();\n\n"
+                .to_string(),
+        );
+        config.object_comparator = Some("objectComparator".to_string());
+        config.use_null_for_option = false;
+        config.typed_number_lists = false;
+        // TODO: test config.required_option = false;
+        parse_and_write_generation(&path, &output_path, config);
     }
 
     #[test]
@@ -308,13 +318,21 @@ default world host {
             "{}/wasm_wit_component/example/lib/types_gen_big_int.dart",
             PACKAGE_DIR
         );
-        parse_and_write_generation(&path, &output_path, Int64TypeConfig::BigInt);
+        parse_and_write_generation(
+            &path,
+            &output_path,
+            default_wit_config(Int64TypeConfig::BigInt),
+        );
     }
 
     #[test]
     pub fn parse_generator() {
         let path = format!("{}/wit/dart-wit-generator.wit", PACKAGE_DIR);
         let output_path = format!("{}/wasm_wit_component/lib/src/generator.dart", PACKAGE_DIR);
-        parse_and_write_generation(&path, &output_path, Int64TypeConfig::BigInt);
+        parse_and_write_generation(
+            &path,
+            &output_path,
+            default_wit_config(Int64TypeConfig::BigInt),
+        );
     }
 }

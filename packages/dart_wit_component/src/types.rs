@@ -540,13 +540,13 @@ impl Parsed<'_> {
             let defined = self.1.get(v as &str);
             if let Some(def) = defined {
                 let owner = match ty.owner {
-                    TypeOwner::World(id) => Some(&self.0.worlds.get(id).unwrap().name),
-                    TypeOwner::Interface(id) => self.0.interfaces.get(id).unwrap().name.as_ref(),
+                    TypeOwner::World(id) => Some(self.0.worlds.get(id).unwrap().name.clone()),
+                    TypeOwner::Interface(id) => self.0.interfaces.get(id).unwrap().name.clone(),
                     TypeOwner::None => None,
                 };
                 let name = format!(
                     "{v}-{}",
-                    owner.unwrap_or(&def.iter().position(|e| (*e).eq(ty)).unwrap().to_string())
+                    owner.unwrap_or_else(|| def.iter().position(|e| (*e).eq(ty)).unwrap().to_string())
                 );
                 Some(heck::AsPascalCase(name).to_string())
             } else {
