@@ -7,6 +7,10 @@ interface types-interface {
     b: string,
     c: list<tuple<string, option<t4>>>,
     d: option<option<tuple<list<s64>, option<option<u64>>>>>,
+    e: errno,
+    i: input,
+    p: permissions,
+    f: many-flags,
   }
 
   /// values of this type will be one of the specified cases
@@ -38,6 +42,13 @@ interface types-interface {
     read,
     write,
     exec,
+  }
+
+  flags many-flags {
+    f1, f2, f3, f4, f5, f6, f7, f8, f9, f10,
+    f11, f12, f13, f14, f15, f16, f17, f18, f19, f20,
+    f21, f22, f23, f24, f25, f26, f27, f28, f29, f30,
+    f31, f32, f33,
   }
 
   // type aliases are allowed to primitive types and additionally here are some
@@ -92,7 +103,7 @@ interface round-trip-numbers {
 
 /// Comment for import interface
 interface api-imports {
-  use types-interface.{t7}
+  use types-interface.{t7, r, permissions, input, errno}
 
   /// Same name as the type in `types-interface`, but this is a different type
   variant human {
@@ -102,9 +113,14 @@ interface api-imports {
   }
 
   api-a1-b2: func(arg: list<human>) -> (h1: t7, val2: human)
+
+  /// Function with a record, enum, flags and union types
+  record-func: func(r: r, e: errno, p: permissions, i: input) -> (r: r, e: errno, p: permissions, i: input)
 }
 
 interface api {
+  use types-interface.{r, permissions, input, errno as errno-renamed}
+
   /// Comment for export function
   f12: func() -> (val-one: tuple<s32>, val2: string)
 
@@ -121,6 +137,9 @@ interface api {
 
   class: func(break: option<option<t5>>) -> tuple<>
   continue: func(abstract: option<result<_, errno>>, extends: tuple<>) -> (%implements: option<tuple<>>)
+
+  /// Function with a record, enum, flags and union types
+  record-func: func(r: r, e: errno-renamed, p: permissions, i: input) -> (r: r, e: errno-renamed, p: permissions, i: input)
 }
 
 use api-imports as imports

@@ -1,12 +1,12 @@
 // ignore_for_file: avoid_print
 
-import 'dart:convert' show jsonEncode;
 import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:test/test.dart';
 import 'package:wasm_run/load_module.dart';
 import 'package:wasm_wit_component/wasm_wit_component.dart';
+import 'package:wasm_wit_component_example/test_utils.dart';
 import 'package:wasm_wit_component_example/types_gen_big_int.dart';
 import 'package:wasm_wit_component_example/wit_generator_test.dart';
 
@@ -31,6 +31,7 @@ void typesGenBigIntWitComponentTests({
     for (int i = 0; i < count; i++) {
       test.test(expect: (a, b) {});
       test.importsImpl.apiA1B2Data.clear();
+      // test.importsImpl.recordFuncData.clear();
       test.inlineImpl.inlineImpData.clear();
       test.printed.clear();
       test.roundTripNumbersHostImpl.roundTripNumbersData.clear();
@@ -38,75 +39,44 @@ void typesGenBigIntWitComponentTests({
     }
     print('count $count ${clock.elapsedMilliseconds}ms');
   } else {
-    void expectEq_(
-      Object? a,
-      Object? b, [
-      Object? Function(Object? json)? fromJson,
-    ]) {
-      if (b is Matcher) {
-        expect(a, b);
-        return;
-      }
-      expect(a, b);
-      try {
-        // JSBigInt cant be printed
-        expect(a.toString(), b.toString());
-      } catch (_) {}
-      expect(comparator.hashValue(a), comparator.hashValue(b));
-      if (fromJson != null) {
-        final jsonValue = (a as dynamic).toJson();
-        expect(jsonValue, (b as dynamic).toJson());
-        expect(fromJson(jsonValue), b);
-      }
-      if (a is! int && a is! String && a is! bool && a is! BigInt) {
-        try {
-          expect(jsonEncode({'data': a}), jsonEncode({'data': b}));
-        } catch (_) {
-          if (a is! RoundTripNumbersData) {
-            rethrow;
-          }
-        }
-      }
-    }
-
     group('types bigint gen', () {
       test('types', () async {
         final test = await _TypesWorldTest.init(getWitComponentExampleBytes);
-        test.test(expect: expectEq_);
+        test.test(expect: expectEq);
       });
 
       test('flags', () async {
-        void expectEq(Object? a, Object? b) =>
-            expectEq_(a, b, Permissions.fromJson);
+        void expectEq_(Object? a, Object? b) =>
+            expectEq(a, b, Permissions.fromJson);
 
         final allFlags = Permissions.all();
         final noneFlags = Permissions.none();
-        expectEq(
+        expectEq_(
           allFlags,
           Permissions.fromBool(read: true, write: true, exec: true),
         );
-        expectEq(allFlags, ~noneFlags);
-        expectEq(~allFlags, noneFlags);
-        expectEq(allFlags | noneFlags, allFlags);
-        expectEq(allFlags & noneFlags, noneFlags);
-        expectEq(allFlags ^ noneFlags, allFlags);
-        expectEq(allFlags ^ allFlags, noneFlags);
-        expectEq(noneFlags ^ noneFlags, noneFlags);
+        expectEq_(allFlags, ~noneFlags);
+        expectEq_(~allFlags, noneFlags);
+        expectEq_(allFlags | noneFlags, allFlags);
+        expectEq_(allFlags & noneFlags, noneFlags);
+        expectEq_(allFlags ^ noneFlags, allFlags);
+        expectEq_(allFlags ^ allFlags, noneFlags);
+        expectEq_(noneFlags ^ noneFlags, noneFlags);
 
         final onlyWrite = Permissions.fromBool(write: true);
-        expectEq(onlyWrite, Permissions.none()..write = true);
-        expectEq(onlyWrite & onlyWrite, onlyWrite);
-        expectEq(onlyWrite | noneFlags, onlyWrite);
-        expectEq(onlyWrite & allFlags, onlyWrite);
-        expectEq(onlyWrite & noneFlags, noneFlags);
-        expectEq(onlyWrite | allFlags, allFlags);
+        expectEq_(onlyWrite, Permissions.none()..write = true);
+        expectEq_(onlyWrite & onlyWrite, onlyWrite);
+        expectEq_(onlyWrite | noneFlags, onlyWrite);
+        expectEq_(onlyWrite & allFlags, onlyWrite);
+        expectEq_(onlyWrite & noneFlags, noneFlags);
+        expectEq_(onlyWrite | allFlags, allFlags);
 
         final onlyRead = Permissions.fromBool(read: true);
-        expectEq(
+        expectEq_(
           onlyWrite | onlyRead,
           Permissions.fromBool(write: true, read: true),
         );
-        expectEq(onlyWrite & onlyRead, noneFlags);
+        expectEq_(onlyWrite & onlyRead, noneFlags);
 
         expect(noneFlags.toString(), 'Permissions()');
         expect(allFlags.toString(), 'Permissions(read, write, exec)');

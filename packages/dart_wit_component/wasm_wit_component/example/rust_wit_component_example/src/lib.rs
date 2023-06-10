@@ -4,7 +4,7 @@ wit_bindgen::generate!("types-example");
 
 use exports::types_example_namespace::types_example_pkg::*;
 use types_example_namespace::types_example_pkg::{
-    api_imports as imports, round_trip_numbers as round_trip_numbers_host,
+    api_imports as imports, round_trip_numbers as round_trip_numbers_host, types_interface,
 };
 
 // Define a custom type and implement the generated `Host` trait for it which
@@ -102,13 +102,27 @@ impl api::Api for MyHost {
             None
         }
     }
+
+    fn record_func(
+        r: types_interface::R,
+        e: types_interface::Errno,
+        p: types_interface::Permissions,
+        i: types_interface::Input,
+    ) -> (
+        types_interface::R,
+        types_interface::Errno,
+        types_interface::Permissions,
+        types_interface::Input,
+    ) {
+        imports::record_func(&r, e, p, &i)
+    }
 }
 
 impl round_trip_numbers::RoundTripNumbers for MyHost {
     fn round_trip_numbers(
         data: round_trip_numbers::RoundTripNumbersData,
     ) -> round_trip_numbers::RoundTripNumbersData {
-        round_trip_numbers_host::round_trip_numbers(
+        let result = round_trip_numbers_host::round_trip_numbers(
             round_trip_numbers_host::RoundTripNumbersData {
                 f32: data.f32,
                 f64: data.f64,
@@ -122,29 +136,47 @@ impl round_trip_numbers::RoundTripNumbers for MyHost {
                 un64: data.un64,
             },
         );
+        assert_eq!(result.si8, data.si8);
+        assert_eq!(result.un8, data.un8);
+        assert_eq!(result.si16, data.si16);
+        assert_eq!(result.un16, data.un16);
+        assert_eq!(result.si32, data.si32);
+        assert_eq!(result.un32, data.un32);
+        assert_eq!(result.si64, data.si64);
+        assert_eq!(result.un64, data.un64);
         data
     }
 
     fn round_trip_numbers_list(
         data: round_trip_numbers::RoundTripNumbersListData,
     ) -> round_trip_numbers::RoundTripNumbersListData {
-        round_trip_numbers_host::round_trip_numbers_list(
-            &round_trip_numbers_host::RoundTripNumbersListData {
-                f32: data.f32.clone(),
-                f64: data.f64.clone(),
-                si8: data.si8.clone(),
-                un8: data.un8.clone(),
-                si16: data.si16.clone(),
-                un16: data.un16.clone(),
-                si32: data.si32.clone(),
-                un32: data.un32.clone(),
-                si64: data.si64.clone(),
-                un64: data.un64.clone(),
-                si64_list: data.si64_list.clone(),
-                un64_list: data.un64_list.clone(),
-                un8_list: data.un8_list.clone(),
-            },
-        );
+        let arg = round_trip_numbers_host::RoundTripNumbersListData {
+            f32: data.f32.clone(),
+            f64: data.f64.clone(),
+            si8: data.si8.clone(),
+            un8: data.un8.clone(),
+            si16: data.si16.clone(),
+            un16: data.un16.clone(),
+            si32: data.si32.clone(),
+            un32: data.un32.clone(),
+            si64: data.si64.clone(),
+            un64: data.un64.clone(),
+            si64_list: data.si64_list.clone(),
+            un64_list: data.un64_list.clone(),
+            un8_list: data.un8_list.clone(),
+        };
+        let result = round_trip_numbers_host::round_trip_numbers_list(&arg);
+        assert_eq!(result.si8, data.si8);
+        assert_eq!(result.un8, data.un8);
+        assert_eq!(result.si16, data.si16);
+        assert_eq!(result.un16, data.un16);
+        assert_eq!(result.si32, data.si32);
+        assert_eq!(result.un32, data.un32);
+        assert_eq!(result.si64, data.si64);
+        assert_eq!(result.un64, data.un64);
+        assert_eq!(result.si64_list, data.si64_list);
+        assert_eq!(result.un64_list, data.un64_list);
+        assert_eq!(result.un8_list, data.un8_list);
         data
     }
 }
