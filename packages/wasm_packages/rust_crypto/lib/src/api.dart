@@ -23,11 +23,14 @@ enum Argon2Version {
       final index = _spec.labels.indexOf(json);
       return index != -1 ? values[index] : values.byName(json);
     }
-    return values[json! as int];
+    return json is (int, Object?) ? values[json.$1] : values[json! as int];
   }
 
   /// Returns this as a serializable JSON value.
   Object? toJson() => _spec.labels[index];
+
+  /// Returns this as a WASM canonical abi value.
+  int toWasm() => index;
   static const _spec = EnumType(['v0x10', 'v0x13']);
 }
 
@@ -44,11 +47,14 @@ enum Argon2Algorithm {
       final index = _spec.labels.indexOf(json);
       return index != -1 ? values[index] : values.byName(json);
     }
-    return values[json! as int];
+    return json is (int, Object?) ? values[json.$1] : values[json! as int];
   }
 
   /// Returns this as a serializable JSON value.
   Object? toJson() => _spec.labels[index];
+
+  /// Returns this as a WASM canonical abi value.
+  int toWasm() => index;
   static const _spec = EnumType(['argon2d', 'argon2i', 'argon2id']);
 }
 
@@ -125,8 +131,23 @@ class Argon2Config {
         'parallelism-cost': parallelismCost,
         'output-length': (outputLength == null
             ? const None().toJson()
-            : Option.fromValue(outputLength).toJson((some) => some)),
+            : Option.fromValue(outputLength).toJson()),
       };
+
+  /// Returns this as a WASM canonical abi value.
+  List<Object?> toWasm() => [
+        version.toWasm(),
+        algorithm.toWasm(),
+        (secret == null
+            ? const None().toWasm()
+            : Option.fromValue(secret).toWasm()),
+        memoryCost,
+        timeCost,
+        parallelismCost,
+        (outputLength == null
+            ? const None().toWasm()
+            : Option.fromValue(outputLength).toWasm())
+      ];
   @override
   String toString() =>
       'Argon2Config${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
@@ -168,8 +189,8 @@ class Argon2Config {
         outputLength
       ];
   static const _spec = RecordType([
-    (label: 'version', t: EnumType(['v0x10', 'v0x13'])),
-    (label: 'algorithm', t: EnumType(['argon2d', 'argon2i', 'argon2id'])),
+    (label: 'version', t: Argon2Version._spec),
+    (label: 'algorithm', t: Argon2Algorithm._spec),
     (label: 'secret', t: OptionType(ListType(U8()))),
     (label: 'memory-cost', t: U32()),
     (label: 'time-cost', t: U32()),
@@ -190,11 +211,14 @@ enum AesKind {
       final index = _spec.labels.indexOf(json);
       return index != -1 ? values[index] : values.byName(json);
     }
-    return values[json! as int];
+    return json is (int, Object?) ? values[json.$1] : values[json! as int];
   }
 
   /// Returns this as a serializable JSON value.
   Object? toJson() => _spec.labels[index];
+
+  /// Returns this as a WASM canonical abi value.
+  int toWasm() => index;
   static const _spec = EnumType(['bits128', 'bits256']);
 }
 
@@ -413,23 +437,7 @@ class Argon2 {
   Argon2(WasmLibrary library)
       : _defaultConfig = library.getComponentFunction(
           'wasm-run-dart:rust-crypto/argon2#default-config',
-          const FuncType([], [
-            (
-              '',
-              RecordType([
-                (label: 'version', t: EnumType(['v0x10', 'v0x13'])),
-                (
-                  label: 'algorithm',
-                  t: EnumType(['argon2d', 'argon2i', 'argon2id'])
-                ),
-                (label: 'secret', t: OptionType(ListType(U8()))),
-                (label: 'memory-cost', t: U32()),
-                (label: 'time-cost', t: U32()),
-                (label: 'parallelism-cost', t: U32()),
-                (label: 'output-length', t: OptionType(U32()))
-              ])
-            )
-          ]),
+          const FuncType([], [('', Argon2Config._spec)]),
         )!,
         _generateSalt = library.getComponentFunction(
           'wasm-run-dart:rust-crypto/argon2#generate-salt',
@@ -438,21 +446,7 @@ class Argon2 {
         _hashPassword = library.getComponentFunction(
           'wasm-run-dart:rust-crypto/argon2#hash-password',
           const FuncType([
-            (
-              'config',
-              RecordType([
-                (label: 'version', t: EnumType(['v0x10', 'v0x13'])),
-                (
-                  label: 'algorithm',
-                  t: EnumType(['argon2d', 'argon2i', 'argon2id'])
-                ),
-                (label: 'secret', t: OptionType(ListType(U8()))),
-                (label: 'memory-cost', t: U32()),
-                (label: 'time-cost', t: U32()),
-                (label: 'parallelism-cost', t: U32()),
-                (label: 'output-length', t: OptionType(U32()))
-              ])
-            ),
+            ('config', Argon2Config._spec),
             ('password', ListType(U8())),
             ('salt', ListType(U8()))
           ], [
@@ -468,21 +462,7 @@ class Argon2 {
         _rawHash = library.getComponentFunction(
           'wasm-run-dart:rust-crypto/argon2#raw-hash',
           const FuncType([
-            (
-              'config',
-              RecordType([
-                (label: 'version', t: EnumType(['v0x10', 'v0x13'])),
-                (
-                  label: 'algorithm',
-                  t: EnumType(['argon2d', 'argon2i', 'argon2id'])
-                ),
-                (label: 'secret', t: OptionType(ListType(U8()))),
-                (label: 'memory-cost', t: U32()),
-                (label: 'time-cost', t: U32()),
-                (label: 'parallelism-cost', t: U32()),
-                (label: 'output-length', t: OptionType(U32()))
-              ])
-            ),
+            ('config', Argon2Config._spec),
             ('password', ListType(U8())),
             ('salt', ListType(U8())),
             ('byte-length', U32())
@@ -514,7 +494,7 @@ class Argon2 {
     required Uint8List password,
     required Uint8List salt,
   }) {
-    final results = _hashPassword([config.toJson(), password, salt]);
+    final results = _hashPassword([config.toWasm(), password, salt]);
     final result = results[0];
     return (result is Uint8List
         ? result
@@ -541,7 +521,7 @@ class Argon2 {
     required Uint8List salt,
     required int /*U32*/ byteLength,
   }) {
-    final results = _rawHash([config.toJson(), password, salt, byteLength]);
+    final results = _rawHash([config.toWasm(), password, salt, byteLength]);
     final result = results[0];
     return (result is Uint8List
         ? result
@@ -553,16 +533,12 @@ class AesGcmSiv {
   AesGcmSiv(WasmLibrary library)
       : _generateKey = library.getComponentFunction(
           'wasm-run-dart:rust-crypto/aes-gcm-siv#generate-key',
-          const FuncType([
-            ('kind', EnumType(['bits128', 'bits256']))
-          ], [
-            ('', ListType(U8()))
-          ]),
+          const FuncType([('kind', AesKind._spec)], [('', ListType(U8()))]),
         )!,
         _encrypt = library.getComponentFunction(
           'wasm-run-dart:rust-crypto/aes-gcm-siv#encrypt',
           const FuncType([
-            ('kind', EnumType(['bits128', 'bits256'])),
+            ('kind', AesKind._spec),
             ('key', ListType(U8())),
             ('nonce', ListType(U8())),
             ('plain-text', ListType(U8())),
@@ -574,7 +550,7 @@ class AesGcmSiv {
         _decrypt = library.getComponentFunction(
           'wasm-run-dart:rust-crypto/aes-gcm-siv#decrypt',
           const FuncType([
-            ('kind', EnumType(['bits128', 'bits256'])),
+            ('kind', AesKind._spec),
             ('key', ListType(U8())),
             ('nonce', ListType(U8())),
             ('cipher-text', ListType(U8())),
@@ -587,7 +563,7 @@ class AesGcmSiv {
   Uint8List generateKey({
     required AesKind kind,
   }) {
-    final results = _generateKey([kind.toJson()]);
+    final results = _generateKey([kind.toWasm()]);
     final result = results[0];
     return (result is Uint8List
         ? result
@@ -603,13 +579,13 @@ class AesGcmSiv {
     Uint8List? associatedData,
   }) {
     final results = _encrypt([
-      kind.toJson(),
+      kind.toWasm(),
       key,
       nonce,
       plainText,
       (associatedData == null
-          ? const None().toJson()
-          : Option.fromValue(associatedData).toJson((some) => some))
+          ? const None().toWasm()
+          : Option.fromValue(associatedData).toWasm())
     ]);
     final result = results[0];
     return (result is Uint8List
@@ -626,13 +602,13 @@ class AesGcmSiv {
     Uint8List? associatedData,
   }) {
     final results = _decrypt([
-      kind.toJson(),
+      kind.toWasm(),
       key,
       nonce,
       cipherText,
       (associatedData == null
-          ? const None().toJson()
-          : Option.fromValue(associatedData).toJson((some) => some))
+          ? const None().toWasm()
+          : Option.fromValue(associatedData).toWasm())
     ]);
     final result = results[0];
     return (result is Uint8List

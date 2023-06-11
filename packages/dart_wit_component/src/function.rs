@@ -79,7 +79,7 @@ impl Parsed<'_> {
             .collect::<Vec<_>>()
             .join(", ");
         let ret = match &function.results {
-            Results::Anon(a) => format!("[{}]", self.type_to_json("results", a)),
+            Results::Anon(a) => format!("[{}]", self.type_to_wasm("results", a)),
             Results::Named(results) => {
                 if results.is_empty() {
                     "const []".to_string()
@@ -87,7 +87,7 @@ impl Parsed<'_> {
                     let values = results
                         .iter()
                         .map(|(name, ty)| {
-                            self.type_to_json(&format!("results.{}", name.as_var()), ty)
+                            self.type_to_wasm(&format!("results.{}", name.as_var()), ty)
                         })
                         .collect::<Vec<_>>()
                         .join(", ");

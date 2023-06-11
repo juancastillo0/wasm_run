@@ -146,8 +146,7 @@ class InMemoryFiles {
       (final worldFile, final pkgFiles) =>
         InMemoryFiles(
           worldFile: WitFile.fromJson(worldFile),
-          pkgFiles:
-              (pkgFiles! as Iterable).map((e) => WitFile.fromJson(e)).toList(),
+          pkgFiles: (pkgFiles! as Iterable).map(WitFile.fromJson).toList(),
         ),
       _ => throw Exception('Invalid JSON $json_')
     };
@@ -160,8 +159,10 @@ class InMemoryFiles {
       };
 
   /// Returns this as a WASM canonical abi value.
-  List<Object?> toWasm() =>
-      [worldFile.toWasm(), pkgFiles.map((e) => e.toWasm()).toList()];
+  List<Object?> toWasm() => [
+        worldFile.toWasm(),
+        pkgFiles.map((e) => e.toWasm()).toList(growable: false)
+      ];
   @override
   String toString() =>
       'InMemoryFiles${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
@@ -470,10 +471,10 @@ class WitGeneratorConfig {
         generateDocs,
         (fileHeader == null
             ? const None().toWasm()
-            : Option.fromValue(fileHeader).toWasm((some) => some)),
+            : Option.fromValue(fileHeader).toWasm()),
         (objectComparator == null
             ? const None().toWasm()
-            : Option.fromValue(objectComparator).toWasm((some) => some)),
+            : Option.fromValue(objectComparator).toWasm()),
         useNullForOption,
         requiredOption,
         int64Type.toWasm(),

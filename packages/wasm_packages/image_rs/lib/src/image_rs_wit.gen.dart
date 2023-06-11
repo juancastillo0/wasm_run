@@ -28,11 +28,14 @@ enum PixelType {
       final index = _spec.labels.indexOf(json);
       return index != -1 ? values[index] : values.byName(json);
     }
-    return values[json! as int];
+    return json is (int, Object?) ? values[json.$1] : values[json! as int];
   }
 
   /// Returns this as a serializable JSON value.
   Object? toJson() => _spec.labels[index];
+
+  /// Returns this as a WASM canonical abi value.
+  int toWasm() => index;
   static const _spec = EnumType(['rgb', 'rgba', 'luma', 'luma-a']);
 }
 
@@ -64,6 +67,9 @@ class ImageSize {
         'width': width,
         'height': height,
       };
+
+  /// Returns this as a WASM canonical abi value.
+  List<Object?> toWasm() => [width, height];
   @override
   String toString() =>
       'ImageSize${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
@@ -138,11 +144,14 @@ enum ImageFormat {
       final index = _spec.labels.indexOf(json);
       return index != -1 ? values[index] : values.byName(json);
     }
-    return values[json! as int];
+    return json is (int, Object?) ? values[json.$1] : values[json! as int];
   }
 
   /// Returns this as a serializable JSON value.
   Object? toJson() => _spec.labels[index];
+
+  /// Returns this as a WASM canonical abi value.
+  int toWasm() => index;
   static const _spec = EnumType([
     'png',
     'jpeg',
@@ -189,6 +198,9 @@ class Image {
   Map<String, Object?> toJson() => {
         'bytes': bytes.toList(),
       };
+
+  /// Returns this as a WASM canonical abi value.
+  List<Object?> toWasm() => [bytes];
   @override
   String toString() =>
       'Image${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
@@ -231,11 +243,14 @@ enum ColorType {
       final index = _spec.labels.indexOf(json);
       return index != -1 ? values[index] : values.byName(json);
     }
-    return values[json! as int];
+    return json is (int, Object?) ? values[json.$1] : values[json! as int];
   }
 
   /// Returns this as a serializable JSON value.
   Object? toJson() => _spec.labels[index];
+
+  /// Returns this as a WASM canonical abi value.
+  int toWasm() => index;
   static const _spec = EnumType([
     'l8',
     'la8',
@@ -293,6 +308,10 @@ class ImageRef {
         'width': width,
         'height': height,
       };
+
+  /// Returns this as a WASM canonical abi value.
+  List<Object?> toWasm() =>
+      [id, format.toWasm(), color.toWasm(), width, height];
   @override
   String toString() =>
       'ImageRef${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
@@ -322,43 +341,8 @@ class ImageRef {
   List<Object?> get _props => [id, format, color, width, height];
   static const _spec = RecordType([
     (label: 'id', t: U32()),
-    (
-      label: 'format',
-      t: EnumType([
-        'png',
-        'jpeg',
-        'gif',
-        'bmp',
-        'ico',
-        'tiff',
-        'web-p',
-        'avif',
-        'pnm',
-        'dds',
-        'tga',
-        'open-exr',
-        'farbfeld',
-        'hdr',
-        'qoi',
-        'unknown'
-      ])
-    ),
-    (
-      label: 'color',
-      t: EnumType([
-        'l8',
-        'la8',
-        'rgb8',
-        'rgba8',
-        'l16',
-        'la16',
-        'rgb16',
-        'rgba16',
-        'rgb32f',
-        'rgba32f',
-        'unknown'
-      ])
-    ),
+    (label: 'format', t: ImageFormat._spec),
+    (label: 'color', t: ColorType._spec),
     (label: 'width', t: U32()),
     (label: 'height', t: U32())
   ]);
@@ -402,6 +386,9 @@ class ImageCrop {
         'width': width,
         'height': height,
       };
+
+  /// Returns this as a WASM canonical abi value.
+  List<Object?> toWasm() => [x, y, width, height];
   @override
   String toString() =>
       'ImageCrop${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
@@ -459,11 +446,14 @@ enum FilterType {
       final index = _spec.labels.indexOf(json);
       return index != -1 ? values[index] : values.byName(json);
     }
-    return values[json! as int];
+    return json is (int, Object?) ? values[json.$1] : values[json! as int];
   }
 
   /// Returns this as a serializable JSON value.
   Object? toJson() => _spec.labels[index];
+
+  /// Returns this as a WASM canonical abi value.
+  int toWasm() => index;
   static const _spec =
       EnumType(['nearest', 'triangle', 'catmull-rom', 'gaussian', 'lanczos3']);
 }
@@ -505,6 +495,9 @@ sealed class ImageError {
 
   /// Returns this as a serializable JSON value.
   Map<String, Object?> toJson();
+
+  /// Returns this as a WASM canonical abi value.
+  (int, Object?) toWasm();
   static const _spec = Variant([
     Case('decoding', StringType()),
     Case('encoding', StringType()),
@@ -533,6 +526,10 @@ class ImageErrorDecoding implements ImageError {
   /// Returns this as a serializable JSON value.
   @override
   Map<String, Object?> toJson() => {'decoding': value};
+
+  /// Returns this as a WASM canonical abi value.
+  @override
+  (int, Object?) toWasm() => (0, value);
   @override
   String toString() => 'ImageErrorDecoding($value)';
   @override
@@ -562,6 +559,10 @@ class ImageErrorEncoding implements ImageError {
   /// Returns this as a serializable JSON value.
   @override
   Map<String, Object?> toJson() => {'encoding': value};
+
+  /// Returns this as a WASM canonical abi value.
+  @override
+  (int, Object?) toWasm() => (1, value);
   @override
   String toString() => 'ImageErrorEncoding($value)';
   @override
@@ -587,6 +588,10 @@ class ImageErrorParameter implements ImageError {
   /// Returns this as a serializable JSON value.
   @override
   Map<String, Object?> toJson() => {'parameter': value};
+
+  /// Returns this as a WASM canonical abi value.
+  @override
+  (int, Object?) toWasm() => (2, value);
   @override
   String toString() => 'ImageErrorParameter($value)';
   @override
@@ -612,6 +617,10 @@ class ImageErrorLimits implements ImageError {
   /// Returns this as a serializable JSON value.
   @override
   Map<String, Object?> toJson() => {'limits': value};
+
+  /// Returns this as a WASM canonical abi value.
+  @override
+  (int, Object?) toWasm() => (3, value);
   @override
   String toString() => 'ImageErrorLimits($value)';
   @override
@@ -641,6 +650,10 @@ class ImageErrorUnsupported implements ImageError {
   /// Returns this as a serializable JSON value.
   @override
   Map<String, Object?> toJson() => {'unsupported': value};
+
+  /// Returns this as a WASM canonical abi value.
+  @override
+  (int, Object?) toWasm() => (4, value);
   @override
   String toString() => 'ImageErrorUnsupported($value)';
   @override
@@ -660,6 +673,10 @@ class ImageErrorIoError implements ImageError {
   /// Returns this as a serializable JSON value.
   @override
   Map<String, Object?> toJson() => {'io-error': value};
+
+  /// Returns this as a WASM canonical abi value.
+  @override
+  (int, Object?) toWasm() => (5, value);
   @override
   String toString() => 'ImageErrorIoError($value)';
   @override
@@ -677,2183 +694,143 @@ class Operations {
   Operations(WasmLibrary library)
       : _blur = library.getComponentFunction(
           'wasm-run-dart:image-rs/operations#blur',
-          const FuncType([
-            (
-              'image-ref',
-              RecordType([
-                (label: 'id', t: U32()),
-                (
-                  label: 'format',
-                  t: EnumType([
-                    'png',
-                    'jpeg',
-                    'gif',
-                    'bmp',
-                    'ico',
-                    'tiff',
-                    'web-p',
-                    'avif',
-                    'pnm',
-                    'dds',
-                    'tga',
-                    'open-exr',
-                    'farbfeld',
-                    'hdr',
-                    'qoi',
-                    'unknown'
-                  ])
-                ),
-                (
-                  label: 'color',
-                  t: EnumType([
-                    'l8',
-                    'la8',
-                    'rgb8',
-                    'rgba8',
-                    'l16',
-                    'la16',
-                    'rgb16',
-                    'rgba16',
-                    'rgb32f',
-                    'rgba32f',
-                    'unknown'
-                  ])
-                ),
-                (label: 'width', t: U32()),
-                (label: 'height', t: U32())
-              ])
-            ),
-            ('value', Float32())
-          ], [
-            (
-              '',
-              RecordType([
-                (label: 'id', t: U32()),
-                (
-                  label: 'format',
-                  t: EnumType([
-                    'png',
-                    'jpeg',
-                    'gif',
-                    'bmp',
-                    'ico',
-                    'tiff',
-                    'web-p',
-                    'avif',
-                    'pnm',
-                    'dds',
-                    'tga',
-                    'open-exr',
-                    'farbfeld',
-                    'hdr',
-                    'qoi',
-                    'unknown'
-                  ])
-                ),
-                (
-                  label: 'color',
-                  t: EnumType([
-                    'l8',
-                    'la8',
-                    'rgb8',
-                    'rgba8',
-                    'l16',
-                    'la16',
-                    'rgb16',
-                    'rgba16',
-                    'rgb32f',
-                    'rgba32f',
-                    'unknown'
-                  ])
-                ),
-                (label: 'width', t: U32()),
-                (label: 'height', t: U32())
-              ])
-            )
-          ]),
+          const FuncType([('image-ref', ImageRef._spec), ('value', Float32())],
+              [('', ImageRef._spec)]),
         )!,
         _brighten = library.getComponentFunction(
           'wasm-run-dart:image-rs/operations#brighten',
-          const FuncType([
-            (
-              'image-ref',
-              RecordType([
-                (label: 'id', t: U32()),
-                (
-                  label: 'format',
-                  t: EnumType([
-                    'png',
-                    'jpeg',
-                    'gif',
-                    'bmp',
-                    'ico',
-                    'tiff',
-                    'web-p',
-                    'avif',
-                    'pnm',
-                    'dds',
-                    'tga',
-                    'open-exr',
-                    'farbfeld',
-                    'hdr',
-                    'qoi',
-                    'unknown'
-                  ])
-                ),
-                (
-                  label: 'color',
-                  t: EnumType([
-                    'l8',
-                    'la8',
-                    'rgb8',
-                    'rgba8',
-                    'l16',
-                    'la16',
-                    'rgb16',
-                    'rgba16',
-                    'rgb32f',
-                    'rgba32f',
-                    'unknown'
-                  ])
-                ),
-                (label: 'width', t: U32()),
-                (label: 'height', t: U32())
-              ])
-            ),
-            ('value', S32())
-          ], [
-            (
-              '',
-              RecordType([
-                (label: 'id', t: U32()),
-                (
-                  label: 'format',
-                  t: EnumType([
-                    'png',
-                    'jpeg',
-                    'gif',
-                    'bmp',
-                    'ico',
-                    'tiff',
-                    'web-p',
-                    'avif',
-                    'pnm',
-                    'dds',
-                    'tga',
-                    'open-exr',
-                    'farbfeld',
-                    'hdr',
-                    'qoi',
-                    'unknown'
-                  ])
-                ),
-                (
-                  label: 'color',
-                  t: EnumType([
-                    'l8',
-                    'la8',
-                    'rgb8',
-                    'rgba8',
-                    'l16',
-                    'la16',
-                    'rgb16',
-                    'rgba16',
-                    'rgb32f',
-                    'rgba32f',
-                    'unknown'
-                  ])
-                ),
-                (label: 'width', t: U32()),
-                (label: 'height', t: U32())
-              ])
-            )
-          ]),
+          const FuncType([('image-ref', ImageRef._spec), ('value', S32())],
+              [('', ImageRef._spec)]),
         )!,
         _huerotate = library.getComponentFunction(
           'wasm-run-dart:image-rs/operations#huerotate',
-          const FuncType([
-            (
-              'image-ref',
-              RecordType([
-                (label: 'id', t: U32()),
-                (
-                  label: 'format',
-                  t: EnumType([
-                    'png',
-                    'jpeg',
-                    'gif',
-                    'bmp',
-                    'ico',
-                    'tiff',
-                    'web-p',
-                    'avif',
-                    'pnm',
-                    'dds',
-                    'tga',
-                    'open-exr',
-                    'farbfeld',
-                    'hdr',
-                    'qoi',
-                    'unknown'
-                  ])
-                ),
-                (
-                  label: 'color',
-                  t: EnumType([
-                    'l8',
-                    'la8',
-                    'rgb8',
-                    'rgba8',
-                    'l16',
-                    'la16',
-                    'rgb16',
-                    'rgba16',
-                    'rgb32f',
-                    'rgba32f',
-                    'unknown'
-                  ])
-                ),
-                (label: 'width', t: U32()),
-                (label: 'height', t: U32())
-              ])
-            ),
-            ('value', S32())
-          ], [
-            (
-              '',
-              RecordType([
-                (label: 'id', t: U32()),
-                (
-                  label: 'format',
-                  t: EnumType([
-                    'png',
-                    'jpeg',
-                    'gif',
-                    'bmp',
-                    'ico',
-                    'tiff',
-                    'web-p',
-                    'avif',
-                    'pnm',
-                    'dds',
-                    'tga',
-                    'open-exr',
-                    'farbfeld',
-                    'hdr',
-                    'qoi',
-                    'unknown'
-                  ])
-                ),
-                (
-                  label: 'color',
-                  t: EnumType([
-                    'l8',
-                    'la8',
-                    'rgb8',
-                    'rgba8',
-                    'l16',
-                    'la16',
-                    'rgb16',
-                    'rgba16',
-                    'rgb32f',
-                    'rgba32f',
-                    'unknown'
-                  ])
-                ),
-                (label: 'width', t: U32()),
-                (label: 'height', t: U32())
-              ])
-            )
-          ]),
+          const FuncType([('image-ref', ImageRef._spec), ('value', S32())],
+              [('', ImageRef._spec)]),
         )!,
         _adjustContrast = library.getComponentFunction(
           'wasm-run-dart:image-rs/operations#adjust-contrast',
-          const FuncType([
-            (
-              'image-ref',
-              RecordType([
-                (label: 'id', t: U32()),
-                (
-                  label: 'format',
-                  t: EnumType([
-                    'png',
-                    'jpeg',
-                    'gif',
-                    'bmp',
-                    'ico',
-                    'tiff',
-                    'web-p',
-                    'avif',
-                    'pnm',
-                    'dds',
-                    'tga',
-                    'open-exr',
-                    'farbfeld',
-                    'hdr',
-                    'qoi',
-                    'unknown'
-                  ])
-                ),
-                (
-                  label: 'color',
-                  t: EnumType([
-                    'l8',
-                    'la8',
-                    'rgb8',
-                    'rgba8',
-                    'l16',
-                    'la16',
-                    'rgb16',
-                    'rgba16',
-                    'rgb32f',
-                    'rgba32f',
-                    'unknown'
-                  ])
-                ),
-                (label: 'width', t: U32()),
-                (label: 'height', t: U32())
-              ])
-            ),
-            ('c', Float32())
-          ], [
-            (
-              '',
-              RecordType([
-                (label: 'id', t: U32()),
-                (
-                  label: 'format',
-                  t: EnumType([
-                    'png',
-                    'jpeg',
-                    'gif',
-                    'bmp',
-                    'ico',
-                    'tiff',
-                    'web-p',
-                    'avif',
-                    'pnm',
-                    'dds',
-                    'tga',
-                    'open-exr',
-                    'farbfeld',
-                    'hdr',
-                    'qoi',
-                    'unknown'
-                  ])
-                ),
-                (
-                  label: 'color',
-                  t: EnumType([
-                    'l8',
-                    'la8',
-                    'rgb8',
-                    'rgba8',
-                    'l16',
-                    'la16',
-                    'rgb16',
-                    'rgba16',
-                    'rgb32f',
-                    'rgba32f',
-                    'unknown'
-                  ])
-                ),
-                (label: 'width', t: U32()),
-                (label: 'height', t: U32())
-              ])
-            )
-          ]),
+          const FuncType([('image-ref', ImageRef._spec), ('c', Float32())],
+              [('', ImageRef._spec)]),
         )!,
         _crop = library.getComponentFunction(
           'wasm-run-dart:image-rs/operations#crop',
-          const FuncType([
-            (
-              'image-ref',
-              RecordType([
-                (label: 'id', t: U32()),
-                (
-                  label: 'format',
-                  t: EnumType([
-                    'png',
-                    'jpeg',
-                    'gif',
-                    'bmp',
-                    'ico',
-                    'tiff',
-                    'web-p',
-                    'avif',
-                    'pnm',
-                    'dds',
-                    'tga',
-                    'open-exr',
-                    'farbfeld',
-                    'hdr',
-                    'qoi',
-                    'unknown'
-                  ])
-                ),
-                (
-                  label: 'color',
-                  t: EnumType([
-                    'l8',
-                    'la8',
-                    'rgb8',
-                    'rgba8',
-                    'l16',
-                    'la16',
-                    'rgb16',
-                    'rgba16',
-                    'rgb32f',
-                    'rgba32f',
-                    'unknown'
-                  ])
-                ),
-                (label: 'width', t: U32()),
-                (label: 'height', t: U32())
-              ])
-            ),
-            (
-              'image-crop',
-              RecordType([
-                (label: 'x', t: U32()),
-                (label: 'y', t: U32()),
-                (label: 'width', t: U32()),
-                (label: 'height', t: U32())
-              ])
-            )
-          ], [
-            (
-              '',
-              RecordType([
-                (label: 'id', t: U32()),
-                (
-                  label: 'format',
-                  t: EnumType([
-                    'png',
-                    'jpeg',
-                    'gif',
-                    'bmp',
-                    'ico',
-                    'tiff',
-                    'web-p',
-                    'avif',
-                    'pnm',
-                    'dds',
-                    'tga',
-                    'open-exr',
-                    'farbfeld',
-                    'hdr',
-                    'qoi',
-                    'unknown'
-                  ])
-                ),
-                (
-                  label: 'color',
-                  t: EnumType([
-                    'l8',
-                    'la8',
-                    'rgb8',
-                    'rgba8',
-                    'l16',
-                    'la16',
-                    'rgb16',
-                    'rgba16',
-                    'rgb32f',
-                    'rgba32f',
-                    'unknown'
-                  ])
-                ),
-                (label: 'width', t: U32()),
-                (label: 'height', t: U32())
-              ])
-            )
-          ]),
+          const FuncType(
+              [('image-ref', ImageRef._spec), ('image-crop', ImageCrop._spec)],
+              [('', ImageRef._spec)]),
         )!,
         _filter3x3 = library.getComponentFunction(
           'wasm-run-dart:image-rs/operations#filter3x3',
-          const FuncType([
-            (
-              'image-ref',
-              RecordType([
-                (label: 'id', t: U32()),
-                (
-                  label: 'format',
-                  t: EnumType([
-                    'png',
-                    'jpeg',
-                    'gif',
-                    'bmp',
-                    'ico',
-                    'tiff',
-                    'web-p',
-                    'avif',
-                    'pnm',
-                    'dds',
-                    'tga',
-                    'open-exr',
-                    'farbfeld',
-                    'hdr',
-                    'qoi',
-                    'unknown'
-                  ])
-                ),
-                (
-                  label: 'color',
-                  t: EnumType([
-                    'l8',
-                    'la8',
-                    'rgb8',
-                    'rgba8',
-                    'l16',
-                    'la16',
-                    'rgb16',
-                    'rgba16',
-                    'rgb32f',
-                    'rgba32f',
-                    'unknown'
-                  ])
-                ),
-                (label: 'width', t: U32()),
-                (label: 'height', t: U32())
-              ])
-            ),
-            ('kernel', ListType(Float32()))
-          ], [
-            (
-              '',
-              RecordType([
-                (label: 'id', t: U32()),
-                (
-                  label: 'format',
-                  t: EnumType([
-                    'png',
-                    'jpeg',
-                    'gif',
-                    'bmp',
-                    'ico',
-                    'tiff',
-                    'web-p',
-                    'avif',
-                    'pnm',
-                    'dds',
-                    'tga',
-                    'open-exr',
-                    'farbfeld',
-                    'hdr',
-                    'qoi',
-                    'unknown'
-                  ])
-                ),
-                (
-                  label: 'color',
-                  t: EnumType([
-                    'l8',
-                    'la8',
-                    'rgb8',
-                    'rgba8',
-                    'l16',
-                    'la16',
-                    'rgb16',
-                    'rgba16',
-                    'rgb32f',
-                    'rgba32f',
-                    'unknown'
-                  ])
-                ),
-                (label: 'width', t: U32()),
-                (label: 'height', t: U32())
-              ])
-            )
-          ]),
+          const FuncType(
+              [('image-ref', ImageRef._spec), ('kernel', ListType(Float32()))],
+              [('', ImageRef._spec)]),
         )!,
         _flipHorizontal = library.getComponentFunction(
           'wasm-run-dart:image-rs/operations#flip-horizontal',
-          const FuncType([
-            (
-              'image-ref',
-              RecordType([
-                (label: 'id', t: U32()),
-                (
-                  label: 'format',
-                  t: EnumType([
-                    'png',
-                    'jpeg',
-                    'gif',
-                    'bmp',
-                    'ico',
-                    'tiff',
-                    'web-p',
-                    'avif',
-                    'pnm',
-                    'dds',
-                    'tga',
-                    'open-exr',
-                    'farbfeld',
-                    'hdr',
-                    'qoi',
-                    'unknown'
-                  ])
-                ),
-                (
-                  label: 'color',
-                  t: EnumType([
-                    'l8',
-                    'la8',
-                    'rgb8',
-                    'rgba8',
-                    'l16',
-                    'la16',
-                    'rgb16',
-                    'rgba16',
-                    'rgb32f',
-                    'rgba32f',
-                    'unknown'
-                  ])
-                ),
-                (label: 'width', t: U32()),
-                (label: 'height', t: U32())
-              ])
-            )
-          ], [
-            (
-              '',
-              RecordType([
-                (label: 'id', t: U32()),
-                (
-                  label: 'format',
-                  t: EnumType([
-                    'png',
-                    'jpeg',
-                    'gif',
-                    'bmp',
-                    'ico',
-                    'tiff',
-                    'web-p',
-                    'avif',
-                    'pnm',
-                    'dds',
-                    'tga',
-                    'open-exr',
-                    'farbfeld',
-                    'hdr',
-                    'qoi',
-                    'unknown'
-                  ])
-                ),
-                (
-                  label: 'color',
-                  t: EnumType([
-                    'l8',
-                    'la8',
-                    'rgb8',
-                    'rgba8',
-                    'l16',
-                    'la16',
-                    'rgb16',
-                    'rgba16',
-                    'rgb32f',
-                    'rgba32f',
-                    'unknown'
-                  ])
-                ),
-                (label: 'width', t: U32()),
-                (label: 'height', t: U32())
-              ])
-            )
-          ]),
+          const FuncType(
+              [('image-ref', ImageRef._spec)], [('', ImageRef._spec)]),
         )!,
         _flipVertical = library.getComponentFunction(
           'wasm-run-dart:image-rs/operations#flip-vertical',
-          const FuncType([
-            (
-              'image-ref',
-              RecordType([
-                (label: 'id', t: U32()),
-                (
-                  label: 'format',
-                  t: EnumType([
-                    'png',
-                    'jpeg',
-                    'gif',
-                    'bmp',
-                    'ico',
-                    'tiff',
-                    'web-p',
-                    'avif',
-                    'pnm',
-                    'dds',
-                    'tga',
-                    'open-exr',
-                    'farbfeld',
-                    'hdr',
-                    'qoi',
-                    'unknown'
-                  ])
-                ),
-                (
-                  label: 'color',
-                  t: EnumType([
-                    'l8',
-                    'la8',
-                    'rgb8',
-                    'rgba8',
-                    'l16',
-                    'la16',
-                    'rgb16',
-                    'rgba16',
-                    'rgb32f',
-                    'rgba32f',
-                    'unknown'
-                  ])
-                ),
-                (label: 'width', t: U32()),
-                (label: 'height', t: U32())
-              ])
-            )
-          ], [
-            (
-              '',
-              RecordType([
-                (label: 'id', t: U32()),
-                (
-                  label: 'format',
-                  t: EnumType([
-                    'png',
-                    'jpeg',
-                    'gif',
-                    'bmp',
-                    'ico',
-                    'tiff',
-                    'web-p',
-                    'avif',
-                    'pnm',
-                    'dds',
-                    'tga',
-                    'open-exr',
-                    'farbfeld',
-                    'hdr',
-                    'qoi',
-                    'unknown'
-                  ])
-                ),
-                (
-                  label: 'color',
-                  t: EnumType([
-                    'l8',
-                    'la8',
-                    'rgb8',
-                    'rgba8',
-                    'l16',
-                    'la16',
-                    'rgb16',
-                    'rgba16',
-                    'rgb32f',
-                    'rgba32f',
-                    'unknown'
-                  ])
-                ),
-                (label: 'width', t: U32()),
-                (label: 'height', t: U32())
-              ])
-            )
-          ]),
+          const FuncType(
+              [('image-ref', ImageRef._spec)], [('', ImageRef._spec)]),
         )!,
         _grayscale = library.getComponentFunction(
           'wasm-run-dart:image-rs/operations#grayscale',
-          const FuncType([
-            (
-              'image-ref',
-              RecordType([
-                (label: 'id', t: U32()),
-                (
-                  label: 'format',
-                  t: EnumType([
-                    'png',
-                    'jpeg',
-                    'gif',
-                    'bmp',
-                    'ico',
-                    'tiff',
-                    'web-p',
-                    'avif',
-                    'pnm',
-                    'dds',
-                    'tga',
-                    'open-exr',
-                    'farbfeld',
-                    'hdr',
-                    'qoi',
-                    'unknown'
-                  ])
-                ),
-                (
-                  label: 'color',
-                  t: EnumType([
-                    'l8',
-                    'la8',
-                    'rgb8',
-                    'rgba8',
-                    'l16',
-                    'la16',
-                    'rgb16',
-                    'rgba16',
-                    'rgb32f',
-                    'rgba32f',
-                    'unknown'
-                  ])
-                ),
-                (label: 'width', t: U32()),
-                (label: 'height', t: U32())
-              ])
-            )
-          ], [
-            (
-              '',
-              RecordType([
-                (label: 'id', t: U32()),
-                (
-                  label: 'format',
-                  t: EnumType([
-                    'png',
-                    'jpeg',
-                    'gif',
-                    'bmp',
-                    'ico',
-                    'tiff',
-                    'web-p',
-                    'avif',
-                    'pnm',
-                    'dds',
-                    'tga',
-                    'open-exr',
-                    'farbfeld',
-                    'hdr',
-                    'qoi',
-                    'unknown'
-                  ])
-                ),
-                (
-                  label: 'color',
-                  t: EnumType([
-                    'l8',
-                    'la8',
-                    'rgb8',
-                    'rgba8',
-                    'l16',
-                    'la16',
-                    'rgb16',
-                    'rgba16',
-                    'rgb32f',
-                    'rgba32f',
-                    'unknown'
-                  ])
-                ),
-                (label: 'width', t: U32()),
-                (label: 'height', t: U32())
-              ])
-            )
-          ]),
+          const FuncType(
+              [('image-ref', ImageRef._spec)], [('', ImageRef._spec)]),
         )!,
         _invert = library.getComponentFunction(
           'wasm-run-dart:image-rs/operations#invert',
-          const FuncType([
-            (
-              'image-ref',
-              RecordType([
-                (label: 'id', t: U32()),
-                (
-                  label: 'format',
-                  t: EnumType([
-                    'png',
-                    'jpeg',
-                    'gif',
-                    'bmp',
-                    'ico',
-                    'tiff',
-                    'web-p',
-                    'avif',
-                    'pnm',
-                    'dds',
-                    'tga',
-                    'open-exr',
-                    'farbfeld',
-                    'hdr',
-                    'qoi',
-                    'unknown'
-                  ])
-                ),
-                (
-                  label: 'color',
-                  t: EnumType([
-                    'l8',
-                    'la8',
-                    'rgb8',
-                    'rgba8',
-                    'l16',
-                    'la16',
-                    'rgb16',
-                    'rgba16',
-                    'rgb32f',
-                    'rgba32f',
-                    'unknown'
-                  ])
-                ),
-                (label: 'width', t: U32()),
-                (label: 'height', t: U32())
-              ])
-            )
-          ], [
-            (
-              '',
-              RecordType([
-                (label: 'id', t: U32()),
-                (
-                  label: 'format',
-                  t: EnumType([
-                    'png',
-                    'jpeg',
-                    'gif',
-                    'bmp',
-                    'ico',
-                    'tiff',
-                    'web-p',
-                    'avif',
-                    'pnm',
-                    'dds',
-                    'tga',
-                    'open-exr',
-                    'farbfeld',
-                    'hdr',
-                    'qoi',
-                    'unknown'
-                  ])
-                ),
-                (
-                  label: 'color',
-                  t: EnumType([
-                    'l8',
-                    'la8',
-                    'rgb8',
-                    'rgba8',
-                    'l16',
-                    'la16',
-                    'rgb16',
-                    'rgba16',
-                    'rgb32f',
-                    'rgba32f',
-                    'unknown'
-                  ])
-                ),
-                (label: 'width', t: U32()),
-                (label: 'height', t: U32())
-              ])
-            )
-          ]),
+          const FuncType(
+              [('image-ref', ImageRef._spec)], [('', ImageRef._spec)]),
         )!,
         _resize = library.getComponentFunction(
           'wasm-run-dart:image-rs/operations#resize',
           const FuncType([
-            (
-              'image-ref',
-              RecordType([
-                (label: 'id', t: U32()),
-                (
-                  label: 'format',
-                  t: EnumType([
-                    'png',
-                    'jpeg',
-                    'gif',
-                    'bmp',
-                    'ico',
-                    'tiff',
-                    'web-p',
-                    'avif',
-                    'pnm',
-                    'dds',
-                    'tga',
-                    'open-exr',
-                    'farbfeld',
-                    'hdr',
-                    'qoi',
-                    'unknown'
-                  ])
-                ),
-                (
-                  label: 'color',
-                  t: EnumType([
-                    'l8',
-                    'la8',
-                    'rgb8',
-                    'rgba8',
-                    'l16',
-                    'la16',
-                    'rgb16',
-                    'rgba16',
-                    'rgb32f',
-                    'rgba32f',
-                    'unknown'
-                  ])
-                ),
-                (label: 'width', t: U32()),
-                (label: 'height', t: U32())
-              ])
-            ),
-            (
-              'size',
-              RecordType(
-                  [(label: 'width', t: U32()), (label: 'height', t: U32())])
-            ),
-            (
-              'filter',
-              EnumType([
-                'nearest',
-                'triangle',
-                'catmull-rom',
-                'gaussian',
-                'lanczos3'
-              ])
-            )
+            ('image-ref', ImageRef._spec),
+            ('size', ImageSize._spec),
+            ('filter', FilterType._spec)
           ], [
-            (
-              '',
-              RecordType([
-                (label: 'id', t: U32()),
-                (
-                  label: 'format',
-                  t: EnumType([
-                    'png',
-                    'jpeg',
-                    'gif',
-                    'bmp',
-                    'ico',
-                    'tiff',
-                    'web-p',
-                    'avif',
-                    'pnm',
-                    'dds',
-                    'tga',
-                    'open-exr',
-                    'farbfeld',
-                    'hdr',
-                    'qoi',
-                    'unknown'
-                  ])
-                ),
-                (
-                  label: 'color',
-                  t: EnumType([
-                    'l8',
-                    'la8',
-                    'rgb8',
-                    'rgba8',
-                    'l16',
-                    'la16',
-                    'rgb16',
-                    'rgba16',
-                    'rgb32f',
-                    'rgba32f',
-                    'unknown'
-                  ])
-                ),
-                (label: 'width', t: U32()),
-                (label: 'height', t: U32())
-              ])
-            )
+            ('', ImageRef._spec)
           ]),
         )!,
         _resizeExact = library.getComponentFunction(
           'wasm-run-dart:image-rs/operations#resize-exact',
           const FuncType([
-            (
-              'image-ref',
-              RecordType([
-                (label: 'id', t: U32()),
-                (
-                  label: 'format',
-                  t: EnumType([
-                    'png',
-                    'jpeg',
-                    'gif',
-                    'bmp',
-                    'ico',
-                    'tiff',
-                    'web-p',
-                    'avif',
-                    'pnm',
-                    'dds',
-                    'tga',
-                    'open-exr',
-                    'farbfeld',
-                    'hdr',
-                    'qoi',
-                    'unknown'
-                  ])
-                ),
-                (
-                  label: 'color',
-                  t: EnumType([
-                    'l8',
-                    'la8',
-                    'rgb8',
-                    'rgba8',
-                    'l16',
-                    'la16',
-                    'rgb16',
-                    'rgba16',
-                    'rgb32f',
-                    'rgba32f',
-                    'unknown'
-                  ])
-                ),
-                (label: 'width', t: U32()),
-                (label: 'height', t: U32())
-              ])
-            ),
-            (
-              'size',
-              RecordType(
-                  [(label: 'width', t: U32()), (label: 'height', t: U32())])
-            ),
-            (
-              'filter',
-              EnumType([
-                'nearest',
-                'triangle',
-                'catmull-rom',
-                'gaussian',
-                'lanczos3'
-              ])
-            )
+            ('image-ref', ImageRef._spec),
+            ('size', ImageSize._spec),
+            ('filter', FilterType._spec)
           ], [
-            (
-              '',
-              RecordType([
-                (label: 'id', t: U32()),
-                (
-                  label: 'format',
-                  t: EnumType([
-                    'png',
-                    'jpeg',
-                    'gif',
-                    'bmp',
-                    'ico',
-                    'tiff',
-                    'web-p',
-                    'avif',
-                    'pnm',
-                    'dds',
-                    'tga',
-                    'open-exr',
-                    'farbfeld',
-                    'hdr',
-                    'qoi',
-                    'unknown'
-                  ])
-                ),
-                (
-                  label: 'color',
-                  t: EnumType([
-                    'l8',
-                    'la8',
-                    'rgb8',
-                    'rgba8',
-                    'l16',
-                    'la16',
-                    'rgb16',
-                    'rgba16',
-                    'rgb32f',
-                    'rgba32f',
-                    'unknown'
-                  ])
-                ),
-                (label: 'width', t: U32()),
-                (label: 'height', t: U32())
-              ])
-            )
+            ('', ImageRef._spec)
           ]),
         )!,
         _resizeToFill = library.getComponentFunction(
           'wasm-run-dart:image-rs/operations#resize-to-fill',
           const FuncType([
-            (
-              'image-ref',
-              RecordType([
-                (label: 'id', t: U32()),
-                (
-                  label: 'format',
-                  t: EnumType([
-                    'png',
-                    'jpeg',
-                    'gif',
-                    'bmp',
-                    'ico',
-                    'tiff',
-                    'web-p',
-                    'avif',
-                    'pnm',
-                    'dds',
-                    'tga',
-                    'open-exr',
-                    'farbfeld',
-                    'hdr',
-                    'qoi',
-                    'unknown'
-                  ])
-                ),
-                (
-                  label: 'color',
-                  t: EnumType([
-                    'l8',
-                    'la8',
-                    'rgb8',
-                    'rgba8',
-                    'l16',
-                    'la16',
-                    'rgb16',
-                    'rgba16',
-                    'rgb32f',
-                    'rgba32f',
-                    'unknown'
-                  ])
-                ),
-                (label: 'width', t: U32()),
-                (label: 'height', t: U32())
-              ])
-            ),
-            (
-              'size',
-              RecordType(
-                  [(label: 'width', t: U32()), (label: 'height', t: U32())])
-            ),
-            (
-              'filter',
-              EnumType([
-                'nearest',
-                'triangle',
-                'catmull-rom',
-                'gaussian',
-                'lanczos3'
-              ])
-            )
+            ('image-ref', ImageRef._spec),
+            ('size', ImageSize._spec),
+            ('filter', FilterType._spec)
           ], [
-            (
-              '',
-              RecordType([
-                (label: 'id', t: U32()),
-                (
-                  label: 'format',
-                  t: EnumType([
-                    'png',
-                    'jpeg',
-                    'gif',
-                    'bmp',
-                    'ico',
-                    'tiff',
-                    'web-p',
-                    'avif',
-                    'pnm',
-                    'dds',
-                    'tga',
-                    'open-exr',
-                    'farbfeld',
-                    'hdr',
-                    'qoi',
-                    'unknown'
-                  ])
-                ),
-                (
-                  label: 'color',
-                  t: EnumType([
-                    'l8',
-                    'la8',
-                    'rgb8',
-                    'rgba8',
-                    'l16',
-                    'la16',
-                    'rgb16',
-                    'rgba16',
-                    'rgb32f',
-                    'rgba32f',
-                    'unknown'
-                  ])
-                ),
-                (label: 'width', t: U32()),
-                (label: 'height', t: U32())
-              ])
-            )
+            ('', ImageRef._spec)
           ]),
         )!,
         _rotate180 = library.getComponentFunction(
           'wasm-run-dart:image-rs/operations#rotate180',
-          const FuncType([
-            (
-              'image-ref',
-              RecordType([
-                (label: 'id', t: U32()),
-                (
-                  label: 'format',
-                  t: EnumType([
-                    'png',
-                    'jpeg',
-                    'gif',
-                    'bmp',
-                    'ico',
-                    'tiff',
-                    'web-p',
-                    'avif',
-                    'pnm',
-                    'dds',
-                    'tga',
-                    'open-exr',
-                    'farbfeld',
-                    'hdr',
-                    'qoi',
-                    'unknown'
-                  ])
-                ),
-                (
-                  label: 'color',
-                  t: EnumType([
-                    'l8',
-                    'la8',
-                    'rgb8',
-                    'rgba8',
-                    'l16',
-                    'la16',
-                    'rgb16',
-                    'rgba16',
-                    'rgb32f',
-                    'rgba32f',
-                    'unknown'
-                  ])
-                ),
-                (label: 'width', t: U32()),
-                (label: 'height', t: U32())
-              ])
-            )
-          ], [
-            (
-              '',
-              RecordType([
-                (label: 'id', t: U32()),
-                (
-                  label: 'format',
-                  t: EnumType([
-                    'png',
-                    'jpeg',
-                    'gif',
-                    'bmp',
-                    'ico',
-                    'tiff',
-                    'web-p',
-                    'avif',
-                    'pnm',
-                    'dds',
-                    'tga',
-                    'open-exr',
-                    'farbfeld',
-                    'hdr',
-                    'qoi',
-                    'unknown'
-                  ])
-                ),
-                (
-                  label: 'color',
-                  t: EnumType([
-                    'l8',
-                    'la8',
-                    'rgb8',
-                    'rgba8',
-                    'l16',
-                    'la16',
-                    'rgb16',
-                    'rgba16',
-                    'rgb32f',
-                    'rgba32f',
-                    'unknown'
-                  ])
-                ),
-                (label: 'width', t: U32()),
-                (label: 'height', t: U32())
-              ])
-            )
-          ]),
+          const FuncType(
+              [('image-ref', ImageRef._spec)], [('', ImageRef._spec)]),
         )!,
         _rotate270 = library.getComponentFunction(
           'wasm-run-dart:image-rs/operations#rotate270',
-          const FuncType([
-            (
-              'image-ref',
-              RecordType([
-                (label: 'id', t: U32()),
-                (
-                  label: 'format',
-                  t: EnumType([
-                    'png',
-                    'jpeg',
-                    'gif',
-                    'bmp',
-                    'ico',
-                    'tiff',
-                    'web-p',
-                    'avif',
-                    'pnm',
-                    'dds',
-                    'tga',
-                    'open-exr',
-                    'farbfeld',
-                    'hdr',
-                    'qoi',
-                    'unknown'
-                  ])
-                ),
-                (
-                  label: 'color',
-                  t: EnumType([
-                    'l8',
-                    'la8',
-                    'rgb8',
-                    'rgba8',
-                    'l16',
-                    'la16',
-                    'rgb16',
-                    'rgba16',
-                    'rgb32f',
-                    'rgba32f',
-                    'unknown'
-                  ])
-                ),
-                (label: 'width', t: U32()),
-                (label: 'height', t: U32())
-              ])
-            )
-          ], [
-            (
-              '',
-              RecordType([
-                (label: 'id', t: U32()),
-                (
-                  label: 'format',
-                  t: EnumType([
-                    'png',
-                    'jpeg',
-                    'gif',
-                    'bmp',
-                    'ico',
-                    'tiff',
-                    'web-p',
-                    'avif',
-                    'pnm',
-                    'dds',
-                    'tga',
-                    'open-exr',
-                    'farbfeld',
-                    'hdr',
-                    'qoi',
-                    'unknown'
-                  ])
-                ),
-                (
-                  label: 'color',
-                  t: EnumType([
-                    'l8',
-                    'la8',
-                    'rgb8',
-                    'rgba8',
-                    'l16',
-                    'la16',
-                    'rgb16',
-                    'rgba16',
-                    'rgb32f',
-                    'rgba32f',
-                    'unknown'
-                  ])
-                ),
-                (label: 'width', t: U32()),
-                (label: 'height', t: U32())
-              ])
-            )
-          ]),
+          const FuncType(
+              [('image-ref', ImageRef._spec)], [('', ImageRef._spec)]),
         )!,
         _rotate90 = library.getComponentFunction(
           'wasm-run-dart:image-rs/operations#rotate90',
-          const FuncType([
-            (
-              'image-ref',
-              RecordType([
-                (label: 'id', t: U32()),
-                (
-                  label: 'format',
-                  t: EnumType([
-                    'png',
-                    'jpeg',
-                    'gif',
-                    'bmp',
-                    'ico',
-                    'tiff',
-                    'web-p',
-                    'avif',
-                    'pnm',
-                    'dds',
-                    'tga',
-                    'open-exr',
-                    'farbfeld',
-                    'hdr',
-                    'qoi',
-                    'unknown'
-                  ])
-                ),
-                (
-                  label: 'color',
-                  t: EnumType([
-                    'l8',
-                    'la8',
-                    'rgb8',
-                    'rgba8',
-                    'l16',
-                    'la16',
-                    'rgb16',
-                    'rgba16',
-                    'rgb32f',
-                    'rgba32f',
-                    'unknown'
-                  ])
-                ),
-                (label: 'width', t: U32()),
-                (label: 'height', t: U32())
-              ])
-            )
-          ], [
-            (
-              '',
-              RecordType([
-                (label: 'id', t: U32()),
-                (
-                  label: 'format',
-                  t: EnumType([
-                    'png',
-                    'jpeg',
-                    'gif',
-                    'bmp',
-                    'ico',
-                    'tiff',
-                    'web-p',
-                    'avif',
-                    'pnm',
-                    'dds',
-                    'tga',
-                    'open-exr',
-                    'farbfeld',
-                    'hdr',
-                    'qoi',
-                    'unknown'
-                  ])
-                ),
-                (
-                  label: 'color',
-                  t: EnumType([
-                    'l8',
-                    'la8',
-                    'rgb8',
-                    'rgba8',
-                    'l16',
-                    'la16',
-                    'rgb16',
-                    'rgba16',
-                    'rgb32f',
-                    'rgba32f',
-                    'unknown'
-                  ])
-                ),
-                (label: 'width', t: U32()),
-                (label: 'height', t: U32())
-              ])
-            )
-          ]),
+          const FuncType(
+              [('image-ref', ImageRef._spec)], [('', ImageRef._spec)]),
         )!,
         _unsharpen = library.getComponentFunction(
           'wasm-run-dart:image-rs/operations#unsharpen',
           const FuncType([
-            (
-              'image-ref',
-              RecordType([
-                (label: 'id', t: U32()),
-                (
-                  label: 'format',
-                  t: EnumType([
-                    'png',
-                    'jpeg',
-                    'gif',
-                    'bmp',
-                    'ico',
-                    'tiff',
-                    'web-p',
-                    'avif',
-                    'pnm',
-                    'dds',
-                    'tga',
-                    'open-exr',
-                    'farbfeld',
-                    'hdr',
-                    'qoi',
-                    'unknown'
-                  ])
-                ),
-                (
-                  label: 'color',
-                  t: EnumType([
-                    'l8',
-                    'la8',
-                    'rgb8',
-                    'rgba8',
-                    'l16',
-                    'la16',
-                    'rgb16',
-                    'rgba16',
-                    'rgb32f',
-                    'rgba32f',
-                    'unknown'
-                  ])
-                ),
-                (label: 'width', t: U32()),
-                (label: 'height', t: U32())
-              ])
-            ),
+            ('image-ref', ImageRef._spec),
             ('sigma', Float32()),
             ('threshold', S32())
           ], [
-            (
-              '',
-              RecordType([
-                (label: 'id', t: U32()),
-                (
-                  label: 'format',
-                  t: EnumType([
-                    'png',
-                    'jpeg',
-                    'gif',
-                    'bmp',
-                    'ico',
-                    'tiff',
-                    'web-p',
-                    'avif',
-                    'pnm',
-                    'dds',
-                    'tga',
-                    'open-exr',
-                    'farbfeld',
-                    'hdr',
-                    'qoi',
-                    'unknown'
-                  ])
-                ),
-                (
-                  label: 'color',
-                  t: EnumType([
-                    'l8',
-                    'la8',
-                    'rgb8',
-                    'rgba8',
-                    'l16',
-                    'la16',
-                    'rgb16',
-                    'rgba16',
-                    'rgb32f',
-                    'rgba32f',
-                    'unknown'
-                  ])
-                ),
-                (label: 'width', t: U32()),
-                (label: 'height', t: U32())
-              ])
-            )
+            ('', ImageRef._spec)
           ]),
         )!,
         _thumbnail = library.getComponentFunction(
           'wasm-run-dart:image-rs/operations#thumbnail',
-          const FuncType([
-            (
-              'image-ref',
-              RecordType([
-                (label: 'id', t: U32()),
-                (
-                  label: 'format',
-                  t: EnumType([
-                    'png',
-                    'jpeg',
-                    'gif',
-                    'bmp',
-                    'ico',
-                    'tiff',
-                    'web-p',
-                    'avif',
-                    'pnm',
-                    'dds',
-                    'tga',
-                    'open-exr',
-                    'farbfeld',
-                    'hdr',
-                    'qoi',
-                    'unknown'
-                  ])
-                ),
-                (
-                  label: 'color',
-                  t: EnumType([
-                    'l8',
-                    'la8',
-                    'rgb8',
-                    'rgba8',
-                    'l16',
-                    'la16',
-                    'rgb16',
-                    'rgba16',
-                    'rgb32f',
-                    'rgba32f',
-                    'unknown'
-                  ])
-                ),
-                (label: 'width', t: U32()),
-                (label: 'height', t: U32())
-              ])
-            ),
-            (
-              'size',
-              RecordType(
-                  [(label: 'width', t: U32()), (label: 'height', t: U32())])
-            )
-          ], [
-            (
-              '',
-              RecordType([
-                (label: 'id', t: U32()),
-                (
-                  label: 'format',
-                  t: EnumType([
-                    'png',
-                    'jpeg',
-                    'gif',
-                    'bmp',
-                    'ico',
-                    'tiff',
-                    'web-p',
-                    'avif',
-                    'pnm',
-                    'dds',
-                    'tga',
-                    'open-exr',
-                    'farbfeld',
-                    'hdr',
-                    'qoi',
-                    'unknown'
-                  ])
-                ),
-                (
-                  label: 'color',
-                  t: EnumType([
-                    'l8',
-                    'la8',
-                    'rgb8',
-                    'rgba8',
-                    'l16',
-                    'la16',
-                    'rgb16',
-                    'rgba16',
-                    'rgb32f',
-                    'rgba32f',
-                    'unknown'
-                  ])
-                ),
-                (label: 'width', t: U32()),
-                (label: 'height', t: U32())
-              ])
-            )
-          ]),
+          const FuncType(
+              [('image-ref', ImageRef._spec), ('size', ImageSize._spec)],
+              [('', ImageRef._spec)]),
         )!,
         _thumbnailExact = library.getComponentFunction(
           'wasm-run-dart:image-rs/operations#thumbnail-exact',
-          const FuncType([
-            (
-              'image-ref',
-              RecordType([
-                (label: 'id', t: U32()),
-                (
-                  label: 'format',
-                  t: EnumType([
-                    'png',
-                    'jpeg',
-                    'gif',
-                    'bmp',
-                    'ico',
-                    'tiff',
-                    'web-p',
-                    'avif',
-                    'pnm',
-                    'dds',
-                    'tga',
-                    'open-exr',
-                    'farbfeld',
-                    'hdr',
-                    'qoi',
-                    'unknown'
-                  ])
-                ),
-                (
-                  label: 'color',
-                  t: EnumType([
-                    'l8',
-                    'la8',
-                    'rgb8',
-                    'rgba8',
-                    'l16',
-                    'la16',
-                    'rgb16',
-                    'rgba16',
-                    'rgb32f',
-                    'rgba32f',
-                    'unknown'
-                  ])
-                ),
-                (label: 'width', t: U32()),
-                (label: 'height', t: U32())
-              ])
-            ),
-            (
-              'size',
-              RecordType(
-                  [(label: 'width', t: U32()), (label: 'height', t: U32())])
-            )
-          ], [
-            (
-              '',
-              RecordType([
-                (label: 'id', t: U32()),
-                (
-                  label: 'format',
-                  t: EnumType([
-                    'png',
-                    'jpeg',
-                    'gif',
-                    'bmp',
-                    'ico',
-                    'tiff',
-                    'web-p',
-                    'avif',
-                    'pnm',
-                    'dds',
-                    'tga',
-                    'open-exr',
-                    'farbfeld',
-                    'hdr',
-                    'qoi',
-                    'unknown'
-                  ])
-                ),
-                (
-                  label: 'color',
-                  t: EnumType([
-                    'l8',
-                    'la8',
-                    'rgb8',
-                    'rgba8',
-                    'l16',
-                    'la16',
-                    'rgb16',
-                    'rgba16',
-                    'rgb32f',
-                    'rgba32f',
-                    'unknown'
-                  ])
-                ),
-                (label: 'width', t: U32()),
-                (label: 'height', t: U32())
-              ])
-            )
-          ]),
+          const FuncType(
+              [('image-ref', ImageRef._spec), ('size', ImageSize._spec)],
+              [('', ImageRef._spec)]),
         )!,
         _overlay = library.getComponentFunction(
           'wasm-run-dart:image-rs/operations#overlay',
           const FuncType([
-            (
-              'image-ref',
-              RecordType([
-                (label: 'id', t: U32()),
-                (
-                  label: 'format',
-                  t: EnumType([
-                    'png',
-                    'jpeg',
-                    'gif',
-                    'bmp',
-                    'ico',
-                    'tiff',
-                    'web-p',
-                    'avif',
-                    'pnm',
-                    'dds',
-                    'tga',
-                    'open-exr',
-                    'farbfeld',
-                    'hdr',
-                    'qoi',
-                    'unknown'
-                  ])
-                ),
-                (
-                  label: 'color',
-                  t: EnumType([
-                    'l8',
-                    'la8',
-                    'rgb8',
-                    'rgba8',
-                    'l16',
-                    'la16',
-                    'rgb16',
-                    'rgba16',
-                    'rgb32f',
-                    'rgba32f',
-                    'unknown'
-                  ])
-                ),
-                (label: 'width', t: U32()),
-                (label: 'height', t: U32())
-              ])
-            ),
-            (
-              'other',
-              RecordType([
-                (label: 'id', t: U32()),
-                (
-                  label: 'format',
-                  t: EnumType([
-                    'png',
-                    'jpeg',
-                    'gif',
-                    'bmp',
-                    'ico',
-                    'tiff',
-                    'web-p',
-                    'avif',
-                    'pnm',
-                    'dds',
-                    'tga',
-                    'open-exr',
-                    'farbfeld',
-                    'hdr',
-                    'qoi',
-                    'unknown'
-                  ])
-                ),
-                (
-                  label: 'color',
-                  t: EnumType([
-                    'l8',
-                    'la8',
-                    'rgb8',
-                    'rgba8',
-                    'l16',
-                    'la16',
-                    'rgb16',
-                    'rgba16',
-                    'rgb32f',
-                    'rgba32f',
-                    'unknown'
-                  ])
-                ),
-                (label: 'width', t: U32()),
-                (label: 'height', t: U32())
-              ])
-            ),
+            ('image-ref', ImageRef._spec),
+            ('other', ImageRef._spec),
             ('x', U32()),
             ('y', U32())
           ], [
-            (
-              '',
-              RecordType([
-                (label: 'id', t: U32()),
-                (
-                  label: 'format',
-                  t: EnumType([
-                    'png',
-                    'jpeg',
-                    'gif',
-                    'bmp',
-                    'ico',
-                    'tiff',
-                    'web-p',
-                    'avif',
-                    'pnm',
-                    'dds',
-                    'tga',
-                    'open-exr',
-                    'farbfeld',
-                    'hdr',
-                    'qoi',
-                    'unknown'
-                  ])
-                ),
-                (
-                  label: 'color',
-                  t: EnumType([
-                    'l8',
-                    'la8',
-                    'rgb8',
-                    'rgba8',
-                    'l16',
-                    'la16',
-                    'rgb16',
-                    'rgba16',
-                    'rgb32f',
-                    'rgba32f',
-                    'unknown'
-                  ])
-                ),
-                (label: 'width', t: U32()),
-                (label: 'height', t: U32())
-              ])
-            )
+            ('', ImageRef._spec)
           ]),
         )!,
         _replace = library.getComponentFunction(
           'wasm-run-dart:image-rs/operations#replace',
           const FuncType([
-            (
-              'image-ref',
-              RecordType([
-                (label: 'id', t: U32()),
-                (
-                  label: 'format',
-                  t: EnumType([
-                    'png',
-                    'jpeg',
-                    'gif',
-                    'bmp',
-                    'ico',
-                    'tiff',
-                    'web-p',
-                    'avif',
-                    'pnm',
-                    'dds',
-                    'tga',
-                    'open-exr',
-                    'farbfeld',
-                    'hdr',
-                    'qoi',
-                    'unknown'
-                  ])
-                ),
-                (
-                  label: 'color',
-                  t: EnumType([
-                    'l8',
-                    'la8',
-                    'rgb8',
-                    'rgba8',
-                    'l16',
-                    'la16',
-                    'rgb16',
-                    'rgba16',
-                    'rgb32f',
-                    'rgba32f',
-                    'unknown'
-                  ])
-                ),
-                (label: 'width', t: U32()),
-                (label: 'height', t: U32())
-              ])
-            ),
-            (
-              'other',
-              RecordType([
-                (label: 'id', t: U32()),
-                (
-                  label: 'format',
-                  t: EnumType([
-                    'png',
-                    'jpeg',
-                    'gif',
-                    'bmp',
-                    'ico',
-                    'tiff',
-                    'web-p',
-                    'avif',
-                    'pnm',
-                    'dds',
-                    'tga',
-                    'open-exr',
-                    'farbfeld',
-                    'hdr',
-                    'qoi',
-                    'unknown'
-                  ])
-                ),
-                (
-                  label: 'color',
-                  t: EnumType([
-                    'l8',
-                    'la8',
-                    'rgb8',
-                    'rgba8',
-                    'l16',
-                    'la16',
-                    'rgb16',
-                    'rgba16',
-                    'rgb32f',
-                    'rgba32f',
-                    'unknown'
-                  ])
-                ),
-                (label: 'width', t: U32()),
-                (label: 'height', t: U32())
-              ])
-            ),
+            ('image-ref', ImageRef._spec),
+            ('other', ImageRef._spec),
             ('x', U32()),
             ('y', U32())
           ], [
-            (
-              '',
-              RecordType([
-                (label: 'id', t: U32()),
-                (
-                  label: 'format',
-                  t: EnumType([
-                    'png',
-                    'jpeg',
-                    'gif',
-                    'bmp',
-                    'ico',
-                    'tiff',
-                    'web-p',
-                    'avif',
-                    'pnm',
-                    'dds',
-                    'tga',
-                    'open-exr',
-                    'farbfeld',
-                    'hdr',
-                    'qoi',
-                    'unknown'
-                  ])
-                ),
-                (
-                  label: 'color',
-                  t: EnumType([
-                    'l8',
-                    'la8',
-                    'rgb8',
-                    'rgba8',
-                    'l16',
-                    'la16',
-                    'rgb16',
-                    'rgba16',
-                    'rgb32f',
-                    'rgba32f',
-                    'unknown'
-                  ])
-                ),
-                (label: 'width', t: U32()),
-                (label: 'height', t: U32())
-              ])
-            )
+            ('', ImageRef._spec)
           ]),
         )!;
   final ListValue Function(ListValue) _blur;
@@ -2863,7 +840,7 @@ class Operations {
     required ImageRef imageRef,
     required double /*F32*/ value,
   }) {
-    final results = _blur([imageRef.toJson(), value]);
+    final results = _blur([imageRef.toWasm(), value]);
     final result = results[0];
     return ImageRef.fromJson(result);
   }
@@ -2875,7 +852,7 @@ class Operations {
     required ImageRef imageRef,
     required int /*S32*/ value,
   }) {
-    final results = _brighten([imageRef.toJson(), value]);
+    final results = _brighten([imageRef.toWasm(), value]);
     final result = results[0];
     return ImageRef.fromJson(result);
   }
@@ -2887,7 +864,7 @@ class Operations {
     required ImageRef imageRef,
     required int /*S32*/ value,
   }) {
-    final results = _huerotate([imageRef.toJson(), value]);
+    final results = _huerotate([imageRef.toWasm(), value]);
     final result = results[0];
     return ImageRef.fromJson(result);
   }
@@ -2899,7 +876,7 @@ class Operations {
     required ImageRef imageRef,
     required double /*F32*/ c,
   }) {
-    final results = _adjustContrast([imageRef.toJson(), c]);
+    final results = _adjustContrast([imageRef.toWasm(), c]);
     final result = results[0];
     return ImageRef.fromJson(result);
   }
@@ -2911,7 +888,7 @@ class Operations {
     required ImageRef imageRef,
     required ImageCrop imageCrop,
   }) {
-    final results = _crop([imageRef.toJson(), imageCrop.toJson()]);
+    final results = _crop([imageRef.toWasm(), imageCrop.toWasm()]);
     final result = results[0];
     return ImageRef.fromJson(result);
   }
@@ -2923,7 +900,7 @@ class Operations {
     required ImageRef imageRef,
     required Float32List kernel,
   }) {
-    final results = _filter3x3([imageRef.toJson(), kernel]);
+    final results = _filter3x3([imageRef.toWasm(), kernel]);
     final result = results[0];
     return ImageRef.fromJson(result);
   }
@@ -2934,7 +911,7 @@ class Operations {
   ImageRef flipHorizontal({
     required ImageRef imageRef,
   }) {
-    final results = _flipHorizontal([imageRef.toJson()]);
+    final results = _flipHorizontal([imageRef.toWasm()]);
     final result = results[0];
     return ImageRef.fromJson(result);
   }
@@ -2945,7 +922,7 @@ class Operations {
   ImageRef flipVertical({
     required ImageRef imageRef,
   }) {
-    final results = _flipVertical([imageRef.toJson()]);
+    final results = _flipVertical([imageRef.toWasm()]);
     final result = results[0];
     return ImageRef.fromJson(result);
   }
@@ -2956,7 +933,7 @@ class Operations {
   ImageRef grayscale({
     required ImageRef imageRef,
   }) {
-    final results = _grayscale([imageRef.toJson()]);
+    final results = _grayscale([imageRef.toWasm()]);
     final result = results[0];
     return ImageRef.fromJson(result);
   }
@@ -2967,7 +944,7 @@ class Operations {
   ImageRef invert({
     required ImageRef imageRef,
   }) {
-    final results = _invert([imageRef.toJson()]);
+    final results = _invert([imageRef.toWasm()]);
     final result = results[0];
     return ImageRef.fromJson(result);
   }
@@ -2982,7 +959,7 @@ class Operations {
     required FilterType filter,
   }) {
     final results =
-        _resize([imageRef.toJson(), size.toJson(), filter.toJson()]);
+        _resize([imageRef.toWasm(), size.toWasm(), filter.toWasm()]);
     final result = results[0];
     return ImageRef.fromJson(result);
   }
@@ -2997,7 +974,7 @@ class Operations {
     required FilterType filter,
   }) {
     final results =
-        _resizeExact([imageRef.toJson(), size.toJson(), filter.toJson()]);
+        _resizeExact([imageRef.toWasm(), size.toWasm(), filter.toWasm()]);
     final result = results[0];
     return ImageRef.fromJson(result);
   }
@@ -3014,7 +991,7 @@ class Operations {
     required FilterType filter,
   }) {
     final results =
-        _resizeToFill([imageRef.toJson(), size.toJson(), filter.toJson()]);
+        _resizeToFill([imageRef.toWasm(), size.toWasm(), filter.toWasm()]);
     final result = results[0];
     return ImageRef.fromJson(result);
   }
@@ -3025,7 +1002,7 @@ class Operations {
   ImageRef rotate180({
     required ImageRef imageRef,
   }) {
-    final results = _rotate180([imageRef.toJson()]);
+    final results = _rotate180([imageRef.toWasm()]);
     final result = results[0];
     return ImageRef.fromJson(result);
   }
@@ -3036,7 +1013,7 @@ class Operations {
   ImageRef rotate270({
     required ImageRef imageRef,
   }) {
-    final results = _rotate270([imageRef.toJson()]);
+    final results = _rotate270([imageRef.toWasm()]);
     final result = results[0];
     return ImageRef.fromJson(result);
   }
@@ -3047,7 +1024,7 @@ class Operations {
   ImageRef rotate90({
     required ImageRef imageRef,
   }) {
-    final results = _rotate90([imageRef.toJson()]);
+    final results = _rotate90([imageRef.toWasm()]);
     final result = results[0];
     return ImageRef.fromJson(result);
   }
@@ -3060,7 +1037,7 @@ class Operations {
     required double /*F32*/ sigma,
     required int /*S32*/ threshold,
   }) {
-    final results = _unsharpen([imageRef.toJson(), sigma, threshold]);
+    final results = _unsharpen([imageRef.toWasm(), sigma, threshold]);
     final result = results[0];
     return ImageRef.fromJson(result);
   }
@@ -3073,7 +1050,7 @@ class Operations {
     required ImageRef imageRef,
     required ImageSize size,
   }) {
-    final results = _thumbnail([imageRef.toJson(), size.toJson()]);
+    final results = _thumbnail([imageRef.toWasm(), size.toWasm()]);
     final result = results[0];
     return ImageRef.fromJson(result);
   }
@@ -3086,7 +1063,7 @@ class Operations {
     required ImageRef imageRef,
     required ImageSize size,
   }) {
-    final results = _thumbnailExact([imageRef.toJson(), size.toJson()]);
+    final results = _thumbnailExact([imageRef.toWasm(), size.toWasm()]);
     final result = results[0];
     return ImageRef.fromJson(result);
   }
@@ -3100,7 +1077,7 @@ class Operations {
     required int /*U32*/ x,
     required int /*U32*/ y,
   }) {
-    final results = _overlay([imageRef.toJson(), other.toJson(), x, y]);
+    final results = _overlay([imageRef.toWasm(), other.toWasm(), x, y]);
     final result = results[0];
     return ImageRef.fromJson(result);
   }
@@ -3114,7 +1091,7 @@ class Operations {
     required int /*U32*/ x,
     required int /*U32*/ y,
   }) {
-    final results = _replace([imageRef.toJson(), other.toJson(), x, y]);
+    final results = _replace([imageRef.toWasm(), other.toWasm(), x, y]);
     final result = results[0];
     return ImageRef.fromJson(result);
   }
@@ -3131,366 +1108,45 @@ class ImageRsWorld {
   })  : operations = Operations(library),
         _guessBufferFormat = library.getComponentFunction(
           'guess-buffer-format',
-          const FuncType([
-            ('buffer', ListType(U8()))
-          ], [
-            (
-              '',
-              ResultType(
-                  EnumType([
-                    'png',
-                    'jpeg',
-                    'gif',
-                    'bmp',
-                    'ico',
-                    'tiff',
-                    'web-p',
-                    'avif',
-                    'pnm',
-                    'dds',
-                    'tga',
-                    'open-exr',
-                    'farbfeld',
-                    'hdr',
-                    'qoi',
-                    'unknown'
-                  ]),
-                  StringType())
-            )
-          ]),
+          const FuncType([('buffer', ListType(U8()))],
+              [('', ResultType(ImageFormat._spec, StringType()))]),
         )!,
         _fileImageSize = library.getComponentFunction(
           'file-image-size',
-          const FuncType([
-            ('path', StringType())
-          ], [
-            (
-              '',
-              ResultType(
-                  RecordType([
-                    (label: 'width', t: U32()),
-                    (label: 'height', t: U32())
-                  ]),
-                  StringType())
-            )
-          ]),
+          const FuncType([('path', StringType())],
+              [('', ResultType(ImageSize._spec, StringType()))]),
         )!,
         _imageBufferPointerAndSize = library.getComponentFunction(
           'image-buffer-pointer-and-size',
           const FuncType([
-            (
-              'image-ref',
-              RecordType([
-                (label: 'id', t: U32()),
-                (
-                  label: 'format',
-                  t: EnumType([
-                    'png',
-                    'jpeg',
-                    'gif',
-                    'bmp',
-                    'ico',
-                    'tiff',
-                    'web-p',
-                    'avif',
-                    'pnm',
-                    'dds',
-                    'tga',
-                    'open-exr',
-                    'farbfeld',
-                    'hdr',
-                    'qoi',
-                    'unknown'
-                  ])
-                ),
-                (
-                  label: 'color',
-                  t: EnumType([
-                    'l8',
-                    'la8',
-                    'rgb8',
-                    'rgba8',
-                    'l16',
-                    'la16',
-                    'rgb16',
-                    'rgba16',
-                    'rgb32f',
-                    'rgba32f',
-                    'unknown'
-                  ])
-                ),
-                (label: 'width', t: U32()),
-                (label: 'height', t: U32())
-              ])
-            )
+            ('image-ref', ImageRef._spec)
           ], [
             ('', Tuple([U32(), U32()]))
           ]),
         )!,
         _copyImageBuffer = library.getComponentFunction(
           'copy-image-buffer',
-          const FuncType([
-            (
-              'image-ref',
-              RecordType([
-                (label: 'id', t: U32()),
-                (
-                  label: 'format',
-                  t: EnumType([
-                    'png',
-                    'jpeg',
-                    'gif',
-                    'bmp',
-                    'ico',
-                    'tiff',
-                    'web-p',
-                    'avif',
-                    'pnm',
-                    'dds',
-                    'tga',
-                    'open-exr',
-                    'farbfeld',
-                    'hdr',
-                    'qoi',
-                    'unknown'
-                  ])
-                ),
-                (
-                  label: 'color',
-                  t: EnumType([
-                    'l8',
-                    'la8',
-                    'rgb8',
-                    'rgba8',
-                    'l16',
-                    'la16',
-                    'rgb16',
-                    'rgba16',
-                    'rgb32f',
-                    'rgba32f',
-                    'unknown'
-                  ])
-                ),
-                (label: 'width', t: U32()),
-                (label: 'height', t: U32())
-              ])
-            )
-          ], [
-            ('', RecordType([(label: 'bytes', t: ListType(U8()))]))
-          ]),
+          const FuncType([('image-ref', ImageRef._spec)], [('', Image._spec)]),
         )!,
         _disposeImage = library.getComponentFunction(
           'dispose-image',
-          const FuncType([
-            (
-              'image',
-              RecordType([
-                (label: 'id', t: U32()),
-                (
-                  label: 'format',
-                  t: EnumType([
-                    'png',
-                    'jpeg',
-                    'gif',
-                    'bmp',
-                    'ico',
-                    'tiff',
-                    'web-p',
-                    'avif',
-                    'pnm',
-                    'dds',
-                    'tga',
-                    'open-exr',
-                    'farbfeld',
-                    'hdr',
-                    'qoi',
-                    'unknown'
-                  ])
-                ),
-                (
-                  label: 'color',
-                  t: EnumType([
-                    'l8',
-                    'la8',
-                    'rgb8',
-                    'rgba8',
-                    'l16',
-                    'la16',
-                    'rgb16',
-                    'rgba16',
-                    'rgb32f',
-                    'rgba32f',
-                    'unknown'
-                  ])
-                ),
-                (label: 'width', t: U32()),
-                (label: 'height', t: U32())
-              ])
-            )
-          ], [
-            ('', ResultType(U32(), StringType()))
-          ]),
+          const FuncType([('image', ImageRef._spec)],
+              [('', ResultType(U32(), StringType()))]),
         )!,
         _readBuffer = library.getComponentFunction(
           'read-buffer',
-          const FuncType([
-            ('buffer', ListType(U8()))
-          ], [
-            (
-              '',
-              ResultType(
-                  RecordType([
-                    (label: 'id', t: U32()),
-                    (
-                      label: 'format',
-                      t: EnumType([
-                        'png',
-                        'jpeg',
-                        'gif',
-                        'bmp',
-                        'ico',
-                        'tiff',
-                        'web-p',
-                        'avif',
-                        'pnm',
-                        'dds',
-                        'tga',
-                        'open-exr',
-                        'farbfeld',
-                        'hdr',
-                        'qoi',
-                        'unknown'
-                      ])
-                    ),
-                    (
-                      label: 'color',
-                      t: EnumType([
-                        'l8',
-                        'la8',
-                        'rgb8',
-                        'rgba8',
-                        'l16',
-                        'la16',
-                        'rgb16',
-                        'rgba16',
-                        'rgb32f',
-                        'rgba32f',
-                        'unknown'
-                      ])
-                    ),
-                    (label: 'width', t: U32()),
-                    (label: 'height', t: U32())
-                  ]),
-                  StringType())
-            )
-          ]),
+          const FuncType([('buffer', ListType(U8()))],
+              [('', ResultType(ImageRef._spec, StringType()))]),
         )!,
         _readFile = library.getComponentFunction(
           'read-file',
-          const FuncType([
-            ('path', StringType())
-          ], [
-            (
-              '',
-              ResultType(
-                  RecordType([
-                    (label: 'id', t: U32()),
-                    (
-                      label: 'format',
-                      t: EnumType([
-                        'png',
-                        'jpeg',
-                        'gif',
-                        'bmp',
-                        'ico',
-                        'tiff',
-                        'web-p',
-                        'avif',
-                        'pnm',
-                        'dds',
-                        'tga',
-                        'open-exr',
-                        'farbfeld',
-                        'hdr',
-                        'qoi',
-                        'unknown'
-                      ])
-                    ),
-                    (
-                      label: 'color',
-                      t: EnumType([
-                        'l8',
-                        'la8',
-                        'rgb8',
-                        'rgba8',
-                        'l16',
-                        'la16',
-                        'rgb16',
-                        'rgba16',
-                        'rgb32f',
-                        'rgba32f',
-                        'unknown'
-                      ])
-                    ),
-                    (label: 'width', t: U32()),
-                    (label: 'height', t: U32())
-                  ]),
-                  StringType())
-            )
-          ]),
+          const FuncType([('path', StringType())],
+              [('', ResultType(ImageRef._spec, StringType()))]),
         )!,
         _saveFile = library.getComponentFunction(
           'save-file',
-          const FuncType([
-            (
-              'image',
-              RecordType([
-                (label: 'id', t: U32()),
-                (
-                  label: 'format',
-                  t: EnumType([
-                    'png',
-                    'jpeg',
-                    'gif',
-                    'bmp',
-                    'ico',
-                    'tiff',
-                    'web-p',
-                    'avif',
-                    'pnm',
-                    'dds',
-                    'tga',
-                    'open-exr',
-                    'farbfeld',
-                    'hdr',
-                    'qoi',
-                    'unknown'
-                  ])
-                ),
-                (
-                  label: 'color',
-                  t: EnumType([
-                    'l8',
-                    'la8',
-                    'rgb8',
-                    'rgba8',
-                    'l16',
-                    'la16',
-                    'rgb16',
-                    'rgba16',
-                    'rgb32f',
-                    'rgba32f',
-                    'unknown'
-                  ])
-                ),
-                (label: 'width', t: U32()),
-                (label: 'height', t: U32())
-              ])
-            ),
-            ('path', StringType())
-          ], [
-            ('', ResultType(U32(), StringType()))
-          ]),
+          const FuncType([('image', ImageRef._spec), ('path', StringType())],
+              [('', ResultType(U32(), StringType()))]),
         )!;
 
   static Future<ImageRsWorld> init(
@@ -3533,7 +1189,7 @@ class ImageRsWorld {
   ) imageBufferPointerAndSize({
     required ImageRef imageRef,
   }) {
-    final results = _imageBufferPointerAndSize([imageRef.toJson()]);
+    final results = _imageBufferPointerAndSize([imageRef.toWasm()]);
     final result = results[0];
     return (() {
       final l = result is Map
@@ -3553,7 +1209,7 @@ class ImageRsWorld {
   Image copyImageBuffer({
     required ImageRef imageRef,
   }) {
-    final results = _copyImageBuffer([imageRef.toJson()]);
+    final results = _copyImageBuffer([imageRef.toWasm()]);
     final result = results[0];
     return Image.fromJson(result);
   }
@@ -3562,7 +1218,7 @@ class ImageRsWorld {
   Result<int /*U32*/, String> disposeImage({
     required ImageRef image,
   }) {
-    final results = _disposeImage([image.toJson()]);
+    final results = _disposeImage([image.toWasm()]);
     final result = results[0];
     return Result.fromJson(result, (ok) => ok! as int,
         (error) => error is String ? error : (error! as ParsedString).value);
@@ -3602,7 +1258,7 @@ class ImageRsWorld {
     required ImageRef image,
     required String path,
   }) {
-    final results = _saveFile([image.toJson(), path]);
+    final results = _saveFile([image.toWasm(), path]);
     final result = results[0];
     return Result.fromJson(result, (ok) => ok! as int,
         (error) => error is String ? error : (error! as ParsedString).value);

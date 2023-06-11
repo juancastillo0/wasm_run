@@ -40,7 +40,16 @@ Future<DartWitGeneratorWorld> generator({
     if (!_isWeb) {
       final packageDir = File.fromUri(Platform.script).parent.parent;
       final wasmFile = packageDir.uri.resolve('lib/dart_wit_component.wasm');
-      uris = WasmFileUris(uri: wasmFile, fallback: uris);
+      if (File(wasmFile.toFilePath()).existsSync()) {
+        uris = WasmFileUris(uri: wasmFile, fallback: uris);
+      } else if (_getRootDirectory() case final Directory root) {
+        uris = WasmFileUris(
+          uri: root.uri.resolve(
+            'packages/dart_wit_component/wasm_wit_component/lib/dart_wit_component.wasm',
+          ),
+          fallback: uris,
+        );
+      }
     }
 
     module = await uris.loadModule();
@@ -53,6 +62,17 @@ Future<DartWitGeneratorWorld> generator({
     imports: const DartWitGeneratorWorldImports(),
   );
   return world;
+}
+
+Directory? _getRootDirectory() {
+  var dir = Directory.current;
+  while (!File('${dir.path}${Platform.pathSeparator}melos.yaml').existsSync()) {
+    if (dir.path == '/' || dir.path == '' || dir.path == dir.parent.path) {
+      return null;
+    }
+    dir = dir.parent;
+  }
+  return dir;
 }
 
 /// Creates a [WasiConfig] from the given [witPath].

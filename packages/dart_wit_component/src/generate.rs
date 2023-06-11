@@ -326,6 +326,60 @@ default world host {
     }
 
     #[test]
+    pub fn generate_image_rs() {
+        let path = format!(
+            "{}/../wasm_packages/image_rs/image_rs_wasm/wit/image-rs.wit",
+            PACKAGE_DIR
+        );
+        let output_path = format!(
+            "{}/../wasm_packages/image_rs/lib/src/image_rs_wit.gen.dart",
+            PACKAGE_DIR
+        );
+        parse_and_write_generation(
+            &path,
+            &output_path,
+            default_wit_config(Int64TypeConfig::BigInt),
+        );
+    }
+
+    #[test]
+    pub fn generate_rust_crypto() {
+        let path = format!(
+            "{}/../wasm_packages/rust_crypto/rust_crypto_wasm/wit/rust-crypto.wit",
+            PACKAGE_DIR
+        );
+        let output_path = format!(
+            "{}/../wasm_packages/rust_crypto/lib/src/api.dart",
+            PACKAGE_DIR
+        );
+        parse_and_write_generation(
+            &path,
+            &output_path,
+            default_wit_config(Int64TypeConfig::BigInt),
+        );
+    }
+
+    #[test]
+    pub fn generate_host() {
+        let path = format!("{}/wasm_wit_component/example/lib/host.wit", PACKAGE_DIR);
+        let output_path = format!(
+            "{}/wasm_wit_component/example/lib/host_wit_generation.dart",
+            PACKAGE_DIR
+        );
+        parse_and_write_generation(
+            &path,
+            &output_path,
+            default_wit_config(Int64TypeConfig::BigInt),
+        );
+        let contents = std::fs::read_to_string(&output_path).unwrap();
+        std::fs::write(
+            &output_path,
+            format!("const hostWitDartOutput = r'''\n{contents}''';\n"),
+        )
+        .unwrap();
+    }
+
+    #[test]
     pub fn parse_generator() {
         let path = format!("{}/wit/dart-wit-generator.wit", PACKAGE_DIR);
         let output_path = format!("{}/wasm_wit_component/lib/src/generator.dart", PACKAGE_DIR);
@@ -334,5 +388,15 @@ default world host {
             &output_path,
             default_wit_config(Int64TypeConfig::BigInt),
         );
+    }
+
+    #[test]
+    pub fn generate_all() {
+        parse_generator();
+        parse_wit_types();
+        parse_wit_types_big_int();
+        generate_image_rs();
+        generate_rust_crypto();
+        generate_host();
     }
 }

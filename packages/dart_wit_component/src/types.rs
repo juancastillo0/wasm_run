@@ -23,6 +23,22 @@ enum MethodComment {
     CopyWith,
 }
 
+fn mapper_func(getter: &str, current: &str, is_required: bool) -> String {
+    let func_params = format!("({getter})");
+    if current == getter {
+        if is_required {
+            "null".to_string()
+        } else {
+            "".to_string()
+        }
+    } else if current.ends_with(&func_params) {
+        let current_func = current.trim_end_matches(&func_params);
+        current_func.to_string()
+    } else {
+        format!("{func_params} => {current}")
+    }
+}
+
 impl Parsed<'_> {
     pub fn type_to_str(&self, ty: &Type) -> String {
         match ty {
@@ -139,16 +155,10 @@ impl Parsed<'_> {
     fn type_def_to_json(&self, getter: &str, ty: &TypeDef) -> String {
         match &ty.kind {
             TypeDefKind::Option(ty) => {
-                let mut mapped = self.type_to_json_inner("some", &ty);
-                mapped = if mapped == "some" {
-                    "".to_string()
-                } else {
-                    format!("(some) => {mapped}")
-                };
+                let mapped = self.type_to_json_inner("some", &ty);
+                let mapped = mapper_func("some", &mapped, false);
                 if self.2.use_null_for_option {
-                    format!(
-                        "({getter} == null ? const None().toJson() : Option.fromValue({getter}).toJson({mapped}))"
-                    )
+                    format!("({getter} == null ? const None().toJson() : Option.fromValue({getter}).toJson({mapped}))")
                 } else {
                     format!("{getter}.toJson({mapped})")
                 }
@@ -166,31 +176,22 @@ impl Parsed<'_> {
             TypeDefKind::Variant(_variant) => format!("{getter}.toJson()"),
             TypeDefKind::Option(ty) => {
                 let inner = self.type_to_json_inner("some", &ty);
-                if inner == "some" {
-                    format!("{getter}.toJson()")
-                } else {
-                    format!("{getter}.toJson((some) => {inner})")
-                }
+                let inner = mapper_func("some", &inner, false);
+                format!("{getter}.toJson({inner})")
             }
             TypeDefKind::Result(r) => {
                 let map_ok = r.ok.map_or_else(
                     || "null".to_string(),
                     |ok| {
                         let to_json = self.type_to_json("ok", &ok);
-                        if to_json == "ok" {
-                            return "null".to_string();
-                        }
-                        format!("(ok) => {to_json}")
+                        mapper_func("ok", &to_json, true)
                     },
                 );
                 let map_err = r.err.map_or_else(
                     || "null".to_string(),
                     |error| {
                         let to_json = self.type_to_json("error", &error);
-                        if to_json == "error" {
-                            return "null".to_string();
-                        }
-                        format!("(error) => {to_json}")
+                        mapper_func("error", &to_json, true)
                     },
                 );
                 format!("{getter}.toJson({map_ok}, {map_err})")
@@ -209,11 +210,9 @@ impl Parsed<'_> {
                 let inner = self.type_to_json("e", &ty);
                 if inner == "e" {
                     format!("{getter}.toList()")
-                } else if inner.ends_with("(e)") {
-                    let inner_func = inner.trim_end_matches("(e)");
-                    format!("{getter}.map({inner_func}).toList()")
                 } else {
-                    format!("{getter}.map((e) => {inner}).toList()")
+                    let inner = mapper_func("e", &inner, true);
+                    format!("{getter}.map({inner}).toList()")
                 }
             }
             TypeDefKind::Future(_ty) => unreachable!("Future"),
@@ -258,16 +257,12 @@ impl Parsed<'_> {
     fn type_def_to_wasm(&self, getter: &str, ty: &TypeDef) -> String {
         match &ty.kind {
             TypeDefKind::Option(ty) => {
+                let mapper = self.type_to_wasm_inner("some", &ty);
+                let mapper = mapper_func("some", &mapper, false);
                 if self.2.use_null_for_option {
-                    format!(
-                        "({getter} == null ? const None().toWasm() : Option.fromValue({getter}).toWasm((some) => {}))",
-                        self.type_to_wasm_inner("some", &ty)
-                    )
+                    format!("({getter} == null ? const None().toWasm() : Option.fromValue({getter}).toWasm({mapper}))")
                 } else {
-                    format!(
-                        "{getter}.toWasm((some) => {})",
-                        self.type_to_wasm_inner("some", &ty)
-                    )
+                    format!("{getter}.toWasm({mapper})")
                 }
             }
             _ => self.type_def_to_wasm_inner(getter, ty),
@@ -276,7 +271,6 @@ impl Parsed<'_> {
 
     fn type_def_to_wasm_inner(&self, getter: &str, ty: &TypeDef) -> String {
         match &ty.kind {
-            // TODO: toWasm()
             TypeDefKind::Record(_record) => format!("{getter}.toWasm()"),
             TypeDefKind::Enum(_enum_) => format!("{getter}.toWasm()"),
             TypeDefKind::Union(_union) => format!("{getter}.toWasm()"),
@@ -284,8 +278,8 @@ impl Parsed<'_> {
             TypeDefKind::Variant(_variant) => format!("{getter}.toWasm()"),
             TypeDefKind::Option(ty) => {
                 format!(
-                    "{getter}.toWasm((some) => {})",
-                    self.type_to_wasm_inner("some", &ty)
+                    "{getter}.toWasm({})",
+                    mapper_func("some", &self.type_to_wasm_inner("some", &ty), false)
                 )
             }
             TypeDefKind::Result(r) => {
@@ -293,20 +287,14 @@ impl Parsed<'_> {
                     || "null".to_string(),
                     |ok| {
                         let to_wasm = self.type_to_wasm("ok", &ok);
-                        if to_wasm == "ok" {
-                            return "null".to_string();
-                        }
-                        format!("(ok) => {to_wasm}")
+                        mapper_func("ok", &to_wasm, true)
                     },
                 );
                 let map_err = r.err.map_or_else(
                     || "null".to_string(),
                     |error| {
                         let to_wasm = self.type_to_wasm("error", &error);
-                        if to_wasm == "error" {
-                            return "null".to_string();
-                        }
-                        format!("(error) => {to_wasm}")
+                        mapper_func("error", &to_wasm, true)
                     },
                 );
                 format!("{getter}.toWasm({map_ok}, {map_err})")
@@ -323,10 +311,13 @@ impl Parsed<'_> {
             }
             TypeDefKind::List(ty) => {
                 let inner = self.type_to_wasm("e", &ty);
+                // In toJson() we use toList(), but in toWasm() we just use the list directly
+                // If we need to map, we use toList(growable: false).
                 if inner == "e" {
                     format!("{getter}")
                 } else {
-                    format!("{getter}.map((e) => {inner}).toList()")
+                    let inner = mapper_func("e", &inner, true);
+                    format!("{getter}.map({inner}).toList(growable: false)")
                 }
             }
             TypeDefKind::Future(_ty) => unreachable!("Future"),
@@ -588,7 +579,8 @@ impl Parsed<'_> {
                     if inner == "e" {
                         format!("({getter}! as Iterable).toList()")
                     } else {
-                        format!("({getter}! as Iterable).map((e) => {inner}).toList()")
+                        let inner = mapper_func("e", &inner, true);
+                        format!("({getter}! as Iterable).map({inner}).toList()")
                     }
                 }),
             TypeDefKind::Future(ty) => {

@@ -679,11 +679,10 @@ class R {
         a,
         b,
         c
-            .map((e) =>
-                [e.$1, e.$2.toWasm((some) => some.toWasm((some) => some))])
-            .toList(),
-        d.toWasm((some) => some.toWasm((some) =>
-            [some.$1, some.$2.toWasm((some) => some.toWasm((some) => some))])),
+            .map((e) => [e.$1, e.$2.toWasm((some) => some.toWasm())])
+            .toList(growable: false),
+        d.toWasm((some) => some.toWasm(
+            (some) => [some.$1, some.$2.toWasm((some) => some.toWasm())])),
         e.toWasm(),
         i.toWasm(),
         p.toWasm(),
@@ -1236,7 +1235,7 @@ class HumanApiImportsAdult implements HumanApiImports {
         2,
         [
           value.$1,
-          value.$2.toWasm((some) => some.toWasm((some) => some)),
+          value.$2.toWasm((some) => some.toWasm()),
           [value.$3.$1]
         ]
       );
@@ -1295,8 +1294,7 @@ class ErrnoApi {
       };
 
   /// Returns this as a WASM canonical abi value.
-  List<Object?> toWasm() =>
-      [aU1, listS1, str.toWasm((some) => some), c.toWasm((some) => some)];
+  List<Object?> toWasm() => [aU1, listS1, str.toWasm(), c.toWasm()];
   @override
   String toString() =>
       'ErrnoApi${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
@@ -1646,13 +1644,11 @@ class TypesExampleWorld {
           ListValue args) {
         final args0 = args[0];
         final results = imports.apiImports.apiA1B2(
-            arg: (args0! as Iterable)
-                .map((e) => HumanApiImports.fromJson(e))
-                .toList());
+            arg: (args0! as Iterable).map(HumanApiImports.fromJson).toList());
         return (
           [
-            results.h1.toJson(null, (error) => error.toJson()),
-            results.val2.toJson()
+            results.h1.toWasm(null, (error) => error.toWasm()),
+            results.val2.toWasm()
           ],
           () {}
         );
@@ -1694,10 +1690,10 @@ class TypesExampleWorld {
             i: Input.fromJson(args3));
         return (
           [
-            results.r.toJson(),
-            results.e.toJson(),
-            results.p.toJson(),
-            results.i.toJson()
+            results.r.toWasm(),
+            results.e.toWasm(),
+            results.p.toWasm(),
+            results.i.toWasm()
           ],
           () {}
         );
@@ -1723,7 +1719,7 @@ class TypesExampleWorld {
             args: (args0! as Iterable)
                 .map((e) => Option.fromJson(e, (some) => some! as String))
                 .toList());
-        return ([results.toJson(null, null)], () {});
+        return ([results.toWasm(null, null)], () {});
       }
 
       final lowered = loweredImportFunction(
@@ -1739,7 +1735,7 @@ class TypesExampleWorld {
         final args0 = args[0];
         final results = imports.roundTripNumbers
             .roundTripNumbers(data: RoundTripNumbersData.fromJson(args0));
-        return ([results.toJson()], () {});
+        return ([results.toWasm()], () {});
       }
 
       final lowered = loweredImportFunction(
@@ -1761,7 +1757,7 @@ class TypesExampleWorld {
         final args0 = args[0];
         final results = imports.roundTripNumbers.roundTripNumbersList(
             data: RoundTripNumbersListData.fromJson(args0));
-        return ([results.toJson()], () {});
+        return ([results.toWasm()], () {});
       }
 
       final lowered = loweredImportFunction(
@@ -1821,7 +1817,7 @@ class TypesExampleWorld {
   }) {
     final results = _f1([
       f,
-      fList.map((e) => [e.$1, e.$2]).toList()
+      fList.map((e) => [e.$1, e.$2]).toList(growable: false)
     ]);
     final r0 = results[0];
     final r1 = results[1];

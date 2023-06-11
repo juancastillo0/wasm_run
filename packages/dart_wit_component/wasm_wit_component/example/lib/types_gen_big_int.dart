@@ -638,9 +638,7 @@ class R {
                             : some;
                         return switch (l) {
                           [final v0, final v1] || (final v0, final v1) => (
-                              (v0! as Iterable)
-                                  .map((e) => bigIntFromJson(e))
-                                  .toList(),
+                              (v0! as Iterable).map(bigIntFromJson).toList(),
                               Option.fromJson(
                                       v1,
                                       (some) => Option.fromJson(
@@ -695,10 +693,9 @@ class R {
                   e.$1,
                   (e.$2 == null
                       ? const None().toWasm()
-                      : Option.fromValue(e.$2)
-                          .toWasm((some) => some.toWasm((some) => some)))
+                      : Option.fromValue(e.$2).toWasm((some) => some.toWasm()))
                 ])
-            .toList(),
+            .toList(growable: false),
         (d == null
             ? const None().toWasm()
             : Option.fromValue(d).toWasm((some) => some.toWasm((some) => [
@@ -706,7 +703,7 @@ class R {
                   (some.$2 == null
                       ? const None().toWasm()
                       : Option.fromValue(some.$2)
-                          .toWasm((some) => some.toWasm((some) => some)))
+                          .toWasm((some) => some.toWasm()))
                 ]))),
         e.toWasm(),
         i.toWasm(),
@@ -853,7 +850,7 @@ class RoundTripNumbersListData {
           un32: (un32 is Uint32List
               ? un32
               : Uint32List.fromList((un32! as List).cast())),
-          un64: (un64! as Iterable).map((e) => bigIntFromJson(e)).toList(),
+          un64: (un64! as Iterable).map(bigIntFromJson).toList(),
           si8: (si8 is Int8List
               ? si8
               : Int8List.fromList((si8! as List).cast())),
@@ -863,14 +860,12 @@ class RoundTripNumbersListData {
           si32: (si32 is Int32List
               ? si32
               : Int32List.fromList((si32! as List).cast())),
-          si64: (si64! as Iterable).map((e) => bigIntFromJson(e)).toList(),
+          si64: (si64! as Iterable).map(bigIntFromJson).toList(),
           si64List: (si64List! as Iterable)
-              .map((e) =>
-                  (e! as Iterable).map((e) => bigIntFromJson(e)).toList())
+              .map((e) => (e! as Iterable).map(bigIntFromJson).toList())
               .toList(),
           un64List: (un64List! as Iterable)
-              .map((e) =>
-                  (e! as Iterable).map((e) => bigIntFromJson(e)).toList())
+              .map((e) => (e! as Iterable).map(bigIntFromJson).toList())
               .toList(),
           un8List: (un8List! as Iterable)
               .map((e) => (e is Uint8List
@@ -1286,8 +1281,7 @@ class HumanApiImportsAdult implements HumanApiImports {
           value.$1,
           (value.$2 == null
               ? const None().toWasm()
-              : Option.fromValue(value.$2)
-                  .toWasm((some) => some.toWasm((some) => some))),
+              : Option.fromValue(value.$2).toWasm((some) => some.toWasm())),
           [value.$3.$1]
         ]
       );
@@ -1327,7 +1321,7 @@ class ErrnoApi {
       (final aU1, final listS1, final str, final c) =>
         ErrnoApi(
           aU1: bigIntFromJson(aU1),
-          listS1: (listS1! as Iterable).map((e) => bigIntFromJson(e)).toList(),
+          listS1: (listS1! as Iterable).map(bigIntFromJson).toList(),
           str: Option.fromJson(
               str,
               (some) =>
@@ -1352,12 +1346,8 @@ class ErrnoApi {
   List<Object?> toWasm() => [
         aU1,
         listS1,
-        (str == null
-            ? const None().toWasm()
-            : Option.fromValue(str).toWasm((some) => some)),
-        (c == null
-            ? const None().toWasm()
-            : Option.fromValue(c).toWasm((some) => some))
+        (str == null ? const None().toWasm() : Option.fromValue(str).toWasm()),
+        (c == null ? const None().toWasm() : Option.fromValue(c).toWasm())
       ];
   @override
   String toString() =>
@@ -1718,13 +1708,11 @@ class TypesExampleWorld {
           ListValue args) {
         final args0 = args[0];
         final results = imports.apiImports.apiA1B2(
-            arg: (args0! as Iterable)
-                .map((e) => HumanApiImports.fromJson(e))
-                .toList());
+            arg: (args0! as Iterable).map(HumanApiImports.fromJson).toList());
         return (
           [
-            results.h1.toJson(null, (error) => error.toJson()),
-            results.val2.toJson()
+            results.h1.toWasm(null, (error) => error.toWasm()),
+            results.val2.toWasm()
           ],
           () {}
         );
@@ -1766,10 +1754,10 @@ class TypesExampleWorld {
             i: Input.fromJson(args3));
         return (
           [
-            results.r.toJson(),
-            results.e.toJson(),
-            results.p.toJson(),
-            results.i.toJson()
+            results.r.toWasm(),
+            results.e.toWasm(),
+            results.p.toWasm(),
+            results.i.toWasm()
           ],
           () {}
         );
@@ -1795,7 +1783,7 @@ class TypesExampleWorld {
             args: (args0! as Iterable)
                 .map((e) => Option.fromJson(e, (some) => some! as String).value)
                 .toList());
-        return ([results.toJson(null, null)], () {});
+        return ([results.toWasm(null, null)], () {});
       }
 
       final lowered = loweredImportFunction(
@@ -1811,7 +1799,7 @@ class TypesExampleWorld {
         final args0 = args[0];
         final results = imports.roundTripNumbers
             .roundTripNumbers(data: RoundTripNumbersData.fromJson(args0));
-        return ([results.toJson()], () {});
+        return ([results.toWasm()], () {});
       }
 
       final lowered = loweredImportFunction(
@@ -1833,7 +1821,7 @@ class TypesExampleWorld {
         final args0 = args[0];
         final results = imports.roundTripNumbers.roundTripNumbersList(
             data: RoundTripNumbersListData.fromJson(args0));
-        return ([results.toJson()], () {});
+        return ([results.toWasm()], () {});
       }
 
       final lowered = loweredImportFunction(
@@ -1893,7 +1881,7 @@ class TypesExampleWorld {
   }) {
     final results = _f1([
       f,
-      fList.map((e) => [e.$1, e.$2]).toList()
+      fList.map((e) => [e.$1, e.$2]).toList(growable: false)
     ]);
     final r0 = results[0];
     final r1 = results[1];
