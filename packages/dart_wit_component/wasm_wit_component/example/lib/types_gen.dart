@@ -745,47 +745,10 @@ class R {
       t: OptionType(
           OptionType(Tuple([ListType(S64()), OptionType(OptionType(U64()))])))
     ),
-    (label: 'e', t: EnumType(['too-big', 'too-small', 'too-fast', 'too-slow'])),
-    (label: 'i', t: Union([U64(), StringType()])),
-    (label: 'p', t: Flags(['read', 'write', 'exec'])),
-    (
-      label: 'f',
-      t: Flags([
-        'f1',
-        'f2',
-        'f3',
-        'f4',
-        'f5',
-        'f6',
-        'f7',
-        'f8',
-        'f9',
-        'f10',
-        'f11',
-        'f12',
-        'f13',
-        'f14',
-        'f15',
-        'f16',
-        'f17',
-        'f18',
-        'f19',
-        'f20',
-        'f21',
-        'f22',
-        'f23',
-        'f24',
-        'f25',
-        'f26',
-        'f27',
-        'f28',
-        'f29',
-        'f30',
-        'f31',
-        'f32',
-        'f33'
-      ])
-    )
+    (label: 'e', t: ErrnoTypesInterface._spec),
+    (label: 'i', t: Input._spec),
+    (label: 'p', t: Permissions._spec),
+    (label: 'f', t: ManyFlags._spec)
   ]);
 }
 
@@ -1327,8 +1290,8 @@ class ErrnoApi {
   Map<String, Object?> toJson() => {
         'a-u1': aU1,
         'list-s1': listS1.toList(),
-        'str': str.toJson((some) => some),
-        'c': c.toJson((some) => some),
+        'str': str.toJson(),
+        'c': c.toJson(),
       };
 
   /// Returns this as a WASM canonical abi value.
@@ -1479,81 +1442,13 @@ class RoundTripNumbers {
   RoundTripNumbers(WasmLibrary library)
       : _roundTripNumbers = library.getComponentFunction(
           'types-example-namespace:types-example-pkg/round-trip-numbers#round-trip-numbers',
-          const FuncType([
-            (
-              'data',
-              RecordType([
-                (label: 'un8', t: U8()),
-                (label: 'un16', t: U16()),
-                (label: 'un32', t: U32()),
-                (label: 'un64', t: U64()),
-                (label: 'si8', t: S8()),
-                (label: 'si16', t: S16()),
-                (label: 'si32', t: S32()),
-                (label: 'si64', t: S64()),
-                (label: 'f32', t: Float32()),
-                (label: 'f64', t: Float64())
-              ])
-            )
-          ], [
-            (
-              '',
-              RecordType([
-                (label: 'un8', t: U8()),
-                (label: 'un16', t: U16()),
-                (label: 'un32', t: U32()),
-                (label: 'un64', t: U64()),
-                (label: 'si8', t: S8()),
-                (label: 'si16', t: S16()),
-                (label: 'si32', t: S32()),
-                (label: 'si64', t: S64()),
-                (label: 'f32', t: Float32()),
-                (label: 'f64', t: Float64())
-              ])
-            )
-          ]),
+          const FuncType([('data', RoundTripNumbersData._spec)],
+              [('', RoundTripNumbersData._spec)]),
         )!,
         _roundTripNumbersList = library.getComponentFunction(
           'types-example-namespace:types-example-pkg/round-trip-numbers#round-trip-numbers-list',
-          const FuncType([
-            (
-              'data',
-              RecordType([
-                (label: 'un8', t: ListType(U8())),
-                (label: 'un16', t: ListType(U16())),
-                (label: 'un32', t: ListType(U32())),
-                (label: 'un64', t: ListType(U64())),
-                (label: 'si8', t: ListType(S8())),
-                (label: 'si16', t: ListType(S16())),
-                (label: 'si32', t: ListType(S32())),
-                (label: 'si64', t: ListType(S64())),
-                (label: 'si64-list', t: ListType(ListType(S64()))),
-                (label: 'un64-list', t: ListType(ListType(U64()))),
-                (label: 'un8-list', t: ListType(ListType(U8()))),
-                (label: 'f32', t: ListType(Float32())),
-                (label: 'f64', t: ListType(Float64()))
-              ])
-            )
-          ], [
-            (
-              '',
-              RecordType([
-                (label: 'un8', t: ListType(U8())),
-                (label: 'un16', t: ListType(U16())),
-                (label: 'un32', t: ListType(U32())),
-                (label: 'un64', t: ListType(U64())),
-                (label: 'si8', t: ListType(S8())),
-                (label: 'si16', t: ListType(S16())),
-                (label: 'si32', t: ListType(S32())),
-                (label: 'si64', t: ListType(S64())),
-                (label: 'si64-list', t: ListType(ListType(S64()))),
-                (label: 'un64-list', t: ListType(ListType(U64()))),
-                (label: 'un8-list', t: ListType(ListType(U8()))),
-                (label: 'f32', t: ListType(Float32())),
-                (label: 'f64', t: ListType(Float64()))
-              ])
-            )
-          ]),
+          const FuncType([('data', RoundTripNumbersListData._spec)],
+              [('', RoundTripNumbersListData._spec)]),
         )!;
   final ListValue Function(ListValue) _roundTripNumbers;
   RoundTripNumbersData roundTripNumbers({
@@ -1588,14 +1483,8 @@ class Api {
           const FuncType([
             (
               'break',
-              OptionType(OptionType(ResultType(
-                  null,
-                  OptionType(RecordType([
-                    (label: 'a-u1', t: U64()),
-                    (label: 'list-s1', t: ListType(S64())),
-                    (label: 'str', t: OptionType(StringType())),
-                    (label: 'c', t: OptionType(Char()))
-                  ])))))
+              OptionType(
+                  OptionType(ResultType(null, OptionType(ErrnoApi._spec))))
             )
           ], [
             ('', Tuple([]))
@@ -1604,17 +1493,7 @@ class Api {
         _continue_ = library.getComponentFunction(
           'types-example-namespace:types-example-pkg/api#continue',
           const FuncType([
-            (
-              'abstract',
-              OptionType(ResultType(
-                  null,
-                  RecordType([
-                    (label: 'a-u1', t: U64()),
-                    (label: 'list-s1', t: ListType(S64())),
-                    (label: 'str', t: OptionType(StringType())),
-                    (label: 'c', t: OptionType(Char()))
-                  ])))
-            ),
+            ('abstract', OptionType(ResultType(null, ErrnoApi._spec))),
             ('extends', Tuple([]))
           ], [
             ('implements', OptionType(Tuple([])))
@@ -1623,135 +1502,15 @@ class Api {
         _recordFunc = library.getComponentFunction(
           'types-example-namespace:types-example-pkg/api#record-func',
           const FuncType([
-            (
-              'r',
-              RecordType([
-                (label: 'a', t: U32()),
-                (label: 'b', t: StringType()),
-                (
-                  label: 'c',
-                  t: ListType(
-                      Tuple([StringType(), OptionType(OptionType(U32()))]))
-                ),
-                (
-                  label: 'd',
-                  t: OptionType(OptionType(
-                      Tuple([ListType(S64()), OptionType(OptionType(U64()))])))
-                ),
-                (
-                  label: 'e',
-                  t: EnumType(['too-big', 'too-small', 'too-fast', 'too-slow'])
-                ),
-                (label: 'i', t: Union([U64(), StringType()])),
-                (label: 'p', t: Flags(['read', 'write', 'exec'])),
-                (
-                  label: 'f',
-                  t: Flags([
-                    'f1',
-                    'f2',
-                    'f3',
-                    'f4',
-                    'f5',
-                    'f6',
-                    'f7',
-                    'f8',
-                    'f9',
-                    'f10',
-                    'f11',
-                    'f12',
-                    'f13',
-                    'f14',
-                    'f15',
-                    'f16',
-                    'f17',
-                    'f18',
-                    'f19',
-                    'f20',
-                    'f21',
-                    'f22',
-                    'f23',
-                    'f24',
-                    'f25',
-                    'f26',
-                    'f27',
-                    'f28',
-                    'f29',
-                    'f30',
-                    'f31',
-                    'f32',
-                    'f33'
-                  ])
-                )
-              ])
-            ),
-            ('e', EnumType(['too-big', 'too-small', 'too-fast', 'too-slow'])),
-            ('p', Flags(['read', 'write', 'exec'])),
-            ('i', Union([U64(), StringType()]))
+            ('r', R._spec),
+            ('e', ErrnoTypesInterface._spec),
+            ('p', Permissions._spec),
+            ('i', Input._spec)
           ], [
-            (
-              'r',
-              RecordType([
-                (label: 'a', t: U32()),
-                (label: 'b', t: StringType()),
-                (
-                  label: 'c',
-                  t: ListType(
-                      Tuple([StringType(), OptionType(OptionType(U32()))]))
-                ),
-                (
-                  label: 'd',
-                  t: OptionType(OptionType(
-                      Tuple([ListType(S64()), OptionType(OptionType(U64()))])))
-                ),
-                (
-                  label: 'e',
-                  t: EnumType(['too-big', 'too-small', 'too-fast', 'too-slow'])
-                ),
-                (label: 'i', t: Union([U64(), StringType()])),
-                (label: 'p', t: Flags(['read', 'write', 'exec'])),
-                (
-                  label: 'f',
-                  t: Flags([
-                    'f1',
-                    'f2',
-                    'f3',
-                    'f4',
-                    'f5',
-                    'f6',
-                    'f7',
-                    'f8',
-                    'f9',
-                    'f10',
-                    'f11',
-                    'f12',
-                    'f13',
-                    'f14',
-                    'f15',
-                    'f16',
-                    'f17',
-                    'f18',
-                    'f19',
-                    'f20',
-                    'f21',
-                    'f22',
-                    'f23',
-                    'f24',
-                    'f25',
-                    'f26',
-                    'f27',
-                    'f28',
-                    'f29',
-                    'f30',
-                    'f31',
-                    'f32',
-                    'f33'
-                  ])
-                )
-              ])
-            ),
-            ('e', EnumType(['too-big', 'too-small', 'too-fast', 'too-slow'])),
-            ('p', Flags(['read', 'write', 'exec'])),
-            ('i', Union([U64(), StringType()]))
+            ('r', R._spec),
+            ('e', ErrnoTypesInterface._spec),
+            ('p', Permissions._spec),
+            ('i', Input._spec)
           ]),
         )!;
   final ListValue Function(ListValue) _f12;
@@ -1852,8 +1611,8 @@ class TypesExampleWorld {
         _reNamed = library.getComponentFunction(
           're-named',
           const FuncType([
-            ('perm', OptionType(Flags(['read', 'write', 'exec']))),
-            ('e', OptionType(RecordType([])))
+            ('perm', OptionType(Permissions._spec)),
+            ('e', OptionType(Empty._spec))
           ], [
             ('', Tuple([U32(), U64()]))
           ]),
@@ -1862,7 +1621,7 @@ class TypesExampleWorld {
           're-named2',
           const FuncType([
             ('tup', Tuple([ListType(U16())])),
-            ('e', RecordType([]))
+            ('e', Empty._spec)
           ], [
             ('', Tuple([OptionType(U8()), S8()]))
           ]),
@@ -1877,40 +1636,10 @@ class TypesExampleWorld {
 
     {
       const ft = FuncType([
-        (
-          'arg',
-          ListType(Variant([
-            Case('baby', null),
-            Case('child', U64()),
-            Case(
-                'adult',
-                Tuple([
-                  StringType(),
-                  OptionType(OptionType(StringType())),
-                  Tuple([S64()])
-                ]))
-          ]))
-        )
+        ('arg', ListType(HumanApiImports._spec))
       ], [
-        (
-          'h1',
-          ResultType(Char(),
-              EnumType(['too-big', 'too-small', 'too-fast', 'too-slow']))
-        ),
-        (
-          'val2',
-          Variant([
-            Case('baby', null),
-            Case('child', U64()),
-            Case(
-                'adult',
-                Tuple([
-                  StringType(),
-                  OptionType(OptionType(StringType())),
-                  Tuple([S64()])
-                ]))
-          ])
-        )
+        ('h1', ResultType(Char(), ErrnoTypesInterface._spec)),
+        ('val2', HumanApiImports._spec)
       ]);
 
       (ListValue, void Function()) execImportsApiImportsApiA1b2(
@@ -1941,133 +1670,15 @@ class TypesExampleWorld {
     }
     {
       const ft = FuncType([
-        (
-          'r',
-          RecordType([
-            (label: 'a', t: U32()),
-            (label: 'b', t: StringType()),
-            (
-              label: 'c',
-              t: ListType(Tuple([StringType(), OptionType(OptionType(U32()))]))
-            ),
-            (
-              label: 'd',
-              t: OptionType(OptionType(
-                  Tuple([ListType(S64()), OptionType(OptionType(U64()))])))
-            ),
-            (
-              label: 'e',
-              t: EnumType(['too-big', 'too-small', 'too-fast', 'too-slow'])
-            ),
-            (label: 'i', t: Union([U64(), StringType()])),
-            (label: 'p', t: Flags(['read', 'write', 'exec'])),
-            (
-              label: 'f',
-              t: Flags([
-                'f1',
-                'f2',
-                'f3',
-                'f4',
-                'f5',
-                'f6',
-                'f7',
-                'f8',
-                'f9',
-                'f10',
-                'f11',
-                'f12',
-                'f13',
-                'f14',
-                'f15',
-                'f16',
-                'f17',
-                'f18',
-                'f19',
-                'f20',
-                'f21',
-                'f22',
-                'f23',
-                'f24',
-                'f25',
-                'f26',
-                'f27',
-                'f28',
-                'f29',
-                'f30',
-                'f31',
-                'f32',
-                'f33'
-              ])
-            )
-          ])
-        ),
-        ('e', EnumType(['too-big', 'too-small', 'too-fast', 'too-slow'])),
-        ('p', Flags(['read', 'write', 'exec'])),
-        ('i', Union([U64(), StringType()]))
+        ('r', R._spec),
+        ('e', ErrnoTypesInterface._spec),
+        ('p', Permissions._spec),
+        ('i', Input._spec)
       ], [
-        (
-          'r',
-          RecordType([
-            (label: 'a', t: U32()),
-            (label: 'b', t: StringType()),
-            (
-              label: 'c',
-              t: ListType(Tuple([StringType(), OptionType(OptionType(U32()))]))
-            ),
-            (
-              label: 'd',
-              t: OptionType(OptionType(
-                  Tuple([ListType(S64()), OptionType(OptionType(U64()))])))
-            ),
-            (
-              label: 'e',
-              t: EnumType(['too-big', 'too-small', 'too-fast', 'too-slow'])
-            ),
-            (label: 'i', t: Union([U64(), StringType()])),
-            (label: 'p', t: Flags(['read', 'write', 'exec'])),
-            (
-              label: 'f',
-              t: Flags([
-                'f1',
-                'f2',
-                'f3',
-                'f4',
-                'f5',
-                'f6',
-                'f7',
-                'f8',
-                'f9',
-                'f10',
-                'f11',
-                'f12',
-                'f13',
-                'f14',
-                'f15',
-                'f16',
-                'f17',
-                'f18',
-                'f19',
-                'f20',
-                'f21',
-                'f22',
-                'f23',
-                'f24',
-                'f25',
-                'f26',
-                'f27',
-                'f28',
-                'f29',
-                'f30',
-                'f31',
-                'f32',
-                'f33'
-              ])
-            )
-          ])
-        ),
-        ('e', EnumType(['too-big', 'too-small', 'too-fast', 'too-slow'])),
-        ('p', Flags(['read', 'write', 'exec'])),
-        ('i', Union([U64(), StringType()]))
+        ('r', R._spec),
+        ('e', ErrnoTypesInterface._spec),
+        ('p', Permissions._spec),
+        ('i', Input._spec)
       ]);
 
       (ListValue, void Function()) execImportsApiImportsRecordFunc(
@@ -2120,39 +1731,8 @@ class TypesExampleWorld {
       builder.addImport(r'inline', 'inline-imp', lowered);
     }
     {
-      const ft = FuncType([
-        (
-          'data',
-          RecordType([
-            (label: 'un8', t: U8()),
-            (label: 'un16', t: U16()),
-            (label: 'un32', t: U32()),
-            (label: 'un64', t: U64()),
-            (label: 'si8', t: S8()),
-            (label: 'si16', t: S16()),
-            (label: 'si32', t: S32()),
-            (label: 'si64', t: S64()),
-            (label: 'f32', t: Float32()),
-            (label: 'f64', t: Float64())
-          ])
-        )
-      ], [
-        (
-          '',
-          RecordType([
-            (label: 'un8', t: U8()),
-            (label: 'un16', t: U16()),
-            (label: 'un32', t: U32()),
-            (label: 'un64', t: U64()),
-            (label: 'si8', t: S8()),
-            (label: 'si16', t: S16()),
-            (label: 'si32', t: S32()),
-            (label: 'si64', t: S64()),
-            (label: 'f32', t: Float32()),
-            (label: 'f64', t: Float64())
-          ])
-        )
-      ]);
+      const ft = FuncType([('data', RoundTripNumbersData._spec)],
+          [('', RoundTripNumbersData._spec)]);
 
       (ListValue, void Function()) execImportsRoundTripNumbersRoundTripNumbers(
           ListValue args) {
@@ -2173,45 +1753,8 @@ class TypesExampleWorld {
           lowered);
     }
     {
-      const ft = FuncType([
-        (
-          'data',
-          RecordType([
-            (label: 'un8', t: ListType(U8())),
-            (label: 'un16', t: ListType(U16())),
-            (label: 'un32', t: ListType(U32())),
-            (label: 'un64', t: ListType(U64())),
-            (label: 'si8', t: ListType(S8())),
-            (label: 'si16', t: ListType(S16())),
-            (label: 'si32', t: ListType(S32())),
-            (label: 'si64', t: ListType(S64())),
-            (label: 'si64-list', t: ListType(ListType(S64()))),
-            (label: 'un64-list', t: ListType(ListType(U64()))),
-            (label: 'un8-list', t: ListType(ListType(U8()))),
-            (label: 'f32', t: ListType(Float32())),
-            (label: 'f64', t: ListType(Float64()))
-          ])
-        )
-      ], [
-        (
-          '',
-          RecordType([
-            (label: 'un8', t: ListType(U8())),
-            (label: 'un16', t: ListType(U16())),
-            (label: 'un32', t: ListType(U32())),
-            (label: 'un64', t: ListType(U64())),
-            (label: 'si8', t: ListType(S8())),
-            (label: 'si16', t: ListType(S16())),
-            (label: 'si32', t: ListType(S32())),
-            (label: 'si64', t: ListType(S64())),
-            (label: 'si64-list', t: ListType(ListType(S64()))),
-            (label: 'un64-list', t: ListType(ListType(U64()))),
-            (label: 'un8-list', t: ListType(ListType(U8()))),
-            (label: 'f32', t: ListType(Float32())),
-            (label: 'f64', t: ListType(Float64()))
-          ])
-        )
-      ]);
+      const ft = FuncType([('data', RoundTripNumbersListData._spec)],
+          [('', RoundTripNumbersListData._spec)]);
 
       (ListValue, void Function())
           execImportsRoundTripNumbersRoundTripNumbersList(ListValue args) {
@@ -2232,10 +1775,8 @@ class TypesExampleWorld {
           lowered);
     }
     {
-      const ft = FuncType([
-        ('message', StringType()),
-        ('level', EnumType(['debug', 'info', 'warn', 'error']))
-      ], []);
+      const ft =
+          FuncType([('message', StringType()), ('level', LogLevel._spec)], []);
 
       (ListValue, void Function()) execImportsPrint(ListValue args) {
         final args0 = args[0];

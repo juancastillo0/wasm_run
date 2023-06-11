@@ -40,6 +40,9 @@ class WitFile {
         'path': path,
         'contents': contents,
       };
+
+  /// Returns this as a WASM canonical abi value.
+  List<Object?> toWasm() => [path, contents];
   @override
   String toString() =>
       'WitFile${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
@@ -105,11 +108,14 @@ enum Int64TypeConfig {
       final index = _spec.labels.indexOf(json);
       return index != -1 ? values[index] : values.byName(json);
     }
-    return values[json! as int];
+    return json is (int, Object?) ? values[json.$1] : values[json! as int];
   }
 
   /// Returns this as a serializable JSON value.
   Object? toJson() => _spec.labels[index];
+
+  /// Returns this as a WASM canonical abi value.
+  int toWasm() => index;
   static const _spec = EnumType(
       ['native-object', 'big-int', 'big-int-unsigned-only', 'core-int']);
 }
@@ -152,6 +158,10 @@ class InMemoryFiles {
         'world-file': worldFile.toJson(),
         'pkg-files': pkgFiles.map((e) => e.toJson()).toList(),
       };
+
+  /// Returns this as a WASM canonical abi value.
+  List<Object?> toWasm() =>
+      [worldFile.toWasm(), pkgFiles.map((e) => e.toWasm()).toList()];
   @override
   String toString() =>
       'InMemoryFiles${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
@@ -174,20 +184,8 @@ class InMemoryFiles {
   // ignore: unused_field
   List<Object?> get _props => [worldFile, pkgFiles];
   static const _spec = RecordType([
-    (
-      label: 'world-file',
-      t: RecordType([
-        (label: 'path', t: StringType()),
-        (label: 'contents', t: StringType())
-      ])
-    ),
-    (
-      label: 'pkg-files',
-      t: ListType(RecordType([
-        (label: 'path', t: StringType()),
-        (label: 'contents', t: StringType())
-      ]))
-    )
+    (label: 'world-file', t: WitFile._spec),
+    (label: 'pkg-files', t: ListType(WitFile._spec))
   ]);
 }
 
@@ -225,6 +223,9 @@ class FileSystemPaths {
   Map<String, Object?> toJson() => {
         'input-path': inputPath,
       };
+
+  /// Returns this as a WASM canonical abi value.
+  List<Object?> toWasm() => [inputPath];
   @override
   String toString() =>
       'FileSystemPaths${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
@@ -274,26 +275,11 @@ sealed class WitGeneratorInput {
 
   /// Returns this as a serializable JSON value.
   Map<String, Object?> toJson();
+
+  /// Returns this as a WASM canonical abi value.
+  (int, Object?) toWasm();
 // ignore: unused_field
-  static const _spec = Union([
-    RecordType([(label: 'input-path', t: StringType())]),
-    RecordType([
-      (
-        label: 'world-file',
-        t: RecordType([
-          (label: 'path', t: StringType()),
-          (label: 'contents', t: StringType())
-        ])
-      ),
-      (
-        label: 'pkg-files',
-        t: ListType(RecordType([
-          (label: 'path', t: StringType()),
-          (label: 'contents', t: StringType())
-        ]))
-      )
-    ])
-  ]);
+  static const _spec = Union([FileSystemPaths._spec, InMemoryFiles._spec]);
 }
 
 class WitGeneratorInputFileSystemPaths implements WitGeneratorInput {
@@ -303,6 +289,10 @@ class WitGeneratorInputFileSystemPaths implements WitGeneratorInput {
   /// Returns this as a serializable JSON value.
   @override
   Map<String, Object?> toJson() => {'0': value.toJson()};
+
+  /// Returns this as a WASM canonical abi value.
+  @override
+  (int, Object?) toWasm() => (0, value.toWasm());
   @override
   String toString() => 'WitGeneratorInputFileSystemPaths($value)';
   @override
@@ -320,6 +310,10 @@ class WitGeneratorInputInMemoryFiles implements WitGeneratorInput {
   /// Returns this as a serializable JSON value.
   @override
   Map<String, Object?> toJson() => {'1': value.toJson()};
+
+  /// Returns this as a WASM canonical abi value.
+  @override
+  (int, Object?) toWasm() => (1, value.toWasm());
   @override
   String toString() => 'WitGeneratorInputInMemoryFiles($value)';
   @override
@@ -456,15 +450,35 @@ class WitGeneratorConfig {
         'generate-docs': generateDocs,
         'file-header': (fileHeader == null
             ? const None().toJson()
-            : Option.fromValue(fileHeader).toJson((some) => some)),
+            : Option.fromValue(fileHeader).toJson()),
         'object-comparator': (objectComparator == null
             ? const None().toJson()
-            : Option.fromValue(objectComparator).toJson((some) => some)),
+            : Option.fromValue(objectComparator).toJson()),
         'use-null-for-option': useNullForOption,
         'required-option': requiredOption,
         'int64-type': int64Type.toJson(),
         'typed-number-lists': typedNumberLists,
       };
+
+  /// Returns this as a WASM canonical abi value.
+  List<Object?> toWasm() => [
+        inputs.toWasm(),
+        jsonSerialization,
+        copyWith_,
+        equalityAndHashCode,
+        toString_,
+        generateDocs,
+        (fileHeader == null
+            ? const None().toWasm()
+            : Option.fromValue(fileHeader).toWasm((some) => some)),
+        (objectComparator == null
+            ? const None().toWasm()
+            : Option.fromValue(objectComparator).toWasm((some) => some)),
+        useNullForOption,
+        requiredOption,
+        int64Type.toWasm(),
+        typedNumberLists
+      ];
   @override
   String toString() =>
       'WitGeneratorConfig${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
@@ -523,28 +537,7 @@ class WitGeneratorConfig {
         typedNumberLists
       ];
   static const _spec = RecordType([
-    (
-      label: 'inputs',
-      t: Union([
-        RecordType([(label: 'input-path', t: StringType())]),
-        RecordType([
-          (
-            label: 'world-file',
-            t: RecordType([
-              (label: 'path', t: StringType()),
-              (label: 'contents', t: StringType())
-            ])
-          ),
-          (
-            label: 'pkg-files',
-            t: ListType(RecordType([
-              (label: 'path', t: StringType()),
-              (label: 'contents', t: StringType())
-            ]))
-          )
-        ])
-      ])
-    ),
+    (label: 'inputs', t: WitGeneratorInput._spec),
     (label: 'json-serialization', t: Bool()),
     (label: 'copy-with', t: Bool()),
     (label: 'equality-and-hash-code', t: Bool()),
@@ -554,11 +547,7 @@ class WitGeneratorConfig {
     (label: 'object-comparator', t: OptionType(StringType())),
     (label: 'use-null-for-option', t: Bool()),
     (label: 'required-option', t: Bool()),
-    (
-      label: 'int64-type',
-      t: EnumType(
-          ['native-object', 'big-int', 'big-int-unsigned-only', 'core-int'])
-    ),
+    (label: 'int64-type', t: Int64TypeConfig._spec),
     (label: 'typed-number-lists', t: Bool())
   ]);
 }
@@ -576,114 +565,13 @@ class DartWitGeneratorWorld {
     required this.library,
   })  : _generate = library.getComponentFunction(
           'generate',
-          const FuncType([
-            (
-              'config',
-              RecordType([
-                (
-                  label: 'inputs',
-                  t: Union([
-                    RecordType([(label: 'input-path', t: StringType())]),
-                    RecordType([
-                      (
-                        label: 'world-file',
-                        t: RecordType([
-                          (label: 'path', t: StringType()),
-                          (label: 'contents', t: StringType())
-                        ])
-                      ),
-                      (
-                        label: 'pkg-files',
-                        t: ListType(RecordType([
-                          (label: 'path', t: StringType()),
-                          (label: 'contents', t: StringType())
-                        ]))
-                      )
-                    ])
-                  ])
-                ),
-                (label: 'json-serialization', t: Bool()),
-                (label: 'copy-with', t: Bool()),
-                (label: 'equality-and-hash-code', t: Bool()),
-                (label: 'to-string', t: Bool()),
-                (label: 'generate-docs', t: Bool()),
-                (label: 'file-header', t: OptionType(StringType())),
-                (label: 'object-comparator', t: OptionType(StringType())),
-                (label: 'use-null-for-option', t: Bool()),
-                (label: 'required-option', t: Bool()),
-                (
-                  label: 'int64-type',
-                  t: EnumType([
-                    'native-object',
-                    'big-int',
-                    'big-int-unsigned-only',
-                    'core-int'
-                  ])
-                ),
-                (label: 'typed-number-lists', t: Bool())
-              ])
-            )
-          ], [
-            (
-              '',
-              ResultType(
-                  RecordType([
-                    (label: 'path', t: StringType()),
-                    (label: 'contents', t: StringType())
-                  ]),
-                  StringType())
-            )
-          ]),
+          const FuncType([('config', WitGeneratorConfig._spec)],
+              [('', ResultType(WitFile._spec, StringType()))]),
         )!,
         _generateToFile = library.getComponentFunction(
           'generate-to-file',
           const FuncType([
-            (
-              'config',
-              RecordType([
-                (
-                  label: 'inputs',
-                  t: Union([
-                    RecordType([(label: 'input-path', t: StringType())]),
-                    RecordType([
-                      (
-                        label: 'world-file',
-                        t: RecordType([
-                          (label: 'path', t: StringType()),
-                          (label: 'contents', t: StringType())
-                        ])
-                      ),
-                      (
-                        label: 'pkg-files',
-                        t: ListType(RecordType([
-                          (label: 'path', t: StringType()),
-                          (label: 'contents', t: StringType())
-                        ]))
-                      )
-                    ])
-                  ])
-                ),
-                (label: 'json-serialization', t: Bool()),
-                (label: 'copy-with', t: Bool()),
-                (label: 'equality-and-hash-code', t: Bool()),
-                (label: 'to-string', t: Bool()),
-                (label: 'generate-docs', t: Bool()),
-                (label: 'file-header', t: OptionType(StringType())),
-                (label: 'object-comparator', t: OptionType(StringType())),
-                (label: 'use-null-for-option', t: Bool()),
-                (label: 'required-option', t: Bool()),
-                (
-                  label: 'int64-type',
-                  t: EnumType([
-                    'native-object',
-                    'big-int',
-                    'big-int-unsigned-only',
-                    'core-int'
-                  ])
-                ),
-                (label: 'typed-number-lists', t: Bool())
-              ])
-            ),
+            ('config', WitGeneratorConfig._spec),
             ('file-path', StringType())
           ], [
             ('', ResultType(null, StringType()))
@@ -709,7 +597,7 @@ class DartWitGeneratorWorld {
   Result<WitFile, String> generate({
     required WitGeneratorConfig config,
   }) {
-    final results = _generate([config.toJson()]);
+    final results = _generate([config.toWasm()]);
     final result = results[0];
     return Result.fromJson(result, (ok) => WitFile.fromJson(ok),
         (error) => error is String ? error : (error! as ParsedString).value);
@@ -722,7 +610,7 @@ class DartWitGeneratorWorld {
     required WitGeneratorConfig config,
     required String filePath,
   }) {
-    final results = _generateToFile([config.toJson(), filePath]);
+    final results = _generateToFile([config.toWasm(), filePath]);
     final result = results[0];
     return Result.fromJson(result, (ok) => null,
         (error) => error is String ? error : (error! as ParsedString).value);

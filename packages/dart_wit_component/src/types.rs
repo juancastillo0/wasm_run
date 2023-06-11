@@ -336,7 +336,33 @@ impl Parsed<'_> {
         }
     }
 
+    fn type_class_name(&self, ty: &Type) -> Option<String> {
+        if let Type::Id(ty_id) = ty {
+            let ty_def = self.0.types.get(*ty_id).unwrap();
+            if let (
+                Some(name),
+                TypeDefKind::Record(_)
+                | TypeDefKind::Enum(_)
+                | TypeDefKind::Union(_)
+                | TypeDefKind::Variant(_)
+                | TypeDefKind::Flags(_),
+            ) = (self.type_def_to_name_definition(ty_def), &ty_def.kind)
+            {
+                return Some(name);
+            }
+        }
+        None
+    }
+
     pub fn type_to_spec(&self, ty: &Type) -> String {
+        if let Some(name) = self.type_class_name(ty) {
+            format!("{name}._spec")
+        } else {
+            self.type_to_spec_inner(ty)
+        }
+    }
+
+    fn type_to_spec_inner(&self, ty: &Type) -> String {
         match ty {
             Type::Id(ty_id) => {
                 let ty_def = self.0.types.get(*ty_id).unwrap();
@@ -401,15 +427,15 @@ impl Parsed<'_> {
                     .collect::<Vec<_>>()
                     .join("', '")
             ),
-            TypeDefKind::Variant(variant) => format!(
-                "Variant([{}])",
-                variant
+            TypeDefKind::Variant(variant) => {
+                let options = variant
                     .cases
                     .iter()
                     .map(|t| format!("Case('{}', {})", t.name, self.type_def_to_spec_option(t.ty)))
                     .collect::<Vec<_>>()
-                    .join(", ")
-            ),
+                    .join(", ");
+                format!("Variant([{options}])")
+            }
             TypeDefKind::Tuple(t) => {
                 format!(
                     "Tuple([{}])",
