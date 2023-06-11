@@ -8,19 +8,9 @@ import 'package:wasm_wit_component/generator.dart';
 import 'package:wasm_wit_component/src/generate_cli.dart';
 import 'package:wasm_wit_component/wasm_wit_component.dart';
 import 'package:wasm_wit_component_example/host_wit_generation.dart';
+import 'package:wasm_wit_component_example/test_utils.dart';
 
 final _formatter = DartFormatter();
-
-Directory getRootDirectory() {
-  var dir = Directory.current;
-  while (!File('${dir.path}${Platform.pathSeparator}melos.yaml').existsSync()) {
-    if (dir.path == '/' || dir.path == '' || dir.path == dir.parent.path) {
-      throw Exception('Could not find root directory');
-    }
-    dir = dir.parent;
-  }
-  return dir;
-}
 
 void witDartGeneratorTests({Future<Directory> Function()? getDirectory}) {
   group('wit generator', () {

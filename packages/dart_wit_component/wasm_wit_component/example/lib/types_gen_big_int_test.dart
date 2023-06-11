@@ -1,6 +1,5 @@
 // ignore_for_file: avoid_print
 
-import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:test/test.dart';
@@ -8,23 +7,13 @@ import 'package:wasm_run/load_module.dart';
 import 'package:wasm_wit_component/wasm_wit_component.dart';
 import 'package:wasm_wit_component_example/test_utils.dart';
 import 'package:wasm_wit_component_example/types_gen_big_int.dart';
-import 'package:wasm_wit_component_example/wit_generator_test.dart';
 
-bool _kReleaseMode = true;
 const _isWeb = identical(0, 0.0);
 
 void typesGenBigIntWitComponentTests({
   Future<Uint8List> Function()? getWitComponentExampleBytes,
 }) async {
-  // ignore: prefer_asserts_with_message
-  assert(
-    (() {
-      _kReleaseMode = false;
-      return true;
-    })(),
-  );
-
-  if (_kReleaseMode) {
+  if (isRelease()) {
     final test = await _TypesWorldTest.init();
     final clock = Stopwatch()..start();
     const count = 10000;
@@ -88,19 +77,6 @@ void typesGenBigIntWitComponentTests({
   }
 }
 
-String _getWitComponentExample() {
-  final root = getRootDirectory();
-  final base =
-      '${root.path}/packages/dart_wit_component/wasm_wit_component/example/rust_wit_component_example';
-  final releasePath =
-      '$base/target/wasm32-unknown-unknown/release/rust_wit_component_example.wasm';
-  if (_kReleaseMode) return releasePath;
-  final debugPath =
-      '$base/target/wasm32-unknown-unknown/debug/rust_wit_component_example.wasm';
-  if (File(debugPath).existsSync()) return debugPath;
-  return releasePath;
-}
-
 Future<TypesExampleWorld> initTypesWorld(
   TypesExampleWorldImports imports,
   Future<Uint8List> Function()? getWitComponentExampleBytes,
@@ -117,7 +93,7 @@ Future<TypesExampleWorld> initTypesWorld(
       uri: Uri.parse(
         _isWeb
             ? './packages/wasm_wit_component_example/rust_wit_component_example.wasm'
-            : _getWitComponentExample(),
+            : getWitComponentExamplePath(),
       ),
     );
     module = await wasmUris.loadModule();

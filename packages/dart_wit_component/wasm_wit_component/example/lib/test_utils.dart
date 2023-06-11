@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:test/test.dart';
 // ignore: implementation_imports
@@ -7,6 +8,18 @@ import 'package:wasm_wit_component/src/record_equality.dart'
 import 'package:wasm_wit_component/wasm_wit_component.dart';
 import 'package:wasm_wit_component_example/types_gen.dart' as t;
 import 'package:wasm_wit_component_example/types_gen_big_int.dart' as t_big_int;
+
+bool isRelease() {
+  bool releaseMode = true;
+  // ignore: prefer_asserts_with_message
+  assert(
+    (() {
+      releaseMode = false;
+      return true;
+    })(),
+  );
+  return releaseMode;
+}
 
 void expectEq(
   Object? a,
@@ -43,4 +56,25 @@ void expectEq(
       }
     }
   }
+}
+
+Directory getRootDirectory() {
+  var dir = Directory.current;
+  while (!File('${dir.path}${Platform.pathSeparator}melos.yaml').existsSync()) {
+    if (dir.path == '/' || dir.path == '' || dir.path == dir.parent.path) {
+      throw Exception('Could not find root directory');
+    }
+    dir = dir.parent;
+  }
+  return dir;
+}
+
+String getWitComponentExamplePath() {
+  final root = getRootDirectory();
+  final base =
+      '${root.path}/packages/dart_wit_component/wasm_wit_component/example/lib/rust_wit_component_example.wasm';
+  if (isRelease()) {
+    return '$base/target/wasm32-unknown-unknown/release/rust_wit_component_example.wasm';
+  }
+  return base;
 }
