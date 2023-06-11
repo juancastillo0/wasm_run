@@ -139,16 +139,18 @@ impl Parsed<'_> {
     fn type_def_to_json(&self, getter: &str, ty: &TypeDef) -> String {
         match &ty.kind {
             TypeDefKind::Option(ty) => {
+                let mut mapped = self.type_to_json_inner("some", &ty);
+                mapped = if mapped == "some" {
+                    "".to_string()
+                } else {
+                    format!("(some) => {mapped}")
+                };
                 if self.2.use_null_for_option {
                     format!(
-                        "({getter} == null ? const None().toJson() : Option.fromValue({getter}).toJson((some) => {}))",
-                        self.type_to_json_inner("some", &ty)
+                        "({getter} == null ? const None().toJson() : Option.fromValue({getter}).toJson({mapped}))"
                     )
                 } else {
-                    format!(
-                        "{getter}.toJson((some) => {})",
-                        self.type_to_json_inner("some", &ty)
-                    )
+                    format!("{getter}.toJson({mapped})")
                 }
             }
             _ => self.type_def_to_json_inner(getter, ty),
@@ -165,14 +167,13 @@ impl Parsed<'_> {
             TypeDefKind::Option(ty) => {
                 let inner = self.type_to_json_inner("some", &ty);
                 if inner == "some" {
-                    format!( "{getter}.toJson()")
+                    format!("{getter}.toJson()")
                 } else {
-                    format!( "{getter}.toJson((some) => {inner})")
+                    format!("{getter}.toJson((some) => {inner})")
                 }
             }
-            TypeDefKind::Result(r) => format!(
-                "{getter}.toJson({}, {})",
-                r.ok.map_or_else(
+            TypeDefKind::Result(r) => {
+                let map_ok = r.ok.map_or_else(
                     || "null".to_string(),
                     |ok| {
                         let to_json = self.type_to_json("ok", &ok);
@@ -180,9 +181,9 @@ impl Parsed<'_> {
                             return "null".to_string();
                         }
                         format!("(ok) => {to_json}")
-                    }
-                ),
-                r.err.map_or_else(
+                    },
+                );
+                let map_err = r.err.map_or_else(
                     || "null".to_string(),
                     |error| {
                         let to_json = self.type_to_json("error", &error);
@@ -190,20 +191,19 @@ impl Parsed<'_> {
                             return "null".to_string();
                         }
                         format!("(error) => {to_json}")
-                    }
-                )
-            ),
+                    },
+                );
+                format!("{getter}.toJson({map_ok}, {map_err})")
+            }
             TypeDefKind::Tuple(t) => {
-                format!(
-                    "[{}]",
-                    t.types
-                        .iter()
-                        .enumerate()
-                        .map(|(i, t)| self
-                            .type_to_json(&format!("{getter}.${ind}", ind = i + 1), t))
-                        .collect::<Vec<_>>()
-                        .join(", "),
-                )
+                let list = t
+                    .types
+                    .iter()
+                    .enumerate()
+                    .map(|(i, t)| self.type_to_json(&format!("{getter}.${ind}", ind = i + 1), t))
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                format!("[{list}]")
             }
             TypeDefKind::List(ty) => {
                 let inner = self.type_to_json("e", &ty);
@@ -288,9 +288,8 @@ impl Parsed<'_> {
                     self.type_to_wasm_inner("some", &ty)
                 )
             }
-            TypeDefKind::Result(r) => format!(
-                "{getter}.toWasm({}, {})",
-                r.ok.map_or_else(
+            TypeDefKind::Result(r) => {
+                let map_ok = r.ok.map_or_else(
                     || "null".to_string(),
                     |ok| {
                         let to_wasm = self.type_to_wasm("ok", &ok);
@@ -298,9 +297,9 @@ impl Parsed<'_> {
                             return "null".to_string();
                         }
                         format!("(ok) => {to_wasm}")
-                    }
-                ),
-                r.err.map_or_else(
+                    },
+                );
+                let map_err = r.err.map_or_else(
                     || "null".to_string(),
                     |error| {
                         let to_wasm = self.type_to_wasm("error", &error);
@@ -308,20 +307,19 @@ impl Parsed<'_> {
                             return "null".to_string();
                         }
                         format!("(error) => {to_wasm}")
-                    }
-                )
-            ),
+                    },
+                );
+                format!("{getter}.toWasm({map_ok}, {map_err})")
+            }
             TypeDefKind::Tuple(t) => {
-                format!(
-                    "[{}]",
-                    t.types
-                        .iter()
-                        .enumerate()
-                        .map(|(i, t)| self
-                            .type_to_wasm(&format!("{getter}.${ind}", ind = i + 1), t))
-                        .collect::<Vec<_>>()
-                        .join(", "),
-                )
+                let list = t
+                    .types
+                    .iter()
+                    .enumerate()
+                    .map(|(i, t)| self.type_to_wasm(&format!("{getter}.${ind}", ind = i + 1), t))
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                format!("[{list}]")
             }
             TypeDefKind::List(ty) => {
                 let inner = self.type_to_wasm("e", &ty);
@@ -367,15 +365,15 @@ impl Parsed<'_> {
 
     pub fn type_def_to_spec(&self, ty: &TypeDef) -> String {
         match &ty.kind {
-            TypeDefKind::Record(record) => format!(
-                "RecordType([{}])",
-                record
+            TypeDefKind::Record(record) => {
+                let fields = record
                     .fields
                     .iter()
                     .map(|t| format!("(label: '{}', t: {})", t.name, self.type_to_spec(&t.ty)))
                     .collect::<Vec<_>>()
-                    .join(", ")
-            ),
+                    .join(", ");
+                format!("RecordType([{fields}])")
+            }
             TypeDefKind::Enum(enum_) => format!(
                 "EnumType(['{}'])",
                 enum_
@@ -517,21 +515,22 @@ impl Parsed<'_> {
                         .collect::<Vec<_>>()
                         .join(",");
                     let s_comma = if t.types.len() == 1 { "," } else { "" };
+                    let length = t.types.len();
+                    let values =  t.types
+                            .iter()
+                            .enumerate()
+                            .map(|(i, t)| self.type_from_json(&format!("v{i}"), t))
+                            .collect::<Vec<_>>()
+                            .join(", ");
+
                     format!(
                         "(() {{final l = {getter} is Map
                         ? List.generate({length}, (i) => {getter}[i.toString()], growable: false)
                         : {getter};
                         return switch (l) {{
-                            [{spread}] || ({spread}{s_comma}) => ({},),
+                            [{spread}] || ({spread}{s_comma}) => ({values},),
                             _ => throw Exception('Invalid JSON ${getter}')}};
-                        }})()",
-                        t.types
-                            .iter()
-                            .enumerate()
-                            .map(|(i, t)| self.type_from_json(&format!("v{i}"), t))
-                            .collect::<Vec<_>>()
-                            .join(", "),
-                        length = t.types.len(),
+                        }})()"
                     )
                 }
             }
@@ -555,7 +554,7 @@ impl Parsed<'_> {
             // ),
             TypeDefKind::List(ty) => self
                 .list_typed_data(ty)
-                .map(|type_data| 
+                .map(|type_data|
                     format!("({getter} is {type_data} ? {getter} : {type_data}.fromList(({getter}! as List).cast()))")
                 )
                 .unwrap_or_else(|| {
@@ -616,17 +615,16 @@ impl Parsed<'_> {
             TypeDefKind::Flags(_flags) => name.unwrap(),
             TypeDefKind::Variant(_variant) => name.unwrap(),
             TypeDefKind::Tuple(t) => {
-                format!(
-                    "({})",
-                    t.types
-                        .iter()
-                        .map(|t| {
-                            let mut s = self.type_to_str(t);
-                            s.push_str(", ");
-                            s
-                        })
-                        .collect::<String>()
-                )
+                let values = t
+                    .types
+                    .iter()
+                    .map(|t| {
+                        let mut s = self.type_to_str(t);
+                        s.push_str(", ");
+                        s
+                    })
+                    .collect::<String>();
+                format!("({values})")
             }
             TypeDefKind::Option(ty) => format!("Option<{}>", self.type_to_str_inner(&ty)),
             TypeDefKind::Result(r) => format!(
@@ -668,7 +666,11 @@ impl Parsed<'_> {
                 };
                 let name = format!(
                     "{v}-{}",
-                    owner.unwrap_or_else(|| def.iter().position(|e| (*e).eq(ty)).unwrap().to_string())
+                    owner.unwrap_or_else(|| def
+                        .iter()
+                        .position(|e| (*e).eq(ty))
+                        .unwrap()
+                        .to_string())
                 );
                 Some(heck::AsPascalCase(name).to_string())
             } else {
@@ -684,7 +686,7 @@ impl Parsed<'_> {
             match comment {
                 MethodComment::CopyWith => COPY_WITH_COMMENT,
                 MethodComment::ToJson => TO_JSON_COMMENT,
-                MethodComment::ToWasm =>TO_WASM_COMMENT,
+                MethodComment::ToWasm => TO_WASM_COMMENT,
                 MethodComment::FromJson => FROM_JSON_COMMENT,
             }
         } else {
@@ -706,7 +708,7 @@ impl Parsed<'_> {
             s.push_str(self.method_comment(MethodComment::ToJson));
             s.push_str(&methods.to_json(name, self));
         }
-        
+
         s.push_str(self.method_comment(MethodComment::ToWasm));
         s.push_str(&methods.to_wasm(name, self));
 
@@ -863,6 +865,21 @@ impl Parsed<'_> {
             TypeDefKind::Variant(a) => {
                 let from_json_comment = self.method_comment(MethodComment::FromJson);
                 let name = name.unwrap();
+                let switch_value =  a.cases
+                    .iter()
+                    .enumerate()
+                    .map(|(i, v)| {
+                        let inner_name = heck::AsPascalCase(&v.name);
+                        match v.ty {
+                            Some(ty) => format!(
+                                "({i}, final value) || [{i}, final value] => {name}{inner_name}({}),",
+                                self.type_from_json("value", &ty),
+                            ),
+                            None => format!("({i}, null) || [{i}, null] => const {name}{inner_name}(),",),
+                        }
+                    })
+                    .collect::<String>();
+
                 s.push_str(&format!(
                     "sealed class {name} {{ {from_json_comment}factory {name}.fromJson(Object? json_) {{
                     Object? json = json_;
@@ -873,22 +890,8 @@ impl Parsed<'_> {
                           json.values.first
                         );
                     }}
-                    return switch (json) {{ {} _ => throw Exception('Invalid JSON $json_'), }};
+                    return switch (json) {{ {switch_value} _ => throw Exception('Invalid JSON $json_'), }};
                 }}",
-                    a.cases
-                        .iter()
-                        .enumerate()
-                        .map(|(i, v)| {
-                            let inner_name = heck::AsPascalCase(&v.name);
-                            match v.ty {
-                                Some(ty) => format!(
-                                    "({i}, final value) || [{i}, final value] => {name}{inner_name}({}),",
-                                    self.type_from_json("value", &ty),
-                                ),
-                                None => format!("({i}, null) || [{i}, null] => const {name}{inner_name}(),",),
-                            }
-                        })
-                        .collect::<String>()
                 ));
                 let mut cases_string = String::new();
                 a.cases.iter().enumerate().for_each(|(i, v)| {
@@ -923,6 +926,23 @@ impl Parsed<'_> {
             TypeDefKind::Flags(f) => {
                 let name = name.unwrap();
                 let num_flags = f.flags.len();
+                let from_bool = f
+                    .flags
+                    .iter()
+                    .map(|v| format!("bool {} = false", v.name.as_var()))
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                let from_bool_content = f
+                    .flags
+                    .iter()
+                    .map(|v| {
+                        format!(
+                            "if ({}) value_.{} = true;",
+                            v.name.as_var(),
+                            v.name.as_var()
+                        )
+                    })
+                    .collect::<String>();
                 s.push_str(&format!(
                     "class {name} {{ 
                     /// The flags represented as a set of bits.
@@ -939,22 +959,7 @@ impl Parsed<'_> {
                         final value_ = {name}.none();
                         {from_bool_content}
                         return value_;
-                    }}",
-                    from_bool = f
-                        .flags
-                        .iter()
-                        .map(|v| format!("bool {} = false", v.name.as_var()))
-                        .collect::<Vec<_>>()
-                        .join(", "),
-                    from_bool_content = f
-                        .flags
-                        .iter()
-                        .map(|v| format!(
-                            "if ({}) value_.{} = true;",
-                            v.name.as_var(),
-                            v.name.as_var()
-                        ))
-                        .collect::<String>(),
+                    }}"
                 ));
                 self.add_methods_trait(&mut s, &name, f);
 

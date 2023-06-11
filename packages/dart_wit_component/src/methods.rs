@@ -21,13 +21,12 @@ impl GeneratedMethodsTrait for Record {
         format!("List<Object?> toWasm() => [{props}];")
     }
     fn to_json(&self, _name: &str, p: &Parsed) -> String {
-        format!(
-            "Map<String, Object?> toJson() => {{{}}};",
-            self.fields
-                .iter()
-                .map(|f| format!("'{}': {},", f.name, p.type_to_json(&f.name.as_var(), &f.ty)))
-                .collect::<String>(),
-        )
+        let content = self
+            .fields
+            .iter()
+            .map(|f| format!("'{}': {},", f.name, p.type_to_json(&f.name.as_var(), &f.ty)))
+            .collect::<String>();
+        format!("Map<String, Object?> toJson() => {{{content}}};")
     }
     fn from_json(&self, name: &str, p: &Parsed) -> Option<String> {
         if self.fields.is_empty() {
@@ -266,13 +265,13 @@ impl GeneratedMethodsTrait for Flags {
         ))
     }
     fn to_string(&self, name: &str, _p: &Parsed) -> Option<String> {
+        let to_string_content = self
+            .flags
+            .iter()
+            .map(|v| format!("if ({}) '{}',", v.name.as_var(), v.name.as_var()))
+            .collect::<String>();
         Some(format!(
             "@override\nString toString() => '{name}(${{[{to_string_content}].join(', ')}})';",
-            to_string_content = self
-                .flags
-                .iter()
-                .map(|v| format!("if ({}) '{}',", v.name.as_var(), v.name.as_var()))
-                .collect::<String>(),
         ))
     }
     fn copy_with(&self, _name: &str, _p: &Parsed) -> Option<String> {
