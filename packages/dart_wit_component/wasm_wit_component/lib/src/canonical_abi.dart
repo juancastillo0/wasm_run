@@ -130,8 +130,7 @@ class ComponentInstance {
         i64.setUint64(
           data,
           ptr,
-          // TODO: remove this
-          i64.fromBigInt(v is String ? BigInt.parse(v) : v as BigInt),
+          i64.fromBigInt(v as BigInt),
           Endian.little,
         ),
       Int64TypeConfig.coreInt =>
@@ -146,8 +145,7 @@ class ComponentInstance {
       Int64TypeConfig.bigInt => i64.setInt64(
           data,
           ptr,
-          // TODO: remove this
-          i64.fromBigInt(v is String ? BigInt.parse(v) : v as BigInt),
+          i64.fromBigInt(v as BigInt),
           Endian.little,
         ),
       Int64TypeConfig.coreInt ||

@@ -168,7 +168,7 @@ String convert_i32_to_char(int i) {
 typedef ListValue = List<Object?>;
 typedef RecordValue = Map<String, Object?>;
 typedef VariantValue = RecordValue;
-typedef FlagsValue = Uint32List; // TODO endianness
+typedef FlagsValue = Uint32List;
 typedef TupleValue = RecordValue;
 
 typedef VariantValue2 = (int, Object?);

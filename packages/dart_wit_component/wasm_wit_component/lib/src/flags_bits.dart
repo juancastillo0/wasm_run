@@ -15,7 +15,9 @@ class FlagsBits {
       : assert(
           data.lengthInBytes % 4 == 0,
           "ByteData's length should be a multiple of 4",
-        );
+        ) {
+    _zeroOutUnusedBits();
+  }
 
   /// Creates a [FlagsBits] with all flags set to `false`.
   FlagsBits.none({required this.numFlags})
@@ -50,9 +52,7 @@ class FlagsBits {
     for (var i = 0; i < json.length; i++) {
       flagBits.setUint32(i * 4, json[i], Endian.little);
     }
-    final flags = FlagsBits(flagBits, numFlags: flagsKeys.length);
-    flags._zeroOutUnusedBits();
-    return flags;
+    return FlagsBits(flagBits, numFlags: flagsKeys.length);
   }
 
   factory FlagsBits._fromMap(
@@ -107,7 +107,6 @@ class FlagsBits {
     for (var i = 0; i < data.lengthInBytes ~/ 4; i++) {
       c.setUint32(i * 4, merge(_index(i), other._index(i)), Endian.little);
     }
-    _zeroOutUnusedBits();
     return FlagsBits(c, numFlags: numFlags);
   }
 
@@ -135,14 +134,17 @@ class FlagsBits {
   Uint32List get _bitsAsUint32List => Uint32List.sublistView(data);
 
   /// Returns a JSON representation of the flag bits.
-  Object toJson() => Uint32List.fromList(_bitsAsUint32List);
+  Object toJson() {
+    return List.generate(_bitsAsUint32List.length, _index);
+  }
 
   @override
   String toString() {
-    return 'FlagsBits(${_bitsAsUint32List.map((e) {
-      // TODO: improve
-      return e.toRadixString(2);
-    }).join(',')})';
+    final bits = Iterable.generate(
+      _bitsAsUint32List.length,
+      (i) => _index(i).toRadixString(2),
+    ).join(',');
+    return 'FlagsBits(numFlags: $numFlags, ${bits})';
   }
 
   @override
