@@ -31,7 +31,7 @@ void typesGenBigIntWitComponentTests({
     for (int i = 0; i < count; i++) {
       test.test(expect: (a, b) {});
       test.importsImpl.apiA1B2Data.clear();
-      // test.importsImpl.recordFuncData.clear();
+      test.importsImpl.recordFuncData.clear();
       test.inlineImpl.inlineImpData.clear();
       test.printed.clear();
       test.roundTripNumbersHostImpl.roundTripNumbersData.clear();
@@ -150,12 +150,27 @@ class _InlineImpl implements InlineImport {
 
 class _ImportsImpl implements ApiImportsImport {
   final List<List<HumanApiImports>> apiA1B2Data = [];
+  final List<({ErrnoApiImports e, Input i, Permissions p, R r})>
+      recordFuncData = [];
+
   @override
   ({T7 h1, HumanApiImports val2}) apiA1B2({
     required List<HumanApiImports> arg,
   }) {
     apiA1B2Data.add(arg);
     return (h1: Ok(arg.length.toString()), val2: const HumanApiImports.baby());
+  }
+
+  @override
+  ({ErrnoApiImports e, Input i, Permissions p, R r}) recordFunc({
+    required R r,
+    required ErrnoApiImports e,
+    required Permissions p,
+    required Input i,
+  }) {
+    final data = (e: e, i: i, p: p, r: r);
+    recordFuncData.add(data);
+    return data;
   }
 }
 
@@ -247,6 +262,58 @@ class _TypesWorldTest {
       final response = world.roundTripNumbers.roundTripNumbersList(data: data);
       expect(response, data);
       expect(roundTripNumbersHostImpl.roundTripNumbersListData[0], data);
+    }
+
+    {
+      final data = (
+        r: R(
+          a: 3,
+          b: 'dawd',
+          c: [('da', Some(3))],
+          e: ErrnoTypesInterface.tooSlow,
+          f: ManyFlags.all(),
+          i: Input.string('value'),
+          p: Permissions.all(),
+          d: null,
+        ),
+        e: ErrnoTypesInterface.tooBig,
+        p: Permissions.fromBool(exec: true),
+        i: Input.bigIntU64(BigInt.from(4)),
+      );
+      final result = world.api.recordFunc(
+        e: data.e,
+        i: data.i,
+        p: data.p,
+        r: data.r,
+      );
+
+      expect(result, data);
+      expect(importsImpl.recordFuncData[0], data);
+    }
+    {
+      final data = (
+        r: R(
+          a: 303,
+          b: 'dawd',
+          c: [('dappodaw', None())],
+          e: ErrnoTypesInterface.tooSlow,
+          f: ManyFlags.none(),
+          i: Input.bigIntU64(BigInt.from(0)),
+          p: Permissions.none(),
+          d: Some(([BigInt.from(3)], None())),
+        ),
+        e: ErrnoTypesInterface.tooBig,
+        p: Permissions.fromBool(read: true, write: true),
+        i: Input.string('0'),
+      );
+      final result = world.api.recordFunc(
+        e: data.e,
+        i: data.i,
+        p: data.p,
+        r: data.r,
+      );
+      expect(result, data);
+      expect(importsImpl.recordFuncData[1], data);
     }
     {
       // TODO: test string multi char
