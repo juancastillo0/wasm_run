@@ -124,7 +124,7 @@ WasmVal _fromWasmValueRaw(ValueTy ty, Object? value, WasmRunModuleId module) {
       );
     case ValueTy.funcRef:
       if (value == null) {
-        return const WasmVal.funcRef();
+        return WasmVal.funcRef();
       }
       return _makeFunction(value as WasmFunction, module);
   }
