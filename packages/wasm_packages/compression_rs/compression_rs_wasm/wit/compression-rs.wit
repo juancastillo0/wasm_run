@@ -1,0 +1,16 @@
+package compression-rs-namespace:compression-rs
+
+world compression-rs {
+    /// A record is a class with named fields
+    /// There are enum, list, variant, option, result, tuple and union types
+    record model {
+      /// Comment for a field
+      integer: s32,
+    }
+
+    /// An import is a function that is provided by the host environment (Dart)
+    import map-integer: func(value: s32) -> float64
+
+    /// export
+    export run: func(value: model) -> result<float64, string>
+}

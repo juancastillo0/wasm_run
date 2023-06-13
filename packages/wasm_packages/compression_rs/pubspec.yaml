@@ -1,0 +1,19 @@
+name: compression_rs
+description: A starting point for Dart libraries or applications.
+version: 0.1.0
+# repository:
+# homepage:
+topics:
+  - wasm
+  - wit
+
+environment:
+  sdk: ^3.0.0
+
+dependencies:
+  wasm_run: ^0.0.1
+  wasm_wit_component: ^0.0.1
+
+dev_dependencies:
+  lints: ^2.0.0
+  test: ^1.21.0
