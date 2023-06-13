@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:isolate';
 import 'dart:typed_data';
 
 import 'package:wasm_run/src/ffi.dart' show getUriBodyBytes;
@@ -29,6 +30,51 @@ class WasmFileUris {
     this.threadsSimdUri,
     this.fallback,
   });
+
+  /// Returns a uri for a [package] name and a [libPath]
+  /// that contains the wasm module.
+  ///
+  /// The wasm module file should be in `lib/libPath`.
+  /// The [envVariable] is used to get the path to the wasm module
+  /// from the environment variables.
+  ///
+  /// For compiled native (non-web) Flutter you should use Flutter assets
+  /// or an HTTP endpoint, such as from a Github release.
+  static Future<Uri> uriForPackage({
+    required String package,
+    required String libPath,
+    required String? envVariable,
+  }) async {
+    const isWeb = identical(0, 0.0);
+    if (isWeb) {
+      return Uri.parse('./packages/$package/$libPath');
+    } else {
+      final envFile = Platform.environment[envVariable];
+      final scriptRoot = File.fromUri(Platform.script).parent.parent;
+      Uri? packageUri;
+      try {
+        packageUri = await Isolate.resolvePackageUri(
+          Uri.parse('package:$package/$libPath'),
+        );
+      } catch (_) {}
+      final options = [
+        if (envFile != null) Uri.parse(envFile),
+        // dart run package:script
+        scriptRoot.uri.resolve('lib/$libPath'),
+        // dart run test
+        Directory.current.uri.resolve('lib/$libPath'),
+        // another package
+        if (packageUri != null) packageUri,
+        // some_dir/script.exe
+        Platform.script.resolve(libPath),
+      ];
+      final wasmFile = options.firstWhere(
+        (option) => File.fromUri(option).existsSync(),
+        orElse: () => options.first,
+      );
+      return wasmFile;
+    }
+  }
 
   /// A list of [WasmFileUris] that will be used as fallbacks if the previous
   /// one fails to load.
@@ -175,4 +221,21 @@ class WasmFileUrisException implements Exception {
 
   @override
   String toString() => 'WasmFileUrisException($uris, ${errors.join('\n')})';
+}
+
+class WasmFileIOOutput {
+  final String environmentVariable;
+  final String? dartDefineConstant;
+  final String defaultPath;
+  final String? overridePath;
+  // final String packageName;
+  // final String pathFromPackageLib;
+
+  ///
+  WasmFileIOOutput({
+    required this.environmentVariable,
+    required this.defaultPath,
+    this.dartDefineConstant,
+    this.overridePath,
+  });
 }
