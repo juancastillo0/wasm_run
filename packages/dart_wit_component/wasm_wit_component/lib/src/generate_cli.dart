@@ -1,5 +1,4 @@
 import 'dart:convert' show jsonDecode;
-import 'dart:developer' as developer;
 import 'dart:io';
 
 import 'package:wasm_wit_component/generator.dart';
@@ -14,28 +13,28 @@ Future<void> generateCli(List<String> arguments) async {
   final args = GeneratorCLIArgs.fromArgs(arguments);
   final witInputPath = args.witInputPath;
   // TODO: multiple files or directory
-  final dartFilePath = args.dartFilePath;
+  final dartFilePath = args.dartFilePath ??
+      (witInputPath.endsWith('.wit')
+          ? '${witInputPath.substring(0, witInputPath.length - 5)}.dart'
+          : '${witInputPath}.dart');
   final watch = args.watch;
 
   final wasiConfig = wasiConfigFromPath(witInputPath);
-  final world = await generator(wasiConfig: wasiConfig);
+  final world = await createDartWitGenerator(wasiConfig: wasiConfig);
   final config = args.config;
-  final witExtension = RegExp(r'(.wit)?$');
 
   Future<void> generate() async {
     final result = world.generate(config: config);
     switch (result) {
       case Ok(ok: final file):
-        final outPath =
-            dartFilePath ?? file.path.replaceFirst(witExtension, '.dart');
-        final ioFile = await File(outPath).create(recursive: true);
+        final ioFile = await File(dartFilePath).create(recursive: true);
         await ioFile.writeAsString(file.contents);
         try {
-          await Process.run('dart', ['format', outPath]);
+          await Process.run('dart', ['format', dartFilePath]);
         } catch (_) {}
       case Err(:final error):
         if (watch) {
-          developer.log(error, level: 900);
+          print('Wit generation error: $error');
         } else {
           throw Exception(error);
         }
@@ -48,7 +47,7 @@ Future<void> generateCli(List<String> arguments) async {
     final watchDir = parentFromPath(witInputPath).$1;
     await for (final event in watchDir.watch(recursive: true)) {
       if (event.path.endsWith('.wit')) {
-        developer.log('reloading...', level: 700);
+        print('reloading...');
         await generate();
       }
     }

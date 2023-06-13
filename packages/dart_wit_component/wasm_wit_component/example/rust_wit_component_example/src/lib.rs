@@ -8,7 +8,7 @@ use types_example_namespace::types_example_pkg::{
 };
 
 // Define a custom type and implement the generated `Host` trait for it which
-// represents implementing all the necesssary exported interfaces for this
+// represents implementing all the necessary exported interfaces for this
 // component.
 struct MyHost;
 

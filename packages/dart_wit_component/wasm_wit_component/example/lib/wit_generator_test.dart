@@ -186,7 +186,7 @@ world host {
             })
         },
       );
-      final g = await generator(wasiConfig: wasiConfig);
+      final g = await createDartWitGenerator(wasiConfig: wasiConfig);
       final inputs = WitGeneratorInput.fileSystemPaths(
         FileSystemPaths(inputPath: witPath),
       );
@@ -195,7 +195,7 @@ world host {
     });
 
     test('in memory input', () async {
-      final g = await generator(
+      final g = await createDartWitGenerator(
         wasiConfig: const WasiConfig(
           preopenedDirs: [],
           webBrowserFileSystem: {},

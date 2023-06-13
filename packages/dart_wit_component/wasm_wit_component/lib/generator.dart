@@ -20,7 +20,7 @@ const _isWeb = identical(0, 0.0);
 /// from the file system in `lib/dart_wit_component.wasm` either reading it directly
 /// in native platforms or with a GET request for Dart web. As a fallback
 /// it will use the releases from the wasm_run repository.
-Future<DartWitGeneratorWorld> generator({
+Future<DartWitGeneratorWorld> createDartWitGenerator({
   required WasiConfig wasiConfig,
   Future<WasmModule> Function()? loadModule,
 }) async {
@@ -62,6 +62,24 @@ Future<DartWitGeneratorWorld> generator({
     imports: const DartWitGeneratorWorldImports(),
   );
   return world;
+}
+
+/// Returns a [WitGeneratorConfig] with the default configuration
+WitGeneratorConfig defaultGeneratorConfig({
+  required WitGeneratorInput inputs,
+}) {
+  return WitGeneratorConfig(
+    inputs: inputs,
+    jsonSerialization: true,
+    copyWith_: true,
+    equalityAndHashCode: true,
+    toString_: true,
+    generateDocs: true,
+    useNullForOption: true,
+    requiredOption: false,
+    int64Type: Int64TypeConfig.bigInt,
+    typedNumberLists: true,
+  );
 }
 
 Directory? _getRootDirectory() {
