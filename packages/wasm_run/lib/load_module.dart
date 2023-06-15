@@ -31,7 +31,7 @@ class WasmFileUris {
     this.fallback,
   });
 
-  /// Returns a uri for a [package] name and a [libPath]
+  /// Returns the uri for a [package] name and a [libPath]
   /// that contains the wasm module.
   ///
   /// The wasm module file should be in `lib/libPath`.

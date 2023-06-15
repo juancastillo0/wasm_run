@@ -179,6 +179,9 @@ class WasiConfig implements WasiConfigNative {
 /// To instantiate this builder you may use [WasmInstanceBuilder.build]
 /// or [WasmInstanceBuilder.build].
 abstract class WasmInstanceBuilder {
+  /// The wasm module associated with this instance builder.
+  WasmModule get module;
+
   /// Creates a new memory with [minPages] and [maxPages] pages.
   WasmMemory createMemory({required int minPages, int? maxPages});
 

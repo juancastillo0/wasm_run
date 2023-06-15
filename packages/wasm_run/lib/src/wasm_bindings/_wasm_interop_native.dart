@@ -193,7 +193,7 @@ WasmFunction _toWasmFunction(WFunc func, WasmRunModuleId module, String? name) {
 }
 
 WasmExternal _toWasmExternal(ModuleExportValue value, _Instance instance) {
-  final module = instance.builder.module;
+  final module = instance.builder.mod;
   return value.value.when(
     sharedMemory: _SharedMemory.new,
     func: (func) => _toWasmFunction(func, module, value.desc.name),
@@ -376,35 +376,36 @@ class _References {
 }
 
 class _Builder extends WasmInstanceBuilder {
-  final _WasmModule compiledModule;
-  final WasmRunModuleId module;
+  @override
+  final _WasmModule module;
+  final WasmRunModuleId mod;
   final WasiConfig? wasiConfig;
   final _WasmInstanceFuel? _fuel;
 
-  _Builder(this.compiledModule, this.module, this.wasiConfig)
-      : _fuel = (compiledModule.config.consumeFuel ?? false)
-            ? _WasmInstanceFuel(module)
+  _Builder(this.module, this.mod, this.wasiConfig)
+      : _fuel = (module.config.consumeFuel ?? false)
+            ? _WasmInstanceFuel(mod)
             : null;
 
   @override
   WasmGlobal createGlobal(WasmValue value, {required bool mutable}) {
-    final global = module.createGlobal(
-      value: _fromWasmValue(value, module),
+    final global = mod.createGlobal(
+      value: _fromWasmValue(value, mod),
       mutable: mutable,
     );
-    return _Global(global, module);
+    return _Global(global, mod);
   }
 
   @override
   WasmMemory createMemory({required int minPages, int? maxPages}) {
-    final memory = module.createMemory(
+    final memory = mod.createMemory(
       memoryType: MemoryTy(
         shared: false,
         minimum: minPages,
         maximum: maxPages,
       ),
     );
-    return _Memory(memory, module);
+    return _Memory(memory, mod);
   }
 
   @override
@@ -413,16 +414,16 @@ class _Builder extends WasmInstanceBuilder {
     required int minSize,
     int? maxSize,
   }) {
-    final inner = _fromWasmValue(value, module);
+    final inner = _fromWasmValue(value, mod);
     return _Table(
-      module.createTable(
+      mod.createTable(
         value: inner,
         tableType: TableArgs(
           minimum: minSize,
           maximum: maxSize,
         ),
       ),
-      module,
+      mod,
     );
   }
 
@@ -439,7 +440,7 @@ class _Builder extends WasmInstanceBuilder {
       table: (table) => ExternalValue.table((table as _Table).table),
       global: (global) => ExternalValue.global((global as _Global).global),
       function: (function) {
-        final desc = compiledModule.module.getModuleImports().firstWhere(
+        final desc = module.module.getModuleImports().firstWhere(
               (e) => e.module == moduleName && e.name == name,
               // TODO: this is different behavior from web. On web wrong imports are ignored
               orElse: () => throw Exception(
@@ -480,8 +481,8 @@ class _Builder extends WasmInstanceBuilder {
             results: expectedResults,
           );
         }
-        final functionId = _References.getOrCreateId(functionToSave, module);
-        final func = module.createFunction(
+        final functionId = _References.getOrCreateId(functionToSave, mod);
+        final func = mod.createFunction(
           functionPointer: _References.globalWasmFunctionPointer,
           functionId: functionId,
           paramTypes: type.field0.parameters,
@@ -496,7 +497,7 @@ class _Builder extends WasmInstanceBuilder {
   }
 
   void linkImport(String moduleName, String name, ExternalValue value) {
-    module.linkImports(
+    mod.linkImports(
       imports: [ModuleImport(module: moduleName, name: name, value: value)],
     );
   }
@@ -506,13 +507,13 @@ class _Builder extends WasmInstanceBuilder {
 
   @override
   WasmInstance buildSync() {
-    final instance = module.instantiateSync();
+    final instance = mod.instantiateSync();
     return _Instance(instance, this);
   }
 
   @override
   Future<WasmInstance> build() async {
-    final instance = await module.instantiate();
+    final instance = await mod.instantiate();
     return _Instance(instance, this);
   }
 }
@@ -547,7 +548,7 @@ class _Instance extends WasmInstance {
   final WasmRunInstanceId instance;
   final _Builder builder;
   @override
-  _WasmModule get module => builder.compiledModule;
+  _WasmModule get module => builder.module;
 
   @override
   late final Map<String, WasmExternal> exports;
@@ -564,15 +565,13 @@ class _Instance extends WasmInstance {
     final wasiConfig = builder.wasiConfig;
     if (wasiConfig != null) {
       if (wasiConfig.captureStderr) {
-        _stderr ??= builder.module
-            .stdioStream(kind: StdIOKind.stderr)
-            .asBroadcastStream();
+        _stderr ??=
+            builder.mod.stdioStream(kind: StdIOKind.stderr).asBroadcastStream();
         _stderr!.first;
       }
-      if (wasiConfig.captureStderr) {
-        _stdout ??= builder.module
-            .stdioStream(kind: StdIOKind.stdout)
-            .asBroadcastStream();
+      if (wasiConfig.captureStdout) {
+        _stdout ??=
+            builder.mod.stdioStream(kind: StdIOKind.stdout).asBroadcastStream();
         _stdout!.first;
       }
 
@@ -601,7 +600,7 @@ class _Instance extends WasmInstance {
         'Only exported function can be run with `runParallel`',
       ),
     );
-    final runner = builder.module;
+    final runner = builder.mod;
     if (argsLists.any((args) => args.length != function.params.length)) {
       throw Exception(
         'argsLists.any((element) => element.length != function.params.length)',
@@ -643,7 +642,7 @@ class _Instance extends WasmInstance {
           call: (call) {
             final results =
                 _References.executeFunction(call.functionId, call.args);
-            builder.module.workerExecution(
+            builder.mod.workerExecution(
               workerIndex: call.workerIndex,
               results: results,
             );
