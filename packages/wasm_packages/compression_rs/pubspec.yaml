@@ -6,11 +6,15 @@ version: 0.1.0
 topics:
   - wasm
   - wit
+  - compression
 
 environment:
   sdk: ^3.0.0
 
 dependencies:
+  archive: ^3.3.7
+  # es_compression: ^2.0.0
+  brotli: ^0.6.0
   wasm_run: ^0.0.1
   wasm_wit_component: ^0.0.1
 

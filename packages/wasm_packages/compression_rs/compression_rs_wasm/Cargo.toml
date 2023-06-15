@@ -9,4 +9,25 @@ edition = "2021"
 crate-type = ['cdylib']
 
 [dependencies]
-wit-bindgen = { git = "https://github.com/bytecodealliance/wit-bindgen", version = "0.7.0", rev = "8bab26e857ef24455d7b9b38795d34857ed57099" }
+brotli = { version = "3.3.4", optional = true }
+flate2 = "1.0.26"
+# lz4 = "1.24.0" # c bindings
+tar = { version = "0.4.38", optional = true }
+wit-bindgen = { git = "https://github.com/bytecodealliance/wit-bindgen", version = "0.7.0", rev = "131746313de2f90d2688afbbc40c4a7ca309fe0d" }
+zip = { version = "0.6.6", optional = true, default-features = false, features = [
+    "aes-crypto",
+    "deflate",
+    "time",
+    # removed "zstd"
+] }
+# zstd = "0.12.3" # c bindings
+
+[features]
+default = ["brotli", "gzip", "zlib", "deflate", "tar", "zip"]
+nobrotli = ["gzip", "zlib", "deflate", "tar", "zip"]
+brotli = ["dep:brotli"]
+gzip = []
+zlib = []
+deflate = []
+tar = ["dep:tar"]
+zip = ["dep:zip"]
