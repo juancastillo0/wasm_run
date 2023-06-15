@@ -15,8 +15,8 @@ Future<void> generateCli(List<String> arguments) async {
   // TODO: multiple files or directory
   final dartFilePath = args.dartFilePath ??
       (witInputPath.endsWith('.wit')
-          ? '${witInputPath.substring(0, witInputPath.length - 5)}.dart'
-          : '${witInputPath}.dart');
+          ? '${witInputPath.substring(0, witInputPath.length - 4)}_wit.gen.dart'
+          : '${witInputPath}_wit.gen.dart');
   final watch = args.watch;
 
   final wasiConfig = wasiConfigFromPath(witInputPath);

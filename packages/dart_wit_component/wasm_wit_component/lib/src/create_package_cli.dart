@@ -237,7 +237,7 @@ edition = "2021"
 crate-type = ['cdylib']
 
 [dependencies]
-wit-bindgen = { git = "https://github.com/bytecodealliance/wit-bindgen", version = "0.7.0", rev = "8bab26e857ef24455d7b9b38795d34857ed57099" }
+wit-bindgen = { git = "https://github.com/bytecodealliance/wit-bindgen", version = "0.7.0", rev = "131746313de2f90d2688afbbc40c4a7ca309fe0d" }
 ''';
   }
 
@@ -432,9 +432,8 @@ wit_bindgen::generate!("$witPackageName");
 // use exports::${dartName}_namespace::${dartName}::*;
 // use ${dartName}_namespace::${dartName}::interface_name;
 
-// Define a custom type and implement the generated trait for it which
-// represents implementing all the necessary exported interfaces for this
-// component.
+// Define a custom type and implement the generated trait for it which represents
+// implementing all the necessary exported interfaces for this component.
 struct WitImplementation;
 
 export_$dartName!(WitImplementation);
@@ -508,7 +507,7 @@ world ${witPackageName} {
 // crate-type = ['cdylib']
 
 // [dependencies]
-// wit-bindgen = { git = "https://github.com/bytecodealliance/wit-bindgen", version = "0.7.0", rev = "8bab26e857ef24455d7b9b38795d34857ed57099" }
+// wit-bindgen = { git = "https://github.com/bytecodealliance/wit-bindgen", version = "0.7.0", rev = "131746313de2f90d2688afbbc40c4a7ca309fe0d" }
 // ''',
 //     ),
 //   );
