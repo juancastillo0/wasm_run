@@ -535,6 +535,43 @@ class _Instance extends WasmInstance {
   }
 
   @override
+  Future<WasiFile?> wasiOpenFile(
+    String path, {
+    bool create = false,
+    bool truncate = false,
+    // bool directory = false,
+    bool exclusive = false,
+  }) async {
+    if (builder.wasi == null) return null;
+    final directories =
+        builder.wasi!.inner.fds.sublist(3).cast<PreopenDirectory>();
+    final oflags = (create ? oflagsCREAT : 0) |
+        (truncate ? oflagsTRUNC : 0) |
+        // (directory ? oflagsDIRECTORY : 0) |
+        (exclusive ? oflagsEXCL : 0);
+    for (final dir in directories) {
+      final value = dir.path_open(
+        0,
+        path,
+        oflags,
+        i64.fromInt(0),
+        i64.fromInt(0),
+        0,
+      );
+      if (value.fd_obj != null) {
+        final file = (value.fd_obj! as OpenFile).file;
+        return WasiFile(file.data);
+      }
+    }
+    // TODO: throw Exception('No preopened dir for $path');
+    return null;
+    // return Map.fromEntries(directories.map((e) => MapEntry(
+    //     utf8.decode(e.prestat_name),
+    //     e.path_open(dirflags, path, oflags, fs_rights_base,
+    //         fs_rights_inheriting, fdflags))));
+  }
+
+  @override
   WasmInstanceFuel? fuel() => null;
 
   @override

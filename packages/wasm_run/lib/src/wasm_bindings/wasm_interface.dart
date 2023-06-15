@@ -283,6 +283,15 @@ abstract class WasmInstance {
   /// The exports of this instance.
   Map<String, WasmExternal> get exports;
 
+  /// Opens a file with [path] and returns a [WasiFile] if it exists.
+  Future<WasiFile?> wasiOpenFile(
+    String path, {
+    bool create = false,
+    bool truncate = false,
+    // bool directory = false,
+    bool exclusive = false,
+  });
+
   /// When using WASI with [WasiConfig] in [WasmModule.builder],
   /// this is the stderr stream.
   Stream<Uint8List> get stderr;

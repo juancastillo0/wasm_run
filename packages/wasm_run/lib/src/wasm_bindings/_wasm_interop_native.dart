@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:ffi' as ffi;
+import 'dart:io';
 import 'dart:typed_data' show Uint8List;
 
 import 'package:flutter_rust_bridge/flutter_rust_bridge.dart'
@@ -658,6 +659,36 @@ class _Instance extends WasmInstance {
 
   @override
   WasmInstanceFuel? fuel() => builder.fuel();
+
+  @override
+  Future<WasiFile?> wasiOpenFile(
+    String path, {
+    bool create = false,
+    bool truncate = false,
+    // bool directory = false,
+    bool exclusive = false,
+  }) async {
+    if (builder.wasiConfig == null) return null;
+    final wasi = builder.wasiConfig!;
+    final dir = wasi.preopenedDirs.firstWhere(
+      (element) => path.startsWith(element.wasmGuestPath),
+      orElse: () => throw Exception('No preopened dir for $path'),
+    );
+    final filePath = path.substring(dir.wasmGuestPath.length);
+    final fileUri = Uri.parse(dir.hostPath).resolve(filePath);
+    final file = File.fromUri(fileUri);
+    if (create) {
+      await file.create(recursive: true, exclusive: exclusive);
+    }
+    final Uint8List bytes;
+    if (truncate) {
+      bytes = Uint8List(0);
+      await file.writeAsBytes(bytes);
+    } else {
+      bytes = await file.readAsBytes();
+    }
+    return WasiFile(bytes);
+  }
 
   @override
   Stream<Uint8List> get stderr {
