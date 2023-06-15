@@ -155,8 +155,13 @@ impl Parsed<'_> {
                     .iter()
                     .enumerate()
                     .for_each(|(index, (id, f))| {
+                        let fn_name = if self.2.async_worker {
+                            "getComponentFunctionWorker"
+                        } else {
+                            "getComponentFunction"
+                        };
                         s.push_str(&format!(
-                            "_{} = library.getComponentFunction('{world_prefix}#{id}', const {},)!",
+                            "_{} = library.{fn_name}('{world_prefix}#{id}', const {},)!",
                             id.as_var(),
                             self.function_spec(f)
                         ));
@@ -237,7 +242,7 @@ impl Parsed<'_> {
             params = format!("{{{params}}}");
         }
 
-        let results = match &f.results {
+        let mut results = match &f.results {
             Results::Anon(ty) => self.type_to_str(ty),
             Results::Named(list) => {
                 if list.is_empty() {
@@ -265,11 +270,20 @@ impl Parsed<'_> {
             }
             FuncKind::MethodCall => {
                 // s.push_str(&format!("late final _{} = lookup('{}');", f.name, f.name));
-                s.push_str(&format!("final ListValue Function(ListValue) _{name};"));
+                if self.2.async_worker {
+                    results = format!("Future<{results}>");
+                    s.push_str(&format!(
+                        "final Future<ListValue> Function(ListValue) _{name};"
+                    ));
+                } else {
+                    s.push_str(&format!("final ListValue Function(ListValue) _{name};"));
+                }
 
                 add_docs(&mut s, &f.docs);
-                s.push_str(&format!("{results} {name}({params}) {{"));
+                let async_ = if self.2.async_worker { "async " } else { "" };
+                s.push_str(&format!("{results} {name}({params}) {async_}{{"));
                 {
+                    let await_ = if self.2.async_worker { "await " } else { "" };
                     let results_assignments = if f.results.len() == 0
                         || (f.results.len() == 1
                             && self.is_unit(f.results.iter_types().next().unwrap()))
@@ -319,7 +333,9 @@ impl Parsed<'_> {
                             }
                         }
                     };
-                    s.push_str(&format!("{results_assignments}_{name}([{params}]);{ret}"));
+                    s.push_str(&format!(
+                        "{results_assignments}{await_}_{name}([{params}]);{ret}"
+                    ));
                 }
                 s.push_str("}");
             }

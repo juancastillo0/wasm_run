@@ -31,7 +31,9 @@ world dart-wit-generator {
         /// For example, `Uint8List` instead of `List<int>` for `list<u8>`.
         /// This does not affect `list<u64>` and `list<s64>`, they will
         /// use a `List<[int64Type]>`.
-        typed-number-lists: bool
+        typed-number-lists: bool,
+        /// Whether to the asyncronous functions to execute functions in workers.
+        async-worker: bool,
     }
 
     /// The file inputs to use for the code generation.

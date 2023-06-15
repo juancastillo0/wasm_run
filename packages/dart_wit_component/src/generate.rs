@@ -51,6 +51,9 @@ pub fn document_to_dart(
                         s.push_str(&format!("typedef {name} = {ref_name};"));
                     }
                 }
+            } else {
+                let ref_name = p.type_to_str(ty);
+                s.push_str(&format!("typedef {name} = {ref_name};"));
             }
             return;
         }
@@ -136,8 +139,13 @@ pub fn document_to_dart(
                 }
                 WorldItem::Type(_type_id) => {}
                 WorldItem::Function(f) => {
+                    let fn_name = if p.2.async_worker {
+                        "getComponentFunctionWorker"
+                    } else {
+                        "getComponentFunction"
+                    };
                     constructor.push(format!(
-                        "_{id_name} = library.getComponentFunction('{id}', const {},)!",
+                        "_{id_name} = library.{fn_name}('{id}', const {},)!",
                         p.function_spec(f)
                     ));
                     p.add_function(&mut methods, f, FuncKind::MethodCall);
@@ -245,6 +253,7 @@ mod tests {
             object_comparator: None,
             required_option: false,
             typed_number_lists: true,
+            async_worker: false,
             int64_type,
         }
     }
@@ -272,7 +281,7 @@ default world host {
         let parsed = wit_parser::UnresolvedPackage::parse_file(Path::new(path)).unwrap();
 
         let s = super::document_to_dart(&parsed, config).unwrap();
-        println!("{}", s);
+        // println!("{}", s);
         File::create(output_path)
             .unwrap()
             .write(s.as_bytes())
@@ -343,6 +352,38 @@ default world host {
     }
 
     #[test]
+    pub fn generate_compression_rs() {
+        let path = format!(
+            "{}/../wasm_packages/compression_rs/compression_rs_wasm/wit/compression-rs.wit",
+            PACKAGE_DIR
+        );
+        let output_path = format!(
+            "{}/../wasm_packages/compression_rs/lib/src/compression_rs_wit.gen.dart",
+            PACKAGE_DIR
+        );
+        parse_and_write_generation(
+            &path,
+            &output_path,
+            default_wit_config(Int64TypeConfig::BigInt),
+        );
+    }
+
+    #[test]
+    pub fn generate_compression_rs_worker() {
+        let path = format!(
+            "{}/../wasm_packages/compression_rs/compression_rs_wasm/wit/compression-rs.wit",
+            PACKAGE_DIR
+        );
+        let output_path = format!(
+            "{}/../wasm_packages/compression_rs/lib/src/compression_rs_wit.worker.gen.dart",
+            PACKAGE_DIR
+        );
+        let mut config = default_wit_config(Int64TypeConfig::BigInt);
+        config.async_worker = true;
+        parse_and_write_generation(&path, &output_path, config);
+    }
+
+    #[test]
     pub fn generate_rust_crypto() {
         let path = format!(
             "{}/../wasm_packages/rust_crypto/rust_crypto_wasm/wit/rust-crypto.wit",
@@ -396,6 +437,8 @@ default world host {
         parse_wit_types();
         parse_wit_types_big_int();
         generate_image_rs();
+        generate_compression_rs();
+        generate_compression_rs_worker();
         generate_rust_crypto();
         generate_host();
     }
