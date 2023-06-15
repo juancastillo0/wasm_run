@@ -2,6 +2,7 @@
 
 // ignore_for_file: non_constant_identifier_names, constant_identifier_names, parameter_assignments
 
+import 'dart:async' show Completer;
 import 'dart:typed_data' show ByteData, Endian, Uint8List;
 
 import 'package:wasm_run/wasm_run.dart' show i64;
@@ -90,6 +91,7 @@ class ComponentInstance {
   /// Indicates whether the instance may be called from the outside world through an export.
   bool may_enter = true;
   final HandleTables handles = HandleTables();
+  Completer<void>? _asyncCompleter;
 
   final Int64TypeConfig int64Type;
 
@@ -352,6 +354,61 @@ class HandleTables {
     flat_results = callee(flat_args);
   } catch (e, s) {
     trap(e, s);
+  }
+
+  opts._updateMemoryView();
+  final results = lift_values(
+    cx,
+    MAX_FLAT_RESULTS,
+    ValueIter(flat_results),
+    computedFt?.results ?? ft.result_types(),
+    computedTypes: computedFt?.resultsData,
+  );
+
+  void post_return() {
+    opts.post_return?.call(flat_results);
+    trap_if(cx.borrow_count != 0);
+  }
+
+  return (results, post_return);
+}
+
+Future<(ListValue, void Function())> canon_lift_async(
+  CanonicalOptions opts,
+  ComponentInstance inst,
+  Future<List<FlatValue>> Function(List<FlatValue>) callee,
+  FuncType ft,
+  ListValue args, {
+  ComputedFuncTypeData? computedFt,
+}) async {
+  // TODO: remove this
+  while (inst._asyncCompleter != null) {
+    await inst._asyncCompleter!.future;
+  }
+  final cx = Context(opts, inst);
+  trap_if(!inst.may_enter);
+
+  assert(inst.may_leave);
+  inst.may_leave = false;
+  final flat_args = lower_values(
+    cx,
+    MAX_FLAT_PARAMS,
+    args,
+    computedFt?.parameters ?? ft.param_types(),
+    computedTypes: computedFt?.parametersData,
+  );
+  inst.may_leave = true;
+
+  final completer = Completer<void>();
+  inst._asyncCompleter = completer;
+  final List<FlatValue> flat_results;
+  try {
+    flat_results = await callee(flat_args);
+  } catch (e, s) {
+    trap(e, s);
+  } finally {
+    inst._asyncCompleter = null;
+    completer.complete();
   }
 
   opts._updateMemoryView();

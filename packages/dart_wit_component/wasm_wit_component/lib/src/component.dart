@@ -209,8 +209,10 @@ class WasmLibrary {
     // TODO: get encoding from instance exports
     this.stringEncoding = StringEncoding.utf8,
     Int64TypeConfig int64Type = Int64TypeConfig.bigInt,
+    WasmMemory? wasmMemory,
   })  : _realloc = instance.getFunction('cabi_realloc')!.inner,
-        wasmMemory = instance.getMemory('memory') ??
+        wasmMemory = wasmMemory ??
+            instance.getMemory('memory') ??
             instance.exports.values.whereType<WasmMemory>().first,
         componentInstance = ComponentInstance(int64Type: int64Type);
 
@@ -291,6 +293,44 @@ class WasmLibrary {
     final options = _functionOptions(postFunc);
     return (ListValue args) {
       final (funcLift, post) = canon_lift(
+        options,
+        componentInstance,
+        coreFunc,
+        ft,
+        args,
+        computedFt: computedFt,
+      );
+      post();
+
+      return funcLift;
+    };
+  }
+
+  /// Returns a Function that can be used to call the component function
+  /// with the given [name] and [ft] ([FuncType]).
+  /// The function is constructed by flattening the [ft] and then calling
+  /// [canon_lift] to create a function that can be called with a list of
+  /// core Wasm [FlatValue]s.
+  Future<ListValue> Function(ListValue args)? getComponentFunctionWorker(
+    String name,
+    FuncType ft,
+  ) {
+    final func = instance.getFunction(name);
+    if (func == null) return null;
+    final computedFt = ComputedTypeData.cacheFunction(ft);
+    final flattenedFt = computedFt.liftCoreType;
+    final postFunc = postReturnFunction(name);
+    Future<List<FlatValue>> coreFunc(List<FlatValue> p) async {
+      final args = _mapValuesToFlat(componentInstance.int64Type, p);
+      final resultsParallel = await instance.runParallel(func, [args]);
+      final results = resultsParallel[0];
+      if (results.isEmpty) return const [];
+      return _mapFlatToValues(results, flattenedFt.results);
+    }
+
+    final options = _functionOptions(postFunc);
+    return (ListValue args) async {
+      final (funcLift, post) = await canon_lift_async(
         options,
         componentInstance,
         coreFunc,
