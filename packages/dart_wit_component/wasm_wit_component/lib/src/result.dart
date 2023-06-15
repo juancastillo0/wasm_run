@@ -47,6 +47,24 @@ sealed class Result<O, E> {
     Object? Function(O value)? mapOk,
     Object? Function(E value)? mapError,
   ]);
+
+  /// Returns the inner ok value or throws the error inside a [ResultException].
+  O unwrap();
+
+  /// Returns the inner error value or throws the ok inside a [ResultException].
+  E unwrapErr();
+
+  /// Returns the inner ok value or a provided default.
+  O unwrapOrElse(O Function() defaultValue);
+
+  /// Returns the inner ok value or a provided default.
+  E unwrapErrOrElse(E Function() defaultValue);
+
+  /// Returns a result by mapping [ok] using [mapOk] if this is an [Ok]
+  Result<ON, E> map<ON>(ON Function(O ok) mapOk);
+
+  /// Returns a result by mapping [error] using [mapError] if this is an [Err]
+  Result<O, EN> mapErr<EN>(EN Function(E error) mapError);
 }
 
 /// A Rust-style Result type's success value.
@@ -77,6 +95,19 @@ class Ok<O, E> implements Result<O, E> {
     Object? Function(E value)? mapError,
   ]) =>
       (0, mapOk == null ? ok : mapOk(ok));
+
+  @override
+  O unwrap() => ok;
+  @override
+  E unwrapErr() => throw ResultException(this);
+  @override
+  O unwrapOrElse(O Function() defaultValue) => ok;
+  @override
+  E unwrapErrOrElse(E Function() defaultValue) => defaultValue();
+  @override
+  Result<ON, E> map<ON>(ON Function(O ok) mapOk) => Ok(mapOk(ok));
+  @override
+  Result<O, EN> mapErr<EN>(EN Function(E error) mapError) => Ok(ok);
 
   @override
   bool operator ==(Object other) =>
@@ -123,6 +154,20 @@ class Err<O, E> implements Result<O, E> {
       (1, mapError == null ? error : mapError(error));
 
   @override
+  O unwrap() => throw ResultException(this);
+  @override
+  E unwrapErr() => error;
+  @override
+  O unwrapOrElse(O Function() defaultValue) => defaultValue();
+  @override
+  E unwrapErrOrElse(E Function() defaultValue) => error;
+  @override
+  Result<ON, E> map<ON>(ON Function(O ok) mapOk) => Err(error);
+  @override
+  Result<O, EN> mapErr<EN>(EN Function(E error) mapError) =>
+      Err(mapError(error));
+
+  @override
   bool operator ==(Object other) =>
       other is Err<O, E> &&
       other.runtimeType == runtimeType &&
@@ -134,5 +179,19 @@ class Err<O, E> implements Result<O, E> {
   @override
   String toString() {
     return 'Err<$O, $E>($error)';
+  }
+}
+
+/// An exception that wraps [inner], a [Result]
+class ResultException<O, E> implements Exception {
+  /// The result that caused the exception
+  final Result<O, E> inner;
+
+  /// An exception that wraps [inner], a [Result]
+  const ResultException(this.inner);
+
+  @override
+  String toString() {
+    return 'ResultException($inner)';
   }
 }
