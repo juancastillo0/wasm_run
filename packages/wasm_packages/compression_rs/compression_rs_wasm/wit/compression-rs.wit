@@ -1,5 +1,51 @@
 package compression-rs-namespace:compression-rs
 
+interface flate {
+  type io-error = string
+  type io-success = u32
+
+  variant input {
+    bytes(list<u8>),
+    file(string),
+  }
+}
+
+interface brotli {
+  use flate.{io-error, io-success, input}
+
+  brotli-compress: func(input: input) -> result<list<u8>, io-error>
+  brotli-decompress: func(input: input) -> result<list<u8>, io-error>
+  brotli-compress-file: func(input: input, output-path: string) -> result<io-success, io-error>
+  brotli-decompress-file: func(input: input, output-path: string) -> result<io-success, io-error>
+}
+
+interface gzip {
+  use flate.{io-error, io-success, input}
+
+  gzip-compress: func(input: input) -> result<list<u8>, io-error>
+  gzip-decompress: func(input: input) -> result<list<u8>, io-error>
+  gzip-compress-file: func(input: input, output-path: string) -> result<io-success, io-error>
+  gzip-decompress-file: func(input: input, output-path: string) -> result<io-success, io-error>
+}
+
+interface zlib {
+  use flate.{io-error, io-success, input}
+
+  zlib-compress: func(input: input) -> result<list<u8>, io-error>
+  zlib-decompress: func(input: input) -> result<list<u8>, io-error>
+  zlib-compress-file: func(input: input, output-path: string) -> result<io-success, io-error>
+  zlib-decompress-file: func(input: input, output-path: string) -> result<io-success, io-error>
+}
+
+interface deflate {
+  use flate.{io-error, io-success, input}
+
+  deflate-compress: func(input: input) -> result<list<u8>, io-error>
+  deflate-decompress: func(input: input) -> result<list<u8>, io-error>
+  deflate-compress-file: func(input: input, output-path: string) -> result<io-success, io-error>
+  deflate-decompress-file: func(input: input, output-path: string) -> result<io-success, io-error>
+}
+
 world compression-rs {
     /// A record is a class with named fields
     /// There are enum, list, variant, option, result, tuple and union types
@@ -7,6 +53,11 @@ world compression-rs {
       /// Comment for a field
       integer: s32,
     }
+
+    export brotli
+    export deflate
+    export gzip
+    export zlib
 
     /// An import is a function that is provided by the host environment (Dart)
     import map-integer: func(value: s32) -> float64

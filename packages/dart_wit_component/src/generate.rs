@@ -165,6 +165,22 @@ pub fn document_to_dart(
             s.push_str(&format!(": {};", constructor.join(", ")));
         }
 
+        let int64_type = match p.2.int64_type {
+            Int64TypeConfig::BigInt => "Int64TypeConfig.bigInt",
+            Int64TypeConfig::BigIntUnsignedOnly => "Int64TypeConfig.bigIntUnsignedOnly",
+            Int64TypeConfig::CoreInt => "Int64TypeConfig.coreInt",
+            Int64TypeConfig::NativeObject => "Int64TypeConfig.nativeObject",
+        };
+        let instantiate = if p.2.async_worker {
+            worker_instantiation(int64_type)
+        } else {
+            format!(
+                "final instance = await builder.build();
+
+library = WasmLibrary(instance, int64Type: {int64_type});"
+            )
+        };
+
         s.push_str(&format!(
             "\n\nstatic Future<{w_name}World> init(
                     WasmInstanceBuilder builder, {{
@@ -174,25 +190,71 @@ pub fn document_to_dart(
                     WasmLibrary getLib() => library;
 
                     {func_imports}
-
-                    final instance = await builder.build();
-
-                    library = WasmLibrary(instance, int64Type: {int64_type});
+                    {instantiate}
                     return {w_name}World(imports: imports, library: library);
                 }}
 
                 {methods}
             ",
-            int64_type = match p.2.int64_type {
-                Int64TypeConfig::BigInt => "Int64TypeConfig.bigInt",
-                Int64TypeConfig::BigIntUnsignedOnly => "Int64TypeConfig.bigIntUnsignedOnly",
-                Int64TypeConfig::CoreInt => "Int64TypeConfig.coreInt",
-                Int64TypeConfig::NativeObject => "Int64TypeConfig.nativeObject",
-            }
         ));
         s.push_str("}");
     });
     Ok(s)
+}
+
+fn worker_instantiation(int64_type: &str) -> String {
+    format!(
+        "
+var memType = MemoryTy(minimum: 1, maximum: 2, shared: true);
+try {{
+    // Find the shared memory import. May not work in web.
+    final mem = builder.module.getImports().firstWhere(
+        (e) =>
+            e.kind == WasmExternalKind.memory &&
+            (e.type!.field0 as MemoryTy).shared,
+        );
+    memType = mem.type!.field0 as MemoryTy;
+}} catch (_) {{}}
+
+var attempts = 0;
+late WasmSharedMemory wasmMemory;
+WasmInstance? instance;
+while (instance == null) {{
+    try {{
+        wasmMemory = builder.module.createSharedMemory(
+            minPages: memType.minimum,
+            maxPages: memType.maximum! > memType.minimum
+                ? memType.maximum!
+                : memType.minimum + 1,
+        );
+        builder.addImport('env', 'memory', wasmMemory);
+        instance = await builder.build();
+    }} catch (e) {{
+        // TODO: This is not great, remove it. 
+        if (identical(0, 0.0) && attempts < 2) {{
+            final str = e.toString();
+            final init = RegExp('initial ([0-9]+)').firstMatch(str);
+            final maxi = RegExp('maximum ([0-9]+)').firstMatch(str);
+            if (init != null || maxi != null) {{
+                final initVal =
+                    init == null ? memType.minimum : int.parse(init.group(1)!);
+                final maxVal =
+                    maxi == null ? memType.maximum : int.parse(maxi.group(1)!);
+                memType = MemoryTy(minimum: initVal, maximum: maxVal, shared: true);
+                attempts++;
+                continue;
+            }}
+        }}
+        rethrow;
+    }}
+}}
+
+library = WasmLibrary(
+    instance,
+    int64Type: {int64_type},
+    wasmMemory: wasmMemory,
+);"
+    )
 }
 
 pub fn add_docs(s: &mut String, docs: &Docs) {
