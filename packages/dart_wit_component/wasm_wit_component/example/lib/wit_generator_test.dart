@@ -69,6 +69,7 @@ void witDartGeneratorTests({Future<Directory> Function()? getDirectory}) {
               useNullForOption: false,
               requiredOption: false,
               typedNumberLists: true,
+              asyncWorker: false,
             ),
           ),
         );
@@ -105,6 +106,7 @@ void witDartGeneratorTests({Future<Directory> Function()? getDirectory}) {
               useNullForOption: false,
               requiredOption: false,
               typedNumberLists: true,
+              asyncWorker: false,
             ),
           ),
         );
@@ -229,6 +231,7 @@ WitGeneratorConfig _defaultConfig(WitGeneratorInput inputs) {
     useNullForOption: false,
     requiredOption: false,
     typedNumberLists: true,
+    asyncWorker: false,
   );
 }
 

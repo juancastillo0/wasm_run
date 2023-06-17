@@ -8,4 +8,5 @@ exclude = [
     "packages/wasm_packages/rust_crypto/rust_crypto_wasm/Cargo.toml",
     "packages/wasm_packages/image_rs/image_rs_wasm/Cargo.toml",
     "packages/wasm_packages/compression_rs/compression_rs_wasm/Cargo.toml",
+    "packages/wasm_packages/wasm_parser/wasm_parser_wasm/Cargo.toml",
 ]

@@ -367,6 +367,9 @@ class WitGeneratorConfig {
   /// This does not affect `list<u64>` and `list<s64>`, they will
   /// use a `List<[int64Type]>`.
   final bool typedNumberLists;
+
+  /// Whether to the asyncronous functions to execute functions in workers.
+  final bool asyncWorker;
   const WitGeneratorConfig({
     required this.inputs,
     required this.jsonSerialization,
@@ -380,6 +383,7 @@ class WitGeneratorConfig {
     required this.requiredOption,
     required this.int64Type,
     required this.typedNumberLists,
+    required this.asyncWorker,
   });
 
   /// Returns a new instance from a JSON value.
@@ -401,7 +405,8 @@ class WitGeneratorConfig {
         final useNullForOption,
         final requiredOption,
         final int64Type,
-        final typedNumberLists
+        final typedNumberLists,
+        final asyncWorker
       ] ||
       (
         final inputs,
@@ -415,7 +420,8 @@ class WitGeneratorConfig {
         final useNullForOption,
         final requiredOption,
         final int64Type,
-        final typedNumberLists
+        final typedNumberLists,
+        final asyncWorker
       ) =>
         WitGeneratorConfig(
           inputs: WitGeneratorInput.fromJson(inputs),
@@ -436,6 +442,7 @@ class WitGeneratorConfig {
           requiredOption: requiredOption! as bool,
           int64Type: Int64TypeConfig.fromJson(int64Type),
           typedNumberLists: typedNumberLists! as bool,
+          asyncWorker: asyncWorker! as bool,
         ),
       _ => throw Exception('Invalid JSON $json_')
     };
@@ -459,6 +466,7 @@ class WitGeneratorConfig {
         'required-option': requiredOption,
         'int64-type': int64Type.toJson(),
         'typed-number-lists': typedNumberLists,
+        'async-worker': asyncWorker,
       };
 
   /// Returns this as a WASM canonical abi value.
@@ -478,7 +486,8 @@ class WitGeneratorConfig {
         useNullForOption,
         requiredOption,
         int64Type.toWasm(),
-        typedNumberLists
+        typedNumberLists,
+        asyncWorker
       ];
   @override
   String toString() =>
@@ -498,6 +507,7 @@ class WitGeneratorConfig {
     bool? requiredOption,
     Int64TypeConfig? int64Type,
     bool? typedNumberLists,
+    bool? asyncWorker,
   }) =>
       WitGeneratorConfig(
           inputs: inputs ?? this.inputs,
@@ -513,7 +523,8 @@ class WitGeneratorConfig {
           useNullForOption: useNullForOption ?? this.useNullForOption,
           requiredOption: requiredOption ?? this.requiredOption,
           int64Type: int64Type ?? this.int64Type,
-          typedNumberLists: typedNumberLists ?? this.typedNumberLists);
+          typedNumberLists: typedNumberLists ?? this.typedNumberLists,
+          asyncWorker: asyncWorker ?? this.asyncWorker);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -535,7 +546,8 @@ class WitGeneratorConfig {
         useNullForOption,
         requiredOption,
         int64Type,
-        typedNumberLists
+        typedNumberLists,
+        asyncWorker
       ];
   static const _spec = RecordType([
     (label: 'inputs', t: WitGeneratorInput._spec),
@@ -549,7 +561,8 @@ class WitGeneratorConfig {
     (label: 'use-null-for-option', t: Bool()),
     (label: 'required-option', t: Bool()),
     (label: 'int64-type', t: Int64TypeConfig._spec),
-    (label: 'typed-number-lists', t: Bool())
+    (label: 'typed-number-lists', t: Bool()),
+    (label: 'async-worker', t: Bool())
   ]);
 }
 

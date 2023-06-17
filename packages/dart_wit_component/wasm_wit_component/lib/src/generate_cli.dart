@@ -117,6 +117,7 @@ class GeneratorCLIArgs {
       requiredOption: args.namedBool[_Arg.requiredOption] ?? false,
       useNullForOption: args.namedBool[_Arg.useNullForOption] ?? true,
       typedNumberLists: args.namedBool[_Arg.typedNumberLists] ?? true,
+      asyncWorker: args.namedBool[_Arg.asyncWorker] ?? false,
       objectComparator: args.singleArgValue(_Arg.objectComparator),
       int64Type: args.singleArgEnum(_Arg.int64Type, Int64TypeConfig.values) ??
           Int64TypeConfig.bigInt,
@@ -164,6 +165,7 @@ class _Arg {
   static const requiredOption = 'required-option';
   static const useNullForOption = 'null-for-option';
   static const typedNumberLists = 'typed-number-lists';
+  static const asyncWorker = 'async-worker';
   static const watch = 'watch';
 
   static const fileHeader = 'file-header';
@@ -181,6 +183,7 @@ class _Arg {
     useNullForOption,
     typedNumberLists,
     requiredOption,
+    asyncWorker,
     watch,
   ];
 

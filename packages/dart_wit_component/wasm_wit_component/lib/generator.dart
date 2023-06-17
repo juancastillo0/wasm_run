@@ -8,7 +8,7 @@ export 'package:wasm_wit_component/src/generator.dart';
 
 const _isWeb = identical(0, 0.0);
 
-/// Creates a [DartWitGeneratorWorld] from for the given [wasiConfig].
+/// Creates a [DartWitGeneratorWorld] with the given [wasiConfig].
 /// It setsUp the dynamic library for wasm_run for native platforms and
 /// loads the dart_wit_component WASM module from the file system or
 /// from the releases of wasm_run repository.
@@ -79,6 +79,7 @@ WitGeneratorConfig defaultGeneratorConfig({
     requiredOption: false,
     int64Type: Int64TypeConfig.bigInt,
     typedNumberLists: true,
+    asyncWorker: false,
   );
 }
 

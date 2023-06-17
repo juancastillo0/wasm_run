@@ -22,6 +22,11 @@ Future<void> createPackageCli(List<String> arguments) async {
     defaultsTo: false,
   );
   parser.addFlag(
+    'async-worker',
+    help: 'Whether to generate worker enabled async functions',
+    defaultsTo: false,
+  );
+  parser.addFlag(
     'build',
     help: 'Whether to build the wasm component module',
     defaultsTo: true,
@@ -63,6 +68,7 @@ Future<void> createPackageCli(List<String> arguments) async {
     rustName: result['rust-name'] as String? ??
         '${Uri.parse(directory).pathSegments.last}_wasm',
     template: CreatePackageTemplate.values.byName(result['template'] as String),
+    asyncWorker: result['async-worker']! as bool,
     wasi: result['wasi']! as bool,
     build: result['build']! as bool,
     run: result['run']! as bool,
@@ -86,27 +92,46 @@ Future<void> createPackage(CreatePackageArgs args) async {
     final g = await createDartWitGenerator(
       wasiConfig: wasiConfigFromPath(args.directory),
     );
-    final filePath = '${args.directory}/lib/src/${args.dartWitGen}';
-    final generateResult = g.generateToFile(
-      filePath: filePath,
-      config: defaultGeneratorConfig(
-        inputs: WitGeneratorInput.fileSystemPaths(
-          FileSystemPaths(inputPath: witFile),
-        ),
-      ),
-    );
-    if (generateResult.isError) throw Exception(generateResult.error);
 
-    try {
-      final formatGeneration = await Process.run(
-        'dart',
-        ['format', filePath],
+    final filePath = '${args.directory}/lib/src/${args.dartWitGen}';
+    await _generateAndFormat(g, filePath: filePath, witFile: witFile);
+    if (args.asyncWorker) {
+      final workerPath = '${args.directory}/lib/src/${args.dartWitWorkerGen}';
+      await _generateAndFormat(
+        g,
+        filePath: workerPath,
+        witFile: witFile,
+        asyncWorker: true,
       );
-      if (formatGeneration.exitCode != 0) {
-        print(formatGeneration.stderr);
-      }
-    } catch (_) {}
+    }
   }
+}
+
+Future<void> _generateAndFormat(
+  DartWitGeneratorWorld g, {
+  required String filePath,
+  required String witFile,
+  bool asyncWorker = false,
+}) async {
+  final generateResult = g.generateToFile(
+    filePath: filePath,
+    config: defaultGeneratorConfig(
+      inputs: WitGeneratorInput.fileSystemPaths(
+        FileSystemPaths(inputPath: witFile),
+      ),
+    ).copyWith(asyncWorker: asyncWorker),
+  );
+  if (generateResult.isError) throw Exception(generateResult.error);
+
+  try {
+    final formatGeneration = await Process.run(
+      'dart',
+      ['format', filePath],
+    );
+    if (formatGeneration.exitCode != 0) {
+      print(formatGeneration.stderr);
+    }
+  } catch (_) {}
 }
 
 Future<void> _writeDirectory(
@@ -141,6 +166,7 @@ class CreatePackageArgs {
   final String directory;
   final String rustName;
   final CreatePackageTemplate template;
+  final bool asyncWorker;
   final bool wasi;
   final bool onlyRust;
   final bool build;
@@ -153,6 +179,7 @@ class CreatePackageArgs {
     required this.rustName,
     required this.template,
     required this.onlyRust,
+    required this.asyncWorker,
     required this.wasi,
     required this.build,
     required this.run,
@@ -166,6 +193,7 @@ class CreatePackageArgs {
       template:
           CreatePackageTemplate.values.byName(json['template']! as String),
       onlyRust: json['onlyRust']! as bool,
+      asyncWorker: json['asyncWorker']! as bool,
       wasi: json['wasi']! as bool,
       build: json['build']! as bool,
       run: json['run']! as bool,
@@ -177,6 +205,7 @@ class CreatePackageArgs {
   String get witPackageName => ReCase(dartName).paramCase;
   String get packageNameType => ReCase(dartName).pascalCase;
   String get dartWitGen => '${dartName}_wit.gen.dart';
+  String get dartWitWorkerGen => '${dartName}_wit.worker.gen.dart';
 
   Map<String, Object?> outputFiles() {
     return {
@@ -191,9 +220,9 @@ class CreatePackageArgs {
       },
       'lib': {
         'src': {
-          // TODO: dart generated file
-          dartWitGen: libRustFile(),
+          dartWitGen: '',
         },
+        if (asyncWorker) '${dartName}_worker.dart': libDartWorkerFile(),
         // TODO: wasm file
         '${dartName}.dart': libDartFile(),
       },
@@ -282,6 +311,27 @@ analyzer:
   }
 
   String readmeFile() {
+    String asyncWorkerSection = '';
+    if (asyncWorker) {
+      asyncWorkerSection = '''
+
+## Async Worker
+
+### Build Threaded Wasm from Rust
+
+```sh
+cd $rustName
+RUSTFLAGS='-C target-feature=+atomics,+bulk-memory,+mutable-globals -C link-args=--shared-memory' cargo +nightly build --target wasm32-unknown-unknown --profile release -Z build-std=std,panic_abort
+cp target/wasm32-unknown-unknown/release/$rustName.wasm ../lib/$rustName.threads.wasm
+```
+
+### Generate Wit Dart async bindings
+
+```sh
+dart run wasm_wit_component:generate ${rustName}/wit/${witPackageName}.wit lib/src/${dartWitWorkerGen} --async-worker
+```
+''';
+    }
     return '''
 # $dartName
 
@@ -298,7 +348,7 @@ cp target/wasm32-wasi/release/$rustName.wasm ../lib/
 ```sh
 dart run wasm_wit_component:generate ${rustName}/wit/${witPackageName}.wit lib/src/${dartWitGen}
 ```
-''';
+${asyncWorkerSection}''';
   }
 
   String exampleDartFile() {
@@ -358,7 +408,7 @@ void main() {
         case Err(:final String error):
           throw Exception(error);
       }
-    })
+    });
   });
 }
 ''';
@@ -377,7 +427,7 @@ import 'package:${dartName}/src/${dartWitGen}';
 
 export 'package:${dartName}/src/${dartWitGen}';
 
-/// Creates a [${packageNameType}World] from for the given [wasiConfig].
+/// Creates a [${packageNameType}World] with the given [wasiConfig].
 /// It setsUp the dynamic library for wasm_run in native platforms and
 /// loads the ${dartName} WASM module from the file system or
 /// from the url pointing to 'lib/${rustName}.wasm'.
@@ -400,7 +450,7 @@ Future<${packageNameType}World> create${packageNameType}({
   if (loadModule != null) {
     module = await loadModule();
   } else {
-    final uri await WasmFileUris.uriForPackage(
+    final uri = await WasmFileUris.uriForPackage(
       package: '${dartName}',
       libPath: '${rustName}.wasm',
       envVariable: '${ReCase(dartName).constantCase}_WASM_PATH',
@@ -411,6 +461,70 @@ Future<${packageNameType}World> create${packageNameType}({
   final builder = module.builder(
     wasiConfig: wasiConfig,
     workersConfig: workersConfig,
+  );
+
+  return ${packageNameType}World.init(builder, imports: imports);
+}
+''';
+      case CreatePackageTemplate.complete:
+        return '''''';
+    }
+  }
+
+  String libDartWorkerFile() {
+    switch (template) {
+      case CreatePackageTemplate.simple:
+        return '''
+import 'dart:io';
+
+import 'package:wasm_run/load_module.dart';
+import 'package:wasm_run/wasm_run.dart';
+import 'package:${dartName}/src/${dartWitGen}';
+
+export 'package:${dartName}/src/${dartWitGen}';
+
+/// Creates a [${packageNameType}World] with the given [imports].
+/// It setsUp the dynamic library for wasm_run in native platforms and
+/// loads the ${dartName} WASM module from the file system or
+/// from the url pointing to 'lib/${rustName}.wasm'.
+///
+/// If [loadModule] is provided, it will be used to load the WASM module.
+/// This can be useful if you want to provide a different configuration
+/// or implementation, or you are loading it from Flutter assets or
+/// from a different HTTP endpoint. By default, it will load the WASM module
+/// from the file system in `lib/${rustName}.wasm` either reading it directly
+/// in native platforms or with a GET request for Dart web.
+///
+/// This version of the function is used to create a world that supports
+/// asynchronous executions thorough OS threads or Web Workers.
+/// However, it only supports in memory inputs and outputs.
+/// It does not support file system access or Wasi APIs.
+Future<${packageNameType}World> create${packageNameType}Worker({
+  required ${packageNameType}WorldImports imports,
+  Future<WasmModule> Function()? loadModule,
+  WorkersConfig? workersConfig,
+}) async {
+  await WasmRunLibrary.setUp(override: false);
+
+  final WasmModule module;
+  if (loadModule != null) {
+    module = await loadModule();
+  } else {
+    final uri = await WasmFileUris.uriForPackage(
+      package: '${dartName}',
+      libPath: '${rustName}.threads.wasm',
+      envVariable: '${ReCase(dartName).constantCase}_WASM_THREADS_PATH',
+    );
+    final uris = WasmFileUris(uri: uri);
+    module = await uris.loadModule(
+      config: ModuleConfig(
+        wasmtime: ModuleConfigWasmtime(wasmThreads: true),
+      ),
+    );
+  }
+  final numWorkers = identical(0, 0.0) ? 2 : Platform.numberOfProcessors;
+  final builder = module.builder(
+    workersConfig: workersConfig ?? WorkersConfig(numberOfWorkers: numWorkers),
   );
 
   return ${packageNameType}World.init(builder, imports: imports);
