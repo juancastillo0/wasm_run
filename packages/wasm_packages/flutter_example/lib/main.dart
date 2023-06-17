@@ -18,7 +18,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Wasm Packages Demo',
+      title: 'Wasm Run Packages',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurpleAccent),
         useMaterial3: true,
@@ -35,7 +35,7 @@ class MyApp extends StatelessWidget {
           // ),
         ),
       ),
-      home: const MyHomePage(title: 'Wasm Packages'),
+      home: const MyHomePage(title: 'Wasm Run Packages'),
     );
   }
 }

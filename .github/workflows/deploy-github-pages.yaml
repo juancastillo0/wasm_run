@@ -1,0 +1,41 @@
+name: Flutter Web Github Pages
+
+# Controls when the action will run. Triggers the workflow on push or pull request
+# events but only for the master branch
+on:
+  push:
+    branches:
+      - wit-generator-args
+
+env:
+  FLUTTER_CHANNEL: beta
+  RUST_TOOLCHAIN: nightly
+  MELOS_VERSION: "3.1.0"
+
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  build:
+    name: Build and deploy Flutter web
+    runs-on: ubuntu-latest
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      - uses: actions/checkout@v3
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: ${{ env.FLUTTER_CHANNEL }}
+      - run: dart pub global activate melos ${{ env.MELOS_VERSION }} && melos bs
+      # - name: Run code generation
+      #   run: flutter pub run build_runner build --delete-conflicting-outputs
+
+      - run: flutter build web --release --web-renderer canvaskit --base-href /wasm_run/
+        working-directory: packages/wasm_packages/flutter_example
+
+      # - name: patch service worker
+      #   run: dart patch_service_worker.dart
+
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: packages/wasm_packages/flutter_example/build/web
