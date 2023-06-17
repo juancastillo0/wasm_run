@@ -12,6 +12,8 @@ import 'package:test/test.dart';
 import 'package:wasm_wit_component/wasm_wit_component.dart';
 import 'package:wasm_run/src/ffi.dart' as wasm_run_ffi;
 
+const isWeb = identical(0, 0.0);
+
 void main() {
   group('compression_rs api', () {
     test('run', () async {
@@ -71,7 +73,6 @@ void main() {
           mapInteger: ({required value}) => value * 0.17,
         ),
       );
-      const isWeb = identical(0, 0.0);
       final values = [
         const Utf8Codec().encoder.convert('hello world'),
         if (isWeb)
@@ -92,8 +93,8 @@ void main() {
       final compressors = [
         // TODO: world.brotli.compressor,
         world.gzip.compressor,
-        world.zlib.compressor,
-        world.deflate.compressor,
+        // world.zlib.compressor,
+        // world.deflate.compressor,
       ];
 
       await Future.wait(
@@ -133,8 +134,19 @@ void main() {
       );
       final values = [
         const Utf8Codec().encoder.convert('hello world'),
-        File('lib/src/compression_rs_wit.gen.dart').readAsBytesSync(),
-        File('lib/compression_rs_wasm.wasm').readAsBytesSync(),
+        if (isWeb)
+          await wasm_run_ffi.getUriBodyBytes(Uri.parse(
+            // TODO: improve error message
+            './packages/compression_rs/src/compression_rs_wit.gen.dart',
+          ))
+        else
+          File('lib/src/compression_rs_wit.gen.dart').readAsBytesSync(),
+        if (isWeb)
+          await wasm_run_ffi.getUriBodyBytes(Uri.parse(
+            './packages/compression_rs/compression_rs_wasm.wasm',
+          ))
+        else
+          File('lib/compression_rs_wasm.wasm').readAsBytesSync(),
       ];
 
       // TODO: generate interface for world

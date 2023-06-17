@@ -7,7 +7,7 @@ import 'package:wasm_wit_component/wasm_wit_component.dart';
 
 export 'package:compression_rs/src/compression_rs_wit.worker.gen.dart';
 
-/// Creates a [CompressionRsWorld] from for the given [wasiConfig].
+/// Creates a [CompressionRsWorld] with the given [wasiConfig].
 /// It setsUp the dynamic library for wasm_run in native platforms and
 /// loads the compression_rs WASM module from the file system or
 /// from the url pointing to 'lib/compression_rs_wasm.wasm'.
@@ -45,7 +45,7 @@ Future<CompressionRsWorld> createCompressionRsInMemoryWorker({
       ),
     );
   }
-  final defaultNumWorkers = identical(0, 0.0) ? 4 : Platform.numberOfProcessors;
+  final defaultNumWorkers = identical(0, 0.0) ? 2 : Platform.numberOfProcessors;
   final builder = module.builder(
     workersConfig:
         workersConfig ?? WorkersConfig(numberOfWorkers: defaultNumWorkers),

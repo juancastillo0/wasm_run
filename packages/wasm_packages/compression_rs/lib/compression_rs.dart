@@ -4,7 +4,7 @@ import 'package:compression_rs/src/compression_rs_wit.gen.dart';
 
 export 'package:compression_rs/src/compression_rs_wit.gen.dart';
 
-/// Creates a [CompressionRsWorld] from for the given [wasiConfig].
+/// Creates a [CompressionRsWorld] with the given [wasiConfig].
 /// It setsUp the dynamic library for wasm_run in native platforms and
 /// loads the compression_rs WASM module from the file system or
 /// from the url pointing to 'lib/compression_rs_wasm.wasm'.

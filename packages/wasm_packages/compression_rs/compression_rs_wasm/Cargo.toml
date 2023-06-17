@@ -23,9 +23,11 @@ zip = { version = "0.6.6", optional = true, default-features = false, features =
 # zstd = "0.12.3" # c bindings
 
 [features]
-default = ["brotli", "gzip", "zlib", "deflate", "tar", "zip"]
-nobrotli = ["gzip", "zlib", "deflate", "tar", "zip"]
+default = ["brotli", "gzip", "zlib", "deflate", "tar", "zip", "wasi"]
+nobrotli = ["gzip", "zlib", "deflate", "tar", "zip", "wasi"]
+worker = ["gzip", "zlib", "deflate", "tar", "zip"]
 brotli = ["dep:brotli"]
+wasi = []
 gzip = []
 zlib = []
 deflate = []

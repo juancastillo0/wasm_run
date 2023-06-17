@@ -18,7 +18,12 @@ impl Input {
     fn with_read<T>(&mut self, f: impl FnOnce(&mut dyn Read) -> T) -> T {
         match self {
             Input::Bytes(bytes) => f(&mut bytes.as_slice()),
+            #[cfg(feature = "wasi")]
             Input::File(file) => f(&mut File::open(file).unwrap()),
+            #[cfg(not(feature = "wasi"))]
+            Input::File(file) => {
+                panic!("The wasm module should be compiled with the wasi feature. Tried to open file {file}.")
+            }
         }
     }
 }
