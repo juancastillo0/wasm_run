@@ -6,6 +6,7 @@ import 'package:flutter_example/state.dart';
 import 'package:flutter_example/wasm_parser_state.dart';
 import 'package:wasm_parser/wasm_parser.dart';
 import 'package:file_system_access/file_system_access.dart' as fsa;
+import 'package:url_launcher/url_launcher.dart';
 
 void main() {
   runApp(const MyApp());
@@ -19,6 +20,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Wasm Run Packages',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurpleAccent),
         useMaterial3: true,
@@ -71,7 +73,15 @@ class _MyHomePageState extends State<MyHomePage> {
       child: Scaffold(
         appBar: AppBar(
           backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-          actions: [],
+          actions: [
+            TextButton(
+              onPressed: () => launchUrl(
+                Uri.parse('https://github.com/juancastillo0/wasm_run'),
+              ),
+              child: const Text('GitHub'),
+            ),
+            const SizedBox(width: 10),
+          ],
           title: Text(widget.title),
         ),
         body: Center(

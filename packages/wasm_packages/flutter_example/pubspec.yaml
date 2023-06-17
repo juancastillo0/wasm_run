@@ -31,6 +31,8 @@ dependencies:
   flutter:
     sdk: flutter
 
+  url_launcher: ^6.1.11
+
   wasm_run_flutter:
     path: ../../wasm_run_flutter
   wasm_wit_component:
