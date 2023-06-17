@@ -14,7 +14,7 @@ export 'package:wasm_run/wasm_run.dart';
 
 const _isWeb = identical(0, 0.0);
 
-/// Creates a [DartWitGeneratorWorld] from for the given [wasiConfig].
+/// Creates a [RustCryptoWorld] with the given [wasiConfig].
 /// It setsUp the dynamic library for wasm_run for native platforms and
 /// loads the dart_wit_component WASM module from the file system or
 /// from the releases of wasm_run repository.

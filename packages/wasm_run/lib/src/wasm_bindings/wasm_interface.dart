@@ -40,7 +40,11 @@ export 'package:wasm_run/src/int64_bigint/int64_bigint.dart';
 abstract class WasmModule {
   /// A builder that creates a new [WasmInstance] from this module.
   /// It configures the imports and definitions of the instance.
-  /// [wasiConfig] is not supported in the browser executor.
+  /// [wasiConfig] is used to configure WASI imports, environment variables,
+  /// arguments and the file system access.
+  /// [workersConfig] is used to configure the number of workers and the
+  /// web worker script url. The module should support atomics, threads and
+  /// shared memory to be able to use workers.
   WasmInstanceBuilder builder({
     WasiConfig? wasiConfig,
     WorkersConfig? workersConfig,
