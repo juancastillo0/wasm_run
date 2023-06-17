@@ -12,6 +12,9 @@ env:
   RUST_TOOLCHAIN: nightly
   MELOS_VERSION: "3.1.0"
 
+permissions:
+  contents: write
+  discussions: write
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
