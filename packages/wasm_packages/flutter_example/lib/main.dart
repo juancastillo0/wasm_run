@@ -1,6 +1,11 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_example/flutter_utils.dart';
 import 'package:flutter_example/state.dart';
+import 'package:flutter_example/wasm_parser_state.dart';
+import 'package:wasm_parser/wasm_parser.dart';
+import 'package:file_system_access/file_system_access.dart' as fsa;
 
 void main() {
   runApp(const MyApp());
@@ -13,42 +18,30 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Wasm Packages Demo',
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a blue toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurpleAccent),
         useMaterial3: true,
+        inputDecorationTheme: const InputDecorationTheme(
+          isDense: true,
+          filled: true,
+          labelStyle: TextStyle(height: 0.5),
+          // isCollapsed: true,
+          contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+          // enabledBorder: UnderlineInputBorder(
+          //   // borderSide: BorderSide(
+          //   //   color: Colors.black12,
+          //   // ),
+          // ),
+        ),
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const MyHomePage(title: 'Wasm Packages'),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
 
   final String title;
 
@@ -57,7 +50,6 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
   late GlobalState state;
 
   @override
@@ -72,73 +64,30 @@ class _MyHomePageState extends State<MyHomePage> {
     super.dispose();
   }
 
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Inherited(
       state: state,
       child: Scaffold(
         appBar: AppBar(
-          // TRY THIS: Try changing the color here to a specific color (to
-          // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-          // change color while the other colors stay the same.
           backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-          // Here we take the value from the MyHomePage object that was created by
-          // the App.build method, and use it to set our appbar title.
           actions: [],
           title: Text(widget.title),
         ),
         body: Center(
-          // Center is a layout widget. It takes a single child and positions it
-          // in the middle of the parent.
           child: Column(
-            // Column is also a layout widget. It takes a list of children and
-            // arranges them vertically. By default, it sizes itself to fit its
-            // children horizontally, and tries to be as tall as its parent.
-            //
-            // Column has various properties to control how it sizes itself and
-            // how it positions its children. Here we use mainAxisAlignment to
-            // center the children vertically; the main axis here is the vertical
-            // axis because Columns are vertical (the cross axis would be
-            // horizontal).
-            //
-            // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-            // action in the IDE, or press "p" in the console), to see the
-            // wireframe for each widget.
             mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              const Text(
-                'You have pushed the button this many times:',
+            children: [
+              Expanded(
+                child: LoaderWidget(
+                  loader: state.wasmParser,
+                  child: const WasmParserPage(),
+                ),
               ),
-              Text(
-                '$_counter',
-                style: Theme.of(context).textTheme.headlineMedium,
-              ),
-              const WasmParserPage(),
+              const SizedBox(height: 10),
             ],
           ),
         ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: _incrementCounter,
-          tooltip: 'Increment',
-          child: const Icon(Icons.add),
-        ), // This trailing comma makes auto-formatting nicer for build methods.
       ),
     );
   }
@@ -154,20 +103,417 @@ class ImageRsPage extends StatelessWidget {
   }
 }
 
+class LoaderWidget extends StatelessWidget {
+  const LoaderWidget({super.key, required this.loader, required this.child});
+
+  final FutureLoader loader;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: loader,
+      builder: (context, _) {
+        final state = loader.value;
+        if (loader.error.isNotEmpty) {
+          return Column(
+            children: [
+              Text(loader.error).container(padding: const EdgeInsets.all(12)),
+              ElevatedButton(
+                onPressed: loader.load,
+                child: const Text('Retry'),
+              ),
+            ],
+          );
+        } else if (state == null) {
+          loader.load();
+          return const CircularProgressIndicator()
+              .container(alignment: Alignment.center);
+        }
+        return child;
+      },
+    );
+  }
+}
+
 class WasmParserPage extends StatelessWidget {
   const WasmParserPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final wasmParser = Inherited.get<GlobalState>(context).wasmParser;
-    if (wasmParser == null) {
+    final wasmParserLoader = Inherited.get<GlobalState>(context).wasmParser;
+    final state = wasmParserLoader.value;
+    if (state == null) {
       return const CircularProgressIndicator();
     }
+    const wasmFileType = fsa.FilePickerAcceptType(
+      description: 'WebAssembly',
+      accept: {
+        'application/wasm': ['.wasm']
+      },
+    );
+    const watFileType = fsa.FilePickerAcceptType(
+      description: 'WebAssemblyText',
+      accept: {
+        'application/wat': ['.wat']
+      },
+    );
 
-    return Column(
-      children: [
-        TextField(),
-      ],
+    void loadWasm(void Function(String name, Uint8List bytes) onLoad) async {
+      final files = await fsa.FileSystem.instance.showOpenFilePickerWebSafe(
+        const fsa.FsOpenOptions(
+          multiple: false,
+          types: [wasmFileType],
+        ),
+      );
+      if (files.isNotEmpty) {
+        final file = files.first;
+        final bytes = await file.file.readAsBytes();
+        onLoad(file.file.name, bytes);
+      }
+    }
+
+    void loadWat() async {
+      final files = await fsa.FileSystem.instance.showOpenFilePickerWebSafe(
+        const fsa.FsOpenOptions(
+          multiple: false,
+          types: [watFileType],
+        ),
+      );
+      if (files.isNotEmpty) {
+        final file = files.first;
+        final text = await file.file.readAsString();
+        state.setWat(text);
+      }
+    }
+
+    Future<void> downloadFile(String name, Uint8List bytes) async {
+      if (!fsa.FileSystem.instance.isSupported) {
+        await fsa.XFile.fromData(bytes).saveTo(name);
+      } else {
+        final handle = await fsa.FileSystem.instance.showSaveFilePicker(
+          fsa.FsSaveOptions(types: const [wasmFileType], suggestedName: name),
+        );
+        if (handle == null) return;
+        final writable = await handle.createWritable(keepExistingData: false);
+        await writable.write(
+          fsa.FileSystemWriteChunkType.bufferSource(
+            bytes.buffer,
+          ),
+        );
+        await writable.close();
+      }
+    }
+
+    void createComponent() async {
+      final componentBytes = state.wasm2component();
+      if (componentBytes == null) return;
+      await downloadFile('component.wasm', componentBytes);
+    }
+
+    void downloadWasm() async {
+      final moduleBytes = state.wat2wasm();
+      if (moduleBytes == null) return;
+      await downloadFile('module.wasm', moduleBytes);
+    }
+
+    Widget wasmModuleTypeWidget(ModuleType value) {
+      final line = BoxDecoration(
+        border: Border(
+          top: BorderSide(color: Colors.grey.shade300),
+        ),
+      );
+      return Card(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Text('ModuleType')
+                .title()
+                .container(alignment: Alignment.center),
+            const Text('Imports').subtitle(),
+            if (value.imports.isEmpty)
+              const Text('No imports')
+                  .container(padding: const EdgeInsets.all(6)),
+            ...value.imports.map(
+              (e) => Text('${e.module}.${e.name}\n${e.type}').container(
+                padding: const EdgeInsets.all(6),
+                decoration: line,
+              ),
+            ),
+            const Text('Exports').subtitle(),
+            if (value.exports.isEmpty) const Text('No exports'),
+            ...value.exports.map(
+              (e) => Text('${e.name}\n${e.type}').container(
+                padding: const EdgeInsets.all(6),
+                decoration: line,
+              ),
+            )
+          ],
+        ).container(padding: const EdgeInsets.all(6)),
+      );
+    }
+
+    Widget wasmTypeWidget() {
+      if (state.wasmType == null) {
+        return const Text(
+          'No WASM file parsed.\nLoad a binary file, parse the WAT text with "wat2wasm" or select an example WAT',
+          textAlign: TextAlign.center,
+        ).container(padding: const EdgeInsets.all(20));
+      }
+      return Column(
+        children: [
+          switch (state.wasmType!) {
+            WasmTypeModuleType(:final value) => wasmModuleTypeWidget(value),
+            WasmTypeComponentType(:final value) => Column(
+                children: [
+                  const Text('ComponentType').title(),
+                  const Text('Modules'),
+                  ...value.modules.map(wasmModuleTypeWidget)
+                ],
+              ),
+          },
+        ],
+      );
+    }
+
+    return AnimatedBuilder(
+      animation: state,
+      builder: (context, _) {
+        return Row(
+          children: [
+            Expanded(
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      const Text('WAT').title(),
+                      ElevatedButton(
+                        onPressed: loadWat,
+                        child: const Text('loadWat'),
+                      ),
+                      Row(
+                        children: [
+                          const Text('Examples:').container(
+                              padding: const EdgeInsets.only(left: 10)),
+                          ButtonBar(
+                            buttonPadding: const EdgeInsets.all(1),
+                            children: [
+                              ...WatExample.values.map(
+                                (e) => TextButton(
+                                  onPressed: () {
+                                    state.setWat(e.wat);
+                                  },
+                                  child: Text(e.name),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  Expanded(
+                    child: TextField(
+                      controller: state.watController,
+                      maxLines: 1000,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      const Text('WASM').title(),
+                      ElevatedButton(
+                        onPressed: () => loadWasm(
+                          (_, bytes) => state.loadWasm(bytes),
+                        ),
+                        child: const Text('loadWasm'),
+                      ),
+                      if (state.wasmType != null)
+                        ElevatedButton(
+                          onPressed: downloadWasm,
+                          child: const Text('downloadWasm'),
+                        ),
+                      ElevatedButton(
+                        onPressed: state.wat2wasm,
+                        child: const Text('wat2wasm'),
+                      )
+                    ],
+                  ),
+                  Expanded(
+                    child: SingleChildScrollView(child: wasmTypeWidget()),
+                  ),
+                  if (state.error.isNotEmpty)
+                    Row(
+                      children: [
+                        Expanded(child: Text(state.error)),
+                        ElevatedButton(
+                          onPressed: () => state.setError(''),
+                          child: const Text('Close'),
+                        )
+                      ],
+                    ).container(
+                      margin: const EdgeInsets.only(top: 12),
+                      padding: const EdgeInsets.all(12),
+                      color: Colors.red.shade100,
+                    ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      const Text('Wasm Component').title(),
+                      ElevatedButton(
+                        onPressed: createComponent,
+                        child: const Text('createComponent'),
+                      ),
+                      // TODO: wasi adapter
+                      ElevatedButton(
+                        onPressed: () {
+                          loadWasm(
+                            (name, bytes) async {
+                              String name_ = name.split('.').first;
+                              await showDialog(
+                                context: context,
+                                builder: (context) {
+                                  final navigator = Navigator.of(context);
+                                  return AlertDialog(
+                                    content: TextFormField(
+                                      decoration: const InputDecoration(
+                                        labelText: 'Adapter Name',
+                                      ),
+                                      initialValue: name_,
+                                      onFieldSubmitted: (name) {
+                                        name_ = name;
+                                        navigator.pop();
+                                      },
+                                      onChanged: (name) => name_ = name,
+                                    ),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: navigator.pop,
+                                        child: const Text('Accept'),
+                                      ),
+                                    ],
+                                  );
+                                },
+                              );
+
+                              state.addAdapter(
+                                ComponentAdapter(
+                                  name: name_,
+                                  wasm: WasmInput.binary(bytes),
+                                ),
+                              );
+                            },
+                          );
+                        },
+                        child: const Text('addAdapter'),
+                      ),
+                    ],
+                  ),
+                  if (state.adapters.isEmpty)
+                    const Text('No Adapters')
+                  else
+                    Column(
+                      children: [
+                        ...state.adapters.values.map(
+                          (e) => Row(
+                            key: Key(e.name),
+                            children: [
+                              const SizedBox(width: 10),
+                              Text(e.name)
+                                  .container(padding: const EdgeInsets.all(6)),
+                              IconButton(
+                                onPressed: () => state.removeAdapter(e.name),
+                                icon: const Icon(Icons.close),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  Row(
+                    children: [
+                      const Text('WIT').title(),
+                      ElevatedButton(
+                        onPressed: state.wasm2wit,
+                        child: const Text('wasm2wit'),
+                      ),
+                    ],
+                  ),
+                  Expanded(
+                    child: TextField(
+                      controller: state.witController,
+                      maxLines: 1000,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ).container(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+        );
+      },
+    );
+  }
+}
+
+extension TextExt on Text {
+  Widget title() => Text(
+        data!,
+        style: const TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+        ),
+      ).container(padding: const EdgeInsets.all(12));
+
+  Widget subtitle() => Text(
+        data!,
+        style: const TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+        ),
+      ).container(padding: const EdgeInsets.all(4));
+}
+
+extension ContainerExt on Widget {
+  Widget container({
+    AlignmentGeometry? alignment,
+    EdgeInsetsGeometry? padding,
+    Color? color,
+    Decoration? decoration,
+    Decoration? foregroundDecoration,
+    double? width,
+    double? height,
+    BoxConstraints? constraints,
+    EdgeInsetsGeometry? margin,
+    Matrix4? transform,
+    AlignmentGeometry? transformAlignment,
+    Clip clipBehavior = Clip.none,
+  }) {
+    return Container(
+      alignment: alignment,
+      padding: padding,
+      color: color,
+      decoration: decoration,
+      foregroundDecoration: foregroundDecoration,
+      width: width,
+      height: height,
+      constraints: constraints,
+      margin: margin,
+      transform: transform,
+      transformAlignment: transformAlignment,
+      clipBehavior: clipBehavior,
+      child: this,
     );
   }
 }
