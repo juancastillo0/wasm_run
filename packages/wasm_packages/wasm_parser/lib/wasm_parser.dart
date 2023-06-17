@@ -29,12 +29,19 @@ Future<WasmParserWorld> createWasmParser({
   if (loadModule != null) {
     module = await loadModule();
   } else {
+    const baseUrl =
+        'https://github.com/juancastillo0/wasm_run/releases/download';
+    const wasmUrl =
+        '$baseUrl/wasm_packages-v${WasmRunLibrary.version}/wasm_parser_wasm.wasm';
     final uri = await WasmFileUris.uriForPackage(
       package: 'wasm_parser',
       libPath: 'wasm_parser_wasm.wasm',
       envVariable: 'WASM_PARSER_WASM_PATH',
     );
-    final uris = WasmFileUris(uri: uri);
+    final uris = WasmFileUris(
+      uri: uri,
+      fallback: WasmFileUris(uri: Uri.parse(wasmUrl)),
+    );
     module = await uris.loadModule();
   }
   final builder = module.builder(

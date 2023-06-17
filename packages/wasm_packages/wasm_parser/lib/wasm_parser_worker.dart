@@ -2,9 +2,9 @@ import 'dart:io';
 
 import 'package:wasm_run/load_module.dart';
 import 'package:wasm_run/wasm_run.dart';
-import 'package:wasm_parser/src/wasm_parser_wit.gen.dart';
+import 'package:wasm_parser/src/wasm_parser_wit.worker.gen.dart';
 
-export 'package:wasm_parser/src/wasm_parser_wit.gen.dart';
+export 'package:wasm_parser/src/wasm_parser_wit.worker.gen.dart';
 
 /// Creates a [WasmParserWorld] with the given [imports].
 /// It setsUp the dynamic library for wasm_run in native platforms and

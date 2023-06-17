@@ -40,7 +40,7 @@ class Trap implements Exception {
 
   @override
   String toString() {
-    return 'Trap($sourceError, $stackTrace)';
+    return 'Trap($sourceError\n$stackTrace)';
   }
 }
 
