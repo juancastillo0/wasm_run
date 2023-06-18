@@ -1,6 +1,7 @@
-import 'dart:typed_data';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_example/flutter_utils.dart';
 import 'package:flutter_example/paginated_text.dart';
 import 'package:flutter_example/state.dart';
@@ -25,6 +26,9 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurpleAccent),
         useMaterial3: true,
+        appBarTheme: const AppBarTheme(
+          toolbarHeight: 48,
+        ),
         inputDecorationTheme: const InputDecorationTheme(
           isDense: true,
           filled: true,
@@ -234,6 +238,10 @@ class WasmParserPage extends StatelessWidget {
           top: BorderSide(color: Colors.grey.shade300),
         ),
       );
+      const externNameStyle = TextStyle(
+        fontWeight: FontWeight.w600,
+        fontSize: 14,
+      );
       return Card(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -246,7 +254,17 @@ class WasmParserPage extends StatelessWidget {
               const Text('No imports')
                   .container(padding: const EdgeInsets.all(6)),
             ...value.imports.map(
-              (e) => Text('${e.module}.${e.name}\n${e.type}').container(
+              (e) => SelectableText.rich(
+                TextSpan(
+                  children: [
+                    TextSpan(
+                      text: '${e.module}.${e.name}',
+                      style: externNameStyle,
+                    ),
+                    TextSpan(text: '\n${e.type}'),
+                  ],
+                ),
+              ).container(
                 padding: const EdgeInsets.all(6),
                 decoration: line,
               ),
@@ -254,7 +272,14 @@ class WasmParserPage extends StatelessWidget {
             const Text('Exports').subtitle(),
             if (value.exports.isEmpty) const Text('No exports'),
             ...value.exports.map(
-              (e) => Text('${e.name}\n${e.type}').container(
+              (e) => SelectableText.rich(
+                TextSpan(
+                  children: [
+                    TextSpan(text: e.name, style: externNameStyle),
+                    TextSpan(text: '\n${e.type}'),
+                  ],
+                ),
+              ).container(
                 padding: const EdgeInsets.all(6),
                 decoration: line,
               ),
@@ -269,7 +294,10 @@ class WasmParserPage extends StatelessWidget {
         return const Text(
           'No WASM file parsed.\nLoad a binary file, parse the WAT text with "wat2wasm" or select an example WAT',
           textAlign: TextAlign.center,
-        ).container(padding: const EdgeInsets.all(20));
+        ).container(
+          alignment: Alignment.topCenter,
+          padding: const EdgeInsets.all(20),
+        );
       }
       return Column(
         children: [
@@ -302,7 +330,15 @@ class WasmParserPage extends StatelessWidget {
                       const Text('WAT').title(),
                       ElevatedButton(
                         onPressed: loadWat,
-                        child: const Text('loadWat'),
+                        child: const Text('load'),
+                      ),
+                      ElevatedButton(
+                        onPressed: () => downloadFile(
+                          'module.wat',
+                          const Utf8Encoder()
+                              .convert(state.watController.joinedText),
+                        ),
+                        child: const Text('download'),
                       ),
                       Row(
                         mainAxisSize: MainAxisSize.min,
@@ -346,17 +382,52 @@ class WasmParserPage extends StatelessWidget {
                         onPressed: () => loadWasm(
                           (_, bytes) => state.loadWasm(bytes),
                         ),
-                        child: const Text('loadWasm'),
+                        child: const Text('load'),
                       ),
                       if (state.wasmType != null)
                         ElevatedButton(
                           onPressed: downloadWasm,
-                          child: const Text('downloadWasm'),
+                          child: const Text('download'),
                         ),
                       ElevatedButton(
                         onPressed: state.wat2wasm,
                         child: const Text('wat2wasm'),
-                      )
+                      ),
+                      DropdownButtonFormField(
+                        isDense: true,
+                        isExpanded: true,
+                        items: [
+                          'packages/wasm_parser/lib/assets/wasm_parser_wasm.wasm',
+                          'packages/wasm_parser/lib/assets/wasm_parser_wasm.threads.wasm',
+                          'packages/compression_rs/lib/assets/compression_rs_wasm.wasm',
+                          'packages/compression_rs/lib/assets/compression_rs_wasm.threads.wasm',
+                          'packages/rust_crypto/lib/assets/rust_crypto_wasm.wasm',
+                          'packages/image_rs/lib/assets/image_rs_wasm.wasm',
+                        ]
+                            .map(
+                              (e) => DropdownMenuItem(
+                                value: e,
+                                child: Text(
+                                  Uri.parse(e)
+                                      .pathSegments
+                                      .last
+                                      .replaceFirst(RegExp(r'.wasm$'), ''),
+                                  style: const TextStyle(fontSize: 12),
+                                ),
+                              ),
+                            )
+                            .toList(),
+                        value: null,
+                        hint: const Text('Packages'),
+                        onChanged: (v) async {
+                          if (v == null) return;
+                          final bytes = await rootBundle.load(v);
+                          state.loadWasm(bytes.buffer.asUint8List());
+                        },
+                      ).container(
+                        width: 200,
+                        padding: const EdgeInsets.only(left: 10),
+                      ),
                     ],
                   ),
                   Expanded(
@@ -451,6 +522,13 @@ class WasmParserPage extends StatelessWidget {
                               const SizedBox(width: 10),
                               Text(e.name)
                                   .container(padding: const EdgeInsets.all(6)),
+                              if (e.wasm is WasmInputBinary)
+                                TextButton(
+                                  onPressed: () => state.loadWasm(
+                                    (e.wasm as WasmInputBinary).value,
+                                  ),
+                                  child: const Text('loadWasm'),
+                                ),
                               IconButton(
                                 onPressed: () => state.removeAdapter(e.name),
                                 icon: const Icon(Icons.close),
@@ -473,6 +551,7 @@ class WasmParserPage extends StatelessWidget {
                     child: TextField(
                       controller: state.witController,
                       maxLines: 1000,
+                      style: codeTextStyle,
                     ),
                   ),
                 ],
@@ -483,57 +562,6 @@ class WasmParserPage extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 12),
         );
       },
-    );
-  }
-}
-
-extension TextExt on Text {
-  Widget title() => Text(
-        data!,
-        style: const TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.bold,
-        ),
-      ).container(padding: const EdgeInsets.all(10));
-
-  Widget subtitle() => Text(
-        data!,
-        style: const TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.bold,
-        ),
-      ).container(padding: const EdgeInsets.all(4));
-}
-
-extension ContainerExt on Widget {
-  Widget container({
-    AlignmentGeometry? alignment,
-    EdgeInsetsGeometry? padding,
-    Color? color,
-    Decoration? decoration,
-    Decoration? foregroundDecoration,
-    double? width,
-    double? height,
-    BoxConstraints? constraints,
-    EdgeInsetsGeometry? margin,
-    Matrix4? transform,
-    AlignmentGeometry? transformAlignment,
-    Clip clipBehavior = Clip.none,
-  }) {
-    return Container(
-      alignment: alignment,
-      padding: padding,
-      color: color,
-      decoration: decoration,
-      foregroundDecoration: foregroundDecoration,
-      width: width,
-      height: height,
-      constraints: constraints,
-      margin: margin,
-      transform: transform,
-      transformAlignment: transformAlignment,
-      clipBehavior: clipBehavior,
-      child: this,
     );
   }
 }
