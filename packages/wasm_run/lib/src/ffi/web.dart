@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'package:flutter_rust_bridge/flutter_rust_bridge.dart' as frb;
 import 'package:wasm_run/src/bridge_generated.dart';
+import 'package:wasm_run/src/ffi.dart';
 
 typedef ExternalLibrary = frb.WasmModule;
 
@@ -32,8 +33,11 @@ Future<void> _setUpWasmFeatureDetect() {
   if (js_util.hasProperty(js_util.globalThis, 'wasmFeatureDetect')) {
     return Future.value();
   }
-  return _setUpFeatureDetectFuture ??=
-      _injectSrcScript('./packages/wasm_run/assets/wasm-feature-detect.js');
+  return _setUpFeatureDetectFuture ??= _injectSrcScript(
+    kIsFlutter
+        ? './assets/packages/wasm_run/lib/assets/wasm-feature-detect.js'
+        : './packages/wasm_run/assets/wasm-feature-detect.js',
+  );
 }
 
 Future<void> _setUpBrowserWasiShim() {
@@ -41,7 +45,9 @@ Future<void> _setUpBrowserWasiShim() {
     return Future.value();
   }
   return _setUpBrowserWasiShimFuture ??= _injectSrcScript(
-    './packages/wasm_run/assets/browser_wasi_shim.js',
+    kIsFlutter
+        ? './assets/packages/wasm_run/lib/assets/browser_wasi_shim.js'
+        : './packages/wasm_run/assets/browser_wasi_shim.js',
     type: 'module',
   );
 }

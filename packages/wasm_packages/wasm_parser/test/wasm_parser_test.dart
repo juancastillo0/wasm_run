@@ -274,6 +274,8 @@ void main() {
 
       test(
         'multi memory',
+        // TODO: multi memory is not supported on web
+        skip: isWeb,
         () => validateWat(
           WatModuleValid(
             r'''
