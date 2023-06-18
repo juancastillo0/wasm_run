@@ -66,7 +66,7 @@ void witDartGeneratorTests({Future<Directory> Function()? getDirectory}) {
               fileHeader: null,
               generateDocs: false,
               int64Type: Int64TypeConfig.bigInt,
-              useNullForOption: false,
+              useNullForOption: true,
               requiredOption: false,
               typedNumberLists: true,
               asyncWorker: false,
@@ -103,7 +103,7 @@ void witDartGeneratorTests({Future<Directory> Function()? getDirectory}) {
               fileHeader: null,
               generateDocs: true,
               int64Type: Int64TypeConfig.bigInt,
-              useNullForOption: false,
+              useNullForOption: true,
               requiredOption: false,
               typedNumberLists: true,
               asyncWorker: false,
@@ -218,26 +218,9 @@ world host {
   });
 }
 
-WitGeneratorConfig _defaultConfig(WitGeneratorInput inputs) {
-  return WitGeneratorConfig(
-    inputs: inputs,
-    copyWith_: true,
-    equalityAndHashCode: true,
-    jsonSerialization: true,
-    toString_: true,
-    fileHeader: null,
-    generateDocs: true,
-    int64Type: Int64TypeConfig.bigInt,
-    useNullForOption: false,
-    requiredOption: false,
-    typedNumberLists: true,
-    asyncWorker: false,
-  );
-}
-
 void _validateHostResult(DartWitGeneratorWorld g, WitGeneratorInput inputs) {
   final result = g.generate(
-    config: _defaultConfig(inputs),
+    config: defaultGeneratorConfig(inputs: inputs),
   );
 
   switch (result) {
