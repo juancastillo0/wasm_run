@@ -293,8 +293,10 @@ class WasmParserPage extends StatelessWidget {
           children: [
             Expanded(
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
+                  Wrap(
+                    crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
                       const Text('WAT').title(),
                       ElevatedButton(
@@ -302,6 +304,7 @@ class WasmParserPage extends StatelessWidget {
                         child: const Text('loadWat'),
                       ),
                       Row(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
                           const Text('Examples:').container(
                               padding: const EdgeInsets.only(left: 10)),
@@ -333,8 +336,10 @@ class WasmParserPage extends StatelessWidget {
             ),
             Expanded(
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
+                  Wrap(
+                    crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
                       const Text('WASM').title(),
                       ElevatedButton(
@@ -376,8 +381,10 @@ class WasmParserPage extends StatelessWidget {
             ),
             Expanded(
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
+                  Wrap(
+                    crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
                       const Text('Wasm Component').title(),
                       ElevatedButton(
@@ -430,7 +437,10 @@ class WasmParserPage extends StatelessWidget {
                     ],
                   ),
                   if (state.adapters.isEmpty)
-                    const Text('No Adapters')
+                    const Text('No Adapters').container(
+                      padding: const EdgeInsets.all(18),
+                      alignment: Alignment.center,
+                    )
                   else
                     Column(
                       children: [
@@ -484,7 +494,7 @@ extension TextExt on Text {
           fontSize: 20,
           fontWeight: FontWeight.bold,
         ),
-      ).container(padding: const EdgeInsets.all(12));
+      ).container(padding: const EdgeInsets.all(10));
 
   Widget subtitle() => Text(
         data!,

@@ -513,6 +513,102 @@ void testAll({TestArgs? testArgs}) {
       [-1.4, i64.fromBigInt(BigInt.from(5))],
     );
   });
+  test(
+    'loading with WasmFileUris',
+    () async {
+      final initialUri = WasmFileUris(
+        uri: Uri.parse('https://example.com/assets/wasm.wasm'),
+        simdUri: Uri.parse('https://example.com/assets/wasm.threads.wasm'),
+        threadsSimdUri:
+            Uri.parse('https://example.com/assets/wasm.threadsSimd.wasm'),
+        fallback: WasmFileUris(
+          uri: Uri.parse('https://example.com/assets/wasm.fallback.wasm'),
+        ),
+      );
+      final uris = WasmFileUris.fromList([initialUri]);
+      // TODO: save to file? fallback to uri if not found in simd/threads?
+
+      for (final v in [
+        {
+          'threads': false,
+          'simd': false,
+          'uri': initialUri.uri,
+        },
+        {
+          'threads': true,
+          'simd': true,
+          'uri': initialUri.threadsSimdUri,
+        },
+        {
+          'threads': false,
+          'simd': true,
+          'uri': initialUri.simdUri,
+        },
+        {
+          'threads': true,
+          'simd': false,
+          'uri': initialUri.uri,
+        },
+      ]) {
+        final features = WasmFeatures(
+          mutableGlobal: true,
+          saturatingFloatToInt: true,
+          signExtension: true,
+          referenceTypes: true,
+          multiValue: true,
+          bulkMemory: true,
+          simd: v['simd']! as bool,
+          relaxedSimd: true,
+          threads: v['threads']! as bool,
+          tailCall: true,
+          floats: true,
+          multiMemory: true,
+          exceptions: true,
+          memory64: true,
+          extendedConst: true,
+          componentModel: true,
+          memoryControl: true,
+          garbageCollection: true,
+          typeReflection: true,
+        );
+
+        final uri = uris.uriForFeatures(
+          WasmRuntimeFeatures(
+            isBrowser: false,
+            name: 'wasmtime',
+            version: '0.2.1',
+            defaultFeatures: features,
+            supportedFeatures: features,
+          ),
+        );
+        expect(uri, v['uri']);
+
+        try {
+          await uris.loadModule(getUriBodyBytes: (uri) async => Uint8List(0));
+          throw Exception('should not reach');
+        } on WasmFileUrisException catch (e) {
+          expect(e.errors, hasLength(2));
+          final toString = e.toString();
+          expect(
+            toString,
+            contains(
+              'WasmFileUrisException(WasmFileUris(uri: https://example.com/assets/wasm.wasm',
+            ),
+          );
+          expect(
+            toString,
+            contains('fallbackUri: https://example.com/assets/wasm.wasm'),
+          );
+          expect(
+            toString,
+            contains(
+              'Url "https://example.com/assets/wasm.threadsSimd.wasm" returned an empty body',
+            ),
+          );
+        }
+      }
+    },
+  );
 
   /// WIT Component tests
   typesGenWitComponentTests(
@@ -542,11 +638,19 @@ void testAll({TestArgs? testArgs}) {
           .toFilePath();
       await setUpDesktopDynamicLibrary(dynamicLibraryPath: library);
       addTearDown(() => File(library).deleteSync());
+      expect(WasmRunLibrary.isReachable(), true);
 
       final dynLib = ffi.DynamicLibrary.open(library);
-      expect(WasmRunLibrary.isReachable(), true);
-      WasmRunLibrary.set(dynLib);
-      expect(WasmRunLibrary.isReachable(), true);
+      expect(
+        () => WasmRunLibrary.set(dynLib),
+        throwsA(
+          predicate(
+            (p0) => p0
+                .toString()
+                .contains('WasmRun bindings were already configured'),
+          ),
+        ),
+      );
       expect(
         () => WasmRunLibrary.setUp(override: true),
         throwsA(
