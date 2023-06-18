@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_example/flutter_utils.dart';
+import 'package:flutter_example/paginated_text.dart';
 import 'package:flutter_example/state.dart';
 import 'package:flutter_example/wasm_parser_state.dart';
 import 'package:wasm_parser/wasm_parser.dart';
@@ -326,9 +327,8 @@ class WasmParserPage extends StatelessWidget {
                     ],
                   ),
                   Expanded(
-                    child: TextField(
+                    child: PaginatedTextField(
                       controller: state.watController,
-                      maxLines: 1000,
                     ),
                   ),
                 ],

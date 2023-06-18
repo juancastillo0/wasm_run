@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/widgets.dart'
     show ChangeNotifier, TextEditingController;
+import 'package:flutter_example/paginated_text.dart';
 import 'package:wasm_parser/wasm_parser.dart';
 import 'package:wasm_wit_component/wasm_wit_component.dart';
 
@@ -11,7 +12,7 @@ class WasmParserState extends ChangeNotifier {
   final WasmParserWorld _wasmParser;
 
   String error = '';
-  final watController = TextEditingController();
+  var watController = PaginatedTextController('');
   final witController = TextEditingController();
   WasmType? wasmType;
   Uint8List? _wasmBytes;
@@ -21,7 +22,7 @@ class WasmParserState extends ChangeNotifier {
   bool get isWatValidated => wasmType != null;
 
   void setWat(String watInput, {bool overrideWasm = true}) {
-    watController.text = watInput;
+    watController = PaginatedTextController(watInput);
     if (overrideWasm) {
       _wasmBytes = null;
       _wasmComponentBytes = null;
@@ -83,7 +84,7 @@ class WasmParserState extends ChangeNotifier {
 
   Uint8List? wat2wasm() {
     final result =
-        _wasmParser.wat2wasm(input: WatInput.text(watController.text));
+        _wasmParser.wat2wasm(input: WatInput.text(watController.joinedText));
     if (result.isOk) {
       loadWasm(result.ok!, overrideWat: false);
     }

@@ -20,6 +20,62 @@ class Inherited<T> extends InheritedWidget {
   }
 }
 
+extension TextExt on Text {
+  Widget title() => Text(
+        data!,
+        style: const TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+        ),
+      ).container(padding: const EdgeInsets.all(10));
+
+  Widget subtitle() => Text(
+        data!,
+        style: const TextStyle(
+          fontSize: 17,
+          fontWeight: FontWeight.bold,
+        ),
+      ).container(padding: const EdgeInsets.all(6));
+}
+
+const codeTextStyle = TextStyle(
+  fontSize: 13,
+  fontFamily: 'monospace',
+);
+
+extension ContainerExt on Widget {
+  Widget container({
+    AlignmentGeometry? alignment,
+    EdgeInsetsGeometry? padding,
+    Color? color,
+    Decoration? decoration,
+    Decoration? foregroundDecoration,
+    double? width,
+    double? height,
+    BoxConstraints? constraints,
+    EdgeInsetsGeometry? margin,
+    Matrix4? transform,
+    AlignmentGeometry? transformAlignment,
+    Clip clipBehavior = Clip.none,
+  }) {
+    return Container(
+      alignment: alignment,
+      padding: padding,
+      color: color,
+      decoration: decoration,
+      foregroundDecoration: foregroundDecoration,
+      width: width,
+      height: height,
+      constraints: constraints,
+      margin: margin,
+      transform: transform,
+      transformAlignment: transformAlignment,
+      clipBehavior: clipBehavior,
+      child: this,
+    );
+  }
+}
+
 extension WatchListenable<T extends Listenable> on T {
   Widget select<O>(
     O Function(T state) selector,
