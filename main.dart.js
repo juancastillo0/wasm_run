@@ -23835,7 +23835,7 @@ var $async$D1=A.W(function(c,d){if(c===1)return A.S(d,r)
 while(true)switch(s){case 0:s=3
 return A.Z(A.a8O(!1),$async$D1)
 case 3:s=4
-return A.Z(A.al9("WASM_PARSER_WASM_PATH","wasm_parser_wasm.wasm","wasm_parser"),$async$D1)
+return A.Z(A.al9("WASM_PARSER_WASM_PATH","assets/wasm_parser_wasm.wasm","wasm_parser"),$async$D1)
 case 4:p=d
 o=A
 s=5
