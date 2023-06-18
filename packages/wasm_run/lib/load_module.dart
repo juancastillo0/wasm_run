@@ -2,7 +2,7 @@ import 'dart:io';
 import 'dart:isolate';
 import 'dart:typed_data';
 
-import 'package:wasm_run/src/ffi.dart' show getUriBodyBytes;
+import 'package:wasm_run/src/ffi.dart' show getUriBodyBytes, kIsFlutter;
 import 'package:wasm_run/wasm_run.dart';
 
 /// A class that represents a wasm module to be loaded.
@@ -47,7 +47,11 @@ class WasmFileUris {
   }) async {
     const isWeb = identical(0, 0.0);
     if (isWeb) {
-      return Uri.parse('./packages/$package/$libPath');
+      return Uri.parse(
+        kIsFlutter
+            ? './assets/packages/$package/lib/$libPath'
+            : './packages/$package/$libPath',
+      );
     } else {
       final envFile = Platform.environment[envVariable];
       final scriptRoot = File.fromUri(Platform.script).parent.parent;
