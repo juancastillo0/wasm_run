@@ -26,6 +26,11 @@ Future<Uint8List> getUriBodyBytes(Uri uri) => getUriBodyBytesImpl(uri);
 /// This is used to determine the url of the wasm_run assets in web.
 bool kIsFlutter = false;
 
+/// The global function to use for loading assets.
+/// Used used in Flutter apps to load assets from the bundled assets.
+/// For example to load WASM modules for a package.
+Future<ByteData> Function(String path)? globalLoadAsset;
+
 /// Static namespace for configuring the dynamic library for wasm_run
 class WasmRunLibrary {
   const WasmRunLibrary._();
@@ -68,9 +73,12 @@ class WasmRunLibrary {
   /// If [override] is true, it will override the current library if it exists.
   static Future<void> setUp({
     required bool override,
-    bool isFlutter = false,
+    bool? isFlutter,
+    Future<ByteData> Function(String)? loadAsset,
   }) async {
-    kIsFlutter = kIsFlutter || isFlutter;
+    if (isFlutter != null) kIsFlutter = isFlutter;
+    if (loadAsset != null) globalLoadAsset = loadAsset;
+
     if (_isWeb) {
       return setUpLibraryImpl(
         features: const bool.fromEnvironment(

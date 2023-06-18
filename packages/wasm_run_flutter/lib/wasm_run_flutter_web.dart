@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 import 'package:wasm_run/wasm_run.dart';
 
@@ -9,6 +10,10 @@ class WasmRunFlutterWeb {
   ///
   /// For more information, see: [WasmRunLibrary.setUp].
   static void registerWith(Registrar registrar) {
-    WasmRunLibrary.setUp(override: false, isFlutter: true);
+    WasmRunLibrary.setUp(
+      override: false,
+      isFlutter: true,
+      loadAsset: rootBundle.load,
+    );
   }
 }

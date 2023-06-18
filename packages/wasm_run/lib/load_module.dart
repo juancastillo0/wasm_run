@@ -2,7 +2,8 @@ import 'dart:io';
 import 'dart:isolate';
 import 'dart:typed_data';
 
-import 'package:wasm_run/src/ffi.dart' show getUriBodyBytes, kIsFlutter;
+import 'package:wasm_run/src/ffi.dart'
+    show getUriBodyBytes, globalLoadAsset, kIsFlutter;
 import 'package:wasm_run/wasm_run.dart';
 
 /// A class that represents a wasm module to be loaded.
@@ -49,7 +50,7 @@ class WasmFileUris {
     if (isWeb) {
       return Uri.parse(
         kIsFlutter
-            ? './assets/packages/$package/lib/$libPath'
+            ? 'asset:packages/$package/lib/$libPath'
             : './packages/$package/$libPath',
       );
     } else {
@@ -74,7 +75,9 @@ class WasmFileUris {
       ];
       final wasmFile = options.firstWhere(
         (option) => File.fromUri(option).existsSync(),
-        orElse: () => options.first,
+        orElse: () => globalLoadAsset != null
+            ? Uri.parse('asset:packages/$package/lib/$libPath')
+            : options.first,
       );
       return wasmFile;
     }
@@ -142,12 +145,24 @@ class WasmFileUris {
     final features = await wasmRuntimeFeatures();
     final uri = uriForFeatures(features);
     final isHttp = uri.isScheme('http') || uri.isScheme('https');
+    final isAsset = uri.isScheme('asset');
     const isWeb = identical(0, 0.0);
 
     final List<ErrorWithTrace> exceptions = [];
     WasmModule? wasmModule;
 
-    if (isHttp || isWeb) {
+    if (isAsset && globalLoadAsset != null) {
+      try {
+        final assetData = await globalLoadAsset!(uri.path);
+        final wasmFile = Uint8List.sublistView(assetData);
+        if (wasmFile.isEmpty) {
+          throw Exception('Asset "$uri" is empty.');
+        }
+        wasmModule = await compileWasmModule(wasmFile, config: config);
+      } catch (e, s) {
+        exceptions.add(ErrorWithTrace(e, s));
+      }
+    } else if (isHttp || isWeb) {
       try {
         final wasmFile = await getUriBodyBytes(uri);
         if (wasmFile.isEmpty) {
