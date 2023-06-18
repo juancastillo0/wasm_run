@@ -29,7 +29,7 @@ Future<CompressionRsWorld> createCompressionRs({
   } else {
     final uri = await WasmFileUris.uriForPackage(
       package: 'compression_rs',
-      libPath: 'compression_rs_wasm.wasm',
+      libPath: 'assets/compression_rs_wasm.wasm',
       envVariable: 'COMPRESSION_RS_WASM_PATH',
     );
     final uris = WasmFileUris(uri: uri);

@@ -14,10 +14,10 @@ cd wasm_parser_wasm
 
 ## Build Wasm Component from Rust
 cargo wasi build --release
-cp target/wasm32-wasi/release/wasm_parser_wasm.wasm ../lib/
+cp target/wasm32-wasi/release/wasm_parser_wasm.wasm ../lib/assets/
 ### Build Threaded Wasm from Rust
 RUSTFLAGS='-C target-feature=+atomics,+bulk-memory,+mutable-globals' \
     cargo +nightly build --target wasm32-unknown-unknown --release -Z build-std=std,panic_abort
-cp target/wasm32-unknown-unknown/release/wasm_parser_wasm.wasm ../lib/wasm_parser_wasm.threads.wasm
+cp target/wasm32-unknown-unknown/release/wasm_parser_wasm.wasm ../lib/assets/wasm_parser_wasm.threads.wasm
 
 

@@ -41,14 +41,14 @@ Future<RustCryptoWorld> rustCryptoInstance({
     const baseUrl =
         'https://github.com/juancastillo0/wasm_run/releases/download';
     const wasmUrl = _isWeb
-        ? './packages/rust_crypto/$filename'
+        ? './packages/rust_crypto/assets/$filename'
         // TODO: independent version
-        : '$baseUrl/rust_crypto-v${WasmRunLibrary.version}/$filename';
+        : '$baseUrl/wasm_packages-v${WasmRunLibrary.version}/$filename';
 
     WasmFileUris uris = WasmFileUris(uri: Uri.parse(wasmUrl));
     if (!_isWeb) {
       final packageDir = File.fromUri(Platform.script).parent.parent;
-      final wasmFile = packageDir.uri.resolve('lib/$filename');
+      final wasmFile = packageDir.uri.resolve('lib/assets/$filename');
       uris = WasmFileUris(uri: wasmFile, fallback: uris);
     }
 

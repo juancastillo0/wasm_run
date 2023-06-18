@@ -10,6 +10,10 @@ topics:
 environment:
   sdk: ^3.0.0
 
+flutter:
+  assets:
+    - lib/assets/
+
 dependencies:
   wasm_run: ^0.0.1
   wasm_wit_component: ^0.0.1

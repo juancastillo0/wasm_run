@@ -28,7 +28,7 @@ Future<ImageRsWorld> createImageRs({
   } else {
     final uri = await WasmFileUris.uriForPackage(
       package: 'image_rs',
-      libPath: 'image_rs_wasm.wasm',
+      libPath: 'assets/image_rs_wasm.wasm',
       envVariable: 'IMAGE_RS_WASM_PATH',
     );
     final uris = WasmFileUris(uri: uri);

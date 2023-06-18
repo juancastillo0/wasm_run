@@ -35,7 +35,7 @@ Future<CompressionRsWorld> createCompressionRsInMemoryWorker({
   } else {
     final uri = await WasmFileUris.uriForPackage(
       package: 'compression_rs',
-      libPath: 'compression_rs_wasm.threads.wasm',
+      libPath: 'assets/compression_rs_wasm.threads.wasm',
       envVariable: 'COMPRESSION_RS_WASM_THREADS_PATH',
     );
     final uris = WasmFileUris(uri: uri);

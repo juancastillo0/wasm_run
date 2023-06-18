@@ -35,7 +35,7 @@ Future<WasmParserWorld> createWasmParser({
         '$baseUrl/wasm_packages-v${WasmRunLibrary.version}/wasm_parser_wasm.wasm';
     final uri = await WasmFileUris.uriForPackage(
       package: 'wasm_parser',
-      libPath: 'wasm_parser_wasm.wasm',
+      libPath: 'assets/wasm_parser_wasm.wasm',
       envVariable: 'WASM_PARSER_WASM_PATH',
     );
     final uris = WasmFileUris(

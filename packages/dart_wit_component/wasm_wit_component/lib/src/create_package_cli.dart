@@ -284,6 +284,10 @@ topics:
 environment:
   sdk: ^3.0.0
 
+flutter:
+  assets:
+    - lib/assets/
+
 dependencies:
   wasm_run: ^0.0.1
   wasm_wit_component: ^0.0.1
@@ -322,7 +326,7 @@ analyzer:
 ```sh
 cd $rustName
 RUSTFLAGS='-C target-feature=+atomics,+bulk-memory,+mutable-globals -C link-args=--shared-memory' cargo +nightly build --target wasm32-unknown-unknown --profile release -Z build-std=std,panic_abort
-cp target/wasm32-unknown-unknown/release/$rustName.wasm ../lib/$rustName.threads.wasm
+cp target/wasm32-unknown-unknown/release/$rustName.wasm ../lib/assets/$rustName.threads.wasm
 ```
 
 ### Generate Wit Dart async bindings
@@ -340,7 +344,7 @@ dart run wasm_wit_component:generate ${rustName}/wit/${witPackageName}.wit lib/s
 ```sh
 cd $rustName
 cargo wasi build --release
-cp target/wasm32-wasi/release/$rustName.wasm ../lib/
+cp target/wasm32-wasi/release/$rustName.wasm ../lib/assets/
 ```
 
 ## Generate Wit Dart bindings
@@ -452,7 +456,7 @@ Future<${packageNameType}World> create${packageNameType}({
   } else {
     final uri = await WasmFileUris.uriForPackage(
       package: '${dartName}',
-      libPath: '${rustName}.wasm',
+      libPath: 'assets/${rustName}.wasm',
       envVariable: '${ReCase(dartName).constantCase}_WASM_PATH',
     );
     final uris = WasmFileUris(uri: uri);
@@ -512,7 +516,7 @@ Future<${packageNameType}World> create${packageNameType}Worker({
   } else {
     final uri = await WasmFileUris.uriForPackage(
       package: '${dartName}',
-      libPath: '${rustName}.threads.wasm',
+      libPath: 'assets/${rustName}.threads.wasm',
       envVariable: '${ReCase(dartName).constantCase}_WASM_THREADS_PATH',
     );
     final uris = WasmFileUris(uri: uri);

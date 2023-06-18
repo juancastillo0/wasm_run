@@ -129,7 +129,6 @@ class HostWorld {
           loweredImportFunction(r'$root#print', ft, execImportsPrint, getLib);
       builder.addImport(r'$root', 'print', lowered);
     }
-
     final instance = await builder.build();
 
     library = WasmLibrary(instance, int64Type: Int64TypeConfig.bigInt);

@@ -35,7 +35,7 @@ Future<WasmParserWorld> createWasmParserWorker({
   } else {
     final uri = await WasmFileUris.uriForPackage(
       package: 'wasm_parser',
-      libPath: 'wasm_parser_wasm.threads.wasm',
+      libPath: 'assets/wasm_parser_wasm.threads.wasm',
       envVariable: 'WASM_PARSER_WASM_THREADS_PATH',
     );
     final uris = WasmFileUris(uri: uri);

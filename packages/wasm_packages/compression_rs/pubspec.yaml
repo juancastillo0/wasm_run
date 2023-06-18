@@ -11,6 +11,10 @@ topics:
 environment:
   sdk: ^3.0.0
 
+flutter:
+  assets:
+    - lib/assets/
+
 dependencies:
   archive: ^3.3.7
   # es_compression: ^2.0.0

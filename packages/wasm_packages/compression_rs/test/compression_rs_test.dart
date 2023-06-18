@@ -84,10 +84,10 @@ void main() {
           File('lib/src/compression_rs_wit.gen.dart').readAsBytesSync(),
         if (isWeb)
           await wasm_run_ffi.getUriBodyBytes(Uri.parse(
-            './packages/compression_rs/compression_rs_wasm.wasm',
+            './packages/compression_rs/assets/compression_rs_wasm.wasm',
           ))
         else
-          File('lib/compression_rs_wasm.wasm').readAsBytesSync(),
+          File('lib/assets/compression_rs_wasm.wasm').readAsBytesSync(),
       ];
 
       final compressors = [
@@ -143,10 +143,10 @@ void main() {
           File('lib/src/compression_rs_wit.gen.dart').readAsBytesSync(),
         if (isWeb)
           await wasm_run_ffi.getUriBodyBytes(Uri.parse(
-            './packages/compression_rs/compression_rs_wasm.wasm',
+            './packages/compression_rs/assets/compression_rs_wasm.wasm',
           ))
         else
-          File('lib/compression_rs_wasm.wasm').readAsBytesSync(),
+          File('lib/assets/compression_rs_wasm.wasm').readAsBytesSync(),
       ];
 
       // TODO: generate interface for world

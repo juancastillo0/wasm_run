@@ -29,9 +29,9 @@ void main() {
       final wasmBinary = isWeb
           ? await wasm_run_ffi.getUriBodyBytes(Uri.parse(
               // TODO: improve error message
-              './packages/wasm_parser/wasm_parser_wasm.wasm',
+              './packages/wasm_parser/assets/wasm_parser_wasm.wasm',
             ))
-          : File('lib/wasm_parser_wasm.wasm').readAsBytesSync();
+          : File('lib/assets/wasm_parser_wasm.wasm').readAsBytesSync();
 
       final adapterUri = await WasmFileUris.uriForPackage(
         package: 'wasm_wit_component',
