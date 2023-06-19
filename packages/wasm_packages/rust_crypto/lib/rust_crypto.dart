@@ -3,8 +3,6 @@
 /// More dartdocs go here.
 library;
 
-import 'dart:io';
-
 import 'package:rust_crypto/src/api.dart';
 import 'package:wasm_run/load_module.dart';
 import 'package:wasm_wit_component/wasm_wit_component.dart';
@@ -38,18 +36,19 @@ Future<RustCryptoWorld> rustCryptoInstance({
   if (loadModule != null) {
     module = await loadModule();
   } else {
-    const baseUrl =
-        'https://github.com/juancastillo0/wasm_run/releases/download';
-    const wasmUrl = _isWeb
-        ? './packages/rust_crypto/assets/$filename'
-        // TODO: independent version
-        : '$baseUrl/wasm_packages-v${WasmRunLibrary.version}/$filename';
-
-    WasmFileUris uris = WasmFileUris(uri: Uri.parse(wasmUrl));
+    final uri = await WasmFileUris.uriForPackage(
+      package: 'rust_crypto',
+      libPath: 'assets/rust_crypto_wasm.wasm',
+      envVariable: 'RUST_CRYPTO_WASM_PATH',
+    );
+    WasmFileUris uris = WasmFileUris(uri: uri);
     if (!_isWeb) {
-      final packageDir = File.fromUri(Platform.script).parent.parent;
-      final wasmFile = packageDir.uri.resolve('lib/assets/$filename');
-      uris = WasmFileUris(uri: wasmFile, fallback: uris);
+      const releaseUrl =
+          'https://github.com/juancastillo0/wasm_run/releases/download/wasm_packages-v${WasmRunLibrary.version}/$filename';
+      uris = WasmFileUris(
+        uri: uri,
+        fallback: WasmFileUris(uri: Uri.parse(releaseUrl)),
+      );
     }
 
     module = await uris.loadModule();

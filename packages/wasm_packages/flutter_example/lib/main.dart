@@ -202,34 +202,20 @@ class WasmParserPage extends StatelessWidget {
       }
     }
 
-    Future<void> downloadFile(String name, Uint8List bytes) async {
-      if (!fsa.FileSystem.instance.isSupported) {
-        await fsa.XFile.fromData(bytes).saveTo(name);
-      } else {
-        final handle = await fsa.FileSystem.instance.showSaveFilePicker(
-          fsa.FsSaveOptions(types: const [wasmFileType], suggestedName: name),
-        );
-        if (handle == null) return;
-        final writable = await handle.createWritable(keepExistingData: false);
-        await writable.write(
-          fsa.FileSystemWriteChunkType.bufferSource(
-            bytes.buffer,
-          ),
-        );
-        await writable.close();
-      }
-    }
-
     void createComponent() async {
       final componentBytes = state.wasm2component();
       if (componentBytes == null) return;
-      await downloadFile('component.wasm', componentBytes);
+      await downloadFile(
+        'component.wasm',
+        componentBytes,
+        types: [wasmFileType],
+      );
     }
 
     void downloadWasm() async {
       final moduleBytes = state.wat2wasm();
       if (moduleBytes == null) return;
-      await downloadFile('module.wasm', moduleBytes);
+      await downloadFile('module.wasm', moduleBytes, types: [wasmFileType]);
     }
 
     Widget wasmModuleTypeWidget(ModuleType value) {
@@ -302,8 +288,8 @@ class WasmParserPage extends StatelessWidget {
       return Column(
         children: [
           switch (state.wasmType!) {
-            WasmTypeModuleType(:final value) => wasmModuleTypeWidget(value),
-            WasmTypeComponentType(:final value) => Column(
+            final ModuleType value => wasmModuleTypeWidget(value),
+            final ComponentType value => Column(
                 children: [
                   const Text('ComponentType').title(),
                   const Text('Modules'),
@@ -337,6 +323,7 @@ class WasmParserPage extends StatelessWidget {
                           'module.wat',
                           const Utf8Encoder()
                               .convert(state.watController.joinedText),
+                          types: [watFileType],
                         ),
                         child: const Text('download'),
                       ),
@@ -433,20 +420,7 @@ class WasmParserPage extends StatelessWidget {
                   Expanded(
                     child: SingleChildScrollView(child: wasmTypeWidget()),
                   ),
-                  if (state.error.isNotEmpty)
-                    Row(
-                      children: [
-                        Expanded(child: Text(state.error)),
-                        ElevatedButton(
-                          onPressed: () => state.setError(''),
-                          child: const Text('Close'),
-                        )
-                      ],
-                    ).container(
-                      margin: const EdgeInsets.only(top: 12),
-                      padding: const EdgeInsets.all(12),
-                      color: Colors.red.shade100,
-                    ),
+                  ErrorMessage(state: state),
                 ],
               ),
             ),

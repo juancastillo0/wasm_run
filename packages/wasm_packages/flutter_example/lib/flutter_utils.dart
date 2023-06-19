@@ -1,3 +1,6 @@
+import 'dart:typed_data';
+
+import 'package:file_system_access/file_system_access.dart' as fsa;
 import 'package:flutter/material.dart';
 
 class Inherited<T> extends InheritedWidget {
@@ -38,6 +41,28 @@ extension TextExt on Text {
       ).container(padding: const EdgeInsets.all(6));
 }
 
+Future<void> downloadFile(
+  String name,
+  Uint8List bytes, {
+  List<fsa.FilePickerAcceptType> types = const [],
+}) async {
+  if (!fsa.FileSystem.instance.isSupported) {
+    await fsa.XFile.fromData(bytes).saveTo(name);
+  } else {
+    final handle = await fsa.FileSystem.instance.showSaveFilePicker(
+      fsa.FsSaveOptions(types: types, suggestedName: name),
+    );
+    if (handle == null) return;
+    final writable = await handle.createWritable(keepExistingData: false);
+    await writable.write(
+      fsa.FileSystemWriteChunkType.bufferSource(
+        bytes.buffer,
+      ),
+    );
+    await writable.close();
+  }
+}
+
 const codeTextStyle = TextStyle(
   fontSize: 13,
   fontFamily: 'monospace',
@@ -72,6 +97,46 @@ extension ContainerExt on Widget {
       transformAlignment: transformAlignment,
       clipBehavior: clipBehavior,
       child: this,
+    );
+  }
+}
+
+mixin ErrorNotifier on ChangeNotifier {
+  String _error = '';
+
+  String get error => _error;
+
+  void setError(String error) {
+    _error = error;
+    notifyListeners();
+  }
+}
+
+class ErrorMessage extends StatelessWidget {
+  const ErrorMessage({super.key, required this.state});
+
+  final ErrorNotifier state;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: state,
+      builder: (context, _) {
+        if (state.error.isEmpty) return const SizedBox();
+        return Row(
+          children: [
+            Expanded(child: Text(state.error)),
+            ElevatedButton(
+              onPressed: () => state.setError(''),
+              child: const Text('Close'),
+            )
+          ],
+        ).container(
+          margin: const EdgeInsets.only(top: 12),
+          padding: const EdgeInsets.all(12),
+          color: Colors.red.shade100,
+        );
+      },
     );
   }
 }

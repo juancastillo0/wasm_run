@@ -2,6 +2,7 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart' show ChangeNotifier;
+import 'package:flutter_example/flutter_utils.dart';
 import 'package:rust_crypto/rust_crypto.dart';
 
 enum RCHash {
@@ -12,7 +13,7 @@ enum RCHash {
   blake3,
 }
 
-class RustCryptoState extends ChangeNotifier {
+class RustCryptoState extends ChangeNotifier with ErrorNotifier {
   RustCryptoState(this.rustCrypto);
 
   final RustCryptoWorld rustCrypto;

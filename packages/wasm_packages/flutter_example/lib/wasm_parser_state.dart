@@ -2,16 +2,16 @@ import 'dart:typed_data';
 
 import 'package:flutter/widgets.dart'
     show ChangeNotifier, TextEditingController;
+import 'package:flutter_example/flutter_utils.dart';
 import 'package:flutter_example/paginated_text.dart';
 import 'package:wasm_parser/wasm_parser.dart';
 import 'package:wasm_wit_component/wasm_wit_component.dart';
 
-class WasmParserState extends ChangeNotifier {
+class WasmParserState extends ChangeNotifier with ErrorNotifier {
   WasmParserState(this._wasmParser);
 
   final WasmParserWorld _wasmParser;
 
-  String error = '';
   var watController = PaginatedTextController('');
   final witController = TextEditingController();
   WasmType? wasmType;
@@ -38,11 +38,6 @@ class WasmParserState extends ChangeNotifier {
 
   void setWasmType(WasmType? wasmType) {
     this.wasmType = wasmType;
-    notifyListeners();
-  }
-
-  void setError(String error) {
-    this.error = error;
     notifyListeners();
   }
 

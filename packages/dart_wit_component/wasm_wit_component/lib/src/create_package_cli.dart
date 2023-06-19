@@ -54,6 +54,7 @@ Future<void> createPackageCli(List<String> arguments) async {
     defaultsTo: 'simple',
   );
   // TODO: cargo and package features with different wasm modules
+  // TODO: implement only-rust
 
   final result = parser.parse(arguments);
   final directory = (result['directory'] as String?) ?? result.rest.firstOrNull;
