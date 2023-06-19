@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_example/flutter_utils.dart';
 
@@ -36,7 +37,7 @@ class PaginatedTextController extends ChangeNotifier {
     );
   }
 
-  static const defaultPageSize = identical(0, 0.1) ? 30000 : 300000;
+  static const defaultPageSize = kIsWeb ? 20000 : 300000;
 
   void _updateSearch() {
     if (_searchTimer == null) {
@@ -238,24 +239,20 @@ class PaginatedTextField extends StatelessWidget {
                     ),
                     child: const Text('RegExp'),
                   ),
-                  const Spacer(),
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text('${controller.page + 1}/${controller.pageCount}')
                           .container(padding: const EdgeInsets.all(6)),
-                      SizedBox(
-                        width: 50,
-                        child: TextField(
-                          onChanged: (value) {
-                            final page = int.tryParse(value);
-                            if (page != null) {
-                              controller.page = page - 1;
-                            }
-                          },
-                          style: const TextStyle(fontSize: 14),
-                        ),
-                      ),
+                      TextField(
+                        onChanged: (value) {
+                          final page = int.tryParse(value);
+                          if (page != null) {
+                            controller.page = page - 1;
+                          }
+                        },
+                        style: const TextStyle(fontSize: 14),
+                      ).container(width: 50),
                       IconButton(
                         onPressed: () => controller.page = 0,
                         icon: const Icon(Icons.first_page),
