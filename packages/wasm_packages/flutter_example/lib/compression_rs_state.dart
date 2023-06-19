@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:compression_rs/compression_rs_in_mem_worker.dart';
 import 'package:flutter/foundation.dart' show ChangeNotifier;
+import 'package:flutter_example/flutter_utils.dart';
 
 enum CRsMethod {
   brotli,
@@ -19,17 +20,10 @@ enum CRsMethod {
   }
 }
 
-class CompressionRsState extends ChangeNotifier {
+class CompressionRsState extends ChangeNotifier with ErrorNotifier {
   CompressionRsState(this.compressionRs);
 
   final CompressionRsWorld compressionRs;
-
-  String error = '';
-
-  void setError(String error) {
-    this.error = error;
-    notifyListeners();
-  }
 
   Future<Uint8List?> compress(Uint8List bytes, CRsMethod method) async {
     final result = await method

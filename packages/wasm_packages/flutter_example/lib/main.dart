@@ -2,8 +2,11 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_example/compression_rs_page.dart';
 import 'package:flutter_example/flutter_utils.dart';
+import 'package:flutter_example/image_rs_page.dart';
 import 'package:flutter_example/paginated_text.dart';
+import 'package:flutter_example/rust_crypto_page.dart';
 import 'package:flutter_example/state.dart';
 import 'package:flutter_example/wasm_parser_state.dart';
 import 'package:wasm_parser/wasm_parser.dart';
@@ -56,8 +59,37 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
+enum AppTab {
+  wasmParser,
+  compressionRs,
+  imageRs,
+  rustCrypto;
+
+  Widget tab(GlobalState state) {
+    return switch (this) {
+      AppTab.wasmParser => LoaderWidget(
+          loader: state.wasmParser,
+          child: const WasmParserPage(),
+        ),
+      AppTab.compressionRs => LoaderWidget(
+          loader: state.compressionRs,
+          child: const CompressionRsPage(),
+        ),
+      AppTab.imageRs => LoaderWidget(
+          loader: state.imageRs,
+          child: const ImageRsPage(),
+        ),
+      AppTab.rustCrypto => LoaderWidget(
+          loader: state.rustCrypto,
+          child: const RustCryptoPage(),
+        ),
+    };
+  }
+}
+
 class _MyHomePageState extends State<MyHomePage> {
   late GlobalState state;
+  AppTab tab = AppTab.wasmParser;
 
   @override
   void initState() {
@@ -87,34 +119,45 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             const SizedBox(width: 10),
           ],
-          title: Text(widget.title),
+          title: Row(
+            children: [
+              Text(widget.title),
+              const SizedBox(width: 10),
+              if (MediaQuery.of(context).size.width > 1000)
+                ...AppTab.values.map(
+                  (t) => TextButton(
+                    onPressed: () => setState(() {
+                      tab = t;
+                    }),
+                    child: Text(t.name),
+                  ),
+                )
+              else
+                DropdownButtonFormField(
+                  value: tab,
+                  items: AppTab.values
+                      .map((t) => DropdownMenuItem(
+                            child: Text(t.name),
+                          ))
+                      .toList(),
+                  onChanged: (t) => setState(() {
+                    tab = t;
+                  }),
+                ),
+            ],
+          ),
         ),
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Expanded(
-                child: LoaderWidget(
-                  loader: state.wasmParser,
-                  child: const WasmParserPage(),
-                ),
-              ),
+              Expanded(child: tab.tab(state)),
               const SizedBox(height: 10),
             ],
           ),
         ),
       ),
     );
-  }
-}
-
-class ImageRsPage extends StatelessWidget {
-  const ImageRsPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    Inherited.get<GlobalState>(context).imageRs;
-    return const Placeholder();
   }
 }
 

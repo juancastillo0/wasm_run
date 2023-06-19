@@ -1,6 +1,7 @@
 import 'package:compression_rs/compression_rs.dart' as compression_rs;
 import 'package:compression_rs/compression_rs_in_mem_worker.dart';
 import 'package:flutter/foundation.dart' show ChangeNotifier, ValueNotifier;
+import 'package:flutter_example/image_rs_state.dart';
 import 'package:flutter_example/wasm_parser_state.dart';
 import 'package:image_rs/image_rs.dart';
 import 'package:rust_crypto/rust_crypto.dart';
@@ -31,7 +32,7 @@ class GlobalState extends ChangeNotifier {
     ).then(CompressionRsState.new),
   );
   late final imageRs = FutureLoader(
-    () => createImageRs(wasiConfig: wasiConfig),
+    () => createImageRs(wasiConfig: wasiConfig).then(ImageRsState.new),
   );
   late final rustCrypto = FutureLoader(
     () => rustCryptoInstance(wasiConfig: wasiConfig).then(RustCryptoState.new),
