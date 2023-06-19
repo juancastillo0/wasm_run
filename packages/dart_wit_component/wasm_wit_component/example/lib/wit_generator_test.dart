@@ -56,9 +56,7 @@ void witDartGeneratorTests({Future<Directory> Function()? getDirectory}) {
             watch: false,
             witInputPath: pathToWit,
             config: WitGeneratorConfig(
-              inputs: WitGeneratorInput.fileSystemPaths(
-                FileSystemPaths(inputPath: pathToWit),
-              ),
+              inputs: FileSystemPaths(inputPath: pathToWit),
               jsonSerialization: true,
               copyWith_: false,
               equalityAndHashCode: false,
@@ -70,6 +68,7 @@ void witDartGeneratorTests({Future<Directory> Function()? getDirectory}) {
               requiredOption: false,
               typedNumberLists: true,
               asyncWorker: false,
+              sameClassUnion: true,
             ),
           ),
         );
@@ -93,9 +92,7 @@ void witDartGeneratorTests({Future<Directory> Function()? getDirectory}) {
             watch: true,
             witInputPath: pathToWit,
             config: WitGeneratorConfig(
-              inputs: WitGeneratorInput.fileSystemPaths(
-                FileSystemPaths(inputPath: pathToWit),
-              ),
+              inputs: FileSystemPaths(inputPath: pathToWit),
               jsonSerialization: false,
               copyWith_: false,
               equalityAndHashCode: true,
@@ -107,6 +104,7 @@ void witDartGeneratorTests({Future<Directory> Function()? getDirectory}) {
               requiredOption: false,
               typedNumberLists: true,
               asyncWorker: false,
+              sameClassUnion: true,
             ),
           ),
         );
@@ -189,9 +187,7 @@ world host {
         },
       );
       final g = await createDartWitGenerator(wasiConfig: wasiConfig);
-      final inputs = WitGeneratorInput.fileSystemPaths(
-        FileSystemPaths(inputPath: witPath),
-      );
+      final inputs = FileSystemPaths(inputPath: witPath);
 
       _validateHostResult(g, inputs);
     });
@@ -203,14 +199,12 @@ world host {
           webBrowserFileSystem: {},
         ),
       );
-      const inputs = WitGeneratorInput.inMemoryFiles(
-        InMemoryFiles(
-          worldFile: WitFile(
-            path: 'host.wit',
-            contents: hostWitContents,
-          ),
-          pkgFiles: [],
+      const inputs = InMemoryFiles(
+        worldFile: WitFile(
+          path: 'host.wit',
+          contents: hostWitContents,
         ),
+        pkgFiles: [],
       );
 
       _validateHostResult(g, inputs);

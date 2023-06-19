@@ -14,14 +14,16 @@ typedef T9 = List<String>;
 typedef T8 = Result<void, void>;
 typedef T6 = Result<String, void>;
 typedef T4 = Option<int /*U32*/ >;
+typedef T3 = String;
 typedef T2 = (
   int /*U32*/,
   int /*U64*/,
 );
 typedef T10 = T9;
+typedef T1 = int /*U32*/;
 
 /// a bitflags type
-class Permissions {
+class Permissions implements ToJsonSerializable {
   /// The flags represented as a set of bits.
   final FlagsBits flagsBits;
 
@@ -53,7 +55,9 @@ class Permissions {
   }
 
   /// Returns this as a serializable JSON value.
-  Object toJson() => flagsBits.toJson();
+  @override
+  Map<String, Object?> toJson() =>
+      flagsBits.toJson()..['runtimeType'] = 'Permissions';
 
   /// Returns this as a WASM canonical abi value.
   Uint32List toWasm() => Uint32List.sublistView(flagsBits.data);
@@ -93,7 +97,7 @@ class Permissions {
   static const _spec = Flags(['read', 'write', 'exec']);
 }
 
-class ManyFlags {
+class ManyFlags implements ToJsonSerializable {
   /// The flags represented as a set of bits.
   final FlagsBits flagsBits;
 
@@ -187,7 +191,9 @@ class ManyFlags {
   }
 
   /// Returns this as a serializable JSON value.
-  Object toJson() => flagsBits.toJson();
+  @override
+  Map<String, Object?> toJson() =>
+      flagsBits.toJson()..['runtimeType'] = 'ManyFlags';
 
   /// Returns this as a WASM canonical abi value.
   Uint32List toWasm() => Uint32List.sublistView(flagsBits.data);
@@ -354,14 +360,19 @@ class ManyFlags {
 /// similar to `variant`, but doesn't require naming cases and all variants
 /// have a type payload -- note that this is not a C union, it still has a
 /// discriminant
-sealed class Input {
+sealed class Input implements ToJsonSerializable {
   /// Returns a new instance from a JSON value.
   /// May throw if the value does not have the expected structure.
   factory Input.fromJson(Object? json_) {
     Object? json = json_;
     if (json is Map) {
-      final k = json.keys.first;
-      json = (k is int ? k : int.parse(k! as String), json.values.first);
+      final rt = json['runtimeType'];
+      if (rt is String) {
+        json = (const ['InputIntU64', 'InputString'].indexOf(rt), json);
+      } else {
+        final MapEntry(:key, :value) = json.entries.first;
+        json = (key is int ? key : int.parse(key! as String), value);
+      }
     }
     return switch (json) {
       (0, final value) || [0, final value] => InputIntU64(value! as int),
@@ -375,10 +386,14 @@ sealed class Input {
   const factory Input.string(String value) = InputString;
 
   /// Returns this as a serializable JSON value.
+  @override
   Map<String, Object?> toJson();
 
   /// Returns this as a WASM canonical abi value.
-  (int, Object?) toWasm();
+  static (int, Object?) toWasm(Input value) => switch (value) {
+        InputIntU64() => value.toWasm(),
+        InputString() => value.toWasm(),
+      };
 // ignore: unused_field
   static const _spec = Union([U64(), StringType()]);
 }
@@ -389,10 +404,9 @@ class InputIntU64 implements Input {
 
   /// Returns this as a serializable JSON value.
   @override
-  Map<String, Object?> toJson() => {'0': value};
+  Map<String, Object?> toJson() => {'runtimeType': 'InputIntU64', '0': value};
 
   /// Returns this as a WASM canonical abi value.
-  @override
   (int, Object?) toWasm() => (0, value);
   @override
   String toString() => 'InputIntU64($value)';
@@ -409,10 +423,9 @@ class InputString implements Input {
 
   /// Returns this as a serializable JSON value.
   @override
-  Map<String, Object?> toJson() => {'1': value};
+  Map<String, Object?> toJson() => {'runtimeType': 'InputString', '1': value};
 
   /// Returns this as a WASM canonical abi value.
-  @override
   (int, Object?) toWasm() => (1, value);
   @override
   String toString() => 'InputString($value)';
@@ -424,16 +437,17 @@ class InputString implements Input {
 }
 
 /// values of this type will be one of the specified cases
-sealed class HumanTypesInterface {
+sealed class HumanTypesInterface implements ToJsonSerializable {
   /// Returns a new instance from a JSON value.
   /// May throw if the value does not have the expected structure.
   factory HumanTypesInterface.fromJson(Object? json_) {
     Object? json = json_;
     if (json is Map) {
-      final k = json.keys.first;
+      final MapEntry(:key, :value) =
+          json.entries.firstWhere((e) => e.key != 'runtimeType');
       json = (
-        k is int ? k : _spec.cases.indexWhere((c) => c.label == k),
-        json.values.first
+        key is int ? key : _spec.cases.indexWhere((c) => c.label == key),
+        value,
       );
     }
     return switch (json) {
@@ -451,6 +465,7 @@ sealed class HumanTypesInterface {
   const factory HumanTypesInterface.adult() = HumanTypesInterfaceAdult;
 
   /// Returns this as a serializable JSON value.
+  @override
   Map<String, Object?> toJson();
 
   /// Returns this as a WASM canonical abi value.
@@ -464,7 +479,8 @@ class HumanTypesInterfaceBaby implements HumanTypesInterface {
 
   /// Returns this as a serializable JSON value.
   @override
-  Map<String, Object?> toJson() => {'baby': null};
+  Map<String, Object?> toJson() =>
+      {'runtimeType': 'HumanTypesInterfaceBaby', 'baby': null};
 
   /// Returns this as a WASM canonical abi value.
   @override
@@ -486,7 +502,8 @@ class HumanTypesInterfaceChild implements HumanTypesInterface {
 
   /// Returns this as a serializable JSON value.
   @override
-  Map<String, Object?> toJson() => {'child': value};
+  Map<String, Object?> toJson() =>
+      {'runtimeType': 'HumanTypesInterfaceChild', 'child': value};
 
   /// Returns this as a WASM canonical abi value.
   @override
@@ -506,7 +523,8 @@ class HumanTypesInterfaceAdult implements HumanTypesInterface {
 
   /// Returns this as a serializable JSON value.
   @override
-  Map<String, Object?> toJson() => {'adult': null};
+  Map<String, Object?> toJson() =>
+      {'runtimeType': 'HumanTypesInterfaceAdult', 'adult': null};
 
   /// Returns this as a WASM canonical abi value.
   @override
@@ -520,7 +538,7 @@ class HumanTypesInterfaceAdult implements HumanTypesInterface {
 }
 
 /// similar to `variant`, but no type payloads
-enum ErrnoTypesInterface {
+enum ErrnoTypesInterface implements ToJsonSerializable {
   tooBig,
   tooSmall,
   tooFast,
@@ -528,17 +546,14 @@ enum ErrnoTypesInterface {
 
   /// Returns a new instance from a JSON value.
   /// May throw if the value does not have the expected structure.
-  factory ErrnoTypesInterface.fromJson(Object? json_) {
-    final json = json_ is Map ? json_.keys.first : json_;
-    if (json is String) {
-      final index = _spec.labels.indexOf(json);
-      return index != -1 ? values[index] : values.byName(json);
-    }
-    return json is (int, Object?) ? values[json.$1] : values[json! as int];
+  factory ErrnoTypesInterface.fromJson(Object? json) {
+    return ToJsonSerializable.enumFromJson(json, values, _spec);
   }
 
   /// Returns this as a serializable JSON value.
-  Object? toJson() => _spec.labels[index];
+  @override
+  Map<String, Object?> toJson() =>
+      {'runtimeType': 'ErrnoTypesInterface', _spec.labels[index]: null};
 
   /// Returns this as a WASM canonical abi value.
   int toWasm() => index;
@@ -552,7 +567,7 @@ typedef T7 = Result<String /*Char*/, ErrnoTypesInterface>;
 typedef T5TypesInterface = Result<void, ErrnoTypesInterface>;
 
 /// "package of named fields"
-class R {
+class R implements ToJsonSerializable {
   final int /*U32*/ a;
   final String b;
   final List<
@@ -661,7 +676,9 @@ class R {
   }
 
   /// Returns this as a serializable JSON value.
+  @override
   Map<String, Object?> toJson() => {
+        'runtimeType': 'R',
         'a': a,
         'b': b,
         'c':
@@ -684,7 +701,7 @@ class R {
         d.toWasm((some) => some.toWasm(
             (some) => [some.$1, some.$2.toWasm((some) => some.toWasm())])),
         e.toWasm(),
-        i.toWasm(),
+        Input.toWasm(i),
         p.toWasm(),
         f.toWasm()
       ];
@@ -751,7 +768,7 @@ class R {
   ]);
 }
 
-class RoundTripNumbersListData {
+class RoundTripNumbersListData implements ToJsonSerializable {
   final List<int /*U8*/ > un8;
   final List<int /*U16*/ > un16;
   final List<int /*U32*/ > un32;
@@ -844,7 +861,9 @@ class RoundTripNumbersListData {
   }
 
   /// Returns this as a serializable JSON value.
+  @override
   Map<String, Object?> toJson() => {
+        'runtimeType': 'RoundTripNumbersListData',
         'un8': un8.toList(),
         'un16': un16.toList(),
         'un32': un32.toList(),
@@ -951,7 +970,7 @@ class RoundTripNumbersListData {
   ]);
 }
 
-class RoundTripNumbersData {
+class RoundTripNumbersData implements ToJsonSerializable {
   final int /*U8*/ un8;
   final int /*U16*/ un16;
   final int /*U32*/ un32;
@@ -1023,7 +1042,9 @@ class RoundTripNumbersData {
   }
 
   /// Returns this as a serializable JSON value.
+  @override
   Map<String, Object?> toJson() => {
+        'runtimeType': 'RoundTripNumbersData',
         'un8': un8,
         'un16': un16,
         'un32': un32,
@@ -1095,16 +1116,17 @@ class RoundTripNumbersData {
 typedef ErrnoApiImports = ErrnoTypesInterface;
 
 /// Same name as the type in `types-interface`, but this is a different type
-sealed class HumanApiImports {
+sealed class HumanApiImports implements ToJsonSerializable {
   /// Returns a new instance from a JSON value.
   /// May throw if the value does not have the expected structure.
   factory HumanApiImports.fromJson(Object? json_) {
     Object? json = json_;
     if (json is Map) {
-      final k = json.keys.first;
+      final MapEntry(:key, :value) =
+          json.entries.firstWhere((e) => e.key != 'runtimeType');
       json = (
-        k is int ? k : _spec.cases.indexWhere((c) => c.label == k),
-        json.values.first
+        key is int ? key : _spec.cases.indexWhere((c) => c.label == key),
+        value,
       );
     }
     return switch (json) {
@@ -1155,6 +1177,7 @@ sealed class HumanApiImports {
       ) value) = HumanApiImportsAdult;
 
   /// Returns this as a serializable JSON value.
+  @override
   Map<String, Object?> toJson();
 
   /// Returns this as a WASM canonical abi value.
@@ -1177,7 +1200,8 @@ class HumanApiImportsBaby implements HumanApiImports {
 
   /// Returns this as a serializable JSON value.
   @override
-  Map<String, Object?> toJson() => {'baby': null};
+  Map<String, Object?> toJson() =>
+      {'runtimeType': 'HumanApiImportsBaby', 'baby': null};
 
   /// Returns this as a WASM canonical abi value.
   @override
@@ -1196,7 +1220,8 @@ class HumanApiImportsChild implements HumanApiImports {
 
   /// Returns this as a serializable JSON value.
   @override
-  Map<String, Object?> toJson() => {'child': value};
+  Map<String, Object?> toJson() =>
+      {'runtimeType': 'HumanApiImportsChild', 'child': value};
 
   /// Returns this as a WASM canonical abi value.
   @override
@@ -1222,6 +1247,7 @@ class HumanApiImportsAdult implements HumanApiImports {
   /// Returns this as a serializable JSON value.
   @override
   Map<String, Object?> toJson() => {
+        'runtimeType': 'HumanApiImportsAdult',
         'adult': [
           value.$1,
           value.$2.toJson((some) => some.toJson()),
@@ -1251,7 +1277,7 @@ class HumanApiImportsAdult implements HumanApiImports {
 
 typedef ErrnoRenamed = ErrnoTypesInterface;
 
-class ErrnoApi {
+class ErrnoApi implements ToJsonSerializable {
   final int /*U64*/ aU1;
 
   /// A list of signed 64-bit integers
@@ -1286,7 +1312,9 @@ class ErrnoApi {
   }
 
   /// Returns this as a serializable JSON value.
+  @override
   Map<String, Object?> toJson() => {
+        'runtimeType': 'ErrnoApi',
         'a-u1': aU1,
         'list-s1': listS1.toList(),
         'str': str.toJson(),
@@ -1332,7 +1360,7 @@ class ErrnoApi {
 typedef T5Api = Result<void, Option<ErrnoApi>>;
 typedef T2Renamed = T2;
 
-enum LogLevel {
+enum LogLevel implements ToJsonSerializable {
   /// lowest level
   debug,
   info,
@@ -1341,24 +1369,21 @@ enum LogLevel {
 
   /// Returns a new instance from a JSON value.
   /// May throw if the value does not have the expected structure.
-  factory LogLevel.fromJson(Object? json_) {
-    final json = json_ is Map ? json_.keys.first : json_;
-    if (json is String) {
-      final index = _spec.labels.indexOf(json);
-      return index != -1 ? values[index] : values.byName(json);
-    }
-    return json is (int, Object?) ? values[json.$1] : values[json! as int];
+  factory LogLevel.fromJson(Object? json) {
+    return ToJsonSerializable.enumFromJson(json, values, _spec);
   }
 
   /// Returns this as a serializable JSON value.
-  Object? toJson() => _spec.labels[index];
+  @override
+  Map<String, Object?> toJson() =>
+      {'runtimeType': 'LogLevel', _spec.labels[index]: null};
 
   /// Returns this as a WASM canonical abi value.
   int toWasm() => index;
   static const _spec = EnumType(['debug', 'info', 'warn', 'error']);
 }
 
-class Empty {
+class Empty implements ToJsonSerializable {
   const Empty();
 
   /// Returns a new instance from a JSON value.
@@ -1366,7 +1391,10 @@ class Empty {
   factory Empty.fromJson(Object? _) => const Empty();
 
   /// Returns this as a serializable JSON value.
-  Map<String, Object?> toJson() => {};
+  @override
+  Map<String, Object?> toJson() => {
+        'runtimeType': 'Empty',
+      };
 
   /// Returns this as a WASM canonical abi value.
   List<Object?> toWasm() => [];
@@ -1566,7 +1594,7 @@ class Api {
     required Input i,
   }) {
     final results =
-        _recordFunc([r.toWasm(), e.toWasm(), p.toWasm(), i.toWasm()]);
+        _recordFunc([r.toWasm(), e.toWasm(), p.toWasm(), Input.toWasm(i)]);
     final r0 = results[0];
     final r1 = results[1];
     final r2 = results[2];
@@ -1693,7 +1721,7 @@ class TypesExampleWorld {
             results.r.toWasm(),
             results.e.toWasm(),
             results.p.toWasm(),
-            results.i.toWasm()
+            Input.toWasm(results.i)
           ],
           () {}
         );
@@ -1787,7 +1815,6 @@ class TypesExampleWorld {
           loweredImportFunction(r'$root#print', ft, execImportsPrint, getLib);
       builder.addImport(r'$root', 'print', lowered);
     }
-
     final instance = await builder.build();
 
     library = WasmLibrary(instance, int64Type: Int64TypeConfig.coreInt);

@@ -4,7 +4,7 @@ import 'dart:typed_data';
 import 'package:wasm_parser/wasm_parser.dart';
 import 'package:test/test.dart';
 import 'package:wasm_run/load_module.dart';
-import 'package:wasm_wit_component/wasm_wit_component.dart';
+import 'package:wasm_wit_component/wasm_wit_component.dart' hide ComponentType;
 import 'package:wasm_run/src/ffi.dart' as wasm_run_ffi;
 
 import 'module_type.dart' show moduleToType;
@@ -59,12 +59,12 @@ void main() {
 
       final componentType = world
           .parseWasm(input: WasmInput.binary(component))
-          .unwrap() as WasmTypeComponentType;
+          .unwrap() as ComponentType;
       final moduleType = world
           .parseWasm(input: WasmInput.binary(wasmBinary))
-          .unwrap() as WasmTypeModuleType;
-      expect([componentType.value.modules.first], [moduleType.value]);
-      expect(componentType.value.modules, hasLength(4));
+          .unwrap() as ModuleType;
+      expect([componentType.modules.first], [moduleType]);
+      expect(componentType.modules, hasLength(4));
 
       switch (result) {
         case Ok(ok: final wit):
@@ -94,8 +94,7 @@ void main() {
         imports: const WasmParserWorldImports(),
       );
       final wat = WatInput.text(valid.wat);
-      final wasmType =
-          world.parseWat(input: wat).unwrap() as WasmTypeModuleType;
+      final moduleType = world.parseWat(input: wat).unwrap() as ModuleType;
       final Uint8List wasmBytes = world.wat2wasm(input: wat).unwrap();
       final wasmBinary = WasmInput.binary(wasmBytes);
       final wasmType2 = world.parseWasm(input: wasmBinary).unwrap();
@@ -103,9 +102,8 @@ void main() {
       final wasmType3 =
           world.parseWat(input: WatInput.text(mappedWat)).unwrap();
 
-      expect(wasmType, wasmType2);
-      expect(wasmType, wasmType3);
-      final ModuleType moduleType = wasmType.value;
+      expect(moduleType, wasmType2);
+      expect(moduleType, wasmType3);
       expect(moduleType.imports, valid.imports);
       expect(moduleType.exports, valid.exports);
 
@@ -141,11 +139,9 @@ void main() {
             [
               ModuleExport(
                 name: 'add',
-                type: ExternType.functionType(
-                  FunctionType(
-                    parameters: [ValueType.i32(), ValueType.i32()],
-                    results: [ValueType.i32()],
-                  ),
+                type: FunctionType(
+                  parameters: [ValueType.i32(), ValueType.i32()],
+                  results: [ValueType.i32()],
                 ),
               ),
             ],
@@ -169,22 +165,18 @@ void main() {
               ModuleImport(
                 module: 'host',
                 name: 'hello',
-                type: ExternType.functionType(
-                  FunctionType(
-                    parameters: [ValueType.i32()],
-                    results: [],
-                  ),
+                type: FunctionType(
+                  parameters: [ValueType.i32()],
+                  results: [],
                 ),
               ),
             ],
             [
               ModuleExport(
                 name: 'hello',
-                type: ExternType.functionType(
-                  FunctionType(
-                    parameters: [],
-                    results: [],
-                  ),
+                type: FunctionType(
+                  parameters: [],
+                  results: [],
                 ),
               ),
             ],
@@ -209,31 +201,25 @@ void main() {
               ModuleImport(
                 module: 'js',
                 name: 'global',
-                type: ExternType.globalType(
-                  GlobalType(
-                    mutable: true,
-                    value: ValueType.i32(),
-                  ),
+                type: GlobalType(
+                  mutable: true,
+                  value: ValueType.i32(),
                 ),
               ),
             ],
             [
               ModuleExport(
                 name: 'getGlobal',
-                type: ExternType.functionType(
-                  FunctionType(
-                    parameters: [],
-                    results: [ValueType.i32()],
-                  ),
+                type: FunctionType(
+                  parameters: [],
+                  results: [ValueType.i32()],
                 ),
               ),
               ModuleExport(
                 name: 'incGlobal',
-                type: ExternType.functionType(
-                  FunctionType(
-                    parameters: [],
-                    results: [],
-                  ),
+                type: FunctionType(
+                  parameters: [],
+                  results: [],
                 ),
               ),
             ],
@@ -258,12 +244,10 @@ void main() {
               ModuleImport(
                 module: 'js',
                 name: 'tbl',
-                type: ExternType.tableType(
-                  TableType(
-                    minimum: 3,
-                    maximum: null,
-                    element: RefType(nullable: true, heapType: HeapType.func()),
-                  ),
+                type: TableType(
+                  minimum: 3,
+                  maximum: null,
+                  element: RefType(nullable: true, heapType: HeapType.func()),
                 ),
               ),
             ],
@@ -312,62 +296,56 @@ void main() {
             [
               ModuleExport(
                 name: 'memory0',
-                type: ExternTypeMemoryType(MemoryType(
+                type: MemoryType(
                   memory64: false,
                   shared: false,
                   minimum: BigInt.from(2),
                   maximum: BigInt.from(3),
-                )),
+                ),
               ),
               ModuleExport(
                 name: 'memory1',
-                type: ExternTypeMemoryType(MemoryType(
+                type: MemoryType(
                   memory64: false,
                   shared: false,
                   minimum: BigInt.from(2),
                   maximum: BigInt.from(4),
-                )),
+                ),
               ),
               ModuleExport(
                 name: 'size0',
-                type: ExternTypeFunctionType(
-                  FunctionType(parameters: [], results: [ValueTypeI32()]),
-                ),
+                type: FunctionType(parameters: [], results: [ValueTypeI32()]),
               ),
               ModuleExport(
                 name: 'load0',
-                type: ExternTypeFunctionType(FunctionType(
+                type: FunctionType(
                   parameters: [ValueTypeI32()],
                   results: [ValueTypeI32()],
-                )),
-              ),
-              ModuleExport(
-                name: 'store0',
-                type: ExternTypeFunctionType(FunctionType(
-                  parameters: [ValueTypeI32(), ValueTypeI32()],
-                  results: [],
-                )),
-              ),
-              ModuleExport(
-                name: 'size1',
-                type: ExternTypeFunctionType(
-                  FunctionType(parameters: [], results: [ValueTypeI32()]),
                 ),
               ),
               ModuleExport(
+                name: 'store0',
+                type: FunctionType(
+                  parameters: [ValueTypeI32(), ValueTypeI32()],
+                  results: [],
+                ),
+              ),
+              ModuleExport(
+                name: 'size1',
+                type: FunctionType(parameters: [], results: [ValueTypeI32()]),
+              ),
+              ModuleExport(
                 name: 'load1',
-                type: ExternTypeFunctionType(FunctionType(
+                type: FunctionType(
                   parameters: [ValueTypeI32()],
                   results: [ValueTypeI32()],
-                )),
+                ),
               ),
               ModuleExport(
                 name: 'store1',
-                type: ExternTypeFunctionType(
-                  FunctionType(
-                    parameters: [ValueTypeI32(), ValueTypeI32()],
-                    results: [],
-                  ),
+                type: FunctionType(
+                  parameters: [ValueTypeI32(), ValueTypeI32()],
+                  results: [],
                 ),
               ),
             ],

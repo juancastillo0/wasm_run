@@ -1,3 +1,4 @@
+use std::io::Cursor;
 use std::{collections::HashMap, sync::RwLock};
 
 use once_cell::sync::Lazy;
@@ -17,9 +18,9 @@ impl GlobalState {
         let image_ref = ImageRef {
             id,
             // TODO: pointer?
-            format: image::guess_format(&image.as_bytes())
-                .map(map_image_format)
-                .unwrap_or(ImageFormat::Unknown),
+            // format: image::guess_format(&image.as_bytes())
+            //     .map(map_image_format)
+            //     .unwrap_or(ImageFormat::Unknown),
             // pixel: None,
             width: image.width(),
             height: image.height(),
@@ -57,7 +58,6 @@ wit_bindgen::generate!("image-rs");
 
 use exports::wasm_run_dart::image_rs;
 use exports::wasm_run_dart::image_rs::operations::{FilterType, ImageCrop};
-use wasm_run_dart::image_rs::types::ColorType;
 
 // Define a custom type and implement the generated `Host` trait for it which
 // represents implementing all the necessary exported interfaces for this
@@ -71,6 +71,14 @@ impl ImageRs for ImageRsImpl {
         image::guess_format(&buffer)
             .map(map_image_format)
             .map_err(map_err)
+    }
+
+    fn format_extensions(f: ImageFormat) -> Vec<String> {
+        map_image_format_to(f)
+            .extensions_str()
+            .iter()
+            .map(|e| e.to_string())
+            .collect()
     }
 
     fn file_image_size(path: String) -> Result<ImageSize, String> {
@@ -87,8 +95,64 @@ impl ImageRs for ImageRsImpl {
     }
 
     fn copy_image_buffer(image_ref: ImageRef) -> Image {
-        with(|state| Image {
-            bytes: state.images[&image_ref.id].as_bytes().to_vec(),
+        with(|state| {
+            let img = &state.images[&image_ref.id];
+            let len = Some(img.color().channel_count() as usize)
+                .and_then(|size| size.checked_mul(img.width() as usize))
+                .and_then(|size| size.checked_mul(img.height() as usize));
+            let bytes = img.as_bytes()[..len.unwrap()].to_vec();
+            Image { bytes }
+        })
+    }
+
+    fn convert_color(image_ref: ImageRef, color: ColorType) -> ImageRef {
+        operation(image_ref, |img| {
+            let mapped = match color {
+                ColorType::L8 => image::DynamicImage::ImageLuma8(img.to_luma8()),
+                ColorType::La8 => image::DynamicImage::ImageLumaA8(img.to_luma_alpha8()),
+                ColorType::Rgb8 => image::DynamicImage::ImageRgb8(img.to_rgb8()),
+                ColorType::Rgba8 => image::DynamicImage::ImageRgba8(img.to_rgba8()),
+                ColorType::L16 => image::DynamicImage::ImageLuma16(img.to_luma16()),
+                ColorType::La16 => image::DynamicImage::ImageLumaA16(img.to_luma_alpha16()),
+                ColorType::Rgb16 => image::DynamicImage::ImageRgb16(img.to_rgb16()),
+                ColorType::Rgba16 => image::DynamicImage::ImageRgba16(img.to_rgba16()),
+                ColorType::Rgb32f => image::DynamicImage::ImageRgb32F(img.to_rgb32f()),
+                ColorType::Rgba32f => image::DynamicImage::ImageRgba32F(img.to_rgba32f()),
+                ColorType::Unknown => img.clone(),
+            };
+            mapped
+        })
+    }
+
+    fn convert_format(image_ref: ImageRef, image_format: ImageFormat) -> Result<Vec<u8>, String> {
+        with(|state| {
+            use image::error::*;
+            use image::DynamicImage;
+            let mut output = Cursor::new(Vec::new());
+            let image_format = map_image_format_to(image_format);
+            let img = &state.images[&image_ref.id];
+            match img {
+                DynamicImage::ImageLuma8(p) => p.write_to(&mut output, image_format),
+                DynamicImage::ImageLumaA8(p) => p.write_to(&mut output, image_format),
+                DynamicImage::ImageRgb8(p) => p.write_to(&mut output, image_format),
+                DynamicImage::ImageRgba8(p) => p.write_to(&mut output, image_format),
+                DynamicImage::ImageLuma16(p) => p.write_to(&mut output, image_format),
+                DynamicImage::ImageLumaA16(p) => p.write_to(&mut output, image_format),
+                DynamicImage::ImageRgb16(p) => p.write_to(&mut output, image_format),
+                DynamicImage::ImageRgba16(p) => p.write_to(&mut output, image_format),
+                DynamicImage::ImageRgb32F(p) => p.write_to(&mut output, image_format),
+                DynamicImage::ImageRgba32F(p) => p.write_to(&mut output, image_format),
+                _ => Err(image::ImageError::Unsupported(
+                    UnsupportedError::from_format_and_kind(
+                        ImageFormatHint::Unknown,
+                        UnsupportedErrorKind::GenericFeature(
+                            "Unsupported input format".to_string(),
+                        ),
+                    ),
+                )),
+            }
+            .map_err(map_err)?;
+            Ok(output.into_inner())
         })
     }
 
@@ -255,6 +319,27 @@ fn map_image_format(f: image::ImageFormat) -> ImageFormat {
         image::ImageFormat::Hdr => ImageFormat::Hdr,
         image::ImageFormat::Farbfeld => ImageFormat::Farbfeld,
         _ => ImageFormat::Unknown,
+    }
+}
+
+fn map_image_format_to(f: ImageFormat) -> image::ImageFormat {
+    match f {
+        ImageFormat::Png => image::ImageFormat::Png,
+        ImageFormat::Jpeg => image::ImageFormat::Jpeg,
+        ImageFormat::Gif => image::ImageFormat::Gif,
+        ImageFormat::WebP => image::ImageFormat::WebP,
+        ImageFormat::Pnm => image::ImageFormat::Pnm,
+        ImageFormat::Tiff => image::ImageFormat::Tiff,
+        ImageFormat::Tga => image::ImageFormat::Tga,
+        ImageFormat::Dds => image::ImageFormat::Dds,
+        ImageFormat::Bmp => image::ImageFormat::Bmp,
+        ImageFormat::Ico => image::ImageFormat::Ico,
+        ImageFormat::Hdr => image::ImageFormat::Hdr,
+        ImageFormat::Farbfeld => image::ImageFormat::Farbfeld,
+        ImageFormat::OpenExr => image::ImageFormat::OpenExr,
+        ImageFormat::Qoi => image::ImageFormat::Qoi,
+        ImageFormat::Avif => image::ImageFormat::Avif,
+        ImageFormat::Unknown => image::ImageFormat::Png,
     }
 }
 

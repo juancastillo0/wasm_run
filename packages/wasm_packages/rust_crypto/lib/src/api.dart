@@ -11,54 +11,48 @@ import 'package:wasm_wit_component/wasm_wit_component.dart';
 /// described in the PHC string format specification ($argon2id$v=19$...).
 typedef PasswordHash = Uint8List;
 
-enum Argon2Version {
+enum Argon2Version implements ToJsonSerializable {
   v0x10,
   v0x13;
 
   /// Returns a new instance from a JSON value.
   /// May throw if the value does not have the expected structure.
-  factory Argon2Version.fromJson(Object? json_) {
-    final json = json_ is Map ? json_.keys.first : json_;
-    if (json is String) {
-      final index = _spec.labels.indexOf(json);
-      return index != -1 ? values[index] : values.byName(json);
-    }
-    return json is (int, Object?) ? values[json.$1] : values[json! as int];
+  factory Argon2Version.fromJson(Object? json) {
+    return ToJsonSerializable.enumFromJson(json, values, _spec);
   }
 
   /// Returns this as a serializable JSON value.
-  Object? toJson() => _spec.labels[index];
+  @override
+  Map<String, Object?> toJson() =>
+      {'runtimeType': 'Argon2Version', _spec.labels[index]: null};
 
   /// Returns this as a WASM canonical abi value.
   int toWasm() => index;
   static const _spec = EnumType(['v0x10', 'v0x13']);
 }
 
-enum Argon2Algorithm {
+enum Argon2Algorithm implements ToJsonSerializable {
   argon2d,
   argon2i,
   argon2id;
 
   /// Returns a new instance from a JSON value.
   /// May throw if the value does not have the expected structure.
-  factory Argon2Algorithm.fromJson(Object? json_) {
-    final json = json_ is Map ? json_.keys.first : json_;
-    if (json is String) {
-      final index = _spec.labels.indexOf(json);
-      return index != -1 ? values[index] : values.byName(json);
-    }
-    return json is (int, Object?) ? values[json.$1] : values[json! as int];
+  factory Argon2Algorithm.fromJson(Object? json) {
+    return ToJsonSerializable.enumFromJson(json, values, _spec);
   }
 
   /// Returns this as a serializable JSON value.
-  Object? toJson() => _spec.labels[index];
+  @override
+  Map<String, Object?> toJson() =>
+      {'runtimeType': 'Argon2Algorithm', _spec.labels[index]: null};
 
   /// Returns this as a WASM canonical abi value.
   int toWasm() => index;
   static const _spec = EnumType(['argon2d', 'argon2i', 'argon2id']);
 }
 
-class Argon2Config {
+class Argon2Config implements ToJsonSerializable {
   final Argon2Version version;
   final Argon2Algorithm algorithm;
   final Uint8List? secret;
@@ -120,7 +114,9 @@ class Argon2Config {
   }
 
   /// Returns this as a serializable JSON value.
+  @override
   Map<String, Object?> toJson() => {
+        'runtimeType': 'Argon2Config',
         'version': version.toJson(),
         'algorithm': algorithm.toJson(),
         'secret': (secret == null
@@ -174,9 +170,10 @@ class Argon2Config {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is Argon2Config && comparator.arePropsEqual(_props, other._props);
+      other is Argon2Config &&
+          const ObjectComparator().arePropsEqual(_props, other._props);
   @override
-  int get hashCode => comparator.hashProps(_props);
+  int get hashCode => const ObjectComparator().hashProps(_props);
 
   // ignore: unused_field
   List<Object?> get _props => [
@@ -199,23 +196,20 @@ class Argon2Config {
   ]);
 }
 
-enum AesKind {
+enum AesKind implements ToJsonSerializable {
   bits128,
   bits256;
 
   /// Returns a new instance from a JSON value.
   /// May throw if the value does not have the expected structure.
-  factory AesKind.fromJson(Object? json_) {
-    final json = json_ is Map ? json_.keys.first : json_;
-    if (json is String) {
-      final index = _spec.labels.indexOf(json);
-      return index != -1 ? values[index] : values.byName(json);
-    }
-    return json is (int, Object?) ? values[json.$1] : values[json! as int];
+  factory AesKind.fromJson(Object? json) {
+    return ToJsonSerializable.enumFromJson(json, values, _spec);
   }
 
   /// Returns this as a serializable JSON value.
-  Object? toJson() => _spec.labels[index];
+  @override
+  Map<String, Object?> toJson() =>
+      {'runtimeType': 'AesKind', _spec.labels[index]: null};
 
   /// Returns this as a WASM canonical abi value.
   int toWasm() => index;

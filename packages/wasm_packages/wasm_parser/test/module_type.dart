@@ -42,25 +42,25 @@ ModuleType moduleToType(WasmModule module) {
 
 ExternType mapExternalType(ExternalType type) {
   return type.when(
-    func: (func) => ExternType.functionType(FunctionType(
+    func: (func) => FunctionType(
       parameters: func.parameters.map(mapValueTy).toList(),
       results: func.results.map(mapValueTy).toList(),
-    )),
-    global: (global) => ExternType.globalType(GlobalType(
+    ),
+    global: (global) => GlobalType(
       mutable: global.mutable,
       value: mapValueTy(global.value),
-    )),
-    table: (table) => ExternType.tableType(TableType(
+    ),
+    table: (table) => TableType(
       minimum: table.minimum,
       maximum: table.maximum,
       element: (mapValueTy(table.element) as ValueTypeRef).value,
-    )),
-    memory: (memory) => ExternType.memoryType(MemoryType(
+    ),
+    memory: (memory) => MemoryType(
       minimum: BigInt.from(memory.minimum),
       maximum: memory.maximum == null ? null : BigInt.from(memory.maximum!),
       shared: memory.shared,
       memory64: false,
-    )),
+    ),
   );
 }
 

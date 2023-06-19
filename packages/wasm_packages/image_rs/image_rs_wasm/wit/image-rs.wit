@@ -4,7 +4,6 @@ interface types {
 
     record image-ref {
         id: u32,
-        format: image-format,
         color: color-type,
         width: u32,
         height: u32,
@@ -78,34 +77,44 @@ interface types {
 }
 
 world image-rs {
-    use types.{image-ref, image, image-size, image-format} 
+    use types.{image-ref, image, image-size, image-format, color-type} 
+
+    type image-error = string
 
     export operations
     
-    export guess-buffer-format: func(buffer: list<u8>) -> result<image-format, string>
+    export guess-buffer-format: func(buffer: list<u8>) -> result<image-format, image-error>
 
-    export file-image-size: func(path: string) -> result<image-size, string>
+    export file-image-size: func(path: string) -> result<image-size, image-error>
+
+    export format-extensions: func(format: image-format) -> list<string>
 
     export image-buffer-pointer-and-size: func(image-ref: image-ref) -> tuple<u32, u32>
 
     export copy-image-buffer: func(image-ref: image-ref) -> image
 
-    export dispose-image: func(image: image-ref) -> result<u32, string>
+    export dispose-image: func(image: image-ref) -> result<u32, image-error>
 
     /// Create a new image from a byte slice
     /// Makes an educated guess about the image format.
-    export read-buffer: func(buffer: list<u8>) -> result<image-ref, string>
+    export read-buffer: func(buffer: list<u8>) -> result<image-ref, image-error>
 
     /// Open the image located at the path specified.
     /// The image's format is determined from the path's file extension.
-    export read-file: func(path: string) -> result<image-ref, string>
+    export read-file: func(path: string) -> result<image-ref, image-error>
 
     /// Saves the buffer to a file at the path specified. 
     /// The image format is derived from the file extension.
-    export save-file: func(image: image-ref, path: string) -> result<u32, string>
+    export save-file: func(image: image-ref, path: string) -> result<u32, image-error>
+
+    /// Copy the image to a new color representation.
+    export convert-color: func(image: image-ref, color: color-type) -> image-ref
+
+    /// Converts the image into a different [format]. 
+    export convert-format: func(image: image-ref, format: image-format) -> result<list<u8>, image-error>
 
 
-    variant image-error {
+    variant image-error-v {
         /// An error was encountered while decoding.
         ///
         /// This means that the input data did not conform to the specification of some image format,

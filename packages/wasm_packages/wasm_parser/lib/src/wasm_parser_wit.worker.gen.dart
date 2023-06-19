@@ -7,16 +7,17 @@ import 'dart:typed_data';
 
 import 'package:wasm_wit_component/wasm_wit_component.dart';
 
-sealed class WatInput {
+sealed class WatInput implements ToJsonSerializable {
   /// Returns a new instance from a JSON value.
   /// May throw if the value does not have the expected structure.
   factory WatInput.fromJson(Object? json_) {
     Object? json = json_;
     if (json is Map) {
-      final k = json.keys.first;
+      final MapEntry(:key, :value) =
+          json.entries.firstWhere((e) => e.key != 'runtimeType');
       json = (
-        k is int ? k : _spec.cases.indexWhere((c) => c.label == k),
-        json.values.first
+        key is int ? key : _spec.cases.indexWhere((c) => c.label == key),
+        value,
       );
     }
     return switch (json) {
@@ -36,6 +37,7 @@ sealed class WatInput {
   const factory WatInput.filePath(String value) = WatInputFilePath;
 
   /// Returns this as a serializable JSON value.
+  @override
   Map<String, Object?> toJson();
 
   /// Returns this as a WASM canonical abi value.
@@ -56,7 +58,8 @@ class WatInputText implements WatInput {
 
   /// Returns this as a serializable JSON value.
   @override
-  Map<String, Object?> toJson() => {'text': value};
+  Map<String, Object?> toJson() =>
+      {'runtimeType': 'WatInputText', 'text': value};
 
   /// Returns this as a WASM canonical abi value.
   @override
@@ -65,9 +68,10 @@ class WatInputText implements WatInput {
   String toString() => 'WatInputText($value)';
   @override
   bool operator ==(Object other) =>
-      other is WatInputText && comparator.areEqual(other.value, value);
+      other is WatInputText &&
+      const ObjectComparator().areEqual(other.value, value);
   @override
-  int get hashCode => comparator.hashValue(value);
+  int get hashCode => const ObjectComparator().hashValue(value);
 }
 
 /// A sequence of bytes in the WebAssembly binary format
@@ -79,7 +83,8 @@ class WatInputBinary implements WatInput {
 
   /// Returns this as a serializable JSON value.
   @override
-  Map<String, Object?> toJson() => {'binary': value.toList()};
+  Map<String, Object?> toJson() =>
+      {'runtimeType': 'WatInputBinary', 'binary': value.toList()};
 
   /// Returns this as a WASM canonical abi value.
   @override
@@ -88,9 +93,10 @@ class WatInputBinary implements WatInput {
   String toString() => 'WatInputBinary($value)';
   @override
   bool operator ==(Object other) =>
-      other is WatInputBinary && comparator.areEqual(other.value, value);
+      other is WatInputBinary &&
+      const ObjectComparator().areEqual(other.value, value);
   @override
-  int get hashCode => comparator.hashValue(value);
+  int get hashCode => const ObjectComparator().hashValue(value);
 }
 
 /// A path to a file containing either text or binary
@@ -102,7 +108,8 @@ class WatInputFilePath implements WatInput {
 
   /// Returns this as a serializable JSON value.
   @override
-  Map<String, Object?> toJson() => {'file-path': value};
+  Map<String, Object?> toJson() =>
+      {'runtimeType': 'WatInputFilePath', 'file-path': value};
 
   /// Returns this as a WASM canonical abi value.
   @override
@@ -111,21 +118,23 @@ class WatInputFilePath implements WatInput {
   String toString() => 'WatInputFilePath($value)';
   @override
   bool operator ==(Object other) =>
-      other is WatInputFilePath && comparator.areEqual(other.value, value);
+      other is WatInputFilePath &&
+      const ObjectComparator().areEqual(other.value, value);
   @override
-  int get hashCode => comparator.hashValue(value);
+  int get hashCode => const ObjectComparator().hashValue(value);
 }
 
-sealed class WasmInput {
+sealed class WasmInput implements ToJsonSerializable {
   /// Returns a new instance from a JSON value.
   /// May throw if the value does not have the expected structure.
   factory WasmInput.fromJson(Object? json_) {
     Object? json = json_;
     if (json is Map) {
-      final k = json.keys.first;
+      final MapEntry(:key, :value) =
+          json.entries.firstWhere((e) => e.key != 'runtimeType');
       json = (
-        k is int ? k : _spec.cases.indexWhere((c) => c.label == k),
-        json.values.first
+        key is int ? key : _spec.cases.indexWhere((c) => c.label == key),
+        value,
       );
     }
     return switch (json) {
@@ -142,6 +151,7 @@ sealed class WasmInput {
   const factory WasmInput.filePath(String value) = WasmInputFilePath;
 
   /// Returns this as a serializable JSON value.
+  @override
   Map<String, Object?> toJson();
 
   /// Returns this as a WASM canonical abi value.
@@ -159,7 +169,8 @@ class WasmInputBinary implements WasmInput {
 
   /// Returns this as a serializable JSON value.
   @override
-  Map<String, Object?> toJson() => {'binary': value.toList()};
+  Map<String, Object?> toJson() =>
+      {'runtimeType': 'WasmInputBinary', 'binary': value.toList()};
 
   /// Returns this as a WASM canonical abi value.
   @override
@@ -168,9 +179,10 @@ class WasmInputBinary implements WasmInput {
   String toString() => 'WasmInputBinary($value)';
   @override
   bool operator ==(Object other) =>
-      other is WasmInputBinary && comparator.areEqual(other.value, value);
+      other is WasmInputBinary &&
+      const ObjectComparator().areEqual(other.value, value);
   @override
-  int get hashCode => comparator.hashValue(value);
+  int get hashCode => const ObjectComparator().hashValue(value);
 }
 
 /// A path to a file containing the binary wasm module
@@ -182,7 +194,8 @@ class WasmInputFilePath implements WasmInput {
 
   /// Returns this as a serializable JSON value.
   @override
-  Map<String, Object?> toJson() => {'file-path': value};
+  Map<String, Object?> toJson() =>
+      {'runtimeType': 'WasmInputFilePath', 'file-path': value};
 
   /// Returns this as a WASM canonical abi value.
   @override
@@ -191,12 +204,13 @@ class WasmInputFilePath implements WasmInput {
   String toString() => 'WasmInputFilePath($value)';
   @override
   bool operator ==(Object other) =>
-      other is WasmInputFilePath && comparator.areEqual(other.value, value);
+      other is WasmInputFilePath &&
+      const ObjectComparator().areEqual(other.value, value);
   @override
-  int get hashCode => comparator.hashValue(value);
+  int get hashCode => const ObjectComparator().hashValue(value);
 }
 
-class WasmFeatures {
+class WasmFeatures implements ToJsonSerializable {
   /// The WebAssembly mutable-global proposal (enabled by default)
   final bool mutableGlobal;
 
@@ -354,7 +368,9 @@ class WasmFeatures {
   }
 
   /// Returns this as a serializable JSON value.
+  @override
   Map<String, Object?> toJson() => {
+        'runtimeType': 'WasmFeatures',
         'mutable-global': mutableGlobal,
         'saturating-float-to-int': saturatingFloatToInt,
         'sign-extension': signExtension,
@@ -448,9 +464,10 @@ class WasmFeatures {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is WasmFeatures && comparator.arePropsEqual(_props, other._props);
+      other is WasmFeatures &&
+          const ObjectComparator().arePropsEqual(_props, other._props);
   @override
-  int get hashCode => comparator.hashProps(_props);
+  int get hashCode => const ObjectComparator().hashProps(_props);
 
   // ignore: unused_field
   List<Object?> get _props => [
@@ -498,23 +515,20 @@ class WasmFeatures {
 }
 
 /// Represents a tag kind.
-enum TagKind {
+enum TagKind implements ToJsonSerializable {
   /// The tag is an exception type.
   exception;
 
   /// Returns a new instance from a JSON value.
   /// May throw if the value does not have the expected structure.
-  factory TagKind.fromJson(Object? json_) {
-    final json = json_ is Map ? json_.keys.first : json_;
-    if (json is String) {
-      final index = _spec.labels.indexOf(json);
-      return index != -1 ? values[index] : values.byName(json);
-    }
-    return json is (int, Object?) ? values[json.$1] : values[json! as int];
+  factory TagKind.fromJson(Object? json) {
+    return ToJsonSerializable.enumFromJson(json, values, _spec);
   }
 
   /// Returns this as a serializable JSON value.
-  Object? toJson() => _spec.labels[index];
+  @override
+  Map<String, Object?> toJson() =>
+      {'runtimeType': 'TagKind', _spec.labels[index]: null};
 
   /// Returns this as a WASM canonical abi value.
   int toWasm() => index;
@@ -523,7 +537,7 @@ enum TagKind {
 
 typedef ParserError = String;
 
-class MemoryType {
+class MemoryType implements ExternType, ToJsonSerializable {
   /// Whether or not this is a 64-bit memory, using i64 as an index. If this
   /// is false it's a 32-bit memory using i32 as an index.
   ///
@@ -577,7 +591,9 @@ class MemoryType {
   }
 
   /// Returns this as a serializable JSON value.
+  @override
   Map<String, Object?> toJson() => {
+        'runtimeType': 'MemoryType',
         'memory64': memory64,
         'shared': shared,
         'minimum': minimum.toString(),
@@ -614,9 +630,10 @@ class MemoryType {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is MemoryType && comparator.arePropsEqual(_props, other._props);
+      other is MemoryType &&
+          const ObjectComparator().arePropsEqual(_props, other._props);
   @override
-  int get hashCode => comparator.hashProps(_props);
+  int get hashCode => const ObjectComparator().hashProps(_props);
 
   // ignore: unused_field
   List<Object?> get _props => [memory64, shared, minimum, maximum];
@@ -630,16 +647,17 @@ class MemoryType {
 
 /// A heap type from function references. When the proposal is disabled, Index
 /// is an invalid type.
-sealed class HeapType {
+sealed class HeapType implements ToJsonSerializable {
   /// Returns a new instance from a JSON value.
   /// May throw if the value does not have the expected structure.
   factory HeapType.fromJson(Object? json_) {
     Object? json = json_;
     if (json is Map) {
-      final k = json.keys.first;
+      final MapEntry(:key, :value) =
+          json.entries.firstWhere((e) => e.key != 'runtimeType');
       json = (
-        k is int ? k : _spec.cases.indexWhere((c) => c.label == k),
-        json.values.first
+        key is int ? key : _spec.cases.indexWhere((c) => c.label == key),
+        value,
       );
     }
     return switch (json) {
@@ -670,6 +688,7 @@ sealed class HeapType {
   const factory HeapType.i31() = HeapTypeI31;
 
   /// Returns this as a serializable JSON value.
+  @override
   Map<String, Object?> toJson();
 
   /// Returns this as a WASM canonical abi value.
@@ -698,7 +717,8 @@ class HeapTypeIndexed implements HeapType {
 
   /// Returns this as a serializable JSON value.
   @override
-  Map<String, Object?> toJson() => {'indexed': value};
+  Map<String, Object?> toJson() =>
+      {'runtimeType': 'HeapTypeIndexed', 'indexed': value};
 
   /// Returns this as a WASM canonical abi value.
   @override
@@ -707,9 +727,10 @@ class HeapTypeIndexed implements HeapType {
   String toString() => 'HeapTypeIndexed($value)';
   @override
   bool operator ==(Object other) =>
-      other is HeapTypeIndexed && comparator.areEqual(other.value, value);
+      other is HeapTypeIndexed &&
+      const ObjectComparator().areEqual(other.value, value);
   @override
-  int get hashCode => comparator.hashValue(value);
+  int get hashCode => const ObjectComparator().hashValue(value);
 }
 
 /// Untyped (any) function.
@@ -719,7 +740,8 @@ class HeapTypeFunc implements HeapType {
 
   /// Returns this as a serializable JSON value.
   @override
-  Map<String, Object?> toJson() => {'func': null};
+  Map<String, Object?> toJson() =>
+      {'runtimeType': 'HeapTypeFunc', 'func': null};
 
   /// Returns this as a WASM canonical abi value.
   @override
@@ -739,7 +761,8 @@ class HeapTypeExtern implements HeapType {
 
   /// Returns this as a serializable JSON value.
   @override
-  Map<String, Object?> toJson() => {'extern': null};
+  Map<String, Object?> toJson() =>
+      {'runtimeType': 'HeapTypeExtern', 'extern': null};
 
   /// Returns this as a WASM canonical abi value.
   @override
@@ -759,7 +782,7 @@ class HeapTypeAny implements HeapType {
 
   /// Returns this as a serializable JSON value.
   @override
-  Map<String, Object?> toJson() => {'any': null};
+  Map<String, Object?> toJson() => {'runtimeType': 'HeapTypeAny', 'any': null};
 
   /// Returns this as a WASM canonical abi value.
   @override
@@ -779,7 +802,8 @@ class HeapTypeNone implements HeapType {
 
   /// Returns this as a serializable JSON value.
   @override
-  Map<String, Object?> toJson() => {'none': null};
+  Map<String, Object?> toJson() =>
+      {'runtimeType': 'HeapTypeNone', 'none': null};
 
   /// Returns this as a WASM canonical abi value.
   @override
@@ -799,7 +823,8 @@ class HeapTypeNoExtern implements HeapType {
 
   /// Returns this as a serializable JSON value.
   @override
-  Map<String, Object?> toJson() => {'no-extern': null};
+  Map<String, Object?> toJson() =>
+      {'runtimeType': 'HeapTypeNoExtern', 'no-extern': null};
 
   /// Returns this as a WASM canonical abi value.
   @override
@@ -819,7 +844,8 @@ class HeapTypeNoFunc implements HeapType {
 
   /// Returns this as a serializable JSON value.
   @override
-  Map<String, Object?> toJson() => {'no-func': null};
+  Map<String, Object?> toJson() =>
+      {'runtimeType': 'HeapTypeNoFunc', 'no-func': null};
 
   /// Returns this as a WASM canonical abi value.
   @override
@@ -841,7 +867,7 @@ class HeapTypeEq implements HeapType {
 
   /// Returns this as a serializable JSON value.
   @override
-  Map<String, Object?> toJson() => {'eq': null};
+  Map<String, Object?> toJson() => {'runtimeType': 'HeapTypeEq', 'eq': null};
 
   /// Returns this as a WASM canonical abi value.
   @override
@@ -861,7 +887,8 @@ class HeapTypeStruct implements HeapType {
 
   /// Returns this as a serializable JSON value.
   @override
-  Map<String, Object?> toJson() => {'struct': null};
+  Map<String, Object?> toJson() =>
+      {'runtimeType': 'HeapTypeStruct', 'struct': null};
 
   /// Returns this as a WASM canonical abi value.
   @override
@@ -881,7 +908,8 @@ class HeapTypeArray implements HeapType {
 
   /// Returns this as a serializable JSON value.
   @override
-  Map<String, Object?> toJson() => {'array': null};
+  Map<String, Object?> toJson() =>
+      {'runtimeType': 'HeapTypeArray', 'array': null};
 
   /// Returns this as a WASM canonical abi value.
   @override
@@ -901,7 +929,7 @@ class HeapTypeI31 implements HeapType {
 
   /// Returns this as a serializable JSON value.
   @override
-  Map<String, Object?> toJson() => {'i31': null};
+  Map<String, Object?> toJson() => {'runtimeType': 'HeapTypeI31', 'i31': null};
 
   /// Returns this as a WASM canonical abi value.
   @override
@@ -914,7 +942,7 @@ class HeapTypeI31 implements HeapType {
   int get hashCode => (HeapTypeI31).hashCode;
 }
 
-class RefType {
+class RefType implements ToJsonSerializable {
   final bool nullable;
   final HeapType heapType;
   const RefType({
@@ -940,7 +968,9 @@ class RefType {
   }
 
   /// Returns this as a serializable JSON value.
+  @override
   Map<String, Object?> toJson() => {
+        'runtimeType': 'RefType',
         'nullable': nullable,
         'heap-type': heapType.toJson(),
       };
@@ -962,9 +992,10 @@ class RefType {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is RefType && comparator.arePropsEqual(_props, other._props);
+      other is RefType &&
+          const ObjectComparator().arePropsEqual(_props, other._props);
   @override
-  int get hashCode => comparator.hashProps(_props);
+  int get hashCode => const ObjectComparator().hashProps(_props);
 
   // ignore: unused_field
   List<Object?> get _props => [nullable, heapType];
@@ -974,16 +1005,17 @@ class RefType {
   ]);
 }
 
-sealed class ValueType {
+sealed class ValueType implements ToJsonSerializable {
   /// Returns a new instance from a JSON value.
   /// May throw if the value does not have the expected structure.
   factory ValueType.fromJson(Object? json_) {
     Object? json = json_;
     if (json is Map) {
-      final k = json.keys.first;
+      final MapEntry(:key, :value) =
+          json.entries.firstWhere((e) => e.key != 'runtimeType');
       json = (
-        k is int ? k : _spec.cases.indexWhere((c) => c.label == k),
-        json.values.first
+        key is int ? key : _spec.cases.indexWhere((c) => c.label == key),
+        value,
       );
     }
     return switch (json) {
@@ -1006,6 +1038,7 @@ sealed class ValueType {
   const factory ValueType.ref(RefType value) = ValueTypeRef;
 
   /// Returns this as a serializable JSON value.
+  @override
   Map<String, Object?> toJson();
 
   /// Returns this as a WASM canonical abi value.
@@ -1027,7 +1060,7 @@ class ValueTypeI32 implements ValueType {
 
   /// Returns this as a serializable JSON value.
   @override
-  Map<String, Object?> toJson() => {'i32': null};
+  Map<String, Object?> toJson() => {'runtimeType': 'ValueTypeI32', 'i32': null};
 
   /// Returns this as a WASM canonical abi value.
   @override
@@ -1047,7 +1080,7 @@ class ValueTypeI64 implements ValueType {
 
   /// Returns this as a serializable JSON value.
   @override
-  Map<String, Object?> toJson() => {'i64': null};
+  Map<String, Object?> toJson() => {'runtimeType': 'ValueTypeI64', 'i64': null};
 
   /// Returns this as a WASM canonical abi value.
   @override
@@ -1067,7 +1100,7 @@ class ValueTypeF32 implements ValueType {
 
   /// Returns this as a serializable JSON value.
   @override
-  Map<String, Object?> toJson() => {'f32': null};
+  Map<String, Object?> toJson() => {'runtimeType': 'ValueTypeF32', 'f32': null};
 
   /// Returns this as a WASM canonical abi value.
   @override
@@ -1087,7 +1120,7 @@ class ValueTypeF64 implements ValueType {
 
   /// Returns this as a serializable JSON value.
   @override
-  Map<String, Object?> toJson() => {'f64': null};
+  Map<String, Object?> toJson() => {'runtimeType': 'ValueTypeF64', 'f64': null};
 
   /// Returns this as a WASM canonical abi value.
   @override
@@ -1107,7 +1140,8 @@ class ValueTypeV128 implements ValueType {
 
   /// Returns this as a serializable JSON value.
   @override
-  Map<String, Object?> toJson() => {'v128': null};
+  Map<String, Object?> toJson() =>
+      {'runtimeType': 'ValueTypeV128', 'v128': null};
 
   /// Returns this as a WASM canonical abi value.
   @override
@@ -1129,7 +1163,8 @@ class ValueTypeRef implements ValueType {
 
   /// Returns this as a serializable JSON value.
   @override
-  Map<String, Object?> toJson() => {'ref': value.toJson()};
+  Map<String, Object?> toJson() =>
+      {'runtimeType': 'ValueTypeRef', 'ref': value.toJson()};
 
   /// Returns this as a WASM canonical abi value.
   @override
@@ -1138,12 +1173,13 @@ class ValueTypeRef implements ValueType {
   String toString() => 'ValueTypeRef($value)';
   @override
   bool operator ==(Object other) =>
-      other is ValueTypeRef && comparator.areEqual(other.value, value);
+      other is ValueTypeRef &&
+      const ObjectComparator().areEqual(other.value, value);
   @override
-  int get hashCode => comparator.hashValue(value);
+  int get hashCode => const ObjectComparator().hashValue(value);
 }
 
-class TableType {
+class TableType implements ExternType, ToJsonSerializable {
   /// The table's element type.
   final RefType element;
 
@@ -1177,7 +1213,9 @@ class TableType {
   }
 
   /// Returns this as a serializable JSON value.
+  @override
   Map<String, Object?> toJson() => {
+        'runtimeType': 'TableType',
         'element': element.toJson(),
         'minimum': minimum,
         'maximum': (maximum == null
@@ -1210,9 +1248,10 @@ class TableType {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is TableType && comparator.arePropsEqual(_props, other._props);
+      other is TableType &&
+          const ObjectComparator().arePropsEqual(_props, other._props);
   @override
-  int get hashCode => comparator.hashProps(_props);
+  int get hashCode => const ObjectComparator().hashProps(_props);
 
   // ignore: unused_field
   List<Object?> get _props => [element, minimum, maximum];
@@ -1223,7 +1262,7 @@ class TableType {
   ]);
 }
 
-class GlobalType {
+class GlobalType implements ExternType, ToJsonSerializable {
   /// The global's type.
   final ValueType value;
 
@@ -1252,7 +1291,9 @@ class GlobalType {
   }
 
   /// Returns this as a serializable JSON value.
+  @override
   Map<String, Object?> toJson() => {
+        'runtimeType': 'GlobalType',
         'value': value.toJson(),
         'mutable': mutable,
       };
@@ -1272,9 +1313,10 @@ class GlobalType {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is GlobalType && comparator.arePropsEqual(_props, other._props);
+      other is GlobalType &&
+          const ObjectComparator().arePropsEqual(_props, other._props);
   @override
-  int get hashCode => comparator.hashProps(_props);
+  int get hashCode => const ObjectComparator().hashProps(_props);
 
   // ignore: unused_field
   List<Object?> get _props => [value, mutable];
@@ -1282,7 +1324,7 @@ class GlobalType {
       [(label: 'value', t: ValueType._spec), (label: 'mutable', t: Bool())]);
 }
 
-class FunctionType {
+class FunctionType implements ExternType, ToJsonSerializable {
   /// The parameters of the function
   final List<ValueType> parameters;
 
@@ -1312,7 +1354,9 @@ class FunctionType {
   }
 
   /// Returns this as a serializable JSON value.
+  @override
   Map<String, Object?> toJson() => {
+        'runtimeType': 'FunctionType',
         'parameters': parameters.map((e) => e.toJson()).toList(),
         'results': results.map((e) => e.toJson()).toList(),
       };
@@ -1337,9 +1381,10 @@ class FunctionType {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is FunctionType && comparator.arePropsEqual(_props, other._props);
+      other is FunctionType &&
+          const ObjectComparator().arePropsEqual(_props, other._props);
   @override
-  int get hashCode => comparator.hashProps(_props);
+  int get hashCode => const ObjectComparator().hashProps(_props);
 
   // ignore: unused_field
   List<Object?> get _props => [parameters, results];
@@ -1350,7 +1395,7 @@ class FunctionType {
 }
 
 /// A tag's type.
-class TagType {
+class TagType implements ExternType, ToJsonSerializable {
   /// The kind of tag
   final TagKind kind;
 
@@ -1381,7 +1426,9 @@ class TagType {
   }
 
   /// Returns this as a serializable JSON value.
+  @override
   Map<String, Object?> toJson() => {
+        'runtimeType': 'TagType',
         'kind': kind.toJson(),
         'function-type': functionType.toJson(),
       };
@@ -1403,9 +1450,10 @@ class TagType {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is TagType && comparator.arePropsEqual(_props, other._props);
+      other is TagType &&
+          const ObjectComparator().arePropsEqual(_props, other._props);
   @override
-  int get hashCode => comparator.hashProps(_props);
+  int get hashCode => const ObjectComparator().hashProps(_props);
 
   // ignore: unused_field
   List<Object?> get _props => [kind, functionType];
@@ -1415,46 +1463,56 @@ class TagType {
   ]);
 }
 
-sealed class ExternType {
+sealed class ExternType implements ToJsonSerializable {
   /// Returns a new instance from a JSON value.
   /// May throw if the value does not have the expected structure.
   factory ExternType.fromJson(Object? json_) {
     Object? json = json_;
     if (json is Map) {
-      final k = json.keys.first;
-      json = (k is int ? k : int.parse(k! as String), json.values.first);
+      final rt = json['runtimeType'];
+      if (rt is String) {
+        json = (
+          const [
+            'MemoryType',
+            'TableType',
+            'GlobalType',
+            'FunctionType',
+            'TagType'
+          ].indexOf(rt),
+          json
+        );
+      } else {
+        final MapEntry(:key, :value) = json.entries.first;
+        json = (key is int ? key : int.parse(key! as String), value);
+      }
     }
     return switch (json) {
-      (0, final value) ||
-      [0, final value] =>
-        ExternTypeMemoryType(MemoryType.fromJson(value)),
-      (1, final value) ||
-      [1, final value] =>
-        ExternTypeTableType(TableType.fromJson(value)),
-      (2, final value) ||
-      [2, final value] =>
-        ExternTypeGlobalType(GlobalType.fromJson(value)),
-      (3, final value) ||
-      [3, final value] =>
-        ExternTypeFunctionType(FunctionType.fromJson(value)),
-      (4, final value) ||
-      [4, final value] =>
-        ExternTypeTagType(TagType.fromJson(value)),
+      (0, final value) || [0, final value] => MemoryType.fromJson(value),
+      (1, final value) || [1, final value] => TableType.fromJson(value),
+      (2, final value) || [2, final value] => GlobalType.fromJson(value),
+      (3, final value) || [3, final value] => FunctionType.fromJson(value),
+      (4, final value) || [4, final value] => TagType.fromJson(value),
       _ => throw Exception('Invalid JSON $json_'),
     };
   }
-  const factory ExternType.memoryType(MemoryType value) = ExternTypeMemoryType;
-  const factory ExternType.tableType(TableType value) = ExternTypeTableType;
-  const factory ExternType.globalType(GlobalType value) = ExternTypeGlobalType;
-  const factory ExternType.functionType(FunctionType value) =
-      ExternTypeFunctionType;
-  const factory ExternType.tagType(TagType value) = ExternTypeTagType;
+  static const memoryType = MemoryType.new;
+  static const tableType = TableType.new;
+  static const globalType = GlobalType.new;
+  static const functionType = FunctionType.new;
+  static const tagType = TagType.new;
 
   /// Returns this as a serializable JSON value.
+  @override
   Map<String, Object?> toJson();
 
   /// Returns this as a WASM canonical abi value.
-  (int, Object?) toWasm();
+  static (int, Object?) toWasm(ExternType value) => switch (value) {
+        MemoryType() => (0, value.toWasm()),
+        TableType() => (1, value.toWasm()),
+        GlobalType() => (2, value.toWasm()),
+        FunctionType() => (3, value.toWasm()),
+        TagType() => (4, value.toWasm()),
+      };
 // ignore: unused_field
   static const _spec = Union([
     MemoryType._spec,
@@ -1465,108 +1523,7 @@ sealed class ExternType {
   ]);
 }
 
-class ExternTypeMemoryType implements ExternType {
-  final MemoryType value;
-  const ExternTypeMemoryType(this.value);
-
-  /// Returns this as a serializable JSON value.
-  @override
-  Map<String, Object?> toJson() => {'0': value.toJson()};
-
-  /// Returns this as a WASM canonical abi value.
-  @override
-  (int, Object?) toWasm() => (0, value.toWasm());
-  @override
-  String toString() => 'ExternTypeMemoryType($value)';
-  @override
-  bool operator ==(Object other) =>
-      other is ExternTypeMemoryType && comparator.areEqual(other.value, value);
-  @override
-  int get hashCode => comparator.hashValue(value);
-}
-
-class ExternTypeTableType implements ExternType {
-  final TableType value;
-  const ExternTypeTableType(this.value);
-
-  /// Returns this as a serializable JSON value.
-  @override
-  Map<String, Object?> toJson() => {'1': value.toJson()};
-
-  /// Returns this as a WASM canonical abi value.
-  @override
-  (int, Object?) toWasm() => (1, value.toWasm());
-  @override
-  String toString() => 'ExternTypeTableType($value)';
-  @override
-  bool operator ==(Object other) =>
-      other is ExternTypeTableType && comparator.areEqual(other.value, value);
-  @override
-  int get hashCode => comparator.hashValue(value);
-}
-
-class ExternTypeGlobalType implements ExternType {
-  final GlobalType value;
-  const ExternTypeGlobalType(this.value);
-
-  /// Returns this as a serializable JSON value.
-  @override
-  Map<String, Object?> toJson() => {'2': value.toJson()};
-
-  /// Returns this as a WASM canonical abi value.
-  @override
-  (int, Object?) toWasm() => (2, value.toWasm());
-  @override
-  String toString() => 'ExternTypeGlobalType($value)';
-  @override
-  bool operator ==(Object other) =>
-      other is ExternTypeGlobalType && comparator.areEqual(other.value, value);
-  @override
-  int get hashCode => comparator.hashValue(value);
-}
-
-class ExternTypeFunctionType implements ExternType {
-  final FunctionType value;
-  const ExternTypeFunctionType(this.value);
-
-  /// Returns this as a serializable JSON value.
-  @override
-  Map<String, Object?> toJson() => {'3': value.toJson()};
-
-  /// Returns this as a WASM canonical abi value.
-  @override
-  (int, Object?) toWasm() => (3, value.toWasm());
-  @override
-  String toString() => 'ExternTypeFunctionType($value)';
-  @override
-  bool operator ==(Object other) =>
-      other is ExternTypeFunctionType &&
-      comparator.areEqual(other.value, value);
-  @override
-  int get hashCode => comparator.hashValue(value);
-}
-
-class ExternTypeTagType implements ExternType {
-  final TagType value;
-  const ExternTypeTagType(this.value);
-
-  /// Returns this as a serializable JSON value.
-  @override
-  Map<String, Object?> toJson() => {'4': value.toJson()};
-
-  /// Returns this as a WASM canonical abi value.
-  @override
-  (int, Object?) toWasm() => (4, value.toWasm());
-  @override
-  String toString() => 'ExternTypeTagType($value)';
-  @override
-  bool operator ==(Object other) =>
-      other is ExternTypeTagType && comparator.areEqual(other.value, value);
-  @override
-  int get hashCode => comparator.hashValue(value);
-}
-
-class ModuleImport {
+class ModuleImport implements ToJsonSerializable {
   /// The module name of the imported item.
   final String module;
 
@@ -1600,14 +1557,16 @@ class ModuleImport {
   }
 
   /// Returns this as a serializable JSON value.
+  @override
   Map<String, Object?> toJson() => {
+        'runtimeType': 'ModuleImport',
         'module': module,
         'name': name,
         'type': type.toJson(),
       };
 
   /// Returns this as a WASM canonical abi value.
-  List<Object?> toWasm() => [module, name, type.toWasm()];
+  List<Object?> toWasm() => [module, name, ExternType.toWasm(type)];
   @override
   String toString() =>
       'ModuleImport${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
@@ -1625,9 +1584,10 @@ class ModuleImport {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is ModuleImport && comparator.arePropsEqual(_props, other._props);
+      other is ModuleImport &&
+          const ObjectComparator().arePropsEqual(_props, other._props);
   @override
-  int get hashCode => comparator.hashProps(_props);
+  int get hashCode => const ObjectComparator().hashProps(_props);
 
   // ignore: unused_field
   List<Object?> get _props => [module, name, type];
@@ -1638,7 +1598,7 @@ class ModuleImport {
   ]);
 }
 
-class ModuleExport {
+class ModuleExport implements ToJsonSerializable {
   /// The name of the exported item.
   final String name;
 
@@ -1665,13 +1625,15 @@ class ModuleExport {
   }
 
   /// Returns this as a serializable JSON value.
+  @override
   Map<String, Object?> toJson() => {
+        'runtimeType': 'ModuleExport',
         'name': name,
         'type': type.toJson(),
       };
 
   /// Returns this as a WASM canonical abi value.
-  List<Object?> toWasm() => [name, type.toWasm()];
+  List<Object?> toWasm() => [name, ExternType.toWasm(type)];
   @override
   String toString() =>
       'ModuleExport${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
@@ -1685,9 +1647,10 @@ class ModuleExport {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is ModuleExport && comparator.arePropsEqual(_props, other._props);
+      other is ModuleExport &&
+          const ObjectComparator().arePropsEqual(_props, other._props);
   @override
-  int get hashCode => comparator.hashProps(_props);
+  int get hashCode => const ObjectComparator().hashProps(_props);
 
   // ignore: unused_field
   List<Object?> get _props => [name, type];
@@ -1695,7 +1658,7 @@ class ModuleExport {
       [(label: 'name', t: StringType()), (label: 'type', t: ExternType._spec)]);
 }
 
-class ModuleType {
+class ModuleType implements WasmType, ToJsonSerializable {
   final List<ModuleImport> imports;
   final List<ModuleExport> exports;
   const ModuleType({
@@ -1721,7 +1684,9 @@ class ModuleType {
   }
 
   /// Returns this as a serializable JSON value.
+  @override
   Map<String, Object?> toJson() => {
+        'runtimeType': 'ModuleType',
         'imports': imports.map((e) => e.toJson()).toList(),
         'exports': exports.map((e) => e.toJson()).toList(),
       };
@@ -1745,9 +1710,10 @@ class ModuleType {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is ModuleType && comparator.arePropsEqual(_props, other._props);
+      other is ModuleType &&
+          const ObjectComparator().arePropsEqual(_props, other._props);
   @override
-  int get hashCode => comparator.hashProps(_props);
+  int get hashCode => const ObjectComparator().hashProps(_props);
 
   // ignore: unused_field
   List<Object?> get _props => [imports, exports];
@@ -1757,7 +1723,7 @@ class ModuleType {
   ]);
 }
 
-enum CoreRefType {
+enum CoreRefType implements ToJsonSerializable {
   /// The reference type is funcref.
   funcref,
 
@@ -1766,24 +1732,21 @@ enum CoreRefType {
 
   /// Returns a new instance from a JSON value.
   /// May throw if the value does not have the expected structure.
-  factory CoreRefType.fromJson(Object? json_) {
-    final json = json_ is Map ? json_.keys.first : json_;
-    if (json is String) {
-      final index = _spec.labels.indexOf(json);
-      return index != -1 ? values[index] : values.byName(json);
-    }
-    return json is (int, Object?) ? values[json.$1] : values[json! as int];
+  factory CoreRefType.fromJson(Object? json) {
+    return ToJsonSerializable.enumFromJson(json, values, _spec);
   }
 
   /// Returns this as a serializable JSON value.
-  Object? toJson() => _spec.labels[index];
+  @override
+  Map<String, Object?> toJson() =>
+      {'runtimeType': 'CoreRefType', _spec.labels[index]: null};
 
   /// Returns this as a WASM canonical abi value.
   int toWasm() => index;
   static const _spec = EnumType(['funcref', 'externref']);
 }
 
-class ComponentType {
+class ComponentType implements WasmType, ToJsonSerializable {
   final List<ModuleType> modules;
   const ComponentType({
     required this.modules,
@@ -1804,7 +1767,9 @@ class ComponentType {
   }
 
   /// Returns this as a serializable JSON value.
+  @override
   Map<String, Object?> toJson() => {
+        'runtimeType': 'ComponentType',
         'modules': modules.map((e) => e.toJson()).toList(),
       };
 
@@ -1823,9 +1788,10 @@ class ComponentType {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is ComponentType && comparator.arePropsEqual(_props, other._props);
+      other is ComponentType &&
+          const ObjectComparator().arePropsEqual(_props, other._props);
   @override
-  int get hashCode => comparator.hashProps(_props);
+  int get hashCode => const ObjectComparator().hashProps(_props);
 
   // ignore: unused_field
   List<Object?> get _props => [modules];
@@ -1833,79 +1799,43 @@ class ComponentType {
       RecordType([(label: 'modules', t: ListType(ModuleType._spec))]);
 }
 
-sealed class WasmType {
+sealed class WasmType implements ToJsonSerializable {
   /// Returns a new instance from a JSON value.
   /// May throw if the value does not have the expected structure.
   factory WasmType.fromJson(Object? json_) {
     Object? json = json_;
     if (json is Map) {
-      final k = json.keys.first;
-      json = (k is int ? k : int.parse(k! as String), json.values.first);
+      final rt = json['runtimeType'];
+      if (rt is String) {
+        json = (const ['ModuleType', 'ComponentType'].indexOf(rt), json);
+      } else {
+        final MapEntry(:key, :value) = json.entries.first;
+        json = (key is int ? key : int.parse(key! as String), value);
+      }
     }
     return switch (json) {
-      (0, final value) ||
-      [0, final value] =>
-        WasmTypeModuleType(ModuleType.fromJson(value)),
-      (1, final value) ||
-      [1, final value] =>
-        WasmTypeComponentType(ComponentType.fromJson(value)),
+      (0, final value) || [0, final value] => ModuleType.fromJson(value),
+      (1, final value) || [1, final value] => ComponentType.fromJson(value),
       _ => throw Exception('Invalid JSON $json_'),
     };
   }
-  const factory WasmType.moduleType(ModuleType value) = WasmTypeModuleType;
-  const factory WasmType.componentType(ComponentType value) =
-      WasmTypeComponentType;
+  static const moduleType = ModuleType.new;
+  static const componentType = ComponentType.new;
 
   /// Returns this as a serializable JSON value.
+  @override
   Map<String, Object?> toJson();
 
   /// Returns this as a WASM canonical abi value.
-  (int, Object?) toWasm();
+  static (int, Object?) toWasm(WasmType value) => switch (value) {
+        ModuleType() => (0, value.toWasm()),
+        ComponentType() => (1, value.toWasm()),
+      };
 // ignore: unused_field
   static const _spec = Union([ModuleType._spec, ComponentType._spec]);
 }
 
-class WasmTypeModuleType implements WasmType {
-  final ModuleType value;
-  const WasmTypeModuleType(this.value);
-
-  /// Returns this as a serializable JSON value.
-  @override
-  Map<String, Object?> toJson() => {'0': value.toJson()};
-
-  /// Returns this as a WASM canonical abi value.
-  @override
-  (int, Object?) toWasm() => (0, value.toWasm());
-  @override
-  String toString() => 'WasmTypeModuleType($value)';
-  @override
-  bool operator ==(Object other) =>
-      other is WasmTypeModuleType && comparator.areEqual(other.value, value);
-  @override
-  int get hashCode => comparator.hashValue(value);
-}
-
-class WasmTypeComponentType implements WasmType {
-  final ComponentType value;
-  const WasmTypeComponentType(this.value);
-
-  /// Returns this as a serializable JSON value.
-  @override
-  Map<String, Object?> toJson() => {'1': value.toJson()};
-
-  /// Returns this as a WASM canonical abi value.
-  @override
-  (int, Object?) toWasm() => (1, value.toWasm());
-  @override
-  String toString() => 'WasmTypeComponentType($value)';
-  @override
-  bool operator ==(Object other) =>
-      other is WasmTypeComponentType && comparator.areEqual(other.value, value);
-  @override
-  int get hashCode => comparator.hashValue(value);
-}
-
-class ComponentAdapter {
+class ComponentAdapter implements ToJsonSerializable {
   final String name;
   final WasmInput wasm;
   const ComponentAdapter({
@@ -1929,7 +1859,9 @@ class ComponentAdapter {
   }
 
   /// Returns this as a serializable JSON value.
+  @override
   Map<String, Object?> toJson() => {
+        'runtimeType': 'ComponentAdapter',
         'name': name,
         'wasm': wasm.toJson(),
       };
@@ -1950,9 +1882,9 @@ class ComponentAdapter {
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is ComponentAdapter &&
-          comparator.arePropsEqual(_props, other._props);
+          const ObjectComparator().arePropsEqual(_props, other._props);
   @override
-  int get hashCode => comparator.hashProps(_props);
+  int get hashCode => const ObjectComparator().hashProps(_props);
 
   // ignore: unused_field
   List<Object?> get _props => [name, wasm];

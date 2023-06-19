@@ -7,7 +7,7 @@ import 'dart:typed_data';
 
 import 'package:wasm_wit_component/wasm_wit_component.dart';
 
-enum PixelType {
+enum PixelType implements ToJsonSerializable {
   /// RGB pixel
   rgb,
 
@@ -22,24 +22,21 @@ enum PixelType {
 
   /// Returns a new instance from a JSON value.
   /// May throw if the value does not have the expected structure.
-  factory PixelType.fromJson(Object? json_) {
-    final json = json_ is Map ? json_.keys.first : json_;
-    if (json is String) {
-      final index = _spec.labels.indexOf(json);
-      return index != -1 ? values[index] : values.byName(json);
-    }
-    return json is (int, Object?) ? values[json.$1] : values[json! as int];
+  factory PixelType.fromJson(Object? json) {
+    return ToJsonSerializable.enumFromJson(json, values, _spec);
   }
 
   /// Returns this as a serializable JSON value.
-  Object? toJson() => _spec.labels[index];
+  @override
+  Map<String, Object?> toJson() =>
+      {'runtimeType': 'PixelType', _spec.labels[index]: null};
 
   /// Returns this as a WASM canonical abi value.
   int toWasm() => index;
   static const _spec = EnumType(['rgb', 'rgba', 'luma', 'luma-a']);
 }
 
-class ImageSize {
+class ImageSize implements ToJsonSerializable {
   final int /*U32*/ width;
   final int /*U32*/ height;
   const ImageSize({
@@ -63,7 +60,9 @@ class ImageSize {
   }
 
   /// Returns this as a serializable JSON value.
+  @override
   Map<String, Object?> toJson() => {
+        'runtimeType': 'ImageSize',
         'width': width,
         'height': height,
       };
@@ -83,9 +82,10 @@ class ImageSize {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is ImageSize && comparator.arePropsEqual(_props, other._props);
+      other is ImageSize &&
+          const ObjectComparator().arePropsEqual(_props, other._props);
   @override
-  int get hashCode => comparator.hashProps(_props);
+  int get hashCode => const ObjectComparator().hashProps(_props);
 
   // ignore: unused_field
   List<Object?> get _props => [width, height];
@@ -93,7 +93,7 @@ class ImageSize {
       RecordType([(label: 'width', t: U32()), (label: 'height', t: U32())]);
 }
 
-enum ImageFormat {
+enum ImageFormat implements ToJsonSerializable {
   /// All supported color types	Same as decoding
   png,
 
@@ -138,17 +138,14 @@ enum ImageFormat {
 
   /// Returns a new instance from a JSON value.
   /// May throw if the value does not have the expected structure.
-  factory ImageFormat.fromJson(Object? json_) {
-    final json = json_ is Map ? json_.keys.first : json_;
-    if (json is String) {
-      final index = _spec.labels.indexOf(json);
-      return index != -1 ? values[index] : values.byName(json);
-    }
-    return json is (int, Object?) ? values[json.$1] : values[json! as int];
+  factory ImageFormat.fromJson(Object? json) {
+    return ToJsonSerializable.enumFromJson(json, values, _spec);
   }
 
   /// Returns this as a serializable JSON value.
-  Object? toJson() => _spec.labels[index];
+  @override
+  Map<String, Object?> toJson() =>
+      {'runtimeType': 'ImageFormat', _spec.labels[index]: null};
 
   /// Returns this as a WASM canonical abi value.
   int toWasm() => index;
@@ -172,7 +169,7 @@ enum ImageFormat {
   ]);
 }
 
-class Image {
+class Image implements ToJsonSerializable {
   final Uint8List bytes;
   const Image({
     required this.bytes,
@@ -195,7 +192,9 @@ class Image {
   }
 
   /// Returns this as a serializable JSON value.
+  @override
   Map<String, Object?> toJson() => {
+        'runtimeType': 'Image',
         'bytes': bytes.toList(),
       };
 
@@ -213,16 +212,17 @@ class Image {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is Image && comparator.arePropsEqual(_props, other._props);
+      other is Image &&
+          const ObjectComparator().arePropsEqual(_props, other._props);
   @override
-  int get hashCode => comparator.hashProps(_props);
+  int get hashCode => const ObjectComparator().hashProps(_props);
 
   // ignore: unused_field
   List<Object?> get _props => [bytes];
   static const _spec = RecordType([(label: 'bytes', t: ListType(U8()))]);
 }
 
-enum ColorType {
+enum ColorType implements ToJsonSerializable {
   l8,
   la8,
   rgb8,
@@ -237,17 +237,14 @@ enum ColorType {
 
   /// Returns a new instance from a JSON value.
   /// May throw if the value does not have the expected structure.
-  factory ColorType.fromJson(Object? json_) {
-    final json = json_ is Map ? json_.keys.first : json_;
-    if (json is String) {
-      final index = _spec.labels.indexOf(json);
-      return index != -1 ? values[index] : values.byName(json);
-    }
-    return json is (int, Object?) ? values[json.$1] : values[json! as int];
+  factory ColorType.fromJson(Object? json) {
+    return ToJsonSerializable.enumFromJson(json, values, _spec);
   }
 
   /// Returns this as a serializable JSON value.
-  Object? toJson() => _spec.labels[index];
+  @override
+  Map<String, Object?> toJson() =>
+      {'runtimeType': 'ColorType', _spec.labels[index]: null};
 
   /// Returns this as a WASM canonical abi value.
   int toWasm() => index;
@@ -266,15 +263,13 @@ enum ColorType {
   ]);
 }
 
-class ImageRef {
+class ImageRef implements ToJsonSerializable {
   final int /*U32*/ id;
-  final ImageFormat format;
   final ColorType color;
   final int /*U32*/ width;
   final int /*U32*/ height;
   const ImageRef({
     required this.id,
-    required this.format,
     required this.color,
     required this.width,
     required this.height,
@@ -287,11 +282,10 @@ class ImageRef {
         ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
         : json_;
     return switch (json) {
-      [final id, final format, final color, final width, final height] ||
-      (final id, final format, final color, final width, final height) =>
+      [final id, final color, final width, final height] ||
+      (final id, final color, final width, final height) =>
         ImageRef(
           id: id! as int,
-          format: ImageFormat.fromJson(format),
           color: ColorType.fromJson(color),
           width: width! as int,
           height: height! as int,
@@ -301,17 +295,17 @@ class ImageRef {
   }
 
   /// Returns this as a serializable JSON value.
+  @override
   Map<String, Object?> toJson() => {
+        'runtimeType': 'ImageRef',
         'id': id,
-        'format': format.toJson(),
         'color': color.toJson(),
         'width': width,
         'height': height,
       };
 
   /// Returns this as a WASM canonical abi value.
-  List<Object?> toWasm() =>
-      [id, format.toWasm(), color.toWasm(), width, height];
+  List<Object?> toWasm() => [id, color.toWasm(), width, height];
   @override
   String toString() =>
       'ImageRef${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
@@ -319,36 +313,34 @@ class ImageRef {
   /// Returns a new instance by overriding the values passed as arguments
   ImageRef copyWith({
     int /*U32*/ ? id,
-    ImageFormat? format,
     ColorType? color,
     int /*U32*/ ? width,
     int /*U32*/ ? height,
   }) =>
       ImageRef(
           id: id ?? this.id,
-          format: format ?? this.format,
           color: color ?? this.color,
           width: width ?? this.width,
           height: height ?? this.height);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is ImageRef && comparator.arePropsEqual(_props, other._props);
+      other is ImageRef &&
+          const ObjectComparator().arePropsEqual(_props, other._props);
   @override
-  int get hashCode => comparator.hashProps(_props);
+  int get hashCode => const ObjectComparator().hashProps(_props);
 
   // ignore: unused_field
-  List<Object?> get _props => [id, format, color, width, height];
+  List<Object?> get _props => [id, color, width, height];
   static const _spec = RecordType([
     (label: 'id', t: U32()),
-    (label: 'format', t: ImageFormat._spec),
     (label: 'color', t: ColorType._spec),
     (label: 'width', t: U32()),
     (label: 'height', t: U32())
   ]);
 }
 
-class ImageCrop {
+class ImageCrop implements ToJsonSerializable {
   final int /*U32*/ x;
   final int /*U32*/ y;
   final int /*U32*/ width;
@@ -380,7 +372,9 @@ class ImageCrop {
   }
 
   /// Returns this as a serializable JSON value.
+  @override
   Map<String, Object?> toJson() => {
+        'runtimeType': 'ImageCrop',
         'x': x,
         'y': y,
         'width': width,
@@ -408,9 +402,10 @@ class ImageCrop {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is ImageCrop && comparator.arePropsEqual(_props, other._props);
+      other is ImageCrop &&
+          const ObjectComparator().arePropsEqual(_props, other._props);
   @override
-  int get hashCode => comparator.hashProps(_props);
+  int get hashCode => const ObjectComparator().hashProps(_props);
 
   // ignore: unused_field
   List<Object?> get _props => [x, y, width, height];
@@ -422,7 +417,7 @@ class ImageCrop {
   ]);
 }
 
-enum FilterType {
+enum FilterType implements ToJsonSerializable {
   /// Nearest Neighbor
   nearest,
 
@@ -440,17 +435,14 @@ enum FilterType {
 
   /// Returns a new instance from a JSON value.
   /// May throw if the value does not have the expected structure.
-  factory FilterType.fromJson(Object? json_) {
-    final json = json_ is Map ? json_.keys.first : json_;
-    if (json is String) {
-      final index = _spec.labels.indexOf(json);
-      return index != -1 ? values[index] : values.byName(json);
-    }
-    return json is (int, Object?) ? values[json.$1] : values[json! as int];
+  factory FilterType.fromJson(Object? json) {
+    return ToJsonSerializable.enumFromJson(json, values, _spec);
   }
 
   /// Returns this as a serializable JSON value.
-  Object? toJson() => _spec.labels[index];
+  @override
+  Map<String, Object?> toJson() =>
+      {'runtimeType': 'FilterType', _spec.labels[index]: null};
 
   /// Returns this as a WASM canonical abi value.
   int toWasm() => index;
@@ -458,42 +450,44 @@ enum FilterType {
       EnumType(['nearest', 'triangle', 'catmull-rom', 'gaussian', 'lanczos3']);
 }
 
-sealed class ImageError {
+sealed class ImageErrorV implements ToJsonSerializable {
   /// Returns a new instance from a JSON value.
   /// May throw if the value does not have the expected structure.
-  factory ImageError.fromJson(Object? json_) {
+  factory ImageErrorV.fromJson(Object? json_) {
     Object? json = json_;
     if (json is Map) {
-      final k = json.keys.first;
+      final MapEntry(:key, :value) =
+          json.entries.firstWhere((e) => e.key != 'runtimeType');
       json = (
-        k is int ? k : _spec.cases.indexWhere((c) => c.label == k),
-        json.values.first
+        key is int ? key : _spec.cases.indexWhere((c) => c.label == key),
+        value,
       );
     }
     return switch (json) {
-      (0, final value) || [0, final value] => ImageErrorDecoding(
+      (0, final value) || [0, final value] => ImageErrorVDecoding(
           value is String ? value : (value! as ParsedString).value),
-      (1, final value) || [1, final value] => ImageErrorEncoding(
+      (1, final value) || [1, final value] => ImageErrorVEncoding(
           value is String ? value : (value! as ParsedString).value),
-      (2, final value) || [2, final value] => ImageErrorParameter(
+      (2, final value) || [2, final value] => ImageErrorVParameter(
           value is String ? value : (value! as ParsedString).value),
-      (3, final value) || [3, final value] => ImageErrorLimits(
+      (3, final value) || [3, final value] => ImageErrorVLimits(
           value is String ? value : (value! as ParsedString).value),
-      (4, final value) || [4, final value] => ImageErrorUnsupported(
+      (4, final value) || [4, final value] => ImageErrorVUnsupported(
           value is String ? value : (value! as ParsedString).value),
-      (5, final value) || [5, final value] => ImageErrorIoError(
+      (5, final value) || [5, final value] => ImageErrorVIoError(
           value is String ? value : (value! as ParsedString).value),
       _ => throw Exception('Invalid JSON $json_'),
     };
   }
-  const factory ImageError.decoding(String value) = ImageErrorDecoding;
-  const factory ImageError.encoding(String value) = ImageErrorEncoding;
-  const factory ImageError.parameter(String value) = ImageErrorParameter;
-  const factory ImageError.limits(String value) = ImageErrorLimits;
-  const factory ImageError.unsupported(String value) = ImageErrorUnsupported;
-  const factory ImageError.ioError(String value) = ImageErrorIoError;
+  const factory ImageErrorV.decoding(String value) = ImageErrorVDecoding;
+  const factory ImageErrorV.encoding(String value) = ImageErrorVEncoding;
+  const factory ImageErrorV.parameter(String value) = ImageErrorVParameter;
+  const factory ImageErrorV.limits(String value) = ImageErrorVLimits;
+  const factory ImageErrorV.unsupported(String value) = ImageErrorVUnsupported;
+  const factory ImageErrorV.ioError(String value) = ImageErrorVIoError;
 
   /// Returns this as a serializable JSON value.
+  @override
   Map<String, Object?> toJson();
 
   /// Returns this as a WASM canonical abi value.
@@ -513,7 +507,7 @@ sealed class ImageError {
 /// This means that the input data did not conform to the specification of some image format,
 /// or that no format could be determined, or that it did not match format specific
 /// requirements set by the caller.
-class ImageErrorDecoding implements ImageError {
+class ImageErrorVDecoding implements ImageErrorV {
   final String value;
 
   /// An error was encountered while decoding.
@@ -521,22 +515,24 @@ class ImageErrorDecoding implements ImageError {
   /// This means that the input data did not conform to the specification of some image format,
   /// or that no format could be determined, or that it did not match format specific
   /// requirements set by the caller.
-  const ImageErrorDecoding(this.value);
+  const ImageErrorVDecoding(this.value);
 
   /// Returns this as a serializable JSON value.
   @override
-  Map<String, Object?> toJson() => {'decoding': value};
+  Map<String, Object?> toJson() =>
+      {'runtimeType': 'ImageErrorVDecoding', 'decoding': value};
 
   /// Returns this as a WASM canonical abi value.
   @override
   (int, Object?) toWasm() => (0, value);
   @override
-  String toString() => 'ImageErrorDecoding($value)';
+  String toString() => 'ImageErrorVDecoding($value)';
   @override
   bool operator ==(Object other) =>
-      other is ImageErrorDecoding && comparator.areEqual(other.value, value);
+      other is ImageErrorVDecoding &&
+      const ObjectComparator().areEqual(other.value, value);
   @override
-  int get hashCode => comparator.hashValue(value);
+  int get hashCode => const ObjectComparator().hashValue(value);
 }
 
 /// An error was encountered while encoding.
@@ -545,7 +541,7 @@ class ImageErrorDecoding implements ImageError {
 /// specification has no representation for its color space or because a necessary conversion
 /// is ambiguous. In some cases it might also happen that the dimensions can not be used with
 /// the format.
-class ImageErrorEncoding implements ImageError {
+class ImageErrorVEncoding implements ImageErrorV {
   final String value;
 
   /// An error was encountered while encoding.
@@ -554,80 +550,86 @@ class ImageErrorEncoding implements ImageError {
   /// specification has no representation for its color space or because a necessary conversion
   /// is ambiguous. In some cases it might also happen that the dimensions can not be used with
   /// the format.
-  const ImageErrorEncoding(this.value);
+  const ImageErrorVEncoding(this.value);
 
   /// Returns this as a serializable JSON value.
   @override
-  Map<String, Object?> toJson() => {'encoding': value};
+  Map<String, Object?> toJson() =>
+      {'runtimeType': 'ImageErrorVEncoding', 'encoding': value};
 
   /// Returns this as a WASM canonical abi value.
   @override
   (int, Object?) toWasm() => (1, value);
   @override
-  String toString() => 'ImageErrorEncoding($value)';
+  String toString() => 'ImageErrorVEncoding($value)';
   @override
   bool operator ==(Object other) =>
-      other is ImageErrorEncoding && comparator.areEqual(other.value, value);
+      other is ImageErrorVEncoding &&
+      const ObjectComparator().areEqual(other.value, value);
   @override
-  int get hashCode => comparator.hashValue(value);
+  int get hashCode => const ObjectComparator().hashValue(value);
 }
 
 /// An error was encountered in input arguments.
 ///
 /// This is a catch-all case for strictly internal operations such as scaling, conversions,
 /// etc. that involve no external format specifications.
-class ImageErrorParameter implements ImageError {
+class ImageErrorVParameter implements ImageErrorV {
   final String value;
 
   /// An error was encountered in input arguments.
   ///
   /// This is a catch-all case for strictly internal operations such as scaling, conversions,
   /// etc. that involve no external format specifications.
-  const ImageErrorParameter(this.value);
+  const ImageErrorVParameter(this.value);
 
   /// Returns this as a serializable JSON value.
   @override
-  Map<String, Object?> toJson() => {'parameter': value};
+  Map<String, Object?> toJson() =>
+      {'runtimeType': 'ImageErrorVParameter', 'parameter': value};
 
   /// Returns this as a WASM canonical abi value.
   @override
   (int, Object?) toWasm() => (2, value);
   @override
-  String toString() => 'ImageErrorParameter($value)';
+  String toString() => 'ImageErrorVParameter($value)';
   @override
   bool operator ==(Object other) =>
-      other is ImageErrorParameter && comparator.areEqual(other.value, value);
+      other is ImageErrorVParameter &&
+      const ObjectComparator().areEqual(other.value, value);
   @override
-  int get hashCode => comparator.hashValue(value);
+  int get hashCode => const ObjectComparator().hashValue(value);
 }
 
 /// Completing the operation would have required more resources than allowed.
 ///
 /// Errors of this type are limits set by the user or environment, *not* inherent in a specific
 /// format or operation that was executed.
-class ImageErrorLimits implements ImageError {
+class ImageErrorVLimits implements ImageErrorV {
   final String value;
 
   /// Completing the operation would have required more resources than allowed.
   ///
   /// Errors of this type are limits set by the user or environment, *not* inherent in a specific
   /// format or operation that was executed.
-  const ImageErrorLimits(this.value);
+  const ImageErrorVLimits(this.value);
 
   /// Returns this as a serializable JSON value.
   @override
-  Map<String, Object?> toJson() => {'limits': value};
+  Map<String, Object?> toJson() =>
+      {'runtimeType': 'ImageErrorVLimits', 'limits': value};
 
   /// Returns this as a WASM canonical abi value.
   @override
   (int, Object?) toWasm() => (3, value);
   @override
-  String toString() => 'ImageErrorLimits($value)';
+  String toString() => 'ImageErrorVLimits($value)';
   @override
   bool operator ==(Object other) =>
-      other is ImageErrorLimits && comparator.areEqual(other.value, value);
+      other is ImageErrorVLimits &&
+      const ObjectComparator().areEqual(other.value, value);
   @override
-  int get hashCode => comparator.hashValue(value);
+  int get hashCode => const ObjectComparator().hashValue(value);
 }
 
 /// An operation can not be completed by the chosen abstraction.
@@ -636,7 +638,7 @@ class ImageErrorLimits implements ImageError {
 /// * it requires a disabled feature,
 /// * the implementation does not yet exist, or
 /// * no abstraction for a lower level could be found.
-class ImageErrorUnsupported implements ImageError {
+class ImageErrorVUnsupported implements ImageErrorV {
   final String value;
 
   /// An operation can not be completed by the chosen abstraction.
@@ -645,46 +647,52 @@ class ImageErrorUnsupported implements ImageError {
   /// * it requires a disabled feature,
   /// * the implementation does not yet exist, or
   /// * no abstraction for a lower level could be found.
-  const ImageErrorUnsupported(this.value);
+  const ImageErrorVUnsupported(this.value);
 
   /// Returns this as a serializable JSON value.
   @override
-  Map<String, Object?> toJson() => {'unsupported': value};
+  Map<String, Object?> toJson() =>
+      {'runtimeType': 'ImageErrorVUnsupported', 'unsupported': value};
 
   /// Returns this as a WASM canonical abi value.
   @override
   (int, Object?) toWasm() => (4, value);
   @override
-  String toString() => 'ImageErrorUnsupported($value)';
+  String toString() => 'ImageErrorVUnsupported($value)';
   @override
   bool operator ==(Object other) =>
-      other is ImageErrorUnsupported && comparator.areEqual(other.value, value);
+      other is ImageErrorVUnsupported &&
+      const ObjectComparator().areEqual(other.value, value);
   @override
-  int get hashCode => comparator.hashValue(value);
+  int get hashCode => const ObjectComparator().hashValue(value);
 }
 
 /// An error occurred while interacting with the environment.
-class ImageErrorIoError implements ImageError {
+class ImageErrorVIoError implements ImageErrorV {
   final String value;
 
   /// An error occurred while interacting with the environment.
-  const ImageErrorIoError(this.value);
+  const ImageErrorVIoError(this.value);
 
   /// Returns this as a serializable JSON value.
   @override
-  Map<String, Object?> toJson() => {'io-error': value};
+  Map<String, Object?> toJson() =>
+      {'runtimeType': 'ImageErrorVIoError', 'io-error': value};
 
   /// Returns this as a WASM canonical abi value.
   @override
   (int, Object?) toWasm() => (5, value);
   @override
-  String toString() => 'ImageErrorIoError($value)';
+  String toString() => 'ImageErrorVIoError($value)';
   @override
   bool operator ==(Object other) =>
-      other is ImageErrorIoError && comparator.areEqual(other.value, value);
+      other is ImageErrorVIoError &&
+      const ObjectComparator().areEqual(other.value, value);
   @override
-  int get hashCode => comparator.hashValue(value);
+  int get hashCode => const ObjectComparator().hashValue(value);
 }
+
+typedef ImageError = String;
 
 class ImageRsWorldImports {
   const ImageRsWorldImports();
@@ -1116,6 +1124,11 @@ class ImageRsWorld {
           const FuncType([('path', StringType())],
               [('', ResultType(ImageSize._spec, StringType()))]),
         )!,
+        _formatExtensions = library.getComponentFunction(
+          'format-extensions',
+          const FuncType(
+              [('format', ImageFormat._spec)], [('', ListType(StringType()))]),
+        )!,
         _imageBufferPointerAndSize = library.getComponentFunction(
           'image-buffer-pointer-and-size',
           const FuncType([
@@ -1147,6 +1160,18 @@ class ImageRsWorld {
           'save-file',
           const FuncType([('image', ImageRef._spec), ('path', StringType())],
               [('', ResultType(U32(), StringType()))]),
+        )!,
+        _convertColor = library.getComponentFunction(
+          'convert-color',
+          const FuncType(
+              [('image', ImageRef._spec), ('color', ColorType._spec)],
+              [('', ImageRef._spec)]),
+        )!,
+        _convertFormat = library.getComponentFunction(
+          'convert-format',
+          const FuncType(
+              [('image', ImageRef._spec), ('format', ImageFormat._spec)],
+              [('', ResultType(ListType(U8()), StringType()))]),
         )!;
 
   static Future<ImageRsWorld> init(
@@ -1163,7 +1188,7 @@ class ImageRsWorld {
   }
 
   final ListValue Function(ListValue) _guessBufferFormat;
-  Result<ImageFormat, String> guessBufferFormat({
+  Result<ImageFormat, ImageError> guessBufferFormat({
     required Uint8List buffer,
   }) {
     final results = _guessBufferFormat([buffer]);
@@ -1173,13 +1198,24 @@ class ImageRsWorld {
   }
 
   final ListValue Function(ListValue) _fileImageSize;
-  Result<ImageSize, String> fileImageSize({
+  Result<ImageSize, ImageError> fileImageSize({
     required String path,
   }) {
     final results = _fileImageSize([path]);
     final result = results[0];
     return Result.fromJson(result, (ok) => ImageSize.fromJson(ok),
         (error) => error is String ? error : (error! as ParsedString).value);
+  }
+
+  final ListValue Function(ListValue) _formatExtensions;
+  List<String> formatExtensions({
+    required ImageFormat format,
+  }) {
+    final results = _formatExtensions([format.toWasm()]);
+    final result = results[0];
+    return (result! as Iterable)
+        .map((e) => e is String ? e : (e! as ParsedString).value)
+        .toList();
   }
 
   final ListValue Function(ListValue) _imageBufferPointerAndSize;
@@ -1215,7 +1251,7 @@ class ImageRsWorld {
   }
 
   final ListValue Function(ListValue) _disposeImage;
-  Result<int /*U32*/, String> disposeImage({
+  Result<int /*U32*/, ImageError> disposeImage({
     required ImageRef image,
   }) {
     final results = _disposeImage([image.toWasm()]);
@@ -1228,7 +1264,7 @@ class ImageRsWorld {
 
   /// Create a new image from a byte slice
   /// Makes an educated guess about the image format.
-  Result<ImageRef, String> readBuffer({
+  Result<ImageRef, ImageError> readBuffer({
     required Uint8List buffer,
   }) {
     final results = _readBuffer([buffer]);
@@ -1241,7 +1277,7 @@ class ImageRsWorld {
 
   /// Open the image located at the path specified.
   /// The image's format is determined from the path's file extension.
-  Result<ImageRef, String> readFile({
+  Result<ImageRef, ImageError> readFile({
     required String path,
   }) {
     final results = _readFile([path]);
@@ -1254,13 +1290,41 @@ class ImageRsWorld {
 
   /// Saves the buffer to a file at the path specified.
   /// The image format is derived from the file extension.
-  Result<int /*U32*/, String> saveFile({
+  Result<int /*U32*/, ImageError> saveFile({
     required ImageRef image,
     required String path,
   }) {
     final results = _saveFile([image.toWasm(), path]);
     final result = results[0];
     return Result.fromJson(result, (ok) => ok! as int,
+        (error) => error is String ? error : (error! as ParsedString).value);
+  }
+
+  final ListValue Function(ListValue) _convertColor;
+
+  /// Copy the image to a new color representation.
+  ImageRef convertColor({
+    required ImageRef image,
+    required ColorType color,
+  }) {
+    final results = _convertColor([image.toWasm(), color.toWasm()]);
+    final result = results[0];
+    return ImageRef.fromJson(result);
+  }
+
+  final ListValue Function(ListValue) _convertFormat;
+
+  /// Converts the image into a different [format].
+  Result<Uint8List, ImageError> convertFormat({
+    required ImageRef image,
+    required ImageFormat format,
+  }) {
+    final results = _convertFormat([image.toWasm(), format.toWasm()]);
+    final result = results[0];
+    return Result.fromJson(
+        result,
+        (ok) =>
+            (ok is Uint8List ? ok : Uint8List.fromList((ok! as List).cast())),
         (error) => error is String ? error : (error! as ParsedString).value);
   }
 }

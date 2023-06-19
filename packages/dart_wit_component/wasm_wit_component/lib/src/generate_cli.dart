@@ -104,9 +104,7 @@ class GeneratorCLIArgs {
     final enableDefault = args.namedBool[_Arg.default_] ?? true;
 
     final config = WitGeneratorConfig(
-      inputs: WitGeneratorInput.fileSystemPaths(
-        FileSystemPaths(inputPath: witInputPath),
-      ),
+      inputs: FileSystemPaths(inputPath: witInputPath),
       jsonSerialization:
           args.namedBool[_Arg.jsonSerialization] ?? enableDefault,
       copyWith_: args.namedBool[_Arg.copyWith] ?? enableDefault,
@@ -118,6 +116,7 @@ class GeneratorCLIArgs {
       useNullForOption: args.namedBool[_Arg.useNullForOption] ?? true,
       typedNumberLists: args.namedBool[_Arg.typedNumberLists] ?? true,
       asyncWorker: args.namedBool[_Arg.asyncWorker] ?? false,
+      sameClassUnion: args.namedBool[_Arg.sameClassUnion] ?? true,
       objectComparator: args.singleArgValue(_Arg.objectComparator),
       int64Type: args.singleArgEnum(_Arg.int64Type, Int64TypeConfig.values) ??
           Int64TypeConfig.bigInt,
@@ -166,6 +165,7 @@ class _Arg {
   static const useNullForOption = 'null-for-option';
   static const typedNumberLists = 'typed-number-lists';
   static const asyncWorker = 'async-worker';
+  static const sameClassUnion = 'same-union-class';
   static const watch = 'watch';
 
   static const fileHeader = 'file-header';
@@ -184,6 +184,7 @@ class _Arg {
     typedNumberLists,
     requiredOption,
     asyncWorker,
+    sameClassUnion,
     watch,
   ];
 

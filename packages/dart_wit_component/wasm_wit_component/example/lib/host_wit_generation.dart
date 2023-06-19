@@ -8,7 +8,7 @@ import 'dart:typed_data';
 
 import 'package:wasm_wit_component/wasm_wit_component.dart';
 
-class RecordTest {
+class RecordTest implements ToJsonSerializable {
   final int /*U32*/ a;
   final String b;
   final double /*F64*/ c;
@@ -35,7 +35,9 @@ class RecordTest {
   }
 
   /// Returns this as a serializable JSON value.
+  @override
   Map<String, Object?> toJson() => {
+        'runtimeType': 'RecordTest',
         'a': a,
         'b': b,
         'c': c,
@@ -57,9 +59,10 @@ class RecordTest {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is RecordTest && comparator.arePropsEqual(_props, other._props);
+      other is RecordTest &&
+          const ObjectComparator().arePropsEqual(_props, other._props);
   @override
-  int get hashCode => comparator.hashProps(_props);
+  int get hashCode => const ObjectComparator().hashProps(_props);
 
   // ignore: unused_field
   List<Object?> get _props => [a, b, c];

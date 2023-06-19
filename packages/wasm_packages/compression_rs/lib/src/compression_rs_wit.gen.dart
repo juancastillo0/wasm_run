@@ -10,16 +10,17 @@ import 'package:wasm_wit_component/wasm_wit_component.dart';
 typedef IoSuccess = int /*U32*/;
 typedef IoError = String;
 
-sealed class Input {
+sealed class Input implements ToJsonSerializable {
   /// Returns a new instance from a JSON value.
   /// May throw if the value does not have the expected structure.
   factory Input.fromJson(Object? json_) {
     Object? json = json_;
     if (json is Map) {
-      final k = json.keys.first;
+      final MapEntry(:key, :value) =
+          json.entries.firstWhere((e) => e.key != 'runtimeType');
       json = (
-        k is int ? k : _spec.cases.indexWhere((c) => c.label == k),
-        json.values.first
+        key is int ? key : _spec.cases.indexWhere((c) => c.label == key),
+        value,
       );
     }
     return switch (json) {
@@ -36,6 +37,7 @@ sealed class Input {
   const factory Input.file(String value) = InputFile;
 
   /// Returns this as a serializable JSON value.
+  @override
   Map<String, Object?> toJson();
 
   /// Returns this as a WASM canonical abi value.
@@ -50,7 +52,8 @@ class InputBytes implements Input {
 
   /// Returns this as a serializable JSON value.
   @override
-  Map<String, Object?> toJson() => {'bytes': value.toList()};
+  Map<String, Object?> toJson() =>
+      {'runtimeType': 'InputBytes', 'bytes': value.toList()};
 
   /// Returns this as a WASM canonical abi value.
   @override
@@ -59,9 +62,10 @@ class InputBytes implements Input {
   String toString() => 'InputBytes($value)';
   @override
   bool operator ==(Object other) =>
-      other is InputBytes && comparator.areEqual(other.value, value);
+      other is InputBytes &&
+      const ObjectComparator().areEqual(other.value, value);
   @override
-  int get hashCode => comparator.hashValue(value);
+  int get hashCode => const ObjectComparator().hashValue(value);
 }
 
 class InputFile implements Input {
@@ -70,7 +74,7 @@ class InputFile implements Input {
 
   /// Returns this as a serializable JSON value.
   @override
-  Map<String, Object?> toJson() => {'file': value};
+  Map<String, Object?> toJson() => {'runtimeType': 'InputFile', 'file': value};
 
   /// Returns this as a WASM canonical abi value.
   @override
@@ -79,14 +83,15 @@ class InputFile implements Input {
   String toString() => 'InputFile($value)';
   @override
   bool operator ==(Object other) =>
-      other is InputFile && comparator.areEqual(other.value, value);
+      other is InputFile &&
+      const ObjectComparator().areEqual(other.value, value);
   @override
-  int get hashCode => comparator.hashValue(value);
+  int get hashCode => const ObjectComparator().hashValue(value);
 }
 
 /// A record is a class with named fields
 /// There are enum, list, variant, option, result, tuple and union types
-class Model {
+class Model implements ToJsonSerializable {
   /// Comment for a field
   final int /*S32*/ integer;
 
@@ -111,7 +116,9 @@ class Model {
   }
 
   /// Returns this as a serializable JSON value.
+  @override
   Map<String, Object?> toJson() => {
+        'runtimeType': 'Model',
         'integer': integer,
       };
 
@@ -129,9 +136,10 @@ class Model {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is Model && comparator.arePropsEqual(_props, other._props);
+      other is Model &&
+          const ObjectComparator().arePropsEqual(_props, other._props);
   @override
-  int get hashCode => comparator.hashProps(_props);
+  int get hashCode => const ObjectComparator().hashProps(_props);
 
   // ignore: unused_field
   List<Object?> get _props => [integer];
@@ -481,7 +489,6 @@ class CompressionRsWorld {
           r'$root#map-integer', ft, execImportsMapInteger, getLib);
       builder.addImport(r'$root', 'map-integer', lowered);
     }
-
     final instance = await builder.build();
 
     library = WasmLibrary(instance, int64Type: Int64TypeConfig.bigInt);

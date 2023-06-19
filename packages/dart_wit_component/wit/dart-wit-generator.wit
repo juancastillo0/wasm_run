@@ -34,6 +34,9 @@ world dart-wit-generator {
         typed-number-lists: bool,
         /// Whether to the asyncronous functions to execute functions in workers.
         async-worker: bool,
+        /// Whether to use extends for union variants instead of crating a separate
+        /// wrapper class for each option.
+        same-class-union: bool,
     }
 
     /// The file inputs to use for the code generation.

@@ -80,6 +80,7 @@ WitGeneratorConfig defaultGeneratorConfig({
     int64Type: Int64TypeConfig.bigInt,
     typedNumberLists: true,
     asyncWorker: false,
+    sameClassUnion: true,
   );
 }
 

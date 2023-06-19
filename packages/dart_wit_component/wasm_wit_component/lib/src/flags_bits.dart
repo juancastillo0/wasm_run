@@ -1,9 +1,10 @@
 import 'dart:typed_data' show ByteData, Endian, Uint32List;
 
-import 'package:wasm_wit_component/src/component.dart' show comparator;
+import 'package:wasm_wit_component/src/component.dart'
+    show ToJsonSerializable, comparator;
 
 /// A class that stores a list of flags as a [ByteData] instance.
-class FlagsBits {
+class FlagsBits implements ToJsonSerializable {
   /// The [ByteData] instance that stores the flag bits.
   final ByteData data;
 
@@ -40,19 +41,30 @@ class FlagsBits {
   /// [json_] must be a [List] of [int]s or [bool]s.
   factory FlagsBits.fromJson(
     Object? json_, {
-    required List<Object> flagsKeys,
+    List<Object>? flagsKeys,
   }) {
+    int? numFlags = flagsKeys?.length;
     if (json_ is Map) {
-      return FlagsBits._fromMap(json_, flagsKeys);
+      final nFlags = json_['numFlags'];
+      final flags = json_['flags'];
+      if (nFlags is int && flags is List) {
+        json_ = flags;
+        numFlags = nFlags;
+      } else if (flagsKeys != null) {
+        return FlagsBits._fromMap(json_, flagsKeys);
+      }
     } else if (json_ is List && json_.first is bool) {
       return FlagsBits.fromBooleans(json_.cast<bool>());
     }
-    final json = (json_! as List).cast<int>();
-    final flagBits = ByteData(json.length * 4);
-    for (var i = 0; i < json.length; i++) {
-      flagBits.setUint32(i * 4, json[i], Endian.little);
+    if (json_ is! List || numFlags == null) {
+      throw Exception('Invalid JSON ${json_} for FlagsBits(keys:${flagsKeys})');
     }
-    return FlagsBits(flagBits, numFlags: flagsKeys.length);
+    final u32List = json_.cast<int>();
+    final flagBits = ByteData(u32List.length * 4);
+    for (var i = 0; i < u32List.length; i++) {
+      flagBits.setUint32(i * 4, u32List[i], Endian.little);
+    }
+    return FlagsBits(flagBits, numFlags: numFlags);
   }
 
   factory FlagsBits._fromMap(
@@ -67,6 +79,15 @@ class FlagsBits {
       }
     }
     return value;
+  }
+
+  /// Returns a JSON representation of the flag bits.
+  @override
+  Map<String, Object?> toJson() {
+    return {
+      'numFlags': numFlags,
+      'flags': List.generate(_bitsAsUint32List.length, _index),
+    };
   }
 
   /// Gets the flag at [i]
@@ -132,11 +153,6 @@ class FlagsBits {
   }
 
   Uint32List get _bitsAsUint32List => Uint32List.sublistView(data);
-
-  /// Returns a JSON representation of the flag bits.
-  Object toJson() {
-    return List.generate(_bitsAsUint32List.length, _index);
-  }
 
   @override
   String toString() {

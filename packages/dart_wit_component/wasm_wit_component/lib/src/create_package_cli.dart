@@ -116,9 +116,7 @@ Future<void> _generateAndFormat(
   final generateResult = g.generateToFile(
     filePath: filePath,
     config: defaultGeneratorConfig(
-      inputs: WitGeneratorInput.fileSystemPaths(
-        FileSystemPaths(inputPath: witFile),
-      ),
+      inputs: FileSystemPaths(inputPath: witFile),
     ).copyWith(asyncWorker: asyncWorker),
   );
   if (generateResult.isError) throw Exception(generateResult.error);
