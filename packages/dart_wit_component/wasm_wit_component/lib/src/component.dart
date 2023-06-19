@@ -11,6 +11,7 @@ import 'package:wasm_wit_component/src/record_equality.dart' show recordToList;
 
 export 'package:wasm_wit_component/generator.dart' show Int64TypeConfig;
 export 'package:wasm_wit_component/src/flags_bits.dart' show FlagsBits;
+export 'package:wasm_wit_component/src/models.dart';
 
 /// The [ObjectComparator] used to compare equality between objects
 /// and calculate their hash codes.

@@ -21,7 +21,8 @@ pub fn document_to_dart(
         .map_err(|err| err.to_string())?;
 
     let names = HashMap::<&str, Vec<&TypeDef>>::new();
-    let mut p = Parsed(&resolve, names, config);
+    let unions = HashMap::<String, Vec<String>>::new();
+    let mut p = Parsed(&resolve, names, config, unions);
 
     // parsed.documents
     // parsed.foreign_deps
@@ -39,6 +40,23 @@ pub fn document_to_dart(
     });
     p.1.retain(|_k, v| v.len() > 1);
 
+    if p.2.same_class_union {
+        // Find all unions
+        resolve.types.iter().for_each(|(_id, ty)| {
+            if let TypeDefKind::Union(union) = &ty.kind {
+                let union_name = p.type_def_to_name_definition(ty).unwrap();
+                union.cases.iter().for_each(|case| {
+                    if let (Some(_), Type::Id(id)) = (p.type_class_name(&case.ty), case.ty) {
+                        let case_ty = resolve.types.get(id).unwrap();
+                        if let Some(name) = p.type_def_to_name_definition(case_ty) {
+                            let implements = p.3.entry(name).or_default();
+                            implements.push(union_name.clone());
+                        }
+                    }
+                });
+            }
+        });
+    }
     resolve.types.iter().for_each(|(_id, ty)| {
         if let (TypeDefKind::Type(ty), Some(name)) =
             (&ty.kind, p.type_def_to_name_definition(ty).as_ref())
@@ -316,6 +334,7 @@ mod tests {
             required_option: false,
             typed_number_lists: true,
             async_worker: false,
+            same_class_union: true,
             int64_type,
         }
     }
@@ -446,6 +465,38 @@ default world host {
     }
 
     #[test]
+    pub fn generate_wasm_parser() {
+        let path = format!(
+            "{}/../wasm_packages/wasm_parser/wasm_parser_wasm/wit/wasm-parser.wit",
+            PACKAGE_DIR
+        );
+        let output_path = format!(
+            "{}/../wasm_packages/wasm_parser/lib/src/wasm_parser_wit.gen.dart",
+            PACKAGE_DIR
+        );
+        parse_and_write_generation(
+            &path,
+            &output_path,
+            default_wit_config(Int64TypeConfig::BigInt),
+        );
+    }
+
+    #[test]
+    pub fn generate_wasm_parser_worker() {
+        let path = format!(
+            "{}/../wasm_packages/wasm_parser/wasm_parser_wasm/wit/wasm-parser.wit",
+            PACKAGE_DIR
+        );
+        let output_path = format!(
+            "{}/../wasm_packages/wasm_parser/lib/src/wasm_parser_wit.worker.gen.dart",
+            PACKAGE_DIR
+        );
+        let mut config = default_wit_config(Int64TypeConfig::BigInt);
+        config.async_worker = true;
+        parse_and_write_generation(&path, &output_path, config);
+    }
+
+    #[test]
     pub fn generate_rust_crypto() {
         let path = format!(
             "{}/../wasm_packages/rust_crypto/rust_crypto_wasm/wit/rust-crypto.wit",
@@ -503,5 +554,7 @@ default world host {
         generate_compression_rs_worker();
         generate_rust_crypto();
         generate_host();
+        generate_wasm_parser();
+        generate_wasm_parser_worker();
     }
 }

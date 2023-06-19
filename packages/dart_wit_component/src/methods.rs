@@ -20,13 +20,13 @@ impl GeneratedMethodsTrait for Record {
             .join(",");
         format!("List<Object?> toWasm() => [{props}];")
     }
-    fn to_json(&self, _name: &str, p: &Parsed) -> String {
+    fn to_json(&self, name: &str, p: &Parsed) -> String {
         let content = self
             .fields
             .iter()
             .map(|f| format!("'{}': {},", f.name, p.type_to_json(&f.name.as_var(), &f.ty)))
             .collect::<String>();
-        format!("Map<String, Object?> toJson() => {{{content}}};")
+        format!("Map<String, Object?> toJson() => {{'runtimeType': '{name}', {content}}};")
     }
     fn from_json(&self, name: &str, p: &Parsed) -> Option<String> {
         if self.fields.is_empty() {
@@ -125,18 +125,14 @@ impl GeneratedMethodsTrait for Enum {
     fn to_wasm(&self, _name: &str, _p: &Parsed) -> String {
         "int toWasm() => index;".to_string()
     }
-    fn to_json(&self, _name: &str, _p: &Parsed) -> String {
-        "Object? toJson() => _spec.labels[index];\n".to_string()
+    fn to_json(&self, name: &str, _p: &Parsed) -> String {
+        format!("Map<String, Object?> toJson() => {{'runtimeType':'{name}', _spec.labels[index]: null}};\n")
     }
     fn from_json(&self, name: &str, _p: &Parsed) -> Option<String> {
         Some(format!(
-            "factory {name}.fromJson(Object? json_) {{
-                final json = json_ is Map ? json_.keys.first : json_;
-                if (json is String) {{
-                    final index = _spec.labels.indexOf(json);
-                    return index != -1 ? values[index] : values.byName(json);
-                }}
-                return json is (int, Object?) ? values[json.$1] : values[json! as int];}}",
+            "factory {name}.fromJson(Object? json) {{
+                return ToJsonSerializable.enumFromJson(json, values, _spec);
+            }}",
         ))
     }
     fn to_string(&self, _name: &str, _p: &Parsed) -> Option<String> {
@@ -155,14 +151,14 @@ fn base_string_case(data: &(usize, &Case), name: &str, p: &Parsed) -> String {
     let comparator = p.comparator();
     if let Some(ty) = self_.ty {
         format!(
-    "@override Map<String, Object?> toJson() => {{'{}': {}}};
+    "Map<String, Object?> toJson() => {{'runtimeType':'{name}','{}': {}}};
     @override String toString() => '{name}($value)';
     @override bool operator ==(Object other) => other is {name} && {comparator}.areEqual(other.value, value);
     @override int get hashCode => {comparator}.hashValue(value);", self_.name,  p.type_to_json("value", &ty)
 )
     } else {
         format!(
-            "@override Map<String, Object?> toJson() => {{'{}': null}};
+            "Map<String, Object?> toJson() => {{'runtimeType':'{name}','{}': null}};
     @override String toString() => '{name}()';
     @override bool operator ==(Object other) => other is {name};
     @override int get hashCode => ({name}).hashCode;",
@@ -217,15 +213,20 @@ impl GeneratedMethodsTrait for (usize, &Case) {
 
 impl GeneratedMethodsTrait for (usize, &UnionCase) {
     fn to_wasm(&self, _name: &str, p: &Parsed) -> String {
+        let override_ = if p.2.same_class_union {
+            ""
+        } else {
+            "@override "
+        };
         format!(
-            "@override (int, Object?) toWasm() => ({}, {});",
+            "{override_}(int, Object?) toWasm() => ({}, {});",
             self.0,
             p.type_to_wasm("value", &self.1.ty)
         )
     }
-    fn to_json(&self, _name: &str, p: &Parsed) -> String {
+    fn to_json(&self, name: &str, p: &Parsed) -> String {
         format!(
-            "@override\nMap<String, Object?> toJson() => {{'{}': {}}};",
+            "\nMap<String, Object?> toJson() => {{'runtimeType':'{name}','{}': {}}};",
             self.0,
             p.type_to_json("value", &self.1.ty)
         )
@@ -253,8 +254,8 @@ impl GeneratedMethodsTrait for Flags {
     fn to_wasm(&self, _name: &str, _p: &Parsed) -> String {
         "Uint32List toWasm() => Uint32List.sublistView(flagsBits.data);".to_string()
     }
-    fn to_json(&self, _name: &str, _p: &Parsed) -> String {
-        "Object toJson() => flagsBits.toJson();".to_string()
+    fn to_json(&self, name: &str, _p: &Parsed) -> String {
+        format!("Map<String, Object?> toJson() => flagsBits.toJson()..['runtimeType'] = '{name}';")
     }
     fn from_json(&self, name: &str, _p: &Parsed) -> Option<String> {
         Some(format!(

@@ -1,7 +1,7 @@
 import 'package:wasm_wit_component/src/component.dart';
 
 /// A Rust-style Option type.
-sealed class Option<T extends Object> {
+sealed class Option<T extends Object> implements ToJsonSerializable {
   /// A Rust-style Option type's Some value.
   const factory Option.some(T value) = Some;
 
@@ -42,6 +42,7 @@ sealed class Option<T extends Object> {
   bool get isNone;
 
   /// Returns a JSON representation of the option.
+  @override
   Map<String, Object?> toJson([Object? Function(T value)? mapValue]);
 
   /// Returns the Wasm canonical abi representation of the option.

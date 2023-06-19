@@ -1,7 +1,7 @@
 import 'package:wasm_wit_component/src/component.dart';
 
 /// A Rust-style Result type.
-sealed class Result<O, E> {
+sealed class Result<O, E> implements ToJsonSerializable {
   /// A Rust-style Result type's success value.
   const factory Result.ok(O ok) = Ok<O, E>;
 
@@ -37,6 +37,7 @@ sealed class Result<O, E> {
   }
 
   /// Returns a JSON representation of the result.
+  @override
   Map<String, Object?> toJson([
     Object? Function(O value)? mapOk,
     Object? Function(E value)? mapError,

@@ -7,6 +7,7 @@ pub struct Parsed<'a>(
     pub &'a Resolve,
     pub HashMap<&'a str, Vec<&'a TypeDef>>,
     pub WitGeneratorConfig,
+    pub HashMap<String, Vec<String>>,
 );
 
 const FROM_JSON_COMMENT: &str = "/// Returns a new instance from a JSON value.
@@ -273,7 +274,16 @@ impl Parsed<'_> {
         match &ty.kind {
             TypeDefKind::Record(_record) => format!("{getter}.toWasm()"),
             TypeDefKind::Enum(_enum_) => format!("{getter}.toWasm()"),
-            TypeDefKind::Union(_union) => format!("{getter}.toWasm()"),
+            TypeDefKind::Union(_union) => {
+                if self.2.same_class_union {
+                    format!(
+                        "{}.toWasm({getter})",
+                        self.type_def_to_name_definition(ty).unwrap()
+                    )
+                } else {
+                    format!("{getter}.toWasm()")
+                }
+            }
             TypeDefKind::Flags(_flags) => format!("{getter}.toWasm()"),
             TypeDefKind::Variant(_variant) => format!("{getter}.toWasm()"),
             TypeDefKind::Option(ty) => {
@@ -327,7 +337,7 @@ impl Parsed<'_> {
         }
     }
 
-    fn type_class_name(&self, ty: &Type) -> Option<String> {
+    pub fn type_class_name(&self, ty: &Type) -> Option<String> {
         if let Type::Id(ty_id) = ty {
             let ty_def = self.0.types.get(*ty_id).unwrap();
             if let (
@@ -724,6 +734,7 @@ impl Parsed<'_> {
                 s.push_str(&m);
             }
             s.push_str(self.method_comment(MethodComment::ToJson));
+            s.push_str("@override ");
             s.push_str(&methods.to_json(name, self));
         }
 
@@ -749,7 +760,28 @@ impl Parsed<'_> {
     }
 
     pub fn comparator(&self) -> &str {
-        self.2.object_comparator.as_deref().unwrap_or("comparator")
+        self.2
+            .object_comparator
+            .as_deref()
+            .unwrap_or("const ObjectComparator()")
+    }
+
+    pub fn implements(&self, name: &str) -> String {
+        // TODO: check json_serialize config
+        self.3
+            .get(name)
+            .map(|v| format!("implements {}, ToJsonSerializable ", v.join(",")))
+            .unwrap_or("implements ToJsonSerializable ".to_string())
+    }
+
+    fn union_case_class(&self, case: &UnionCase, name: &str) -> String {
+        if let Some(class_name) = self.type_class_name(&case.ty) {
+            class_name
+        } else {
+            let ty = self.type_to_str(&case.ty);
+            let inner_name = heck::AsPascalCase(&ty);
+            format!("{name}{inner_name}")
+        }
     }
 
     pub fn type_def_to_definition(&self, ty: &TypeDef) -> String {
@@ -760,7 +792,8 @@ impl Parsed<'_> {
         match &ty.kind {
             TypeDefKind::Record(r) => {
                 let name = name.unwrap();
-                s.push_str(&format!("class {name} {{"));
+                let implements = self.implements(&name);
+                s.push_str(&format!("class {name} {implements}{{"));
                 r.fields.iter().for_each(|f| {
                     add_docs(&mut s, &f.docs);
                     s.push_str(&format!(
@@ -801,7 +834,8 @@ impl Parsed<'_> {
             }
             TypeDefKind::Enum(e) => {
                 let name = name.unwrap();
-                s.push_str(&format!("enum {name} {{"));
+                let implements = self.implements(&name);
+                s.push_str(&format!("enum {name} {implements}{{"));
                 e.cases.iter().enumerate().for_each(|(i, v)| {
                     add_docs(&mut s, &v.docs);
                     s.push_str(&format!(
@@ -828,49 +862,107 @@ impl Parsed<'_> {
                     .iter()
                     .enumerate()
                     .map(|(i, v)| {
-                        let ty = self.type_to_str(&v.ty);
-                        let inner_name = heck::AsPascalCase(&ty);
-                        format!(
-                            "({i}, final value) || [{i}, final value] => {name}{inner_name}({}),",
-                            self.type_from_json("value", &v.ty),
-                        )
+                        let inner_from_json = self.type_from_json("value", &v.ty);
+                        let parsed = if let Some(_) = self.type_class_name(&v.ty) {
+                            inner_from_json
+                        } else {
+                            let ty = self.type_to_str(&v.ty);
+                            let inner_name = heck::AsPascalCase(&ty);
+                            format!("{name}{inner_name}({inner_from_json})")
+                        };
+                        format!("({i}, final value) || [{i}, final value] => {parsed},")
                     })
                     .collect::<String>();
 
-                s.push_str(&format!(
-                    "sealed class {name} {{
-                    {from_json_comment}factory {name}.fromJson(Object? json_) {{
-                        Object? json = json_;
-                        if (json is Map) {{
-                            final k = json.keys.first;
-                            json = (k is int ? k : int.parse(k! as String), json.values.first);
-                        }}
-                        return switch (json) {{ {switch_cases} _ => throw Exception('Invalid JSON $json_'), }};
-                    }}",
-                ));
-
+                let implements = self.implements(&name);
+                if self.2.same_class_union {
+                    let runtime_types = u
+                        .cases
+                        .iter()
+                        .map(|c| self.union_case_class(c, &name))
+                        .collect::<Vec<_>>()
+                        .join("', '");
+                    s.push_str(&format!(
+                        "sealed class {name} {implements}{{
+                        {from_json_comment}factory {name}.fromJson(Object? json_) {{
+                            Object? json = json_;
+                            if (json is Map) {{
+                                final rt = json['runtimeType'];
+                                if (rt is String) {{
+                                    json = (const ['{runtime_types}'].indexOf(rt), json);
+                                }} else {{
+                                    final MapEntry(:key, :value) = json.entries.first;
+                                    json = (key is int ? key : int.parse(key! as String), value);
+                                }}
+                            }}
+                            return switch (json) {{ {switch_cases} _ => throw Exception('Invalid JSON $json_'), }};
+                        }}",
+                    ));
+                } else {
+                    s.push_str(&format!(
+                        "sealed class {name} {implements}{{
+                        {from_json_comment}factory {name}.fromJson(Object? json_) {{
+                            Object? json = json_;
+                            if (json is Map) {{
+                                final MapEntry(:key, :value) = json.entries.firstWhere((e) => e.key != 'runtimeType');
+                                json = (key is int ? key : int.parse(key! as String), value);
+                            }}
+                            return switch (json) {{ {switch_cases} _ => throw Exception('Invalid JSON $json_'), }};
+                        }}",
+                    ));
+                }
                 let mut cases_string = String::new();
                 u.cases.iter().enumerate().for_each(|(i, v)| {
-                    // TODO: should we use the docs from the union's inner type?
-                    let docs = extract_dart_docs(&v.docs).unwrap_or("".to_string());
-                    cases_string.push_str(&docs);
                     let ty = self.type_to_str(&v.ty);
                     let inner_name = heck::AsPascalCase(&ty);
-                    let class_name = format!("{name}{inner_name}");
-                    cases_string.push_str(&format!(
-                        "class {class_name} implements {name} {{ final {ty} value; {docs}const {class_name}(this.value);",
-                    ));
+                    let docs = extract_dart_docs(&v.docs).unwrap_or("".to_string());
 
-                    add_docs(&mut cases_string, &v.docs);
-                    self.add_methods_trait(&mut cases_string, &class_name, &(i, v));
-                    cases_string.push_str("}");
-                    s.push_str(&format!("{docs}const factory {name}.{}({ty} value) = {class_name};", ty.as_var()));
+                    if let (true, Some(class_name)) =  (self.2.same_class_union, self.type_class_name(&v.ty)) {
+                        // TODO: improve
+                        s.push_str(&format!("{docs}static const {} = {class_name}.new;", ty.as_var()));
+                        // don't regenerate classes for types that already have a class
+                        class_name
+                    } else {
+                        // TODO: should we use the docs from the union's inner type?
+                        let class_name = format!("{name}{inner_name}");
+                        cases_string.push_str(&docs);
+                        cases_string.push_str(&format!(
+                            "class {class_name} implements {name} {{ final {ty} value; {docs}const {class_name}(this.value);",
+                        ));
+                        add_docs(&mut cases_string, &v.docs);
+                        self.add_methods_trait(&mut cases_string, &class_name, &(i, v));
+                        cases_string.push_str("}");
+                        s.push_str(&format!("{docs}const factory {name}.{}({ty} value) = {class_name};", ty.as_var()));
+                        class_name
+                    };
                 });
 
                 s.push_str(self.method_comment(MethodComment::ToJson));
-                s.push_str("Map<String, Object?> toJson();\n");
-                s.push_str(self.method_comment(MethodComment::ToWasm));
-                s.push_str("(int, Object?) toWasm();\n");
+                s.push_str("@override Map<String, Object?> toJson();\n");
+                if self.2.same_class_union {
+                    s.push_str(self.method_comment(MethodComment::ToWasm));
+                    let switch = u
+                        .cases
+                        .iter()
+                        .enumerate()
+                        .map(|(i, v)| {
+                            if let Some(class_name) = self.type_class_name(&v.ty) {
+                                let to_wasm = self.type_to_wasm("value", &v.ty);
+                                format!("{class_name}() => ({i}, {to_wasm}),")
+                            } else {
+                                let ty = self.type_to_str(&v.ty);
+                                let class_name = format!("{name}{}", heck::AsPascalCase(&ty));
+                                format!("{class_name}() => value.toWasm(),")
+                            }
+                        })
+                        .collect::<String>();
+                    s.push_str(&format!(
+                        "static (int, Object?) toWasm({name} value) => switch (value) {{{switch}}};\n"
+                    ));
+                } else {
+                    s.push_str(self.method_comment(MethodComment::ToWasm));
+                    s.push_str("(int, Object?) toWasm();\n");
+                }
 
                 s.push_str(&format!(
                     "// ignore: unused_field\nstatic const _spec = {};",
@@ -897,15 +989,15 @@ impl Parsed<'_> {
                         }
                     })
                     .collect::<String>();
-
+                let implements = self.implements(&name);
                 s.push_str(&format!(
-                    "sealed class {name} {{ {from_json_comment}factory {name}.fromJson(Object? json_) {{
+                    "sealed class {name} {implements}{{ {from_json_comment}factory {name}.fromJson(Object? json_) {{
                     Object? json = json_;
                     if (json is Map) {{
-                        final k = json.keys.first;
+                        final MapEntry(:key, :value) = json.entries.firstWhere((e) => e.key != 'runtimeType');
                         json = (
-                          k is int ? k : _spec.cases.indexWhere((c) => c.label == k),
-                          json.values.first
+                          key is int ? key : _spec.cases.indexWhere((c) => c.label == key),
+                          value,
                         );
                     }}
                     return switch (json) {{ {switch_value} _ => throw Exception('Invalid JSON $json_'), }};
@@ -930,7 +1022,7 @@ impl Parsed<'_> {
                     cases_string.push_str("}");
                 });
                 s.push_str(self.method_comment(MethodComment::ToJson));
-                s.push_str("Map<String, Object?> toJson();\n");
+                s.push_str("@override Map<String, Object?> toJson();\n");
                 s.push_str(self.method_comment(MethodComment::ToWasm));
                 s.push_str("(int, Object?) toWasm();\n");
                 s.push_str(&format!(
@@ -961,8 +1053,9 @@ impl Parsed<'_> {
                         )
                     })
                     .collect::<String>();
+                let implements = self.implements(&name);
                 s.push_str(&format!(
-                    "class {name} {{ 
+                    "class {name} {implements}{{ 
                     /// The flags represented as a set of bits.
                     final FlagsBits flagsBits; 
                     /// Creates an instance where the flags are represented by [flagsBits].
