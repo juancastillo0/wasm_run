@@ -59,6 +59,8 @@ enum AppTab {
   imageRs,
   rustCrypto;
 
+  String get uiName => name.substring(0, 1).toUpperCase() + name.substring(1);
+
   Widget tab(GlobalState state) {
     return switch (this) {
       AppTab.wasmParser => LoaderWidget(
@@ -117,27 +119,30 @@ class _MyHomePageState extends State<MyHomePage> {
             children: [
               Text(widget.title),
               const SizedBox(width: 10),
-              if (MediaQuery.of(context).size.width > 1000)
+              if (MediaQuery.of(context).size.width > 800)
                 ...AppTab.values.map(
                   (t) => TextButton(
                     onPressed: () => setState(() {
                       tab = t;
                     }),
-                    child: Text(t.name),
+                    child: Text(t.uiName),
                   ),
                 )
               else
-                DropdownButtonFormField(
+                DropdownButton(
+                  isExpanded: true,
+                  padding: const EdgeInsets.all(8),
                   value: tab,
                   items: AppTab.values
                       .map((t) => DropdownMenuItem(
-                            child: Text(t.name),
+                            value: t,
+                            child: Text(t.uiName),
                           ))
                       .toList(),
                   onChanged: (t) => setState(() {
-                    tab = t;
+                    tab = t!;
                   }),
-                ),
+                ).container(width: 200),
             ],
           ),
         ),

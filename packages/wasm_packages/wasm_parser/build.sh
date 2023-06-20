@@ -19,5 +19,3 @@ cp target/wasm32-wasi/release/wasm_parser_wasm.wasm ../lib/assets/
 RUSTFLAGS='-C target-feature=+atomics,+bulk-memory,+mutable-globals' \
     cargo +nightly build --target wasm32-unknown-unknown --release -Z build-std=std,panic_abort
 cp target/wasm32-unknown-unknown/release/wasm_parser_wasm.wasm ../lib/assets/wasm_parser_wasm.threads.wasm
-
-

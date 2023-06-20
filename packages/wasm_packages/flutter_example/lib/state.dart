@@ -1,5 +1,6 @@
-import 'package:compression_rs/compression_rs.dart' as compression_rs;
-import 'package:compression_rs/compression_rs_in_mem_worker.dart';
+import 'package:compression_rs/compression_rs.dart';
+import 'package:compression_rs/compression_rs_in_mem_worker.dart'
+    as compression_rs;
 import 'package:flutter/foundation.dart' show ChangeNotifier, ValueNotifier;
 import 'package:flutter_example/image_rs_state.dart';
 import 'package:flutter_example/wasm_parser_state.dart';
@@ -16,19 +17,15 @@ class GlobalState extends ChangeNotifier {
   final wasiConfig =
       const WasiConfig(preopenedDirs: [], webBrowserFileSystem: {});
 
-  late final compressionRsSync = FutureLoader(
-    () => compression_rs.createCompressionRs(
-      wasiConfig: wasiConfig,
-      imports: compression_rs.CompressionRsWorldImports(
-        mapInteger: ({required int value}) => value * 2,
-      ),
+  late final compressionRsAsync = FutureLoader(
+    () => compression_rs.createCompressionRsInMemoryWorker(
+      imports: const compression_rs.CompressionRsWorldImports(),
     ),
   );
   late final compressionRs = FutureLoader(
-    () => createCompressionRsInMemoryWorker(
-      imports: CompressionRsWorldImports(
-        mapInteger: ({required int value}) => value * 2,
-      ),
+    () => createCompressionRs(
+      wasiConfig: wasiConfig,
+      imports: const CompressionRsWorldImports(),
     ).then(CompressionRsState.new),
   );
   late final imageRs = FutureLoader(

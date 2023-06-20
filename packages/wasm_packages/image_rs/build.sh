@@ -12,5 +12,3 @@ cd image_rs_wasm
 ## Build Wasm Component from Rust
 cargo wasi build --release
 cp target/wasm32-wasi/release/image_rs_wasm.wasm ../lib/assets/
-
-
