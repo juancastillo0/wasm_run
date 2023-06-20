@@ -16,40 +16,10 @@ const isWeb = identical(0, 0.0);
 
 void main() {
   group('compression_rs api', () {
-    test('run', () async {
-      final List<int> integers = [];
-      final world = await createCompressionRs(
-        wasiConfig: WasiConfig(preopenedDirs: [], webBrowserFileSystem: {}),
-        imports: CompressionRsWorldImports(
-          mapInteger: ({required value}) {
-            integers.add(value);
-            return value * 0.17;
-          },
-        ),
-      );
-      expect(integers, isEmpty);
-      final model = Model(integer: 20);
-      final result = world.run(value: model);
-
-      switch (result) {
-        case Ok(:final double ok):
-          expect(ok, 20 * 0.17);
-          expect(integers, [20]);
-        case Err(:final String error):
-          throw Exception(error);
-      }
-    });
-
     test('brotli', () async {
-      final List<int> integers = [];
       final world = await createCompressionRs(
         wasiConfig: WasiConfig(preopenedDirs: [], webBrowserFileSystem: {}),
-        imports: CompressionRsWorldImports(
-          mapInteger: ({required value}) {
-            integers.add(value);
-            return value * 0.17;
-          },
-        ),
+        imports: CompressionRsWorldImports(),
       );
       final value = const Utf8Codec().encoder.convert('hello world');
       final result = world.brotli.brotliCompress(input: Input.bytes(value));
@@ -69,9 +39,7 @@ void main() {
     test('all async worker', () async {
       final world = await compress_worker.createCompressionRsInMemoryWorker(
         // wasiConfig: WasiConfig(preopenedDirs: [], webBrowserFileSystem: {}),
-        imports: compress_worker.CompressionRsWorldImports(
-          mapInteger: ({required value}) => value * 0.17,
-        ),
+        imports: compress_worker.CompressionRsWorldImports(),
       );
       final values = [
         const Utf8Codec().encoder.convert('hello world'),
@@ -128,9 +96,7 @@ void main() {
     test('all', () async {
       final world = await createCompressionRs(
         wasiConfig: WasiConfig(preopenedDirs: [], webBrowserFileSystem: {}),
-        imports: CompressionRsWorldImports(
-          mapInteger: ({required value}) => value * 0.17,
-        ),
+        imports: CompressionRsWorldImports(),
       );
       final values = [
         const Utf8Codec().encoder.convert('hello world'),
@@ -271,66 +237,4 @@ void main() {
       }
     });
   });
-}
-
-class Compressor {
-  final String name;
-  final Result<Uint8List, IoError> Function({required Input input}) compress;
-  final Result<Uint8List, IoError> Function({required Input input}) decompress;
-  final Result<IoSuccess, IoError> Function({
-    required Input input,
-    required String outputPath,
-  }) compressFile;
-  final Result<IoSuccess, IoError> Function({
-    required Input input,
-    required String outputPath,
-  }) decompressFile;
-
-  Compressor({
-    required this.name,
-    required this.compress,
-    required this.decompress,
-    required this.compressFile,
-    required this.decompressFile,
-  });
-}
-
-extension BrotliExt on Brotli {
-  Compressor get compressor => Compressor(
-        name: 'brotli',
-        compress: brotliCompress,
-        decompress: brotliDecompress,
-        compressFile: brotliCompressFile,
-        decompressFile: brotliDecompressFile,
-      );
-}
-
-extension GzipExt on Gzip {
-  Compressor get compressor => Compressor(
-        name: 'gzip',
-        compress: gzipCompress,
-        decompress: gzipDecompress,
-        compressFile: gzipCompressFile,
-        decompressFile: gzipDecompressFile,
-      );
-}
-
-extension ZlibExt on Zlib {
-  Compressor get compressor => Compressor(
-        name: 'zlib',
-        compress: zlibCompress,
-        decompress: zlibDecompress,
-        compressFile: zlibCompressFile,
-        decompressFile: zlibDecompressFile,
-      );
-}
-
-extension DeflateExt on Deflate {
-  Compressor get compressor => Compressor(
-        name: 'deflate',
-        compress: deflateCompress,
-        decompress: deflateDecompress,
-        compressFile: deflateCompressFile,
-        decompressFile: deflateDecompressFile,
-      );
 }

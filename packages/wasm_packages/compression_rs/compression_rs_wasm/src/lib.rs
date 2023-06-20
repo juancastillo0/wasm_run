@@ -1,3 +1,4 @@
+use std::fmt::Display;
 use std::fs::File;
 use std::io::prelude::*;
 
@@ -28,7 +29,7 @@ impl Input {
     }
 }
 
-fn map_err(e: std::io::Error) -> String {
+fn map_err<E: Display>(e: E) -> String {
     e.to_string()
 }
 
@@ -88,6 +89,110 @@ impl compression_rs::brotli::Brotli for WitImplementation {
     fn brotli_decompress_file(mut i: Input, path: String) -> Result<u32, String> {
         i.with_read(|i| {
             let mut d = brotli::Decompressor::new(i, 4096 /* buffer size */);
+            let mut file = File::options().write(true).open(path).map_err(map_err)?;
+            let size = std::io::copy(&mut d, &mut file).map_err(map_err)?;
+            Ok(size as u32)
+        })
+    }
+}
+
+#[cfg(not(feature = "zstd"))]
+#[allow(unused_variables, unused_mut)]
+impl compression_rs::zstd::Zstd for WitImplementation {
+    fn zstd_compress(mut i: Input) -> Result<Vec<u8>, String> {
+        panic!("The wasm module should be compiled with the zstd feature");
+    }
+    fn zstd_decompress(mut i: Input) -> Result<Vec<u8>, String> {
+        panic!("The wasm module should be compiled with the zstd feature");
+    }
+    fn zstd_compress_file(mut i: Input, path: String) -> Result<u32, String> {
+        panic!("The wasm module should be compiled with the zstd feature");
+    }
+    fn zstd_decompress_file(mut i: Input, path: String) -> Result<u32, String> {
+        panic!("The wasm module should be compiled with the zstd feature");
+    }
+}
+
+#[cfg(feature = "zstd")]
+impl compression_rs::zstd::Zstd for WitImplementation {
+    fn zstd_compress(mut _i: Input) -> Result<Vec<u8>, String> {
+        Err("zstd compression is not implemented".to_string())
+    }
+
+    fn zstd_decompress(mut i: Input) -> Result<Vec<u8>, String> {
+        i.with_read(|i| {
+            let mut d = ruzstd::FrameDecoder::new();
+            d.init(i).map_err(map_err)?;
+            let mut output = Vec::new();
+            d.read_to_end(&mut output).map_err(map_err)?;
+            Ok(output)
+        })
+    }
+
+    fn zstd_compress_file(mut _i: Input, _path: String) -> Result<u32, String> {
+        Err("zstd compression is not implemented".to_string())
+    }
+
+    fn zstd_decompress_file(mut i: Input, path: String) -> Result<u32, String> {
+        i.with_read(|i| {
+            let mut d = ruzstd::FrameDecoder::new();
+            d.init(i).map_err(map_err)?;
+            let mut file = File::options().write(true).open(path).map_err(map_err)?;
+            let size = std::io::copy(&mut d, &mut file).map_err(map_err)?;
+            Ok(size as u32)
+        })
+    }
+}
+
+#[cfg(not(feature = "lz4"))]
+#[allow(unused_variables, unused_mut)]
+impl compression_rs::lz4::Lz4 for WitImplementation {
+    fn lz4_compress(mut i: Input) -> Result<Vec<u8>, String> {
+        panic!("The wasm module should be compiled with the lz4 feature");
+    }
+    fn lz4_decompress(mut i: Input) -> Result<Vec<u8>, String> {
+        panic!("The wasm module should be compiled with the lz4 feature");
+    }
+    fn lz4_compress_file(mut i: Input, path: String) -> Result<u32, String> {
+        panic!("The wasm module should be compiled with the lz4 feature");
+    }
+    fn lz4_decompress_file(mut i: Input, path: String) -> Result<u32, String> {
+        panic!("The wasm module should be compiled with the lz4 feature");
+    }
+}
+
+#[cfg(feature = "lz4")]
+impl compression_rs::lz4::Lz4 for WitImplementation {
+    fn lz4_compress(mut i: Input) -> Result<Vec<u8>, String> {
+        i.with_read(|i| {
+            let mut w = lz4_flex::frame::FrameEncoder::new(Vec::new());
+            std::io::copy(i, &mut w).map_err(map_err)?;
+            Ok(w.finish().map_err(map_err)?)
+        })
+    }
+
+    fn lz4_decompress(mut i: Input) -> Result<Vec<u8>, String> {
+        i.with_read(|i| {
+            let mut d = lz4_flex::frame::FrameDecoder::new(i);
+            let mut output = Vec::new();
+            d.read_to_end(&mut output).map_err(map_err)?;
+            Ok(output)
+        })
+    }
+
+    fn lz4_compress_file(mut i: Input, path: String) -> Result<u32, String> {
+        i.with_read(|i| {
+            let file = File::options().write(true).open(path).map_err(map_err)?;
+            let mut w = lz4_flex::frame::FrameEncoder::new(file);
+            let size = std::io::copy(i, &mut w).map_err(map_err)?;
+            w.finish().map_err(map_err)?;
+            Ok(size as u32)
+        })
+    }
+
+    fn lz4_decompress_file(mut i: Input, path: String) -> Result<u32, String> {
+        i.with_read(|i| {
+            let mut d = lz4_flex::frame::FrameDecoder::new(i);
             let mut file = File::options().write(true).open(path).map_err(map_err)?;
             let size = std::io::copy(&mut d, &mut file).map_err(map_err)?;
             Ok(size as u32)
@@ -261,16 +366,5 @@ impl compression_rs::deflate::Deflate for WitImplementation {
             let size = std::io::copy(&mut d, &mut file).map_err(map_err)?;
             Ok(size as u32)
         })
-    }
-}
-
-impl CompressionRs for WitImplementation {
-    fn run(value: Model) -> Result<f64, String> {
-        let mapped = map_integer(value.integer);
-        if mapped.is_nan() {
-            Err("NaN returned from map_integer".to_string())
-        } else {
-            Ok(mapped)
-        }
     }
 }
