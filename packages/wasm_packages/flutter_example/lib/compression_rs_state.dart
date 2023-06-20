@@ -1,45 +1,55 @@
 import 'dart:typed_data';
 
-import 'package:compression_rs/compression_rs_in_mem_worker.dart';
+import 'package:compression_rs/compression_rs.dart';
 import 'package:flutter/foundation.dart' show ChangeNotifier;
 import 'package:flutter_example/flutter_utils.dart';
-
-enum CRsMethod {
-  brotli,
-  deflate,
-  gzip,
-  zlib;
-
-  AsyncCompressor compressor(CompressionRsWorld compressionRs) {
-    return switch (this) {
-      brotli => compressionRs.brotli.compressor,
-      deflate => compressionRs.deflate.compressor,
-      gzip => compressionRs.gzip.compressor,
-      zlib => compressionRs.zlib.compressor,
-    };
-  }
-}
 
 class CompressionRsState extends ChangeNotifier with ErrorNotifier {
   CompressionRsState(this.compressionRs);
 
   final CompressionRsWorld compressionRs;
+  final List<InputFile> files = [];
 
-  Future<Uint8List?> compress(Uint8List bytes, CRsMethod method) async {
-    final result = await method
-        .compressor(compressionRs)
-        .compress(input: Input.bytes(bytes));
-    return result.mapErr(setError).ok;
+  void compress(InputFile file, CompressorKind kind) {
+    if (file.compressed[kind] != null) return;
+    final result =
+        kind.compressor(compressionRs).compress(input: Input.bytes(file.bytes));
+    file.compressed[kind] = result.mapErr(setError).ok;
+    notifyListeners();
   }
 
-  Future<Uint8List?> decompress(Uint8List bytes, CRsMethod method) async {
-    final result = await method
+  void decompress(InputFile file, CompressorKind kind) {
+    if (file.decompressed[kind] != null) return;
+    final result = kind
         .compressor(compressionRs)
-        .decompress(input: Input.bytes(bytes));
-    return result.mapErr(setError).ok;
+        .decompress(input: Input.bytes(file.bytes));
+    file.decompressed[kind] = result.mapErr(setError).ok;
+    notifyListeners();
+  }
+
+  void loadFile(String name, Uint8List bytes) {
+    final file = InputFile(name, bytes);
+    files.add(file);
+    for (final kind in CompressorKind.values) {
+      if (name.endsWith('.${kind.name}')) {
+        decompress(file, kind);
+        break;
+      }
+    }
+    notifyListeners();
+  }
+
+  void removeFile(InputFile file) {
+    files.remove(file);
+    notifyListeners();
   }
 }
 
-extension CompressorAsync on CompressionRsWorld {
-  AsyncCompressor compressor(CRsMethod method) => method.compressor(this);
+class InputFile {
+  final String name;
+  final Uint8List bytes;
+  final Map<CompressorKind, Uint8List?> compressed = {};
+  final Map<CompressorKind, Uint8List?> decompressed = {};
+
+  InputFile(this.name, this.bytes);
 }
