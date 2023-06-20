@@ -1,0 +1,243 @@
+package wasm-parser-namespace:wasm-parser
+
+world wasm-parser {
+    type parser-error = string
+
+    union wasm-type {
+      module-type,
+      component-type,
+    }
+
+    record module-type {
+      imports: list<module-import>,
+      exports: list<module-export>,
+    }
+
+    record component-type {
+      modules: list<module-type>,
+    }
+
+    variant wat-input {
+      /// A string of text in the WebAssembly text format
+      text(string),
+      /// A sequence of bytes in the WebAssembly binary format
+      binary(list<u8>),
+      /// A path to a file containing either text or binary
+      file-path(string),
+    }
+
+    variant wasm-input {
+      /// A sequence of bytes in the WebAssembly binary format
+      binary(list<u8>),
+      /// A path to a file containing the binary wasm module
+      file-path(string),
+    }
+
+    record component-adapter {
+      name: string,
+      wasm: wasm-input,
+    }
+    
+    // TODO: wasm_metadata
+
+    export wasm2wasm-component: func(input: wasm-input, wit: option<string>, adapters: list<component-adapter>) -> result<list<u8>, parser-error>
+    export wasm-component2wit: func(input: wasm-input) -> result<string, parser-error>
+    export wat2wasm: func(input: wat-input) -> result<list<u8>, parser-error>
+    export wasm2wat: func(input: wasm-input) -> result<string, parser-error>
+
+    export parse-wat: func(input: wat-input) -> result<wasm-type, parser-error>
+    export parse-wasm: func(input: wasm-input) -> result<wasm-type, parser-error>
+    export validate-wasm: func(input: wasm-input, features: option<wasm-features>) -> result<wasm-type, parser-error>
+
+    export default-wasm-features: func() -> wasm-features
+
+    record module-import {
+      /// The module name of the imported item.
+      module: string,
+      /// The name of the imported item.
+      name: string,
+      /// The type of the import.
+      %type: extern-type,
+    }
+
+    record module-export {
+      /// The name of the exported item.
+      name: string,
+      /// The type of the export.
+      %type: extern-type,
+    }
+
+    // union ModuleTypeDeclaration {
+// 
+    // }
+
+    union extern-type {
+      memory-type,
+      table-type,
+      global-type,
+      function-type,
+      tag-type,
+    }
+
+    record memory-type {
+      /// Whether or not this is a 64-bit memory, using i64 as an index. If this
+      /// is false it's a 32-bit memory using i32 as an index.
+      ///
+      /// This is part of the memory64 proposal in WebAssembly.
+      memory64: bool,
+      /// Whether or not this is a "shared" memory, indicating that it should be
+      /// send-able across threads and the `maximum` field is always present for
+      /// valid types.
+      ///
+      /// This is part of the threads proposal in WebAssembly.
+      shared: bool,
+      /// Initial size of this memory, in wasm pages.
+      ///
+      /// For 32-bit memories (when `memory64` is `false`) this is guaranteed to
+      /// be at most `u32::MAX` for valid types.
+      minimum: u64,
+      /// Optional maximum size of this memory, in wasm pages.
+      ///
+      /// For 32-bit memories (when `memory64` is `false`) this is guaranteed to
+      /// be at most `u32::MAX` for valid types. This field is always present for
+      /// valid wasm memories when `shared` is `true`.
+      maximum: option<u64>,
+    }
+
+    record table-type {
+      /// The table's element type.
+      element: ref-type,
+      /// Initial size of this table, in elements.
+      minimum: u32,
+      /// Optional maximum size of the table, in elements.
+      maximum: option<u32>,
+    }
+
+    record global-type {
+      /// The global's type.
+      value: value-type,
+      /// Whether or not the global is mutable.
+      mutable: bool
+    }
+
+    record function-type {
+      /// The parameters of the function
+      parameters: list<value-type>,
+      /// The results of the function
+      results: list<value-type>,
+    }
+
+    /// A tag's type.
+    record tag-type {
+      /// The kind of tag
+      kind: tag-kind,
+      /// The function type this tag uses.
+      function-type: function-type,
+    }
+
+    /// Represents a tag kind.
+    enum tag-kind {
+      /// The tag is an exception type.
+      exception,
+    }
+
+    variant value-type {
+      /// The value type is i32.
+      i32,
+      /// The value type is i64.
+      i64,
+      /// The value type is f32.
+      f32,
+      /// The value type is f64.
+      f64,
+      /// The value type is v128.
+      v128,
+      /// The value type is a reference.
+      ref(ref-type),
+    }
+
+    enum core-ref-type {
+      /// The reference type is funcref.
+      funcref,
+      /// The reference type is externref.
+      externref,
+    }
+    
+    record ref-type {
+      nullable: bool,
+      heap-type: heap-type,
+    }
+
+    /// A heap type from function references. When the proposal is disabled, Index
+    /// is an invalid type.
+    variant heap-type {
+        /// User defined type at the given index.
+        indexed(u32),
+        /// Untyped (any) function.
+        %func,
+        /// External heap type.
+        extern,
+        /// The `any` heap type. The common supertype (a.k.a. top) of all internal types.
+        any,
+        /// The `none` heap type. The common subtype (a.k.a. bottom) of all internal types.
+        none,
+        /// The `noextern` heap type. The common subtype (a.k.a. bottom) of all external types.
+        no-extern,
+        /// The `nofunc` heap type. The common subtype (a.k.a. bottom) of all function types.
+        no-func,
+        /// The `eq` heap type. The common supertype of all referenceable types on which comparison
+        /// (ref.eq) is allowed.
+        eq,
+        /// The `struct` heap type. The common supertype of all struct types.
+        struct,
+        /// The `array` heap type. The common supertype of all array types.
+        array,
+        /// The i31 heap type.
+        i31,
+    }
+
+    record wasm-features {
+      /// The WebAssembly mutable-global proposal (enabled by default)
+      mutable-global: bool,
+      /// The WebAssembly nontrapping-float-to-int-conversions proposal (enabled by default)
+      saturating-float-to-int: bool,
+      /// The WebAssembly sign-extension-ops proposal (enabled by default)
+      sign-extension: bool,
+      /// The WebAssembly reference types proposal (enabled by default)
+      reference-types: bool,
+      /// The WebAssembly multi-value proposal (enabled by default)
+      multi-value: bool,
+      /// The WebAssembly bulk memory operations proposal (enabled by default)
+      bulk-memory: bool,
+      /// The WebAssembly SIMD proposal (enabled by default)
+      simd: bool,
+      /// The WebAssembly Relaxed SIMD proposal
+      relaxed-simd: bool,
+      /// The WebAssembly threads proposal
+      threads: bool,
+      /// The WebAssembly tail-call proposal
+      tail-call: bool,
+      /// Whether or not floating-point instructions are enabled.
+      /// This is enabled by default can be used to disallow floating-point operators and types.
+      /// This does not correspond to a WebAssembly proposal but is instead intended for embeddings which have
+      /// stricter-than-usual requirements about execution. Floats in WebAssembly can have different NaN patterns
+      /// across hosts which can lead to host-dependent execution which some runtimes may not desire.
+      floats: bool,
+      /// The WebAssembly multi memory proposal
+      multi-memory: bool,
+      /// The WebAssembly exception handling proposal
+      exceptions: bool,
+      /// The WebAssembly memory64 proposal
+      memory64: bool,
+      /// The WebAssembly extended_const proposal
+      extended-const: bool,
+      /// The WebAssembly component model proposal.
+      component-model: bool,
+      /// The WebAssembly typed function references proposal
+      function-references: bool,
+      /// The WebAssembly memory control proposal
+      memory-control: bool,
+      /// The WebAssembly gc proposal
+      gc: bool,
+    }
+}

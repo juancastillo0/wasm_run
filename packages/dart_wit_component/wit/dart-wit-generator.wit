@@ -6,12 +6,37 @@ world dart-wit-generator {
         inputs: wit-generator-input,
         /// Whether to generate json serialization for the types in the world.
         json-serialization: bool,
-        /// Whether to generate a copyWith method for the types in the world.
+        /// Whether to generate a `copyWith` method for the types in the world.
         copy-with: bool,
-        /// Whether to generate equality and hash code getters for the types in the world.
+        /// Whether to generate equality and the `hashCode` getter for the types in the world.
         equality-and-hash-code: bool,
-        /// Whether to generate toString methods for the types in the world.
+        /// Whether to generate `toString` methods for the types in the world.
         to-string: bool,
+        /// Whether to generate documentation for methods within the types in the world.
+        /// For example, for the `toJson`, `copyWith` and `fromJson` methods.
+        generate-docs: bool,
+        /// Custom imports, ignore comments or code to be added at the top of the generated file.
+        file-header: option<string>,
+        /// [ObjectComparator] used to implement the generated equality and hashCode overrides.
+        /// You will need to add a custom import in [fileHeader] to use this.
+        object-comparator: option<string>,
+        /// Whether to use `null` for `option` types when possible.
+        /// For example when there is a single unnested `option` type.
+        use-null-for-option: bool,
+        /// Whether `option` parameters are required.
+        required-option: bool,
+        /// The type to use for 64 bit integers.
+        int64-type: int64-type-config,
+        /// Whether to use `dart:typed_data`'s numeric lists.
+        /// For example, `Uint8List` instead of `List<int>` for `list<u8>`.
+        /// This does not affect `list<u64>` and `list<s64>`, they will
+        /// use a `List<[int64Type]>`.
+        typed-number-lists: bool,
+        /// Whether to the asyncronous functions to execute functions in workers.
+        async-worker: bool,
+        /// Whether to use extends for union variants instead of crating a separate
+        /// wrapper class for each option.
+        same-class-union: bool,
     }
 
     /// The file inputs to use for the code generation.
@@ -20,6 +45,7 @@ world dart-wit-generator {
         in-memory-files,
     }
 
+    /// The paths in the file system that contain the wit files.
     record file-system-paths {
         /// May be a file or a directory.
         /// When it is a directory, all files in the directory will be used as input.
@@ -29,12 +55,45 @@ world dart-wit-generator {
         input-path: string,
     }
 
+    /// Files paths and their contents.
     record in-memory-files {
         /// The file to use as the world file.
         world-file: wit-file,
         /// The files to use as the package files for the world.
         /// You will be able to import with `use pkg` from these files.
         pkg-files: list<wit-file>,
+    }
+
+    /// Configures how 64 bit integers are represented in the generated code.
+    enum int64-type-config {
+        /// Use the native JavaScript BigInt type and [int] for native platforms.
+        /// You will need to cast it with the [i64] utility functions.
+        /// 
+        /// This is not safe for native platforms, because the unsigned 64 bit integers
+        /// can not be represented properly in Dart's core int type unless you only care about the bits.
+        /// For example, the maximum U64 `18446744073709551615` will be represented as `-1`. Although you do
+        /// not lose any information (the bits are the same), the methods used over the [int] type
+        /// will not work as expected for values greater than the maximum signed 64 bit integer.
+        /// Safe, but cumbersome for web platforms, since you will need to cast the JsBigInt
+        /// to the wanted value using [i64]. 
+        native-object,
+        /// Use the [BigInt] type for signed and unsigned 64 bit integers.
+        /// 
+        /// Safe in all platforms.
+        big-int,
+        /// Use the [BigInt] type only for unsigned 64 bit integers.
+        /// [int] is used for signed 64 bit integers.
+        /// 
+        /// Unsafe for web platforms since the signed 64 bit integers
+        /// are represented as a double in JavaScript.
+        /// Safe for native, see [nativeObject].
+        big-int-unsigned-only,
+        /// Use the [int] type.
+        ///
+        /// Unsafe in all platforms. 
+        /// Web can not represent 64 bit integers since it uses doubles for all numbers.
+        /// Native cannot represent unsigned 64 big integers, see [nativeObject].
+        core-int,
     }
 
     record wit-file {
@@ -47,5 +106,8 @@ world dart-wit-generator {
 
     /// Generates a world from the given configuration.
     export generate: func(config: wit-generator-config) -> result<wit-file, string>
+
+    /// Generates a world from the given configuration to the [filePath].
+    export generate-to-file: func(config: wit-generator-config, file-path: string) -> result<_, string>
 
 }

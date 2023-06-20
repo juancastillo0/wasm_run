@@ -21,9 +21,15 @@ import 'dart:js_util';
 
 import 'package:flutter_rust_bridge/flutter_rust_bridge.dart';
 
+const oflagsCREAT = 1 << 0;
+const oflagsDIRECTORY = 1 << 1;
+const oflagsEXCL = 1 << 2;
+const oflagsTRUNC = 1 << 3;
+
 @JS('File')
 abstract class WasiWebFile {
-  external factory WasiWebFile(Uint8List items);
+  external factory WasiWebFile(Uint8List data);
+  external Uint8List get data;
 }
 
 @JS('Directory')
@@ -36,11 +42,13 @@ abstract class WasiWebDirectory {
 @JS('OpenFile')
 abstract class OpenFile extends Fd {
   external factory OpenFile(WasiWebFile file);
+  external WasiWebFile get file;
 }
 
 @JS('OpenDirectory')
 abstract class OpenDirectory extends Fd {
-  external factory OpenDirectory(WasiWebDirectory directory);
+  external factory OpenDirectory(WasiWebDirectory dir);
+  external WasiWebDirectory get dir;
 }
 
 @JS('PreopenDirectory')
@@ -49,6 +57,7 @@ abstract class PreopenDirectory extends OpenDirectory {
     String name,
     Object items, // Map<String, Object? /*File | Directory*/ > items,
   );
+  external Uint8List get prestat_name;
 }
 
 @JS('WASI')
@@ -216,7 +225,7 @@ abstract class PrestatGet {
 @anonymous
 abstract class PrestatDirNameGet {
   external int get ret;
-  external int get prestat_dir_name;
+  external Uint8List? get prestat_dir_name;
 }
 
 @JS()

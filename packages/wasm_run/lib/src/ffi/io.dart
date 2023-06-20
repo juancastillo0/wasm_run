@@ -1,5 +1,6 @@
 import 'dart:ffi';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:wasm_run/src/bridge_generated.dart';
 import 'package:wasm_run/src/ffi/library_locator.dart';
@@ -79,4 +80,18 @@ DynamicLibrary _validateLibrary(DynamicLibrary library) {
     return library;
   }
   throw Exception('Invalid library $library');
+}
+
+Future<Uint8List> getUriBodyBytesImpl(Uri uri) async {
+  final client = HttpClient();
+  final request = await client.getUrl(uri);
+  final response = await request.close();
+  if (response.contentLength == 0) {
+    throw Exception('Failed to fetch $uri: ${response.statusCode}');
+  }
+  final bytes = await response.fold(
+    BytesBuilder(),
+    (b, d) => b..add(d),
+  );
+  return bytes.takeBytes();
 }

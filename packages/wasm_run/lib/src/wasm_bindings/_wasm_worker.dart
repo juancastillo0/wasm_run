@@ -6,8 +6,7 @@ import 'dart:html' as html;
 import 'dart:js_util' as js_util;
 import 'dart:typed_data';
 
-import 'package:flutter_rust_bridge/flutter_rust_bridge.dart'
-    show JS, anonymous;
+import 'package:flutter_rust_bridge/flutter_rust_bridge.dart' show JS;
 import 'package:wasm_run/src/wasm_bindings/_atomics_web.dart';
 import 'package:wasm_run/src/wasm_bindings/wasm_interface.dart';
 
@@ -215,48 +214,6 @@ class WasmWorker {
 
 @JS('DataView')
 external Object get _dataViewConstructor;
-
-// @JS('sendSharedMemoryToWorker')
-// external void sendSharedMemoryToWorker(
-//   Object worker,
-//   Object wasmModule,
-//   Object sharedMemory,
-// );
-
-@JS()
-@anonymous
-class _MessageDataLoad {
-  ///
-  external factory _MessageDataLoad({
-    required String cmd,
-    required int workerId,
-    required Object wasmModule,
-    required Object wasmMemory,
-    required Object wasmImports,
-  });
-}
-
-@JS()
-@anonymous
-class _MessageDataRun {
-  ///
-  external factory _MessageDataRun({
-    required String cmd,
-    required int taskId,
-    required String functionExport,
-    required List<Object?> args,
-  });
-}
-
-class _PostMessageLoaded {
-  final String cmd;
-  final int workerId;
-
-  _PostMessageLoaded({
-    required this.cmd,
-    required this.workerId,
-  });
-}
 
 class _PostMessageResult {
   final String cmd;

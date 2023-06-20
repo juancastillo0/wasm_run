@@ -13,6 +13,10 @@ topics:
 environment:
   sdk: ">=2.19.0 <4.0.0"
 
+flutter:
+  assets:
+    - lib/assets/
+
 dependencies:
   meta: ^1.8.0
   ffi: ^2.0.1
@@ -21,7 +25,6 @@ dependencies:
   wasm_interop: ^2.0.1
   logging: ^1.1.0
   collection: ^1.17.0
-  http: ^0.13.5
 
 dev_dependencies:
   ffigen: ^7.2.10

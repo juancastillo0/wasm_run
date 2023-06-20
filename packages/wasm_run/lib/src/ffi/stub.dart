@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:wasm_run/src/bridge_generated.dart';
 
 /// Represents the external library for wasm_run
@@ -20,3 +22,6 @@ ExternalLibrary createLibraryImpl() => throw UnimplementedError();
 /// or web browser functionalities.
 Future<void> setUpLibraryImpl({required bool features, required bool wasi}) =>
     throw UnimplementedError();
+
+/// Executes a GET request to the [uri] and returns the body bytes.
+Future<Uint8List> getUriBodyBytesImpl(Uri uri) => throw UnimplementedError();

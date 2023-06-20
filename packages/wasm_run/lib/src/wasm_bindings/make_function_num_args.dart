@@ -1,4 +1,5 @@
-// ignore_for_file: inference_failure_on_untyped_parameter
+// coverage:ignore-file
+// ignore_for_file: inference_failure_on_untyped_parameter, require_trailing_commas
 
 /// Creates a function that calls [inner] with the given number of arguments.
 Function makeFunctionNumArgs(

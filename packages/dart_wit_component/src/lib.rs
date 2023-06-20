@@ -2,6 +2,7 @@ use std::path::Path;
 
 mod function;
 pub mod generate;
+mod methods;
 mod strings;
 mod types;
 
@@ -15,7 +16,19 @@ wit_bindgen::generate!("dart-wit-generator");
 struct GeneratorImpl;
 
 impl DartWitGenerator for GeneratorImpl {
+    fn generate_to_file(config: WitGeneratorConfig, file_path: String) -> Result<(), String> {
+        let file = Self::generate(config)?;
+        std::fs::write(file_path, file.contents).map_err(|e| e.to_string())?;
+        Ok(())
+    }
+
     fn generate(config: WitGeneratorConfig) -> Result<WitFile, String> {
+        let base_config = WitGeneratorConfig {
+            inputs: WitGeneratorInput::FileSystemPaths(FileSystemPaths {
+                input_path: "".to_string(),
+            }),
+            ..config
+        };
         let (path, pkg) = match config.inputs {
             WitGeneratorInput::InMemoryFiles(inputs) => {
                 let mut source_map = wit_parser::SourceMap::new();
@@ -33,7 +46,7 @@ impl DartWitGenerator for GeneratorImpl {
                 (p.input_path, parsed)
             }
         };
-        let contents = generate::document_to_dart(&pkg);
+        let contents = generate::document_to_dart(&pkg, base_config)?;
         Ok(WitFile { path, contents })
     }
 }

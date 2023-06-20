@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:wasm_run/src/bridge_generated.dart';
 import 'package:wasm_run/src/ffi/setup_dynamic_library.dart';
 import 'package:wasm_run/src/ffi/stub.dart'
@@ -16,6 +18,18 @@ WasmRunDart _createWrapper(ExternalLibrary lib) {
 }
 
 WasmRunDart _createLib() => _createWrapper(createLibraryImpl());
+
+/// Executes a GET request to the [uri] and returns the body bytes.
+Future<Uint8List> getUriBodyBytes(Uri uri) => getUriBodyBytesImpl(uri);
+
+/// True when the current application is a Flutter application.
+/// This is used to determine the url of the wasm_run assets in web.
+bool kIsFlutter = false;
+
+/// The global function to use for loading assets.
+/// Used used in Flutter apps to load assets from the bundled assets.
+/// For example to load WASM modules for a package.
+Future<ByteData> Function(String path)? globalLoadAsset;
 
 /// Static namespace for configuring the dynamic library for wasm_run
 class WasmRunLibrary {
@@ -57,8 +71,26 @@ class WasmRunLibrary {
 
   /// Sets up the dynamic library to use for the native bindings.
   /// If [override] is true, it will override the current library if it exists.
-  static Future<void> setUp({required bool override}) async {
-    if (_isWeb) return setUpLibraryImpl(features: true, wasi: true);
+  static Future<void> setUp({
+    required bool override,
+    bool? isFlutter,
+    Future<ByteData> Function(String)? loadAsset,
+  }) async {
+    if (isFlutter != null) kIsFlutter = isFlutter;
+    if (loadAsset != null) globalLoadAsset = loadAsset;
+
+    if (_isWeb) {
+      return setUpLibraryImpl(
+        features: const bool.fromEnvironment(
+          'WASM_RUN_WEB_FEATURE_DETECT_LIBRARY',
+          defaultValue: true,
+        ),
+        wasi: const bool.fromEnvironment(
+          'WASM_RUN_WEB_WASI_SHIM_LIBRARY',
+          defaultValue: true,
+        ),
+      );
+    }
     if (override && _wrapper != null) throw _alreadyInitialized;
     if (!override && isReachable()) return;
     await setUpDesktopDynamicLibrary();

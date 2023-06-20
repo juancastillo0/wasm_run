@@ -207,8 +207,8 @@ void wasiTest({TestArgs? testArgs}) {
     expect(DateTime.now().millisecondsSinceEpoch, greaterThan(t));
 
     final memory = instance1.getMemory('memory')!;
-    final _alloc = instance1.getFunction('alloc')!.inner;
-    final alloc = (int bytes) => _alloc(bytes) as int;
+    final alloc_ = instance1.getFunction('alloc')!.inner;
+    int alloc(int bytes) => alloc_(bytes) as int;
     final dealloc = instance1.getFunction('dealloc')!.inner as void Function(
       int offset,
       int bytes,

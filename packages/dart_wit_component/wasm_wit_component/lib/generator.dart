@@ -8,7 +8,7 @@ export 'package:wasm_wit_component/src/generator.dart';
 
 const _isWeb = identical(0, 0.0);
 
-/// Creates a [DartWitGeneratorWorld] from for the given [wasiConfig].
+/// Creates a [DartWitGeneratorWorld] with the given [wasiConfig].
 /// It setsUp the dynamic library for wasm_run for native platforms and
 /// loads the dart_wit_component WASM module from the file system or
 /// from the releases of wasm_run repository.
@@ -20,7 +20,7 @@ const _isWeb = identical(0, 0.0);
 /// from the file system in `lib/dart_wit_component.wasm` either reading it directly
 /// in native platforms or with a GET request for Dart web. As a fallback
 /// it will use the releases from the wasm_run repository.
-Future<DartWitGeneratorWorld> generator({
+Future<DartWitGeneratorWorld> createDartWitGenerator({
   required WasiConfig wasiConfig,
   Future<WasmModule> Function()? loadModule,
 }) async {
@@ -40,7 +40,16 @@ Future<DartWitGeneratorWorld> generator({
     if (!_isWeb) {
       final packageDir = File.fromUri(Platform.script).parent.parent;
       final wasmFile = packageDir.uri.resolve('lib/dart_wit_component.wasm');
-      uris = WasmFileUris(uri: wasmFile, fallback: uris);
+      if (File(wasmFile.toFilePath()).existsSync()) {
+        uris = WasmFileUris(uri: wasmFile, fallback: uris);
+      } else if (_getRootDirectory() case final Directory root) {
+        uris = WasmFileUris(
+          uri: root.uri.resolve(
+            'packages/dart_wit_component/wasm_wit_component/lib/dart_wit_component.wasm',
+          ),
+          fallback: uris,
+        );
+      }
     }
 
     module = await uris.loadModule();
@@ -53,6 +62,37 @@ Future<DartWitGeneratorWorld> generator({
     imports: const DartWitGeneratorWorldImports(),
   );
   return world;
+}
+
+/// Returns a [WitGeneratorConfig] with the default configuration
+WitGeneratorConfig defaultGeneratorConfig({
+  required WitGeneratorInput inputs,
+}) {
+  return WitGeneratorConfig(
+    inputs: inputs,
+    jsonSerialization: true,
+    copyWith_: true,
+    equalityAndHashCode: true,
+    toString_: true,
+    generateDocs: true,
+    useNullForOption: true,
+    requiredOption: false,
+    int64Type: Int64TypeConfig.bigInt,
+    typedNumberLists: true,
+    asyncWorker: false,
+    sameClassUnion: true,
+  );
+}
+
+Directory? _getRootDirectory() {
+  var dir = Directory.current;
+  while (!File('${dir.path}${Platform.pathSeparator}melos.yaml').existsSync()) {
+    if (dir.path == '/' || dir.path == '' || dir.path == dir.parent.path) {
+      return null;
+    }
+    dir = dir.parent;
+  }
+  return dir;
 }
 
 /// Creates a [WasiConfig] from the given [witPath].

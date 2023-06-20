@@ -192,7 +192,7 @@ class _WasmModule extends WasmModule {
       wasi = _WASI(wasiWeb, stdout, stderr);
     }
 
-    return _Builder(module, wasi, workersConfig);
+    return _Builder(this, wasi, workersConfig);
   }
 
   @override
@@ -224,7 +224,9 @@ class _WasmModule extends WasmModule {
 }
 
 class _Builder extends WasmInstanceBuilder {
-  final Module module;
+  @override
+  final _WasmModule module;
+  Module get _module => module.module;
   final _WASI? wasi;
   final WorkersConfig? workersConfig;
   final Map<String, Map<String, WasmExternal>> importMap = {};
@@ -316,14 +318,14 @@ class _Builder extends WasmInstanceBuilder {
     if (workersConfig != null) {
       throw Exception('numThreads is not supported in buildSync()');
     }
-    final instance = Instance.fromModule(module, importMap: _mapImports());
+    final instance = Instance.fromModule(_module, importMap: _mapImports());
     return _Instance(this, instance, null);
   }
 
   @override
   Future<WasmInstance> build() async {
     final instance =
-        await Instance.fromModuleAsync(module, importMap: _mapImports());
+        await Instance.fromModuleAsync(_module, importMap: _mapImports());
 
     List<WasmWorker>? workers;
     if (workersConfig != null) {
@@ -426,7 +428,7 @@ class _Builder extends WasmInstanceBuilder {
           return WasmWorker.create(
             workerId: index + 1,
             workersConfig: workersConfig!,
-            wasmModule: module.jsObject,
+            wasmModule: _module.jsObject,
             wasmImports: mappedImports,
             functions: functions,
           );
@@ -530,6 +532,43 @@ class _Instance extends WasmInstance {
         _executeTasks();
       });
     }
+  }
+
+  @override
+  Future<WasiFile?> wasiOpenFile(
+    String path, {
+    bool create = false,
+    bool truncate = false,
+    // bool directory = false,
+    bool exclusive = false,
+  }) async {
+    if (builder.wasi == null) return null;
+    final directories =
+        builder.wasi!.inner.fds.sublist(3).cast<PreopenDirectory>();
+    final oflags = (create ? oflagsCREAT : 0) |
+        (truncate ? oflagsTRUNC : 0) |
+        // (directory ? oflagsDIRECTORY : 0) |
+        (exclusive ? oflagsEXCL : 0);
+    for (final dir in directories) {
+      final value = dir.path_open(
+        0,
+        path,
+        oflags,
+        i64.fromInt(0),
+        i64.fromInt(0),
+        0,
+      );
+      if (value.fd_obj != null) {
+        final file = (value.fd_obj! as OpenFile).file;
+        return WasiFile(file.data);
+      }
+    }
+    // TODO: throw Exception('No preopened dir for $path');
+    return null;
+    // return Map.fromEntries(directories.map((e) => MapEntry(
+    //     utf8.decode(e.prestat_name),
+    //     e.path_open(dirflags, path, oflags, fs_rights_base,
+    //         fs_rights_inheriting, fdflags))));
   }
 
   @override

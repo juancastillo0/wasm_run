@@ -37,6 +37,7 @@ build/
 /target/
 /Cargo.lock
 /platform-build
+/packages/wasm_packages/release_files/
 .vscode/settings.json
 .fvm/flutter_sdk
 packages/wasm_run/coverage
