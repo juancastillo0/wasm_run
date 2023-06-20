@@ -2,7 +2,7 @@ name: wasm_run_flutter
 description: |
   This library contains the necessary platform bindings for executing `package:wasm_run`'s Web Assembly executor.
   Uses Rust's wasmtime optimizing runtime or wasmi interpreter.
-version: 0.0.1
+version: 0.0.1+1
 homepage: https://github.com/juancastillo0/wasm_run
 
 topics:
@@ -22,7 +22,7 @@ dependencies:
   plugin_platform_interface: ^2.0.2
   flutter_web_plugins:
     sdk: flutter
-  wasm_run: ^0.0.1
+  wasm_run: ^0.0.1+1
 
 dev_dependencies:
   ffi: ^2.0.1

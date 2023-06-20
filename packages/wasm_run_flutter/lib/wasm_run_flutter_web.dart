@@ -3,6 +3,6 @@ import 'package:wasm_run/wasm_run.dart';
 
 class WasmRunFlutterWeb {
   static void registerWith(Registrar registrar) {
-    WasmRunLibrary.setUp(override: false);
+    WasmRunLibrary.setUp(override: false, isFlutter: true);
   }
 }

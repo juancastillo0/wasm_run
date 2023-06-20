@@ -17,6 +17,10 @@ WasmRunDart _createWrapper(ExternalLibrary lib) {
 
 WasmRunDart _createLib() => _createWrapper(createLibraryImpl());
 
+/// True when the current application is a Flutter application.
+/// This is used to determine the url of the wasm_run assets in web.
+bool kIsFlutter = false;
+
 /// Static namespace for configuring the dynamic library for wasm_run
 class WasmRunLibrary {
   const WasmRunLibrary._();
@@ -57,7 +61,11 @@ class WasmRunLibrary {
 
   /// Sets up the dynamic library to use for the native bindings.
   /// If [override] is true, it will override the current library if it exists.
-  static Future<void> setUp({required bool override}) async {
+  static Future<void> setUp({
+    required bool override,
+    bool? isFlutter,
+  }) async {
+    if (isFlutter != null) kIsFlutter = isFlutter;
     if (_isWeb) return setUpLibraryImpl(features: true, wasi: true);
     if (override && _wrapper != null) throw _alreadyInitialized;
     if (!override && isReachable()) return;

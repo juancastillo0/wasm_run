@@ -1,6 +1,6 @@
 name: wasm_run
 description: Web Assembly executor. Uses Rust's wasmtime optimizing runtime or wasmi interpreter.
-version: 0.0.1
+version: 0.0.1+1
 homepage: https://github.com/juancastillo0/wasm_run
 
 topics:
@@ -12,6 +12,10 @@ topics:
 
 environment:
   sdk: ">=2.19.0 <4.0.0"
+
+flutter:
+  assets:
+    - lib/assets/
 
 dependencies:
   meta: ^1.8.0

@@ -2,6 +2,7 @@ import 'dart:html' as html;
 
 import 'package:flutter_rust_bridge/flutter_rust_bridge.dart';
 import 'package:wasm_run/src/bridge_generated.dart';
+import 'package:wasm_run/src/ffi.dart';
 
 typedef ExternalLibrary = WasmModule;
 
@@ -19,10 +20,16 @@ ExternalLibrary createLibraryImpl() {
 Future<void> setUpLibraryImpl({required bool features, required bool wasi}) {
   return Future.wait([
     if (features)
-      _injectSrcScript('./packages/wasm_run/assets/wasm-feature-detect.js'),
+      _injectSrcScript(
+        kIsFlutter
+            ? './assets/packages/wasm_run/lib/assets/wasm-feature-detect.js'
+            : './packages/wasm_run/assets/wasm-feature-detect.js',
+      ),
     if (wasi)
       _injectSrcScript(
-        './packages/wasm_run/assets/browser_wasi_shim.js',
+        kIsFlutter
+            ? './assets/packages/wasm_run/lib/assets/browser_wasi_shim.js'
+            : './packages/wasm_run/assets/browser_wasi_shim.js',
         type: 'module',
       ),
   ]);
