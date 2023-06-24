@@ -39,15 +39,13 @@ class MyApp extends StatelessWidget {
           // ),
         ),
       ),
-      home: const MyHomePage(title: 'Wasm Run Packages'),
+      home: const MyHomePage(),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  final String title;
+  const MyHomePage({super.key});
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
@@ -101,6 +99,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final isBig = MediaQuery.of(context).size.width > 800;
     return Inherited(
       state: state,
       child: Scaffold(
@@ -117,9 +116,9 @@ class _MyHomePageState extends State<MyHomePage> {
           ],
           title: Row(
             children: [
-              Text(widget.title),
+              Text(isBig ? 'Wasm Run Packages' : 'Wasm Run'),
               const SizedBox(width: 10),
-              if (MediaQuery.of(context).size.width > 800)
+              if (isBig)
                 ...AppTab.values.map(
                   (t) => TextButton(
                     onPressed: () => setState(() {
@@ -142,7 +141,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   onChanged: (t) => setState(() {
                     tab = t!;
                   }),
-                ).container(width: 200),
+                ).container(width: 180),
             ],
           ),
         ),

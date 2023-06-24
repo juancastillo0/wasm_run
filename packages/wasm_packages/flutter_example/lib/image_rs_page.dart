@@ -62,154 +62,167 @@ class ImageRsPage extends StatelessWidget {
         final values = state.values;
         return Row(
           children: [
-            AnimatedBuilder(
-              animation: values,
-              builder: (context, _) {
-                return ListView(
-                  children: [
-                    Row(
-                      children: [
-                        const Text('Rotate'),
-                        const SizedBox(width: 3),
-                        ...([
-                          (
-                            90,
-                            state.imageRs.operations.rotate90,
-                          ),
-                          (
-                            180,
-                            state.imageRs.operations.rotate180,
-                          ),
-                          (
-                            270,
-                            state.imageRs.operations.rotate270,
-                          )
-                        ]).map(
-                          (e) => TextButton(
-                            style: TextButton.styleFrom(
-                              minimumSize: const Size(0, 40),
+            FocusTraversalGroup(
+              child: AnimatedBuilder(
+                animation: values,
+                builder: (context, _) {
+                  return ListView(
+                    children: [
+                      Row(
+                        children: [
+                          const Text('Rotate'),
+                          const SizedBox(width: 4),
+                          ...([
+                            (
+                              90,
+                              state.imageRs.operations.rotate90,
                             ),
-                            onPressed: op((ref) => e.$2(imageRef: ref)),
-                            child: Text('${e.$1}'),
-                          ),
-                        )
-                      ],
-                    ),
-                    ...imageOps(state).map(imageOpToWidget),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Text('keepAspectRatio'),
-                        Checkbox(
-                          value: values.keepAspectRatio,
-                          onChanged: (v) => values.setKeepAspectRatio(v!),
-                        ),
-                      ],
-                    ),
-                    DropdownButtonFormField(
-                      value: values.filterType,
-                      onChanged: (f) => values.setFilterType(f!),
-                      items: image_rs.FilterType.values
-                          .map(
-                            (e) => DropdownMenuItem(
-                              value: e,
-                              child: Text(e.name),
+                            (
+                              180,
+                              state.imageRs.operations.rotate180,
+                            ),
+                            (
+                              270,
+                              state.imageRs.operations.rotate270,
+                            )
+                          ]).map(
+                            (e) => TextButton(
+                              style: TextButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 0,
+                                  vertical: 0,
+                                ),
+                                minimumSize: const Size(45, 40),
+                              ),
+                              onPressed: op((ref) => e.$2(imageRef: ref)),
+                              child: Text('${e.$1}'),
                             ),
                           )
-                          .toList(growable: false),
-                    ).container(width: 140),
-                    // TODO: /// Resize the supplied image to the specified dimensions.
-                    // /// The image's aspect ratio is preserved. The image is scaled to the
-                    // /// maximum possible size that fits within the larger (relative to aspect ratio)
-                    // /// of the bounds specified by nwidth and nheight, then cropped to fit within the other bound.
-                    // resize-to-fill: func(image-ref: image-ref, size: image-size, filter: filter-type) -> image-ref
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IntInput(label: 'Width', onChanged: values.setWidth)
-                            .container(width: 80),
-                        IntInput(label: 'Height', onChanged: values.setHeight)
-                            .container(width: 80),
-                      ],
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IntInput(label: 'X', onChanged: values.setX)
-                            .container(width: 80),
-                        IntInput(label: 'Y', onChanged: values.setY)
-                            .container(width: 80),
-                      ],
-                    ),
-                  ]
-                      .expand((e) => [const SizedBox(height: 5), e])
-                      .toList(growable: false),
-                ).container(
-                  width: 200,
-                  padding: const EdgeInsets.only(left: 8),
-                );
-              },
+                        ],
+                      ),
+                      ...imageOps(state).map(imageOpToWidget),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const SizedBox(width: 6),
+                          const Text('keepAspectRatio'),
+                          Checkbox(
+                            value: values.keepAspectRatio,
+                            onChanged: (v) => values.setKeepAspectRatio(v!),
+                          ),
+                        ],
+                      ),
+                      DropdownButtonFormField(
+                        value: values.filterType,
+                        onChanged: (f) => values.setFilterType(f!),
+                        items: image_rs.FilterType.values
+                            .map(
+                              (e) => DropdownMenuItem(
+                                value: e,
+                                child: Text(e.name),
+                              ),
+                            )
+                            .toList(growable: false),
+                      ).container(
+                          width: 140,
+                          padding: const EdgeInsets.symmetric(horizontal: 6)),
+                      // TODO: /// Resize the supplied image to the specified dimensions.
+                      // /// The image's aspect ratio is preserved. The image is scaled to the
+                      // /// maximum possible size that fits within the larger (relative to aspect ratio)
+                      // /// of the bounds specified by nwidth and nheight, then cropped to fit within the other bound.
+                      // resize-to-fill: func(image-ref: image-ref, size: image-size, filter: filter-type) -> image-ref
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IntInput(label: 'Width', onChanged: values.setWidth)
+                              .container(width: 80),
+                          IntInput(label: 'Height', onChanged: values.setHeight)
+                              .container(width: 80),
+                        ],
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IntInput(label: 'X', onChanged: values.setX)
+                              .container(width: 80),
+                          IntInput(label: 'Y', onChanged: values.setY)
+                              .container(width: 80),
+                        ],
+                      ),
+                      const SizedBox(height: 5),
+                    ]
+                        .expand((e) => [const SizedBox(height: 5), e])
+                        .toList(growable: false),
+                  ).container(
+                    width: 180,
+                    padding: const EdgeInsets.only(left: 6),
+                  );
+                },
+              ),
             ),
             Expanded(
               child: Column(
                 children: [
-                  AnimatedBuilder(
-                    animation: values,
-                    builder: (context, _) => Wrap(
-                      runSpacing: 4,
-                      spacing: 4,
-                      children: [
-                        TextButton(
-                          onPressed: () => loadImage(state.loadImage),
-                          child: const Text('Load Image'),
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            final extensions = state.imageRs
-                                .formatExtensions(format: state.format);
-                            downloadFile(
-                              'image.${extensions.firstOrNull ?? ''}',
-                              state.bytes!,
-                            );
-                          },
-                          child: const Text('Download'),
-                        ),
-                        DropdownButtonFormField(
-                          value: state.format,
-                          onChanged: (f) => state.setFormat(f!),
-                          items: image_rs.ImageFormat.values
-                              .where((e) => e != image_rs.ImageFormat.unknown)
-                              .map(
-                                (e) => DropdownMenuItem(
-                                  value: e,
-                                  child: Text(e.name),
-                                ),
-                              )
-                              .toList(growable: false),
-                        ).container(width: 110),
-                        DropdownButtonFormField(
-                          value: state.color,
-                          onChanged: (f) => state.setColor(f!),
-                          items: image_rs.ColorType.values
-                              .where((e) => e != image_rs.ColorType.unknown)
-                              .map(
-                                (e) => DropdownMenuItem(
-                                  value: e,
-                                  child: Text(e.name),
-                                ),
-                              )
-                              .toList(growable: false),
-                        ).container(width: 110),
-                        TextButton.icon(
-                          onPressed: state.revert,
-                          icon: const Icon(Icons.restore),
-                          label: const Text('Revert Changes'),
-                        ),
-                      ],
-                    ),
-                  ).container(padding: const EdgeInsets.symmetric(vertical: 5)),
+                  FocusTraversalGroup(
+                    child: AnimatedBuilder(
+                      animation: values,
+                      builder: (context, _) => Wrap(
+                        runSpacing: 4,
+                        spacing: 4,
+                        children: [
+                          TextButton(
+                            onPressed: () => loadImage(state.loadImage),
+                            child: const Text('Load Image'),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              final extensions = state.imageRs
+                                  .formatExtensions(format: state.format);
+                              downloadFile(
+                                'image.${extensions.firstOrNull ?? ''}',
+                                state.bytes!,
+                              );
+                            },
+                            child: const Text('Download'),
+                          ),
+                          DropdownButtonFormField(
+                            value: state.format,
+                            onChanged: (f) => state.setFormat(f!),
+                            items: image_rs.ImageFormat.values
+                                .where((e) => e != image_rs.ImageFormat.unknown)
+                                .map(
+                                  (e) => DropdownMenuItem(
+                                    value: e,
+                                    child: Text(e.name),
+                                  ),
+                                )
+                                .toList(growable: false),
+                          ).container(width: 110),
+                          DropdownButtonFormField(
+                            value: state.color,
+                            onChanged: (f) => state.setColor(f!),
+                            items: image_rs.ColorType.values
+                                .where((e) => e != image_rs.ColorType.unknown)
+                                .map(
+                                  (e) => DropdownMenuItem(
+                                    value: e,
+                                    child: Text(e.name),
+                                  ),
+                                )
+                                .toList(growable: false),
+                          ).container(width: 110),
+                          TextButton.icon(
+                            onPressed: state.revert,
+                            icon: const Icon(Icons.restore),
+                            label: const Text('Revert Changes'),
+                          ),
+                        ],
+                      ),
+                    ).container(
+                        padding: const EdgeInsets.symmetric(vertical: 5)),
+                  ),
                   if (state.bytes != null)
                     Expanded(
                       child: Column(

@@ -33,6 +33,7 @@ class CompressionRsPage extends StatelessWidget {
 
     // TODO: zip and tar
 
+    const colWidth = 150.0;
     return AnimatedBuilder(
         animation: state,
         builder: (context, _) {
@@ -55,9 +56,8 @@ class CompressionRsPage extends StatelessWidget {
                         .title()
                         .container(alignment: Alignment.center, width: 250),
                     ...CompressorKind.values.map(
-                      (k) => Text(k.name)
-                          .subtitle()
-                          .container(alignment: Alignment.center, width: 150),
+                      (k) => Text(k.name).subtitle().container(
+                          alignment: Alignment.center, width: colWidth),
                     ),
                     const SizedBox(width: 50),
                   ],
@@ -129,7 +129,7 @@ class CompressionRsPage extends StatelessWidget {
                                           child: const Text('Decompress'),
                                         ),
                                     ],
-                                  ).container(width: 150);
+                                  ).container(width: colWidth);
                                 },
                               ),
                               IconButton(
@@ -149,8 +149,4 @@ class CompressionRsPage extends StatelessWidget {
           );
         });
   }
-}
-
-extension Uint8ListExt on Uint8List {
-  String get sizeHuman => '${length ~/ 1024} KB';
 }

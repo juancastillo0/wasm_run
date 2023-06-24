@@ -101,6 +101,10 @@ extension ContainerExt on Widget {
   }
 }
 
+extension Uint8ListExt on Uint8List {
+  String get sizeHuman => '${length ~/ 1024} KB';
+}
+
 mixin ErrorNotifier on ChangeNotifier {
   String _error = '';
 
