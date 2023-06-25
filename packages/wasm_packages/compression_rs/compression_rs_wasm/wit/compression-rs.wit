@@ -2,7 +2,7 @@ package compression-rs-namespace:compression-rs
 
 interface flate {
   type io-error = string
-  type io-success = u32
+  type io-success = u64
 
   enum compressor-kind {
     brotli,
@@ -22,6 +22,181 @@ interface flate {
   // decompress: func(kind: compressor-kind, input: input) -> result<list<u8>, io-error>
   // compress-file: func(kind: compressor-kind, input: input, output-path: string) -> result<io-success, io-error>
   // decompress-file: func(kind: compressor-kind, input: input, output-path: string) -> result<io-success, io-error>
+}
+
+interface archive {
+  use flate.{input, io-error, io-success}
+
+  variant archive-input { 
+    zip(list<zip-archive-input>),
+    tar(list<tar-archive-input>),
+  }
+
+  record zip-archive-input { 
+    item: item-input,
+    options: option<zip-options>,
+  }
+
+  record tar-archive-input { 
+    item: item-input,
+    header: option<tar-header-input>,
+  }
+
+  union item-input { 
+    file-path,
+    dir-path,
+    file-bytes,
+  }
+
+  record file-path {
+    path: string,
+    name: option<string>,
+  }
+
+  record dir-path {
+    path: string,
+    name: option<string>,
+    all-recursive: bool,
+  }
+
+  record file-bytes {
+    path: string,
+    bytes: list<u8>,
+  }
+
+  record tar-file {
+    header: tar-header,
+    file: file-bytes,
+  }
+
+  record zip-file {
+    compression-method: zip-compression-method,
+    last-modified-time: s64,
+    permissions: option<u32>,
+    comment: string,
+    file: file-bytes,
+    crc32: u32,
+    compressed-size: u64,
+    extra-data: list<u8>,
+    is-dir: bool,
+    enclosed-name: option<string>,
+  }
+
+  type tar-files = list<tar-file>
+  type zip-files = list<zip-file>
+
+  write-archive: func(input: archive-input, output-path: string) -> result<_, io-error>
+  create-archive: func(input: archive-input) -> result<list<u8>, io-error>
+  read-tar: func(path: string) -> result<tar-files, io-error>
+  view-tar: func(tar-bytes: list<u8>) -> result<tar-files, io-error>
+  read-zip: func(path: string) -> result<zip-files, io-error>
+  view-zip: func(zip-bytes: list<u8>) -> result<zip-files, io-error>
+  extract-zip: func(zip: input, path: string) -> result<_, io-error>
+  extract-tar: func(tar: input, path: string) -> result<_, io-error>
+
+  record zip-options {
+    compression-method: zip-compression-method,
+    compression-level: option<s32>,
+    last-modified-time: option<s64>,
+    permissions: option<u32>,
+    comment: option<bytes-or-unicode>,
+    // TODO: large-file: bool,
+    // encrypt-with: option<list<u8>>,
+  }
+
+  union bytes-or-unicode {
+    string,
+    list<u8>,
+  }
+
+  enum zip-compression-method {
+    /// Store the file as is
+    stored,
+    /// Compress the file using Deflate
+    deflated,
+    /// Encrypted using AES.
+    ///
+    /// The actual compression method has to be taken from the AES extra data field
+    /// or from `ZipFileData`.
+    // aes,
+    // TODO: non exhaustive
+  }
+
+  variant tar-header-input {
+    bytes(list<u8>),
+    model(tar-header-model)
+  }
+
+  record tar-header-model {
+    // entry-type: tar-entry-type,
+    // path_bytes: list<u8>,
+    mode: option<u32>, 
+    uid: option<u64>, 
+    gid: option<u64>, 
+    mtime: option<u64>, 
+    username: option<string>,
+    groupname: option<string>,
+    device-major: option<u32>, 
+    device-minor: option<u32>, 
+  }
+
+  record tar-header {
+    entry-type: tar-entry-type,
+    bytes: list<u8>,
+    path-bytes: list<u8>,
+    path: option<string>,
+    link-name-bytes: option<list<u8>>,
+    link-name: option<string>,
+    mode: option<u32>, // result
+    uid: option<u64>, // result
+    gid: option<u64>, // result
+    mtime: option<u64>, // result
+    username-bytes: option<list<u8>>,
+    username: option<string>,
+    groupname-bytes: option<list<u8>>,
+    groupname: option<string>,
+    device-major: option<u32>, // result
+    device-minor: option<u32>, // result
+    cksum: option<u32>, // result
+    format-errors: list<string>,
+  }
+
+  enum tar-entry-type {
+    /// Regular file
+    regular,
+    /// Hard link
+    link,
+    /// Symbolic link
+    symlink,
+    /// Character device
+    %char,
+    /// Block device
+    block,
+    /// Directory
+    directory,
+    /// Named pipe (fifo)
+    fifo,
+    /// Implementation-defined 'high-performance' type, treated as regular file
+    continuous,
+    /// GNU extension - long file name
+    gnu-long-name,
+    /// GNU extension - long link name (link target)
+    gnu-long-link,
+    /// GNU extension - sparse file
+    gnu-sparse,
+    /// Global extended header
+    x-global-header,
+    /// Extended Header
+    x-header,
+    /// Hints that destructuring should not be exhaustive.
+    ///
+    /// This enum may grow additional variants, so this makes sure clients
+    /// don't count on exhaustive matching. (Otherwise, adding a new variant
+    /// could break existing code.)
+    // #[doc(hidden)]
+    // __Nonexhaustive(u8),
+    unknown,
+  }
 }
 
 interface brotli {
@@ -85,5 +260,6 @@ world compression-rs {
     export deflate
     export gzip
     export zlib
+    export archive
     // export flate
 }

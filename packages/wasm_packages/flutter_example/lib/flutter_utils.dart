@@ -24,7 +24,7 @@ class Inherited<T> extends InheritedWidget {
 }
 
 extension TextExt on Text {
-  Widget title() => Text(
+  Widget title() => SelectableText(
         data!,
         style: const TextStyle(
           fontSize: 20,
@@ -32,7 +32,7 @@ extension TextExt on Text {
         ),
       ).container(padding: const EdgeInsets.all(10));
 
-  Widget subtitle() => Text(
+  Widget subtitle() => SelectableText(
         data!,
         style: const TextStyle(
           fontSize: 17,
@@ -103,6 +103,33 @@ extension ContainerExt on Widget {
 
 extension Uint8ListExt on Uint8List {
   String get sizeHuman => '${length ~/ 1024} KB';
+}
+
+class IntInput extends StatelessWidget {
+  const IntInput({
+    super.key,
+    required this.onChanged,
+    this.label,
+    this.initialValue,
+  });
+  final int? initialValue;
+  final void Function(int value) onChanged;
+  final String? label;
+
+  @override
+  Widget build(BuildContext context) {
+    return TextFormField(
+      keyboardType: TextInputType.number,
+      initialValue: initialValue?.toString(),
+      decoration: InputDecoration(
+        labelText: label,
+      ),
+      onChanged: (v) {
+        final d = int.tryParse(v);
+        if (d != null) onChanged(d);
+      },
+    );
+  }
 }
 
 mixin ErrorNotifier on ChangeNotifier {

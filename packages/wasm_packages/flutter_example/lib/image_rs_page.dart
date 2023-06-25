@@ -275,29 +275,6 @@ class DoubleInput extends StatelessWidget {
   }
 }
 
-class IntInput extends StatelessWidget {
-  const IntInput({
-    super.key,
-    required this.onChanged,
-    this.label,
-  });
-
-  final void Function(int value) onChanged;
-  final String? label;
-
-  @override
-  Widget build(BuildContext context) {
-    return TextField(
-      decoration: InputDecoration(
-        labelText: label,
-      ),
-      onChanged: (v) {
-        final d = int.tryParse(v);
-        if (d != null) onChanged(d);
-      },
-    );
-  }
-}
 
 class ImgOp {
   final String name;
