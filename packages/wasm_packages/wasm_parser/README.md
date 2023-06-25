@@ -4,7 +4,7 @@
 
 ```sh
 cd wasm_parser_wasm
-cargo wasi build --release
+cargo +stable wasi build --release
 cp target/wasm32-wasi/release/wasm_parser_wasm.wasm ../lib/assets/
 ```
 

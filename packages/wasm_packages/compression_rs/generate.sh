@@ -13,9 +13,10 @@ dart run ../../dart_wit_component/wasm_wit_component/bin/generate.dart \
 cd compression_rs_wasm
 
 ## Build Wasm Component from Rust
-cargo wasi build --release
+cargo +stable wasi build --release
 cp target/wasm32-wasi/release/compression_rs_wasm.wasm ../lib/assets/
 ### Build Threaded Wasm from Rust
 RUSTFLAGS='-C target-feature=+atomics,+bulk-memory,+mutable-globals' \
     cargo +nightly build --target wasm32-unknown-unknown --release -Z build-std=std,panic_abort
 cp target/wasm32-unknown-unknown/release/compression_rs_wasm.wasm ../lib/assets/compression_rs_wasm.threads.wasm
+wasm-opt -Oz -o ../lib/assets/compression_rs_wasm.threads.wasm ../lib/assets/compression_rs_wasm.threads.wasm

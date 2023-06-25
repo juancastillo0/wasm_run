@@ -6,7 +6,7 @@ cd $SCRIPT_DIR # Go to the wasm_wit_component package directory
 cd ..
 
 ## Build Wasm Component from Rust
-cargo wasi build --release
+cargo +stable wasi build --release
 cp target/wasm32-wasi/release/dart_wit_component.wasm wasm_wit_component/lib/
 
 cd wasm_wit_component

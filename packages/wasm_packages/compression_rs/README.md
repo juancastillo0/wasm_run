@@ -4,7 +4,7 @@
 
 ```sh
 cd compression_rs_wasm
-cargo wasi build --release
+cargo +stable wasi build --release
 cp target/wasm32-wasi/release/compression_rs_wasm.wasm ../lib/
 ```
 

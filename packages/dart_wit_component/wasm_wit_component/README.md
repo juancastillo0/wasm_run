@@ -41,7 +41,7 @@ from the package authors, and more.
 ## Build Wasm Module
 
 ```
-cargo wasi build --release
+cargo +stable wasi build --release
 cp target/wasm32-wasi/release/dart_wit_component.wasm wasm_wit_component/lib/dart_wit_component.wasm
 dart run wasm_wit_component/bin/generate.dart wit/dart-wit-generator.wit wasm_wit_component/lib/src/generator.dart
 ```
