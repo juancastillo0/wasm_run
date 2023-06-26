@@ -22,31 +22,31 @@ fn map_err<T: Display>(err: T) -> String {
 }
 
 impl rust_crypto::hmac::Hmac for RustCryptoImpl {
-    fn hmac_sha256(key: Vec<u8>, input: Vec<u8>) -> Vec<u8> {
-        let mut mac = hmac::Hmac::<sha2::Sha256>::new_from_slice(&key).unwrap();
+    fn hmac_sha256(key: Vec<u8>, input: Vec<u8>) -> Result<Vec<u8>, String> {
+        let mut mac = hmac::Hmac::<sha2::Sha256>::new_from_slice(&key).map_err(map_err)?;
         mac.update(&input);
-        mac.finalize().into_bytes().to_vec()
+        Ok(mac.finalize().into_bytes().to_vec())
     }
 
-    fn hmac_sha512(key: Vec<u8>, input: Vec<u8>) -> Vec<u8> {
-        let mut mac = hmac::Hmac::<sha2::Sha512>::new_from_slice(&key).unwrap();
+    fn hmac_sha512(key: Vec<u8>, input: Vec<u8>) -> Result<Vec<u8>, String> {
+        let mut mac = hmac::Hmac::<sha2::Sha512>::new_from_slice(&key).map_err(map_err)?;
         mac.update(&input);
-        mac.finalize().into_bytes().to_vec()
+        Ok(mac.finalize().into_bytes().to_vec())
     }
 
-    fn hmac_sha384(key: Vec<u8>, input: Vec<u8>) -> Vec<u8> {
-        let mut mac = hmac::Hmac::<sha2::Sha384>::new_from_slice(&key).unwrap();
+    fn hmac_sha384(key: Vec<u8>, input: Vec<u8>) -> Result<Vec<u8>, String> {
+        let mut mac = hmac::Hmac::<sha2::Sha384>::new_from_slice(&key).map_err(map_err)?;
         mac.update(&input);
-        mac.finalize().into_bytes().to_vec()
+        Ok(mac.finalize().into_bytes().to_vec())
     }
 
-    fn hmac_sha224(key: Vec<u8>, input: Vec<u8>) -> Vec<u8> {
-        let mut mac = hmac::Hmac::<sha2::Sha224>::new_from_slice(&key).unwrap();
+    fn hmac_sha224(key: Vec<u8>, input: Vec<u8>) -> Result<Vec<u8>, String> {
+        let mut mac = hmac::Hmac::<sha2::Sha224>::new_from_slice(&key).map_err(map_err)?;
         mac.update(&input);
-        mac.finalize().into_bytes().to_vec()
+        Ok(mac.finalize().into_bytes().to_vec())
     }
 
-    fn hmac_blake3(key: Vec<u8>, input: Vec<u8>) -> Vec<u8> {
+    fn hmac_blake3(key: Vec<u8>, input: Vec<u8>) -> Result<Vec<u8>, String> {
         use crate::exports::wasm_run_dart::rust_crypto::blake3::Blake3;
         RustCryptoImpl::mac_keyed_hash(key, input)
         // let mut mac = hmac::SimpleHmac::<blake3::Hasher>::new_from_slice(&key).unwrap();
@@ -136,19 +136,25 @@ impl rust_crypto::blake3::Blake3 for RustCryptoImpl {
         blake3::hash(&bytes).as_bytes().to_vec()
     }
 
-    fn mac_keyed_hash(key: Vec<u8>, bytes: Vec<u8>) -> Vec<u8> {
-        blake3::keyed_hash(&key.try_into().unwrap(), &bytes)
-            .as_bytes()
-            .to_vec()
+    fn mac_keyed_hash(key: Vec<u8>, bytes: Vec<u8>) -> Result<Vec<u8>, String> {
+        Ok(blake3::keyed_hash(
+            &key.try_into().map_err(|e: Vec<u8>| {
+                format!("key byte length should be 32, got {} bytes", e.len())
+            })?,
+            &bytes,
+        )
+        .as_bytes()
+        .to_vec())
     }
 
-    fn derive_key(context: Vec<u8>, key_material: Vec<u8>) -> Vec<u8> {
-        let context = std::str::from_utf8(&context).unwrap();
-        blake3::derive_key(context, &key_material).to_vec()
+    fn derive_key(context: String, key_material: Vec<u8>) -> Vec<u8> {
+        blake3::derive_key(&context, &key_material).to_vec()
     }
 }
 
-fn to_argon2<'a>(config: &'a rust_crypto::argon2::Argon2Config) -> argon2::Argon2<'a> {
+fn to_argon2<'a>(
+    config: &'a rust_crypto::argon2::Argon2Config,
+) -> Result<argon2::Argon2<'a>, String> {
     let algorithm = match config.algorithm {
         rust_crypto::argon2::Argon2Algorithm::Argon2d => argon2::Algorithm::Argon2d,
         rust_crypto::argon2::Argon2Algorithm::Argon2i => argon2::Algorithm::Argon2i,
@@ -164,14 +170,18 @@ fn to_argon2<'a>(config: &'a rust_crypto::argon2::Argon2Config) -> argon2::Argon
         config.memory_cost,
         config.time_cost,
         config.parallelism_cost,
-        config.output_length.map(|i| i.try_into().unwrap()),
+        if let Some(i) = config.output_length {
+            Some(i.try_into().map_err(map_err)?)
+        } else {
+            None
+        },
     )
-    .unwrap();
+    .map_err(map_err)?;
 
     if let Some(secret) = &config.secret {
-        argon2::Argon2::new_with_secret(secret, algorithm, version, params).unwrap()
+        argon2::Argon2::new_with_secret(secret, algorithm, version, params).map_err(map_err)
     } else {
-        argon2::Argon2::new(algorithm, version, params)
+        Ok(argon2::Argon2::new(algorithm, version, params))
     }
 }
 
@@ -194,56 +204,67 @@ impl rust_crypto::argon2::Argon2 for RustCryptoImpl {
             memory_cost: params.m_cost(),
             time_cost: params.t_cost(),
             parallelism_cost: params.p_cost(),
-            output_length: Some(
-                params
-                    .output_len()
-                    .unwrap_or(argon2::Params::DEFAULT_OUTPUT_LEN)
-                    .try_into()
-                    .unwrap(),
-            ),
+            output_length: Some(argon2::Params::DEFAULT_OUTPUT_LEN as u32),
             version,
             secret: None,
         }
     }
 
-    fn generate_salt() -> Vec<u8> {
+    fn generate_salt() -> String {
         let salt = argon2::password_hash::SaltString::generate(&mut OsRng);
-        salt.as_str().as_bytes().to_vec()
+        salt.to_string()
     }
 
     fn hash_password(
         config: rust_crypto::argon2::Argon2Config,
         bytes: Vec<u8>,
-        salt: Vec<u8>,
-    ) -> Vec<u8> {
-        let salt = std::str::from_utf8(&salt).unwrap();
-        let salt = argon2::password_hash::Salt::from_b64(&salt).unwrap();
-        let hash = to_argon2(&config).hash_password(&bytes, salt).unwrap();
-        hash.to_string().as_bytes().to_vec()
+        salt: String,
+    ) -> Result<String, String> {
+        let salt = argon2::password_hash::Salt::from_b64(&salt).map_err(map_err)?;
+        let hash = to_argon2(&config)?
+            .hash_password(&bytes, salt)
+            .map_err(map_err)?;
+        Ok(hash.to_string())
     }
 
-    fn verify_password(password: Vec<u8>, hash: Vec<u8>) -> bool {
-        let hash = std::str::from_utf8(&hash).unwrap();
-        let hash = argon2::password_hash::PasswordHash::new(hash).unwrap();
-        // TODO: parse PasswordHash
-        argon2::Argon2::default()
+    fn verify_password(
+        password: Vec<u8>,
+        hash: String,
+        secret: Option<Vec<u8>>,
+    ) -> Result<bool, String> {
+        let hash = argon2::password_hash::PasswordHash::new(&hash).map_err(map_err)?;
+        if let Some(secret) = secret {
+            Ok(argon2::Argon2::new_with_secret(
+                secret.as_slice(),
+                argon2::Algorithm::default(),
+                argon2::Version::default(),
+                argon2::Params::default(),
+            )
+            .map_err(map_err)?
             .verify_password(&password, &hash)
-            // TODO: handle error
-            .is_ok()
+            .is_ok())
+        } else {
+            Ok(argon2::Argon2::default()
+                .verify_password(&password, &hash)
+                .is_ok())
+        }
     }
 
     fn raw_hash(
         config: rust_crypto::argon2::Argon2Config,
         bytes: Vec<u8>,
         salt: Vec<u8>,
-        byte_length: u32,
-    ) -> Vec<u8> {
-        let mut out = Vec::with_capacity(byte_length as usize);
-        unsafe { out.set_len(byte_length as usize) }
-        to_argon2(&config)
+    ) -> Result<Vec<u8>, String> {
+        let byte_length = config
+            .output_length
+            .unwrap_or(argon2::Params::DEFAULT_OUTPUT_LEN as u32)
+            as usize;
+        let mut out = Vec::with_capacity(byte_length);
+        unsafe { out.set_len(byte_length) }
+        to_argon2(&config)?
             .hash_password_into(&bytes, &salt, &mut out)
-            .unwrap();
-        out
+            .map_err(map_err)?;
+        Ok(out)
     }
 }
 
@@ -266,8 +287,11 @@ impl rust_crypto::aes_gcm_siv::AesGcmSiv for RustCryptoImpl {
         nonce: Vec<u8>,
         plain_text: Vec<u8>,
         associated_data: Option<Vec<u8>>,
-    ) -> Vec<u8> {
+    ) -> Result<Vec<u8>, String> {
         use aes_gcm_siv::KeyInit;
+        if nonce.len() != 12 {
+            return Err(format!("nonce must be 12 bytes, got {} bytes", nonce.len()));
+        }
         let nonce = aes_gcm_siv::Nonce::from_slice(&nonce); // 96-bits; unique per message
         let payload = aes_gcm_siv::aead::Payload {
             msg: plain_text.as_ref(),
@@ -275,12 +299,12 @@ impl rust_crypto::aes_gcm_siv::AesGcmSiv for RustCryptoImpl {
         };
         match kind {
             rust_crypto::aes_gcm_siv::AesKind::Bits128 => {
-                let cipher = aes_gcm_siv::Aes128GcmSiv::new_from_slice(&key).unwrap();
-                cipher.encrypt(nonce, payload).unwrap()
+                let cipher = aes_gcm_siv::Aes128GcmSiv::new_from_slice(&key).map_err(map_err)?;
+                cipher.encrypt(nonce, payload).map_err(map_err)
             }
             rust_crypto::aes_gcm_siv::AesKind::Bits256 => {
-                let cipher = aes_gcm_siv::Aes256GcmSiv::new_from_slice(&key).unwrap();
-                cipher.encrypt(nonce, payload).unwrap()
+                let cipher = aes_gcm_siv::Aes256GcmSiv::new_from_slice(&key).map_err(map_err)?;
+                cipher.encrypt(nonce, payload).map_err(map_err)
             }
         }
     }
@@ -291,8 +315,11 @@ impl rust_crypto::aes_gcm_siv::AesGcmSiv for RustCryptoImpl {
         nonce: Vec<u8>,
         cipher_text: Vec<u8>,
         associated_data: Option<Vec<u8>>,
-    ) -> Vec<u8> {
+    ) -> Result<Vec<u8>, String> {
         use aes_gcm_siv::KeyInit;
+        if nonce.len() != 12 {
+            return Err(format!("nonce must be 12 bytes, got {} bytes", nonce.len()));
+        }
         let nonce = aes_gcm_siv::Nonce::from_slice(&nonce); // 96-bits; unique per message
         let payload = aes_gcm_siv::aead::Payload {
             msg: cipher_text.as_ref(),
@@ -300,12 +327,12 @@ impl rust_crypto::aes_gcm_siv::AesGcmSiv for RustCryptoImpl {
         };
         match kind {
             rust_crypto::aes_gcm_siv::AesKind::Bits128 => {
-                let cipher = aes_gcm_siv::Aes128GcmSiv::new_from_slice(&key).unwrap();
-                cipher.decrypt(nonce, payload).unwrap()
+                let cipher = aes_gcm_siv::Aes128GcmSiv::new_from_slice(&key).map_err(map_err)?;
+                cipher.decrypt(nonce, payload).map_err(map_err)
             }
             rust_crypto::aes_gcm_siv::AesKind::Bits256 => {
-                let cipher = aes_gcm_siv::Aes256GcmSiv::new_from_slice(&key).unwrap();
-                cipher.decrypt(nonce, payload).unwrap()
+                let cipher = aes_gcm_siv::Aes256GcmSiv::new_from_slice(&key).map_err(map_err)?;
+                cipher.decrypt(nonce, payload).map_err(map_err)
             }
         }
     }

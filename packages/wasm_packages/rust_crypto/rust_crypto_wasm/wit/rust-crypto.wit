@@ -31,16 +31,19 @@ interface sha2 {
 
 interface blake3 {
     hash: func(bytes: list<u8>) -> list<u8>
-    mac-keyed-hash: func(key: list<u8>, bytes: list<u8>) -> list<u8>
-    derive-key: func(context: list<u8>, input-key-material: list<u8>) -> list<u8>
+    mac-keyed-hash: func(key: list<u8>, bytes: list<u8>) -> result<list<u8>, string>
+    derive-key: func(context: string, input-key-material: list<u8>) -> list<u8>
 }
 
 interface hmac {
-    hmac-sha224: func(key: list<u8>, bytes: list<u8>) -> list<u8>
-    hmac-sha256: func(key: list<u8>, bytes: list<u8>) -> list<u8>
-    hmac-sha384: func(key: list<u8>, bytes: list<u8>) -> list<u8>
-    hmac-sha512: func(key: list<u8>, bytes: list<u8>) -> list<u8>
-    hmac-blake3: func(key: list<u8>, bytes: list<u8>) -> list<u8>
+    /// Returned when the HMAC key does not have the expected length.
+    type hmac-error = string
+
+    hmac-sha224: func(key: list<u8>, bytes: list<u8>) -> result<list<u8>, hmac-error>
+    hmac-sha256: func(key: list<u8>, bytes: list<u8>) -> result<list<u8>, hmac-error>
+    hmac-sha384: func(key: list<u8>, bytes: list<u8>) -> result<list<u8>, hmac-error>
+    hmac-sha512: func(key: list<u8>, bytes: list<u8>) -> result<list<u8>, hmac-error>
+    hmac-blake3: func(key: list<u8>, bytes: list<u8>) -> result<list<u8>, hmac-error>
 }
 
 interface argon2 {
@@ -48,9 +51,13 @@ interface argon2 {
         version: argon2-version,
         algorithm: argon2-algorithm,
         secret: option<list<u8>>,
+        /// Memory size in 1 KiB blocks. Between 1 and (2^32)-1.
         memory-cost: u32,
+        /// Number of iterations. Between 1 and (2^32)-1.
         time-cost: u32,
+        /// Degree of parallelism. Between 1 and 255.
         parallelism-cost: u32,
+        /// Size of the KDF output in bytes. Default 32.
         output-length: option<u32>,
     }
 
@@ -67,20 +74,20 @@ interface argon2 {
 
     /// This type corresponds to the parsed representation of a PHC string as
     /// described in the PHC string format specification ($argon2id$v=19$...).
-    type password-hash = list<u8>
+    type password-hash = string
 
     default-config: func() -> argon2-config
 
-    generate-salt: func() -> list<u8>
+    generate-salt: func() -> string
 
     /// Hash password to PHC string ($argon2id$v=19$...)
-    hash-password: func(config: argon2-config, password: list<u8>, salt: list<u8>) -> password-hash
+    hash-password: func(config: argon2-config, password: list<u8>, salt: string) -> result<password-hash, string>
 
-    verify-password: func(password: list<u8>, hash: password-hash) -> bool
+    verify-password: func(password: list<u8>, hash: password-hash, secret: option<list<u8>>) -> result<bool, string>
 
     /// This useful for transforming a password into cryptographic keys
     /// for e.g. password-based encryption.
-    raw-hash: func(config: argon2-config, password: list<u8>, salt: list<u8>, byte-length: u32) -> list<u8>
+    raw-hash: func(config: argon2-config, password: list<u8>, salt: list<u8>) -> result<list<u8>, string>
 }
 
 interface aes-gcm-siv {
@@ -97,7 +104,7 @@ interface aes-gcm-siv {
         nonce: list<u8>,
         plain-text: list<u8>,
         associated-data: option<list<u8>>,
-    ) -> list<u8>
+    ) -> result<list<u8>, string>
 
     decrypt: func(
         kind: aes-kind,
@@ -105,10 +112,12 @@ interface aes-gcm-siv {
         nonce: list<u8>,
         cipher-text: list<u8>,
         associated-data: option<list<u8>>,
-    ) -> list<u8>
+    ) -> result<list<u8>, string>
 }
 
 world rust-crypto {
+    export fs-hash
+    export hashes
     export sha2
     export blake3
     export hmac

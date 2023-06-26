@@ -91,7 +91,10 @@ class RustCryptoTest {
     final cryptoHmac = crypto.Hmac(crypto.sha512, key);
 
     final hmacSha512Benchmarks = [
-      Benchmark('wasm', () => world.hmac.hmacSha512(key: key, bytes: data)),
+      Benchmark(
+        'wasm',
+        () => world.hmac.hmacSha512(key: key, bytes: data).unwrap(),
+      ),
       Benchmark('crypto', () => cryptoHmac.convert(data).bytes),
       Benchmark(
           'cryptographySync',
@@ -124,7 +127,7 @@ class RustCryptoTest {
     final config = world.argon2.defaultConfig();
     const defaultOutputLength = 32;
 
-    final salt = world.argon2.generateSalt();
+    final salt = const Utf8Encoder().convert(world.argon2.generateSalt());
     final pointycastleArgon2 = pointycastle.Argon2BytesGenerator()
       ..init(
         pointycastle.Argon2Parameters(
@@ -154,12 +157,9 @@ class RustCryptoTest {
     final argon2Benchmarks = [
       Benchmark(
           'wasm',
-          () => world.argon2.rawHash(
-                config: config,
-                password: password,
-                salt: salt,
-                byteLength: defaultOutputLength,
-              )),
+          () => world.argon2
+              .rawHash(config: config, password: password, salt: salt)
+              .unwrap()),
       // Benchmark('argon2', () => crypto.argon2.convert(data).bytes),
       Benchmark(
           'dargon2',
@@ -210,13 +210,15 @@ class RustCryptoTest {
     final aesGcmBenchmarks = [
       Benchmark(
         'wasm',
-        () => world.aesGcmSiv.encrypt(
-          kind: kind,
-          key: key,
-          plainText: data,
-          nonce: nonce,
-          associatedData: associatedData,
-        ),
+        () => world.aesGcmSiv
+            .encrypt(
+              kind: kind,
+              key: key,
+              plainText: data,
+              nonce: nonce,
+              associatedData: associatedData,
+            )
+            .unwrap(),
       ),
       Benchmark(
         'cryptographySync',
@@ -273,13 +275,15 @@ class RustCryptoTest {
     final aesGcmDecryptBenchmarks = [
       Benchmark(
         'wasm',
-        () => world.aesGcmSiv.decrypt(
-          kind: kind,
-          key: key,
-          cipherText: cipherTextWasm,
-          nonce: nonce,
-          associatedData: associatedData,
-        ),
+        () => world.aesGcmSiv
+            .decrypt(
+              kind: kind,
+              key: key,
+              cipherText: cipherTextWasm,
+              nonce: nonce,
+              associatedData: associatedData,
+            )
+            .unwrap(),
       ),
       Benchmark(
         'cryptographySync',

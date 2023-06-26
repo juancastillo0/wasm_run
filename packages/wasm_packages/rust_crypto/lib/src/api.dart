@@ -7,9 +7,35 @@ import 'dart:typed_data';
 
 import 'package:wasm_wit_component/wasm_wit_component.dart';
 
-/// This type corresponds to the parsed representation of a PHC string as
-/// described in the PHC string format specification ($argon2id$v=19$...).
-typedef PasswordHash = Uint8List;
+typedef HmacError = String;
+
+enum HashKind implements ToJsonSerializable {
+  md5,
+  sha1,
+  sha224,
+  sha256,
+  sha384,
+  sha512,
+  blake3;
+
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
+  factory HashKind.fromJson(Object? json) {
+    return ToJsonSerializable.enumFromJson(json, values, _spec);
+  }
+
+  /// Returns this as a serializable JSON value.
+  @override
+  Map<String, Object?> toJson() =>
+      {'runtimeType': 'HashKind', _spec.labels[index]: null};
+
+  /// Returns this as a WASM canonical abi value.
+  int toWasm() => index;
+  static const _spec = EnumType(
+      ['md5', 'sha1', 'sha224', 'sha256', 'sha384', 'sha512', 'blake3']);
+}
+
+typedef PasswordHash = String;
 
 enum Argon2Version implements ToJsonSerializable {
   v0x10,
@@ -56,9 +82,17 @@ class Argon2Config implements ToJsonSerializable {
   final Argon2Version version;
   final Argon2Algorithm algorithm;
   final Uint8List? secret;
+
+  /// Memory size in 1 KiB blocks. Between 1 and (2^32)-1.
   final int /*U32*/ memoryCost;
+
+  /// Number of iterations. Between 1 and (2^32)-1.
   final int /*U32*/ timeCost;
+
+  /// Degree of parallelism. Between 1 and 255.
   final int /*U32*/ parallelismCost;
+
+  /// Size of the KDF output in bytes. Default 32.
   final int /*U32*/ ? outputLength;
   const Argon2Config({
     required this.version,
@@ -220,6 +254,114 @@ class RustCryptoWorldImports {
   const RustCryptoWorldImports();
 }
 
+class FsHash {
+  FsHash(WasmLibrary library)
+      : _hashFile = library.getComponentFunction(
+          'wasm-run-dart:rust-crypto/fs-hash#hash-file',
+          const FuncType([('kind', HashKind._spec), ('path', StringType())],
+              [('', ResultType(ListType(U8()), StringType()))]),
+        )!,
+        _hmacFile = library.getComponentFunction(
+          'wasm-run-dart:rust-crypto/fs-hash#hmac-file',
+          const FuncType([
+            ('kind', HashKind._spec),
+            ('key', ListType(U8())),
+            ('path', StringType())
+          ], [
+            ('', ResultType(ListType(U8()), StringType()))
+          ]),
+        )!,
+        _crc32File = library.getComponentFunction(
+          'wasm-run-dart:rust-crypto/fs-hash#crc32-file',
+          const FuncType([('path', StringType())],
+              [('', ResultType(U32(), StringType()))]),
+        )!;
+  final ListValue Function(ListValue) _hashFile;
+  Result<Uint8List, String> hashFile({
+    required HashKind kind,
+    required String path,
+  }) {
+    final results = _hashFile([kind.toWasm(), path]);
+    final result = results[0];
+    return Result.fromJson(
+        result,
+        (ok) =>
+            (ok is Uint8List ? ok : Uint8List.fromList((ok! as List).cast())),
+        (error) => error is String ? error : (error! as ParsedString).value);
+  }
+
+  final ListValue Function(ListValue) _hmacFile;
+  Result<Uint8List, String> hmacFile({
+    required HashKind kind,
+    required Uint8List key,
+    required String path,
+  }) {
+    final results = _hmacFile([kind.toWasm(), key, path]);
+    final result = results[0];
+    return Result.fromJson(
+        result,
+        (ok) =>
+            (ok is Uint8List ? ok : Uint8List.fromList((ok! as List).cast())),
+        (error) => error is String ? error : (error! as ParsedString).value);
+  }
+
+  final ListValue Function(ListValue) _crc32File;
+  Result<int /*U32*/, String> crc32File({
+    required String path,
+  }) {
+    final results = _crc32File([path]);
+    final result = results[0];
+    return Result.fromJson(result, (ok) => ok! as int,
+        (error) => error is String ? error : (error! as ParsedString).value);
+  }
+}
+
+class Hashes {
+  Hashes(WasmLibrary library)
+      : _sha1 = library.getComponentFunction(
+          'wasm-run-dart:rust-crypto/hashes#sha1',
+          const FuncType([('bytes', ListType(U8()))], [('', ListType(U8()))]),
+        )!,
+        _md5 = library.getComponentFunction(
+          'wasm-run-dart:rust-crypto/hashes#md5',
+          const FuncType([('bytes', ListType(U8()))], [('', ListType(U8()))]),
+        )!,
+        _crc32 = library.getComponentFunction(
+          'wasm-run-dart:rust-crypto/hashes#crc32',
+          const FuncType([('bytes', ListType(U8()))], [('', U32())]),
+        )!;
+  final ListValue Function(ListValue) _sha1;
+  Uint8List sha1({
+    required Uint8List bytes,
+  }) {
+    final results = _sha1([bytes]);
+    final result = results[0];
+    return (result is Uint8List
+        ? result
+        : Uint8List.fromList((result! as List).cast()));
+  }
+
+  final ListValue Function(ListValue) _md5;
+  Uint8List md5({
+    required Uint8List bytes,
+  }) {
+    final results = _md5([bytes]);
+    final result = results[0];
+    return (result is Uint8List
+        ? result
+        : Uint8List.fromList((result! as List).cast()));
+  }
+
+  final ListValue Function(ListValue) _crc32;
+  int /*U32*/ crc32({
+    required Uint8List bytes,
+  }) {
+    final results = _crc32([bytes]);
+    final result = results[0];
+    return result! as int;
+  }
+}
+
 class Sha2 {
   Sha2(WasmLibrary library)
       : _sha224 = library.getComponentFunction(
@@ -292,12 +434,12 @@ class Blake3 {
         _macKeyedHash = library.getComponentFunction(
           'wasm-run-dart:rust-crypto/blake3#mac-keyed-hash',
           const FuncType([('key', ListType(U8())), ('bytes', ListType(U8()))],
-              [('', ListType(U8()))]),
+              [('', ResultType(ListType(U8()), StringType()))]),
         )!,
         _deriveKey = library.getComponentFunction(
           'wasm-run-dart:rust-crypto/blake3#derive-key',
           const FuncType([
-            ('context', ListType(U8())),
+            ('context', StringType()),
             ('input-key-material', ListType(U8()))
           ], [
             ('', ListType(U8()))
@@ -315,20 +457,22 @@ class Blake3 {
   }
 
   final ListValue Function(ListValue) _macKeyedHash;
-  Uint8List macKeyedHash({
+  Result<Uint8List, String> macKeyedHash({
     required Uint8List key,
     required Uint8List bytes,
   }) {
     final results = _macKeyedHash([key, bytes]);
     final result = results[0];
-    return (result is Uint8List
-        ? result
-        : Uint8List.fromList((result! as List).cast()));
+    return Result.fromJson(
+        result,
+        (ok) =>
+            (ok is Uint8List ? ok : Uint8List.fromList((ok! as List).cast())),
+        (error) => error is String ? error : (error! as ParsedString).value);
   }
 
   final ListValue Function(ListValue) _deriveKey;
   Uint8List deriveKey({
-    required Uint8List context,
+    required String context,
     required Uint8List inputKeyMaterial,
   }) {
     final results = _deriveKey([context, inputKeyMaterial]);
@@ -344,86 +488,96 @@ class Hmac {
       : _hmacSha224 = library.getComponentFunction(
           'wasm-run-dart:rust-crypto/hmac#hmac-sha224',
           const FuncType([('key', ListType(U8())), ('bytes', ListType(U8()))],
-              [('', ListType(U8()))]),
+              [('', ResultType(ListType(U8()), StringType()))]),
         )!,
         _hmacSha256 = library.getComponentFunction(
           'wasm-run-dart:rust-crypto/hmac#hmac-sha256',
           const FuncType([('key', ListType(U8())), ('bytes', ListType(U8()))],
-              [('', ListType(U8()))]),
+              [('', ResultType(ListType(U8()), StringType()))]),
         )!,
         _hmacSha384 = library.getComponentFunction(
           'wasm-run-dart:rust-crypto/hmac#hmac-sha384',
           const FuncType([('key', ListType(U8())), ('bytes', ListType(U8()))],
-              [('', ListType(U8()))]),
+              [('', ResultType(ListType(U8()), StringType()))]),
         )!,
         _hmacSha512 = library.getComponentFunction(
           'wasm-run-dart:rust-crypto/hmac#hmac-sha512',
           const FuncType([('key', ListType(U8())), ('bytes', ListType(U8()))],
-              [('', ListType(U8()))]),
+              [('', ResultType(ListType(U8()), StringType()))]),
         )!,
         _hmacBlake3 = library.getComponentFunction(
           'wasm-run-dart:rust-crypto/hmac#hmac-blake3',
           const FuncType([('key', ListType(U8())), ('bytes', ListType(U8()))],
-              [('', ListType(U8()))]),
+              [('', ResultType(ListType(U8()), StringType()))]),
         )!;
   final ListValue Function(ListValue) _hmacSha224;
-  Uint8List hmacSha224({
+  Result<Uint8List, HmacError> hmacSha224({
     required Uint8List key,
     required Uint8List bytes,
   }) {
     final results = _hmacSha224([key, bytes]);
     final result = results[0];
-    return (result is Uint8List
-        ? result
-        : Uint8List.fromList((result! as List).cast()));
+    return Result.fromJson(
+        result,
+        (ok) =>
+            (ok is Uint8List ? ok : Uint8List.fromList((ok! as List).cast())),
+        (error) => error is String ? error : (error! as ParsedString).value);
   }
 
   final ListValue Function(ListValue) _hmacSha256;
-  Uint8List hmacSha256({
+  Result<Uint8List, HmacError> hmacSha256({
     required Uint8List key,
     required Uint8List bytes,
   }) {
     final results = _hmacSha256([key, bytes]);
     final result = results[0];
-    return (result is Uint8List
-        ? result
-        : Uint8List.fromList((result! as List).cast()));
+    return Result.fromJson(
+        result,
+        (ok) =>
+            (ok is Uint8List ? ok : Uint8List.fromList((ok! as List).cast())),
+        (error) => error is String ? error : (error! as ParsedString).value);
   }
 
   final ListValue Function(ListValue) _hmacSha384;
-  Uint8List hmacSha384({
+  Result<Uint8List, HmacError> hmacSha384({
     required Uint8List key,
     required Uint8List bytes,
   }) {
     final results = _hmacSha384([key, bytes]);
     final result = results[0];
-    return (result is Uint8List
-        ? result
-        : Uint8List.fromList((result! as List).cast()));
+    return Result.fromJson(
+        result,
+        (ok) =>
+            (ok is Uint8List ? ok : Uint8List.fromList((ok! as List).cast())),
+        (error) => error is String ? error : (error! as ParsedString).value);
   }
 
   final ListValue Function(ListValue) _hmacSha512;
-  Uint8List hmacSha512({
+  Result<Uint8List, HmacError> hmacSha512({
     required Uint8List key,
     required Uint8List bytes,
   }) {
     final results = _hmacSha512([key, bytes]);
     final result = results[0];
-    return (result is Uint8List
-        ? result
-        : Uint8List.fromList((result! as List).cast()));
+    return Result.fromJson(
+        result,
+        (ok) =>
+            (ok is Uint8List ? ok : Uint8List.fromList((ok! as List).cast())),
+        (error) => error is String ? error : (error! as ParsedString).value);
   }
 
   final ListValue Function(ListValue) _hmacBlake3;
-  Uint8List hmacBlake3({
+  Result<Uint8List, HmacError> hmacBlake3({
     required Uint8List key,
     required Uint8List bytes,
   }) {
     final results = _hmacBlake3([key, bytes]);
     final result = results[0];
-    return (result is Uint8List
-        ? result
-        : Uint8List.fromList((result! as List).cast()));
+    return Result.fromJson(
+        result,
+        (ok) =>
+            (ok is Uint8List ? ok : Uint8List.fromList((ok! as List).cast())),
+        (error) => error is String ? error : (error! as ParsedString).value);
   }
 }
 
@@ -435,33 +589,36 @@ class Argon2 {
         )!,
         _generateSalt = library.getComponentFunction(
           'wasm-run-dart:rust-crypto/argon2#generate-salt',
-          const FuncType([], [('', ListType(U8()))]),
+          const FuncType([], [('', StringType())]),
         )!,
         _hashPassword = library.getComponentFunction(
           'wasm-run-dart:rust-crypto/argon2#hash-password',
           const FuncType([
             ('config', Argon2Config._spec),
             ('password', ListType(U8())),
-            ('salt', ListType(U8()))
+            ('salt', StringType())
           ], [
-            ('', ListType(U8()))
+            ('', ResultType(StringType(), StringType()))
           ]),
         )!,
         _verifyPassword = library.getComponentFunction(
           'wasm-run-dart:rust-crypto/argon2#verify-password',
-          const FuncType(
-              [('password', ListType(U8())), ('hash', ListType(U8()))],
-              [('', Bool())]),
+          const FuncType([
+            ('password', ListType(U8())),
+            ('hash', StringType()),
+            ('secret', OptionType(ListType(U8())))
+          ], [
+            ('', ResultType(Bool(), StringType()))
+          ]),
         )!,
         _rawHash = library.getComponentFunction(
           'wasm-run-dart:rust-crypto/argon2#raw-hash',
           const FuncType([
             ('config', Argon2Config._spec),
             ('password', ListType(U8())),
-            ('salt', ListType(U8())),
-            ('byte-length', U32())
+            ('salt', ListType(U8()))
           ], [
-            ('', ListType(U8()))
+            ('', ResultType(ListType(U8()), StringType()))
           ]),
         )!;
   final ListValue Function(ListValue) _defaultConfig;
@@ -472,54 +629,62 @@ class Argon2 {
   }
 
   final ListValue Function(ListValue) _generateSalt;
-  Uint8List generateSalt() {
+  String generateSalt() {
     final results = _generateSalt([]);
     final result = results[0];
-    return (result is Uint8List
-        ? result
-        : Uint8List.fromList((result! as List).cast()));
+    return result is String ? result : (result! as ParsedString).value;
   }
 
   final ListValue Function(ListValue) _hashPassword;
 
   /// Hash password to PHC string ($argon2id$v=19$...)
-  PasswordHash hashPassword({
+  Result<PasswordHash, String> hashPassword({
     required Argon2Config config,
     required Uint8List password,
-    required Uint8List salt,
+    required String salt,
   }) {
     final results = _hashPassword([config.toWasm(), password, salt]);
     final result = results[0];
-    return (result is Uint8List
-        ? result
-        : Uint8List.fromList((result! as List).cast()));
+    return Result.fromJson(
+        result,
+        (ok) => ok is String ? ok : (ok! as ParsedString).value,
+        (error) => error is String ? error : (error! as ParsedString).value);
   }
 
   final ListValue Function(ListValue) _verifyPassword;
-  bool verifyPassword({
+  Result<bool, String> verifyPassword({
     required Uint8List password,
     required PasswordHash hash,
+    Uint8List? secret,
   }) {
-    final results = _verifyPassword([password, hash]);
+    final results = _verifyPassword([
+      password,
+      hash,
+      (secret == null
+          ? const None().toWasm()
+          : Option.fromValue(secret).toWasm())
+    ]);
     final result = results[0];
-    return result! as bool;
+    return Result.fromJson(result, (ok) => ok! as bool,
+        (error) => error is String ? error : (error! as ParsedString).value);
   }
 
   final ListValue Function(ListValue) _rawHash;
 
   /// This useful for transforming a password into cryptographic keys
   /// for e.g. password-based encryption.
-  Uint8List rawHash({
+  Result<Uint8List, String> rawHash({
     required Argon2Config config,
     required Uint8List password,
     required Uint8List salt,
-    required int /*U32*/ byteLength,
   }) {
-    final results = _rawHash([config.toWasm(), password, salt, byteLength]);
+    final results = _rawHash([config.toWasm(), password, salt]);
     final result = results[0];
-    return (result is Uint8List
-        ? result
-        : Uint8List.fromList((result! as List).cast()));
+    return Result.fromJson(
+        result,
+        (ok) =>
+            (ok is Uint8List ? ok : Uint8List.fromList((ok! as List).cast())),
+        (error) => error is String ? error : (error! as ParsedString).value);
   }
 }
 
@@ -538,7 +703,7 @@ class AesGcmSiv {
             ('plain-text', ListType(U8())),
             ('associated-data', OptionType(ListType(U8())))
           ], [
-            ('', ListType(U8()))
+            ('', ResultType(ListType(U8()), StringType()))
           ]),
         )!,
         _decrypt = library.getComponentFunction(
@@ -550,7 +715,7 @@ class AesGcmSiv {
             ('cipher-text', ListType(U8())),
             ('associated-data', OptionType(ListType(U8())))
           ], [
-            ('', ListType(U8()))
+            ('', ResultType(ListType(U8()), StringType()))
           ]),
         )!;
   final ListValue Function(ListValue) _generateKey;
@@ -565,7 +730,7 @@ class AesGcmSiv {
   }
 
   final ListValue Function(ListValue) _encrypt;
-  Uint8List encrypt({
+  Result<Uint8List, String> encrypt({
     required AesKind kind,
     required Uint8List key,
     required Uint8List nonce,
@@ -582,13 +747,15 @@ class AesGcmSiv {
           : Option.fromValue(associatedData).toWasm())
     ]);
     final result = results[0];
-    return (result is Uint8List
-        ? result
-        : Uint8List.fromList((result! as List).cast()));
+    return Result.fromJson(
+        result,
+        (ok) =>
+            (ok is Uint8List ? ok : Uint8List.fromList((ok! as List).cast())),
+        (error) => error is String ? error : (error! as ParsedString).value);
   }
 
   final ListValue Function(ListValue) _decrypt;
-  Uint8List decrypt({
+  Result<Uint8List, String> decrypt({
     required AesKind kind,
     required Uint8List key,
     required Uint8List nonce,
@@ -605,15 +772,19 @@ class AesGcmSiv {
           : Option.fromValue(associatedData).toWasm())
     ]);
     final result = results[0];
-    return (result is Uint8List
-        ? result
-        : Uint8List.fromList((result! as List).cast()));
+    return Result.fromJson(
+        result,
+        (ok) =>
+            (ok is Uint8List ? ok : Uint8List.fromList((ok! as List).cast())),
+        (error) => error is String ? error : (error! as ParsedString).value);
   }
 }
 
 class RustCryptoWorld {
   final RustCryptoWorldImports imports;
   final WasmLibrary library;
+  final FsHash fsHash;
+  final Hashes hashes;
   final Sha2 sha2;
   final Blake3 blake3;
   final Hmac hmac;
@@ -623,7 +794,9 @@ class RustCryptoWorld {
   RustCryptoWorld({
     required this.imports,
     required this.library,
-  })  : sha2 = Sha2(library),
+  })  : fsHash = FsHash(library),
+        hashes = Hashes(library),
+        sha2 = Sha2(library),
         blake3 = Blake3(library),
         hmac = Hmac(library),
         argon2 = Argon2(library),
