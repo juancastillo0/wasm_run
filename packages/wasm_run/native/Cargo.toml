@@ -20,7 +20,7 @@ rayon = "1.7.0"
 wasi-common = "9.0.2"
 cap-std = "1.0.13"
 wasmtime = "9.0.2"
-wasmtime-wasi = "9.0.2"
+wasmtime-wasi = "10.0.1"
 # wasmtime-types = "9.0.2"
 
 [features]
