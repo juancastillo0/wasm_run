@@ -2,17 +2,24 @@
 // `with/dart-wit-generator.wit`
 wit_bindgen::generate!("rust-crypto");
 
+use std::{fmt::Display, fs, io::Read};
+
 use aes_gcm_siv::aead::Aead;
 use argon2::password_hash::{rand_core::OsRng, PasswordHasher, PasswordVerifier};
 use hmac::Mac;
 use sha2::Digest;
 
+use crate::rust_crypto::fs_hash::HashKind;
 use exports::wasm_run_dart::rust_crypto;
 
 // Define a custom type and implement the generated `Host` trait for it which
 // represents implementing all the necessary exported interfaces for this
 // component.
 struct RustCryptoImpl;
+
+fn map_err<T: Display>(err: T) -> String {
+    err.to_string()
+}
 
 impl rust_crypto::hmac::Hmac for RustCryptoImpl {
     fn hmac_sha256(key: Vec<u8>, input: Vec<u8>) -> Vec<u8> {
@@ -45,6 +52,56 @@ impl rust_crypto::hmac::Hmac for RustCryptoImpl {
         // let mut mac = hmac::SimpleHmac::<blake3::Hasher>::new_from_slice(&key).unwrap();
         // mac.update(&input);
         // mac.finalize().into_bytes().to_vec()
+    }
+}
+
+impl rust_crypto::fs_hash::FsHash for RustCryptoImpl {
+    fn hash_file(kind: HashKind, path: String) -> Result<Vec<u8>, String> {
+        let mut file = fs::File::open(path).map_err(|e| e.to_string())?;
+        get_hasher(kind, |h| {
+            std::io::copy(&mut file, h).map(|_| ()).map_err(map_err)
+        })
+    }
+
+    fn hmac_file(kind: HashKind, key: Vec<u8>, path: String) -> Result<Vec<u8>, String> {
+        let mut file = fs::File::open(path).map_err(|e| e.to_string())?;
+        get_hmac(kind, key, |h| {
+            std::io::copy(&mut file, h).map(|_| ()).map_err(map_err)
+        })
+    }
+
+    fn crc32_file(path: String) -> Result<u32, String> {
+        let mut file = fs::File::open(path).map_err(|e| e.to_string())?;
+        let mut hasher = crc32fast::Hasher::new();
+        let buff = &mut [0; 1024 * 4 * 2];
+        loop {
+            let read = file.read(buff).map_err(map_err)?;
+            if read == 0 {
+                break;
+            }
+            hasher.update(&buff[..read]);
+        }
+        Ok(hasher.finalize())
+    }
+}
+
+impl rust_crypto::hashes::Hashes for RustCryptoImpl {
+    fn sha1(input: Vec<u8>) -> Vec<u8> {
+        let mut hasher = sha1::Sha1::new();
+        hasher.update(input);
+        hasher.finalize().to_vec()
+    }
+
+    fn md5(input: Vec<u8>) -> Vec<u8> {
+        let mut hasher = md5::Md5::new();
+        hasher.update(input);
+        hasher.finalize().to_vec()
+    }
+
+    fn crc32(input: Vec<u8>) -> u32 {
+        let mut hasher = crc32fast::Hasher::new();
+        hasher.update(input.as_slice());
+        hasher.finalize()
     }
 }
 
@@ -255,3 +312,94 @@ impl rust_crypto::aes_gcm_siv::AesGcmSiv for RustCryptoImpl {
 }
 
 export_rust_crypto!(RustCryptoImpl);
+
+fn get_hmac(
+    kind: HashKind,
+    key: Vec<u8>,
+    f: impl FnOnce(&mut dyn std::io::Write) -> Result<(), String>,
+) -> Result<Vec<u8>, String> {
+    match kind {
+        HashKind::Md5 => {
+            let mut h = hmac::Hmac::<md5::Md5>::new_from_slice(&key).map_err(map_err)?;
+            f(&mut h)?;
+            Ok(h.finalize().into_bytes().to_vec())
+        }
+        HashKind::Sha1 => {
+            let mut h = hmac::Hmac::<sha1::Sha1>::new_from_slice(&key).map_err(map_err)?;
+            f(&mut h)?;
+            Ok(h.finalize().into_bytes().to_vec())
+        }
+        HashKind::Sha256 => {
+            let mut h = hmac::Hmac::<sha2::Sha256>::new_from_slice(&key).map_err(map_err)?;
+            f(&mut h)?;
+            Ok(h.finalize().into_bytes().to_vec())
+        }
+        HashKind::Sha512 => {
+            let mut h = hmac::Hmac::<sha2::Sha512>::new_from_slice(&key).map_err(map_err)?;
+            f(&mut h)?;
+            Ok(h.finalize().into_bytes().to_vec())
+        }
+        HashKind::Sha384 => {
+            let mut h = hmac::Hmac::<sha2::Sha384>::new_from_slice(&key).map_err(map_err)?;
+            f(&mut h)?;
+            Ok(h.finalize().into_bytes().to_vec())
+        }
+        HashKind::Sha224 => {
+            let mut h = hmac::Hmac::<sha2::Sha224>::new_from_slice(&key).map_err(map_err)?;
+            f(&mut h)?;
+            Ok(h.finalize().into_bytes().to_vec())
+        }
+        HashKind::Blake3 => {
+            let mut h = blake3::Hasher::new_keyed(
+                &(key.try_into().map_err(|e: Vec<u8>| {
+                    format!("Key length should be 32 bytes, got {} bytes", e.len())
+                })?),
+            );
+            f(&mut h)?;
+            Ok(h.finalize().as_bytes().to_vec())
+        }
+    }
+}
+
+fn get_hasher(
+    kind: HashKind,
+    f: impl FnOnce(&mut dyn std::io::Write) -> Result<(), String>,
+) -> Result<Vec<u8>, String> {
+    match kind {
+        HashKind::Md5 => {
+            let mut h = md5::Md5::new();
+            f(&mut h)?;
+            Ok(h.finalize().to_vec())
+        }
+        HashKind::Sha1 => {
+            let mut h = sha1::Sha1::new();
+            f(&mut h)?;
+            Ok(h.finalize().to_vec())
+        }
+        HashKind::Sha256 => {
+            let mut h = sha2::Sha256::new();
+            f(&mut h)?;
+            Ok(h.finalize().to_vec())
+        }
+        HashKind::Sha512 => {
+            let mut h = sha2::Sha512::new();
+            f(&mut h)?;
+            Ok(h.finalize().to_vec())
+        }
+        HashKind::Sha384 => {
+            let mut h = sha2::Sha384::new();
+            f(&mut h)?;
+            Ok(h.finalize().to_vec())
+        }
+        HashKind::Sha224 => {
+            let mut h = sha2::Sha224::new();
+            f(&mut h)?;
+            Ok(h.finalize().to_vec())
+        }
+        HashKind::Blake3 => {
+            let mut h = blake3::Hasher::new();
+            f(&mut h)?;
+            Ok(h.finalize().as_bytes().to_vec())
+        }
+    }
+}

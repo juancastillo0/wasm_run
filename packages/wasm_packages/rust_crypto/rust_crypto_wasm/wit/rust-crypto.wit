@@ -1,5 +1,27 @@
 package wasm-run-dart:rust-crypto
 
+interface fs-hash {
+    enum hash-kind {
+        md5,
+        sha1,
+        sha224,
+        sha256,
+        sha384,
+        sha512,
+        blake3,
+    }
+
+    hash-file: func(kind: hash-kind, path: string) -> result<list<u8>, string>
+    hmac-file: func(kind: hash-kind, key: list<u8>, path: string) -> result<list<u8>, string>
+    crc32-file: func(path: string) -> result<u32, string>
+}
+
+interface hashes {
+    sha1: func(bytes: list<u8>) -> list<u8>
+    md5: func(bytes: list<u8>) -> list<u8>
+    crc32: func(bytes: list<u8>) -> u32
+}
+
 interface sha2 {
     sha224: func(bytes: list<u8>) -> list<u8>
     sha256: func(bytes: list<u8>) -> list<u8>
