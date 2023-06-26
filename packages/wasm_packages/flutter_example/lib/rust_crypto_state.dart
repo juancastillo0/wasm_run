@@ -2,17 +2,22 @@ import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
 
-import 'package:file_system_access/file_system_access.dart';
+import 'package:file_system_access/file_system_access.dart'
+    hide Result, Ok, Err;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_example/flutter_utils.dart';
 import 'package:rust_crypto/rust_crypto.dart';
+import 'package:wasm_wit_component/wasm_wit_component.dart';
 
 enum RCHash {
-  sha224,
+  sha1,
+  blake3,
   sha256,
+  sha224,
   sha384,
   sha512,
-  blake3,
+  md5,
+  crc32,
 }
 
 class BinaryInputData {
@@ -70,6 +75,8 @@ class RustCryptoState extends ChangeNotifier with ErrorNotifier {
     generateAesKey();
     generateHmacKey();
     generateNonce();
+    generateSalt();
+    passwordSecret.textController.addListener(_updatePasswordSecret);
   }
 
   void generateNonce() {
@@ -115,6 +122,7 @@ class RustCryptoState extends ChangeNotifier with ErrorNotifier {
 
   InputEncoding hashOutputEncoding = InputEncoding.base64;
   // String base64CipherOutput = '';
+  // TODO: argon and key derivation
 
   void hashOutputEncodingSet(InputEncoding encoding) {
     hashOutputEncoding = encoding;
@@ -124,19 +132,24 @@ class RustCryptoState extends ChangeNotifier with ErrorNotifier {
   Map<RCHash, String> hmacValues = {};
   Map<RCHash, String> hashValues = {};
 
-  Uint8List _hashBytes(Uint8List bytes, RCHash type) {
+  void _hashBytes(Uint8List bytes, RCHash type) {
     final hash = switch (type) {
       RCHash.blake3 => rustCrypto.blake3.hash(bytes: bytes),
       RCHash.sha224 => rustCrypto.sha2.sha224(bytes: bytes),
       RCHash.sha256 => rustCrypto.sha2.sha256(bytes: bytes),
       RCHash.sha384 => rustCrypto.sha2.sha384(bytes: bytes),
       RCHash.sha512 => rustCrypto.sha2.sha512(bytes: bytes),
+      RCHash.md5 => rustCrypto.hashes.md5(bytes: bytes),
+      RCHash.sha1 => rustCrypto.hashes.sha1(bytes: bytes),
+      RCHash.crc32 => (ByteData(4)
+            ..setUint32(0, rustCrypto.hashes.crc32(bytes: bytes)))
+          .buffer
+          .asUint8List(),
     };
     hashValues[type] = outputText(hashOutputEncoding, hash);
-    return hash;
   }
 
-  Uint8List _hmacBytes(Uint8List bytes, Uint8List key, RCHash type) {
+  void _hmacBytes(Uint8List bytes, Uint8List key, RCHash type) {
     final hmac = switch (type) {
       RCHash.blake3 =>
         rustCrypto.blake3.macKeyedHash(bytes: bytes, key: key.sublist(0, 32)),
@@ -144,9 +157,12 @@ class RustCryptoState extends ChangeNotifier with ErrorNotifier {
       RCHash.sha256 => rustCrypto.hmac.hmacSha256(bytes: bytes, key: key),
       RCHash.sha384 => rustCrypto.hmac.hmacSha384(bytes: bytes, key: key),
       RCHash.sha512 => rustCrypto.hmac.hmacSha512(bytes: bytes, key: key),
+      RCHash.md5 || RCHash.sha1 || RCHash.crc32 => Result.ok(Uint8List(0)),
     };
-    hmacValues[type] = outputText(hashOutputEncoding, hmac);
-    return hmac;
+    return switch (hmac) {
+      Ok(:final ok) => hmacValues[type] = outputText(hashOutputEncoding, ok),
+      Err(:final error) => setError(error),
+    };
   }
 
   void computeHashValues() {
@@ -177,9 +193,9 @@ class RustCryptoState extends ChangeNotifier with ErrorNotifier {
     final associatedData_ =
         inputBytes(InputEncoding.utf8, associatedDataController.text, null);
 
-    final Uint8List encrypted;
+    final Result<Uint8List, String> encryptedR;
     if (isConcat) {
-      encrypted = rustCrypto.aesGcmSiv.encryptConcat(
+      encryptedR = rustCrypto.aesGcmSiv.encryptConcat(
         AesKind.bits256,
         plainText: plainText,
         key: aesKeyInput.bytes,
@@ -187,7 +203,7 @@ class RustCryptoState extends ChangeNotifier with ErrorNotifier {
         associatedData: associatedData_,
       );
     } else {
-      encrypted = rustCrypto.aesGcmSiv.encrypt(
+      encryptedR = rustCrypto.aesGcmSiv.encrypt(
         kind: AesKind.bits256,
         plainText: plainText,
         key: aesKeyInput.bytes,
@@ -195,6 +211,8 @@ class RustCryptoState extends ChangeNotifier with ErrorNotifier {
         associatedData: associatedData_,
       );
     }
+    final encrypted = encryptedR.mapErr(setError).ok;
+    if (encrypted == null) return;
     if (planTextInput.encoding == InputEncoding.file) {
       final file = planTextInput.file!;
       cipherTextInput.file =
@@ -209,15 +227,15 @@ class RustCryptoState extends ChangeNotifier with ErrorNotifier {
 
   void decrypt() {
     final cipherText = cipherTextInput.bytes;
-    final Uint8List decrypted;
+    final Result<Uint8List, String> decryptedR;
     if (isConcat) {
-      decrypted = rustCrypto.aesGcmSiv.decryptConcat(
+      decryptedR = rustCrypto.aesGcmSiv.decryptConcat(
         AesKind.bits256,
         concat: cipherText,
         key: aesKeyInput.bytes,
       );
     } else {
-      decrypted = rustCrypto.aesGcmSiv.decrypt(
+      decryptedR = rustCrypto.aesGcmSiv.decrypt(
         kind: AesKind.bits256,
         cipherText: cipherText,
         key: aesKeyInput.bytes,
@@ -226,6 +244,8 @@ class RustCryptoState extends ChangeNotifier with ErrorNotifier {
             inputBytes(InputEncoding.utf8, associatedDataController.text, null),
       );
     }
+    final decrypted = decryptedR.mapErr(setError).ok;
+    if (decrypted == null) return;
     if (cipherTextInput.encoding == InputEncoding.file) {
       final file = cipherTextInput.file!;
       final name = file.name.endsWith(encryptedExt)
@@ -245,10 +265,75 @@ class RustCryptoState extends ChangeNotifier with ErrorNotifier {
     }
     notifyListeners();
   }
+
+  late Argon2Config argon2config = rustCrypto.argon2.defaultConfig();
+  final saltController = TextEditingController();
+  final passwordHashController = TextEditingController();
+  late final passwordInput = BinaryInputData(notifyListeners, isKey: false);
+  late final passwordSecret = BinaryInputData(notifyListeners, isKey: true);
+
+  bool? isPasswordVerified;
+
+  void _updatePasswordSecret() {
+    final secretBytes = passwordSecret.bytes;
+    argon2config = argon2config.copyWith(
+      secret: secretBytes.isEmpty ? const None() : Some(secretBytes),
+    );
+    notifyListeners();
+  }
+
+  void generateSalt() {
+    saltController.text = rustCrypto.argon2.generateSalt();
+    notifyListeners();
+  }
+
+  void setArgon2Config(Argon2Config config) {
+    argon2config = config;
+    notifyListeners();
+  }
+
+  void hashPassword() {
+    rustCrypto.argon2
+        .hashPassword(
+          config: argon2config,
+          password: passwordInput.bytes,
+          salt: saltController.text,
+        )
+        .mapErr(setError)
+        .map((hash) {
+      passwordHashController.text = hash;
+      // passwordRawHashBase64 = hash.split('\$').last;
+      // final keyBytes = rustCrypto.argon2
+      //     .rawHash(
+      //       config: argon2config,
+      //       password: passwordInput.bytes,
+      //       salt: inputBytes(
+      //         InputEncoding.base64,
+      //         '${saltController.text}==',
+      //         null,
+      //       ),
+      //     )
+      //     .unwrap();
+      // passwordRawHashBase64 = outputText(InputEncoding.base64, keyBytes);
+      notifyListeners();
+    });
+  }
+
+  void verifyPassword() {
+    isPasswordVerified = rustCrypto.argon2
+        .verifyPassword(
+          password: passwordInput.bytes,
+          hash: passwordHashController.text,
+          secret: passwordSecret.text.isEmpty ? null : passwordSecret.bytes,
+        )
+        .mapErr(setError)
+        .ok;
+    notifyListeners();
+  }
 }
 
 extension AesGcmSivExt on AesGcmSiv {
-  Uint8List encryptConcat(
+  Result<Uint8List, String> encryptConcat(
     AesKind kind, {
     required Uint8List plainText,
     required Uint8List key,
@@ -258,13 +343,15 @@ extension AesGcmSivExt on AesGcmSiv {
   }) {
     final n = nonce ?? generateNonce();
     final associated = associatedData ?? Uint8List(0);
-    final cipherText = encrypt(
+    final cipherTextR = encrypt(
       kind: kind,
       key: key,
       nonce: n,
       plainText: plainText,
       associatedData: associated,
     );
+    if (cipherTextR.isError) return cipherTextR;
+    final cipherText = cipherTextR.unwrap();
     final nonceStart = concatAssociatedData ? 4 + associated.length : 0;
     final data = ByteData(nonceStart + n.length + cipherText.length);
     final view = data.buffer.asUint8List();
@@ -274,10 +361,10 @@ extension AesGcmSivExt on AesGcmSiv {
     }
     view.setAll(nonceStart, n);
     view.setAll(nonceStart + n.length, cipherText);
-    return view;
+    return Ok(view);
   }
 
-  Uint8List decryptConcat(
+  Result<Uint8List, String> decryptConcat(
     AesKind kind, {
     required Uint8List concat,
     required Uint8List key,
@@ -378,7 +465,7 @@ Uint8List inputBytes(
     switch (inputEncoding) {
       InputEncoding.utf8 => const Utf8Encoder().convert(text),
       InputEncoding.hex => hexToBytes(text),
-      InputEncoding.base64 => base64.decode(text),
+      InputEncoding.base64 => base64.decode(addBase64Padding(text)),
       InputEncoding.file => file!.bytes,
     };
 
@@ -392,3 +479,9 @@ String outputText(
       InputEncoding.base64 => base64.encode(bytes),
       InputEncoding.file => throw UnimplementedError(),
     };
+
+String addBase64Padding(String value) {
+  final mod = value.length % 4;
+  if (mod == 0) return value;
+  return value + '=' * (4 - mod);
+}

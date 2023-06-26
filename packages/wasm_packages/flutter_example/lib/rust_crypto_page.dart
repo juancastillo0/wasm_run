@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_example/flutter_utils.dart';
 import 'package:flutter_example/rust_crypto_state.dart';
 import 'package:flutter_example/state.dart';
+import 'package:rust_crypto/rust_crypto.dart';
+import 'package:wasm_wit_component/wasm_wit_component.dart';
 
 class RustCryptoPage extends StatelessWidget {
   const RustCryptoPage({super.key});
@@ -14,13 +16,14 @@ class RustCryptoPage extends StatelessWidget {
     if (state == null) {
       return const CircularProgressIndicator();
     }
-    final isSmall = MediaQuery.of(context).size.width < 850;
+    final isVerySmall = MediaQuery.of(context).size.width < 800;
+    final isSmall = MediaQuery.of(context).size.width < 1250;
     return AnimatedBuilder(
       animation: state,
       builder: (context, _) {
-        if (isSmall) {
+        if (isVerySmall) {
           return DefaultTabController(
-            length: 2,
+            length: 3,
             child: Column(
               children: [
                 Expanded(
@@ -30,6 +33,9 @@ class RustCryptoPage extends StatelessWidget {
                         child: HashAndHmacView(state: state),
                       ),
                       SingleChildScrollView(child: Aes256GcmView(state: state)),
+                      SingleChildScrollView(
+                        child: Argon2PasswordView(state: state),
+                      ),
                     ],
                   ),
                 ),
@@ -37,7 +43,47 @@ class RustCryptoPage extends StatelessWidget {
                   tabs: [
                     Tab(child: Text('HASH & MAC')),
                     Tab(child: Text('AES GCM SIV')),
+                    Tab(child: Text('ARGON2')),
                   ],
+                ),
+              ],
+            ),
+          );
+        }
+        if (isSmall) {
+          return DefaultTabController(
+            length: 2,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Aes256GcmView(state: state),
+                  ),
+                ),
+                Expanded(
+                  child: Column(
+                    children: [
+                      Expanded(
+                        child: TabBarView(
+                          children: [
+                            SingleChildScrollView(
+                              child: HashAndHmacView(state: state),
+                            ),
+                            SingleChildScrollView(
+                              child: Argon2PasswordView(state: state),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const TabBar(
+                        tabs: [
+                          Tab(child: Text('HASH & MAC')),
+                          Tab(child: Text('ARGON2')),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -53,6 +99,10 @@ class RustCryptoPage extends StatelessWidget {
             const SizedBox(width: 20),
             SingleChildScrollView(
               child: Aes256GcmView(state: state),
+            ),
+            const SizedBox(width: 20),
+            SingleChildScrollView(
+              child: Argon2PasswordView(state: state),
             ),
           ],
         );
@@ -251,6 +301,163 @@ class Aes256GcmView extends StatelessWidget {
   }
 }
 
+class Argon2PasswordView extends StatelessWidget {
+  const Argon2PasswordView({
+    super.key,
+    required this.state,
+  });
+
+  final RustCryptoState state;
+
+  @override
+  Widget build(BuildContext context) {
+    return FocusTraversalGroup(
+      child: Column(
+        children: [
+          const Text('ARGON2').title(),
+          const SizedBox(height: 8),
+          TextField(
+            controller: state.saltController,
+            decoration: InputDecoration(
+              labelText: 'Salt (base64)',
+              suffixIcon: IconButton(
+                onPressed: state.generateSalt,
+                icon: const Icon(Icons.refresh),
+              ),
+            ),
+          ),
+          BinaryInputWidget(
+            data: state.passwordInput,
+            label: 'Password',
+          ),
+          const SizedBox(height: 5),
+          SelectableText(
+            'Is Password Verified: ${state.isPasswordVerified ?? '-'}',
+          ),
+          const SizedBox(height: 10),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              ElevatedButton.icon(
+                onPressed: state.hashPassword,
+                icon: const Icon(Icons.arrow_downward_rounded),
+                label: const Text('Hash Password'),
+              ),
+              const SizedBox(width: 8),
+              ElevatedButton.icon(
+                onPressed: state.verifyPassword,
+                icon: const Icon(Icons.arrow_upward_rounded),
+                label: const Text('Verify Password'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          TextField(
+            controller: state.passwordHashController,
+            maxLines: 3,
+            decoration: InputDecoration(
+              labelText: 'Password Hash (PHC)',
+              suffixIcon: AnimatedBuilder(
+                animation: state.passwordHashController,
+                builder: (context, _) =>
+                    copyButton(state.passwordHashController.text),
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+          Argon2ConfigWidget(
+            config: state.argon2config,
+            passwordSecret: state.passwordSecret,
+            onChanged: state.setArgon2Config,
+          ),
+        ],
+      ).container(
+        margin: const EdgeInsets.only(bottom: 20),
+        padding: const EdgeInsets.symmetric(horizontal: 15),
+        constraints: const BoxConstraints(maxWidth: 400),
+      ),
+    );
+  }
+}
+
+class Argon2ConfigWidget extends StatelessWidget {
+  const Argon2ConfigWidget({
+    super.key,
+    required this.config,
+    required this.onChanged,
+    required this.passwordSecret,
+  });
+
+  final Argon2Config config;
+  final void Function(Argon2Config) onChanged;
+  final BinaryInputData passwordSecret;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Column(
+        children: [
+          const Text('Argon2 Configuration').subtitle(),
+          ToggleButtonsW(
+            value: config.version,
+            options: Argon2Version.values,
+            setValue: (v) => onChanged(config.copyWith(version: v)),
+          ),
+          ToggleButtonsW(
+            value: config.algorithm,
+            options: Argon2Algorithm.values,
+            setValue: (v) => onChanged(config.copyWith(algorithm: v)),
+            width: 70,
+          ),
+          Row(
+            children: [
+              Expanded(
+                child: IntInput(
+                  initialValue: config.outputLength,
+                  onChanged: (v) =>
+                      onChanged(config.copyWith(outputLength: Some(v))),
+                  label: 'Output Length',
+                ),
+              ),
+              Expanded(
+                child: IntInput(
+                  initialValue: config.memoryCost,
+                  onChanged: (v) => onChanged(config.copyWith(memoryCost: v)),
+                  label: 'Memory Cost',
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 1),
+          Row(
+            children: [
+              Expanded(
+                child: IntInput(
+                  initialValue: config.timeCost,
+                  onChanged: (v) => onChanged(config.copyWith(timeCost: v)),
+                  label: 'Time Cost',
+                ),
+              ),
+              Expanded(
+                child: IntInput(
+                  initialValue: config.parallelismCost,
+                  onChanged: (v) =>
+                      onChanged(config.copyWith(parallelismCost: v)),
+                  label: 'Parallelism Cost',
+                ),
+              ),
+            ],
+          ),
+          BinaryInputWidget(
+            data: passwordSecret,
+            label: 'Secret',
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class BinaryInputWidget extends StatelessWidget {
   const BinaryInputWidget({
     super.key,
@@ -337,16 +544,42 @@ class BinaryDataEncodingButtons extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final allowedEncodings = data.allowedEncodings;
+    return ToggleButtonsW(
+      value: data.encoding,
+      setValue: data.encodingSet,
+      options: data.allowedEncodings,
+    );
+  }
+}
+
+class ToggleButtonsW<T extends Enum> extends StatelessWidget {
+  const ToggleButtonsW({
+    super.key,
+    required this.options,
+    required this.value,
+    required this.setValue,
+    this.width = 60,
+  });
+
+  final T value;
+  final void Function(T) setValue;
+  final List<T> options;
+  final double width;
+
+  @override
+  Widget build(BuildContext context) {
     return ToggleButtons(
       constraints: const BoxConstraints(minHeight: 35),
-      isSelected: allowedEncodings.map((e) => e == data.encoding).toList(),
+      isSelected: options.map((e) => e == value).toList(),
       onPressed: (index) {
-        data.encodingSet(allowedEncodings[index]);
+        setValue(options[index]);
       },
       children: [
-        ...allowedEncodings.map(
-          (e) => Text(e.name).container(alignment: Alignment.center, width: 60),
+        ...options.map(
+          (e) => Text(e.name).container(
+            alignment: Alignment.center,
+            width: width,
+          ),
         ),
       ],
     );
