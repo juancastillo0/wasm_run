@@ -63,7 +63,7 @@ class CompressionRsState extends ChangeNotifier with ErrorNotifier {
     final zipList = files
         .map(
           (f) => ZipArchiveInput(
-            item: FileBytes(bytes: f.bytes, path: f.name),
+            item: FileBytes(bytes: f.bytes, path: f.archivePath.text),
             options: f.zipOptions.value,
           ),
         )
@@ -86,7 +86,7 @@ class CompressionRsState extends ChangeNotifier with ErrorNotifier {
     final tarList = files
         .map(
           (f) => TarArchiveInput(
-            item: FileBytes(bytes: f.bytes, path: f.name),
+            item: FileBytes(bytes: f.bytes, path: f.archivePath.text),
             header: TarHeaderInputModel(f.tarHeader.value),
           ),
         )
@@ -117,13 +117,13 @@ class CompressionRsState extends ChangeNotifier with ErrorNotifier {
       if (files != null) {
         for (final zipFile in files) {
           final file = loadFile(zipFile.file.path, zipFile.file.bytes);
-          // TODO: zipFile.crc32 and others
           file.zipOptions.value = ZipOptions(
             compressionMethod: zipFile.compressionMethod,
             comment: BytesOrUnicode.string(zipFile.comment),
             lastModifiedTime: zipFile.lastModifiedTime,
             permissions: zipFile.permissions,
           );
+          file.zipFile = zipFile;
         }
       }
     } else {
@@ -187,10 +187,13 @@ class InputFileState {
   final Map<CompressorKind, Uint8List?> compressed = {};
   final Map<CompressorKind, Uint8List?> decompressed = {};
 
+  final TextEditingController archivePath;
+  ZipFile? zipFile;
   final zipOptions = ValueNotifier(const ZipOptions(
     compressionMethod: ZipCompressionMethod.deflated,
   ));
   final tarHeader = ValueNotifier(const TarHeaderModel());
 
-  InputFileState(this.name, this.bytes);
+  InputFileState(this.name, this.bytes, {this.zipFile})
+      : archivePath = TextEditingController(text: name);
 }
