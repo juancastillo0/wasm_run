@@ -62,104 +62,109 @@ class ImageRsPage extends StatelessWidget {
         final values = state.values;
         return Row(
           children: [
-            FocusTraversalGroup(
-              child: AnimatedBuilder(
-                animation: values,
-                builder: (context, _) {
-                  return ListView(
-                    children: [
-                      Row(
-                        children: [
-                          const Text('Rotate'),
-                          const SizedBox(width: 4),
-                          ...([
-                            (
-                              90,
-                              state.imageRs.operations.rotate90,
-                            ),
-                            (
-                              180,
-                              state.imageRs.operations.rotate180,
-                            ),
-                            (
-                              270,
-                              state.imageRs.operations.rotate270,
-                            )
-                          ]).map(
-                            (e) => TextButton(
-                              style: TextButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 0,
-                                  vertical: 0,
+            Visibility(
+              visible: state.showOperations,
+              child: FocusTraversalGroup(
+                child: AnimatedBuilder(
+                  animation: values,
+                  builder: (context, _) {
+                    return ListView(
+                      children: [
+                        Row(
+                          children: [
+                            const Text('Rotate'),
+                            const SizedBox(width: 4),
+                            ...([
+                              (
+                                90,
+                                state.imageRs.operations.rotate90,
+                              ),
+                              (
+                                180,
+                                state.imageRs.operations.rotate180,
+                              ),
+                              (
+                                270,
+                                state.imageRs.operations.rotate270,
+                              )
+                            ]).map(
+                              (e) => TextButton(
+                                style: TextButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 0,
+                                    vertical: 0,
+                                  ),
+                                  minimumSize: const Size(45, 40),
                                 ),
-                                minimumSize: const Size(45, 40),
-                              ),
-                              onPressed: op((ref) => e.$2(imageRef: ref)),
-                              child: Text('${e.$1}'),
-                            ),
-                          )
-                        ],
-                      ),
-                      ...imageOps(state).map(imageOpToWidget),
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const SizedBox(width: 6),
-                          const Text('keepAspectRatio'),
-                          Checkbox(
-                            value: values.keepAspectRatio,
-                            onChanged: (v) => values.setKeepAspectRatio(v!),
-                          ),
-                        ],
-                      ),
-                      DropdownButtonFormField(
-                        value: values.filterType,
-                        onChanged: (f) => values.setFilterType(f!),
-                        items: image_rs.FilterType.values
-                            .map(
-                              (e) => DropdownMenuItem(
-                                value: e,
-                                child: Text(e.name),
+                                onPressed: op((ref) => e.$2(imageRef: ref)),
+                                child: Text('${e.$1}'),
                               ),
                             )
-                            .toList(growable: false),
-                      ).container(
-                          width: 140,
-                          padding: const EdgeInsets.symmetric(horizontal: 6)),
-                      // TODO: /// Resize the supplied image to the specified dimensions.
-                      // /// The image's aspect ratio is preserved. The image is scaled to the
-                      // /// maximum possible size that fits within the larger (relative to aspect ratio)
-                      // /// of the bounds specified by nwidth and nheight, then cropped to fit within the other bound.
-                      // resize-to-fill: func(image-ref: image-ref, size: image-size, filter: filter-type) -> image-ref
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          IntInput(label: 'Width', onChanged: values.setWidth)
-                              .container(width: 80),
-                          IntInput(label: 'Height', onChanged: values.setHeight)
-                              .container(width: 80),
-                        ],
-                      ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          IntInput(label: 'X', onChanged: values.setX)
-                              .container(width: 80),
-                          IntInput(label: 'Y', onChanged: values.setY)
-                              .container(width: 80),
-                        ],
-                      ),
-                      const SizedBox(height: 5),
-                    ]
-                        .expand((e) => [const SizedBox(height: 5), e])
-                        .toList(growable: false),
-                  ).container(
-                    width: 180,
-                    padding: const EdgeInsets.only(left: 6),
-                  );
-                },
+                          ],
+                        ),
+                        ...imageOps(state).map(imageOpToWidget),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const SizedBox(width: 6),
+                            const Text('keepAspectRatio'),
+                            Checkbox(
+                              value: values.keepAspectRatio,
+                              onChanged: (v) => values.setKeepAspectRatio(v!),
+                            ),
+                          ],
+                        ),
+                        DropdownButtonFormField(
+                          value: values.filterType,
+                          onChanged: (f) => values.setFilterType(f!),
+                          items: image_rs.FilterType.values
+                              .map(
+                                (e) => DropdownMenuItem(
+                                  value: e,
+                                  child: Text(e.name),
+                                ),
+                              )
+                              .toList(growable: false),
+                        ).container(
+                            width: 140,
+                            padding: const EdgeInsets.symmetric(horizontal: 6)),
+                        // TODO: /// Resize the supplied image to the specified dimensions.
+                        // /// The image's aspect ratio is preserved. The image is scaled to the
+                        // /// maximum possible size that fits within the larger (relative to aspect ratio)
+                        // /// of the bounds specified by nwidth and nheight, then cropped to fit within the other bound.
+                        // resize-to-fill: func(image-ref: image-ref, size: image-size, filter: filter-type) -> image-ref
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IntInput(label: 'Width', onChanged: values.setWidth)
+                                .container(width: 80),
+                            IntInput(
+                                    label: 'Height',
+                                    onChanged: values.setHeight)
+                                .container(width: 80),
+                          ],
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IntInput(label: 'X', onChanged: values.setX)
+                                .container(width: 80),
+                            IntInput(label: 'Y', onChanged: values.setY)
+                                .container(width: 80),
+                          ],
+                        ),
+                        const SizedBox(height: 5),
+                      ]
+                          .expand((e) => [const SizedBox(height: 5), e])
+                          .toList(growable: false),
+                    ).container(
+                      width: 180,
+                      padding: const EdgeInsets.only(left: 6),
+                    );
+                  },
+                ),
               ),
             ),
             Expanded(
@@ -172,6 +177,15 @@ class ImageRsPage extends StatelessWidget {
                         runSpacing: 4,
                         spacing: 4,
                         children: [
+                          TextButton.icon(
+                            onPressed: state.toggleShowOperations,
+                            icon: state.showOperations
+                                ? const Icon(Icons.arrow_back_ios, size: 14)
+                                : const Icon(Icons.arrow_forward_ios, size: 14),
+                            label: state.showOperations
+                                ? const Text('Hide')
+                                : const Text('Show'),
+                          ),
                           TextButton(
                             onPressed: () => loadImage(state.loadImage),
                             child: const Text('Load Image'),
@@ -274,7 +288,6 @@ class DoubleInput extends StatelessWidget {
     );
   }
 }
-
 
 class ImgOp {
   final String name;

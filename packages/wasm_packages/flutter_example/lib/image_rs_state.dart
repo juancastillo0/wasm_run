@@ -6,6 +6,7 @@ class ImageRsState extends ChangeNotifier with ErrorNotifier {
   ImageRsState(this.imageRs);
 
   final ImageRsWorld imageRs;
+  bool showOperations = true;
   final values = ImageRsStateValues();
   ImageFormat format = ImageFormat.png;
   ColorType? get color => ref?.color;
@@ -55,6 +56,11 @@ class ImageRsState extends ChangeNotifier with ErrorNotifier {
       this.bytes = bytes;
       notifyListeners();
     }
+  }
+
+  void toggleShowOperations() {
+    showOperations = !showOperations;
+    notifyListeners();
   }
 
   void setFormat(ImageFormat format) {
