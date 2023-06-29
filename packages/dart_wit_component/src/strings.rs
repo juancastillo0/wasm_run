@@ -162,4 +162,6 @@ const RESERVED: &[&str] = &[
     "double",
     "num",
     "i64",
+    "index",
+    // TODO: "init"
 ];

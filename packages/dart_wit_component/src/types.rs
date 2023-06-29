@@ -918,8 +918,8 @@ impl Parsed<'_> {
                     let docs = extract_dart_docs(&v.docs).unwrap_or("".to_string());
 
                     if let (true, Some(class_name)) =  (self.2.same_class_union, self.type_class_name(&v.ty)) {
-                        // TODO: improve
-                        s.push_str(&format!("{docs}static const {} = {class_name}.new;", ty.as_var()));
+                        // TODO: improve, does not work for variants or unions since they don't have a default constructor
+                        // s.push_str(&format!("{docs}static const {} = {class_name}.new;", ty.as_var()));
                         // don't regenerate classes for types that already have a class
                         class_name
                     } else {
