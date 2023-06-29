@@ -1,0 +1,13 @@
+[package]
+name = "sql_parser_wasm"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+crate-type = ['cdylib']
+
+[dependencies]
+wit-bindgen = { git = "https://github.com/bytecodealliance/wit-bindgen", version = "0.7.0", rev = "131746313de2f90d2688afbbc40c4a7ca309fe0d" }
+sqlparser = "0.35.0"
