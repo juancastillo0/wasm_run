@@ -45,6 +45,8 @@ dependencies:
     path: ../rust_crypto
   wasm_parser:
     path: ../wasm_parser
+  sql_parser:
+    path: ../sql_parser
   file_system_access:
     git:
       url: https://github.com/juancastillo0/file_system_access_web.git
@@ -80,6 +82,8 @@ dependency_overrides:
     path: ../rust_crypto
   wasm_parser:
     path: ../wasm_parser
+  sql_parser:
+    path: ../sql_parser
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -92,7 +96,8 @@ flutter:
   uses-material-design: true
 
   # To add assets to your application, add an assets section, like this:
-  # assets:
+  assets:
+    - packages/sql_parser/assets/sql_parser_wasm.wasm
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
 

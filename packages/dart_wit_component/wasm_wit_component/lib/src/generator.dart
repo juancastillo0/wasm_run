@@ -275,8 +275,6 @@ sealed class WitGeneratorInput implements ToJsonSerializable {
       _ => throw Exception('Invalid JSON $json_'),
     };
   }
-  static const fileSystemPaths = FileSystemPaths.new;
-  static const inMemoryFiles = InMemoryFiles.new;
 
   /// Returns this as a serializable JSON value.
   @override

@@ -3,6 +3,7 @@ import 'package:flutter_example/compression_rs_page.dart';
 import 'package:flutter_example/flutter_utils.dart';
 import 'package:flutter_example/image_rs_page.dart';
 import 'package:flutter_example/rust_crypto_page.dart';
+import 'package:flutter_example/sql_parser_page.dart';
 import 'package:flutter_example/state.dart';
 import 'package:flutter_example/wasm_parser_page.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -55,7 +56,8 @@ enum AppTab {
   wasmParser,
   compressionRs,
   imageRs,
-  rustCrypto;
+  rustCrypto,
+  sqlParser;
 
   String get uiName => name.substring(0, 1).toUpperCase() + name.substring(1);
 
@@ -76,6 +78,10 @@ enum AppTab {
       AppTab.rustCrypto => LoaderWidget(
           loader: state.rustCrypto,
           child: const RustCryptoPage(),
+        ),
+      AppTab.sqlParser => LoaderWidget(
+          loader: state.sqlParser,
+          child: const SqlParserPage(),
         ),
     };
   }
