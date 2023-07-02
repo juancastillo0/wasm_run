@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:file_system_access/file_system_access.dart' as fsa;
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class Inherited<T> extends InheritedWidget {
   const Inherited({
@@ -63,13 +64,11 @@ Future<void> downloadFile(
   }
 }
 
-const codeTextStyle = TextStyle(
-  fontSize: 13,
-  fontFamily: 'monospace',
-);
+final codeTextStyle = GoogleFonts.cousine(fontSize: 13);
 
 extension ContainerExt on Widget {
   Widget container({
+    Key? key,
     AlignmentGeometry? alignment,
     EdgeInsetsGeometry? padding,
     Color? color,
@@ -84,6 +83,7 @@ extension ContainerExt on Widget {
     Clip clipBehavior = Clip.none,
   }) {
     return Container(
+      key: key,
       alignment: alignment,
       padding: padding,
       color: color,
@@ -175,7 +175,7 @@ class ErrorMessage extends StatelessWidget {
 extension WatchListenable<T extends Listenable> on T {
   Widget select<O>(
     O Function(T state) selector,
-    Widget Function(O value) builder,
+    Widget Function(BuildContext context, O value) builder,
   ) {
     return ListenableSelector(
       listenable: this,
@@ -194,7 +194,7 @@ class ListenableSelector<T extends Listenable, O> extends StatefulWidget {
   });
   final T listenable;
   final O Function(T state) selector;
-  final Widget Function(O value) builder;
+  final Widget Function(BuildContext context, O value) builder;
 
   @override
   State<ListenableSelector<T, O>> createState() => _ListenableSelectorState();
@@ -239,6 +239,6 @@ class _ListenableSelectorState<T extends Listenable, O>
   @override
   Widget build(BuildContext context) {
     previousValue ??= widget.selector(widget.listenable);
-    return widget.builder(previousValue as O);
+    return widget.builder(context, previousValue as O);
   }
 }
