@@ -44,6 +44,10 @@ Future<SqlParserWorld> createSqlParser({
   return SqlParserWorld.init(builder, imports: imports);
 }
 
+extension SqlAstRefValue on SqlAstRef {
+  SqlAst value(ParsedSql parsed) => parsed.sqlAstRefs[index_];
+}
+
 extension SqlQueryRefValue on SqlQueryRef {
   SqlQuery value(ParsedSql parsed) => parsed.sqlQueryRefs[index_];
 }
@@ -67,3 +71,20 @@ extension SqlSelectRefValue on SqlSelectRef {
 extension ExprRefValue on ExprRef {
   Expr value(ParsedSql parsed) => parsed.exprRefs[index_];
 }
+
+extension DataTypeRefValue on DataTypeRef {
+  DataType value(ParsedSql parsed) => parsed.dataTypeRefs[index_];
+}
+
+extension ArrayAggRefValue on ArrayAggRef {
+  ArrayAgg value(ParsedSql parsed) => parsed.arrayAggRefs[index_];
+}
+
+extension ListAggRefValue on ListAggRef {
+  ListAgg value(ParsedSql parsed) => parsed.listAggRefs[index_];
+}
+
+extension SqlFunctionRefValue on SqlFunctionRef {
+  SqlFunction value(ParsedSql parsed) => parsed.sqlFunctionRefs[index_];
+}
+

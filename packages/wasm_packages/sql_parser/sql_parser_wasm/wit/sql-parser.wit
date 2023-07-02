@@ -146,9 +146,9 @@ world sql-parser {
       operation: alter-table-operation,
     }
 
-    union transaction-mode {
-      transaction-access-mode,
-      transaction-isolation-level,
+    variant transaction-mode {
+      access-mode(transaction-access-mode),
+      isolation-level(transaction-isolation-level),
     }
 
     /// https://docs.rs/sqlparser/0.35.0/sqlparser/ast/enum.TransactionAccessMode.html
@@ -1111,7 +1111,7 @@ world sql-parser {
       is-not-distinct-from,
       any-op,
       all-op,
-      exists-expr,
+      exists,
       nested-expr,
       sql-value,
       subquery,
@@ -1123,7 +1123,7 @@ world sql-parser {
       in-unnest,
       between,
       like,
-      ilike,
+      i-like,
       similar-to,
       cast,
       try-cast,
@@ -1142,38 +1142,122 @@ world sql-parser {
       typed-string,
       map-access,
       sql-function-ref,
+
+      case-expr,
+      list-agg-ref,
+      array-agg-ref,
+      array-subquery,
+      grouping-sets,
+      cube-expr,
+      rollup-expr,
+      tuple-expr,
+      array-index,
+      match-against,
+      array-expr,
+      interval-expr,
+      aggregate-expression-with-filter,
     }
 
+    /// https://docs.rs/sqlparser/0.35.0/sqlparser/ast/struct.Array.html
+    record array-expr {
+      elem: list<expr-ref>,
+      named: bool,
+    }
 
-//     Function(Function),
-//     AggregateExpressionWithFilter {
-//         expr: Box<expr>,
-//         filter: Box<expr>,
-//     },
-//     Case {
-//         operand: Option<Box<expr>>,
-//         conditions: Vec<expr>,
-//         results: Vec<expr>,
-//         else_result: Option<Box<expr>>,
-//     },
-//     ArraySubquery(Box<Query>),
-//     ListAgg(ListAgg),
-//     ArrayAgg(ArrayAgg),
-//     GroupingSets(Vec<Vec<expr>>),
-//     Cube(Vec<Vec<expr>>),
-//     Rollup(Vec<Vec<expr>>),
-//     Tuple(Vec<expr>),
-//     ArrayIndex {
-//         obj: Box<expr>,
-//         indexes: Vec<expr>,
-//     },
-//     Array(Array),
-//     Interval(Interval),
-//     MatchAgainst {
-//         columns: Vec<Ident>,
-//         match_value: Value,
-//         opt_search_modifier: Option<SearchModifier>,
-//     },
+    record interval-expr {
+      value: expr-ref,
+      leading-field: option<date-time-field>,
+      leading-precision: option<u64>,
+      last-field: option<date-time-field>,
+      fractional-seconds-precision: option<u64>,
+    }
+
+    record grouping-sets {
+      values: list<list<expr-ref>>,
+    }
+
+    record cube-expr {
+      values: list<list<expr-ref>>,
+    }
+
+    record rollup-expr {
+      values: list<list<expr-ref>>,
+    }
+
+    record tuple-expr {
+      values: list<expr-ref>,
+    }
+
+    record array-index {
+      obj: expr-ref,
+      indexes: list<expr-ref>,
+    }
+
+    record match-against {
+      columns: list<ident>,
+      match-value: sql-value,
+      opt-search-modifier: option<search-modifier>,
+    } 
+
+    /// https://docs.rs/sqlparser/0.35.0/sqlparser/ast/enum.SearchModifier.html
+    enum search-modifier {
+      in-natural-language-mode,
+      in-natural-language-mode-with-query-expansion,
+      in-boolean-mode,
+      with-query-expansion,
+    }
+
+    record case-expr {
+      operand: option<expr-ref>,
+      conditions: list<expr-ref>,
+      results: list<expr-ref>,
+      else-result: option<expr-ref>,
+    }
+
+    record aggregate-expression-with-filter {
+      expr: expr-ref,
+      filter: expr-ref,
+    }
+
+    record array-subquery {
+      query: sql-query-ref,
+    }
+
+    record array-agg-ref {
+      index: u32,
+    }
+
+    /// https://docs.rs/sqlparser/0.35.0/sqlparser/ast/struct.ArrayAgg.html
+    record array-agg {
+      distinct: bool,
+      expr: expr,
+      order-by: option<list<order-by-expr>>,
+      limit: option<expr>,
+      within-group: bool,
+    }
+
+    record list-agg-ref {
+      index: u32,
+    }
+
+    /// https://docs.rs/sqlparser/0.35.0/sqlparser/ast/struct.ListAgg.html
+    record list-agg {
+      distinct: bool,
+      expr: expr,
+      separator: option<expr>,
+      on-overflow: option<list-agg-on-overflow>,
+      within-group: list<order-by-expr>,
+    }
+
+    variant list-agg-on-overflow {
+      error,
+      truncate(on-overflow-truncate)
+    }
+
+    record on-overflow-truncate {
+      filler: option<expr>,
+      with-count: bool,
+    }
 
     record sql-function-ref {
       index: u32,
@@ -1352,7 +1436,7 @@ world sql-parser {
       escape-char: option<char>,
     }
 
-    record ilike {
+    record i-like {
       negated: bool,
       expr: expr-ref,
       pattern: expr-ref,
@@ -1389,7 +1473,7 @@ world sql-parser {
       expr: expr-ref,
     }
 
-    record exists-expr {
+    record exists {
       subquery: sql-query-ref,
       negated: bool,
     }
@@ -1497,6 +1581,9 @@ world sql-parser {
       set-expr-refs: list<set-expr>,
       expr-refs: list<expr>,
       data-type-refs: list<data-type>,
+      array-agg-refs: list<array-agg>,
+      list-agg-refs: list<list-agg>,
+      sql-function-refs: list<sql-function>,
       warnings: list<string>,
     }
 

@@ -117,8 +117,29 @@ enum UnaryOperator implements ToJsonSerializable {
   ]);
 }
 
+enum TrimWhereField implements ToJsonSerializable {
+  both,
+  leading,
+  trailing;
+
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
+  factory TrimWhereField.fromJson(Object? json) {
+    return ToJsonSerializable.enumFromJson(json, values, _spec);
+  }
+
+  /// Returns this as a serializable JSON value.
+  @override
+  Map<String, Object?> toJson() =>
+      {'runtimeType': 'TrimWhereField', _spec.labels[index]: null};
+
+  /// Returns this as a WASM canonical abi value.
+  int toWasm() => index;
+  static const _spec = EnumType(['both', 'leading', 'trailing']);
+}
+
 /// https://docs.rs/sqlparser/0.35.0/sqlparser/ast/enum.TransactionIsolationLevel.html
-enum TransactionIsolationLevel implements TransactionMode, ToJsonSerializable {
+enum TransactionIsolationLevel implements ToJsonSerializable {
   readUncommitted,
   readCommitted,
   repeatableRead,
@@ -146,7 +167,7 @@ enum TransactionIsolationLevel implements TransactionMode, ToJsonSerializable {
 }
 
 /// https://docs.rs/sqlparser/0.35.0/sqlparser/ast/enum.TransactionAccessMode.html
-enum TransactionAccessMode implements TransactionMode, ToJsonSerializable {
+enum TransactionAccessMode implements ToJsonSerializable {
   readOnly,
   readWrite;
 
@@ -172,41 +193,85 @@ sealed class TransactionMode implements ToJsonSerializable {
   factory TransactionMode.fromJson(Object? json_) {
     Object? json = json_;
     if (json is Map) {
-      final rt = json['runtimeType'];
-      if (rt is String) {
-        json = (
-          const ['TransactionAccessMode', 'TransactionIsolationLevel']
-              .indexOf(rt),
-          json
-        );
-      } else {
-        final MapEntry(:key, :value) = json.entries.first;
-        json = (key is int ? key : int.parse(key! as String), value);
-      }
+      final MapEntry(:key, :value) =
+          json.entries.firstWhere((e) => e.key != 'runtimeType');
+      json = (
+        key is int ? key : _spec.cases.indexWhere((c) => c.label == key),
+        value,
+      );
     }
     return switch (json) {
       (0, final value) ||
       [0, final value] =>
-        TransactionAccessMode.fromJson(value),
-      (1, final value) ||
-      [1, final value] =>
-        TransactionIsolationLevel.fromJson(value),
+        TransactionModeAccessMode(TransactionAccessMode.fromJson(value)),
+      (1, final value) || [1, final value] => TransactionModeIsolationLevel(
+          TransactionIsolationLevel.fromJson(value)),
       _ => throw Exception('Invalid JSON $json_'),
     };
   }
+  const factory TransactionMode.accessMode(TransactionAccessMode value) =
+      TransactionModeAccessMode;
+  const factory TransactionMode.isolationLevel(
+      TransactionIsolationLevel value) = TransactionModeIsolationLevel;
 
   /// Returns this as a serializable JSON value.
   @override
   Map<String, Object?> toJson();
 
   /// Returns this as a WASM canonical abi value.
-  static (int, Object?) toWasm(TransactionMode value) => switch (value) {
-        TransactionAccessMode() => (0, value.toWasm()),
-        TransactionIsolationLevel() => (1, value.toWasm()),
+  (int, Object?) toWasm();
+  static const _spec = Variant([
+    Case('access-mode', TransactionAccessMode._spec),
+    Case('isolation-level', TransactionIsolationLevel._spec)
+  ]);
+}
+
+class TransactionModeAccessMode implements TransactionMode {
+  final TransactionAccessMode value;
+  const TransactionModeAccessMode(this.value);
+
+  /// Returns this as a serializable JSON value.
+  @override
+  Map<String, Object?> toJson() => {
+        'runtimeType': 'TransactionModeAccessMode',
+        'access-mode': value.toJson()
       };
-// ignore: unused_field
-  static const _spec =
-      Union([TransactionAccessMode._spec, TransactionIsolationLevel._spec]);
+
+  /// Returns this as a WASM canonical abi value.
+  @override
+  (int, Object?) toWasm() => (0, value.toWasm());
+  @override
+  String toString() => 'TransactionModeAccessMode($value)';
+  @override
+  bool operator ==(Object other) =>
+      other is TransactionModeAccessMode &&
+      const ObjectComparator().areEqual(other.value, value);
+  @override
+  int get hashCode => const ObjectComparator().hashValue(value);
+}
+
+class TransactionModeIsolationLevel implements TransactionMode {
+  final TransactionIsolationLevel value;
+  const TransactionModeIsolationLevel(this.value);
+
+  /// Returns this as a serializable JSON value.
+  @override
+  Map<String, Object?> toJson() => {
+        'runtimeType': 'TransactionModeIsolationLevel',
+        'isolation-level': value.toJson()
+      };
+
+  /// Returns this as a WASM canonical abi value.
+  @override
+  (int, Object?) toWasm() => (1, value.toWasm());
+  @override
+  String toString() => 'TransactionModeIsolationLevel($value)';
+  @override
+  bool operator ==(Object other) =>
+      other is TransactionModeIsolationLevel &&
+      const ObjectComparator().areEqual(other.value, value);
+  @override
+  int get hashCode => const ObjectComparator().hashValue(value);
 }
 
 /// https://docs.rs/sqlparser/0.35.0/sqlparser/ast/enum.TimezoneInfo.html
@@ -412,7 +477,7 @@ class StartTransaction implements SqlAst, ToJsonSerializable {
 
   /// Returns this as a WASM canonical abi value.
   List<Object?> toWasm() =>
-      [modes.map(TransactionMode.toWasm).toList(growable: false)];
+      [modes.map((e) => e.toWasm()).toList(growable: false)];
   @override
   String toString() =>
       'StartTransaction${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
@@ -715,6 +780,57 @@ class SqlInsertRef implements SetExpr, ToJsonSerializable {
   static const _spec = RecordType([(label: 'index', t: U32())]);
 }
 
+class SqlFunctionRef implements Expr, ToJsonSerializable {
+  final int /*U32*/ index_;
+  const SqlFunctionRef({
+    required this.index_,
+  });
+
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
+  factory SqlFunctionRef.fromJson(Object? json_) {
+    final json = json_ is Map
+        ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
+        : json_;
+    return switch (json) {
+      [final index_] || (final index_,) => SqlFunctionRef(
+          index_: index_! as int,
+        ),
+      _ => throw Exception('Invalid JSON $json_')
+    };
+  }
+
+  /// Returns this as a serializable JSON value.
+  @override
+  Map<String, Object?> toJson() => {
+        'runtimeType': 'SqlFunctionRef',
+        'index': index_,
+      };
+
+  /// Returns this as a WASM canonical abi value.
+  List<Object?> toWasm() => [index_];
+  @override
+  String toString() =>
+      'SqlFunctionRef${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
+
+  /// Returns a new instance by overriding the values passed as arguments
+  SqlFunctionRef copyWith({
+    int /*U32*/ ? index_,
+  }) =>
+      SqlFunctionRef(index_: index_ ?? this.index_);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is SqlFunctionRef &&
+          const ObjectComparator().arePropsEqual(_props, other._props);
+  @override
+  int get hashCode => const ObjectComparator().hashProps(_props);
+
+  // ignore: unused_field
+  List<Object?> get _props => [index_];
+  static const _spec = RecordType([(label: 'index', t: U32())]);
+}
+
 class SqlAstRef implements ToJsonSerializable {
   final int /*U32*/ index_;
   const SqlAstRef({
@@ -935,6 +1051,34 @@ class SetOperation implements SetExpr, ToJsonSerializable {
     (label: 'set-quantifier', t: SetQuantifier._spec),
     (label: 'left', t: SetExprRef._spec),
     (label: 'right', t: SetExprRef._spec)
+  ]);
+}
+
+/// https://docs.rs/sqlparser/0.35.0/sqlparser/ast/enum.SearchModifier.html
+enum SearchModifier implements ToJsonSerializable {
+  inNaturalLanguageMode,
+  inNaturalLanguageModeWithQueryExpansion,
+  inBooleanMode,
+  withQueryExpansion;
+
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
+  factory SearchModifier.fromJson(Object? json) {
+    return ToJsonSerializable.enumFromJson(json, values, _spec);
+  }
+
+  /// Returns this as a serializable JSON value.
+  @override
+  Map<String, Object?> toJson() =>
+      {'runtimeType': 'SearchModifier', _spec.labels[index]: null};
+
+  /// Returns this as a WASM canonical abi value.
+  int toWasm() => index;
+  static const _spec = EnumType([
+    'in-natural-language-mode',
+    'in-natural-language-mode-with-query-expansion',
+    'in-boolean-mode',
+    'with-query-expansion'
   ]);
 }
 
@@ -1211,6 +1355,57 @@ enum LockType implements ToJsonSerializable {
   static const _spec = EnumType(['update', 'share']);
 }
 
+class ListAggRef implements Expr, ToJsonSerializable {
+  final int /*U32*/ index_;
+  const ListAggRef({
+    required this.index_,
+  });
+
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
+  factory ListAggRef.fromJson(Object? json_) {
+    final json = json_ is Map
+        ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
+        : json_;
+    return switch (json) {
+      [final index_] || (final index_,) => ListAggRef(
+          index_: index_! as int,
+        ),
+      _ => throw Exception('Invalid JSON $json_')
+    };
+  }
+
+  /// Returns this as a serializable JSON value.
+  @override
+  Map<String, Object?> toJson() => {
+        'runtimeType': 'ListAggRef',
+        'index': index_,
+      };
+
+  /// Returns this as a WASM canonical abi value.
+  List<Object?> toWasm() => [index_];
+  @override
+  String toString() =>
+      'ListAggRef${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
+
+  /// Returns a new instance by overriding the values passed as arguments
+  ListAggRef copyWith({
+    int /*U32*/ ? index_,
+  }) =>
+      ListAggRef(index_: index_ ?? this.index_);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ListAggRef &&
+          const ObjectComparator().arePropsEqual(_props, other._props);
+  @override
+  int get hashCode => const ObjectComparator().hashProps(_props);
+
+  // ignore: unused_field
+  List<Object?> get _props => [index_];
+  static const _spec = RecordType([(label: 'index', t: U32())]);
+}
+
 enum KeyOrIndexDisplay implements ToJsonSerializable {
   none_,
   key,
@@ -1230,6 +1425,45 @@ enum KeyOrIndexDisplay implements ToJsonSerializable {
   /// Returns this as a WASM canonical abi value.
   int toWasm() => index;
   static const _spec = EnumType(['none', 'key', 'index']);
+}
+
+enum JsonOperator implements ToJsonSerializable {
+  arrow,
+  longArrow,
+  hashArrow,
+  hashLongArrow,
+  colon,
+  atArrow,
+  arrowAt,
+  hashMinus,
+  atQuestion,
+  atAt;
+
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
+  factory JsonOperator.fromJson(Object? json) {
+    return ToJsonSerializable.enumFromJson(json, values, _spec);
+  }
+
+  /// Returns this as a serializable JSON value.
+  @override
+  Map<String, Object?> toJson() =>
+      {'runtimeType': 'JsonOperator', _spec.labels[index]: null};
+
+  /// Returns this as a WASM canonical abi value.
+  int toWasm() => index;
+  static const _spec = EnumType([
+    'arrow',
+    'long-arrow',
+    'hash-arrow',
+    'hash-long-arrow',
+    'colon',
+    'at-arrow',
+    'arrow-at',
+    'hash-minus',
+    'at-question',
+    'at-at'
+  ]);
 }
 
 /// https://docs.rs/sqlparser/0.35.0/sqlparser/ast/enum.IndexType.html
@@ -2674,6 +2908,521 @@ class UnaryOp implements Expr, ToJsonSerializable {
   ]);
 }
 
+class TupleExpr implements Expr, ToJsonSerializable {
+  final List<ExprRef> values;
+  const TupleExpr({
+    required this.values,
+  });
+
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
+  factory TupleExpr.fromJson(Object? json_) {
+    final json = json_ is Map
+        ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
+        : json_;
+    return switch (json) {
+      [final values] || (final values,) => TupleExpr(
+          values: (values! as Iterable).map(ExprRef.fromJson).toList(),
+        ),
+      _ => throw Exception('Invalid JSON $json_')
+    };
+  }
+
+  /// Returns this as a serializable JSON value.
+  @override
+  Map<String, Object?> toJson() => {
+        'runtimeType': 'TupleExpr',
+        'values': values.map((e) => e.toJson()).toList(),
+      };
+
+  /// Returns this as a WASM canonical abi value.
+  List<Object?> toWasm() =>
+      [values.map((e) => e.toWasm()).toList(growable: false)];
+  @override
+  String toString() =>
+      'TupleExpr${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
+
+  /// Returns a new instance by overriding the values passed as arguments
+  TupleExpr copyWith({
+    List<ExprRef>? values,
+  }) =>
+      TupleExpr(values: values ?? this.values);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is TupleExpr &&
+          const ObjectComparator().arePropsEqual(_props, other._props);
+  @override
+  int get hashCode => const ObjectComparator().hashProps(_props);
+
+  // ignore: unused_field
+  List<Object?> get _props => [values];
+  static const _spec =
+      RecordType([(label: 'values', t: ListType(ExprRef._spec))]);
+}
+
+class Trim implements Expr, ToJsonSerializable {
+  final ExprRef expr;
+  final TrimWhereField? trimWhere;
+  final ExprRef? trimWhat;
+  const Trim({
+    required this.expr,
+    this.trimWhere,
+    this.trimWhat,
+  });
+
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
+  factory Trim.fromJson(Object? json_) {
+    final json = json_ is Map
+        ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
+        : json_;
+    return switch (json) {
+      [final expr, final trimWhere, final trimWhat] ||
+      (final expr, final trimWhere, final trimWhat) =>
+        Trim(
+          expr: ExprRef.fromJson(expr),
+          trimWhere: Option.fromJson(
+              trimWhere, (some) => TrimWhereField.fromJson(some)).value,
+          trimWhat:
+              Option.fromJson(trimWhat, (some) => ExprRef.fromJson(some)).value,
+        ),
+      _ => throw Exception('Invalid JSON $json_')
+    };
+  }
+
+  /// Returns this as a serializable JSON value.
+  @override
+  Map<String, Object?> toJson() => {
+        'runtimeType': 'Trim',
+        'expr': expr.toJson(),
+        'trim-where': (trimWhere == null
+            ? const None().toJson()
+            : Option.fromValue(trimWhere).toJson((some) => some.toJson())),
+        'trim-what': (trimWhat == null
+            ? const None().toJson()
+            : Option.fromValue(trimWhat).toJson((some) => some.toJson())),
+      };
+
+  /// Returns this as a WASM canonical abi value.
+  List<Object?> toWasm() => [
+        expr.toWasm(),
+        (trimWhere == null
+            ? const None().toWasm()
+            : Option.fromValue(trimWhere).toWasm((some) => some.toWasm())),
+        (trimWhat == null
+            ? const None().toWasm()
+            : Option.fromValue(trimWhat).toWasm((some) => some.toWasm()))
+      ];
+  @override
+  String toString() =>
+      'Trim${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
+
+  /// Returns a new instance by overriding the values passed as arguments
+  Trim copyWith({
+    ExprRef? expr,
+    Option<TrimWhereField>? trimWhere,
+    Option<ExprRef>? trimWhat,
+  }) =>
+      Trim(
+          expr: expr ?? this.expr,
+          trimWhere: trimWhere != null ? trimWhere.value : this.trimWhere,
+          trimWhat: trimWhat != null ? trimWhat.value : this.trimWhat);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Trim &&
+          const ObjectComparator().arePropsEqual(_props, other._props);
+  @override
+  int get hashCode => const ObjectComparator().hashProps(_props);
+
+  // ignore: unused_field
+  List<Object?> get _props => [expr, trimWhere, trimWhat];
+  static const _spec = RecordType([
+    (label: 'expr', t: ExprRef._spec),
+    (label: 'trim-where', t: OptionType(TrimWhereField._spec)),
+    (label: 'trim-what', t: OptionType(ExprRef._spec))
+  ]);
+}
+
+class Substring implements Expr, ToJsonSerializable {
+  final ExprRef expr;
+  final ExprRef? substringFrom;
+  final ExprRef? substringFor;
+  const Substring({
+    required this.expr,
+    this.substringFrom,
+    this.substringFor,
+  });
+
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
+  factory Substring.fromJson(Object? json_) {
+    final json = json_ is Map
+        ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
+        : json_;
+    return switch (json) {
+      [final expr, final substringFrom, final substringFor] ||
+      (final expr, final substringFrom, final substringFor) =>
+        Substring(
+          expr: ExprRef.fromJson(expr),
+          substringFrom:
+              Option.fromJson(substringFrom, (some) => ExprRef.fromJson(some))
+                  .value,
+          substringFor:
+              Option.fromJson(substringFor, (some) => ExprRef.fromJson(some))
+                  .value,
+        ),
+      _ => throw Exception('Invalid JSON $json_')
+    };
+  }
+
+  /// Returns this as a serializable JSON value.
+  @override
+  Map<String, Object?> toJson() => {
+        'runtimeType': 'Substring',
+        'expr': expr.toJson(),
+        'substring-from': (substringFrom == null
+            ? const None().toJson()
+            : Option.fromValue(substringFrom).toJson((some) => some.toJson())),
+        'substring-for': (substringFor == null
+            ? const None().toJson()
+            : Option.fromValue(substringFor).toJson((some) => some.toJson())),
+      };
+
+  /// Returns this as a WASM canonical abi value.
+  List<Object?> toWasm() => [
+        expr.toWasm(),
+        (substringFrom == null
+            ? const None().toWasm()
+            : Option.fromValue(substringFrom).toWasm((some) => some.toWasm())),
+        (substringFor == null
+            ? const None().toWasm()
+            : Option.fromValue(substringFor).toWasm((some) => some.toWasm()))
+      ];
+  @override
+  String toString() =>
+      'Substring${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
+
+  /// Returns a new instance by overriding the values passed as arguments
+  Substring copyWith({
+    ExprRef? expr,
+    Option<ExprRef>? substringFrom,
+    Option<ExprRef>? substringFor,
+  }) =>
+      Substring(
+          expr: expr ?? this.expr,
+          substringFrom:
+              substringFrom != null ? substringFrom.value : this.substringFrom,
+          substringFor:
+              substringFor != null ? substringFor.value : this.substringFor);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Substring &&
+          const ObjectComparator().arePropsEqual(_props, other._props);
+  @override
+  int get hashCode => const ObjectComparator().hashProps(_props);
+
+  // ignore: unused_field
+  List<Object?> get _props => [expr, substringFrom, substringFor];
+  static const _spec = RecordType([
+    (label: 'expr', t: ExprRef._spec),
+    (label: 'substring-from', t: OptionType(ExprRef._spec)),
+    (label: 'substring-for', t: OptionType(ExprRef._spec))
+  ]);
+}
+
+class SimilarTo implements Expr, ToJsonSerializable {
+  final bool negated;
+  final ExprRef expr;
+  final ExprRef pattern;
+  final String /*Char*/ ? escapeChar;
+  const SimilarTo({
+    required this.negated,
+    required this.expr,
+    required this.pattern,
+    this.escapeChar,
+  });
+
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
+  factory SimilarTo.fromJson(Object? json_) {
+    final json = json_ is Map
+        ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
+        : json_;
+    return switch (json) {
+      [final negated, final expr, final pattern, final escapeChar] ||
+      (final negated, final expr, final pattern, final escapeChar) =>
+        SimilarTo(
+          negated: negated! as bool,
+          expr: ExprRef.fromJson(expr),
+          pattern: ExprRef.fromJson(pattern),
+          escapeChar:
+              Option.fromJson(escapeChar, (some) => some! as String).value,
+        ),
+      _ => throw Exception('Invalid JSON $json_')
+    };
+  }
+
+  /// Returns this as a serializable JSON value.
+  @override
+  Map<String, Object?> toJson() => {
+        'runtimeType': 'SimilarTo',
+        'negated': negated,
+        'expr': expr.toJson(),
+        'pattern': pattern.toJson(),
+        'escape-char': (escapeChar == null
+            ? const None().toJson()
+            : Option.fromValue(escapeChar).toJson()),
+      };
+
+  /// Returns this as a WASM canonical abi value.
+  List<Object?> toWasm() => [
+        negated,
+        expr.toWasm(),
+        pattern.toWasm(),
+        (escapeChar == null
+            ? const None().toWasm()
+            : Option.fromValue(escapeChar).toWasm())
+      ];
+  @override
+  String toString() =>
+      'SimilarTo${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
+
+  /// Returns a new instance by overriding the values passed as arguments
+  SimilarTo copyWith({
+    bool? negated,
+    ExprRef? expr,
+    ExprRef? pattern,
+    Option<String /*Char*/ >? escapeChar,
+  }) =>
+      SimilarTo(
+          negated: negated ?? this.negated,
+          expr: expr ?? this.expr,
+          pattern: pattern ?? this.pattern,
+          escapeChar: escapeChar != null ? escapeChar.value : this.escapeChar);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is SimilarTo &&
+          const ObjectComparator().arePropsEqual(_props, other._props);
+  @override
+  int get hashCode => const ObjectComparator().hashProps(_props);
+
+  // ignore: unused_field
+  List<Object?> get _props => [negated, expr, pattern, escapeChar];
+  static const _spec = RecordType([
+    (label: 'negated', t: Bool()),
+    (label: 'expr', t: ExprRef._spec),
+    (label: 'pattern', t: ExprRef._spec),
+    (label: 'escape-char', t: OptionType(Char()))
+  ]);
+}
+
+class RollupExpr implements Expr, ToJsonSerializable {
+  final List<List<ExprRef>> values;
+  const RollupExpr({
+    required this.values,
+  });
+
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
+  factory RollupExpr.fromJson(Object? json_) {
+    final json = json_ is Map
+        ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
+        : json_;
+    return switch (json) {
+      [final values] || (final values,) => RollupExpr(
+          values: (values! as Iterable)
+              .map((e) => (e! as Iterable).map(ExprRef.fromJson).toList())
+              .toList(),
+        ),
+      _ => throw Exception('Invalid JSON $json_')
+    };
+  }
+
+  /// Returns this as a serializable JSON value.
+  @override
+  Map<String, Object?> toJson() => {
+        'runtimeType': 'RollupExpr',
+        'values': values.map((e) => e.map((e) => e.toJson()).toList()).toList(),
+      };
+
+  /// Returns this as a WASM canonical abi value.
+  List<Object?> toWasm() => [
+        values
+            .map((e) => e.map((e) => e.toWasm()).toList(growable: false))
+            .toList(growable: false)
+      ];
+  @override
+  String toString() =>
+      'RollupExpr${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
+
+  /// Returns a new instance by overriding the values passed as arguments
+  RollupExpr copyWith({
+    List<List<ExprRef>>? values,
+  }) =>
+      RollupExpr(values: values ?? this.values);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is RollupExpr &&
+          const ObjectComparator().arePropsEqual(_props, other._props);
+  @override
+  int get hashCode => const ObjectComparator().hashProps(_props);
+
+  // ignore: unused_field
+  List<Object?> get _props => [values];
+  static const _spec =
+      RecordType([(label: 'values', t: ListType(ListType(ExprRef._spec)))]);
+}
+
+class Position implements Expr, ToJsonSerializable {
+  final ExprRef expr;
+  final ExprRef in_;
+  const Position({
+    required this.expr,
+    required this.in_,
+  });
+
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
+  factory Position.fromJson(Object? json_) {
+    final json = json_ is Map
+        ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
+        : json_;
+    return switch (json) {
+      [final expr, final in_] || (final expr, final in_) => Position(
+          expr: ExprRef.fromJson(expr),
+          in_: ExprRef.fromJson(in_),
+        ),
+      _ => throw Exception('Invalid JSON $json_')
+    };
+  }
+
+  /// Returns this as a serializable JSON value.
+  @override
+  Map<String, Object?> toJson() => {
+        'runtimeType': 'Position',
+        'expr': expr.toJson(),
+        'in': in_.toJson(),
+      };
+
+  /// Returns this as a WASM canonical abi value.
+  List<Object?> toWasm() => [expr.toWasm(), in_.toWasm()];
+  @override
+  String toString() =>
+      'Position${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
+
+  /// Returns a new instance by overriding the values passed as arguments
+  Position copyWith({
+    ExprRef? expr,
+    ExprRef? in_,
+  }) =>
+      Position(expr: expr ?? this.expr, in_: in_ ?? this.in_);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Position &&
+          const ObjectComparator().arePropsEqual(_props, other._props);
+  @override
+  int get hashCode => const ObjectComparator().hashProps(_props);
+
+  // ignore: unused_field
+  List<Object?> get _props => [expr, in_];
+  static const _spec = RecordType(
+      [(label: 'expr', t: ExprRef._spec), (label: 'in', t: ExprRef._spec)]);
+}
+
+class Overlay implements Expr, ToJsonSerializable {
+  final ExprRef expr;
+  final ExprRef overlayWhat;
+  final ExprRef overlayFrom;
+  final ExprRef? overlayFor;
+  const Overlay({
+    required this.expr,
+    required this.overlayWhat,
+    required this.overlayFrom,
+    this.overlayFor,
+  });
+
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
+  factory Overlay.fromJson(Object? json_) {
+    final json = json_ is Map
+        ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
+        : json_;
+    return switch (json) {
+      [final expr, final overlayWhat, final overlayFrom, final overlayFor] ||
+      (final expr, final overlayWhat, final overlayFrom, final overlayFor) =>
+        Overlay(
+          expr: ExprRef.fromJson(expr),
+          overlayWhat: ExprRef.fromJson(overlayWhat),
+          overlayFrom: ExprRef.fromJson(overlayFrom),
+          overlayFor:
+              Option.fromJson(overlayFor, (some) => ExprRef.fromJson(some))
+                  .value,
+        ),
+      _ => throw Exception('Invalid JSON $json_')
+    };
+  }
+
+  /// Returns this as a serializable JSON value.
+  @override
+  Map<String, Object?> toJson() => {
+        'runtimeType': 'Overlay',
+        'expr': expr.toJson(),
+        'overlay-what': overlayWhat.toJson(),
+        'overlay-from': overlayFrom.toJson(),
+        'overlay-for': (overlayFor == null
+            ? const None().toJson()
+            : Option.fromValue(overlayFor).toJson((some) => some.toJson())),
+      };
+
+  /// Returns this as a WASM canonical abi value.
+  List<Object?> toWasm() => [
+        expr.toWasm(),
+        overlayWhat.toWasm(),
+        overlayFrom.toWasm(),
+        (overlayFor == null
+            ? const None().toWasm()
+            : Option.fromValue(overlayFor).toWasm((some) => some.toWasm()))
+      ];
+  @override
+  String toString() =>
+      'Overlay${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
+
+  /// Returns a new instance by overriding the values passed as arguments
+  Overlay copyWith({
+    ExprRef? expr,
+    ExprRef? overlayWhat,
+    ExprRef? overlayFrom,
+    Option<ExprRef>? overlayFor,
+  }) =>
+      Overlay(
+          expr: expr ?? this.expr,
+          overlayWhat: overlayWhat ?? this.overlayWhat,
+          overlayFrom: overlayFrom ?? this.overlayFrom,
+          overlayFor: overlayFor != null ? overlayFor.value : this.overlayFor);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Overlay &&
+          const ObjectComparator().arePropsEqual(_props, other._props);
+  @override
+  int get hashCode => const ObjectComparator().hashProps(_props);
+
+  // ignore: unused_field
+  List<Object?> get _props => [expr, overlayWhat, overlayFrom, overlayFor];
+  static const _spec = RecordType([
+    (label: 'expr', t: ExprRef._spec),
+    (label: 'overlay-what', t: ExprRef._spec),
+    (label: 'overlay-from', t: ExprRef._spec),
+    (label: 'overlay-for', t: OptionType(ExprRef._spec))
+  ]);
+}
+
 class NestedExpr implements Expr, ToJsonSerializable {
   final ExprRef expr;
   const NestedExpr({
@@ -2723,6 +3472,223 @@ class NestedExpr implements Expr, ToJsonSerializable {
   // ignore: unused_field
   List<Object?> get _props => [expr];
   static const _spec = RecordType([(label: 'expr', t: ExprRef._spec)]);
+}
+
+class MapAccess implements Expr, ToJsonSerializable {
+  final ExprRef column;
+  final List<ExprRef> keys;
+  const MapAccess({
+    required this.column,
+    required this.keys,
+  });
+
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
+  factory MapAccess.fromJson(Object? json_) {
+    final json = json_ is Map
+        ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
+        : json_;
+    return switch (json) {
+      [final column, final keys] || (final column, final keys) => MapAccess(
+          column: ExprRef.fromJson(column),
+          keys: (keys! as Iterable).map(ExprRef.fromJson).toList(),
+        ),
+      _ => throw Exception('Invalid JSON $json_')
+    };
+  }
+
+  /// Returns this as a serializable JSON value.
+  @override
+  Map<String, Object?> toJson() => {
+        'runtimeType': 'MapAccess',
+        'column': column.toJson(),
+        'keys': keys.map((e) => e.toJson()).toList(),
+      };
+
+  /// Returns this as a WASM canonical abi value.
+  List<Object?> toWasm() =>
+      [column.toWasm(), keys.map((e) => e.toWasm()).toList(growable: false)];
+  @override
+  String toString() =>
+      'MapAccess${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
+
+  /// Returns a new instance by overriding the values passed as arguments
+  MapAccess copyWith({
+    ExprRef? column,
+    List<ExprRef>? keys,
+  }) =>
+      MapAccess(column: column ?? this.column, keys: keys ?? this.keys);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is MapAccess &&
+          const ObjectComparator().arePropsEqual(_props, other._props);
+  @override
+  int get hashCode => const ObjectComparator().hashProps(_props);
+
+  // ignore: unused_field
+  List<Object?> get _props => [column, keys];
+  static const _spec = RecordType([
+    (label: 'column', t: ExprRef._spec),
+    (label: 'keys', t: ListType(ExprRef._spec))
+  ]);
+}
+
+class Like implements Expr, ToJsonSerializable {
+  final bool negated;
+  final ExprRef expr;
+  final ExprRef pattern;
+  final String /*Char*/ ? escapeChar;
+  const Like({
+    required this.negated,
+    required this.expr,
+    required this.pattern,
+    this.escapeChar,
+  });
+
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
+  factory Like.fromJson(Object? json_) {
+    final json = json_ is Map
+        ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
+        : json_;
+    return switch (json) {
+      [final negated, final expr, final pattern, final escapeChar] ||
+      (final negated, final expr, final pattern, final escapeChar) =>
+        Like(
+          negated: negated! as bool,
+          expr: ExprRef.fromJson(expr),
+          pattern: ExprRef.fromJson(pattern),
+          escapeChar:
+              Option.fromJson(escapeChar, (some) => some! as String).value,
+        ),
+      _ => throw Exception('Invalid JSON $json_')
+    };
+  }
+
+  /// Returns this as a serializable JSON value.
+  @override
+  Map<String, Object?> toJson() => {
+        'runtimeType': 'Like',
+        'negated': negated,
+        'expr': expr.toJson(),
+        'pattern': pattern.toJson(),
+        'escape-char': (escapeChar == null
+            ? const None().toJson()
+            : Option.fromValue(escapeChar).toJson()),
+      };
+
+  /// Returns this as a WASM canonical abi value.
+  List<Object?> toWasm() => [
+        negated,
+        expr.toWasm(),
+        pattern.toWasm(),
+        (escapeChar == null
+            ? const None().toWasm()
+            : Option.fromValue(escapeChar).toWasm())
+      ];
+  @override
+  String toString() =>
+      'Like${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
+
+  /// Returns a new instance by overriding the values passed as arguments
+  Like copyWith({
+    bool? negated,
+    ExprRef? expr,
+    ExprRef? pattern,
+    Option<String /*Char*/ >? escapeChar,
+  }) =>
+      Like(
+          negated: negated ?? this.negated,
+          expr: expr ?? this.expr,
+          pattern: pattern ?? this.pattern,
+          escapeChar: escapeChar != null ? escapeChar.value : this.escapeChar);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Like &&
+          const ObjectComparator().arePropsEqual(_props, other._props);
+  @override
+  int get hashCode => const ObjectComparator().hashProps(_props);
+
+  // ignore: unused_field
+  List<Object?> get _props => [negated, expr, pattern, escapeChar];
+  static const _spec = RecordType([
+    (label: 'negated', t: Bool()),
+    (label: 'expr', t: ExprRef._spec),
+    (label: 'pattern', t: ExprRef._spec),
+    (label: 'escape-char', t: OptionType(Char()))
+  ]);
+}
+
+class JsonAccess implements Expr, ToJsonSerializable {
+  final ExprRef left;
+  final JsonOperator operator_;
+  final ExprRef right;
+  const JsonAccess({
+    required this.left,
+    required this.operator_,
+    required this.right,
+  });
+
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
+  factory JsonAccess.fromJson(Object? json_) {
+    final json = json_ is Map
+        ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
+        : json_;
+    return switch (json) {
+      [final left, final operator_, final right] ||
+      (final left, final operator_, final right) =>
+        JsonAccess(
+          left: ExprRef.fromJson(left),
+          operator_: JsonOperator.fromJson(operator_),
+          right: ExprRef.fromJson(right),
+        ),
+      _ => throw Exception('Invalid JSON $json_')
+    };
+  }
+
+  /// Returns this as a serializable JSON value.
+  @override
+  Map<String, Object?> toJson() => {
+        'runtimeType': 'JsonAccess',
+        'left': left.toJson(),
+        'operator': operator_.toJson(),
+        'right': right.toJson(),
+      };
+
+  /// Returns this as a WASM canonical abi value.
+  List<Object?> toWasm() => [left.toWasm(), operator_.toWasm(), right.toWasm()];
+  @override
+  String toString() =>
+      'JsonAccess${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
+
+  /// Returns a new instance by overriding the values passed as arguments
+  JsonAccess copyWith({
+    ExprRef? left,
+    JsonOperator? operator_,
+    ExprRef? right,
+  }) =>
+      JsonAccess(
+          left: left ?? this.left,
+          operator_: operator_ ?? this.operator_,
+          right: right ?? this.right);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is JsonAccess &&
+          const ObjectComparator().arePropsEqual(_props, other._props);
+  @override
+  int get hashCode => const ObjectComparator().hashProps(_props);
+
+  // ignore: unused_field
+  List<Object?> get _props => [left, operator_, right];
+  static const _spec = RecordType([
+    (label: 'left', t: ExprRef._spec),
+    (label: 'operator', t: JsonOperator._spec),
+    (label: 'right', t: ExprRef._spec)
+  ]);
 }
 
 class IsNotDistinctFrom implements Expr, ToJsonSerializable {
@@ -2841,24 +3807,97 @@ class IsDistinctFrom implements Expr, ToJsonSerializable {
       [(label: 'left', t: ExprRef._spec), (label: 'right', t: ExprRef._spec)]);
 }
 
-class ExistsExpr implements Expr, ToJsonSerializable {
+class InUnnest implements Expr, ToJsonSerializable {
+  final ExprRef expr;
+  final ExprRef arrayExpr;
+  final bool negated;
+  const InUnnest({
+    required this.expr,
+    required this.arrayExpr,
+    required this.negated,
+  });
+
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
+  factory InUnnest.fromJson(Object? json_) {
+    final json = json_ is Map
+        ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
+        : json_;
+    return switch (json) {
+      [final expr, final arrayExpr, final negated] ||
+      (final expr, final arrayExpr, final negated) =>
+        InUnnest(
+          expr: ExprRef.fromJson(expr),
+          arrayExpr: ExprRef.fromJson(arrayExpr),
+          negated: negated! as bool,
+        ),
+      _ => throw Exception('Invalid JSON $json_')
+    };
+  }
+
+  /// Returns this as a serializable JSON value.
+  @override
+  Map<String, Object?> toJson() => {
+        'runtimeType': 'InUnnest',
+        'expr': expr.toJson(),
+        'array-expr': arrayExpr.toJson(),
+        'negated': negated,
+      };
+
+  /// Returns this as a WASM canonical abi value.
+  List<Object?> toWasm() => [expr.toWasm(), arrayExpr.toWasm(), negated];
+  @override
+  String toString() =>
+      'InUnnest${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
+
+  /// Returns a new instance by overriding the values passed as arguments
+  InUnnest copyWith({
+    ExprRef? expr,
+    ExprRef? arrayExpr,
+    bool? negated,
+  }) =>
+      InUnnest(
+          expr: expr ?? this.expr,
+          arrayExpr: arrayExpr ?? this.arrayExpr,
+          negated: negated ?? this.negated);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is InUnnest &&
+          const ObjectComparator().arePropsEqual(_props, other._props);
+  @override
+  int get hashCode => const ObjectComparator().hashProps(_props);
+
+  // ignore: unused_field
+  List<Object?> get _props => [expr, arrayExpr, negated];
+  static const _spec = RecordType([
+    (label: 'expr', t: ExprRef._spec),
+    (label: 'array-expr', t: ExprRef._spec),
+    (label: 'negated', t: Bool())
+  ]);
+}
+
+class InSubquery implements Expr, ToJsonSerializable {
+  final ExprRef expr;
   final SqlQueryRef subquery;
   final bool negated;
-  const ExistsExpr({
+  const InSubquery({
+    required this.expr,
     required this.subquery,
     required this.negated,
   });
 
   /// Returns a new instance from a JSON value.
   /// May throw if the value does not have the expected structure.
-  factory ExistsExpr.fromJson(Object? json_) {
+  factory InSubquery.fromJson(Object? json_) {
     final json = json_ is Map
         ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
         : json_;
     return switch (json) {
-      [final subquery, final negated] ||
-      (final subquery, final negated) =>
-        ExistsExpr(
+      [final expr, final subquery, final negated] ||
+      (final expr, final subquery, final negated) =>
+        InSubquery(
+          expr: ExprRef.fromJson(expr),
           subquery: SqlQueryRef.fromJson(subquery),
           negated: negated! as bool,
         ),
@@ -2869,7 +3908,293 @@ class ExistsExpr implements Expr, ToJsonSerializable {
   /// Returns this as a serializable JSON value.
   @override
   Map<String, Object?> toJson() => {
-        'runtimeType': 'ExistsExpr',
+        'runtimeType': 'InSubquery',
+        'expr': expr.toJson(),
+        'subquery': subquery.toJson(),
+        'negated': negated,
+      };
+
+  /// Returns this as a WASM canonical abi value.
+  List<Object?> toWasm() => [expr.toWasm(), subquery.toWasm(), negated];
+  @override
+  String toString() =>
+      'InSubquery${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
+
+  /// Returns a new instance by overriding the values passed as arguments
+  InSubquery copyWith({
+    ExprRef? expr,
+    SqlQueryRef? subquery,
+    bool? negated,
+  }) =>
+      InSubquery(
+          expr: expr ?? this.expr,
+          subquery: subquery ?? this.subquery,
+          negated: negated ?? this.negated);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is InSubquery &&
+          const ObjectComparator().arePropsEqual(_props, other._props);
+  @override
+  int get hashCode => const ObjectComparator().hashProps(_props);
+
+  // ignore: unused_field
+  List<Object?> get _props => [expr, subquery, negated];
+  static const _spec = RecordType([
+    (label: 'expr', t: ExprRef._spec),
+    (label: 'subquery', t: SqlQueryRef._spec),
+    (label: 'negated', t: Bool())
+  ]);
+}
+
+class InList implements Expr, ToJsonSerializable {
+  final ExprRef expr;
+  final List<ExprRef> list;
+  final bool negated;
+  const InList({
+    required this.expr,
+    required this.list,
+    required this.negated,
+  });
+
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
+  factory InList.fromJson(Object? json_) {
+    final json = json_ is Map
+        ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
+        : json_;
+    return switch (json) {
+      [final expr, final list, final negated] ||
+      (final expr, final list, final negated) =>
+        InList(
+          expr: ExprRef.fromJson(expr),
+          list: (list! as Iterable).map(ExprRef.fromJson).toList(),
+          negated: negated! as bool,
+        ),
+      _ => throw Exception('Invalid JSON $json_')
+    };
+  }
+
+  /// Returns this as a serializable JSON value.
+  @override
+  Map<String, Object?> toJson() => {
+        'runtimeType': 'InList',
+        'expr': expr.toJson(),
+        'list': list.map((e) => e.toJson()).toList(),
+        'negated': negated,
+      };
+
+  /// Returns this as a WASM canonical abi value.
+  List<Object?> toWasm() => [
+        expr.toWasm(),
+        list.map((e) => e.toWasm()).toList(growable: false),
+        negated
+      ];
+  @override
+  String toString() =>
+      'InList${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
+
+  /// Returns a new instance by overriding the values passed as arguments
+  InList copyWith({
+    ExprRef? expr,
+    List<ExprRef>? list,
+    bool? negated,
+  }) =>
+      InList(
+          expr: expr ?? this.expr,
+          list: list ?? this.list,
+          negated: negated ?? this.negated);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is InList &&
+          const ObjectComparator().arePropsEqual(_props, other._props);
+  @override
+  int get hashCode => const ObjectComparator().hashProps(_props);
+
+  // ignore: unused_field
+  List<Object?> get _props => [expr, list, negated];
+  static const _spec = RecordType([
+    (label: 'expr', t: ExprRef._spec),
+    (label: 'list', t: ListType(ExprRef._spec)),
+    (label: 'negated', t: Bool())
+  ]);
+}
+
+class ILike implements Expr, ToJsonSerializable {
+  final bool negated;
+  final ExprRef expr;
+  final ExprRef pattern;
+  final String /*Char*/ ? escapeChar;
+  const ILike({
+    required this.negated,
+    required this.expr,
+    required this.pattern,
+    this.escapeChar,
+  });
+
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
+  factory ILike.fromJson(Object? json_) {
+    final json = json_ is Map
+        ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
+        : json_;
+    return switch (json) {
+      [final negated, final expr, final pattern, final escapeChar] ||
+      (final negated, final expr, final pattern, final escapeChar) =>
+        ILike(
+          negated: negated! as bool,
+          expr: ExprRef.fromJson(expr),
+          pattern: ExprRef.fromJson(pattern),
+          escapeChar:
+              Option.fromJson(escapeChar, (some) => some! as String).value,
+        ),
+      _ => throw Exception('Invalid JSON $json_')
+    };
+  }
+
+  /// Returns this as a serializable JSON value.
+  @override
+  Map<String, Object?> toJson() => {
+        'runtimeType': 'ILike',
+        'negated': negated,
+        'expr': expr.toJson(),
+        'pattern': pattern.toJson(),
+        'escape-char': (escapeChar == null
+            ? const None().toJson()
+            : Option.fromValue(escapeChar).toJson()),
+      };
+
+  /// Returns this as a WASM canonical abi value.
+  List<Object?> toWasm() => [
+        negated,
+        expr.toWasm(),
+        pattern.toWasm(),
+        (escapeChar == null
+            ? const None().toWasm()
+            : Option.fromValue(escapeChar).toWasm())
+      ];
+  @override
+  String toString() =>
+      'ILike${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
+
+  /// Returns a new instance by overriding the values passed as arguments
+  ILike copyWith({
+    bool? negated,
+    ExprRef? expr,
+    ExprRef? pattern,
+    Option<String /*Char*/ >? escapeChar,
+  }) =>
+      ILike(
+          negated: negated ?? this.negated,
+          expr: expr ?? this.expr,
+          pattern: pattern ?? this.pattern,
+          escapeChar: escapeChar != null ? escapeChar.value : this.escapeChar);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ILike &&
+          const ObjectComparator().arePropsEqual(_props, other._props);
+  @override
+  int get hashCode => const ObjectComparator().hashProps(_props);
+
+  // ignore: unused_field
+  List<Object?> get _props => [negated, expr, pattern, escapeChar];
+  static const _spec = RecordType([
+    (label: 'negated', t: Bool()),
+    (label: 'expr', t: ExprRef._spec),
+    (label: 'pattern', t: ExprRef._spec),
+    (label: 'escape-char', t: OptionType(Char()))
+  ]);
+}
+
+class GroupingSets implements Expr, ToJsonSerializable {
+  final List<List<ExprRef>> values;
+  const GroupingSets({
+    required this.values,
+  });
+
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
+  factory GroupingSets.fromJson(Object? json_) {
+    final json = json_ is Map
+        ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
+        : json_;
+    return switch (json) {
+      [final values] || (final values,) => GroupingSets(
+          values: (values! as Iterable)
+              .map((e) => (e! as Iterable).map(ExprRef.fromJson).toList())
+              .toList(),
+        ),
+      _ => throw Exception('Invalid JSON $json_')
+    };
+  }
+
+  /// Returns this as a serializable JSON value.
+  @override
+  Map<String, Object?> toJson() => {
+        'runtimeType': 'GroupingSets',
+        'values': values.map((e) => e.map((e) => e.toJson()).toList()).toList(),
+      };
+
+  /// Returns this as a WASM canonical abi value.
+  List<Object?> toWasm() => [
+        values
+            .map((e) => e.map((e) => e.toWasm()).toList(growable: false))
+            .toList(growable: false)
+      ];
+  @override
+  String toString() =>
+      'GroupingSets${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
+
+  /// Returns a new instance by overriding the values passed as arguments
+  GroupingSets copyWith({
+    List<List<ExprRef>>? values,
+  }) =>
+      GroupingSets(values: values ?? this.values);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is GroupingSets &&
+          const ObjectComparator().arePropsEqual(_props, other._props);
+  @override
+  int get hashCode => const ObjectComparator().hashProps(_props);
+
+  // ignore: unused_field
+  List<Object?> get _props => [values];
+  static const _spec =
+      RecordType([(label: 'values', t: ListType(ListType(ExprRef._spec)))]);
+}
+
+class Exists implements Expr, ToJsonSerializable {
+  final SqlQueryRef subquery;
+  final bool negated;
+  const Exists({
+    required this.subquery,
+    required this.negated,
+  });
+
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
+  factory Exists.fromJson(Object? json_) {
+    final json = json_ is Map
+        ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
+        : json_;
+    return switch (json) {
+      [final subquery, final negated] ||
+      (final subquery, final negated) =>
+        Exists(
+          subquery: SqlQueryRef.fromJson(subquery),
+          negated: negated! as bool,
+        ),
+      _ => throw Exception('Invalid JSON $json_')
+    };
+  }
+
+  /// Returns this as a serializable JSON value.
+  @override
+  Map<String, Object?> toJson() => {
+        'runtimeType': 'Exists',
         'subquery': subquery.toJson(),
         'negated': negated,
       };
@@ -2878,20 +4203,20 @@ class ExistsExpr implements Expr, ToJsonSerializable {
   List<Object?> toWasm() => [subquery.toWasm(), negated];
   @override
   String toString() =>
-      'ExistsExpr${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
+      'Exists${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
 
   /// Returns a new instance by overriding the values passed as arguments
-  ExistsExpr copyWith({
+  Exists copyWith({
     SqlQueryRef? subquery,
     bool? negated,
   }) =>
-      ExistsExpr(
+      Exists(
           subquery: subquery ?? this.subquery,
           negated: negated ?? this.negated);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is ExistsExpr &&
+      other is Exists &&
           const ObjectComparator().arePropsEqual(_props, other._props);
   @override
   int get hashCode => const ObjectComparator().hashProps(_props);
@@ -3742,7 +5067,7 @@ class SetTransaction implements SqlAst, ToJsonSerializable {
 
   /// Returns this as a WASM canonical abi value.
   List<Object?> toWasm() => [
-        modes.map(TransactionMode.toWasm).toList(growable: false),
+        modes.map((e) => e.toWasm()).toList(growable: false),
         (snapshot == null
             ? const None().toWasm()
             : Option.fromValue(snapshot).toWasm((some) => some.toWasm())),
@@ -3776,6 +5101,486 @@ class SetTransaction implements SqlAst, ToJsonSerializable {
     (label: 'modes', t: ListType(TransactionMode._spec)),
     (label: 'snapshot', t: OptionType(SqlValue._spec)),
     (label: 'session', t: Bool())
+  ]);
+}
+
+class MatchAgainst implements Expr, ToJsonSerializable {
+  final List<Ident> columns;
+  final SqlValue matchValue;
+  final SearchModifier? optSearchModifier;
+  const MatchAgainst({
+    required this.columns,
+    required this.matchValue,
+    this.optSearchModifier,
+  });
+
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
+  factory MatchAgainst.fromJson(Object? json_) {
+    final json = json_ is Map
+        ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
+        : json_;
+    return switch (json) {
+      [final columns, final matchValue, final optSearchModifier] ||
+      (final columns, final matchValue, final optSearchModifier) =>
+        MatchAgainst(
+          columns: (columns! as Iterable).map(Ident.fromJson).toList(),
+          matchValue: SqlValue.fromJson(matchValue),
+          optSearchModifier: Option.fromJson(
+              optSearchModifier, (some) => SearchModifier.fromJson(some)).value,
+        ),
+      _ => throw Exception('Invalid JSON $json_')
+    };
+  }
+
+  /// Returns this as a serializable JSON value.
+  @override
+  Map<String, Object?> toJson() => {
+        'runtimeType': 'MatchAgainst',
+        'columns': columns.map((e) => e.toJson()).toList(),
+        'match-value': matchValue.toJson(),
+        'opt-search-modifier': (optSearchModifier == null
+            ? const None().toJson()
+            : Option.fromValue(optSearchModifier)
+                .toJson((some) => some.toJson())),
+      };
+
+  /// Returns this as a WASM canonical abi value.
+  List<Object?> toWasm() => [
+        columns.map((e) => e.toWasm()).toList(growable: false),
+        matchValue.toWasm(),
+        (optSearchModifier == null
+            ? const None().toWasm()
+            : Option.fromValue(optSearchModifier)
+                .toWasm((some) => some.toWasm()))
+      ];
+  @override
+  String toString() =>
+      'MatchAgainst${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
+
+  /// Returns a new instance by overriding the values passed as arguments
+  MatchAgainst copyWith({
+    List<Ident>? columns,
+    SqlValue? matchValue,
+    Option<SearchModifier>? optSearchModifier,
+  }) =>
+      MatchAgainst(
+          columns: columns ?? this.columns,
+          matchValue: matchValue ?? this.matchValue,
+          optSearchModifier: optSearchModifier != null
+              ? optSearchModifier.value
+              : this.optSearchModifier);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is MatchAgainst &&
+          const ObjectComparator().arePropsEqual(_props, other._props);
+  @override
+  int get hashCode => const ObjectComparator().hashProps(_props);
+
+  // ignore: unused_field
+  List<Object?> get _props => [columns, matchValue, optSearchModifier];
+  static const _spec = RecordType([
+    (label: 'columns', t: ListType(Ident._spec)),
+    (label: 'match-value', t: SqlValue._spec),
+    (label: 'opt-search-modifier', t: OptionType(SearchModifier._spec))
+  ]);
+}
+
+class IntroducedString implements Expr, ToJsonSerializable {
+  final String introducer;
+  final SqlValue value;
+  const IntroducedString({
+    required this.introducer,
+    required this.value,
+  });
+
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
+  factory IntroducedString.fromJson(Object? json_) {
+    final json = json_ is Map
+        ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
+        : json_;
+    return switch (json) {
+      [final introducer, final value] ||
+      (final introducer, final value) =>
+        IntroducedString(
+          introducer: introducer is String
+              ? introducer
+              : (introducer! as ParsedString).value,
+          value: SqlValue.fromJson(value),
+        ),
+      _ => throw Exception('Invalid JSON $json_')
+    };
+  }
+
+  /// Returns this as a serializable JSON value.
+  @override
+  Map<String, Object?> toJson() => {
+        'runtimeType': 'IntroducedString',
+        'introducer': introducer,
+        'value': value.toJson(),
+      };
+
+  /// Returns this as a WASM canonical abi value.
+  List<Object?> toWasm() => [introducer, value.toWasm()];
+  @override
+  String toString() =>
+      'IntroducedString${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
+
+  /// Returns a new instance by overriding the values passed as arguments
+  IntroducedString copyWith({
+    String? introducer,
+    SqlValue? value,
+  }) =>
+      IntroducedString(
+          introducer: introducer ?? this.introducer,
+          value: value ?? this.value);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is IntroducedString &&
+          const ObjectComparator().arePropsEqual(_props, other._props);
+  @override
+  int get hashCode => const ObjectComparator().hashProps(_props);
+
+  // ignore: unused_field
+  List<Object?> get _props => [introducer, value];
+  static const _spec = RecordType([
+    (label: 'introducer', t: StringType()),
+    (label: 'value', t: SqlValue._spec)
+  ]);
+}
+
+enum DateTimeField implements ToJsonSerializable {
+  year,
+  month,
+  week,
+  day,
+  date,
+  hour,
+  minute,
+  second,
+  century,
+  decade,
+  dow,
+  doy,
+  epoch,
+  isodow,
+  isoyear,
+  julian,
+  microsecond,
+  microseconds,
+  millenium,
+  millennium,
+  millisecond,
+  milliseconds,
+  nanosecond,
+  nanoseconds,
+  quarter,
+  timezone,
+  timezoneHour,
+  timezoneMinute,
+  noDateTime;
+
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
+  factory DateTimeField.fromJson(Object? json) {
+    return ToJsonSerializable.enumFromJson(json, values, _spec);
+  }
+
+  /// Returns this as a serializable JSON value.
+  @override
+  Map<String, Object?> toJson() =>
+      {'runtimeType': 'DateTimeField', _spec.labels[index]: null};
+
+  /// Returns this as a WASM canonical abi value.
+  int toWasm() => index;
+  static const _spec = EnumType([
+    'year',
+    'month',
+    'week',
+    'day',
+    'date',
+    'hour',
+    'minute',
+    'second',
+    'century',
+    'decade',
+    'dow',
+    'doy',
+    'epoch',
+    'isodow',
+    'isoyear',
+    'julian',
+    'microsecond',
+    'microseconds',
+    'millenium',
+    'millennium',
+    'millisecond',
+    'milliseconds',
+    'nanosecond',
+    'nanoseconds',
+    'quarter',
+    'timezone',
+    'timezone-hour',
+    'timezone-minute',
+    'no-date-time'
+  ]);
+}
+
+class IntervalExpr implements Expr, ToJsonSerializable {
+  final ExprRef value;
+  final DateTimeField? leadingField;
+  final BigInt /*U64*/ ? leadingPrecision;
+  final DateTimeField? lastField;
+  final BigInt /*U64*/ ? fractionalSecondsPrecision;
+  const IntervalExpr({
+    required this.value,
+    this.leadingField,
+    this.leadingPrecision,
+    this.lastField,
+    this.fractionalSecondsPrecision,
+  });
+
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
+  factory IntervalExpr.fromJson(Object? json_) {
+    final json = json_ is Map
+        ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
+        : json_;
+    return switch (json) {
+      [
+        final value,
+        final leadingField,
+        final leadingPrecision,
+        final lastField,
+        final fractionalSecondsPrecision
+      ] ||
+      (
+        final value,
+        final leadingField,
+        final leadingPrecision,
+        final lastField,
+        final fractionalSecondsPrecision
+      ) =>
+        IntervalExpr(
+          value: ExprRef.fromJson(value),
+          leadingField: Option.fromJson(
+              leadingField, (some) => DateTimeField.fromJson(some)).value,
+          leadingPrecision:
+              Option.fromJson(leadingPrecision, (some) => bigIntFromJson(some))
+                  .value,
+          lastField:
+              Option.fromJson(lastField, (some) => DateTimeField.fromJson(some))
+                  .value,
+          fractionalSecondsPrecision: Option.fromJson(
+              fractionalSecondsPrecision, (some) => bigIntFromJson(some)).value,
+        ),
+      _ => throw Exception('Invalid JSON $json_')
+    };
+  }
+
+  /// Returns this as a serializable JSON value.
+  @override
+  Map<String, Object?> toJson() => {
+        'runtimeType': 'IntervalExpr',
+        'value': value.toJson(),
+        'leading-field': (leadingField == null
+            ? const None().toJson()
+            : Option.fromValue(leadingField).toJson((some) => some.toJson())),
+        'leading-precision': (leadingPrecision == null
+            ? const None().toJson()
+            : Option.fromValue(leadingPrecision)
+                .toJson((some) => some.toString())),
+        'last-field': (lastField == null
+            ? const None().toJson()
+            : Option.fromValue(lastField).toJson((some) => some.toJson())),
+        'fractional-seconds-precision': (fractionalSecondsPrecision == null
+            ? const None().toJson()
+            : Option.fromValue(fractionalSecondsPrecision)
+                .toJson((some) => some.toString())),
+      };
+
+  /// Returns this as a WASM canonical abi value.
+  List<Object?> toWasm() => [
+        value.toWasm(),
+        (leadingField == null
+            ? const None().toWasm()
+            : Option.fromValue(leadingField).toWasm((some) => some.toWasm())),
+        (leadingPrecision == null
+            ? const None().toWasm()
+            : Option.fromValue(leadingPrecision).toWasm()),
+        (lastField == null
+            ? const None().toWasm()
+            : Option.fromValue(lastField).toWasm((some) => some.toWasm())),
+        (fractionalSecondsPrecision == null
+            ? const None().toWasm()
+            : Option.fromValue(fractionalSecondsPrecision).toWasm())
+      ];
+  @override
+  String toString() =>
+      'IntervalExpr${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
+
+  /// Returns a new instance by overriding the values passed as arguments
+  IntervalExpr copyWith({
+    ExprRef? value,
+    Option<DateTimeField>? leadingField,
+    Option<BigInt /*U64*/ >? leadingPrecision,
+    Option<DateTimeField>? lastField,
+    Option<BigInt /*U64*/ >? fractionalSecondsPrecision,
+  }) =>
+      IntervalExpr(
+          value: value ?? this.value,
+          leadingField:
+              leadingField != null ? leadingField.value : this.leadingField,
+          leadingPrecision: leadingPrecision != null
+              ? leadingPrecision.value
+              : this.leadingPrecision,
+          lastField: lastField != null ? lastField.value : this.lastField,
+          fractionalSecondsPrecision: fractionalSecondsPrecision != null
+              ? fractionalSecondsPrecision.value
+              : this.fractionalSecondsPrecision);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is IntervalExpr &&
+          const ObjectComparator().arePropsEqual(_props, other._props);
+  @override
+  int get hashCode => const ObjectComparator().hashProps(_props);
+
+  // ignore: unused_field
+  List<Object?> get _props => [
+        value,
+        leadingField,
+        leadingPrecision,
+        lastField,
+        fractionalSecondsPrecision
+      ];
+  static const _spec = RecordType([
+    (label: 'value', t: ExprRef._spec),
+    (label: 'leading-field', t: OptionType(DateTimeField._spec)),
+    (label: 'leading-precision', t: OptionType(U64())),
+    (label: 'last-field', t: OptionType(DateTimeField._spec)),
+    (label: 'fractional-seconds-precision', t: OptionType(U64()))
+  ]);
+}
+
+class Floor implements Expr, ToJsonSerializable {
+  final ExprRef expr;
+  final DateTimeField field;
+  const Floor({
+    required this.expr,
+    required this.field,
+  });
+
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
+  factory Floor.fromJson(Object? json_) {
+    final json = json_ is Map
+        ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
+        : json_;
+    return switch (json) {
+      [final expr, final field] || (final expr, final field) => Floor(
+          expr: ExprRef.fromJson(expr),
+          field: DateTimeField.fromJson(field),
+        ),
+      _ => throw Exception('Invalid JSON $json_')
+    };
+  }
+
+  /// Returns this as a serializable JSON value.
+  @override
+  Map<String, Object?> toJson() => {
+        'runtimeType': 'Floor',
+        'expr': expr.toJson(),
+        'field': field.toJson(),
+      };
+
+  /// Returns this as a WASM canonical abi value.
+  List<Object?> toWasm() => [expr.toWasm(), field.toWasm()];
+  @override
+  String toString() =>
+      'Floor${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
+
+  /// Returns a new instance by overriding the values passed as arguments
+  Floor copyWith({
+    ExprRef? expr,
+    DateTimeField? field,
+  }) =>
+      Floor(expr: expr ?? this.expr, field: field ?? this.field);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Floor &&
+          const ObjectComparator().arePropsEqual(_props, other._props);
+  @override
+  int get hashCode => const ObjectComparator().hashProps(_props);
+
+  // ignore: unused_field
+  List<Object?> get _props => [expr, field];
+  static const _spec = RecordType([
+    (label: 'expr', t: ExprRef._spec),
+    (label: 'field', t: DateTimeField._spec)
+  ]);
+}
+
+class Extract implements Expr, ToJsonSerializable {
+  final DateTimeField field;
+  final ExprRef expr;
+  const Extract({
+    required this.field,
+    required this.expr,
+  });
+
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
+  factory Extract.fromJson(Object? json_) {
+    final json = json_ is Map
+        ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
+        : json_;
+    return switch (json) {
+      [final field, final expr] || (final field, final expr) => Extract(
+          field: DateTimeField.fromJson(field),
+          expr: ExprRef.fromJson(expr),
+        ),
+      _ => throw Exception('Invalid JSON $json_')
+    };
+  }
+
+  /// Returns this as a serializable JSON value.
+  @override
+  Map<String, Object?> toJson() => {
+        'runtimeType': 'Extract',
+        'field': field.toJson(),
+        'expr': expr.toJson(),
+      };
+
+  /// Returns this as a WASM canonical abi value.
+  List<Object?> toWasm() => [field.toWasm(), expr.toWasm()];
+  @override
+  String toString() =>
+      'Extract${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
+
+  /// Returns a new instance by overriding the values passed as arguments
+  Extract copyWith({
+    DateTimeField? field,
+    ExprRef? expr,
+  }) =>
+      Extract(field: field ?? this.field, expr: expr ?? this.expr);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Extract &&
+          const ObjectComparator().arePropsEqual(_props, other._props);
+  @override
+  int get hashCode => const ObjectComparator().hashProps(_props);
+
+  // ignore: unused_field
+  List<Object?> get _props => [field, expr];
+  static const _spec = RecordType([
+    (label: 'field', t: DateTimeField._spec),
+    (label: 'expr', t: ExprRef._spec)
   ]);
 }
 
@@ -3893,6 +5698,64 @@ class CustomDataType implements ToJsonSerializable {
     (label: 'name', t: ListType(Ident._spec)),
     (label: 'arguments', t: ListType(StringType()))
   ]);
+}
+
+class CubeExpr implements Expr, ToJsonSerializable {
+  final List<List<ExprRef>> values;
+  const CubeExpr({
+    required this.values,
+  });
+
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
+  factory CubeExpr.fromJson(Object? json_) {
+    final json = json_ is Map
+        ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
+        : json_;
+    return switch (json) {
+      [final values] || (final values,) => CubeExpr(
+          values: (values! as Iterable)
+              .map((e) => (e! as Iterable).map(ExprRef.fromJson).toList())
+              .toList(),
+        ),
+      _ => throw Exception('Invalid JSON $json_')
+    };
+  }
+
+  /// Returns this as a serializable JSON value.
+  @override
+  Map<String, Object?> toJson() => {
+        'runtimeType': 'CubeExpr',
+        'values': values.map((e) => e.map((e) => e.toJson()).toList()).toList(),
+      };
+
+  /// Returns this as a WASM canonical abi value.
+  List<Object?> toWasm() => [
+        values
+            .map((e) => e.map((e) => e.toWasm()).toList(growable: false))
+            .toList(growable: false)
+      ];
+  @override
+  String toString() =>
+      'CubeExpr${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
+
+  /// Returns a new instance by overriding the values passed as arguments
+  CubeExpr copyWith({
+    List<List<ExprRef>>? values,
+  }) =>
+      CubeExpr(values: values ?? this.values);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is CubeExpr &&
+          const ObjectComparator().arePropsEqual(_props, other._props);
+  @override
+  int get hashCode => const ObjectComparator().hashProps(_props);
+
+  // ignore: unused_field
+  List<Object?> get _props => [values];
+  static const _spec =
+      RecordType([(label: 'values', t: ListType(ListType(ExprRef._spec)))]);
 }
 
 class CreateVirtualTable implements SqlAst, ToJsonSerializable {
@@ -4176,6 +6039,63 @@ class ConflictTargetOnConstraint implements ConflictTarget {
 
 typedef CompoundIdentifier = List<Ident>;
 
+class CompositeAccess implements Expr, ToJsonSerializable {
+  final ExprRef expr;
+  final Ident key;
+  const CompositeAccess({
+    required this.expr,
+    required this.key,
+  });
+
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
+  factory CompositeAccess.fromJson(Object? json_) {
+    final json = json_ is Map
+        ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
+        : json_;
+    return switch (json) {
+      [final expr, final key] || (final expr, final key) => CompositeAccess(
+          expr: ExprRef.fromJson(expr),
+          key: Ident.fromJson(key),
+        ),
+      _ => throw Exception('Invalid JSON $json_')
+    };
+  }
+
+  /// Returns this as a serializable JSON value.
+  @override
+  Map<String, Object?> toJson() => {
+        'runtimeType': 'CompositeAccess',
+        'expr': expr.toJson(),
+        'key': key.toJson(),
+      };
+
+  /// Returns this as a WASM canonical abi value.
+  List<Object?> toWasm() => [expr.toWasm(), key.toWasm()];
+  @override
+  String toString() =>
+      'CompositeAccess${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
+
+  /// Returns a new instance by overriding the values passed as arguments
+  CompositeAccess copyWith({
+    ExprRef? expr,
+    Ident? key,
+  }) =>
+      CompositeAccess(expr: expr ?? this.expr, key: key ?? this.key);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is CompositeAccess &&
+          const ObjectComparator().arePropsEqual(_props, other._props);
+  @override
+  int get hashCode => const ObjectComparator().hashProps(_props);
+
+  // ignore: unused_field
+  List<Object?> get _props => [expr, key];
+  static const _spec = RecordType(
+      [(label: 'expr', t: ExprRef._spec), (label: 'key', t: Ident._spec)]);
+}
+
 /// https://docs.rs/sqlparser/0.35.0/sqlparser/ast/struct.Cte.html
 class CommonTableExpr implements ToJsonSerializable {
   final TableAlias alias;
@@ -4371,6 +6291,66 @@ class Commit implements SqlAst, ToJsonSerializable {
   // ignore: unused_field
   List<Object?> get _props => [chain];
   static const _spec = RecordType([(label: 'chain', t: Bool())]);
+}
+
+class Collate implements Expr, ToJsonSerializable {
+  final ExprRef expr;
+  final ObjectName collation;
+  const Collate({
+    required this.expr,
+    required this.collation,
+  });
+
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
+  factory Collate.fromJson(Object? json_) {
+    final json = json_ is Map
+        ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
+        : json_;
+    return switch (json) {
+      [final expr, final collation] || (final expr, final collation) => Collate(
+          expr: ExprRef.fromJson(expr),
+          collation: (collation! as Iterable).map(Ident.fromJson).toList(),
+        ),
+      _ => throw Exception('Invalid JSON $json_')
+    };
+  }
+
+  /// Returns this as a serializable JSON value.
+  @override
+  Map<String, Object?> toJson() => {
+        'runtimeType': 'Collate',
+        'expr': expr.toJson(),
+        'collation': collation.map((e) => e.toJson()).toList(),
+      };
+
+  /// Returns this as a WASM canonical abi value.
+  List<Object?> toWasm() =>
+      [expr.toWasm(), collation.map((e) => e.toWasm()).toList(growable: false)];
+  @override
+  String toString() =>
+      'Collate${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
+
+  /// Returns a new instance by overriding the values passed as arguments
+  Collate copyWith({
+    ExprRef? expr,
+    ObjectName? collation,
+  }) =>
+      Collate(expr: expr ?? this.expr, collation: collation ?? this.collation);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Collate &&
+          const ObjectComparator().arePropsEqual(_props, other._props);
+  @override
+  int get hashCode => const ObjectComparator().hashProps(_props);
+
+  // ignore: unused_field
+  List<Object?> get _props => [expr, collation];
+  static const _spec = RecordType([
+    (label: 'expr', t: ExprRef._spec),
+    (label: 'collation', t: ListType(Ident._spec))
+  ]);
 }
 
 /// https://docs.rs/sqlparser/0.35.0/sqlparser/ast/enum.CharLengthUnits.html
@@ -6076,6 +8056,127 @@ class UserDefinedTypeCompositeAttributeDef implements ToJsonSerializable {
   ]);
 }
 
+class TypedString implements Expr, ToJsonSerializable {
+  final DataType dataType;
+  final String value;
+  const TypedString({
+    required this.dataType,
+    required this.value,
+  });
+
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
+  factory TypedString.fromJson(Object? json_) {
+    final json = json_ is Map
+        ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
+        : json_;
+    return switch (json) {
+      [final dataType, final value] ||
+      (final dataType, final value) =>
+        TypedString(
+          dataType: DataType.fromJson(dataType),
+          value: value is String ? value : (value! as ParsedString).value,
+        ),
+      _ => throw Exception('Invalid JSON $json_')
+    };
+  }
+
+  /// Returns this as a serializable JSON value.
+  @override
+  Map<String, Object?> toJson() => {
+        'runtimeType': 'TypedString',
+        'data-type': dataType.toJson(),
+        'value': value,
+      };
+
+  /// Returns this as a WASM canonical abi value.
+  List<Object?> toWasm() => [dataType.toWasm(), value];
+  @override
+  String toString() =>
+      'TypedString${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
+
+  /// Returns a new instance by overriding the values passed as arguments
+  TypedString copyWith({
+    DataType? dataType,
+    String? value,
+  }) =>
+      TypedString(
+          dataType: dataType ?? this.dataType, value: value ?? this.value);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is TypedString &&
+          const ObjectComparator().arePropsEqual(_props, other._props);
+  @override
+  int get hashCode => const ObjectComparator().hashProps(_props);
+
+  // ignore: unused_field
+  List<Object?> get _props => [dataType, value];
+  static const _spec = RecordType([
+    (label: 'data-type', t: DataType._spec),
+    (label: 'value', t: StringType())
+  ]);
+}
+
+class TryCast implements Expr, ToJsonSerializable {
+  final ExprRef expr;
+  final DataType dataType;
+  const TryCast({
+    required this.expr,
+    required this.dataType,
+  });
+
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
+  factory TryCast.fromJson(Object? json_) {
+    final json = json_ is Map
+        ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
+        : json_;
+    return switch (json) {
+      [final expr, final dataType] || (final expr, final dataType) => TryCast(
+          expr: ExprRef.fromJson(expr),
+          dataType: DataType.fromJson(dataType),
+        ),
+      _ => throw Exception('Invalid JSON $json_')
+    };
+  }
+
+  /// Returns this as a serializable JSON value.
+  @override
+  Map<String, Object?> toJson() => {
+        'runtimeType': 'TryCast',
+        'expr': expr.toJson(),
+        'data-type': dataType.toJson(),
+      };
+
+  /// Returns this as a WASM canonical abi value.
+  List<Object?> toWasm() => [expr.toWasm(), dataType.toWasm()];
+  @override
+  String toString() =>
+      'TryCast${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
+
+  /// Returns a new instance by overriding the values passed as arguments
+  TryCast copyWith({
+    ExprRef? expr,
+    DataType? dataType,
+  }) =>
+      TryCast(expr: expr ?? this.expr, dataType: dataType ?? this.dataType);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is TryCast &&
+          const ObjectComparator().arePropsEqual(_props, other._props);
+  @override
+  int get hashCode => const ObjectComparator().hashProps(_props);
+
+  // ignore: unused_field
+  List<Object?> get _props => [expr, dataType];
+  static const _spec = RecordType([
+    (label: 'expr', t: ExprRef._spec),
+    (label: 'data-type', t: DataType._spec)
+  ]);
+}
+
 class SqlPrepare implements ToJsonSerializable {
   final Ident name;
   final List<DataType> dataTypes;
@@ -6147,6 +8248,65 @@ class SqlPrepare implements ToJsonSerializable {
     (label: 'name', t: Ident._spec),
     (label: 'data-types', t: ListType(DataType._spec)),
     (label: 'statement', t: SqlAstRef._spec)
+  ]);
+}
+
+class SafeCast implements Expr, ToJsonSerializable {
+  final ExprRef expr;
+  final DataType dataType;
+  const SafeCast({
+    required this.expr,
+    required this.dataType,
+  });
+
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
+  factory SafeCast.fromJson(Object? json_) {
+    final json = json_ is Map
+        ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
+        : json_;
+    return switch (json) {
+      [final expr, final dataType] || (final expr, final dataType) => SafeCast(
+          expr: ExprRef.fromJson(expr),
+          dataType: DataType.fromJson(dataType),
+        ),
+      _ => throw Exception('Invalid JSON $json_')
+    };
+  }
+
+  /// Returns this as a serializable JSON value.
+  @override
+  Map<String, Object?> toJson() => {
+        'runtimeType': 'SafeCast',
+        'expr': expr.toJson(),
+        'data-type': dataType.toJson(),
+      };
+
+  /// Returns this as a WASM canonical abi value.
+  List<Object?> toWasm() => [expr.toWasm(), dataType.toWasm()];
+  @override
+  String toString() =>
+      'SafeCast${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
+
+  /// Returns a new instance by overriding the values passed as arguments
+  SafeCast copyWith({
+    ExprRef? expr,
+    DataType? dataType,
+  }) =>
+      SafeCast(expr: expr ?? this.expr, dataType: dataType ?? this.dataType);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is SafeCast &&
+          const ObjectComparator().arePropsEqual(_props, other._props);
+  @override
+  int get hashCode => const ObjectComparator().hashProps(_props);
+
+  // ignore: unused_field
+  List<Object?> get _props => [expr, dataType];
+  static const _spec = RecordType([
+    (label: 'expr', t: ExprRef._spec),
+    (label: 'data-type', t: DataType._spec)
   ]);
 }
 
@@ -6464,6 +8624,217 @@ class CreateType implements SqlAst, ToJsonSerializable {
   static const _spec = RecordType([
     (label: 'name', t: ListType(Ident._spec)),
     (label: 'representation', t: UserDefinedTypeRepresentation._spec)
+  ]);
+}
+
+class Ceil implements Expr, ToJsonSerializable {
+  final ExprRef expr;
+  final DateTimeField field;
+  const Ceil({
+    required this.expr,
+    required this.field,
+  });
+
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
+  factory Ceil.fromJson(Object? json_) {
+    final json = json_ is Map
+        ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
+        : json_;
+    return switch (json) {
+      [final expr, final field] || (final expr, final field) => Ceil(
+          expr: ExprRef.fromJson(expr),
+          field: DateTimeField.fromJson(field),
+        ),
+      _ => throw Exception('Invalid JSON $json_')
+    };
+  }
+
+  /// Returns this as a serializable JSON value.
+  @override
+  Map<String, Object?> toJson() => {
+        'runtimeType': 'Ceil',
+        'expr': expr.toJson(),
+        'field': field.toJson(),
+      };
+
+  /// Returns this as a WASM canonical abi value.
+  List<Object?> toWasm() => [expr.toWasm(), field.toWasm()];
+  @override
+  String toString() =>
+      'Ceil${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
+
+  /// Returns a new instance by overriding the values passed as arguments
+  Ceil copyWith({
+    ExprRef? expr,
+    DateTimeField? field,
+  }) =>
+      Ceil(expr: expr ?? this.expr, field: field ?? this.field);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Ceil &&
+          const ObjectComparator().arePropsEqual(_props, other._props);
+  @override
+  int get hashCode => const ObjectComparator().hashProps(_props);
+
+  // ignore: unused_field
+  List<Object?> get _props => [expr, field];
+  static const _spec = RecordType([
+    (label: 'expr', t: ExprRef._spec),
+    (label: 'field', t: DateTimeField._spec)
+  ]);
+}
+
+class Cast implements Expr, ToJsonSerializable {
+  final ExprRef expr;
+  final DataType dataType;
+  const Cast({
+    required this.expr,
+    required this.dataType,
+  });
+
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
+  factory Cast.fromJson(Object? json_) {
+    final json = json_ is Map
+        ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
+        : json_;
+    return switch (json) {
+      [final expr, final dataType] || (final expr, final dataType) => Cast(
+          expr: ExprRef.fromJson(expr),
+          dataType: DataType.fromJson(dataType),
+        ),
+      _ => throw Exception('Invalid JSON $json_')
+    };
+  }
+
+  /// Returns this as a serializable JSON value.
+  @override
+  Map<String, Object?> toJson() => {
+        'runtimeType': 'Cast',
+        'expr': expr.toJson(),
+        'data-type': dataType.toJson(),
+      };
+
+  /// Returns this as a WASM canonical abi value.
+  List<Object?> toWasm() => [expr.toWasm(), dataType.toWasm()];
+  @override
+  String toString() =>
+      'Cast${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
+
+  /// Returns a new instance by overriding the values passed as arguments
+  Cast copyWith({
+    ExprRef? expr,
+    DataType? dataType,
+  }) =>
+      Cast(expr: expr ?? this.expr, dataType: dataType ?? this.dataType);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Cast &&
+          const ObjectComparator().arePropsEqual(_props, other._props);
+  @override
+  int get hashCode => const ObjectComparator().hashProps(_props);
+
+  // ignore: unused_field
+  List<Object?> get _props => [expr, dataType];
+  static const _spec = RecordType([
+    (label: 'expr', t: ExprRef._spec),
+    (label: 'data-type', t: DataType._spec)
+  ]);
+}
+
+class CaseExpr implements Expr, ToJsonSerializable {
+  final ExprRef? operand;
+  final List<ExprRef> conditions;
+  final List<ExprRef> results;
+  final ExprRef? elseResult;
+  const CaseExpr({
+    this.operand,
+    required this.conditions,
+    required this.results,
+    this.elseResult,
+  });
+
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
+  factory CaseExpr.fromJson(Object? json_) {
+    final json = json_ is Map
+        ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
+        : json_;
+    return switch (json) {
+      [final operand, final conditions, final results, final elseResult] ||
+      (final operand, final conditions, final results, final elseResult) =>
+        CaseExpr(
+          operand:
+              Option.fromJson(operand, (some) => ExprRef.fromJson(some)).value,
+          conditions: (conditions! as Iterable).map(ExprRef.fromJson).toList(),
+          results: (results! as Iterable).map(ExprRef.fromJson).toList(),
+          elseResult:
+              Option.fromJson(elseResult, (some) => ExprRef.fromJson(some))
+                  .value,
+        ),
+      _ => throw Exception('Invalid JSON $json_')
+    };
+  }
+
+  /// Returns this as a serializable JSON value.
+  @override
+  Map<String, Object?> toJson() => {
+        'runtimeType': 'CaseExpr',
+        'operand': (operand == null
+            ? const None().toJson()
+            : Option.fromValue(operand).toJson((some) => some.toJson())),
+        'conditions': conditions.map((e) => e.toJson()).toList(),
+        'results': results.map((e) => e.toJson()).toList(),
+        'else-result': (elseResult == null
+            ? const None().toJson()
+            : Option.fromValue(elseResult).toJson((some) => some.toJson())),
+      };
+
+  /// Returns this as a WASM canonical abi value.
+  List<Object?> toWasm() => [
+        (operand == null
+            ? const None().toWasm()
+            : Option.fromValue(operand).toWasm((some) => some.toWasm())),
+        conditions.map((e) => e.toWasm()).toList(growable: false),
+        results.map((e) => e.toWasm()).toList(growable: false),
+        (elseResult == null
+            ? const None().toWasm()
+            : Option.fromValue(elseResult).toWasm((some) => some.toWasm()))
+      ];
+  @override
+  String toString() =>
+      'CaseExpr${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
+
+  /// Returns a new instance by overriding the values passed as arguments
+  CaseExpr copyWith({
+    Option<ExprRef>? operand,
+    List<ExprRef>? conditions,
+    List<ExprRef>? results,
+    Option<ExprRef>? elseResult,
+  }) =>
+      CaseExpr(
+          operand: operand != null ? operand.value : this.operand,
+          conditions: conditions ?? this.conditions,
+          results: results ?? this.results,
+          elseResult: elseResult != null ? elseResult.value : this.elseResult);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is CaseExpr &&
+          const ObjectComparator().arePropsEqual(_props, other._props);
+  @override
+  int get hashCode => const ObjectComparator().hashProps(_props);
+
+  // ignore: unused_field
+  List<Object?> get _props => [operand, conditions, results, elseResult];
+  static const _spec = RecordType([
+    (label: 'operand', t: OptionType(ExprRef._spec)),
+    (label: 'conditions', t: ListType(ExprRef._spec)),
+    (label: 'results', t: ListType(ExprRef._spec)),
+    (label: 'else-result', t: OptionType(ExprRef._spec))
   ]);
 }
 
@@ -7373,6 +9744,148 @@ class BinaryOp implements Expr, ToJsonSerializable {
   ]);
 }
 
+class Between implements Expr, ToJsonSerializable {
+  final ExprRef expr;
+  final bool negated;
+  final ExprRef low;
+  final ExprRef high;
+  const Between({
+    required this.expr,
+    required this.negated,
+    required this.low,
+    required this.high,
+  });
+
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
+  factory Between.fromJson(Object? json_) {
+    final json = json_ is Map
+        ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
+        : json_;
+    return switch (json) {
+      [final expr, final negated, final low, final high] ||
+      (final expr, final negated, final low, final high) =>
+        Between(
+          expr: ExprRef.fromJson(expr),
+          negated: negated! as bool,
+          low: ExprRef.fromJson(low),
+          high: ExprRef.fromJson(high),
+        ),
+      _ => throw Exception('Invalid JSON $json_')
+    };
+  }
+
+  /// Returns this as a serializable JSON value.
+  @override
+  Map<String, Object?> toJson() => {
+        'runtimeType': 'Between',
+        'expr': expr.toJson(),
+        'negated': negated,
+        'low': low.toJson(),
+        'high': high.toJson(),
+      };
+
+  /// Returns this as a WASM canonical abi value.
+  List<Object?> toWasm() =>
+      [expr.toWasm(), negated, low.toWasm(), high.toWasm()];
+  @override
+  String toString() =>
+      'Between${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
+
+  /// Returns a new instance by overriding the values passed as arguments
+  Between copyWith({
+    ExprRef? expr,
+    bool? negated,
+    ExprRef? low,
+    ExprRef? high,
+  }) =>
+      Between(
+          expr: expr ?? this.expr,
+          negated: negated ?? this.negated,
+          low: low ?? this.low,
+          high: high ?? this.high);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Between &&
+          const ObjectComparator().arePropsEqual(_props, other._props);
+  @override
+  int get hashCode => const ObjectComparator().hashProps(_props);
+
+  // ignore: unused_field
+  List<Object?> get _props => [expr, negated, low, high];
+  static const _spec = RecordType([
+    (label: 'expr', t: ExprRef._spec),
+    (label: 'negated', t: Bool()),
+    (label: 'low', t: ExprRef._spec),
+    (label: 'high', t: ExprRef._spec)
+  ]);
+}
+
+class AtTimeZone implements Expr, ToJsonSerializable {
+  final ExprRef timestamp;
+  final String timeZone;
+  const AtTimeZone({
+    required this.timestamp,
+    required this.timeZone,
+  });
+
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
+  factory AtTimeZone.fromJson(Object? json_) {
+    final json = json_ is Map
+        ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
+        : json_;
+    return switch (json) {
+      [final timestamp, final timeZone] ||
+      (final timestamp, final timeZone) =>
+        AtTimeZone(
+          timestamp: ExprRef.fromJson(timestamp),
+          timeZone:
+              timeZone is String ? timeZone : (timeZone! as ParsedString).value,
+        ),
+      _ => throw Exception('Invalid JSON $json_')
+    };
+  }
+
+  /// Returns this as a serializable JSON value.
+  @override
+  Map<String, Object?> toJson() => {
+        'runtimeType': 'AtTimeZone',
+        'timestamp': timestamp.toJson(),
+        'time-zone': timeZone,
+      };
+
+  /// Returns this as a WASM canonical abi value.
+  List<Object?> toWasm() => [timestamp.toWasm(), timeZone];
+  @override
+  String toString() =>
+      'AtTimeZone${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
+
+  /// Returns a new instance by overriding the values passed as arguments
+  AtTimeZone copyWith({
+    ExprRef? timestamp,
+    String? timeZone,
+  }) =>
+      AtTimeZone(
+          timestamp: timestamp ?? this.timestamp,
+          timeZone: timeZone ?? this.timeZone);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is AtTimeZone &&
+          const ObjectComparator().arePropsEqual(_props, other._props);
+  @override
+  int get hashCode => const ObjectComparator().hashProps(_props);
+
+  // ignore: unused_field
+  List<Object?> get _props => [timestamp, timeZone];
+  static const _spec = RecordType([
+    (label: 'timestamp', t: ExprRef._spec),
+    (label: 'time-zone', t: StringType())
+  ]);
+}
+
 /// https://docs.rs/sqlparser/0.35.0/sqlparser/ast/struct.WildcardAdditionalOptions.html
 class Asterisk implements ToJsonSerializable {
   /// https://docs.rs/sqlparser/0.35.0/sqlparser/ast/struct.WildcardAdditionalOptions.html
@@ -7473,6 +9986,231 @@ class QualifiedWildcard implements ToJsonSerializable {
     (label: 'qualifier', t: ListType(Ident._spec)),
     (label: 'asterisk', t: Asterisk._spec)
   ]);
+}
+
+class ArraySubquery implements Expr, ToJsonSerializable {
+  final SqlQueryRef query;
+  const ArraySubquery({
+    required this.query,
+  });
+
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
+  factory ArraySubquery.fromJson(Object? json_) {
+    final json = json_ is Map
+        ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
+        : json_;
+    return switch (json) {
+      [final query] || (final query,) => ArraySubquery(
+          query: SqlQueryRef.fromJson(query),
+        ),
+      _ => throw Exception('Invalid JSON $json_')
+    };
+  }
+
+  /// Returns this as a serializable JSON value.
+  @override
+  Map<String, Object?> toJson() => {
+        'runtimeType': 'ArraySubquery',
+        'query': query.toJson(),
+      };
+
+  /// Returns this as a WASM canonical abi value.
+  List<Object?> toWasm() => [query.toWasm()];
+  @override
+  String toString() =>
+      'ArraySubquery${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
+
+  /// Returns a new instance by overriding the values passed as arguments
+  ArraySubquery copyWith({
+    SqlQueryRef? query,
+  }) =>
+      ArraySubquery(query: query ?? this.query);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ArraySubquery &&
+          const ObjectComparator().arePropsEqual(_props, other._props);
+  @override
+  int get hashCode => const ObjectComparator().hashProps(_props);
+
+  // ignore: unused_field
+  List<Object?> get _props => [query];
+  static const _spec = RecordType([(label: 'query', t: SqlQueryRef._spec)]);
+}
+
+class ArrayIndex implements Expr, ToJsonSerializable {
+  final ExprRef obj;
+  final List<ExprRef> indexes;
+  const ArrayIndex({
+    required this.obj,
+    required this.indexes,
+  });
+
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
+  factory ArrayIndex.fromJson(Object? json_) {
+    final json = json_ is Map
+        ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
+        : json_;
+    return switch (json) {
+      [final obj, final indexes] || (final obj, final indexes) => ArrayIndex(
+          obj: ExprRef.fromJson(obj),
+          indexes: (indexes! as Iterable).map(ExprRef.fromJson).toList(),
+        ),
+      _ => throw Exception('Invalid JSON $json_')
+    };
+  }
+
+  /// Returns this as a serializable JSON value.
+  @override
+  Map<String, Object?> toJson() => {
+        'runtimeType': 'ArrayIndex',
+        'obj': obj.toJson(),
+        'indexes': indexes.map((e) => e.toJson()).toList(),
+      };
+
+  /// Returns this as a WASM canonical abi value.
+  List<Object?> toWasm() =>
+      [obj.toWasm(), indexes.map((e) => e.toWasm()).toList(growable: false)];
+  @override
+  String toString() =>
+      'ArrayIndex${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
+
+  /// Returns a new instance by overriding the values passed as arguments
+  ArrayIndex copyWith({
+    ExprRef? obj,
+    List<ExprRef>? indexes,
+  }) =>
+      ArrayIndex(obj: obj ?? this.obj, indexes: indexes ?? this.indexes);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ArrayIndex &&
+          const ObjectComparator().arePropsEqual(_props, other._props);
+  @override
+  int get hashCode => const ObjectComparator().hashProps(_props);
+
+  // ignore: unused_field
+  List<Object?> get _props => [obj, indexes];
+  static const _spec = RecordType([
+    (label: 'obj', t: ExprRef._spec),
+    (label: 'indexes', t: ListType(ExprRef._spec))
+  ]);
+}
+
+/// https://docs.rs/sqlparser/0.35.0/sqlparser/ast/struct.Array.html
+class ArrayExpr implements Expr, ToJsonSerializable {
+  final List<ExprRef> elem;
+  final bool named;
+
+  /// https://docs.rs/sqlparser/0.35.0/sqlparser/ast/struct.Array.html
+  const ArrayExpr({
+    required this.elem,
+    required this.named,
+  });
+
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
+  factory ArrayExpr.fromJson(Object? json_) {
+    final json = json_ is Map
+        ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
+        : json_;
+    return switch (json) {
+      [final elem, final named] || (final elem, final named) => ArrayExpr(
+          elem: (elem! as Iterable).map(ExprRef.fromJson).toList(),
+          named: named! as bool,
+        ),
+      _ => throw Exception('Invalid JSON $json_')
+    };
+  }
+
+  /// Returns this as a serializable JSON value.
+  @override
+  Map<String, Object?> toJson() => {
+        'runtimeType': 'ArrayExpr',
+        'elem': elem.map((e) => e.toJson()).toList(),
+        'named': named,
+      };
+
+  /// Returns this as a WASM canonical abi value.
+  List<Object?> toWasm() =>
+      [elem.map((e) => e.toWasm()).toList(growable: false), named];
+  @override
+  String toString() =>
+      'ArrayExpr${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
+
+  /// Returns a new instance by overriding the values passed as arguments
+  ArrayExpr copyWith({
+    List<ExprRef>? elem,
+    bool? named,
+  }) =>
+      ArrayExpr(elem: elem ?? this.elem, named: named ?? this.named);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ArrayExpr &&
+          const ObjectComparator().arePropsEqual(_props, other._props);
+  @override
+  int get hashCode => const ObjectComparator().hashProps(_props);
+
+  // ignore: unused_field
+  List<Object?> get _props => [elem, named];
+  static const _spec = RecordType([
+    (label: 'elem', t: ListType(ExprRef._spec)),
+    (label: 'named', t: Bool())
+  ]);
+}
+
+class ArrayAggRef implements Expr, ToJsonSerializable {
+  final int /*U32*/ index_;
+  const ArrayAggRef({
+    required this.index_,
+  });
+
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
+  factory ArrayAggRef.fromJson(Object? json_) {
+    final json = json_ is Map
+        ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
+        : json_;
+    return switch (json) {
+      [final index_] || (final index_,) => ArrayAggRef(
+          index_: index_! as int,
+        ),
+      _ => throw Exception('Invalid JSON $json_')
+    };
+  }
+
+  /// Returns this as a serializable JSON value.
+  @override
+  Map<String, Object?> toJson() => {
+        'runtimeType': 'ArrayAggRef',
+        'index': index_,
+      };
+
+  /// Returns this as a WASM canonical abi value.
+  List<Object?> toWasm() => [index_];
+  @override
+  String toString() =>
+      'ArrayAggRef${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
+
+  /// Returns a new instance by overriding the values passed as arguments
+  ArrayAggRef copyWith({
+    int /*U32*/ ? index_,
+  }) =>
+      ArrayAggRef(index_: index_ ?? this.index_);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ArrayAggRef &&
+          const ObjectComparator().arePropsEqual(_props, other._props);
+  @override
+  int get hashCode => const ObjectComparator().hashProps(_props);
+
+  // ignore: unused_field
+  List<Object?> get _props => [index_];
+  static const _spec = RecordType([(label: 'index', t: U32())]);
 }
 
 /// https://docs.rs/sqlparser/0.35.0/sqlparser/ast/enum.ArgMode.html
@@ -7696,6 +10434,66 @@ class AllOp implements Expr, ToJsonSerializable {
   static const _spec = RecordType([(label: 'expr', t: ExprRef._spec)]);
 }
 
+class AggregateExpressionWithFilter implements Expr, ToJsonSerializable {
+  final ExprRef expr;
+  final ExprRef filter;
+  const AggregateExpressionWithFilter({
+    required this.expr,
+    required this.filter,
+  });
+
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
+  factory AggregateExpressionWithFilter.fromJson(Object? json_) {
+    final json = json_ is Map
+        ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
+        : json_;
+    return switch (json) {
+      [final expr, final filter] ||
+      (final expr, final filter) =>
+        AggregateExpressionWithFilter(
+          expr: ExprRef.fromJson(expr),
+          filter: ExprRef.fromJson(filter),
+        ),
+      _ => throw Exception('Invalid JSON $json_')
+    };
+  }
+
+  /// Returns this as a serializable JSON value.
+  @override
+  Map<String, Object?> toJson() => {
+        'runtimeType': 'AggregateExpressionWithFilter',
+        'expr': expr.toJson(),
+        'filter': filter.toJson(),
+      };
+
+  /// Returns this as a WASM canonical abi value.
+  List<Object?> toWasm() => [expr.toWasm(), filter.toWasm()];
+  @override
+  String toString() =>
+      'AggregateExpressionWithFilter${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
+
+  /// Returns a new instance by overriding the values passed as arguments
+  AggregateExpressionWithFilter copyWith({
+    ExprRef? expr,
+    ExprRef? filter,
+  }) =>
+      AggregateExpressionWithFilter(
+          expr: expr ?? this.expr, filter: filter ?? this.filter);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is AggregateExpressionWithFilter &&
+          const ObjectComparator().arePropsEqual(_props, other._props);
+  @override
+  int get hashCode => const ObjectComparator().hashProps(_props);
+
+  // ignore: unused_field
+  List<Object?> get _props => [expr, filter];
+  static const _spec = RecordType(
+      [(label: 'expr', t: ExprRef._spec), (label: 'filter', t: ExprRef._spec)]);
+}
+
 sealed class Expr implements ToJsonSerializable {
   /// Returns a new instance from a JSON value.
   /// May throw if the value does not have the expected structure.
@@ -7715,10 +10513,48 @@ sealed class Expr implements ToJsonSerializable {
             'IsNotDistinctFrom',
             'AnyOp',
             'AllOp',
-            'ExistsExpr',
+            'Exists',
             'NestedExpr',
             'SqlValue',
-            'Subquery'
+            'Subquery',
+            'JsonAccess',
+            'CompositeAccess',
+            'InList',
+            'InSubquery',
+            'InUnnest',
+            'Between',
+            'Like',
+            'ILike',
+            'SimilarTo',
+            'Cast',
+            'TryCast',
+            'SafeCast',
+            'AtTimeZone',
+            'Extract',
+            'Ceil',
+            'Floor',
+            'Position',
+            'Substring',
+            'Trim',
+            'Overlay',
+            'Collate',
+            'IntroducedString',
+            'TypedString',
+            'MapAccess',
+            'SqlFunctionRef',
+            'CaseExpr',
+            'ListAggRef',
+            'ArrayAggRef',
+            'ArraySubquery',
+            'GroupingSets',
+            'CubeExpr',
+            'RollupExpr',
+            'TupleExpr',
+            'ArrayIndex',
+            'MatchAgainst',
+            'ArrayExpr',
+            'IntervalExpr',
+            'AggregateExpressionWithFilter'
           ].indexOf(rt),
           json
         );
@@ -7738,10 +10574,52 @@ sealed class Expr implements ToJsonSerializable {
       (6, final value) || [6, final value] => IsNotDistinctFrom.fromJson(value),
       (7, final value) || [7, final value] => AnyOp.fromJson(value),
       (8, final value) || [8, final value] => AllOp.fromJson(value),
-      (9, final value) || [9, final value] => ExistsExpr.fromJson(value),
+      (9, final value) || [9, final value] => Exists.fromJson(value),
       (10, final value) || [10, final value] => NestedExpr.fromJson(value),
       (11, final value) || [11, final value] => SqlValue.fromJson(value),
       (12, final value) || [12, final value] => Subquery.fromJson(value),
+      (13, final value) || [13, final value] => JsonAccess.fromJson(value),
+      (14, final value) || [14, final value] => CompositeAccess.fromJson(value),
+      (15, final value) || [15, final value] => InList.fromJson(value),
+      (16, final value) || [16, final value] => InSubquery.fromJson(value),
+      (17, final value) || [17, final value] => InUnnest.fromJson(value),
+      (18, final value) || [18, final value] => Between.fromJson(value),
+      (19, final value) || [19, final value] => Like.fromJson(value),
+      (20, final value) || [20, final value] => ILike.fromJson(value),
+      (21, final value) || [21, final value] => SimilarTo.fromJson(value),
+      (22, final value) || [22, final value] => Cast.fromJson(value),
+      (23, final value) || [23, final value] => TryCast.fromJson(value),
+      (24, final value) || [24, final value] => SafeCast.fromJson(value),
+      (25, final value) || [25, final value] => AtTimeZone.fromJson(value),
+      (26, final value) || [26, final value] => Extract.fromJson(value),
+      (27, final value) || [27, final value] => Ceil.fromJson(value),
+      (28, final value) || [28, final value] => Floor.fromJson(value),
+      (29, final value) || [29, final value] => Position.fromJson(value),
+      (30, final value) || [30, final value] => Substring.fromJson(value),
+      (31, final value) || [31, final value] => Trim.fromJson(value),
+      (32, final value) || [32, final value] => Overlay.fromJson(value),
+      (33, final value) || [33, final value] => Collate.fromJson(value),
+      (34, final value) ||
+      [34, final value] =>
+        IntroducedString.fromJson(value),
+      (35, final value) || [35, final value] => TypedString.fromJson(value),
+      (36, final value) || [36, final value] => MapAccess.fromJson(value),
+      (37, final value) || [37, final value] => SqlFunctionRef.fromJson(value),
+      (38, final value) || [38, final value] => CaseExpr.fromJson(value),
+      (39, final value) || [39, final value] => ListAggRef.fromJson(value),
+      (40, final value) || [40, final value] => ArrayAggRef.fromJson(value),
+      (41, final value) || [41, final value] => ArraySubquery.fromJson(value),
+      (42, final value) || [42, final value] => GroupingSets.fromJson(value),
+      (43, final value) || [43, final value] => CubeExpr.fromJson(value),
+      (44, final value) || [44, final value] => RollupExpr.fromJson(value),
+      (45, final value) || [45, final value] => TupleExpr.fromJson(value),
+      (46, final value) || [46, final value] => ArrayIndex.fromJson(value),
+      (47, final value) || [47, final value] => MatchAgainst.fromJson(value),
+      (48, final value) || [48, final value] => ArrayExpr.fromJson(value),
+      (49, final value) || [49, final value] => IntervalExpr.fromJson(value),
+      (50, final value) ||
+      [50, final value] =>
+        AggregateExpressionWithFilter.fromJson(value),
       _ => throw Exception('Invalid JSON $json_'),
     };
   }
@@ -7763,10 +10641,48 @@ sealed class Expr implements ToJsonSerializable {
         IsNotDistinctFrom() => (6, value.toWasm()),
         AnyOp() => (7, value.toWasm()),
         AllOp() => (8, value.toWasm()),
-        ExistsExpr() => (9, value.toWasm()),
+        Exists() => (9, value.toWasm()),
         NestedExpr() => (10, value.toWasm()),
         SqlValue() => (11, value.toWasm()),
         Subquery() => (12, value.toWasm()),
+        JsonAccess() => (13, value.toWasm()),
+        CompositeAccess() => (14, value.toWasm()),
+        InList() => (15, value.toWasm()),
+        InSubquery() => (16, value.toWasm()),
+        InUnnest() => (17, value.toWasm()),
+        Between() => (18, value.toWasm()),
+        Like() => (19, value.toWasm()),
+        ILike() => (20, value.toWasm()),
+        SimilarTo() => (21, value.toWasm()),
+        Cast() => (22, value.toWasm()),
+        TryCast() => (23, value.toWasm()),
+        SafeCast() => (24, value.toWasm()),
+        AtTimeZone() => (25, value.toWasm()),
+        Extract() => (26, value.toWasm()),
+        Ceil() => (27, value.toWasm()),
+        Floor() => (28, value.toWasm()),
+        Position() => (29, value.toWasm()),
+        Substring() => (30, value.toWasm()),
+        Trim() => (31, value.toWasm()),
+        Overlay() => (32, value.toWasm()),
+        Collate() => (33, value.toWasm()),
+        IntroducedString() => (34, value.toWasm()),
+        TypedString() => (35, value.toWasm()),
+        MapAccess() => (36, value.toWasm()),
+        SqlFunctionRef() => (37, value.toWasm()),
+        CaseExpr() => (38, value.toWasm()),
+        ListAggRef() => (39, value.toWasm()),
+        ArrayAggRef() => (40, value.toWasm()),
+        ArraySubquery() => (41, value.toWasm()),
+        GroupingSets() => (42, value.toWasm()),
+        CubeExpr() => (43, value.toWasm()),
+        RollupExpr() => (44, value.toWasm()),
+        TupleExpr() => (45, value.toWasm()),
+        ArrayIndex() => (46, value.toWasm()),
+        MatchAgainst() => (47, value.toWasm()),
+        ArrayExpr() => (48, value.toWasm()),
+        IntervalExpr() => (49, value.toWasm()),
+        AggregateExpressionWithFilter() => (50, value.toWasm()),
       };
 // ignore: unused_field
   static const _spec = Union([
@@ -7779,10 +10695,48 @@ sealed class Expr implements ToJsonSerializable {
     IsNotDistinctFrom._spec,
     AnyOp._spec,
     AllOp._spec,
-    ExistsExpr._spec,
+    Exists._spec,
     NestedExpr._spec,
     SqlValue._spec,
-    Subquery._spec
+    Subquery._spec,
+    JsonAccess._spec,
+    CompositeAccess._spec,
+    InList._spec,
+    InSubquery._spec,
+    InUnnest._spec,
+    Between._spec,
+    Like._spec,
+    ILike._spec,
+    SimilarTo._spec,
+    Cast._spec,
+    TryCast._spec,
+    SafeCast._spec,
+    AtTimeZone._spec,
+    Extract._spec,
+    Ceil._spec,
+    Floor._spec,
+    Position._spec,
+    Substring._spec,
+    Trim._spec,
+    Overlay._spec,
+    Collate._spec,
+    IntroducedString._spec,
+    TypedString._spec,
+    MapAccess._spec,
+    SqlFunctionRef._spec,
+    CaseExpr._spec,
+    ListAggRef._spec,
+    ArrayAggRef._spec,
+    ArraySubquery._spec,
+    GroupingSets._spec,
+    CubeExpr._spec,
+    RollupExpr._spec,
+    TupleExpr._spec,
+    ArrayIndex._spec,
+    MatchAgainst._spec,
+    ArrayExpr._spec,
+    IntervalExpr._spec,
+    AggregateExpressionWithFilter._spec
   ]);
 }
 
@@ -8857,6 +11811,88 @@ class WindowSpec implements ToJsonSerializable {
   ]);
 }
 
+sealed class WindowType implements ToJsonSerializable {
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
+  factory WindowType.fromJson(Object? json_) {
+    Object? json = json_;
+    if (json is Map) {
+      final MapEntry(:key, :value) =
+          json.entries.firstWhere((e) => e.key != 'runtimeType');
+      json = (
+        key is int ? key : _spec.cases.indexWhere((c) => c.label == key),
+        value,
+      );
+    }
+    return switch (json) {
+      (0, final value) ||
+      [0, final value] =>
+        WindowTypeWindowSpec(WindowSpec.fromJson(value)),
+      (1, final value) ||
+      [1, final value] =>
+        WindowTypeNamedWindow(Ident.fromJson(value)),
+      _ => throw Exception('Invalid JSON $json_'),
+    };
+  }
+  const factory WindowType.windowSpec(WindowSpec value) = WindowTypeWindowSpec;
+  const factory WindowType.namedWindow(Ident value) = WindowTypeNamedWindow;
+
+  /// Returns this as a serializable JSON value.
+  @override
+  Map<String, Object?> toJson();
+
+  /// Returns this as a WASM canonical abi value.
+  (int, Object?) toWasm();
+  static const _spec = Variant([
+    Case('window-spec', WindowSpec._spec),
+    Case('named-window', Ident._spec)
+  ]);
+}
+
+class WindowTypeWindowSpec implements WindowType {
+  final WindowSpec value;
+  const WindowTypeWindowSpec(this.value);
+
+  /// Returns this as a serializable JSON value.
+  @override
+  Map<String, Object?> toJson() =>
+      {'runtimeType': 'WindowTypeWindowSpec', 'window-spec': value.toJson()};
+
+  /// Returns this as a WASM canonical abi value.
+  @override
+  (int, Object?) toWasm() => (0, value.toWasm());
+  @override
+  String toString() => 'WindowTypeWindowSpec($value)';
+  @override
+  bool operator ==(Object other) =>
+      other is WindowTypeWindowSpec &&
+      const ObjectComparator().areEqual(other.value, value);
+  @override
+  int get hashCode => const ObjectComparator().hashValue(value);
+}
+
+class WindowTypeNamedWindow implements WindowType {
+  final Ident value;
+  const WindowTypeNamedWindow(this.value);
+
+  /// Returns this as a serializable JSON value.
+  @override
+  Map<String, Object?> toJson() =>
+      {'runtimeType': 'WindowTypeNamedWindow', 'named-window': value.toJson()};
+
+  /// Returns this as a WASM canonical abi value.
+  @override
+  (int, Object?) toWasm() => (1, value.toWasm());
+  @override
+  String toString() => 'WindowTypeNamedWindow($value)';
+  @override
+  bool operator ==(Object other) =>
+      other is WindowTypeNamedWindow &&
+      const ObjectComparator().areEqual(other.value, value);
+  @override
+  int get hashCode => const ObjectComparator().hashValue(value);
+}
+
 class SqlCreateIndex implements SqlAst, ToJsonSerializable {
   final ObjectName name;
   final ObjectName tableName;
@@ -9070,6 +12106,76 @@ class OperateFunctionArg implements ToJsonSerializable {
     (label: 'name', t: OptionType(Ident._spec)),
     (label: 'data-type', t: DataType._spec),
     (label: 'default-expr', t: OptionType(Expr._spec))
+  ]);
+}
+
+class OnOverflowTruncate implements ToJsonSerializable {
+  final Expr? filler;
+  final bool withCount;
+  const OnOverflowTruncate({
+    this.filler,
+    required this.withCount,
+  });
+
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
+  factory OnOverflowTruncate.fromJson(Object? json_) {
+    final json = json_ is Map
+        ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
+        : json_;
+    return switch (json) {
+      [final filler, final withCount] ||
+      (final filler, final withCount) =>
+        OnOverflowTruncate(
+          filler: Option.fromJson(filler, (some) => Expr.fromJson(some)).value,
+          withCount: withCount! as bool,
+        ),
+      _ => throw Exception('Invalid JSON $json_')
+    };
+  }
+
+  /// Returns this as a serializable JSON value.
+  @override
+  Map<String, Object?> toJson() => {
+        'runtimeType': 'OnOverflowTruncate',
+        'filler': (filler == null
+            ? const None().toJson()
+            : Option.fromValue(filler).toJson((some) => some.toJson())),
+        'with-count': withCount,
+      };
+
+  /// Returns this as a WASM canonical abi value.
+  List<Object?> toWasm() => [
+        (filler == null
+            ? const None().toWasm()
+            : Option.fromValue(filler).toWasm(Expr.toWasm)),
+        withCount
+      ];
+  @override
+  String toString() =>
+      'OnOverflowTruncate${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
+
+  /// Returns a new instance by overriding the values passed as arguments
+  OnOverflowTruncate copyWith({
+    Option<Expr>? filler,
+    bool? withCount,
+  }) =>
+      OnOverflowTruncate(
+          filler: filler != null ? filler.value : this.filler,
+          withCount: withCount ?? this.withCount);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is OnOverflowTruncate &&
+          const ObjectComparator().arePropsEqual(_props, other._props);
+  @override
+  int get hashCode => const ObjectComparator().hashProps(_props);
+
+  // ignore: unused_field
+  List<Object?> get _props => [filler, withCount];
+  static const _spec = RecordType([
+    (label: 'filler', t: OptionType(Expr._spec)),
+    (label: 'with-count', t: Bool())
   ]);
 }
 
@@ -9364,6 +12470,199 @@ class MacroArg implements ToJsonSerializable {
   static const _spec = RecordType([
     (label: 'name', t: Ident._spec),
     (label: 'default-expr', t: OptionType(Expr._spec))
+  ]);
+}
+
+sealed class ListAggOnOverflow implements ToJsonSerializable {
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
+  factory ListAggOnOverflow.fromJson(Object? json_) {
+    Object? json = json_;
+    if (json is Map) {
+      final MapEntry(:key, :value) =
+          json.entries.firstWhere((e) => e.key != 'runtimeType');
+      json = (
+        key is int ? key : _spec.cases.indexWhere((c) => c.label == key),
+        value,
+      );
+    }
+    return switch (json) {
+      (0, null) || [0, null] => const ListAggOnOverflowError(),
+      (1, final value) ||
+      [1, final value] =>
+        ListAggOnOverflowTruncate(OnOverflowTruncate.fromJson(value)),
+      _ => throw Exception('Invalid JSON $json_'),
+    };
+  }
+  const factory ListAggOnOverflow.error() = ListAggOnOverflowError;
+  const factory ListAggOnOverflow.truncate(OnOverflowTruncate value) =
+      ListAggOnOverflowTruncate;
+
+  /// Returns this as a serializable JSON value.
+  @override
+  Map<String, Object?> toJson();
+
+  /// Returns this as a WASM canonical abi value.
+  (int, Object?) toWasm();
+  static const _spec = Variant(
+      [Case('error', null), Case('truncate', OnOverflowTruncate._spec)]);
+}
+
+class ListAggOnOverflowError implements ListAggOnOverflow {
+  const ListAggOnOverflowError();
+
+  /// Returns this as a serializable JSON value.
+  @override
+  Map<String, Object?> toJson() =>
+      {'runtimeType': 'ListAggOnOverflowError', 'error': null};
+
+  /// Returns this as a WASM canonical abi value.
+  @override
+  (int, Object?) toWasm() => (0, null);
+  @override
+  String toString() => 'ListAggOnOverflowError()';
+  @override
+  bool operator ==(Object other) => other is ListAggOnOverflowError;
+  @override
+  int get hashCode => (ListAggOnOverflowError).hashCode;
+}
+
+class ListAggOnOverflowTruncate implements ListAggOnOverflow {
+  final OnOverflowTruncate value;
+  const ListAggOnOverflowTruncate(this.value);
+
+  /// Returns this as a serializable JSON value.
+  @override
+  Map<String, Object?> toJson() =>
+      {'runtimeType': 'ListAggOnOverflowTruncate', 'truncate': value.toJson()};
+
+  /// Returns this as a WASM canonical abi value.
+  @override
+  (int, Object?) toWasm() => (1, value.toWasm());
+  @override
+  String toString() => 'ListAggOnOverflowTruncate($value)';
+  @override
+  bool operator ==(Object other) =>
+      other is ListAggOnOverflowTruncate &&
+      const ObjectComparator().areEqual(other.value, value);
+  @override
+  int get hashCode => const ObjectComparator().hashValue(value);
+}
+
+/// https://docs.rs/sqlparser/0.35.0/sqlparser/ast/struct.ListAgg.html
+class ListAgg implements ToJsonSerializable {
+  final bool distinct;
+  final Expr expr;
+  final Expr? separator;
+  final ListAggOnOverflow? onOverflow;
+  final List<OrderByExpr> withinGroup;
+
+  /// https://docs.rs/sqlparser/0.35.0/sqlparser/ast/struct.ListAgg.html
+  const ListAgg({
+    required this.distinct,
+    required this.expr,
+    this.separator,
+    this.onOverflow,
+    required this.withinGroup,
+  });
+
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
+  factory ListAgg.fromJson(Object? json_) {
+    final json = json_ is Map
+        ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
+        : json_;
+    return switch (json) {
+      [
+        final distinct,
+        final expr,
+        final separator,
+        final onOverflow,
+        final withinGroup
+      ] ||
+      (
+        final distinct,
+        final expr,
+        final separator,
+        final onOverflow,
+        final withinGroup
+      ) =>
+        ListAgg(
+          distinct: distinct! as bool,
+          expr: Expr.fromJson(expr),
+          separator:
+              Option.fromJson(separator, (some) => Expr.fromJson(some)).value,
+          onOverflow: Option.fromJson(
+              onOverflow, (some) => ListAggOnOverflow.fromJson(some)).value,
+          withinGroup:
+              (withinGroup! as Iterable).map(OrderByExpr.fromJson).toList(),
+        ),
+      _ => throw Exception('Invalid JSON $json_')
+    };
+  }
+
+  /// Returns this as a serializable JSON value.
+  @override
+  Map<String, Object?> toJson() => {
+        'runtimeType': 'ListAgg',
+        'distinct': distinct,
+        'expr': expr.toJson(),
+        'separator': (separator == null
+            ? const None().toJson()
+            : Option.fromValue(separator).toJson((some) => some.toJson())),
+        'on-overflow': (onOverflow == null
+            ? const None().toJson()
+            : Option.fromValue(onOverflow).toJson((some) => some.toJson())),
+        'within-group': withinGroup.map((e) => e.toJson()).toList(),
+      };
+
+  /// Returns this as a WASM canonical abi value.
+  List<Object?> toWasm() => [
+        distinct,
+        Expr.toWasm(expr),
+        (separator == null
+            ? const None().toWasm()
+            : Option.fromValue(separator).toWasm(Expr.toWasm)),
+        (onOverflow == null
+            ? const None().toWasm()
+            : Option.fromValue(onOverflow).toWasm((some) => some.toWasm())),
+        withinGroup.map((e) => e.toWasm()).toList(growable: false)
+      ];
+  @override
+  String toString() =>
+      'ListAgg${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
+
+  /// Returns a new instance by overriding the values passed as arguments
+  ListAgg copyWith({
+    bool? distinct,
+    Expr? expr,
+    Option<Expr>? separator,
+    Option<ListAggOnOverflow>? onOverflow,
+    List<OrderByExpr>? withinGroup,
+  }) =>
+      ListAgg(
+          distinct: distinct ?? this.distinct,
+          expr: expr ?? this.expr,
+          separator: separator != null ? separator.value : this.separator,
+          onOverflow: onOverflow != null ? onOverflow.value : this.onOverflow,
+          withinGroup: withinGroup ?? this.withinGroup);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ListAgg &&
+          const ObjectComparator().arePropsEqual(_props, other._props);
+  @override
+  int get hashCode => const ObjectComparator().hashProps(_props);
+
+  // ignore: unused_field
+  List<Object?> get _props =>
+      [distinct, expr, separator, onOverflow, withinGroup];
+  static const _spec = RecordType([
+    (label: 'distinct', t: Bool()),
+    (label: 'expr', t: Expr._spec),
+    (label: 'separator', t: OptionType(Expr._spec)),
+    (label: 'on-overflow', t: OptionType(ListAggOnOverflow._spec)),
+    (label: 'within-group', t: ListType(OrderByExpr._spec))
   ]);
 }
 
@@ -10641,6 +13940,126 @@ sealed class TableFactor implements ToJsonSerializable {
       };
 // ignore: unused_field
   static const _spec = Union([TableFactorTable._spec]);
+}
+
+/// https://docs.rs/sqlparser/0.35.0/sqlparser/ast/struct.Function.html
+class SqlFunction implements ToJsonSerializable {
+  final ObjectName name;
+  final List<FunctionArg> args;
+  final WindowType? over;
+  final bool distinct;
+  final bool special;
+  final List<OrderByExpr> orderBy;
+
+  /// https://docs.rs/sqlparser/0.35.0/sqlparser/ast/struct.Function.html
+  const SqlFunction({
+    required this.name,
+    required this.args,
+    this.over,
+    required this.distinct,
+    required this.special,
+    required this.orderBy,
+  });
+
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
+  factory SqlFunction.fromJson(Object? json_) {
+    final json = json_ is Map
+        ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
+        : json_;
+    return switch (json) {
+      [
+        final name,
+        final args,
+        final over,
+        final distinct,
+        final special,
+        final orderBy
+      ] ||
+      (
+        final name,
+        final args,
+        final over,
+        final distinct,
+        final special,
+        final orderBy
+      ) =>
+        SqlFunction(
+          name: (name! as Iterable).map(Ident.fromJson).toList(),
+          args: (args! as Iterable).map(FunctionArg.fromJson).toList(),
+          over:
+              Option.fromJson(over, (some) => WindowType.fromJson(some)).value,
+          distinct: distinct! as bool,
+          special: special! as bool,
+          orderBy: (orderBy! as Iterable).map(OrderByExpr.fromJson).toList(),
+        ),
+      _ => throw Exception('Invalid JSON $json_')
+    };
+  }
+
+  /// Returns this as a serializable JSON value.
+  @override
+  Map<String, Object?> toJson() => {
+        'runtimeType': 'SqlFunction',
+        'name': name.map((e) => e.toJson()).toList(),
+        'args': args.map((e) => e.toJson()).toList(),
+        'over': (over == null
+            ? const None().toJson()
+            : Option.fromValue(over).toJson((some) => some.toJson())),
+        'distinct': distinct,
+        'special': special,
+        'order-by': orderBy.map((e) => e.toJson()).toList(),
+      };
+
+  /// Returns this as a WASM canonical abi value.
+  List<Object?> toWasm() => [
+        name.map((e) => e.toWasm()).toList(growable: false),
+        args.map((e) => e.toWasm()).toList(growable: false),
+        (over == null
+            ? const None().toWasm()
+            : Option.fromValue(over).toWasm((some) => some.toWasm())),
+        distinct,
+        special,
+        orderBy.map((e) => e.toWasm()).toList(growable: false)
+      ];
+  @override
+  String toString() =>
+      'SqlFunction${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
+
+  /// Returns a new instance by overriding the values passed as arguments
+  SqlFunction copyWith({
+    ObjectName? name,
+    List<FunctionArg>? args,
+    Option<WindowType>? over,
+    bool? distinct,
+    bool? special,
+    List<OrderByExpr>? orderBy,
+  }) =>
+      SqlFunction(
+          name: name ?? this.name,
+          args: args ?? this.args,
+          over: over != null ? over.value : this.over,
+          distinct: distinct ?? this.distinct,
+          special: special ?? this.special,
+          orderBy: orderBy ?? this.orderBy);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is SqlFunction &&
+          const ObjectComparator().arePropsEqual(_props, other._props);
+  @override
+  int get hashCode => const ObjectComparator().hashProps(_props);
+
+  // ignore: unused_field
+  List<Object?> get _props => [name, args, over, distinct, special, orderBy];
+  static const _spec = RecordType([
+    (label: 'name', t: ListType(Ident._spec)),
+    (label: 'args', t: ListType(FunctionArg._spec)),
+    (label: 'over', t: OptionType(WindowType._spec)),
+    (label: 'distinct', t: Bool()),
+    (label: 'special', t: Bool()),
+    (label: 'order-by', t: ListType(OrderByExpr._spec))
+  ]);
 }
 
 /// https://docs.rs/sqlparser/0.35.0/sqlparser/ast/struct.Join.html
@@ -14181,6 +17600,124 @@ class SqlInsert implements SqlAst, ToJsonSerializable {
   ]);
 }
 
+/// https://docs.rs/sqlparser/0.35.0/sqlparser/ast/struct.ArrayAgg.html
+class ArrayAgg implements ToJsonSerializable {
+  final bool distinct;
+  final Expr expr;
+  final List<OrderByExpr>? orderBy;
+  final Expr? limit;
+  final bool withinGroup;
+
+  /// https://docs.rs/sqlparser/0.35.0/sqlparser/ast/struct.ArrayAgg.html
+  const ArrayAgg({
+    required this.distinct,
+    required this.expr,
+    this.orderBy,
+    this.limit,
+    required this.withinGroup,
+  });
+
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
+  factory ArrayAgg.fromJson(Object? json_) {
+    final json = json_ is Map
+        ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
+        : json_;
+    return switch (json) {
+      [
+        final distinct,
+        final expr,
+        final orderBy,
+        final limit,
+        final withinGroup
+      ] ||
+      (
+        final distinct,
+        final expr,
+        final orderBy,
+        final limit,
+        final withinGroup
+      ) =>
+        ArrayAgg(
+          distinct: distinct! as bool,
+          expr: Expr.fromJson(expr),
+          orderBy: Option.fromJson(
+              orderBy,
+              (some) =>
+                  (some! as Iterable).map(OrderByExpr.fromJson).toList()).value,
+          limit: Option.fromJson(limit, (some) => Expr.fromJson(some)).value,
+          withinGroup: withinGroup! as bool,
+        ),
+      _ => throw Exception('Invalid JSON $json_')
+    };
+  }
+
+  /// Returns this as a serializable JSON value.
+  @override
+  Map<String, Object?> toJson() => {
+        'runtimeType': 'ArrayAgg',
+        'distinct': distinct,
+        'expr': expr.toJson(),
+        'order-by': (orderBy == null
+            ? const None().toJson()
+            : Option.fromValue(orderBy)
+                .toJson((some) => some.map((e) => e.toJson()).toList())),
+        'limit': (limit == null
+            ? const None().toJson()
+            : Option.fromValue(limit).toJson((some) => some.toJson())),
+        'within-group': withinGroup,
+      };
+
+  /// Returns this as a WASM canonical abi value.
+  List<Object?> toWasm() => [
+        distinct,
+        Expr.toWasm(expr),
+        (orderBy == null
+            ? const None().toWasm()
+            : Option.fromValue(orderBy).toWasm(
+                (some) => some.map((e) => e.toWasm()).toList(growable: false))),
+        (limit == null
+            ? const None().toWasm()
+            : Option.fromValue(limit).toWasm(Expr.toWasm)),
+        withinGroup
+      ];
+  @override
+  String toString() =>
+      'ArrayAgg${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
+
+  /// Returns a new instance by overriding the values passed as arguments
+  ArrayAgg copyWith({
+    bool? distinct,
+    Expr? expr,
+    Option<List<OrderByExpr>>? orderBy,
+    Option<Expr>? limit,
+    bool? withinGroup,
+  }) =>
+      ArrayAgg(
+          distinct: distinct ?? this.distinct,
+          expr: expr ?? this.expr,
+          orderBy: orderBy != null ? orderBy.value : this.orderBy,
+          limit: limit != null ? limit.value : this.limit,
+          withinGroup: withinGroup ?? this.withinGroup);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ArrayAgg &&
+          const ObjectComparator().arePropsEqual(_props, other._props);
+  @override
+  int get hashCode => const ObjectComparator().hashProps(_props);
+
+  // ignore: unused_field
+  List<Object?> get _props => [distinct, expr, orderBy, limit, withinGroup];
+  static const _spec = RecordType([
+    (label: 'distinct', t: Bool()),
+    (label: 'expr', t: Expr._spec),
+    (label: 'order-by', t: OptionType(ListType(OrderByExpr._spec))),
+    (label: 'limit', t: OptionType(Expr._spec)),
+    (label: 'within-group', t: Bool())
+  ]);
+}
+
 /// https://docs.rs/sqlparser/0.35.0/sqlparser/ast/enum.AlterColumnOperation.html
 sealed class AlterColumnOperation implements ToJsonSerializable {
   /// Returns a new instance from a JSON value.
@@ -14887,6 +18424,9 @@ class ParsedSql implements ToJsonSerializable {
   final List<SetExpr> setExprRefs;
   final List<Expr> exprRefs;
   final List<DataType> dataTypeRefs;
+  final List<ArrayAgg> arrayAggRefs;
+  final List<ListAgg> listAggRefs;
+  final List<SqlFunction> sqlFunctionRefs;
   final List<String> warnings;
   const ParsedSql({
     required this.statements,
@@ -14898,6 +18438,9 @@ class ParsedSql implements ToJsonSerializable {
     required this.setExprRefs,
     required this.exprRefs,
     required this.dataTypeRefs,
+    required this.arrayAggRefs,
+    required this.listAggRefs,
+    required this.sqlFunctionRefs,
     required this.warnings,
   });
 
@@ -14918,6 +18461,9 @@ class ParsedSql implements ToJsonSerializable {
         final setExprRefs,
         final exprRefs,
         final dataTypeRefs,
+        final arrayAggRefs,
+        final listAggRefs,
+        final sqlFunctionRefs,
         final warnings
       ] ||
       (
@@ -14930,6 +18476,9 @@ class ParsedSql implements ToJsonSerializable {
         final setExprRefs,
         final exprRefs,
         final dataTypeRefs,
+        final arrayAggRefs,
+        final listAggRefs,
+        final sqlFunctionRefs,
         final warnings
       ) =>
         ParsedSql(
@@ -14948,6 +18497,12 @@ class ParsedSql implements ToJsonSerializable {
           exprRefs: (exprRefs! as Iterable).map(Expr.fromJson).toList(),
           dataTypeRefs:
               (dataTypeRefs! as Iterable).map(DataType.fromJson).toList(),
+          arrayAggRefs:
+              (arrayAggRefs! as Iterable).map(ArrayAgg.fromJson).toList(),
+          listAggRefs:
+              (listAggRefs! as Iterable).map(ListAgg.fromJson).toList(),
+          sqlFunctionRefs:
+              (sqlFunctionRefs! as Iterable).map(SqlFunction.fromJson).toList(),
           warnings: (warnings! as Iterable)
               .map((e) => e is String ? e : (e! as ParsedString).value)
               .toList(),
@@ -14969,6 +18524,9 @@ class ParsedSql implements ToJsonSerializable {
         'set-expr-refs': setExprRefs.map((e) => e.toJson()).toList(),
         'expr-refs': exprRefs.map((e) => e.toJson()).toList(),
         'data-type-refs': dataTypeRefs.map((e) => e.toJson()).toList(),
+        'array-agg-refs': arrayAggRefs.map((e) => e.toJson()).toList(),
+        'list-agg-refs': listAggRefs.map((e) => e.toJson()).toList(),
+        'sql-function-refs': sqlFunctionRefs.map((e) => e.toJson()).toList(),
         'warnings': warnings.toList(),
       };
 
@@ -14983,6 +18541,9 @@ class ParsedSql implements ToJsonSerializable {
         setExprRefs.map(SetExpr.toWasm).toList(growable: false),
         exprRefs.map(Expr.toWasm).toList(growable: false),
         dataTypeRefs.map((e) => e.toWasm()).toList(growable: false),
+        arrayAggRefs.map((e) => e.toWasm()).toList(growable: false),
+        listAggRefs.map((e) => e.toWasm()).toList(growable: false),
+        sqlFunctionRefs.map((e) => e.toWasm()).toList(growable: false),
         warnings
       ];
   @override
@@ -15000,6 +18561,9 @@ class ParsedSql implements ToJsonSerializable {
     List<SetExpr>? setExprRefs,
     List<Expr>? exprRefs,
     List<DataType>? dataTypeRefs,
+    List<ArrayAgg>? arrayAggRefs,
+    List<ListAgg>? listAggRefs,
+    List<SqlFunction>? sqlFunctionRefs,
     List<String>? warnings,
   }) =>
       ParsedSql(
@@ -15012,6 +18576,9 @@ class ParsedSql implements ToJsonSerializable {
           setExprRefs: setExprRefs ?? this.setExprRefs,
           exprRefs: exprRefs ?? this.exprRefs,
           dataTypeRefs: dataTypeRefs ?? this.dataTypeRefs,
+          arrayAggRefs: arrayAggRefs ?? this.arrayAggRefs,
+          listAggRefs: listAggRefs ?? this.listAggRefs,
+          sqlFunctionRefs: sqlFunctionRefs ?? this.sqlFunctionRefs,
           warnings: warnings ?? this.warnings);
   @override
   bool operator ==(Object other) =>
@@ -15032,6 +18599,9 @@ class ParsedSql implements ToJsonSerializable {
         setExprRefs,
         exprRefs,
         dataTypeRefs,
+        arrayAggRefs,
+        listAggRefs,
+        sqlFunctionRefs,
         warnings
       ];
   static const _spec = RecordType([
@@ -15044,6 +18614,9 @@ class ParsedSql implements ToJsonSerializable {
     (label: 'set-expr-refs', t: ListType(SetExpr._spec)),
     (label: 'expr-refs', t: ListType(Expr._spec)),
     (label: 'data-type-refs', t: ListType(DataType._spec)),
+    (label: 'array-agg-refs', t: ListType(ArrayAgg._spec)),
+    (label: 'list-agg-refs', t: ListType(ListAgg._spec)),
+    (label: 'sql-function-refs', t: ListType(SqlFunction._spec)),
     (label: 'warnings', t: ListType(StringType()))
   ]);
 }

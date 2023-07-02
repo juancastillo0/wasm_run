@@ -1,7 +1,6 @@
 // Use a procedural macro to generate bindings for the world we specified in `sql-parser.wit`
 wit_bindgen::generate!("sql-parser");
 
-
 use sqlparser::ast::{self};
 
 // Comment out the following lines to include other generated wit interfaces
@@ -52,15 +51,19 @@ impl ParserState {
                 set_expr_refs: vec![],
                 expr_refs: vec![],
                 data_type_refs: vec![],
+                array_agg_refs: vec![],
+                list_agg_refs: vec![],
+                sql_function_refs: vec![],
                 warnings: vec![],
             },
         }
     }
 
     pub fn process(&mut self, statements: Vec<ast::Statement>) {
-        statements
-            .into_iter()
-            .for_each(|s| self.parsed.statements.push(self.statement(s)));
+        statements.into_iter().for_each(|s| {
+            let a = self.statement(s);
+            self.parsed.statements.push(a);
+        });
     }
 
     fn statement(&mut self, statement: ast::Statement) -> SqlAst {
@@ -162,7 +165,11 @@ impl ParserState {
             } => SqlAst::CreateFunction(CreateFunction {
                 or_replace,
                 name: self.object_name(name),
-                args: args.map(|args| args.into_iter().map(|a| self.function_arg(a)).collect()),
+                args: args.map(|args| {
+                    args.into_iter()
+                        .map(|a| self.operate_function_arg(a))
+                        .collect()
+                }),
                 temporary,
                 return_type: return_type.map(|t| self.data_type(t)),
                 params: self.create_function_body(params),
@@ -175,7 +182,12 @@ impl ParserState {
             } => SqlAst::CreateProcedure(CreateProcedure {
                 name: self.object_name(name),
                 body: body.into_iter().map(|s| self.statement_ref(s)).collect(),
-                params: params.map(|params| params.into_iter().map(|p| self.procedure_param(p))),
+                params: params.map(|params| {
+                    params
+                        .into_iter()
+                        .map(|p| self.procedure_param(p))
+                        .collect()
+                }),
                 or_alter,
             }),
 
@@ -312,7 +324,7 @@ impl ParserState {
             ast::Expr::Nested(expr) => Expr::NestedExpr(NestedExpr {
                 expr: self.expr_ref(*expr),
             }),
-            ast::Expr::Exists { subquery, negated } => Expr::ExistsExpr(ExistsExpr {
+            ast::Expr::Exists { subquery, negated } => Expr::Exists(Exists {
                 subquery: self.query_ref(subquery),
                 negated,
             }),
@@ -321,103 +333,243 @@ impl ParserState {
                 query: self.query_ref(query),
             }),
 
+            ast::Expr::Function(func) => Expr::SqlFunctionRef(self.function_ref(func)),
+            ast::Expr::InList {
+                expr,
+                list,
+                negated,
+            } => Expr::InList(InList {
+                expr: self.expr_ref(*expr),
+                list: list.into_iter().map(|e| self.expr_ref(e)).collect(),
+                negated,
+            }),
+            ast::Expr::InSubquery {
+                expr,
+                subquery,
+                negated,
+            } => Expr::InSubquery(InSubquery {
+                expr: self.expr_ref(*expr),
+                subquery: self.query_ref(subquery),
+                negated,
+            }),
+            ast::Expr::Between {
+                expr,
+                negated,
+                low,
+                high,
+            } => Expr::Between(Between {
+                expr: self.expr_ref(*expr),
+                negated,
+                low: self.expr_ref(*low),
+                high: self.expr_ref(*high),
+            }),
+
+            ast::Expr::JsonAccess {
+                left,
+                operator,
+                right,
+            } => Expr::JsonAccess(JsonAccess {
+                left: self.expr_ref(*left),
+                operator: self.json_operator(operator),
+                right: self.expr_ref(*right),
+            }),
+            ast::Expr::CompositeAccess { expr, key } => Expr::CompositeAccess(CompositeAccess {
+                expr: self.expr_ref(*expr),
+                key: self.ident(key),
+            }),
+            ast::Expr::InUnnest {
+                expr,
+                array_expr,
+                negated,
+            } => Expr::InUnnest(InUnnest {
+                expr: self.expr_ref(*expr),
+                array_expr: self.expr_ref(*array_expr),
+                negated,
+            }),
+            ast::Expr::Like {
+                negated,
+                expr,
+                pattern,
+                escape_char,
+            } => Expr::Like(Like {
+                negated,
+                expr: self.expr_ref(*expr),
+                pattern: self.expr_ref(*pattern),
+                escape_char,
+            }),
+            ast::Expr::ILike {
+                negated,
+                expr,
+                pattern,
+                escape_char,
+            } => Expr::ILike(ILike {
+                negated,
+                expr: self.expr_ref(*expr),
+                pattern: self.expr_ref(*pattern),
+                escape_char,
+            }),
+            ast::Expr::SimilarTo {
+                negated,
+                expr,
+                pattern,
+                escape_char,
+            } => Expr::SimilarTo(SimilarTo {
+                negated,
+                expr: self.expr_ref(*expr),
+                pattern: self.expr_ref(*pattern),
+                escape_char,
+            }),
             ast::Expr::Cast { expr, data_type } => Expr::Cast(Cast {
                 expr: self.expr_ref(*expr),
                 data_type: self.data_type(data_type),
+            }),
+            ast::Expr::TryCast { expr, data_type } => Expr::TryCast(TryCast {
+                expr: self.expr_ref(*expr),
+                data_type: self.data_type(data_type),
+            }),
+            ast::Expr::SafeCast { expr, data_type } => Expr::SafeCast(SafeCast {
+                expr: self.expr_ref(*expr),
+                data_type: self.data_type(data_type),
+            }),
+
+            ast::Expr::AtTimeZone {
+                timestamp,
+                time_zone,
+            } => Expr::AtTimeZone(AtTimeZone {
+                timestamp: self.expr_ref(*timestamp),
+                time_zone,
             }),
             ast::Expr::Extract { field, expr } => Expr::Extract(Extract {
                 field: self.date_time_field(field),
                 expr: self.expr_ref(*expr),
             }),
-            // ast::Expr::Case {
-            //     operand,
-            //     conditions,
-            //     results,
-            //     else_result,
-            // } => Expr::Case(Case {
-            //     operand: operand.map(|o| self.expr_ref(*o)),
-            //     conditions: conditions.into_iter().map(|c| self.expr(c)).collect(),
-            //     results: results.into_iter().map(|r| self.expr(r)).collect(),
-            //     else_result: else_result.map(|e| self.expr_ref(*e)),
-            // }),
-            // ast::Expr::Function(func) => Expr::Function(self.function(func)),
-            // ast::Expr::TypedString { data_type, value } => Expr::TypedString(TypedString {
-            //     data_type: self.data_type(data_type),
-            //     value,
-            // }),
-            // ast::Expr::Collate { expr, collation } => Expr::Collate(Collate {
-            //     expr: self.expr_ref(*expr),
-            //     collation: self.object_name(collation),
-            // }),
-            // ast::Expr::Parameter(n) => Expr::Parameter(Parameter { n }),
-            // ast::Expr::Position { expr, substring } => Expr::Position(Position {
-            //     expr: self.expr_ref(*expr),
-            //     substring: self.expr_ref(*substring),
-            // }),
-            // ast::Expr::InList {
-            //     expr,
-            //     list,
-            //     negated,
-            // } => Expr::InList(InList {
-            //     expr: self.expr_ref(*expr),
-            //     list: list.into_iter().map(|e| self.expr(e)).collect(),
-            //     negated,
-            // }),
-            // ast::Expr::InSubquery {
-            //     expr,
-            //     subquery,
-            //     negated,
-            // } => Expr::InSubquery(InSubquery {
-            //     expr: self.expr_ref(*expr),
-            //     subquery: self.query_ref(*subquery),
-            //     negated,
-            // }),
-            // ast::Expr::Between {
-            //     expr,
-            //     negated,
-            //     low,
-            //     high,
-            // } => Expr::Between(Between {
-            //     expr: self.expr_ref(*expr),
-            //     negated,
-            //     low: self.expr_ref(*low),
-            //     high: self.expr_ref(*high),
-            // }),
-            // ast::Expr::AtTimeZone { expr, timezone } => Expr::AtTimeZone(AtTimeZone {
-            //     expr: self.expr_ref(*expr),
-            //     timezone: self.expr_ref(*timezone),
-            // }),
-            // ast::Expr::CollateFunction { func, collation } => Expr::CollateFunction(CollateFunction {
-            //     func: self.function(func),
-            //     collation: self.object_name(collation),
-            // }),
-            // ast::Expr::AtTimeZoneFunction { func, timezone } => {
-            //     Expr::AtTimeZoneFunction(AtTimeZoneFunction {
-            //         func: self.function(func),
-            //         timezone: self.expr_ref(*timezone),
-            //     })
-            // }
-            // ast::Expr::SubscriptIndex { expr, subscript } => Expr::SubscriptIndex(SubscriptIndex {
-            //     expr: self.expr_ref(*expr),
-            //     subscript: self.expr_ref(*subscript),
-            // }),
-            // ast::Expr::SubscriptSlice {
-            //     expr,
-            //     subscript_start,
-            //     subscript_end,
-            // } => Expr::SubscriptSlice(SubscriptSlice {
-            //     expr: self.expr_ref(*expr),
-            //     subscript_start: subscript_start.map(|e| self.expr_ref(*e)),
-            //     subscript_end: subscript_end.map(|e| self.expr_ref(*e)),
-            // }),
-            // ast::Expr::SubscriptSliceFrom {
-            //     expr,
-            //     subscript_start,
-            // } => Expr::SubscriptSliceFrom(SubscriptSliceFrom {
-            //     expr: self.expr_ref(*expr),
-            //     subscript_start: self.expr_ref(*subscript_start),
-            // }),
-            _ => todo!(),
+            ast::Expr::Ceil { expr, field } => Expr::Ceil(Ceil {
+                field: self.date_time_field(field),
+                expr: self.expr_ref(*expr),
+            }),
+            ast::Expr::Floor { expr, field } => Expr::Floor(Floor {
+                field: self.date_time_field(field),
+                expr: self.expr_ref(*expr),
+            }),
+            ast::Expr::Position { expr, r#in } => Expr::Position(Position {
+                expr: self.expr_ref(*expr),
+                in_: self.expr_ref(*r#in),
+            }),
+            ast::Expr::Substring {
+                expr,
+                substring_from,
+                substring_for,
+            } => Expr::Substring(Substring {
+                expr: self.expr_ref(*expr),
+                substring_from: substring_from.map(|e| self.expr_ref(*e)),
+                substring_for: substring_for.map(|e| self.expr_ref(*e)),
+            }),
+            ast::Expr::Trim {
+                expr,
+                trim_where,
+                trim_what,
+            } => Expr::Trim(Trim {
+                expr: self.expr_ref(*expr),
+                trim_where: trim_where.map(|trim_where| self.trim_where_field(trim_where)),
+                trim_what: trim_what.map(|trim_what| self.expr_ref(*trim_what)),
+            }),
+            ast::Expr::Overlay {
+                expr,
+                overlay_what,
+                overlay_from,
+                overlay_for,
+            } => Expr::Overlay(Overlay {
+                expr: self.expr_ref(*expr),
+                overlay_what: self.expr_ref(*overlay_what),
+                overlay_from: self.expr_ref(*overlay_from),
+                overlay_for: overlay_for.map(|e| self.expr_ref(*e)),
+            }),
+            ast::Expr::Collate { collation, expr } => Expr::Collate(Collate {
+                collation: self.object_name(collation),
+                expr: self.expr_ref(*expr),
+            }),
+            ast::Expr::IntroducedString { introducer, value } => {
+                Expr::IntroducedString(IntroducedString {
+                    introducer,
+                    value: self.sql_value(value),
+                })
+            }
+            ast::Expr::TypedString { data_type, value } => Expr::TypedString(TypedString {
+                data_type: self.data_type(data_type),
+                value,
+            }),
+            ast::Expr::MapAccess { column, keys } => Expr::MapAccess(MapAccess {
+                column: self.expr_ref(*column),
+                keys: keys.into_iter().map(|e| self.expr_ref(e)).collect(),
+            }),
+
+            ast::Expr::Case {
+                operand,
+                conditions,
+                results,
+                else_result,
+            } => Expr::CaseExpr(CaseExpr {
+                operand: operand.map(|o| self.expr_ref(*o)),
+                conditions: conditions.into_iter().map(|c| self.expr_ref(c)).collect(),
+                results: results.into_iter().map(|r| self.expr_ref(r)).collect(),
+                else_result: else_result.map(|e| self.expr_ref(*e)),
+            }),
+            ast::Expr::ListAgg(l) => Expr::ListAggRef(self.list_agg_ref(l)),
+            ast::Expr::ArrayAgg(l) => Expr::ArrayAggRef(self.array_agg_ref(l)),
+            ast::Expr::ArraySubquery(l) => Expr::ArraySubquery(ArraySubquery {
+                query: self.query_ref(l),
+            }),
+            ast::Expr::GroupingSets(l) => Expr::GroupingSets(GroupingSets {
+                values: l
+                    .into_iter()
+                    .map(|s| s.into_iter().map(|e| self.expr_ref(e)).collect())
+                    .collect(),
+            }),
+            ast::Expr::Cube(l) => Expr::CubeExpr(CubeExpr {
+                values: l
+                    .into_iter()
+                    .map(|s| s.into_iter().map(|e| self.expr_ref(e)).collect())
+                    .collect(),
+            }),
+            ast::Expr::Rollup(l) => Expr::RollupExpr(RollupExpr {
+                values: l
+                    .into_iter()
+                    .map(|s| s.into_iter().map(|e| self.expr_ref(e)).collect())
+                    .collect(),
+            }),
+            ast::Expr::Tuple(l) => Expr::TupleExpr(TupleExpr {
+                values: l.into_iter().map(|s| self.expr_ref(s)).collect(),
+            }),
+            ast::Expr::ArrayIndex { obj, indexes } => Expr::ArrayIndex(ArrayIndex {
+                obj: self.expr_ref(*obj),
+                indexes: indexes.into_iter().map(|i| self.expr_ref(i)).collect(),
+            }),
+            ast::Expr::MatchAgainst {
+                columns,
+                match_value,
+                opt_search_modifier,
+            } => Expr::MatchAgainst(MatchAgainst {
+                columns: columns.into_iter().map(|c| self.ident(c)).collect(),
+                match_value: self.sql_value(match_value),
+                opt_search_modifier: opt_search_modifier.map(|s| self.search_modifier(s)),
+            }),
+            ast::Expr::Array(values) => Expr::ArrayExpr(ArrayExpr {
+                elem: values.elem.into_iter().map(|e| self.expr_ref(e)).collect(),
+                named: values.named,
+            }),
+            ast::Expr::Interval(l) => Expr::IntervalExpr(IntervalExpr {
+                value: self.expr_ref(*l.value),
+                leading_field: l.leading_field.map(|v| self.date_time_field(v)),
+                leading_precision: l.leading_precision,
+                last_field: l.last_field.map(|v| self.date_time_field(v)),
+                fractional_seconds_precision: l.fractional_seconds_precision,
+            }),
+            ast::Expr::AggregateExpressionWithFilter { expr, filter } => {
+                Expr::AggregateExpressionWithFilter(AggregateExpressionWithFilter {
+                    expr: self.expr_ref(*expr),
+                    filter: self.expr_ref(*filter),
+                })
+            }
         }
     }
 
@@ -1506,7 +1658,7 @@ impl ParserState {
         }
     }
 
-    fn generated_as(&self, generated_as: ast::GeneratedAs) -> GeneratedAs {
+    fn generated_as(&mut self, generated_as: ast::GeneratedAs) -> GeneratedAs {
         match generated_as {
             ast::GeneratedAs::Always => GeneratedAs::Always,
             ast::GeneratedAs::ByDefault => GeneratedAs::ByDefault,
@@ -1514,7 +1666,10 @@ impl ParserState {
         }
     }
 
-    fn alter_table_operation(&self, operation: ast::AlterTableOperation) -> AlterTableOperation {
+    fn alter_table_operation(
+        &mut self,
+        operation: ast::AlterTableOperation,
+    ) -> AlterTableOperation {
         match operation {
             ast::AlterTableOperation::AddConstraint(v) => {
                 AlterTableOperation::AddConstraint(AddConstraint {
@@ -1615,7 +1770,10 @@ impl ParserState {
         }
     }
 
-    fn alter_index_operation(&self, operation: ast::AlterIndexOperation) -> AlterIndexOperation {
+    fn alter_index_operation(
+        &mut self,
+        operation: ast::AlterIndexOperation,
+    ) -> AlterIndexOperation {
         match operation {
             ast::AlterIndexOperation::RenameIndex { index_name } => {
                 AlterIndexOperation::RenameIndex(RenameIndex {
@@ -1625,7 +1783,7 @@ impl ParserState {
         }
     }
 
-    fn alter_column_operation(&self, op: ast::AlterColumnOperation) -> AlterColumnOperation {
+    fn alter_column_operation(&mut self, op: ast::AlterColumnOperation) -> AlterColumnOperation {
         match op {
             ast::AlterColumnOperation::SetNotNull => AlterColumnOperation::SetNotNull,
             ast::AlterColumnOperation::DropNotNull => AlterColumnOperation::DropNotNull,
@@ -1644,37 +1802,33 @@ impl ParserState {
         }
     }
 
-    fn macro_definition(&self, definition: ast::MacroDefinition) -> MacroDefinition {
+    fn macro_definition(&mut self, definition: ast::MacroDefinition) -> MacroDefinition {
         match definition {
             ast::MacroDefinition::Expr(e) => MacroDefinition::Expr(self.expr(e)),
             ast::MacroDefinition::Table(e) => MacroDefinition::Table(self.query(e)),
         }
     }
 
-    fn transaction_mode(&self, m: ast::TransactionMode) -> TransactionMode {
+    fn transaction_mode(&mut self, m: ast::TransactionMode) -> TransactionMode {
         match m {
-            ast::TransactionMode::AccessMode(m) => {
-                TransactionMode::TransactionAccessMode(match m {
-                    ast::TransactionAccessMode::ReadOnly => TransactionAccessMode::ReadOnly,
-                    ast::TransactionAccessMode::ReadWrite => TransactionAccessMode::ReadWrite,
-                })
-            }
-            ast::TransactionMode::IsolationLevel(m) => {
-                TransactionMode::TransactionIsolationLevel(match m {
-                    ast::TransactionIsolationLevel::ReadUncommitted => {
-                        TransactionIsolationLevel::ReadUncommitted
-                    }
-                    ast::TransactionIsolationLevel::ReadCommitted => {
-                        TransactionIsolationLevel::ReadCommitted
-                    }
-                    ast::TransactionIsolationLevel::RepeatableRead => {
-                        TransactionIsolationLevel::RepeatableRead
-                    }
-                    ast::TransactionIsolationLevel::Serializable => {
-                        TransactionIsolationLevel::Serializable
-                    }
-                })
-            }
+            ast::TransactionMode::AccessMode(m) => TransactionMode::AccessMode(match m {
+                ast::TransactionAccessMode::ReadOnly => TransactionAccessMode::ReadOnly,
+                ast::TransactionAccessMode::ReadWrite => TransactionAccessMode::ReadWrite,
+            }),
+            ast::TransactionMode::IsolationLevel(m) => TransactionMode::IsolationLevel(match m {
+                ast::TransactionIsolationLevel::ReadUncommitted => {
+                    TransactionIsolationLevel::ReadUncommitted
+                }
+                ast::TransactionIsolationLevel::ReadCommitted => {
+                    TransactionIsolationLevel::ReadCommitted
+                }
+                ast::TransactionIsolationLevel::RepeatableRead => {
+                    TransactionIsolationLevel::RepeatableRead
+                }
+                ast::TransactionIsolationLevel::Serializable => {
+                    TransactionIsolationLevel::Serializable
+                }
+            }),
         }
     }
 
@@ -1685,7 +1839,7 @@ impl ParserState {
         SqlAstRef { index }
     }
 
-    fn create_function_body(&self, params: ast::CreateFunctionBody) -> CreateFunctionBody {
+    fn create_function_body(&mut self, params: ast::CreateFunctionBody) -> CreateFunctionBody {
         CreateFunctionBody {
             language: params.language.map(|i| self.ident(i)),
             behavior: params.behavior.map(|v| match v {
@@ -1706,7 +1860,7 @@ impl ParserState {
         }
     }
 
-    fn create_function_using(&self, p: ast::CreateFunctionUsing) -> CreateFunctionUsing {
+    fn create_function_using(&mut self, p: ast::CreateFunctionUsing) -> CreateFunctionUsing {
         match p {
             ast::CreateFunctionUsing::Jar(s) => CreateFunctionUsing::Jar(s),
             ast::CreateFunctionUsing::File(s) => CreateFunctionUsing::File(s),
@@ -1714,10 +1868,165 @@ impl ParserState {
         }
     }
 
-    fn macro_arg(&self, a: ast::MacroArg) -> MacroArg {
+    fn macro_arg(&mut self, a: ast::MacroArg) -> MacroArg {
         MacroArg {
             name: self.ident(a.name),
             default_expr: a.default_expr.map(|d| self.expr(d)),
+        }
+    }
+
+    fn procedure_param(&mut self, p: ast::ProcedureParam) -> ProcedureParam {
+        ProcedureParam {
+            name: self.ident(p.name),
+            data_type: self.data_type(p.data_type),
+        }
+    }
+
+    fn operate_function_arg(&mut self, p: ast::OperateFunctionArg) -> OperateFunctionArg {
+        OperateFunctionArg {
+            name: p.name.map(|n| self.ident(n)),
+            data_type: self.data_type(p.data_type),
+            default_expr: p.default_expr.map(|n| self.expr(n)),
+            mode: p.mode.map(|n| self.arg_mode(n)),
+        }
+    }
+
+    fn arg_mode(&mut self, p: ast::ArgMode) -> ArgMode {
+        match p {
+            ast::ArgMode::In => ArgMode::In,
+            ast::ArgMode::Out => ArgMode::Out,
+            ast::ArgMode::InOut => ArgMode::InOut,
+        }
+    }
+
+    fn date_time_field(&mut self, field: ast::DateTimeField) -> DateTimeField {
+        match field {
+            ast::DateTimeField::Year => DateTimeField::Year,
+            ast::DateTimeField::Month => DateTimeField::Month,
+            ast::DateTimeField::Week => DateTimeField::Week,
+            ast::DateTimeField::Day => DateTimeField::Day,
+            ast::DateTimeField::Date => DateTimeField::Date,
+            ast::DateTimeField::Hour => DateTimeField::Hour,
+            ast::DateTimeField::Minute => DateTimeField::Minute,
+            ast::DateTimeField::Second => DateTimeField::Second,
+            ast::DateTimeField::Century => DateTimeField::Century,
+            ast::DateTimeField::Decade => DateTimeField::Decade,
+            ast::DateTimeField::Dow => DateTimeField::Dow,
+            ast::DateTimeField::Doy => DateTimeField::Doy,
+            ast::DateTimeField::Epoch => DateTimeField::Epoch,
+            ast::DateTimeField::Isodow => DateTimeField::Isodow,
+            ast::DateTimeField::Isoyear => DateTimeField::Isoyear,
+            ast::DateTimeField::Julian => DateTimeField::Julian,
+            ast::DateTimeField::Microsecond => DateTimeField::Microsecond,
+            ast::DateTimeField::Microseconds => DateTimeField::Microseconds,
+            ast::DateTimeField::Millenium => DateTimeField::Millenium,
+            ast::DateTimeField::Millennium => DateTimeField::Millennium,
+            ast::DateTimeField::Millisecond => DateTimeField::Millisecond,
+            ast::DateTimeField::Milliseconds => DateTimeField::Milliseconds,
+            ast::DateTimeField::Nanosecond => DateTimeField::Nanosecond,
+            ast::DateTimeField::Nanoseconds => DateTimeField::Nanoseconds,
+            ast::DateTimeField::Quarter => DateTimeField::Quarter,
+            ast::DateTimeField::Timezone => DateTimeField::Timezone,
+            ast::DateTimeField::TimezoneHour => DateTimeField::TimezoneHour,
+            ast::DateTimeField::TimezoneMinute => DateTimeField::TimezoneMinute,
+            ast::DateTimeField::NoDateTime => DateTimeField::NoDateTime,
+        }
+    }
+
+    fn search_modifier(&mut self, s: ast::SearchModifier) -> SearchModifier {
+        match s {
+            ast::SearchModifier::InNaturalLanguageMode => SearchModifier::InNaturalLanguageMode,
+            ast::SearchModifier::InNaturalLanguageModeWithQueryExpansion => {
+                SearchModifier::InNaturalLanguageModeWithQueryExpansion
+            }
+            ast::SearchModifier::InBooleanMode => SearchModifier::InBooleanMode,
+            ast::SearchModifier::WithQueryExpansion => SearchModifier::WithQueryExpansion,
+        }
+    }
+
+    fn list_agg_ref(&mut self, l: ast::ListAgg) -> ListAggRef {
+        let listagg = ListAgg {
+            distinct: l.distinct,
+            expr: self.expr(*l.expr),
+            separator: l.separator.map(|s| self.expr(*s)),
+            on_overflow: l.on_overflow.map(|s| self.list_agg_on_overflow(s)),
+            within_group: self.order_by(l.within_group),
+        };
+        let index = self.parsed.list_agg_refs.len() as u32;
+        self.parsed.list_agg_refs.push(listagg);
+        ListAggRef { index }
+    }
+
+    fn array_agg_ref(&mut self, l: ast::ArrayAgg) -> ArrayAggRef {
+        let arrayagg = ArrayAgg {
+            distinct: l.distinct,
+            expr: self.expr(*l.expr),
+            order_by: l.order_by.map(|o| self.order_by(o)),
+            limit: l.limit.map(|l| self.expr(*l)),
+            within_group: l.within_group,
+        };
+        let index = self.parsed.array_agg_refs.len() as u32;
+        self.parsed.array_agg_refs.push(arrayagg);
+        ArrayAggRef { index }
+    }
+
+    fn json_operator(&mut self, operator: ast::JsonOperator) -> JsonOperator {
+        match operator {
+            ast::JsonOperator::Arrow => JsonOperator::Arrow,
+            ast::JsonOperator::LongArrow => JsonOperator::LongArrow,
+            ast::JsonOperator::HashArrow => JsonOperator::HashArrow,
+            ast::JsonOperator::HashLongArrow => JsonOperator::HashLongArrow,
+            ast::JsonOperator::Colon => JsonOperator::Colon,
+            ast::JsonOperator::AtArrow => JsonOperator::AtArrow,
+            ast::JsonOperator::ArrowAt => JsonOperator::ArrowAt,
+            ast::JsonOperator::HashMinus => JsonOperator::HashMinus,
+            ast::JsonOperator::AtQuestion => JsonOperator::AtQuestion,
+            ast::JsonOperator::AtAt => JsonOperator::AtAt,
+        }
+    }
+
+    fn function_ref(&mut self, func: ast::Function) -> SqlFunctionRef {
+        let func = SqlFunction {
+            name: self.object_name(func.name),
+            args: func
+                .args
+                .into_iter()
+                .map(|a| self.function_arg(a))
+                .collect(),
+            over: func.over.map(|o| self.window_type(o)),
+            distinct: func.distinct,
+            special: func.special,
+            order_by: self.order_by(func.order_by),
+        };
+        let index = self.parsed.sql_function_refs.len() as u32;
+        self.parsed.sql_function_refs.push(func);
+        SqlFunctionRef { index }
+    }
+
+    fn trim_where_field(&mut self, trim_where: ast::TrimWhereField) -> TrimWhereField {
+        match trim_where {
+            ast::TrimWhereField::Both => TrimWhereField::Both,
+            ast::TrimWhereField::Leading => TrimWhereField::Leading,
+            ast::TrimWhereField::Trailing => TrimWhereField::Trailing,
+        }
+    }
+
+    fn window_type(&mut self, o: ast::WindowType) -> WindowType {
+        match o {
+            ast::WindowType::WindowSpec(i) => WindowType::WindowSpec(self.window_spec(i)),
+            ast::WindowType::NamedWindow(i) => WindowType::NamedWindow(self.ident(i)),
+        }
+    }
+
+    fn list_agg_on_overflow(&mut self, s: ast::ListAggOnOverflow) -> ListAggOnOverflow {
+        match s {
+            ast::ListAggOnOverflow::Error => ListAggOnOverflow::Error,
+            ast::ListAggOnOverflow::Truncate { filler, with_count } => {
+                ListAggOnOverflow::Truncate(OnOverflowTruncate {
+                    with_count,
+                    filler: filler.map(|f| self.expr(*f)),
+                })
+            }
         }
     }
 }
