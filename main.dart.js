@@ -36732,10 +36732,10 @@ default:return!1}},
 a6a(){var s=0,r=A.a_(t.Xw),q,p,o,n,m,l,k,j
 var $async$a6a=A.a0(function(a,b){if(a===1)return A.X(b,r)
 while(true)switch(s){case 0:s=3
-return A.P(A.RT("my_app"),$async$a6a)
+return A.P(A.RT("sql_parser_wasm"),$async$a6a)
 case 3:l=b
 s=4
-return A.P(A.aGU(A.hT("sqlite.wasm",0,null)),$async$a6a)
+return A.P(A.aGU(A.hT("sqlite3.wasm",0,null)),$async$a6a)
 case 4:k=b
 j=k.a
 j=j.b
