@@ -87,4 +87,3 @@ extension ListAggRefValue on ListAggRef {
 extension SqlFunctionRefValue on SqlFunctionRef {
   SqlFunction value(ParsedSql parsed) => parsed.sqlFunctionRefs[index_];
 }
-
