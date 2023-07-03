@@ -643,67 +643,9 @@ class SqlTypeFinder {
     // final List<NamedWindowDefinition> namedWindow;
     // final Expr? qualify;
 
-    final selectedTables = <String, SelectedTable>{};
-    void addTable(SelectedTable selectedTable) {
-      final relation = selectedTable.table;
-      final name = relation.name.joined;
-      selectedTables[relation.alias?.name.value ?? name] = selectedTable;
-    }
-
-    bool someNotLeftInner = false;
-    for (final TableWithJoins(:joins, :relation) in query.from) {
-      for (final Join(:joinOperator, :relation) in joins) {
-        // TODO: use for nullability
-        someNotLeftInner |= !joinOperator.leftRequired;
-        final isRequired = joinOperator.rightRequired;
-        (switch (relation) {
-          TableFactorTable() => addTable(SelectedTable(
-              relation,
-              joinOperator,
-              isNullable: !isRequired,
-            )),
-        });
-      }
-
-      (switch (relation) {
-        TableFactorTable() => addTable(
-            SelectedTable(relation, null, isNullable: someNotLeftInner),
-          ),
-      });
-    }
-
+    final scope = SqlScope(this)..addTableWithJoins(query.from);
     final prevAllFields = _allFields;
-    _allFields = {};
-    for (final MapEntry(key: alias, :value) in selectedTables.entries) {
-      final t = getTable(value.tableName);
-      if (t == null) {
-        print('Could not find table $value with alias $alias');
-        continue;
-      }
-      for (final f in t.fields) {
-        final t = TypeWithNullability(f.type, value.isNullable || f.nullable);
-        // TODO: duplicate field names
-        _allFields[f.name] = t;
-        _allFields['$alias.${f.name}'] = t;
-      }
-    }
-
-    List<ModelField>? tableFields(String alias) {
-      final t = selectedTables[alias];
-      final nullable = t?.isNullable ?? false;
-      final fields = getTable(t?.tableName ?? alias)?.fields;
-      return fields
-          ?.map(
-            (e) => ModelField(
-              '$alias.${e.name}',
-              e.type,
-              defaultValue: e.defaultValue,
-              optional: e.optional,
-              nullable: nullable || e.nullable,
-            ),
-          )
-          .toList();
-    }
+    _allFields = scope.allFields;
 
     final fields = model.fields;
     for (final (i, value) in query.projection.indexed) {
@@ -721,10 +663,11 @@ class SqlTypeFinder {
             optional: false,
           )),
         SelectItemQualifiedWildcard(:final value) => fields.addAll(
-            tableFields(value.qualifier.joined) ?? const [],
+            scope.tableFields(value.qualifier.joined) ?? const [],
           ),
         SelectItemWildcard() => fields.addAll(
-            selectedTables.keys.expand((name) => tableFields(name) ?? const []),
+            scope.selectedTables.keys
+                .expand((name) => scope.tableFields(name) ?? const []),
           ),
       });
     }
@@ -1169,3 +1112,73 @@ extension on JoinOperator {
         JoinOperatorOuterApply() => false,
       });
 }
+
+class SqlScope {
+  final SqlTypeFinder typeFinder;
+  final allFields = <String, TypeWithNullability>{};
+  final selectedTables = <String, SelectedTable>{};
+
+  SqlScope(this.typeFinder);
+
+  void addTable(SelectedTable selectedTable) {
+    final relation = selectedTable.table;
+    final name = relation.name.joined;
+    selectedTables[relation.alias?.name.value ?? name] = selectedTable;
+  }
+
+  void addTableWithJoins(List<TableWithJoins> from) {
+    for (final TableWithJoins(:joins, :relation) in from) {
+      bool someNotLeftInner = false;
+      for (final Join(:joinOperator, :relation) in joins) {
+        // TODO: use for nullability
+        someNotLeftInner |= !joinOperator.leftRequired;
+        final isRequired = joinOperator.rightRequired;
+        (switch (relation) {
+          TableFactorTable() => addTable(SelectedTable(
+              relation,
+              joinOperator,
+              isNullable: !isRequired,
+            )),
+        });
+      }
+
+      (switch (relation) {
+        TableFactorTable() => addTable(
+            SelectedTable(relation, null, isNullable: someNotLeftInner),
+          ),
+      });
+    }
+
+    for (final MapEntry(key: alias, :value) in selectedTables.entries) {
+      final t = typeFinder.getTable(value.tableName);
+      if (t == null) {
+        print('Could not find table $value with alias $alias');
+        continue;
+      }
+      for (final f in t.fields) {
+        final t = TypeWithNullability(f.type, value.isNullable || f.nullable);
+        // TODO: duplicate field names
+        allFields[f.name] = t;
+        allFields['$alias.${f.name}'] = t;
+      }
+    }
+  }
+
+  List<ModelField>? tableFields(String alias) {
+    final t = selectedTables[alias];
+    final nullable = t?.isNullable ?? false;
+    final fields = typeFinder.getTable(t?.tableName ?? alias)?.fields;
+    return fields
+        ?.map(
+          (e) => ModelField(
+            '$alias.${e.name}',
+            e.type,
+            defaultValue: e.defaultValue,
+            optional: e.optional,
+            nullable: nullable || e.nullable,
+          ),
+        )
+        .toList();
+  }
+}
+
