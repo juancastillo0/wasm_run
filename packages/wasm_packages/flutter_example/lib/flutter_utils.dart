@@ -99,6 +99,23 @@ extension ContainerExt on Widget {
       child: this,
     );
   }
+
+  Widget containerObject(Container container) {
+    return Container(
+      key: key,
+      alignment: container.alignment,
+      padding: container.padding,
+      color: container.color,
+      decoration: container.decoration,
+      foregroundDecoration: container.foregroundDecoration,
+      constraints: container.constraints,
+      margin: container.margin,
+      transform: container.transform,
+      transformAlignment: container.transformAlignment,
+      clipBehavior: container.clipBehavior,
+      child: this,
+    );
+  }
 }
 
 extension Uint8ListExt on Uint8List {

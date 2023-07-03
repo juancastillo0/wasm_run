@@ -6,6 +6,12 @@ import 'package:flutter_example/state.dart';
 import 'package:flutter_example/widgets/code_text_field.dart';
 import 'package:sql_parser/sql_parser.dart';
 
+Container get errorContainer => Container(
+      padding: const EdgeInsets.all(12.0),
+      margin: const EdgeInsets.only(top: 12.0),
+      color: Colors.pink.shade100.withOpacity(0.5),
+    );
+
 class SqlParserPage extends StatelessWidget {
   const SqlParserPage({super.key});
 
@@ -19,6 +25,7 @@ class SqlParserPage extends StatelessWidget {
     // final isSmall = MediaQuery.of(context).size.width < 1000;
     // final isVerySmall = MediaQuery.of(context).size.width < 660;
     final textStyle = Theme.of(context).textTheme.bodyMedium!;
+    final colorScheme = Theme.of(context).colorScheme;
 
     Map<int, Widget> getLineWidgets() {
       return Map.fromEntries(
@@ -59,12 +66,15 @@ class SqlParserPage extends StatelessWidget {
                         )
                       ),
                   ].map(
-                    (e) => InkWell(
-                      onTap: e.$1,
+                    (w) => InkWell(
+                      onTap: w.$1,
                       child: Container(
                         alignment: Alignment.center,
                         width: 20,
-                        child: e.$2,
+                        color: e == state.selectedStatement && w.$2.data != 'R'
+                            ? colorScheme.primaryContainer
+                            : null,
+                        child: w.$2,
                       ),
                     ),
                   ),
@@ -85,10 +95,10 @@ class SqlParserPage extends StatelessWidget {
             Expanded(
               child: Column(
                 children: [
-                  ErrorMessage(state: state),
                   Expanded(
                     child: CodeTextField(
                       controller: state.sqlController,
+                      focusNode: state.sqlFocusNode,
                       scrollController: state.scrollController,
                       lineWidgets:
                           state.typeFinder == null ? null : getLineWidgets(),
@@ -97,16 +107,21 @@ class SqlParserPage extends StatelessWidget {
                     ),
                   ),
                   SizedBox(
-                    height: 100,
+                    height: 120,
                     child: SingleChildScrollView(
-                      child: Text(
-                        state.typeFinder?.statementsInfo
+                        child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        ErrorMessage(state: state),
+                        ...state.typeFinder?.statementsInfo
                                 .where((e) => e.prepareError != null)
-                                .map((e) => '${e.prepareError}')
-                                .join('\n\n') ??
-                            '',
-                      ),
-                    ),
+                                .map(
+                                  (e) => Text('${e.prepareError}')
+                                      .containerObject(errorContainer),
+                                ) ??
+                            []
+                      ],
+                    )),
                   ),
                 ],
               ),
@@ -285,31 +300,102 @@ class StatementInfoView extends StatelessWidget {
   Widget build(BuildContext context) {
     final result = state.results[info.statement];
 
-// final String text; Select
     return SingleChildScrollView(
       child: Column(
         children: [
           Text(info.identifier.toString()).title(),
-          const Text('Result').title(),
-          Text(result ?? 'No result'),
-          if (info.preparedStatement != null)
-            Column(
-              children: [
-                const SizedBox(height: 10),
-                if (info.placeholders.isNotEmpty)
-                  const Text('Placeholders').title(),
-                ...info.placeholders.map((ok) => Text('${ok.$1} ${ok.$2}')),
-                ElevatedButton(
-                  onPressed: executeFunction(context, state, info),
-                  child: const Text('Execute'),
+          ElevatedButton(
+            onPressed: () async {
+              state.sqlFocusNode.requestFocus();
+              state.sqlController.value = state.sqlController.value.copyWith(
+                selection: TextSelection(
+                  baseOffset: info.start.index,
+                  extentOffset: info.end.index,
                 ),
-              ],
+              );
+              Future.delayed(
+                const Duration(milliseconds: 10),
+                () {
+                  final maxScroll = state.typeFinder!.lineOffsets.length *
+                          CodeTextField.lineHeight -
+                      state.scrollController.position.viewportDimension;
+                  return state.scrollController.animateTo(
+                    min(
+                      maxScroll,
+                      info.start.line * CodeTextField.lineHeight,
+                    ),
+                    duration: const Duration(milliseconds: 150),
+                    curve: Curves.easeOutQuad,
+                  );
+                },
+              );
+            },
+            child: const Text('View Statement'),
+          ),
+          const Text('Result').title(),
+          switch (result) {
+            SelectResult() => Column(
+                children: [
+                  DataTable(
+                    columnSpacing: 32,
+                    columns: [
+                      ...result.columnNames.indexed.map(
+                        (e) {
+                          final table = result.tableNames?[e.$1];
+                          return DataColumn(
+                            label: SelectableText(
+                              '${table == null ? '' : '$table.'}${e.$2}',
+                            ),
+                          );
+                        },
+                      )
+                    ],
+                    rows: [
+                      ...result.rows.map(
+                        (e) => DataRow(
+                          cells: e
+                              .map(
+                                  (e) => DataCell(SelectableText(e.toString())))
+                              .toList(),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 5),
+                  if (result.rows.isNotEmpty)
+                    Text('# Rows: ${result.rows.length}')
+                  else
+                    const Text('No Rows Found'),
+                  const SizedBox(height: 10),
+                ],
+              ),
+            UpdateResult(:final lastInsertRowId, :final updatedRows) => Text(
+                'Last Insert Row Id: $lastInsertRowId\nUpdated Rows: $updatedRows',
+              ),
+            ErrorResult(:final error) => Text(error.toString()),
+            null => const Text('Has not been executed')
+          },
+          if (info.preparedStatement != null)
+            ElevatedButton(
+              onPressed: executeFunction(context, state, info),
+              child: const Text('Execute'),
+            ).container(
+              margin: const EdgeInsets.only(top: 10),
             ),
+          Column(
+            children: [
+              if (info.placeholders.isNotEmpty)
+                const Text('Placeholders').title(),
+              ...info.placeholders.map(
+                (ok) => Text('${ok.nameOrIndex} ${ok.type.name}'),
+              ),
+            ],
+          ),
           if (info.prepareError != null)
             Column(
               children: [
                 const Text('Prepare Error').title(),
-                Text('${info.prepareError}'),
+                Text('${info.prepareError}').containerObject(errorContainer),
               ],
             ),
           const Text('Model').title(),

@@ -6,16 +6,19 @@ class CodeTextField extends StatelessWidget {
     Key? key,
     required this.controller,
     required this.scrollController,
+    this.focusNode,
     this.lineWidgets,
   }) : super(key: key);
 
   final TextEditingController controller;
   final ScrollController scrollController;
+  final FocusNode? focusNode;
   final Map<int, Widget>? lineWidgets;
+
+  static const lineHeight = 19.0;
 
   @override
   Widget build(BuildContext context) {
-    const lineHeight = 19.0;
     return LayoutBuilder(
       builder: (context, box) {
         final lines = (box.maxHeight / lineHeight).floor();
@@ -79,6 +82,7 @@ class CodeTextField extends StatelessWidget {
                       child: TextField(
                         style: codeTextStyle,
                         scrollController: scrollController,
+                        focusNode: focusNode,
                         controller: controller,
                         expands: true,
                         maxLines: null,

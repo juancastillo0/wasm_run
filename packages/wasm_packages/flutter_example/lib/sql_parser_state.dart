@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart' hide Table;
+import 'package:flutter/widgets.dart';
 import 'package:flutter_example/flutter_utils.dart';
 import 'package:flutter_example/sql_types.dart';
 import 'package:sql_parser/sql_parser.dart';
@@ -12,6 +12,17 @@ CREATE TABLE users (
   id INTEGER PRIMARY KEY,
   name TEXT NOT NULL
 );
+
+SELECT * FROM users;
+
+SELECT * FROM users WHERE users.id >= :minId;
+
+INSERT INTO users(id, name)
+VALUES (1, 'name1'), (2, :c);
+
+UPDATE users SET name = :name WHERE :id = id;
+
+DELETE FROM users WHERE id IN (:ids);
 
 CREATE TABLE posts (
   id INTEGER PRIMARY KEY,
@@ -34,8 +45,6 @@ CREATE TABLE posts_topics (
   PRIMARY KEY(topic_code, post_id)
 );
 
-SELECT * FROM users;
-
 SELECT users.id, users.name user_name, pt.topic_code, posts.*
 FROM users
 INNER JOIN posts ON posts.user_id = users.id
@@ -47,10 +56,10 @@ WHERE users.id = 1 and posts.subtitle is not null;
   final CommonSqlite3 sqlite3;
   final CommonDatabase db;
   final SqlParserWorld sqlParser;
+  final sqlFocusNode = FocusNode();
   final sqlController = TextEditingController();
   final scrollController = ScrollController();
-  // TODO: make is a model
-  final Map<SqlAst, String> results = {};
+  final Map<SqlAst, ExecutionResult> results = {};
 
   String _previousText = '';
   ParsedSql? parsedSql;
@@ -70,8 +79,13 @@ WHERE users.id = 1 and posts.subtitle is not null;
     final parsed = result.mapErr(setError).ok;
     if (parsed != null) {
       parsedSql = parsed;
-      typeFinder = SqlTypeFinder(sqlController.text, parsed, db);
       results.removeWhere((key, value) => !parsed.statements.contains(key));
+      if (typeFinder != null) {
+        for (final s in typeFinder!.statementsInfo) {
+          s.preparedStatement?.dispose();
+        }
+      }
+      typeFinder = SqlTypeFinder(sqlController.text, parsed, db);
       if (selectedStatement != null) {
         final index = parsed.statements.indexOf(selectedStatement!.statement);
         selectedStatement =
@@ -94,20 +108,42 @@ WHERE users.id = 1 and posts.subtitle is not null;
       if (statementInfo.isSelect) {
         final result =
             prepared.selectWith(StatementParameters.named(parameters));
-        final tN = result.tableNames;
-        final str = 'columnNames: ${result.columnNames}\n'
-            '${tN == null ? '' : 'tableNames: ${tN}\n'}'
-            'results:\n${result.rows.join('\n')}';
-        results[statementInfo.statement] = str;
+        results[statementInfo.statement] =
+            SelectResult(result.columnNames, result.tableNames, result.rows);
       } else {
         prepared.executeWith(StatementParameters.named(parameters));
         results[statementInfo.statement] =
-            'lastInsertRowId: ${db.lastInsertRowId}\n'
-            'updatedRows: ${db.getUpdatedRows()}';
+            UpdateResult(db.lastInsertRowId, db.getUpdatedRows());
       }
       notifyListeners();
     } catch (e) {
+      results[statementInfo.statement] = ErrorResult(e);
       setError(e.toString());
     }
   }
+}
+
+sealed class ExecutionResult {
+  const ExecutionResult();
+}
+
+class SelectResult extends ExecutionResult {
+  const SelectResult(this.columnNames, this.tableNames, this.rows);
+
+  final List<String> columnNames;
+  final List<String?>? tableNames;
+  final List<List<Object?>> rows;
+}
+
+class UpdateResult extends ExecutionResult {
+  const UpdateResult(this.lastInsertRowId, this.updatedRows);
+
+  final int lastInsertRowId;
+  final int updatedRows;
+}
+
+class ErrorResult extends ExecutionResult {
+  const ErrorResult(this.error);
+
+  final Object error;
 }

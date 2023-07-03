@@ -1,7 +1,6 @@
 import 'dart:typed_data';
 
 import 'package:compression_rs/compression_rs.dart';
-import 'package:flutter/foundation.dart' show ChangeNotifier;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_example/flutter_utils.dart';
 import 'package:wasm_wit_component/wasm_wit_component.dart';
