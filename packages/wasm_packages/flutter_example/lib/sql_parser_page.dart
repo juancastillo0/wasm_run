@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_example/flutter_utils.dart';
 import 'package:flutter_example/sql_parser_state.dart';
@@ -237,10 +239,14 @@ void Function() executeFunction(
         ? e.placeholders
         : List.generate(
             values,
-            (i) => (SqlValuePlaceholder('$i'), BaseType.dynamic),
+            (i) => SqlPlaceholder(
+              const SqlValuePlaceholder('?'),
+              i,
+              BaseType.dynamic,
+            ),
           );
     final Map<String, String> args = {
-      for (final v in placeholders) v.$1.value: '',
+      for (final v in placeholders) v.ast.value: '',
     };
     if (values != 0) {
       await showDialog(
@@ -250,7 +256,7 @@ void Function() executeFunction(
           title: const Text('Placeholder Values'),
           children: [
             ...placeholders.map((p) {
-              final name = p.$1.value;
+              final name = p.nameOrIndex;
               return Row(
                 children: [
                   const SizedBox(width: 10),
@@ -259,7 +265,7 @@ void Function() executeFunction(
                   Expanded(
                     child: TextField(
                       decoration: InputDecoration(
-                        labelText: p.$2.name,
+                        labelText: p.type.name,
                       ),
                       onChanged: (value) {
                         args[name] = value;
