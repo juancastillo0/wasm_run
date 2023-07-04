@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:file_system_access/file_system_access.dart' as fsa;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_example/flutter_utils.dart';
@@ -7,7 +8,6 @@ import 'package:flutter_example/paginated_text.dart';
 import 'package:flutter_example/state.dart';
 import 'package:flutter_example/wasm_parser_state.dart';
 import 'package:wasm_parser/wasm_parser.dart';
-import 'package:file_system_access/file_system_access.dart' as fsa;
 
 class WasmParserPage extends StatelessWidget {
   const WasmParserPage({super.key});
@@ -387,7 +387,7 @@ class WasmComponentView extends StatelessWidget {
       loadWasm(
         (name, bytes) async {
           String name_ = name.split('.').first;
-          await showDialog(
+          await showDialog<Object?>(
             context: context,
             builder: (context) {
               final navigator = Navigator.of(context);

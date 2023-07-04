@@ -168,7 +168,7 @@ class _MyHomePageState extends State<MyHomePage> {
 class LoaderWidget extends StatelessWidget {
   const LoaderWidget({super.key, required this.loader, required this.child});
 
-  final FutureLoader loader;
+  final FutureLoader<Object> loader;
   final Widget child;
 
   @override

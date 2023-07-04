@@ -12,7 +12,7 @@ class WasmParserState extends ChangeNotifier with ErrorNotifier {
 
   final WasmParserWorld _wasmParser;
 
-  var watController = PaginatedTextController('');
+  PaginatedTextController watController = PaginatedTextController('');
   final witController = TextEditingController();
   WasmType? wasmType;
   Uint8List? _wasmBytes;

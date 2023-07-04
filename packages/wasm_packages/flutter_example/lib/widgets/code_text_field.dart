@@ -3,12 +3,12 @@ import 'package:flutter_example/flutter_utils.dart';
 
 class CodeTextField extends StatelessWidget {
   const CodeTextField({
-    Key? key,
+    super.key,
     required this.controller,
     required this.scrollController,
     this.focusNode,
     this.lineWidgets,
-  }) : super(key: key);
+  });
 
   final TextEditingController controller;
   final ScrollController scrollController;
@@ -44,9 +44,10 @@ class CodeTextField extends StatelessWidget {
 
                   return SizedBox(
                     // width: 50,
-                    height: lineHeight * lines,
+                    height: lineHeight * lines + 4,
                     child: Column(
                       children: [
+                        const SizedBox(height: 4),
                         if (delta != 0)
                           SizedBox(height: lineHeight - bottomPad),
                         for (var i = initial; i < lines + initial - delta; i++)

@@ -31,6 +31,14 @@
 
   <title>Wasm Run Packages</title>
   <link rel="manifest" href="manifest.json">
+  <style>
+    html,
+    body {
+      margin: 0px;
+      height: 100%;
+      width: 100%;
+    }
+  </style>
 
   <script>
     // The value below is injected by flutter build, do not touch.
@@ -40,6 +48,10 @@
   <script src="flutter.js" defer></script>
 </head>
 <body>
+  <div style="display: flex;flex-direction: row;align-items: center;justify-content: center;height: 100%;width: 100%;">
+    <img src="./icons/Icon-192.png" alt="Flutter" width="64px" height="64px">
+    <h1 style="color: black;font:28px sans-serif;">Wasm Run Packages</h1>
+  </div>
   <script>
     window.addEventListener('load', function(ev) {
       // Download main.dart.js

@@ -21,6 +21,7 @@ enum RCHash {
 }
 
 class BinaryInputData {
+  ///
   BinaryInputData(
     this._notifyListeners, {
     required this.isKey,
@@ -157,7 +158,10 @@ class RustCryptoState extends ChangeNotifier with ErrorNotifier {
       RCHash.sha256 => rustCrypto.hmac.hmacSha256(bytes: bytes, key: key),
       RCHash.sha384 => rustCrypto.hmac.hmacSha384(bytes: bytes, key: key),
       RCHash.sha512 => rustCrypto.hmac.hmacSha512(bytes: bytes, key: key),
-      RCHash.md5 || RCHash.sha1 || RCHash.crc32 => Result.ok(Uint8List(0)),
+      RCHash.md5 ||
+      RCHash.sha1 ||
+      RCHash.crc32 =>
+        Result<Uint8List, String>.ok(Uint8List(0)),
     };
     return switch (hmac) {
       Ok(:final ok) => hmacValues[type] = outputText(hashOutputEncoding, ok),
@@ -426,7 +430,7 @@ enum InputEncoding {
   }
 }
 
-const _HEX_ALPHABET = '0123456789abcdef';
+const _hexAlphabet = '0123456789abcdef';
 
 Uint8List hexToBytes(String hex) {
   String str = hex.replaceAll(' ', '');
@@ -436,8 +440,8 @@ Uint8List hexToBytes(String hex) {
   }
   final result = Uint8List(str.length ~/ 2);
   for (int i = 0; i < result.length; i++) {
-    int firstDigit = _HEX_ALPHABET.indexOf(str[i * 2]);
-    int secondDigit = _HEX_ALPHABET.indexOf(str[i * 2 + 1]);
+    final firstDigit = _hexAlphabet.indexOf(str[i * 2]);
+    final secondDigit = _hexAlphabet.indexOf(str[i * 2 + 1]);
     if (firstDigit == -1 || secondDigit == -1) {
       throw FormatException('Non-hex character detected in $hex');
     }

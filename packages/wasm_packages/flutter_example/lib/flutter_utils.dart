@@ -8,8 +8,8 @@ class Inherited<T> extends InheritedWidget {
   const Inherited({
     super.key,
     required this.state,
-    required Widget child,
-  }) : super(child: child);
+    required super.child,
+  });
 
   final T state;
 
@@ -19,7 +19,7 @@ class Inherited<T> extends InheritedWidget {
           .state;
 
   @override
-  bool updateShouldNotify(covariant Inherited oldWidget) {
+  bool updateShouldNotify(covariant Inherited<T> oldWidget) {
     return false;
   }
 }
