@@ -60,6 +60,7 @@ WHERE users.id = 1 and posts.subtitle is not null;
   final sqlController = TextEditingController();
   final scrollController = ScrollController();
   final Map<SqlAst, ExecutionResult> results = {};
+  final Map<SqlAst, List<String>> _params = {};
 
   String _previousText = '';
   ParsedSql? parsedSql;
@@ -71,6 +72,16 @@ WHERE users.id = 1 and posts.subtitle is not null;
     notifyListeners();
   }
 
+  List<String> paramsFor(StatementInfo info) {
+    return _params.putIfAbsent(
+      info.statement,
+      () => List.generate(
+        info.preparedStatement?.parameterCount ?? info.placeholders.length,
+        (_) => '',
+      ),
+    );
+  }
+
   void _update() {
     if (_previousText == sqlController.text) return;
     _previousText = sqlController.text;
@@ -80,6 +91,7 @@ WHERE users.id = 1 and posts.subtitle is not null;
     if (parsed != null) {
       parsedSql = parsed;
       results.removeWhere((key, value) => !parsed.statements.contains(key));
+      _params.removeWhere((key, value) => !parsed.statements.contains(key));
       if (typeFinder != null) {
         for (final s in typeFinder!.statementsInfo) {
           s.preparedStatement?.dispose();
@@ -95,40 +107,41 @@ WHERE users.id = 1 and posts.subtitle is not null;
     }
   }
 
-  void execute(StatementInfo statementInfo, Map<String, Object?> parameters) {
+  void execute(StatementInfo statementInfo) {
     final prepared = statementInfo.preparedStatement;
     if (prepared == null) {
       setError(statementInfo.prepareError.toString());
       return;
     }
     selectStatement(statementInfo);
+    final parameters = StatementParameters(paramsFor(statementInfo));
     try {
-      // TODO: use ? placeholder
-
       if (statementInfo.isSelect) {
-        final result =
-            prepared.selectWith(StatementParameters.named(parameters));
+        final result = prepared.selectWith(parameters);
         results[statementInfo.statement] =
             SelectResult(result.columnNames, result.tableNames, result.rows);
       } else {
-        prepared.executeWith(StatementParameters.named(parameters));
+        prepared.executeWith(parameters);
         results[statementInfo.statement] =
             UpdateResult(db.lastInsertRowId, db.getUpdatedRows());
       }
-      notifyListeners();
     } catch (e) {
       results[statementInfo.statement] = ErrorResult(e);
       setError(e.toString());
     }
+    // recompute prepared statements
+    _previousText = '';
+    _update();
   }
 }
 
 sealed class ExecutionResult {
-  const ExecutionResult();
+  final DateTime timestamp;
+  ExecutionResult() : timestamp = DateTime.now();
 }
 
 class SelectResult extends ExecutionResult {
-  const SelectResult(this.columnNames, this.tableNames, this.rows);
+  SelectResult(this.columnNames, this.tableNames, this.rows);
 
   final List<String> columnNames;
   final List<String?>? tableNames;
@@ -136,14 +149,14 @@ class SelectResult extends ExecutionResult {
 }
 
 class UpdateResult extends ExecutionResult {
-  const UpdateResult(this.lastInsertRowId, this.updatedRows);
+  UpdateResult(this.lastInsertRowId, this.updatedRows);
 
   final int lastInsertRowId;
   final int updatedRows;
 }
 
 class ErrorResult extends ExecutionResult {
-  const ErrorResult(this.error);
+  ErrorResult(this.error);
 
   final Object error;
 }

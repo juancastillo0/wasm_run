@@ -91,7 +91,7 @@ class SqlParserPage extends StatelessWidget {
     return AnimatedBuilder(
       animation: state,
       builder: (context, _) {
-        final parsedSql = state.parsedSql;
+        final parsedSql = state.parsedSql!;
         return Row(
           children: [
             Expanded(
@@ -128,99 +128,95 @@ class SqlParserPage extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(width: 10),
-            if (parsedSql == null)
-              const Text('data')
-            else
-              Expanded(
-                child: Column(
-                  children: [
-                    Row(
-                      children: [
-                        InkWell(
-                          onTap: () {
-                            state.selectStatement(null);
-                          },
-                          child: const Text('View All').container(
-                            padding: const EdgeInsets.all(8.0),
-                            decoration: BoxDecoration(
-                              border: Border(
-                                bottom: BorderSide(
-                                  color: state.selectedStatement == null
-                                      ? Theme.of(context).colorScheme.primary
-                                      : Colors.transparent,
-                                  width: 2,
-                                ),
+            Expanded(
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      InkWell(
+                        onTap: () {
+                          state.selectStatement(null);
+                        },
+                        child: const Text('View All').container(
+                          padding: const EdgeInsets.all(8.0),
+                          decoration: BoxDecoration(
+                            border: Border(
+                              bottom: BorderSide(
+                                color: state.selectedStatement == null
+                                    ? Theme.of(context).colorScheme.primary
+                                    : Colors.transparent,
+                                width: 2,
                               ),
                             ),
                           ),
                         ),
-                        Expanded(
-                          child: SingleChildScrollView(
-                            scrollDirection: Axis.horizontal,
-                            child: Row(
-                              children: [
-                                ...state.typeFinder!.statementsInfo.map(
-                                  (e) => InkWell(
-                                    onTap: () {
-                                      state.selectStatement(e);
-                                    },
-                                    child: Text(e.identifier).container(
-                                      padding: const EdgeInsets.all(8.0),
-                                      decoration: BoxDecoration(
-                                        border: Border(
-                                          bottom: BorderSide(
-                                            color: state.selectedStatement == e
-                                                ? Theme.of(context)
-                                                    .colorScheme
-                                                    .primary
-                                                : Colors.transparent,
-                                            width: 2,
-                                          ),
+                      ),
+                      Expanded(
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: [
+                              ...state.typeFinder!.statementsInfo.map(
+                                (e) => InkWell(
+                                  onTap: () {
+                                    state.selectStatement(e);
+                                  },
+                                  child: Text(e.identifier).container(
+                                    padding: const EdgeInsets.all(8.0),
+                                    decoration: BoxDecoration(
+                                      border: Border(
+                                        bottom: BorderSide(
+                                          color: state.selectedStatement == e
+                                              ? Theme.of(context)
+                                                  .colorScheme
+                                                  .primary
+                                              : Colors.transparent,
+                                          width: 2,
                                         ),
                                       ),
                                     ),
                                   ),
                                 ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
                         ),
-                      ],
-                    ),
-                    if (state.selectedStatement != null)
-                      Expanded(
-                        child: StatementInfoView(
-                          info: state.selectedStatement!,
-                          state: state,
-                        ),
-                      )
-                    else
-                      Expanded(
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: SelectableText(
-                                parsedSql.toString(),
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            // Expanded(
-                            //   child: SelectableText(
-                            //      jsonEncode(parsedSql.toJson()),
-                            //   ),
-                            // ),
-                            Expanded(
-                              child: SelectableText(
-                                state.typeFinder.toString(),
-                              ),
-                            ),
-                          ],
-                        ),
                       ),
-                  ],
-                ),
+                    ],
+                  ),
+                  if (state.selectedStatement != null)
+                    Expanded(
+                      child: StatementInfoView(
+                        info: state.selectedStatement!,
+                        state: state,
+                      ),
+                    )
+                  else
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: SelectableText(
+                              parsedSql.toStringNoRef(),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          // Expanded(
+                          //   child: SelectableText(
+                          //      jsonEncode(parsedSql.toJson()),
+                          //   ),
+                          // ),
+                          Expanded(
+                            child: SelectableText(
+                              state.typeFinder.toString(),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
               ),
+            ),
           ],
         );
       },
@@ -234,6 +230,9 @@ void Function() executeFunction(
   StatementInfo e,
 ) {
   return () async {
+    state.selectStatement(e);
+    final params = state.paramsFor(e);
+
     final values = e.preparedStatement!.parameterCount;
     final placeholders = e.placeholders.length == values
         ? e.placeholders
@@ -245,59 +244,64 @@ void Function() executeFunction(
               BaseType.dynamic,
             ),
           );
-    final Map<String, String> args = {
-      for (final v in placeholders) v.ast.value: '',
-    };
-    if (values != 0) {
-      await showDialog(
+
+    bool execute = values == 0;
+    if (!execute) {
+      final popResult = await showDialog<Object?>(
         context: context,
         builder: (context) => SimpleDialog(
           contentPadding: const EdgeInsets.all(12),
           title: const Text('Placeholder Values'),
           children: [
-            ...placeholders.map((p) {
-              final name = p.nameOrIndex;
-              return Row(
-                children: [
-                  const SizedBox(width: 10),
-                  Text(name),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: TextField(
-                      decoration: InputDecoration(
-                        labelText: p.type.name,
-                      ),
-                      onChanged: (value) {
-                        args[name] = value;
-                      },
-                    ),
-                  ),
-                ],
-              ).container(
-                margin: const EdgeInsets.only(bottom: 4),
-              );
-            }),
+            ...placeholders.map((p) => placeholderInput(p, params)),
             const SizedBox(height: 6),
             TextButton(
               onPressed: () {
-                Navigator.pop(context);
+                Navigator.pop(context, true);
               },
               child: const Text('Execute'),
             ),
           ],
         ),
       );
+      execute = popResult == true;
     }
-    state.execute(e, args);
+    if (execute) {
+      state.execute(e);
+    }
   };
 }
 
+Widget placeholderInput(SqlPlaceholder p, List<String> params) {
+  final name = p.nameOrIndex;
+  return Row(
+    children: [
+      const SizedBox(width: 10),
+      Text(name).container(width: 70),
+      const SizedBox(width: 10),
+      Expanded(
+        child: TextFormField(
+          initialValue: params[p.index],
+          decoration: InputDecoration(
+            labelText: p.type.name,
+          ),
+          onChanged: (value) {
+            params[p.index] = value;
+          },
+        ),
+      ),
+    ],
+  ).container(
+    margin: const EdgeInsets.only(bottom: 4),
+  );
+}
+
 class StatementInfoView extends StatelessWidget {
-  const StatementInfoView({
-    super.key,
+  StatementInfoView({
+    Key? key,
     required this.info,
     required this.state,
-  });
+  }) : super(key: key ?? ValueKey(info.statement));
 
   final StatementInfo info;
   final SqlParserState state;
@@ -342,30 +346,33 @@ class StatementInfoView extends StatelessWidget {
           switch (result) {
             SelectResult() => Column(
                 children: [
-                  DataTable(
-                    columnSpacing: 32,
-                    columns: [
-                      ...result.columnNames.indexed.map(
-                        (e) {
-                          final table = result.tableNames?[e.$1];
-                          return DataColumn(
-                            label: SelectableText(
-                              '${table == null ? '' : '$table.'}${e.$2}',
-                            ),
-                          );
-                        },
-                      )
-                    ],
-                    rows: [
-                      ...result.rows.map(
-                        (e) => DataRow(
-                          cells: e
-                              .map(
-                                  (e) => DataCell(SelectableText(e.toString())))
-                              .toList(),
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: DataTable(
+                      columnSpacing: 28,
+                      columns: [
+                        ...result.columnNames.indexed.map(
+                          (e) {
+                            final table = result.tableNames?[e.$1];
+                            return DataColumn(
+                              label: SelectableText(
+                                '${table == null ? '' : '$table.'}${e.$2}',
+                              ),
+                            );
+                          },
+                        )
+                      ],
+                      rows: [
+                        ...result.rows.map(
+                          (e) => DataRow(
+                            cells: e
+                                .map((e) =>
+                                    DataCell(SelectableText(e.toString())))
+                                .toList(),
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                   const SizedBox(height: 5),
                   if (result.rows.isNotEmpty)
@@ -381,22 +388,47 @@ class StatementInfoView extends StatelessWidget {
             ErrorResult(:final error) => Text(error.toString()),
             null => const Text('Has not been executed')
           },
-          if (info.preparedStatement != null)
-            ElevatedButton(
-              onPressed: executeFunction(context, state, info),
-              child: const Text('Execute'),
+          if (result != null)
+            StreamBuilder(
+              stream: Stream<void>.periodic(const Duration(seconds: 10)),
+              builder: (context, _) => Text(
+                switch (DateTime.now().difference(result.timestamp)) {
+                  < const Duration(seconds: 5) => 'Just now',
+                  final v && < const Duration(seconds: 60) =>
+                    '${v.inSeconds}s ago',
+                  final v => '${v.inMinutes}min ago',
+                },
+              ),
             ).container(
               margin: const EdgeInsets.only(top: 10),
             ),
-          Column(
-            children: [
-              if (info.placeholders.isNotEmpty)
-                const Text('Placeholders').title(),
-              ...info.placeholders.map(
-                (ok) => Text('${ok.nameOrIndex} ${ok.type.name}'),
-              ),
-            ],
-          ),
+          if (info.preparedStatement != null)
+            Column(
+              children: [
+                ElevatedButton(
+                  onPressed: () => state.execute(info),
+                  child: const Text('Execute'),
+                ).container(
+                  margin: const EdgeInsets.only(top: 10),
+                ),
+                if (info.placeholders.isNotEmpty)
+                  const Text('Placeholders').title(),
+                ...info.placeholders.map(
+                  (p) => placeholderInput(p, state.paramsFor(info))
+                      .container(width: 300),
+                ),
+              ],
+            )
+          else
+            Column(
+              children: [
+                if (info.placeholders.isNotEmpty)
+                  const Text('Placeholders').title(),
+                ...info.placeholders.map(
+                  (ok) => Text('${ok.nameOrIndex} ${ok.type.name}'),
+                ),
+              ],
+            ),
           if (info.prepareError != null)
             Column(
               children: [
@@ -405,11 +437,50 @@ class StatementInfoView extends StatelessWidget {
               ],
             ),
           const Text('Model').title(),
-          SelectableText(info.model.toString()),
+          SelectableText(
+            info.model?.toString() ?? 'No Model',
+          ),
           const Text('Parsed').title(),
-          SelectableText(info.statement.toString()),
+          SelectableText(
+            state.parsedSql!.replaceRefs(info.statement.toString()),
+          ),
         ],
       ),
     );
+  }
+}
+
+extension ToStringRefParsedSql on ParsedSql {
+  String toStringNoRef() {
+    final value = toString();
+    return replaceRefs(value);
+  }
+
+  String replaceRefs(String value) {
+    bool didMapped = false;
+    final mapped = value.replaceAllMapped(
+      RegExp(
+          '(SqlSelect|SqlAst|SqlQuery|SqlInsert|SqlUpdate|SqlSelect|SetExpr|Expr|DataType|ArrayAgg|ListAgg|SqlFunction)'
+          'Ref{index: ([0-9]+)}'),
+      (m) {
+        didMapped = true;
+        final index = int.parse(m.group(2)!);
+        return switch (m.group(1)) {
+          'SqlAst' => sqlAstRefs[index].toString(),
+          'SqlQuery' => sqlQueryRefs[index].toString(),
+          'SqlInsert' => sqlInsertRefs[index].toString(),
+          'SqlUpdate' => sqlUpdateRefs[index].toString(),
+          'SqlSelect' => sqlSelectRefs[index].toString(),
+          'SetExpr' => setExprRefs[index].toString(),
+          'Expr' => exprRefs[index].toString(),
+          'DataType' => dataTypeRefs[index].toString(),
+          'ArrayAgg' => arrayAggRefs[index].toString(),
+          'ListAgg' => listAggRefs[index].toString(),
+          'SqlFunction' => sqlFunctionRefs[index].toString(),
+          _ => m.input,
+        };
+      },
+    );
+    return didMapped ? replaceRefs(mapped) : mapped;
   }
 }
