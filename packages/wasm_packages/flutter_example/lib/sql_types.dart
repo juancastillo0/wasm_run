@@ -1,3 +1,5 @@
+// ignore_for_file: unnecessary_parenthesis, unnecessary_statements
+
 import 'package:sql_parser/sql_parser.dart';
 import 'package:sql_parser/visitor.dart';
 import 'package:sqlite3/common.dart';
@@ -287,7 +289,7 @@ class SqlTypeFinder {
         statementEnd.add(text.length);
       }
       final end = statementEnd[i];
-      int start = i == 0 ? 0 : statementEnd[i - 1];
+      final start = i == 0 ? 0 : statementEnd[i - 1] + 1;
       final str = text.substring(start, end);
 
       // final regExp = (switch (stmt) {
@@ -333,7 +335,7 @@ class SqlTypeFinder {
         _ => null,
       });
 
-      final match = RegExp('[a-zA-Z0-9-_]').firstMatch(str);
+      final match = RegExp('[a-zA-Z0-9-_/]').firstMatch(str);
       final start_ = start + (match?.start ?? 0);
       final placeholders = placeholderVisitor.computePlaceholders(stmt);
       CommonPreparedStatement? preparedStatement;
@@ -746,9 +748,10 @@ class SqlTypeFinder {
       TryCast() => toDartType(expr.dataType),
       SafeCast() => toDartType(expr.dataType),
       AtTimeZone() => BaseType.datetime,
-      Extract() => dateTimeFieldType(expr.field),
-      Ceil() => BaseType.int,
-      Floor() => BaseType.int,
+      Extract(:final field) ||
+      Ceil(:final field) ||
+      Floor(:final field) =>
+        dateTimeFieldType(field),
       Position() => BaseType.int,
       Substring() ||
       Trim() ||
@@ -791,11 +794,15 @@ class SqlTypeFinder {
   }
 
   BaseType exprArgType(Expr expr, Expr arg) {
+    bool isArg(Expr? e) {
+      return identical(e, arg) || e is NestedExpr && isArg(extract(e.expr));
+    }
+
     final ty = (switch (expr) {
       Ident() => BaseType.dynamic,
       ExprCompoundIdentifier() => BaseType.dynamic,
       UnaryOp() => unaryOpArgType(expr.op),
-      BinaryOp() => identical(arg, extract(expr.left))
+      BinaryOp() => isArg(extract(expr.left))
           // TODO: proper evaluation logic
           ? exprType(extract(expr.right))
           : exprType(extract(expr.left)),
@@ -809,7 +816,7 @@ class SqlTypeFinder {
             : BaseType.dynamic,
       IsDistinctFrom(:final left, :final right) ||
       IsNotDistinctFrom(:final left, :final right) =>
-        identical(arg, extract(left))
+        isArg(extract(left))
             ? exprType(extract(right))
             : exprType(extract(left)),
       // TODO:
@@ -825,11 +832,11 @@ class SqlTypeFinder {
               ? t.fields.first.type
               : BaseType.dynamic;
         }(),
-      JsonAccess() => identical(extract(expr.left), arg)
+      JsonAccess() => isArg(extract(expr.left))
           ? BaseType.string // TODO: json type
           : BaseType.string,
       CompositeAccess() => BaseType.dynamic,
-      MapAccess() => identical(extract(expr.column), arg)
+      MapAccess() => isArg(extract(expr.column))
           ? BaseType.dynamic
           // TODO: int or string?
           : BaseType.string,
@@ -842,18 +849,46 @@ class SqlTypeFinder {
             print('Could not find function ${function}');
             return BaseType.dynamic;
           }
-          final returnType = func.returnType;
-          if (returnType == null) {
-            print('Function ${function} has no return type. Definition: $func');
-            return BaseType.dynamic;
+
+          int ai = 0;
+          final argTypes = func.args
+              ?.map((a) => (a.name?.value ?? ai++, a.dataType))
+              .toList();
+          // TODO: check order by exprs
+          if (argTypes == null) return BaseType.dynamic;
+
+          ai = 0;
+          final found = function.args
+              .map(
+                (a) => switch (a) {
+                  FunctionArgNamed() => (a.value.name.value, a.value.arg),
+                  FunctionArgUnnamed() => (ai++, a.value),
+                },
+              )
+              .map(
+                (a) => switch (a.$2) {
+                  final FunctionArgExprExpr v => (a.$1, v.value),
+                  FunctionArgExprQualifiedWildcard() => null,
+                  FunctionArgExprWildcard() => null,
+                },
+              )
+              .firstWhere((a) => isArg(a?.$2), orElse: () => null);
+          if (found == null) return BaseType.dynamic;
+          for (final a in argTypes) {
+            if (a.$1 == found.$1) {
+              return toDartType(a.$2);
+            }
           }
-          return toDartType(returnType);
+          print(
+            'Could not find argument $arg in ${function}. Definition: $func',
+          );
+          return BaseType.dynamic;
         }(),
       InSubquery() => exprType(Subquery(query: expr.subquery)),
       InList() => () {
           final diff =
               expr.list.followedBy([expr.expr]).cast<ExprRef?>().firstWhere(
-                    (e) => !identical(e!.value(parsed), arg),
+                    (e) => !isArg(extract(e!)),
                     orElse: () => null,
                   );
           if (diff == null) return BaseType.dynamic;
@@ -876,52 +911,90 @@ class SqlTypeFinder {
       SafeCast() => toDartType(expr.dataType),
       AtTimeZone() => BaseType.datetime,
       Extract() => BaseType.datetime,
-      Ceil() => BaseType.double,
-      Floor() => BaseType.double,
-      // TODO: chould it be the values in the array?
-      Position() => exprType(expr.in_.value(parsed)),
+      Floor(:final field) ||
+      Ceil(:final field) =>
+        field == DateTimeField.noDateTime
+            ? BaseType.numeric
+            : BaseType.datetime,
+      Position() => isArg(extract(expr.expr))
+          ? switch (extract(expr.in_)) {
+              ArrayExpr(:final elem) => elem
+                      .map(extract)
+                      .where((e) => e is! SqlValuePlaceholder)
+                      .map(exprType)
+                      .toSet()
+                      .singleOrNull ??
+                  BaseType.dynamic,
+              final e => exprType(e)
+            }
+          : BaseType.list,
       Substring() => switch ((
           extract(expr.expr),
           mapNullable(expr.substringFrom, extract),
           mapNullable(expr.substringFor, extract)
         )) {
           (_, final Expr a, _) ||
-          (_, _, final Expr a) when identical(a, arg) =>
+          (_, _, final Expr a) when isArg(a) =>
             BaseType.int,
           _ => BaseType.string,
         },
       Overlay() => [
           expr.overlayFrom,
           if (expr.overlayFor != null) expr.overlayFor!
-        ].map(extract).any((e) => identical(e, arg))
+        ].map(extract).any(isArg)
             ? BaseType.int
             : BaseType.string,
       Trim() || Collate() || IntroducedString() => BaseType.string,
       TypedString() => toDartType(expr.dataType),
+      CaseExpr() => () {
+          final BaseType ty;
+          final operand = mapNullable(expr.operand, extract);
+          if (isArg(operand)) {
+            ty = expr.conditions
+                    .map(extract)
+                    .where((e) => e is! SqlValuePlaceholder)
+                    .map(exprType)
+                    .toSet()
+                    .singleOrNull ??
+                BaseType.dynamic;
+          } else if (expr.conditions.map(extract).any(isArg)) {
+            ty = mapNullable(operand, exprType) ?? BaseType.bool;
+          } else {
+            ty = expr.results
+                    .followedBy(
+                      [if (expr.elseResult != null) expr.elseResult!],
+                    )
+                    .map(extract)
+                    .where((e) => !isArg(e) && e is! SqlValuePlaceholder)
+                    .map(exprType)
+                    .toSet()
+                    .singleOrNull ??
+                BaseType.dynamic;
+          }
+          return ty;
+        }(),
+      TupleExpr() => BaseType.dynamic,
+      ArrayIndex() => isArg(extract(expr.obj)) ? BaseType.list : BaseType.int,
+      // TODO: it's usually an int?
+      IntervalExpr() => BaseType.string,
+      ListAggRef() => BaseType.dynamic,
+      ArrayAggRef() =>
+        isArg(expr.value(parsed).limit) ? BaseType.int : BaseType.dynamic,
+      ArraySubquery() => BaseType.dynamic,
+      MatchAgainst() => BaseType.string,
+      ArrayExpr() => expr.elem
+              .map(extract)
+              .where((e) => !isArg(e) && e is! SqlValuePlaceholder)
+              .map(exprType)
+              .toSet()
+              .singleOrNull ??
+          BaseType.dynamic,
 
       ///
       // TODO: continue logic
-      CaseExpr() => expr.results
-              .followedBy([if (expr.elseResult != null) expr.elseResult!])
-              .map((e) => exprType(e.value(parsed)))
-              .toSet()
-              // TODO: all must be the same
-              .singleOrNull ??
-          BaseType.dynamic,
-      ListAggRef() => BaseType.list,
-      ArrayAggRef() => BaseType.list,
-      ArraySubquery() => BaseType.list,
       GroupingSets() => BaseType.dynamic,
       CubeExpr() => BaseType.dynamic,
       RollupExpr() => BaseType.dynamic,
-      // TODO: should be use a different type?
-      TupleExpr() => BaseType.list,
-      // TODO: check array type
-      ArrayIndex() => BaseType.dynamic,
-      MatchAgainst() => BaseType.bool,
-      ArrayExpr() => BaseType.list,
-      // TODO: support proper Day duration. Can't be done with Dart's core Duration
-      IntervalExpr() => BaseType.duration,
       AggregateExpressionWithFilter() => BaseType.dynamic,
     });
     return ty;
@@ -961,7 +1034,7 @@ class SqlTypeFinder {
       DateTimeField.timezoneMinute =>
         BaseType.int,
       DateTimeField.timezone => BaseType.string,
-      DateTimeField.noDateTime => BaseType.dynamic,
+      DateTimeField.noDateTime => BaseType.int,
     };
   }
 
@@ -1255,15 +1328,64 @@ class PlaceholderVisitor extends SqlAstVisitor {
 
   final SqlTypeFinder typeFinder;
   List<SqlPlaceholder> _placeholders = [];
+  List<Map<SqlValuePlaceholder, BaseType>> _insertValuesTypes = [];
   List<Expr> _expressionStack = [];
   late final List<SqlScope> _scopes = [SqlScope(typeFinder)];
 
-  // @override
-  // void processSqlInsert(SqlInsert node) {
-  //   _scopes.add(SqlScope(typeFinder));
-  //   super.processSqlInsert(node);
-  //   _scopes.removeLast();
-  // }
+  @override
+  void processSqlInsert(SqlInsert node) {
+    final map = Map<SqlValuePlaceholder, BaseType>.identity();
+    final table = typeFinder.getTable(node.tableName.joined);
+    if (node.source case SqlQuery(body: final Values values)
+        when table != null) {
+      final types = node.columns
+          .map(
+            (c) => table.fields.firstWhere(
+              (e) => e.name == c.value,
+              orElse: () {
+                print('Could not find column ${c.value} in table $table');
+                return ModelField(
+                  c.value,
+                  BaseType.dynamic,
+                  nullable: true,
+                  optional: false,
+                );
+              },
+            ).type,
+          )
+          .toList();
+      if (values.rows.any((row) => row.length > types.length)) {
+        print('Too many values in insert');
+      }
+      for (final rows in values.rows) {
+        for (final (i, value) in rows.indexed) {
+          if (i >= types.length) {
+            break;
+          }
+          var expr = value;
+          while (expr is NestedExpr) {
+            expr = expr.expr.value(parsed);
+          }
+          if (expr is SqlValuePlaceholder) {
+            map[expr] = types[i];
+          }
+        }
+      }
+    }
+
+    _insertValuesTypes.add(map);
+    final scope = SqlScope(typeFinder)
+      ..addTableWithJoins([
+        TableWithJoins(
+          relation: TableFactorTable(name: node.tableName, withHints: []),
+          joins: [],
+        )
+      ]);
+    _scopes.add(scope);
+    super.processSqlInsert(node);
+    _scopes.removeLast();
+    _insertValuesTypes.removeLast();
+  }
 
   @override
   void processSqlUpdate(SqlUpdate node) {
@@ -1297,6 +1419,7 @@ class PlaceholderVisitor extends SqlAstVisitor {
     final values = _placeholders;
     _placeholders = [];
     _expressionStack = [];
+    _insertValuesTypes = [];
     return values;
   }
 
@@ -1341,6 +1464,9 @@ class PlaceholderVisitor extends SqlAstVisitor {
       typeFinder._allFields = _scopes.last.allFields;
       ty = typeFinder.exprArgType(parent, _expressionStack.last);
       typeFinder._allFields = previousFields;
+    }
+    if (ty == BaseType.dynamic && _insertValuesTypes.isNotEmpty) {
+      ty = _insertValuesTypes.last[node] ?? BaseType.dynamic;
     }
     final value = SqlPlaceholder(node, _placeholders.length, ty);
     _placeholders.add(value);
