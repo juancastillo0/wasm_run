@@ -238,6 +238,7 @@ class SqlTypeFinder {
   final Map<SqlQuery, ModelType> allSelects = Map.identity();
   final Map<String, CreateFunction> allFunctions = {};
   Map<String, TypeWithNullability> _allFields = {};
+  final List<({int index, String comment})> comments = [];
 
   late final PlaceholderVisitor placeholderVisitor = PlaceholderVisitor(this);
 
@@ -256,7 +257,8 @@ class SqlTypeFinder {
   @override
   String toString() {
     return 'SqlTypeFinder{\nallTables:\n${allTables.entries.map((e) => '${e.key}\n${e.value}\n')},\n'
-        'allSelects:\n${allSelects.entries.map((e) => '${e.key}\n${e.value}\n')}';
+        'allSelects:\n${allSelects.entries.map((e) => '${e.key}\n${e.value}\n')}'
+        'comments:\n${comments.join('\n')}}';
   }
 
   ModelType? getTable(String name) {
@@ -268,17 +270,40 @@ class SqlTypeFinder {
   }
 
   void processPositions() {
+    ({int index, String comment})? inComment;
     String? inString;
+    bool skipNext = false;
     for (final (i, code) in text.codeUnits.indexed) {
+      if (skipNext) {
+        skipNext = false;
+        continue;
+      }
       final c = String.fromCharCode(code);
+      final next = i + 1 < text.length
+          ? String.fromCharCode(text.codeUnitAt(i + 1))
+          : null;
       if (inString != null) {
         if (c == inString) inString = null;
+      } else if (inComment != null) {
+        final s = inComment.index;
+        if (inComment.comment == '/*' && '$c$next' == '*/') {
+          comments.add((index: s, comment: text.substring(s, i + 2)));
+          skipNext = true;
+          inComment = null;
+        }
       } else if (c == '"' || c == '"') {
         inString = c;
+      } else if ('$c$next' case final comment && ('--' || '/*')) {
+        inComment = (index: i, comment: comment);
       } else if (c == ';') {
         statementEnd.add(i);
       }
       if (c == '\n') {
+        if (inComment?.comment == '--') {
+          final s = inComment!.index;
+          comments.add((index: s, comment: text.substring(s, i)));
+          inComment = null;
+        }
         lineOffsets.add(i);
       }
     }
