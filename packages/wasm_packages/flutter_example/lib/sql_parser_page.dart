@@ -128,6 +128,7 @@ class SqlParserPage extends StatelessWidget {
                 ],
               ),
             ),
+            const SizedBox(width: 10),
             Expanded(
               child: Column(
                 children: [
@@ -460,7 +461,7 @@ extension ToStringRefParsedSql on ParsedSql {
     bool didMapped = false;
     final mapped = value.replaceAllMapped(
       RegExp(
-          '(SqlSelect|SqlAst|SqlQuery|SqlInsert|SqlUpdate|SqlSelect|SetExpr|Expr|DataType|ArrayAgg|ListAgg|SqlFunction)'
+          '(SqlSelect|SqlAst|SqlQuery|SqlInsert|SqlUpdate|SqlSelect|SetExpr|Expr|DataType|ArrayAgg|ListAgg|SqlFunction|TableWithJoins)'
           'Ref{index: ([0-9]+)}'),
       (m) {
         didMapped = true;
@@ -477,6 +478,7 @@ extension ToStringRefParsedSql on ParsedSql {
           'ArrayAgg' => arrayAggRefs[index].toString(),
           'ListAgg' => listAggRefs[index].toString(),
           'SqlFunction' => sqlFunctionRefs[index].toString(),
+          'TableWithJoins' => tableWithJoinsRefs[index].toString(),
           _ => m.input,
         };
       },

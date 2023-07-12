@@ -2,6 +2,24 @@ PODS:
   - file_selector_macos (0.0.1):
     - FlutterMacOS
   - FlutterMacOS (1.0.0)
+  - path_provider_foundation (0.0.1):
+    - Flutter
+    - FlutterMacOS
+  - sqlite3 (3.41.2):
+    - sqlite3/common (= 3.41.2)
+  - sqlite3/common (3.41.2)
+  - sqlite3/fts5 (3.41.2):
+    - sqlite3/common
+  - sqlite3/perf-threadsafe (3.41.2):
+    - sqlite3/common
+  - sqlite3/rtree (3.41.2):
+    - sqlite3/common
+  - sqlite3_flutter_libs (0.0.1):
+    - FlutterMacOS
+    - sqlite3 (~> 3.41.2)
+    - sqlite3/fts5
+    - sqlite3/perf-threadsafe
+    - sqlite3/rtree
   - url_launcher_macos (0.0.1):
     - FlutterMacOS
   - wasm_run_flutter (0.0.1)
@@ -9,14 +27,24 @@ PODS:
 DEPENDENCIES:
   - file_selector_macos (from `Flutter/ephemeral/.symlinks/plugins/file_selector_macos/macos`)
   - FlutterMacOS (from `Flutter/ephemeral`)
+  - path_provider_foundation (from `Flutter/ephemeral/.symlinks/plugins/path_provider_foundation/darwin`)
+  - sqlite3_flutter_libs (from `Flutter/ephemeral/.symlinks/plugins/sqlite3_flutter_libs/macos`)
   - url_launcher_macos (from `Flutter/ephemeral/.symlinks/plugins/url_launcher_macos/macos`)
   - wasm_run_flutter (from `Flutter/ephemeral/.symlinks/plugins/wasm_run_flutter/macos`)
+
+SPEC REPOS:
+  trunk:
+    - sqlite3
 
 EXTERNAL SOURCES:
   file_selector_macos:
     :path: Flutter/ephemeral/.symlinks/plugins/file_selector_macos/macos
   FlutterMacOS:
     :path: Flutter/ephemeral
+  path_provider_foundation:
+    :path: Flutter/ephemeral/.symlinks/plugins/path_provider_foundation/darwin
+  sqlite3_flutter_libs:
+    :path: Flutter/ephemeral/.symlinks/plugins/sqlite3_flutter_libs/macos
   url_launcher_macos:
     :path: Flutter/ephemeral/.symlinks/plugins/url_launcher_macos/macos
   wasm_run_flutter:
@@ -25,6 +53,9 @@ EXTERNAL SOURCES:
 SPEC CHECKSUMS:
   file_selector_macos: f1b08a781e66103e3ba279fd5d4024a2478b3af6
   FlutterMacOS: 8f6f14fa908a6fb3fba0cd85dbd81ec4b251fb24
+  path_provider_foundation: eaf5b3e458fc0e5fbb9940fb09980e853fe058b8
+  sqlite3: fd89671d969f3e73efe503ce203e28b016b58f68
+  sqlite3_flutter_libs: 00a50503d69f7ab0fe85a5ff25b33082f4df4ce9
   url_launcher_macos: 5335912b679c073563f29d89d33d10d459f95451
   wasm_run_flutter: bc8a69066f23601c1b13183d54a960440eeb0678
 

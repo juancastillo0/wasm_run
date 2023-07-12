@@ -1,5 +1,7 @@
 // ignore_for_file: unnecessary_parenthesis, unnecessary_statements
 
+import 'package:flutter_example/models/btype.dart';
+import 'package:flutter_example/sql_json.dart';
 import 'package:sql_parser/sql_parser.dart';
 import 'package:sql_parser/visitor.dart';
 import 'package:sqlite3/common.dart';
@@ -71,21 +73,7 @@ class ComposeType implements VType {
   ComposeType(this.fields);
 }
 
-enum BaseType implements VType {
-  bool,
-  int,
-  double,
-  numeric,
-  string,
-  binary,
-  bigint,
-  datetime,
-  duration,
-  dynamic,
-  list,
-  map,
-  set,
-}
+typedef BaseType = BType;
 
 class ModelType {
   final List<ModelField> fields;
@@ -106,7 +94,8 @@ class ModelType {
 
   @override
   String toString() {
-    return 'ModelType{fields:\n${fields.join('\n')},\nkeys: ${keys.join('\n')},\nreferences: ${references.join('\n')}}';
+    return 'ModelType{fields:\n${fields.join('\n')},\nkeys: ${keys.join('\n')},'
+        '\nreferences: ${references.join('\n')}}';
   }
 }
 
@@ -127,8 +116,8 @@ class ModelField {
 
   @override
   String toString() {
-    return '$name${optional ? '' : '*'}: ${type.name}${nullable ? '?' : ''}${defaultValue == null ? '' : ' = $defaultValue'}';
-    // return 'ModelField{name: $name, type: $type, nullable: $nullable, optional: $optional, defaultValue: $defaultValue}';
+    return '$name${optional ? '' : '*'}: ${type.name}${nullable ? '?' : ''}'
+        '${defaultValue == null ? '' : ' = $defaultValue'}';
   }
 }
 
@@ -233,16 +222,24 @@ class SqlTypeFinder {
 
   final CommonDatabase db;
   final ParsedSql parsed;
+  final SqlDialect dialect;
   final Map<String, ModelType> allTables = {};
-  Map<String, ModelType>? _withTables;
   final Map<SqlQuery, ModelType> allSelects = Map.identity();
   final Map<String, CreateFunction> allFunctions = {};
+  late SqlScope scope = SqlScope(this);
   Map<String, TypeWithNullability> _allFields = {};
   final List<({int index, String comment})> comments = [];
 
   late final PlaceholderVisitor placeholderVisitor = PlaceholderVisitor(this);
+  late final SqlJsonTypeFinder jsonTypeFinder = SqlJsonTypeFinder(this);
 
-  SqlTypeFinder(this.text, this.parsed, this.db) {
+  ///
+  SqlTypeFinder(
+    this.text,
+    this.parsed,
+    this.db, {
+    this.dialect = SqlDialect.sqlite,
+  }) {
     process();
     processPositions();
   }
@@ -259,14 +256,6 @@ class SqlTypeFinder {
     return 'SqlTypeFinder{\nallTables:\n${allTables.entries.map((e) => '${e.key}\n${e.value}\n')},\n'
         'allSelects:\n${allSelects.entries.map((e) => '${e.key}\n${e.value}\n')}'
         'comments:\n${comments.join('\n')}}';
-  }
-
-  ModelType? getTable(String name) {
-    final n = name.split('.').last;
-    return _withTables?[name] ??
-        allTables[name] ??
-        _withTables?[n] ??
-        allTables[n];
   }
 
   void processPositions() {
@@ -409,8 +398,7 @@ class SqlTypeFinder {
       AlterTable() => 'ALTER_TABLE:${stmt.name.joined}',
       AlterIndex() => 'ALTER_INDEX:${stmt.name.joined}',
       SqlInsert() => 'INSERT:${stmt.tableName.joined}',
-      SqlUpdate() =>
-        'UPDATE:${(stmt.table.relation as TableFactorTable).name.joined}',
+      SqlUpdate() => 'UPDATE:${identifierTableFactor(stmt.table.relation)}',
       SqlDelete() => 'DELETE:${stmt.tables.map((e) => e.joined).join(',')}',
       SqlQuery() => 'QUERY:${setExprIdentifier(stmt.body)}',
       StartTransaction() => 'START_TRANSACTION',
@@ -418,6 +406,35 @@ class SqlTypeFinder {
       Rollback() => 'ROLLBACK',
       Savepoint() => 'SAVEPOINT:${stmt.name.value}',
       SetTransaction() => 'SET_TRANSACTION',
+      SqlAnalyze() => 'ANALYZE:${stmt.tableName.joined}',
+      SqlDrop() => 'DROP:${stmt.names.map((e) => e.joined)}',
+      SqlDropFunction() =>
+        'DROP_FUNCTION:${stmt.funcDesc.map((e) => e.name.joined)}',
+      ShowFunctions() => 'SHOW_FUNCTIONS:${stmt.filter ?? ''}',
+      ShowVariable() => 'SHOW_VARIABLE:${stmt.variable.joined}',
+      ShowVariables() => 'SHOW_VARIABLES:${stmt.filter ?? ''}',
+      ShowCreate() => 'SHOW_CREATE:${stmt.objName.joined}',
+      ShowColumns() => 'SHOW_COLUMNS:${stmt.tableName.joined}',
+      ShowTables() => 'SHOW_TABLES:${stmt.filter ?? ''}',
+      ShowCollation() => 'SHOW_COLLATION:${stmt.filter ?? ''}',
+      SqlComment() => 'COMMENT:${stmt.objectName.joined}',
+      SqlUse() => 'USE:${stmt.dbName.value}',
+      SqlExplainTable() => 'EXPLAIN_TABLE:${stmt.tableName.joined}',
+      SqlExplain() => 'EXPLAIN',
+      SqlMerge() =>
+        'MERGE:${(identifierTableFactor(stmt.source))}:${(identifierTableFactor(stmt.table))}',
+    });
+  }
+
+  String identifierTableFactor(TableFactor t) {
+    return (switch (t) {
+      TableFactorTable() => t.name.joined,
+      TableFactorDerived() => 'DERIVED:${t.alias?.name.value ?? ''}',
+      TableFactorTableFunction() => 'FUNCTION:${t.alias?.name.value ?? ''}',
+      TableFactorUnnest() => 'UNNEST:${t.alias?.name.value ?? ''}',
+      TableFactorNestedJoin() =>
+        'NESTED_JOIN:${t.alias?.name.value ?? t.tableWithJoins.value(parsed)}',
+      TableFactorPivot() => 'PIVOT:${t.name.joined}',
     });
   }
 
@@ -582,37 +599,28 @@ class SqlTypeFinder {
       });
     }
     if (table.query != null) {
+      // TODO:
       queryToDartClass(table.query!);
     }
     return model;
   }
 
   ModelType? queryToDartClass(SqlQuery query) {
-    // TODO: with in Scope
     final with_ = query.with_;
-    bool addedWithTables = false;
+    final previousScope = scope;
+    scope = SqlScope(this);
     if (with_ != null) {
-      addedWithTables = _withTables == null;
-      _withTables ??= {};
-      for (final CommonTableExpr cte in with_.cteTables) {
-        final name = cte.alias.name.value;
-        final model = queryToDartClass(cte.query.value(parsed));
-        if (model != null) {
-          _withTables![name] = model;
-        }
-      }
+      scope.addWith(with_);
     }
     final result = setExprToDartClass(query.body);
-    if (addedWithTables) {
-      _withTables = null;
-    }
+    scope = previousScope;
     return result;
   }
 
   String setExprIdentifier(SetExpr body) {
     return (switch (body) {
       SqlSelectRef() =>
-        'SELECT:${body.value(parsed).from.map((e) => (e.relation as TableFactorTable).name.joined).join(',')}',
+        'SELECT:${body.value(parsed).from.map((e) => identifierTableFactor(e.relation)).join(',')}',
       SqlQueryRef() => setExprIdentifier(body.value(parsed).body),
       SetOperation() => setExprIdentifier(body.left.value(parsed)) +
           body.op.name +
@@ -620,7 +628,7 @@ class SqlTypeFinder {
       Values() => 'VALUES',
       SqlInsertRef() => 'INSERT:${body.value(parsed).tableName.joined}',
       SqlUpdateRef() =>
-        'UPDATE:${(body.value(parsed).table.relation as TableFactorTable).name.joined}',
+        'UPDATE:${identifierTableFactor(body.value(parsed).table.relation)}',
       Table() =>
         'TABLE:${body.schemaName == null ? '' : '${body.schemaName}.'}${body.tableName}',
     });
@@ -653,7 +661,7 @@ class SqlTypeFinder {
         }(),
       SqlInsertRef() => null,
       SqlUpdateRef() => null,
-      Table() => getTable(
+      Table() => scope.getTable(
           '${body.schemaName == null ? '' : '${body.schemaName}.'}${body.tableName}',
         ),
     });
@@ -675,6 +683,7 @@ class SqlTypeFinder {
     // final List<NamedWindowDefinition> namedWindow;
     // final Expr? qualify;
 
+    // TODO: use scopes
     final scope = SqlScope(this)..addTableWithJoins(query.from);
     final prevAllFields = _allFields;
     _allFields = scope.allFields;
@@ -751,6 +760,19 @@ class SqlTypeFinder {
           final func = allFunctions[function.name.joined] ??
               allFunctions[function.name.last.value];
           if (func == null) {
+            final argExprs = function.args
+                .map((e) => e.expr)
+                .whereType<FunctionArgExprExpr>()
+                .map((e) => e.value)
+                .toList();
+            if (argExprs.length == function.args.length) {
+              final ty = jsonTypeFinder.typeFromJsonFunction(
+                function.name.joined,
+                argExprs,
+              );
+              if (ty != null) return ty;
+              // TODO: use other created functions
+            }
             print('Could not find function ${function}');
             return BaseType.dynamic;
           }
@@ -818,6 +840,59 @@ class SqlTypeFinder {
     return e;
   }
 
+  String? exprValue(Expr e) {
+    return switch (e) {
+      // Ident() => '',
+      // ExprCompoundIdentifier() => '',
+      NestedExpr() => exprValue(e.expr.value(parsed)),
+      SqlValue() => sqlValueValue(e),
+      JsonAccess() => null,
+      CompositeAccess() => null,
+      MapAccess() => null,
+      Cast(:final expr) ||
+      TryCast(:final expr) ||
+      SafeCast(:final expr) =>
+        exprValue(expr.value(parsed)),
+      // TODO:
+      Extract() => null,
+      Floor() => mapNullable(exprValue(e.expr.value(parsed)), (p0) {
+          final v = double.tryParse(p0);
+          if (v == null) return null;
+          return v.floor().toString();
+        }),
+      Ceil() => mapNullable(exprValue(e.expr.value(parsed)), (p0) {
+          final v = double.tryParse(p0);
+          if (v == null) return null;
+          return v.ceil().toString();
+        }),
+      TypedString() => e.value,
+      TupleExpr() => null,
+      ArrayIndex() => null,
+      IntervalExpr() => null,
+      ArrayExpr() => null,
+      _ => null,
+    };
+  }
+
+  String? sqlValueValue(SqlValue e) {
+    return switch (e) {
+      SqlValueNumber() => '',
+      SqlValueSingleQuotedString() => e.value,
+      SqlValueDollarQuotedString() => e.value.value,
+      SqlValueEscapedStringLiteral() => e.value,
+      SqlValueSingleQuotedByteStringLiteral() => e.value,
+      SqlValueDoubleQuotedByteStringLiteral() => e.value,
+      SqlValueRawStringLiteral() => e.value,
+      SqlValueNationalStringLiteral() => e.value,
+      SqlValueHexStringLiteral() => e.value,
+      SqlValueDoubleQuotedString() => e.value,
+      SqlValueBoolean() => e.value ? 'true' : 'false',
+      SqlValueNull() => null,
+      SqlValuePlaceholder() => null,
+      SqlValueUnQuotedString() => e.value,
+    };
+  }
+
   BaseType exprArgType(Expr expr, Expr arg) {
     bool isArg(Expr? e) {
       return identical(e, arg) || e is NestedExpr && isArg(extract(e.expr));
@@ -871,6 +946,21 @@ class SqlTypeFinder {
           final func = allFunctions[function.name.joined] ??
               allFunctions[function.name.last.value];
           if (func == null) {
+            final argExprs = function.args
+                .map((e) => e.expr)
+                .whereType<FunctionArgExprExpr>()
+                .map((e) => e.value)
+                .toList();
+            if (argExprs.length == function.args.length) {
+              final ty = jsonTypeFinder.argTypeFromJsonFunction(
+                name: function.name.joined,
+                functionExpr: expr,
+                args: argExprs,
+                placeholder: arg,
+              );
+              if (ty != null) return ty;
+              // TODO: use other created functions
+            }
             print('Could not find function ${function}');
             return BaseType.dynamic;
           }
@@ -1093,7 +1183,7 @@ class SqlTypeFinder {
           final computedIndex = list.indexWhere((e) => identical(e.$1, value));
           if (computedIndex != -1) return list[computedIndex].$2;
 
-          var ty = BaseType.dynamic;
+          BaseType ty = BaseType.dynamic;
           if (_expressionStack.length > 1) {
             int i = _expressionStack.length - 2;
             Expr parent = _expressionStack[i];
@@ -1209,8 +1299,31 @@ class SqlTypeFinder {
   }
 }
 
-O? mapNullable<T extends Object, O>(T? value, O Function(T) mapper) =>
+enum SqlDialect {
+  sqlite,
+  postgres,
+  mysql,
+}
+
+extension UnnestExtension on Expr {
+  Expr unnest(ParsedSql parsed) {
+    Expr expr = this;
+    while (expr is NestedExpr) {
+      expr = expr.expr.value(parsed);
+    }
+    return expr;
+  }
+}
+
+O? mapNullable<T extends Object, O>(T? value, O? Function(T) mapper) =>
     value == null ? null : mapper(value);
+
+extension FunctionArgExt on FunctionArg {
+  FunctionArgExpr get expr => switch (this) {
+        final FunctionArgNamed v => v.value.arg,
+        final FunctionArgUnnamed v => v.value,
+      };
+}
 
 class TypeWithNullability {
   final BaseType type;
@@ -1220,13 +1333,16 @@ class TypeWithNullability {
 }
 
 class SelectedTable {
-  final TableFactorTable table;
-  final JoinOperator? join;
+  final String? tableName;
+  final String? alias;
   final bool isNullable;
 
-  SelectedTable(this.table, this.join, {required this.isNullable});
-
-  String get tableName => table.name.joined;
+  ///
+  SelectedTable({
+    required this.tableName,
+    required this.alias,
+    required this.isNullable,
+  });
 }
 
 extension on ObjectName {
@@ -1267,40 +1383,151 @@ class SqlScope {
   final SqlTypeFinder typeFinder;
   final allFields = <String, TypeWithNullability>{};
   final selectedTables = <String, SelectedTable>{};
+  final Map<String, ModelType> _withTables = {};
 
   SqlScope(this.typeFinder);
 
+  ParsedSql get parsed => typeFinder.parsed;
+
   void addTable(SelectedTable selectedTable) {
-    final relation = selectedTable.table;
-    final name = relation.name.joined;
-    selectedTables[relation.alias?.name.value ?? name] = selectedTable;
+    final name = (selectedTable.alias ?? selectedTable.tableName)!;
+    selectedTables[name] = selectedTable;
+  }
+
+  ModelType? getTable(String name) {
+    final n = name.split('.').last;
+    return _withTables[name] ??
+        typeFinder.allTables[name] ??
+        _withTables[n] ??
+        typeFinder.allTables[n];
+  }
+
+  void _addFactor(
+    TableFactor relation, {
+    required bool isNullable,
+  }) {
+    (switch (relation) {
+      TableFactorTable() => addTable(
+          SelectedTable(
+            alias: relation.alias?.name.value,
+            tableName: relation.name.joined,
+            isNullable: isNullable,
+          ),
+        ),
+      TableFactorDerived() => () {
+          final model =
+              typeFinder.queryToDartClass(relation.subquery.value(parsed));
+          final alias = relation.alias;
+          if (model != null && alias != null) {
+            // TODO: fields
+            _withTables[alias.name.value] = model;
+          }
+        }(),
+      // TODO: find model from expression
+      TableFactorTableFunction() => () {
+          final ty = typeFinder.exprType(relation.expr);
+          final alias = relation.alias;
+          if (ty case BTypeTable(:final inner) when inner != null) {
+            if (alias != null) {
+              final model = ModelType(
+                [
+                  ...inner.entries.map(
+                    (e) => ModelField(
+                      e.key,
+                      e.value,
+                      nullable: isNullable,
+                      optional: true,
+                    ),
+                  ),
+                ],
+                [],
+                [],
+              );
+              _withTables[alias.name.value] = model;
+            }
+            allFields.addAll(
+              inner.map(
+                (key, value) =>
+                    MapEntry(key, TypeWithNullability(value, isNullable)),
+              ),
+            );
+          }
+        }(),
+      TableFactorUnnest() => () {
+          if (relation.withOffset) {
+            allFields[relation.alias?.name.value ?? 'offset'] =
+                TypeWithNullability(BaseType.int, false);
+          }
+          final alias = relation.alias;
+          if (alias != null) {
+            Expr arr = relation.arrayExpr;
+            while (arr is NestedExpr) {
+              arr = arr.expr.value(parsed);
+            }
+            final v = TypeWithNullability(
+              arr is ArrayExpr
+                  ? arr.elem
+                          .map(typeFinder.extract)
+                          .map(typeFinder.exprType)
+                          .toSet()
+                          .singleOrNull ??
+                      BaseType.dynamic
+                  : BaseType.dynamic,
+              false, // TODO:
+            );
+            allFields[alias.name.value] = v;
+          }
+        }(),
+      TableFactorNestedJoin() => () {
+          final rel = relation.tableWithJoins.value(parsed);
+          final alias = relation.alias;
+          if (alias != null) {
+            final nested = SqlScope(typeFinder)..addTableWithJoins([rel]);
+            final model = ModelType(
+              nested.allFields.entries
+                  .map(
+                    (e) => ModelField(
+                      e.key,
+                      e.value.type,
+                      nullable: e.value.isNullable || isNullable,
+                      optional: true,
+                    ),
+                  )
+                  .toList(),
+              [],
+              [],
+            );
+            // TODO: alias columns?
+            final aliasName = alias.name.value;
+            _withTables[aliasName] = model;
+            selectedTables[aliasName] = SelectedTable(
+              alias: aliasName,
+              tableName: null,
+              isNullable: isNullable,
+            );
+          } else {
+            addTableWithJoins([rel]);
+          }
+        }(),
+      // TODO: pivot
+      TableFactorPivot() => null,
+    });
   }
 
   void addTableWithJoins(List<TableWithJoins> from) {
     for (final TableWithJoins(:joins, :relation) in from) {
       bool someNotLeftInner = false;
       for (final Join(:joinOperator, :relation) in joins) {
-        // TODO: use for nullability
         someNotLeftInner |= !joinOperator.leftRequired;
         final isRequired = joinOperator.rightRequired;
-        (switch (relation) {
-          TableFactorTable() => addTable(SelectedTable(
-              relation,
-              joinOperator,
-              isNullable: !isRequired,
-            )),
-        });
+        _addFactor(relation, isNullable: !isRequired);
       }
 
-      (switch (relation) {
-        TableFactorTable() => addTable(
-            SelectedTable(relation, null, isNullable: someNotLeftInner),
-          ),
-      });
+      _addFactor(relation, isNullable: someNotLeftInner);
     }
 
     for (final MapEntry(key: alias, :value) in selectedTables.entries) {
-      final t = typeFinder.getTable(value.tableName);
+      final t = getTable(value.tableName ?? alias);
       if (t == null) {
         print('Could not find table $value with alias $alias');
         continue;
@@ -1317,7 +1544,7 @@ class SqlScope {
   List<ModelField>? tableFields(String alias) {
     final t = selectedTables[alias];
     final nullable = t?.isNullable ?? false;
-    final fields = typeFinder.getTable(t?.tableName ?? alias)?.fields;
+    final fields = getTable(t?.tableName ?? alias)?.fields;
     return fields
         ?.map(
           (e) => ModelField(
@@ -1329,6 +1556,16 @@ class SqlScope {
           ),
         )
         .toList();
+  }
+
+  void addWith(With with_) {
+    for (final CommonTableExpr cte in with_.cteTables) {
+      final name = cte.alias.name.value;
+      final model = typeFinder.queryToDartClass(cte.query.value(parsed));
+      if (model != null) {
+        _withTables[name] = model;
+      }
+    }
   }
 }
 
@@ -1360,7 +1597,7 @@ class PlaceholderVisitor extends SqlAstVisitor {
   @override
   void processSqlInsert(SqlInsert node) {
     final map = Map<SqlValuePlaceholder, BaseType>.identity();
-    final table = typeFinder.getTable(node.tableName.joined);
+    final table = _scopes.last.getTable(node.tableName.joined);
     if (node.source case SqlQuery(body: final Values values)
         when table != null) {
       final types = node.columns
@@ -1477,8 +1714,14 @@ class PlaceholderVisitor extends SqlAstVisitor {
   }
 
   @override
+  void processWith(With node) {
+    _scopes.last.addWith(node);
+    super.processWith(node);
+  }
+
+  @override
   void processSqlValuePlaceholder(SqlValuePlaceholder node) {
-    var ty = BaseType.dynamic;
+    BaseType ty = BaseType.dynamic;
     if (_expressionStack.length > 1) {
       int i = _expressionStack.length - 2;
       Expr parent = _expressionStack[i];
@@ -1498,4 +1741,20 @@ class PlaceholderVisitor extends SqlAstVisitor {
 
     super.processSqlValuePlaceholder(node);
   }
+}
+
+CreateFunction simpleFunc(
+  String name,
+  List<DataType> args,
+  DataType returnType, {
+  bool variadic = false,
+}) {
+  return CreateFunction(
+    name: [...name.split('.').map((n) => Ident(value: n))],
+    args: args.map((e) => OperateFunctionArg(dataType: e)).toList(),
+    returnType: returnType,
+    params: const CreateFunctionBody(),
+    orReplace: false,
+    temporary: false,
+  );
 }
