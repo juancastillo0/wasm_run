@@ -4,39 +4,8 @@ import 'package:wasm_wit_component/wasm_wit_component.dart';
 
 void main() {
   group('sql_parser api', () {
-    test('run', () async {
-      final List<int> integers = [];
-      final world = await createSqlParser(
-        wasiConfig: WasiConfig(preopenedDirs: [], webBrowserFileSystem: {}),
-        imports: SqlParserWorldImports(
-          mapInteger: ({required value}) {
-            integers.add(value);
-            return value * 0.17;
-          },
-        ),
-      );
-      expect(integers, isEmpty);
-      final model = Model(integer: 20);
-      final result = world.run(value: model);
-
-      switch (result) {
-        case Ok(:final double ok):
-          expect(ok, 20 * 0.17);
-          expect(integers, [20]);
-        case Err(:final String error):
-          throw Exception(error);
-      }
-    });
-
     test('sql', () async {
-      final world = await createSqlParser(
-        wasiConfig: WasiConfig(preopenedDirs: [], webBrowserFileSystem: {}),
-        imports: SqlParserWorldImports(
-          mapInteger: ({required value}) {
-            return value * 0.17;
-          },
-        ),
-      );
+      final world = await createSqlParser();
       final result = world.parseSql(sql: '''
 SELECT * FROM foo WHERE bar = c
 ''');
@@ -50,14 +19,7 @@ SELECT * FROM foo WHERE bar = c
     });
 
     test('sql2', () async {
-      final world = await createSqlParser(
-        wasiConfig: WasiConfig(preopenedDirs: [], webBrowserFileSystem: {}),
-        imports: SqlParserWorldImports(
-          mapInteger: ({required value}) {
-            return value * 0.17;
-          },
-        ),
-      );
+      final world = await createSqlParser();
       final result = world.parseSql(sql: '''
 SELECT * FROM foo WHERE bar = 10
 ''');
@@ -71,14 +33,7 @@ SELECT * FROM foo WHERE bar = 10
     });
 
     test('multiple statements', () async {
-      final world = await createSqlParser(
-        wasiConfig: WasiConfig(preopenedDirs: [], webBrowserFileSystem: {}),
-        imports: SqlParserWorldImports(
-          mapInteger: ({required value}) {
-            return value * 0.17;
-          },
-        ),
-      );
+      final world = await createSqlParser();
       final result = world.parseSql(sql: '''
 CREATE TABLE users (
   id INTEGER PRIMARY KEY,

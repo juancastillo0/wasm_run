@@ -45,10 +45,7 @@ class GlobalState extends ChangeNotifier {
   );
   late final sqlParser = FutureLoader(
     () async {
-      final parserFut = createSqlParser(
-        wasiConfig: wasiConfig,
-        imports: SqlParserWorldImports(mapInteger: ({required int value}) => 2),
-      );
+      final parserFut = createSqlParser();
       final parser = await parserFut;
       final db = await loadSqlite();
       return SqlParserState(parser, db);

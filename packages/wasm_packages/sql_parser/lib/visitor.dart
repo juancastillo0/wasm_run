@@ -53,7 +53,185 @@ class SqlAstVisitor {
       SqlAssert() => processSqlAssert(node),
       SqlExecute() => processSqlExecute(node),
       CreateType() => processCreateType(node),
+      SqlAnalyze() => processSqlAnalyze(node),
+      SqlDrop() => processSqlDrop(node),
+      SqlDropFunction() => processSqlDropFunction(node),
+      ShowFunctions() => processShowFunctions(node),
+      ShowVariable() => processShowVariable(node),
+      ShowVariables() => processShowVariables(node),
+      ShowCreate() => processShowCreate(node),
+      ShowColumns() => processShowColumns(node),
+      ShowTables() => processShowTables(node),
+      ShowCollation() => processShowCollation(node),
+      SqlComment() => processSqlComment(node),
+      SqlUse() => processSqlUse(node),
+      SqlExplainTable() => processSqlExplainTable(node),
+      SqlExplain() => processSqlExplain(node),
+      SqlMerge() => processSqlMerge(node),
     });
+  }
+
+  void processSqlAnalyze(SqlAnalyze node) {
+    _process(node);
+    processObjectName(node.tableName);
+    processNullable(node.partitions, processListExpr);
+    processListIdent(node.columns);
+  }
+
+  void processSqlDrop(SqlDrop node) {
+    _process(node);
+    processObjectType(node.objectType);
+    processListObjectName(node.names);
+  }
+
+  void processObjectType(ObjectType node) {
+    _process(node);
+  }
+
+  void processSqlDropFunction(SqlDropFunction node) {
+    _process(node);
+    processListDropFunctionDesc(node.funcDesc);
+    processNullable(node.option, processReferentialAction);
+  }
+
+  void processListDropFunctionDesc(List<DropFunctionDesc> node) {
+    _process(node);
+    node.forEach(processDropFunctionDesc);
+  }
+
+  void processDropFunctionDesc(DropFunctionDesc node) {
+    _process(node);
+    processListIdent(node.name);
+    processNullable(node.args, processListOperateFunctionArg);
+  }
+
+  void processShowFunctions(ShowFunctions node) {
+    _process(node);
+    processNullable(node.filter, processShowStatementFilter);
+  }
+
+  void processShowStatementFilter(ShowStatementFilter node) {
+    _process(node);
+    (switch (node) {
+      ShowStatementFilterLike() => processShowStatementFilterLike(node),
+      ShowStatementFilterILike() => processShowStatementFilterILike(node),
+      ShowStatementFilterWhere() => processShowStatementFilterWhere(node),
+    });
+  }
+
+  void processShowStatementFilterLike(ShowStatementFilterLike node) {
+    _process(node);
+  }
+
+  void processShowStatementFilterILike(ShowStatementFilterILike node) {
+    _process(node);
+  }
+
+  void processShowStatementFilterWhere(ShowStatementFilterWhere node) {
+    _process(node);
+    processExpr(node.value);
+  }
+
+  void processShowVariable(ShowVariable node) {
+    _process(node);
+    processListIdent(node.variable);
+  }
+
+  void processShowVariables(ShowVariables node) {
+    _process(node);
+    processNullable(node.filter, processShowStatementFilter);
+  }
+
+  void processShowCreate(ShowCreate node) {
+    _process(node);
+    processShowCreateObject(node.objType);
+    processObjectName(node.objName);
+  }
+
+  void processShowCreateObject(ShowCreateObject node) {
+    _process(node);
+  }
+
+  void processShowColumns(ShowColumns node) {
+    _process(node);
+    processObjectName(node.tableName);
+    processNullable(node.filter, processShowStatementFilter);
+  }
+
+  void processShowTables(ShowTables node) {
+    _process(node);
+    processNullable(node.dbName, processIdent);
+    processNullable(node.filter, processShowStatementFilter);
+  }
+
+  void processShowCollation(ShowCollation node) {
+    _process(node);
+    processNullable(node.filter, processShowStatementFilter);
+  }
+
+  void processSqlComment(SqlComment node) {
+    _process(node);
+    processCommentObject(node.objectType);
+    processObjectName(node.objectName);
+  }
+
+  void processCommentObject(CommentObject node) {
+    _process(node);
+  }
+
+  void processSqlUse(SqlUse node) {
+    _process(node);
+    processIdent(node.dbName);
+  }
+
+  void processSqlExplainTable(SqlExplainTable node) {
+    _process(node);
+    processObjectName(node.tableName);
+  }
+
+  void processSqlExplain(SqlExplain node) {
+    _process(node);
+    processSqlAstRef(node.statement);
+    processNullable(node.format, processAnalyzeFormat);
+  }
+
+  void processAnalyzeFormat(AnalyzeFormat node) {
+    _process(node);
+  }
+
+  void processSqlMerge(SqlMerge node) {
+    _process(node);
+    processTableFactor(node.table);
+    processTableFactor(node.source);
+    processExpr(node.on_);
+    node.clauses.forEach(processMergeClause);
+  }
+
+  void processMergeClause(MergeClause node) {
+    _process(node);
+    (switch (node) {
+      MatchedUpdate() => processMatchedUpdate(node),
+      MatchedDelete() => processMatchedDelete(node),
+      NotMatched() => processNotMatched(node),
+    });
+  }
+
+  void processMatchedUpdate(MatchedUpdate node) {
+    _process(node);
+    processNullable(node.predicate, processExpr);
+    processListAssignment(node.assignments);
+  }
+
+  void processMatchedDelete(MatchedDelete node) {
+    _process(node);
+    processNullable(node.predicate, processExpr);
+  }
+
+  void processNotMatched(NotMatched node) {
+    _process(node);
+    processNullable(node.predicate, processExpr);
+    processListIdent(node.columns);
+    processValues(node.values);
   }
 
   void processObjectName(ObjectName node) {
@@ -646,7 +824,21 @@ class SqlAstVisitor {
   }
 
   void processWindowType(WindowType node) {
-    // TODO:
+    _process(node);
+    (switch (node) {
+      WindowTypeWindowSpec() => processWindowTypeWindowSpec(node),
+      WindowTypeNamedWindow() => processWindowTypeNamedWindow(node),
+    });
+  }
+
+  void processWindowTypeWindowSpec(WindowTypeWindowSpec node) {
+    _process(node);
+    processWindowSpec(node.value);
+  }
+
+  void processWindowTypeNamedWindow(WindowTypeNamedWindow node) {
+    _process(node);
+    processIdent(node.value);
   }
 
   void processCaseExpr(CaseExpr node) {
@@ -672,7 +864,24 @@ class SqlAstVisitor {
 
   void processListAggOnOverflow(ListAggOnOverflow node) {
     _process(node);
-    // TODO:
+    (switch (node) {
+      ListAggOnOverflowError() => processListAggOnOverflowError(node),
+      ListAggOnOverflowTruncate() => processListAggOnOverflowTruncate(node),
+    });
+  }
+
+  void processListAggOnOverflowError(ListAggOnOverflowError node) {
+    _process(node);
+  }
+
+  void processListAggOnOverflowTruncate(ListAggOnOverflowTruncate node) {
+    _process(node);
+    processOnOverflowTruncate(node.value);
+  }
+
+  void processOnOverflowTruncate(OnOverflowTruncate node) {
+    _process(node);
+    processNullable(node.filler, processExpr);
   }
 
   void processArrayAggRef(ArrayAggRef node) {
@@ -784,7 +993,20 @@ class SqlAstVisitor {
 
   void processConflictTarget(ConflictTarget node) {
     _process(node);
-    // TODO
+    (switch (node) {
+      ConflictTargetColumns() => processConflictTargetColumns(node),
+      ConflictTargetOnConstraint() => processConflictTargetOnConstraint(node),
+    });
+  }
+
+  void processConflictTargetColumns(ConflictTargetColumns node) {
+    _process(node);
+    processListIdent(node.value);
+  }
+
+  void processConflictTargetOnConstraint(ConflictTargetOnConstraint node) {
+    _process(node);
+    processObjectName(node.value);
   }
 
   void processOnConflictAction(OnConflictAction node) {
@@ -878,7 +1100,52 @@ class SqlAstVisitor {
     _process(node);
     (switch (node) {
       TableFactorTable() => processTableFactorTable(node),
+      TableFactorDerived() => processTableFactorDerived(node),
+      TableFactorTableFunction() => processTableFactorTableFunction(node),
+      TableFactorUnnest() => processTableFactorUnnest(node),
+      TableFactorNestedJoin() => processTableFactorNestedJoin(node),
+      TableFactorPivot() => processTableFactorPivot(node),
     });
+  }
+
+  void processTableFactorDerived(TableFactorDerived node) {
+    _process(node);
+    processSqlQueryRef(node.subquery);
+    processNullable(node.alias, processTableAlias);
+  }
+
+  void processTableFactorTableFunction(TableFactorTableFunction node) {
+    _process(node);
+    processExpr(node.expr);
+    processNullable(node.alias, processTableAlias);
+  }
+
+  void processTableFactorUnnest(TableFactorUnnest node) {
+    _process(node);
+    processNullable(node.alias, processTableAlias);
+    processExpr(node.arrayExpr);
+    processNullable(node.withOffsetAlias, processIdent);
+  }
+
+  void processTableFactorNestedJoin(TableFactorNestedJoin node) {
+    _process(node);
+    processTableWithJoinsRef(node.tableWithJoins);
+    processNullable(node.alias, processTableAlias);
+  }
+
+  void processTableWithJoinsRef(TableWithJoinsRef node) {
+    _process(node);
+    processTableWithJoins(node.value(parsed));
+  }
+
+  void processTableFactorPivot(TableFactorPivot node) {
+    _process(node);
+    processObjectName(node.name);
+    processNullable(node.tableAlias, processTableAlias);
+    processExpr(node.aggregateFunction);
+    processListIdent(node.valueColumn);
+    node.pivotValues.forEach(processSqlValue);
+    processNullable(node.pivotAlias, processTableAlias);
   }
 
   void processTableAlias(TableAlias node) {
@@ -928,18 +1195,17 @@ class SqlAstVisitor {
 
   void processFunctionArgExprExpr(FunctionArgExprExpr node) {
     _process(node);
-    // TODO:
+    processExpr(node.value);
   }
 
   void processFunctionArgExprQualifiedWildcard(
       FunctionArgExprQualifiedWildcard node) {
     _process(node);
-    // TODO:
+    processObjectName(node.value);
   }
 
   void processFunctionArgExprWildcard(FunctionArgExprWildcard node) {
     _process(node);
-    // TODO:
   }
 
   void processTableFactorTable(TableFactorTable node) {
@@ -1179,7 +1445,49 @@ class SqlAstVisitor {
 
   void processNamedWindowDefinition(NamedWindowDefinition node) {
     _process(node);
-    // TODO:
+    processIdent(node.name);
+    processWindowSpec(node.windowSpec);
+  }
+
+  void processWindowSpec(WindowSpec node) {
+    _process(node);
+    processListExpr(node.partitionBy);
+    processListOrderByExpr(node.orderBy);
+    processNullable(node.windowFrame, processWindowFrame);
+  }
+
+  void processWindowFrame(WindowFrame node) {
+    _process(node);
+    processWindowFrameUnits(node.units);
+    processWindowFrameBound(node.startBound);
+    processNullable(node.endBound, processWindowFrameBound);
+  }
+
+  void processWindowFrameUnits(WindowFrameUnits node) {
+    _process(node);
+  }
+
+  void processWindowFrameBound(WindowFrameBound node) {
+    _process(node);
+    (switch (node) {
+      WindowFrameBoundPreceding() => processWindowFrameBoundPreceding(node),
+      WindowFrameBoundFollowing() => processWindowFrameBoundFollowing(node),
+      WindowFrameBoundCurrentRow() => processWindowFrameBoundCurrentRow(node),
+    });
+  }
+
+  void processWindowFrameBoundPreceding(WindowFrameBoundPreceding node) {
+    _process(node);
+    processNullable(node.value, processExpr);
+  }
+
+  void processWindowFrameBoundFollowing(WindowFrameBoundFollowing node) {
+    _process(node);
+    processNullable(node.value, processExpr);
+  }
+
+  void processWindowFrameBoundCurrentRow(WindowFrameBoundCurrentRow node) {
+    _process(node);
   }
 
   void processSqlSelect(SqlSelect node) {
@@ -1272,7 +1580,7 @@ class SqlAstVisitor {
 
   void processFetch(Fetch node) {
     _process(node);
-    // TODO:
+    processNullable(node.quantity, processExpr);
   }
 
   void processListLockClause(List<LockClause> node) {
@@ -1282,7 +1590,17 @@ class SqlAstVisitor {
 
   void processLockClause(LockClause node) {
     _process(node);
-    // TODO:
+    processLockType(node.lockType);
+    processNullable(node.of_, processObjectName);
+    processNullable(node.nonblock, processNonBlock);
+  }
+
+  void processLockType(LockType node) {
+    _process(node);
+  }
+
+  void processNonBlock(NonBlock node) {
+    _process(node);
   }
 
   void processSqlQuery(SqlQuery node) {
@@ -1428,7 +1746,75 @@ class SqlAstVisitor {
 
   void processSequenceOptions(SequenceOptions node) {
     _process(node);
-    // TODO:
+    (switch (node) {
+      SequenceOptionsIncrementBy() => processSequenceOptionsIncrementBy(node),
+      SequenceOptionsMinValue() => processSequenceOptionsMinValue(node),
+      SequenceOptionsMaxValue() => processSequenceOptionsMaxValue(node),
+      SequenceOptionsStartWith() => processSequenceOptionsStartWith(node),
+      SequenceOptionsCache() => processSequenceOptionsCache(node),
+      SequenceOptionsCycle() => processSequenceOptionsCycle(node),
+    });
+  }
+
+  void processSequenceOptionsIncrementBy(SequenceOptionsIncrementBy node) {
+    _process(node);
+    processIncrementBy(node.value);
+  }
+
+  void processIncrementBy(IncrementBy node) {
+    _process(node);
+    processExpr(node.increment);
+  }
+
+  void processSequenceOptionsMinValue(SequenceOptionsMinValue node) {
+    _process(node);
+    processMinMaxValue(node.value);
+  }
+
+  void processMinMaxValue(MinMaxValue node) {
+    _process(node);
+    (switch (node) {
+      MinMaxValueEmpty() => processMinMaxValueEmpty(node),
+      MinMaxValueNone() => processMinMaxValueNone(node),
+      MinMaxValueSome() => processMinMaxValueSome(node),
+    });
+  }
+
+  void processMinMaxValueEmpty(MinMaxValueEmpty node) {
+    _process(node);
+  }
+
+  void processMinMaxValueNone(MinMaxValueNone node) {
+    _process(node);
+  }
+
+  void processMinMaxValueSome(MinMaxValueSome node) {
+    _process(node);
+    processExpr(node.value);
+  }
+
+  void processSequenceOptionsMaxValue(SequenceOptionsMaxValue node) {
+    _process(node);
+    processMinMaxValue(node.value);
+  }
+
+  void processSequenceOptionsStartWith(SequenceOptionsStartWith node) {
+    _process(node);
+    processStartWith(node.value);
+  }
+
+  void processStartWith(StartWith node) {
+    _process(node);
+    processExpr(node.start);
+  }
+
+  void processSequenceOptionsCache(SequenceOptionsCache node) {
+    _process(node);
+    processExpr(node.value);
+  }
+
+  void processSequenceOptionsCycle(SequenceOptionsCycle node) {
+    _process(node);
   }
 
   void processColumnOptionDef(ColumnOptionDef node) {
@@ -1666,13 +2052,24 @@ class SqlAstVisitor {
   void processAlterColumnOperationSetDataType(
       AlterColumnOperationSetDataType node) {
     _process(node);
-    // TODO:
+    processSetDataType(node.value);
+  }
+
+  void processSetDataType(SetDataType node) {
+    _process(node);
+    processDataType(node.dataType);
+    processNullable(node.using, processExpr);
   }
 
   void processAlterColumnOperationSetDefault(
       AlterColumnOperationSetDefault node) {
     _process(node);
-    // TODO:
+    processSetDefault(node.value);
+  }
+
+  void processSetDefault(SetDefault node) {
+    _process(node);
+    processExpr(node.value);
   }
 
   void processSwapWith(SwapWith node) {
@@ -1688,7 +2085,14 @@ class SqlAstVisitor {
 
   void processAlterIndexOperation(AlterIndexOperation node) {
     _process(node);
-    // TODO:
+    (switch (node) {
+      RenameIndex() => processRenameIndex(node),
+    });
+  }
+
+  void processRenameIndex(RenameIndex node) {
+    _process(node);
+    processObjectName(node.indexName);
   }
 
   void processAlterIndex(AlterIndex node) {
@@ -1723,7 +2127,30 @@ class SqlAstVisitor {
 
   void processTransactionMode(TransactionMode node) {
     _process(node);
-    // TODO:
+    (switch (node) {
+      TransactionModeAccessMode() => processTransactionModeAccessMode(node),
+      TransactionModeIsolationLevel() =>
+        processTransactionModeIsolationLevel(node),
+    });
+  }
+
+  void processTransactionModeAccessMode(TransactionModeAccessMode node) {
+    _process(node);
+    processTransactionAccessMode(node.value);
+  }
+
+  void processTransactionAccessMode(TransactionAccessMode node) {
+    _process(node);
+  }
+
+  void processTransactionModeIsolationLevel(
+      TransactionModeIsolationLevel node) {
+    _process(node);
+    processTransactionIsolationLevel(node.value);
+  }
+
+  void processTransactionIsolationLevel(TransactionIsolationLevel node) {
+    _process(node);
   }
 
   void processStartTransaction(StartTransaction node) {
@@ -1966,7 +2393,12 @@ class SqlAstVisitor {
 
   void processDataTypeCustom(DataTypeCustom node) {
     _process(node);
-    // TODO:
+    processCustomDataType(node.value);
+  }
+
+  void processCustomDataType(CustomDataType node) {
+    _process(node);
+    processObjectName(node.name);
   }
 
   void processDataTypeArray(DataTypeArray node) {
@@ -2066,12 +2498,43 @@ class SqlAstVisitor {
 
   void processFunctionDefinition(FunctionDefinition node) {
     _process(node);
-    // TODO:
+    (switch (node) {
+      FunctionDefinitionSingleQuotedDef() =>
+        processFunctionDefinitionSingleQuotedDef(node),
+      FunctionDefinitionDoubleDollarDef() =>
+        processFunctionDefinitionDoubleDollarDef(node),
+    });
+  }
+
+  void processFunctionDefinitionSingleQuotedDef(
+      FunctionDefinitionSingleQuotedDef node) {
+    _process(node);
+  }
+
+  void processFunctionDefinitionDoubleDollarDef(
+      FunctionDefinitionDoubleDollarDef node) {
+    _process(node);
   }
 
   void processCreateFunctionUsing(CreateFunctionUsing node) {
     _process(node);
-    // TODO:
+    (switch (node) {
+      CreateFunctionUsingJar() => processCreateFunctionUsingJar(node),
+      CreateFunctionUsingFile() => processCreateFunctionUsingFile(node),
+      CreateFunctionUsingArchive() => processCreateFunctionUsingArchive(node),
+    });
+  }
+
+  void processCreateFunctionUsingJar(CreateFunctionUsingJar node) {
+    _process(node);
+  }
+
+  void processCreateFunctionUsingFile(CreateFunctionUsingFile node) {
+    _process(node);
+  }
+
+  void processCreateFunctionUsingArchive(CreateFunctionUsingArchive node) {
+    _process(node);
   }
 
   void processCreateFunctionBody(CreateFunctionBody node) {
@@ -2121,12 +2584,26 @@ class SqlAstVisitor {
 
   void processMacroArg(MacroArg node) {
     _process(node);
-    // TODO:
+    processIdent(node.name);
+    processNullable(node.defaultExpr, processExpr);
   }
 
   void processMacroDefinition(MacroDefinition node) {
     get<MacroDefinition>()?.call(node);
-    // TODO:
+    (switch (node) {
+      MacroDefinitionExpr() => processMacroDefinitionExpr(node),
+      MacroDefinitionTable() => processMacroDefinitionTable(node),
+    });
+  }
+
+  void processMacroDefinitionExpr(MacroDefinitionExpr node) {
+    _process(node);
+    processExpr(node.value);
+  }
+
+  void processMacroDefinitionTable(MacroDefinitionTable node) {
+    _process(node);
+    processSqlQuery(node.value);
   }
 
   void processCreateMacro(CreateMacro node) {

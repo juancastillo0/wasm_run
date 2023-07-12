@@ -14,15 +14,6 @@ struct WitImplementation;
 export_sql_parser!(WitImplementation);
 
 impl SqlParser for WitImplementation {
-    fn run(value: Model) -> Result<f64, String> {
-        let mapped = map_integer(value.integer);
-        if mapped.is_nan() {
-            Err("NaN returned from map_integer".to_string())
-        } else {
-            Ok(mapped)
-        }
-    }
-
     fn parse_sql(sql_string: String) -> Result<ParsedSql, String> {
         let dialect = sqlparser::dialect::GenericDialect {};
 
@@ -54,6 +45,7 @@ impl ParserState {
                 array_agg_refs: vec![],
                 list_agg_refs: vec![],
                 sql_function_refs: vec![],
+                table_with_joins_refs: vec![],
                 warnings: vec![],
             },
         }
@@ -229,6 +221,136 @@ impl ParserState {
                         )
                     }
                 },
+            }),
+            ast::Statement::Analyze {
+                table_name,
+                partitions,
+                for_columns,
+                columns,
+                cache_metadata,
+                noscan,
+                compute_statistics,
+            } => SqlAst::SqlAnalyze(SqlAnalyze {
+                table_name: self.object_name(table_name),
+                partitions: partitions.map(|p| self.exprs(p)),
+                for_columns,
+                columns: self.idents(columns),
+                cache_metadata,
+                noscan,
+                compute_statistics,
+            }),
+            ast::Statement::Drop {
+                object_type,
+                if_exists,
+                names,
+                cascade,
+                restrict,
+                purge,
+            } => SqlAst::SqlDrop(SqlDrop {
+                object_type: self.object_type(object_type),
+                if_exists,
+                names: names.into_iter().map(|n| self.object_name(n)).collect(),
+                cascade,
+                restrict,
+                purge,
+            }),
+            ast::Statement::DropFunction {
+                if_exists,
+                func_desc,
+                option,
+            } => SqlAst::SqlDropFunction(SqlDropFunction {
+                if_exists,
+                func_desc: func_desc
+                    .into_iter()
+                    .map(|v| self.drop_function_desc(v))
+                    .collect(),
+                option: option.map(|o| self.referential_action(o)),
+            }),
+            ast::Statement::ShowFunctions { filter } => SqlAst::ShowFunctions(ShowFunctions {
+                filter: filter.map(|f| self.show_statement_filter(f)),
+            }),
+            ast::Statement::ShowVariable { variable } => SqlAst::ShowVariable(ShowVariable {
+                variable: self.idents(variable),
+            }),
+            ast::Statement::ShowVariables { filter } => SqlAst::ShowVariables(ShowVariables {
+                filter: filter.map(|f| self.show_statement_filter(f)),
+            }),
+            ast::Statement::ShowCreate { obj_type, obj_name } => SqlAst::ShowCreate(ShowCreate {
+                obj_type: self.show_create_object(obj_type),
+                obj_name: self.object_name(obj_name),
+            }),
+
+            ast::Statement::ShowColumns {
+                extended,
+                full,
+                table_name,
+                filter,
+            } => SqlAst::ShowColumns(ShowColumns {
+                extended,
+                full,
+                table_name: self.object_name(table_name),
+                filter: filter.map(|f| self.show_statement_filter(f)),
+            }),
+            ast::Statement::ShowTables {
+                extended,
+                full,
+                db_name,
+                filter,
+            } => SqlAst::ShowTables(ShowTables {
+                extended,
+                full,
+                db_name: db_name.map(|n| self.ident(n)),
+                filter: filter.map(|f| self.show_statement_filter(f)),
+            }),
+            ast::Statement::ShowCollation { filter } => SqlAst::ShowCollation(ShowCollation {
+                filter: filter.map(|f| self.show_statement_filter(f)),
+            }),
+            ast::Statement::Comment {
+                object_type,
+                object_name,
+                comment,
+                if_exists,
+            } => SqlAst::SqlComment(SqlComment {
+                object_type: self.comment_object(object_type),
+                object_name: self.object_name(object_name),
+                comment,
+                if_exists,
+            }),
+            ast::Statement::Use { db_name } => SqlAst::SqlUse(SqlUse {
+                db_name: self.ident(db_name),
+            }),
+            ast::Statement::ExplainTable {
+                describe_alias,
+                table_name,
+            } => SqlAst::SqlExplainTable(SqlExplainTable {
+                describe_alias,
+                table_name: self.object_name(table_name),
+            }),
+            ast::Statement::Explain {
+                describe_alias,
+                analyze,
+                verbose,
+                statement,
+                format,
+            } => SqlAst::SqlExplain(SqlExplain {
+                describe_alias,
+                analyze,
+                verbose,
+                statement: self.statement_ref(*statement),
+                format: format.map(|f| self.analyze_format(f)),
+            }),
+            ast::Statement::Merge {
+                into,
+                table,
+                source,
+                on,
+                clauses,
+            } => SqlAst::SqlMerge(SqlMerge {
+                into,
+                table: self.table_factor(table),
+                source: self.table_factor(source),
+                on: self.expr(*on),
+                clauses: clauses.into_iter().map(|c| self.merge_clause(c)).collect(),
             }),
 
             _ => todo!(),
@@ -1094,6 +1216,13 @@ impl ParserState {
         }
     }
 
+    fn table_with_joins_ref(&mut self, f: ast::TableWithJoins) -> TableWithJoinsRef {
+        let t = self.table_with_joins(f);
+        let index = self.parsed.table_with_joins_refs.len() as u32;
+        self.parsed.table_with_joins_refs.push(t);
+        TableWithJoinsRef { index }
+    }
+
     fn object_name(&mut self, o: ast::ObjectName) -> ObjectName {
         o.0.into_iter().map(|i| self.ident(i)).collect()
     }
@@ -1221,8 +1350,57 @@ impl ParserState {
                 args: args.map(|a| self.function_args(a)),
                 with_hints: self.exprs(with_hints),
             }),
-            // TODO:
-            _ => todo!(),
+            ast::TableFactor::Derived {
+                lateral,
+                subquery,
+                alias,
+            } => TableFactor::TableFactorDerived(TableFactorDerived {
+                lateral,
+                subquery: self.query_ref(subquery),
+                alias: alias.map(|a| self.table_alias(a)),
+            }),
+            ast::TableFactor::NestedJoin {
+                table_with_joins,
+                alias,
+            } => TableFactor::TableFactorNestedJoin(TableFactorNestedJoin {
+                table_with_joins: self.table_with_joins_ref(*table_with_joins),
+                alias: alias.map(|a| self.table_alias(a)),
+            }),
+            ast::TableFactor::UNNEST {
+                alias,
+                array_expr,
+                with_offset,
+                with_offset_alias,
+            } => TableFactor::TableFactorUnnest(TableFactorUnnest {
+                alias: alias.map(|a| self.table_alias(a)),
+                array_expr: self.expr(*array_expr),
+                with_offset,
+                with_offset_alias: with_offset_alias.map(|a| self.ident(a)),
+            }),
+            ast::TableFactor::TableFunction { expr, alias } => {
+                TableFactor::TableFactorTableFunction(TableFactorTableFunction {
+                    expr: self.expr(expr),
+                    alias: alias.map(|a| self.table_alias(a)),
+                })
+            }
+            ast::TableFactor::Pivot {
+                name,
+                table_alias,
+                aggregate_function,
+                value_column,
+                pivot_values,
+                pivot_alias,
+            } => TableFactor::TableFactorPivot(TableFactorPivot {
+                name: self.object_name(name),
+                table_alias: table_alias.map(|a| self.table_alias(a)),
+                aggregate_function: self.expr(aggregate_function),
+                value_column: self.idents(value_column),
+                pivot_values: pivot_values
+                    .into_iter()
+                    .map(|v| self.sql_value(v))
+                    .collect(),
+                pivot_alias: pivot_alias.map(|a| self.table_alias(a)),
+            }),
         }
     }
 
@@ -2027,6 +2205,92 @@ impl ParserState {
                     filler: filler.map(|f| self.expr(*f)),
                 })
             }
+        }
+    }
+
+    fn merge_clause(&mut self, c: ast::MergeClause) -> MergeClause {
+        match c {
+            ast::MergeClause::MatchedUpdate {
+                predicate,
+                assignments,
+            } => MergeClause::MatchedUpdate(MatchedUpdate {
+                predicate: predicate.map(|p| self.expr(p)),
+                assignments: assignments
+                    .into_iter()
+                    .map(|a| self.assignment(a))
+                    .collect(),
+            }),
+            ast::MergeClause::MatchedDelete(predicate) => {
+                MergeClause::MatchedDelete(MatchedDelete {
+                    predicate: predicate.map(|p| self.expr(p)),
+                })
+            }
+            ast::MergeClause::NotMatched {
+                predicate,
+                columns,
+                values,
+            } => MergeClause::NotMatched(NotMatched {
+                predicate: predicate.map(|p| self.expr(p)),
+                columns: columns.into_iter().map(|c| self.ident(c)).collect(),
+                values: self.values(values),
+            }),
+        }
+    }
+
+    fn analyze_format(&mut self, f: ast::AnalyzeFormat) -> AnalyzeFormat {
+        match f {
+            ast::AnalyzeFormat::TEXT => AnalyzeFormat::Text,
+            ast::AnalyzeFormat::GRAPHVIZ => AnalyzeFormat::Graphviz,
+            ast::AnalyzeFormat::JSON => AnalyzeFormat::Json,
+        }
+    }
+
+    fn comment_object(&mut self, object_type: ast::CommentObject) -> CommentObject {
+        match object_type {
+            ast::CommentObject::Column => CommentObject::Column,
+            ast::CommentObject::Table => CommentObject::Table,
+        }
+    }
+
+    fn show_statement_filter(&mut self, f: ast::ShowStatementFilter) -> ShowStatementFilter {
+        match f {
+            ast::ShowStatementFilter::Like(s) => ShowStatementFilter::Like(s),
+            ast::ShowStatementFilter::ILike(s) => ShowStatementFilter::ILike(s),
+            ast::ShowStatementFilter::Where(s) => ShowStatementFilter::Where(self.expr(s)),
+        }
+    }
+
+    fn show_create_object(&mut self, obj_type: ast::ShowCreateObject) -> ShowCreateObject {
+        match obj_type {
+            ast::ShowCreateObject::Event => ShowCreateObject::Event,
+            ast::ShowCreateObject::Function => ShowCreateObject::Function,
+            ast::ShowCreateObject::Procedure => ShowCreateObject::Procedure,
+            ast::ShowCreateObject::Table => ShowCreateObject::Table,
+            ast::ShowCreateObject::Trigger => ShowCreateObject::Trigger,
+            ast::ShowCreateObject::View => ShowCreateObject::View,
+        }
+    }
+
+    fn drop_function_desc(&mut self, v: ast::DropFunctionDesc) -> DropFunctionDesc {
+        DropFunctionDesc {
+            name: self.object_name(v.name),
+            args: v.args.map(|v| {
+                v.into_iter()
+                    .map(|v| self.operate_function_arg(v))
+                    .collect()
+            }),
+        }
+    }
+
+    fn object_type(&mut self, object_type: ast::ObjectType) -> ObjectType {
+        match object_type {
+            ast::ObjectType::Table => ObjectType::Table,
+            ast::ObjectType::View => ObjectType::View,
+            ast::ObjectType::Index => ObjectType::Index,
+            ast::ObjectType::Schema => ObjectType::Schema,
+            ast::ObjectType::Role => ObjectType::Role,
+            ast::ObjectType::Sequence => ObjectType::Sequence,
+            ast::ObjectType::Stage => ObjectType::Stage,
         }
     }
 }

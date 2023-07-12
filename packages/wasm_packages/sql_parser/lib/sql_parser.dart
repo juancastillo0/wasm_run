@@ -16,9 +16,6 @@ export 'package:sql_parser/src/sql_parser_wit.gen.dart';
 /// from the file system in `lib/sql_parser_wasm.wasm` either reading it directly
 /// in native platforms or with a GET request for Dart web.
 Future<SqlParserWorld> createSqlParser({
-  required WasiConfig wasiConfig,
-  // TODO: remove imports and wasi
-  required SqlParserWorldImports imports,
   Future<WasmModule> Function()? loadModule,
   WorkersConfig? workersConfig,
 }) async {
@@ -37,11 +34,10 @@ Future<SqlParserWorld> createSqlParser({
     module = await uris.loadModule();
   }
   final builder = module.builder(
-    wasiConfig: wasiConfig,
     workersConfig: workersConfig,
   );
 
-  return SqlParserWorld.init(builder, imports: imports);
+  return SqlParserWorld.init(builder, imports: const SqlParserWorldImports());
 }
 
 extension SqlAstRefValue on SqlAstRef {
@@ -87,3 +83,8 @@ extension ListAggRefValue on ListAggRef {
 extension SqlFunctionRefValue on SqlFunctionRef {
   SqlFunction value(ParsedSql parsed) => parsed.sqlFunctionRefs[index_];
 }
+
+extension TableWithJoinsRefValue on TableWithJoinsRef {
+  TableWithJoins value(ParsedSql parsed) => parsed.tableWithJoinsRefs[index_];
+}
+

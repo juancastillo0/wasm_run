@@ -1,18 +1,6 @@
 package sql-parser-namespace:sql-parser
 
 world sql-parser {
-    /// A record is a class with named fields
-    /// There are enum, list, variant, option, result, tuple and union types
-    record model {
-      /// Comment for a field
-      integer: s32,
-    }
-
-    /// An import is a function that is provided by the host environment (Dart)
-    import map-integer: func(value: s32) -> float64
-
-    /// export
-    export run: func(value: model) -> result<float64, string>
 
     union sql-ast {
       // analyze
@@ -45,6 +33,177 @@ world sql-parser {
       sql-assert,
       sql-execute,
       create-type,
+
+      sql-analyze,
+      sql-drop,
+      sql-drop-function,
+      show-functions,
+      show-variable,
+      show-variables,
+      show-create,
+      show-columns,
+      show-tables,
+      show-collation,
+      sql-comment,
+      sql-use,
+      sql-explain-table,
+      sql-explain,
+      sql-merge,
+    }
+
+
+    record sql-analyze {
+      table-name: object-name,
+      partitions: option<list<expr>>,
+      for-columns: bool,
+      columns: list<ident>,
+      cache-metadata: bool,
+      noscan: bool,
+      compute-statistics: bool,
+    }
+
+    enum object-type {
+      table,
+      view,
+      index,
+      schema,
+      role,
+      sequence,
+      stage,
+    }
+
+    record sql-drop {
+      object-type: object-type,
+      if-exists: bool,
+      names: list<object-name>,
+      cascade: bool,
+      restrict: bool,
+      purge: bool,
+    }
+
+    record sql-drop-function {
+      if-exists: bool,
+      func-desc: list<drop-function-desc>,
+      %option: option<referential-action>,
+    }
+
+    record drop-function-desc {
+      name: object-name,
+      args: option<list<operate-function-arg>>,
+    }
+
+    record show-functions {
+      filter: option<show-statement-filter>,
+    }
+
+    record show-variable {
+      variable: list<ident>,
+    }
+
+    record show-variables {
+      filter: option<show-statement-filter>,
+    }
+
+    record show-create {
+      obj-type: show-create-object,
+      obj-name: object-name,
+    }
+
+    enum show-create-object {
+      event,
+      function,
+      procedure,
+      table,
+      trigger,
+      view,
+    }
+
+    variant show-statement-filter {
+        like(string),
+        i-like(string),
+        where(expr),
+    }
+
+    record show-columns {
+      extended: bool,
+      full: bool,
+      table-name: object-name,
+      filter: option<show-statement-filter>,
+    }
+
+    record show-tables {
+      extended: bool,
+      full: bool,
+      db-name: option<ident>,
+      filter: option<show-statement-filter>,
+    }
+
+    record show-collation {
+      filter: option<show-statement-filter>,
+    }
+
+    record sql-comment {
+      object-type: comment-object,
+      object-name: object-name,
+      comment: option<string>,
+      if-exists: bool,
+    }
+
+    enum comment-object {
+        column,
+        table,
+    }
+
+    record sql-use {
+      db-name: ident,
+    }
+
+    record sql-explain-table {
+      describe-alias: bool,
+      table-name: object-name,
+    }
+
+    record sql-explain {
+      describe-alias: bool,
+      analyze: bool,
+      verbose: bool,
+      statement: sql-ast-ref,
+      format: option<analyze-format>,
+    }
+
+    enum analyze-format {
+      text,
+      graphviz,
+      json,
+    }
+
+    record sql-merge {
+      into: bool,
+      table: table-factor,
+      source: table-factor,
+      on: expr,
+      clauses: list<merge-clause>,
+    }
+
+    union merge-clause {
+      matched-update,
+      matched-delete,
+      not-matched,
+    }
+    
+    record matched-delete {
+      predicate: option<expr>,
+    }
+
+    record matched-update {
+      predicate: option<expr>,
+      assignments: list<assignment>,
+    }
+
+    record not-matched {
+      predicate: option<expr>,
+      columns: list<ident>,
+      values: values,
     }
 
     record sql-ast-ref {
@@ -892,10 +1051,18 @@ world sql-parser {
       joins: list<join>,
     }
 
+    record table-with-joins-ref {
+      index: u32,
+    }
+
     /// https://docs.rs/sqlparser/0.35.0/sqlparser/ast/enum.TableFactor.html
     union table-factor {
       table-factor-table,
-      // TODO: derived
+      table-factor-derived,
+      table-factor-table-function,
+      table-factor-unnest,
+      table-factor-nested-join,
+      table-factor-pivot,
     }
 
     record table-factor-table {
@@ -903,6 +1070,38 @@ world sql-parser {
       alias: option<table-alias>,
       args: option<list<function-arg>>,
       with-hints: list<expr>,
+    }
+
+    record table-factor-derived {
+      lateral: bool,
+      subquery: sql-query-ref,
+      alias: option<table-alias>,
+    }
+
+    record table-factor-table-function {
+      expr: expr,
+      alias: option<table-alias>,
+    }
+
+    record table-factor-unnest {
+      alias: option<table-alias>,
+      array-expr: expr,
+      with-offset: bool,
+      with-offset-alias: option<ident>,
+    }
+
+    record table-factor-nested-join {
+      table-with-joins: table-with-joins-ref,
+      alias: option<table-alias>,
+    }
+
+    record table-factor-pivot {
+      name: object-name,
+      table-alias: option<table-alias>,
+      aggregate-function: expr,
+      value-column: list<ident>,
+      pivot-values: list<sql-value>,
+      pivot-alias: option<table-alias>,
     }
 
     record table {
@@ -1584,9 +1783,142 @@ world sql-parser {
       array-agg-refs: list<array-agg>,
       list-agg-refs: list<list-agg>,
       sql-function-refs: list<sql-function>,
+      table-with-joins-refs: list<table-with-joins>,
       warnings: list<string>,
     }
 
     export parse-sql: func(sql: string) -> result<parsed-sql, string>
 }
 
+
+//    Truncate {
+//        table_name: object-name,
+//        partitions: option<list<expr>>,
+//        table: bool,
+//    },
+//    Msck {
+//        table_name: object-name,
+//        repair: bool,
+//        partition_action: option<AddDropSync>,
+//    },
+//    Directory {
+//        overwrite: bool,
+//        local: bool,
+//        path: String,
+//        file_format: option<FileFormat>,
+//        source: Box<Query>,
+//    },
+//    Copy {
+//        source: CopySource,
+//        to: bool,
+//        target: CopyTarget,
+//        options: list<Copyoption>,
+//        legacy_options: list<CopyLegacyoption>,
+//        values: list<option<String>>,
+//    },
+//    CopyIntoSnowflake {
+//        into: object-name,
+//        from_stage: object-name,
+//        from_stage_alias: option<ident>,
+//        stage_params: StageParamsObject,
+//        from_transformations: option<list<StageLoadSelectItem>>,
+//        files: option<list<String>>,
+//        pattern: option<String>,
+//        file_format: DataLoadingoptions,
+//        copy_options: DataLoadingoptions,
+//        validation_mode: option<String>,
+//    },
+//    Close {
+//        cursor: CloseCursor,
+//    },
+//    CreateRole {
+//Show 18 fields
+//},
+//    Fetch {
+//        name: ident,
+//        direction: FetchDirection,
+//        into: option<object-name>,
+//    },
+//    Discard {
+//        object_type: DiscardObject,
+//    },
+//    SetRole {
+//        context_modifier: ContextModifier,
+//        role_name: option<ident>,
+//    },
+//    SetTimeZone {
+//        local: bool,
+//        value: expr,
+//    },
+//    SetNames {
+//        charset_name: String,
+//        collation_name: option<String>,
+//    },
+//    SetNamesDefault {},
+//    CreateSchema {
+//        schema_name: SchemaName,
+//        if_not_exists: bool,
+//    },
+//    CreateDatabase {
+//        db_name: object-name,
+//        if_not_exists: bool,
+//        location: option<String>,
+//        managed_location: option<String>,
+//    },
+//    CreateStage {
+//        or_replace: bool,
+//        temporary: bool,
+//        if_not_exists: bool,
+//        name: object-name,
+//        stage_params: StageParamsObject,
+//        directory_table_params: DataLoadingoptions,
+//        file_format: DataLoadingoptions,
+//        copy_options: DataLoadingoptions,
+//        comment: option<String>,
+//    },
+//    Grant {
+//        privileges: Privileges,
+//        objects: GrantObjects,
+//        grantees: list<ident>,
+//        with_grant_option: bool,
+//        granted_by: option<ident>,
+//    },
+//    Revoke {
+//        privileges: Privileges,
+//        objects: GrantObjects,
+//        grantees: list<ident>,
+//        granted_by: option<ident>,
+//        cascade: bool,
+//    },
+//    Deallocate {
+//        name: ident,
+//        prepare: bool,
+//    },
+//    Prepare {
+//        name: ident,
+//        data_types: list<DataType>,
+//        statement: Box<Statement>,
+//    },
+//    Kill {
+//        modifier: option<KillType>,
+//        id: u64,
+//    },
+//    Cache {
+//        table_flag: option<object-name>,
+//        table_name: object-name,
+//        has_as: bool,
+//        options: list<Sqloption>,
+//        query: option<Query>,
+//    },
+//    UNCache {
+//        table_name: object-name,
+//        if_exists: bool,
+//    },
+//    CreateSequence {
+//        temporary: bool,
+//        if_not_exists: bool,
+//        name: object-name,
+//        data_type: option<DataType>,
+//        sequence_options: list<Sequenceoptions>,
+//        owned_by: option<object-name>,
+//    },
