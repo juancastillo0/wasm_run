@@ -1,11 +1,14 @@
-// ignore_for_file: unnecessary_parenthesis, unnecessary_statements
+// ignore_for_file: unnecessary_parenthesis, unnecessary_statements, unnecessary_brace_in_string_interps
 
+import 'package:flutter_example/dependencies_sorting.dart';
 import 'package:flutter_example/models/btype.dart';
 import 'package:flutter_example/sql_json.dart';
 import 'package:sql_parser/sql_parser.dart';
 import 'package:sql_parser/visitor.dart';
 import 'package:sqlite3/common.dart';
 import 'package:wasm_wit_component/wasm_wit_component.dart';
+
+export 'package:sql_parser/sql_parser.dart';
 
 BaseType toDartType(DataType t) {
   return switch (t) {
@@ -66,14 +69,6 @@ BaseType toDartType(DataType t) {
   };
 }
 
-sealed class VType {}
-
-class ComposeType implements VType {
-  final List<({String name, BaseType type})> fields;
-
-  ComposeType(this.fields);
-}
-
 typedef BaseType = BType;
 
 class ModelType {
@@ -81,7 +76,13 @@ class ModelType {
   final List<ModelKey> keys;
   final List<ModelReference> references;
 
-  ModelType(this.fields, this.keys, this.references);
+  ///
+  ModelType(
+    this.fields, {
+    List<ModelKey>? keys,
+    List<ModelReference>? references,
+  })  : keys = keys ?? [],
+        references = references ?? [];
 
   Set<String>? primaryKey() {
     final index = keys.indexWhere((k) => k.primary);
@@ -153,14 +154,18 @@ class ModelField {
   ModelField(
     this.name,
     this.type, {
-    required this.nullable,
+    required bool? nullable,
     bool? optional,
     this.defaultValue,
-  }) : optional = optional ?? (nullable || defaultValue != null);
+  })  : optional = optional ??
+            ((nullable == true || type is BTypeNullable) ||
+                defaultValue != null),
+        nullable = nullable == true || type is BTypeNullable;
 
   @override
   String toString() {
-    return '$name${optional ? '' : '*'}: ${type.name}${nullable ? '?' : ''}'
+    final n = type.name;
+    return '$name${optional ? '' : '*'}: ${n}${nullable && !n.endsWith('?') ? '?' : ''}'
         '${defaultValue == null ? '' : ' = $defaultValue'}';
   }
 
@@ -257,14 +262,26 @@ class DataClassProps {
   int get hashCode => const ObjectComparator().hashProps(props);
 }
 
-mixin BaseDataClass {
-  DataClassProps get props;
+Object? toSqlValue(Object? value) {
+  if (value == null) return null;
+  if (value is DateTime) return value.toIso8601String();
+  if (value is Duration) return value.inMicroseconds;
+  if (value is List) return value.map(toSqlValue).toList();
+  if (value is Option) return toSqlValue(value.value);
+  if (value is Map) return value.map((k, v) => MapEntry(k, toSqlValue(v)));
+  return value;
+}
 
-  Map<String, Object?> toJson() => props.fields;
+mixin BaseDataClass {
+  DataClassProps get dataClassProps;
+
+  Map<String, Object?> toJson() => dataClassProps.fields.map(
+        (key, value) => MapEntry(key, toSqlValue(value)),
+      );
 
   @override
   String toString() {
-    final p = props;
+    final p = dataClassProps;
     final fields = p.fields.toString();
     return '${p.name}(${fields.substring(1, fields.length - 1)})';
   }
@@ -274,10 +291,10 @@ mixin BaseDataClass {
       identical(this, other) ||
       other is BaseDataClass &&
           runtimeType == other.runtimeType &&
-          props == other.props;
+          dataClassProps == other.dataClassProps;
 
   @override
-  int get hashCode => props.hashCode;
+  int get hashCode => dataClassProps.hashCode;
 }
 
 class CodePosition with BaseDataClass {
@@ -311,7 +328,7 @@ class CodePosition with BaseDataClass {
   }
 
   @override
-  DataClassProps get props => DataClassProps(
+  DataClassProps get dataClassProps => DataClassProps(
         'CodePosition',
         {'index': index, 'column': column, 'line': line},
       );
@@ -328,6 +345,7 @@ class StatementInfo with BaseDataClass {
   final Object? prepareError;
   final List<SqlPlaceholder> placeholders;
   final String identifier;
+  final String? closestComment;
 
   ///
   StatementInfo({
@@ -341,10 +359,11 @@ class StatementInfo with BaseDataClass {
     required this.prepareError,
     required this.placeholders,
     required this.identifier,
+    required this.closestComment,
   });
 
   @override
-  DataClassProps get props => DataClassProps(
+  DataClassProps get dataClassProps => DataClassProps(
         'StatementInfo',
         {
           'statement': statement,
@@ -367,21 +386,30 @@ class SqlTypeFinder {
   final List<int> statementEnd = [];
   final List<Expr> _expressionStack = [];
   final List<StatementInfo> statementsInfo = [];
+  // TODO: remove
   int _currentStatement = 0;
+  // TODO: remove
   final Map<SqlAst, List<(SqlValuePlaceholder, BaseType)>>
       statementPlaceholders = Map.identity();
 
   final CommonDatabase db;
   final ParsedSql parsed;
   final SqlDialect dialect;
+
+  late final AstTopologicalSort astSorted;
   final Map<String, ModelType> allTables = {};
   final Map<SqlQuery, ModelType> allSelects = Map.identity();
+  final Map<SqlAst, ModelType> allReturning = Map.identity();
+
   final Map<String, CreateFunction> allFunctions = {};
   late SqlScope scope = SqlScope(this);
   Map<String, TypeWithNullability> _allFields = {};
+
   final List<({int index, String comment})> comments = [];
 
   late final PlaceholderVisitor placeholderVisitor = PlaceholderVisitor(this);
+  late final DependenciesVisitor dependenciesVisitor =
+      DependenciesVisitor(this);
   late final SqlJsonTypeFinder jsonTypeFinder = SqlJsonTypeFinder(this);
 
   ///
@@ -391,13 +419,14 @@ class SqlTypeFinder {
     this.db, {
     this.dialect = SqlDialect.sqlite,
   }) {
+    astSorted = topologicalSortAst(parsed.statements, dependenciesVisitor);
     process();
     processPositions();
   }
 
   Iterable<SqlAst> iterateStatements() sync* {
-    for (final (i, statement) in parsed.statements.indexed) {
-      _currentStatement = i;
+    for (final statement in astSorted.statements) {
+      _currentStatement = parsed.statements.indexOf(statement);
       yield statement;
     }
   }
@@ -449,7 +478,8 @@ class SqlTypeFinder {
     }
 
     // const wp = '\\s+';
-    for (final (i, stmt) in iterateStatements().indexed) {
+    // TODO: should we use sorted statements for this?
+    for (final (i, stmt) in parsed.statements.indexed) {
       if (i == statementEnd.length) {
         statementEnd.add(text.length);
       }
@@ -523,12 +553,49 @@ class SqlTypeFinder {
           start: CodePosition.fromIndex(start_, lineOffsets),
           end: CodePosition.fromIndex(end, lineOffsets),
           isSelect: stmt is SqlQuery,
-          model: allSelects[stmt] ?? allTables[name],
+          model: allSelects[stmt] ?? allTables[name] ?? allReturning[stmt],
           preparedStatement: preparedStatement,
           prepareError: prepareError,
           placeholders: placeholders,
+          closestComment: findClosestComment(start_, end),
         ),
       );
+    }
+  }
+
+  String? findClosestComment(int index, int end) {
+    if (comments.isEmpty) return null;
+    final foundComment = comments.indexWhere((c) => c.index >= index);
+    if (foundComment == -1) return null;
+    final comment = comments[foundComment];
+    if (comment.index > end) return null;
+
+    var found = [comment];
+    int nextCommentIndex = foundComment + 1;
+    while (nextCommentIndex < comments.length &&
+        comments[nextCommentIndex].index < end) {
+      final c = comments[nextCommentIndex];
+      final prev = found.last;
+      final prevEnd = prev.index + prev.comment.length;
+      final betweenComments = text.substring(prevEnd, c.index);
+      if (!RegExp(r'^\s+$').hasMatch(betweenComments)) {
+        break;
+      }
+      if (c.comment.startsWith('--') &&
+          prev.comment.startsWith('--') &&
+          c.index == prevEnd + 1) {
+        found.add(c);
+      } else {
+        found = [c];
+      }
+      nextCommentIndex++;
+    }
+    if (found.last.comment.startsWith('--')) {
+      // Remove --
+      return found.map((c) => c.comment.substring(2)).join();
+    } else {
+      // Remove /* ... */
+      return found.last.comment.substring(2, found.last.comment.length - 2);
     }
   }
 
@@ -656,9 +723,38 @@ class SqlTypeFinder {
     }
     for (final stmt in iterateStatements()) {
       (switch (stmt) {
-        SqlInsert() => null,
-        SqlUpdate() => null,
-        SqlDelete() => null,
+        SqlInsert() => () {
+            if (stmt.returning != null) {
+              final scope = SqlScope(this);
+              final model = queryToDartClass(stmt.source);
+              final t = scope.getTable(stmt.tableName.joined);
+              scope.allFields.addEntries(
+                [...?model?.fields, ...?t?.fields].map((e) => MapEntry(
+                      e.name,
+                      TypeWithNullability(e.type, e.type.isNullable),
+                    )),
+              );
+
+              allReturning[stmt] =
+                  ModelType(selectedFields(stmt.returning!, scope));
+            }
+          }(),
+        SqlUpdate() => () {
+            if (stmt.returning != null) {
+              allReturning[stmt] = returningModelType(
+                [stmt.table, if (stmt.from != null) stmt.from!],
+                stmt.returning!,
+              );
+            }
+          }(),
+        SqlDelete() => () {
+            if (stmt.returning != null) {
+              allReturning[stmt] = returningModelType(
+                [...stmt.from, if (stmt.using != null) ...stmt.using!],
+                stmt.returning!,
+              );
+            }
+          }(),
         SqlQuery() => () {
             final model = queryToDartClass(stmt);
             if (model != null) {
@@ -672,8 +768,16 @@ class SqlTypeFinder {
     }
   }
 
+  ModelType returningModelType(
+    List<TableWithJoins> from,
+    List<SelectItem> returning,
+  ) {
+    final scope = SqlScope(this)..addTableWithJoins(from);
+    return ModelType(selectedFields(returning, scope));
+  }
+
   ModelType toDartClass(SqlCreateTable table) {
-    final model = ModelType([], [], []);
+    final model = ModelType([]);
     model.fields.addAll(table.columns.map((f) {
       final type = toDartType(f.dataType);
 
@@ -802,13 +906,10 @@ class SqlTypeFinder {
                     '${e.$1}',
                     exprType(e.$2),
                     nullable: true, // TODO: check
-                    optional: true,
                     defaultValue: null,
                   ),
                 )
                 .toList(),
-            [],
-            [],
           );
         }(),
       SqlInsertRef() => null,
@@ -820,7 +921,7 @@ class SqlTypeFinder {
   }
 
   ModelType selectToDartClass(SqlSelect query) {
-    final model = ModelType([], [], []);
+    final model = ModelType([]);
     // final selection = query.selection;
     // final List<Expr> groupBy;
 
@@ -837,23 +938,26 @@ class SqlTypeFinder {
 
     // TODO: use scopes
     final scope = SqlScope(this)..addTableWithJoins(query.from);
+    model.fields.addAll(selectedFields(query.projection, scope));
+    return model;
+  }
+
+  List<ModelField> selectedFields(List<SelectItem> items, SqlScope scope) {
     final prevAllFields = _allFields;
     _allFields = scope.allFields;
 
-    final fields = model.fields;
-    for (final (i, value) in query.projection.indexed) {
+    final List<ModelField> fields = [];
+    for (final (i, value) in items.indexed) {
       (switch (value) {
         SelectItemUnnamedExpr(:final value) => fields.add(ModelField(
             exprFieldName(value) ?? '$i',
             exprType(value),
-            nullable: exprNullable(value), // TODO: use join kind
-            optional: true,
+            nullable: null, // TODO: use join kind
           )),
         SelectItemExprWithAlias(:final value) => fields.add(ModelField(
             value.alias.value,
             exprType(value.expr),
-            nullable: exprNullable(value.expr), // TODO: use join kind
-            optional: true,
+            nullable: null, // TODO: use join kind
           )),
         SelectItemQualifiedWildcard(:final value) => fields.addAll(
             scope.tableFields(value.qualifier.joined) ?? const [],
@@ -866,7 +970,7 @@ class SqlTypeFinder {
     }
 
     _allFields = prevAllFields;
-    return model;
+    return fields;
   }
 
   String? exprFieldName(Expr expr) {
@@ -884,9 +988,101 @@ class SqlTypeFinder {
     return _allFields[v]?.isNullable ?? true;
   }
 
-  BaseType exprType(Expr expr) {
+  bool exprIsNullable(Expr expr) {
+    bool anyNullable(List<ExprRef?> exprs) {
+      return exprs.any((e) => e != null && exprIsNullable(e.value(parsed)));
+    }
+
+    final isNullable = (switch (expr) {
+      Ident() => _allFields[expr.value]?.isNullable ?? true,
+      ExprCompoundIdentifier() =>
+        _allFields[expr.value.joined]?.isNullable ?? true,
+      UnaryOp(:final expr) ||
+      BoolUnaryOp(:final expr) ||
+      InList(:final expr) ||
+      InSubquery(:final expr) =>
+        exprIsNullable(expr.value(parsed)),
+      BinaryOp(:final left, :final right) ||
+      IsDistinctFrom(:final left, :final right) ||
+      IsNotDistinctFrom(:final left, :final right) =>
+        exprIsNullable(left.value(parsed)) ||
+            exprIsNullable(right.value(parsed)),
+      // TODO:
+      AnyOp(:final expr) ||
+      AllOp(:final expr) =>
+        exprIsNullable(expr.value(parsed)),
+      Exists() => false,
+      NestedExpr() => exprIsNullable(expr.expr.value(parsed)),
+      SqlValue() => sqlValueType(expr) is BTypeNullable,
+      Subquery() => false,
+      // TODO: json path access
+      JsonAccess() => true,
+      CompositeAccess() => true,
+      MapAccess() => true,
+      // TODO: check return type and json functions
+      SqlFunctionRef() => false,
+      Between(:final expr, :final low, :final high) =>
+        exprIsNullable(expr.value(parsed)) ||
+            exprIsNullable(low.value(parsed)) ||
+            exprIsNullable(high.value(parsed)),
+      InUnnest(:final expr, arrayExpr: final pattern) ||
+      Like(:final expr, :final pattern) ||
+      ILike(:final expr, :final pattern) ||
+      SimilarTo(:final expr, :final pattern) =>
+        exprIsNullable(expr.value(parsed)) ||
+            exprIsNullable(pattern.value(parsed)),
+      Cast(:final expr) ||
+      TryCast(:final expr) ||
+      SafeCast(:final expr) =>
+        exprIsNullable(expr.value(parsed)),
+      // TODO:
+      AtTimeZone(:final timestamp) => exprIsNullable(timestamp.value(parsed)),
+      Extract(:final expr) ||
+      Ceil(:final expr) ||
+      Floor(:final expr) =>
+        exprIsNullable(expr.value(parsed)),
+      Position(:final expr, :final in_) => anyNullable([expr, in_]),
+      Substring(:final expr, :final substringFrom, :final substringFor) =>
+        anyNullable([expr, substringFrom, substringFor]),
+      Trim(:final expr, :final trimWhat) => anyNullable([expr, trimWhat]),
+      Overlay(
+        :final expr,
+        :final overlayWhat,
+        :final overlayFrom,
+        :final overlayFor
+      ) =>
+        anyNullable([expr, overlayWhat, overlayFrom, overlayFor]),
+      Collate(:final expr) => anyNullable([expr]),
+      IntroducedString() => sqlValueType(expr.value) is BTypeNullable,
+      TypedString() => false,
+      // TODO: should we use the conditions?
+      CaseExpr() => anyNullable(
+          expr.results.followedBy(
+            [if (expr.elseResult != null) expr.elseResult!],
+          ).toList(),
+        ),
+      ListAggRef() ||
+      ArrayAggRef() ||
+      ArraySubquery() ||
+      GroupingSets() ||
+      CubeExpr() ||
+      RollupExpr() ||
+      TupleExpr() ||
+      ArrayExpr() =>
+        false,
+      // TODO: check array type
+      ArrayIndex() => true,
+      MatchAgainst() => true,
+      IntervalExpr(:final value) => exprIsNullable(value.value(parsed)),
+      AggregateExpressionWithFilter(:final expr, :final filter) =>
+        anyNullable([expr, filter]),
+    });
+    return isNullable;
+  }
+
+  BaseType exprType(Expr expr, {bool withNullability = true}) {
     _expressionStack.add(expr);
-    final ty = (switch (expr) {
+    BType ty = (switch (expr) {
       Ident() => _allFields[expr.value]?.type ?? BaseType.dynamic,
       ExprCompoundIdentifier() =>
         _allFields[expr.value.joined]?.type ?? BaseType.dynamic,
@@ -904,6 +1100,7 @@ class SqlTypeFinder {
               ? t.fields.first.type
               : BaseType.dynamic;
         }(),
+      // TODO:
       JsonAccess() => BaseType.dynamic,
       CompositeAccess() => BaseType.dynamic,
       MapAccess() => BaseType.dynamic,
@@ -982,6 +1179,10 @@ class SqlTypeFinder {
       IntervalExpr() => BaseType.duration,
       AggregateExpressionWithFilter() => BaseType.dynamic,
     });
+    if (withNullability) {
+      final n = exprIsNullable(expr);
+      ty = ty.withNullability(n);
+    }
     _expressionStack.removeLast();
     return ty;
   }
@@ -1454,20 +1655,15 @@ class SqlTypeFinder {
     final model = queryToDartClass(stmt.query);
     // TODO: add column names for VALUES and others
     if (model != null) return model;
-    return ModelType(
-      [
-        ...stmt.columns.map(
-          (e) => ModelField(
-            e.value,
-            BaseType.dynamic,
-            nullable: true,
-            optional: true,
-          ),
-        )
-      ],
-      [],
-      [],
-    );
+    return ModelType([
+      ...stmt.columns.map(
+        (e) => ModelField(
+          e.value,
+          BaseType.dynamic,
+          nullable: true,
+        ),
+      )
+    ]);
   }
 }
 
@@ -1495,6 +1691,24 @@ extension FunctionArgExt on FunctionArg {
         final FunctionArgNamed v => v.value.arg,
         final FunctionArgUnnamed v => v.value,
       };
+}
+
+bool isDatabaseDefinitionStatement(SqlAst stmt) {
+  return switch (stmt) {
+    SqlCreateTable() ||
+    CreateVirtualTable() ||
+    SqlDeclare() ||
+    CreateType() ||
+    CreateFunction() ||
+    CreateProcedure() ||
+    CreateMacro() ||
+    SqlCreateView() ||
+    SqlCreateIndex() ||
+    AlterTable() ||
+    AlterIndex() =>
+      true,
+    _ => false,
+  };
 }
 
 class TypeWithNullability {
@@ -1533,7 +1747,7 @@ class SelectedTable {
   });
 }
 
-extension on ObjectName {
+extension ObjectNameJoined on ObjectName {
   String get joined => map((e) => e.value).join('.');
 }
 
@@ -1617,20 +1831,15 @@ class SqlScope {
           final alias = relation.alias;
           if (ty case BTypeTable(:final inner) when inner != null) {
             if (alias != null) {
-              final model = ModelType(
-                [
-                  ...inner.entries.map(
-                    (e) => ModelField(
-                      e.key,
-                      e.value,
-                      nullable: isNullable,
-                      optional: true,
-                    ),
+              final model = ModelType([
+                ...inner.entries.map(
+                  (e) => ModelField(
+                    e.key,
+                    e.value,
+                    nullable: isNullable,
                   ),
-                ],
-                [],
-                [],
-              );
+                ),
+              ]);
               _withTables[alias.name.value] = model;
             }
             allFields.addAll(
@@ -1678,12 +1887,9 @@ class SqlScope {
                       e.key,
                       e.value.type,
                       nullable: e.value.isNullable || isNullable,
-                      optional: true,
                     ),
                   )
                   .toList(),
-              [],
-              [],
             );
             // TODO: alias columns?
             final aliasName = alias.name.value;
@@ -1762,13 +1968,14 @@ class SqlPlaceholder with BaseDataClass {
   final int index;
   final BaseType type;
 
-  String? get name => ast.value == '?' ? null : ast.value;
+  String? get name => isPositional ? null : ast.value;
   String get nameOrIndex => name ?? index.toString();
+  bool get isPositional => ast.value == '?';
 
   const SqlPlaceholder(this.ast, this.index, this.type);
 
   @override
-  DataClassProps get props => DataClassProps('SqlPlaceholder', {
+  DataClassProps get dataClassProps => DataClassProps('SqlPlaceholder', {
         'ast': ast,
         'index': index,
         'type': type,
@@ -1805,7 +2012,6 @@ class PlaceholderVisitor extends SqlAstVisitor {
                   c.value,
                   BaseType.dynamic,
                   nullable: true,
-                  optional: false,
                 );
               },
             ).type,

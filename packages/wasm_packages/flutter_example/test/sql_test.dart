@@ -4,7 +4,6 @@ import 'package:flutter_example/sql_parser_state.dart';
 import 'package:flutter_example/sql_types.dart';
 import 'package:flutter_example/sqlite/sqlite.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:sql_parser/sql_parser.dart';
 // ignore: depend_on_referenced_packages
 import 'package:wasm_run/wasm_run.dart';
 
@@ -52,8 +51,6 @@ SELECT * FROM foo WHERE bar = :c;
                 ),
               )
               .toList(),
-          [],
-          [],
         ),
       );
       final table = typeFinder.allTables.entries.first;
@@ -61,10 +58,9 @@ SELECT * FROM foo WHERE bar = :c;
         table.value,
         ModelType(
           fields,
-          [
+          keys: [
             ModelKey(fields: {'foo'}, primary: true, unique: true),
           ],
-          [],
         ),
       );
     });
@@ -79,10 +75,9 @@ SELECT * FROM foo WHERE bar = :c;
             ModelField('id', BaseType.int, nullable: false),
             ModelField('name', BaseType.string, nullable: false)
           ],
-          [
+          keys: [
             ModelKey(fields: {'id'}, primary: true, unique: true)
           ],
-          [],
         ),
         'posts': ModelType(
           [
@@ -93,10 +88,10 @@ SELECT * FROM foo WHERE bar = :c;
             ModelField('body', BaseType.string, nullable: false),
             ModelField('created_at', BaseType.datetime, nullable: false)
           ],
-          [
+          keys: [
             ModelKey(fields: {'id'}, primary: true, unique: true)
           ],
-          [
+          references: [
             ModelReference(
               '',
               [ColRef('user_id', 'id')],
@@ -117,10 +112,9 @@ SELECT * FROM foo WHERE bar = :c;
             ),
             ModelField('description', BaseType.string, nullable: true)
           ],
-          [
+          keys: [
             ModelKey(fields: {'code'}, primary: true, unique: true)
           ],
-          [],
         ),
         'posts_topics': ModelType(
           [
@@ -128,14 +122,14 @@ SELECT * FROM foo WHERE bar = :c;
             ModelField('topic_code', BaseType.string, nullable: true),
             ModelField('post_id', BaseType.int, nullable: true)
           ],
-          [
+          keys: [
             ModelKey(
               fields: {'topic_code', 'post_id'},
               primary: true,
               unique: true,
             )
           ],
-          [
+          references: [
             ModelReference(
               '',
               [ColRef('topic_code', 'code')],
@@ -156,46 +150,34 @@ SELECT * FROM foo WHERE bar = :c;
 
       final allSelects = {
         const SqlQuery(body: SqlSelectRef(index_: 0), orderBy: [], locks: []):
-            ModelType(
-          [
-            ModelField('users.id', BaseType.int, nullable: false),
-            ModelField('users.name', BaseType.string, nullable: false)
-          ],
-          [],
-          [],
-        ),
+            ModelType([
+          ModelField('users.id', BaseType.int, nullable: false),
+          ModelField('users.name', BaseType.string, nullable: false)
+        ]),
         const SqlQuery(body: SqlSelectRef(index_: 1), orderBy: [], locks: []):
-            ModelType(
-          [
-            ModelField('users.id', BaseType.int, nullable: false),
-            ModelField('users.name', BaseType.string, nullable: false)
-          ],
-          [],
-          [],
-        ),
+            ModelType([
+          ModelField('users.id', BaseType.int, nullable: false),
+          ModelField('users.name', BaseType.string, nullable: false)
+        ]),
         const SqlQuery(body: SqlSelectRef(index_: 2), orderBy: [], locks: []):
-            ModelType(
-          [
-            ModelField('users.id', BaseType.int,
-                nullable: false, optional: true),
-            ModelField('user_name', BaseType.string,
-                nullable: false, optional: true),
-            ModelField('pt.topic_code', BaseType.string, nullable: true),
-            ModelField('posts.id', BaseType.int, nullable: false),
-            ModelField('posts.user_id', BaseType.int, nullable: false),
-            ModelField('posts.title', BaseType.string, nullable: false),
-            ModelField('posts.subtitle', BaseType.string, nullable: true),
-            ModelField('posts.body', BaseType.string, nullable: false),
-            ModelField('posts.created_at', BaseType.datetime, nullable: false)
-          ],
-          [],
-          [],
-        ),
+            ModelType([
+          ModelField('users.id', BaseType.int, nullable: false),
+          ModelField('user_name', BaseType.string, nullable: false),
+          ModelField('pt.topic_code', BaseType.string.nullable(),
+              nullable: true),
+          ModelField('posts.id', BaseType.int, nullable: false),
+          ModelField('posts.user_id', BaseType.int, nullable: false),
+          ModelField('posts.title', BaseType.string, nullable: false),
+          // TODO: BaseType.string.nullable() vs nullable: true
+          ModelField('posts.subtitle', BaseType.string, nullable: true),
+          ModelField('posts.body', BaseType.string, nullable: false),
+          ModelField('posts.created_at', BaseType.datetime, nullable: false)
+        ]),
       };
 
       expect(allSelects.length, typeFinder.allSelects.length);
       for (final e in typeFinder.allSelects.entries) {
-        expect(allSelects[e.key], e.value);
+        expect(e.value, allSelects[e.key]);
       }
 
       final statements = [
@@ -214,6 +196,7 @@ CREATE TABLE users (
           prepareError: null,
           placeholders: [],
           identifier: '0. CREATE_TABLE:users',
+          closestComment: null,
         ),
         StatementInfo(
           statement: typeFinder.parsed.statements[1],
@@ -226,6 +209,7 @@ CREATE TABLE users (
           prepareError: 'no such table: users',
           placeholders: [],
           identifier: '1. QUERY:SELECT:users',
+          closestComment: null,
         ),
         StatementInfo(
           statement: typeFinder.parsed.statements[2],
@@ -240,6 +224,7 @@ CREATE TABLE users (
             const SqlPlaceholder(SqlValuePlaceholder(':minId'), 0, BaseType.int)
           ],
           identifier: '2. QUERY:SELECT:users',
+          closestComment: null,
         ),
         StatementInfo(
           statement: typeFinder.parsed.statements[3],
@@ -256,6 +241,7 @@ VALUES (1, 'name1'), (2, :c)''',
             const SqlPlaceholder(SqlValuePlaceholder(':c'), 0, BaseType.string)
           ],
           identifier: '3. INSERT:users',
+          closestComment: null,
         ),
         StatementInfo(
           statement: typeFinder.parsed.statements[4],
@@ -272,6 +258,7 @@ VALUES (1, 'name1'), (2, :c)''',
             const SqlPlaceholder(SqlValuePlaceholder(':id'), 1, BaseType.int),
           ],
           identifier: '4. UPDATE:users',
+          closestComment: null,
         ),
         StatementInfo(
           statement: typeFinder.parsed.statements[5],
@@ -286,6 +273,7 @@ VALUES (1, 'name1'), (2, :c)''',
             const SqlPlaceholder(SqlValuePlaceholder(':ids'), 0, BaseType.list),
           ],
           identifier: '5. DELETE:users',
+          closestComment: null,
         ),
         StatementInfo(
           statement: typeFinder.parsed.statements[6],
@@ -306,6 +294,7 @@ CREATE TABLE posts (
           prepareError: null,
           placeholders: [],
           identifier: '6. CREATE_TABLE:posts',
+          closestComment: null,
         ),
         StatementInfo(
           statement: typeFinder.parsed.statements[7],
@@ -323,6 +312,7 @@ CREATE TABLE topics (
           prepareError: null,
           placeholders: [],
           identifier: '7. CREATE_TABLE:topics',
+          closestComment: null,
         ),
         StatementInfo(
           statement: typeFinder.parsed.statements[8],
@@ -340,6 +330,7 @@ CREATE TABLE posts_topics (
           prepareError: null,
           placeholders: [],
           identifier: '8. CREATE_TABLE:posts_topics',
+          closestComment: null,
         ),
         StatementInfo(
           statement: typeFinder.parsed.statements[9],
@@ -357,6 +348,7 @@ WHERE users.id = 1 and posts.subtitle is not null''',
           prepareError: 'no such table: users',
           placeholders: [],
           identifier: '9. QUERY:SELECT:users',
+          closestComment: null,
         ),
       ];
 
@@ -364,13 +356,13 @@ WHERE users.id = 1 and posts.subtitle is not null''',
         final e = statements[i];
         expect(
           {
-            ...s.props.fields,
+            ...s.dataClassProps.fields,
             'text': s.text.trim(),
             'preparedStatement': null,
             'prepareError': s.prepareError?.toString(),
           },
           {
-            ...e.props.fields,
+            ...e.dataClassProps.fields,
             'prepareError':
                 e.prepareError == null ? null : contains(e.prepareError),
           },

@@ -39,9 +39,9 @@ sealed class BType {
   @override
   String toString() => name;
 
-  BTypeNullable nullable() => this is BTypeNotNull
-      ? BTypeNullable(this as BTypeNotNull)
-      : this as BTypeNullable;
+  BTypeNullable nullable() => this is BTypeNullable
+      ? this as BTypeNullable
+      : BTypeNullable(this as BTypeNotNull);
 
   BTypeNotNull notNull() => this is BTypeNullable
       ? (this as BTypeNullable).inner
@@ -74,6 +74,7 @@ class BTypeNullable<T extends BTypeNotNull> extends BType {
 
   const BTypeNullable(this.inner);
 
+  @override
   BTypeNullable<T> nullable() => this;
 
   @override
