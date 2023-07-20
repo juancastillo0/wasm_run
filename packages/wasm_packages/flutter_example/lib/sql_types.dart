@@ -5,6 +5,7 @@ import 'package:flutter_example/sql_json.dart';
 import 'package:sql_parser/sql_parser.dart';
 import 'package:sql_parser/visitor.dart';
 import 'package:sqlite3/common.dart';
+import 'package:wasm_wit_component/wasm_wit_component.dart';
 
 BaseType toDartType(DataType t) {
   return switch (t) {
@@ -77,7 +78,7 @@ typedef BaseType = BType;
 
 class ModelType {
   final List<ModelField> fields;
-  final List<({Set<String> fields, bool primary, bool unique})> keys;
+  final List<ModelKey> keys;
   final List<ModelReference> references;
 
   ModelType(this.fields, this.keys, this.references);
@@ -97,6 +98,48 @@ class ModelType {
     return 'ModelType{fields:\n${fields.join('\n')},\nkeys: ${keys.join('\n')},'
         '\nreferences: ${references.join('\n')}}';
   }
+
+  List<Object> get props => [fields, keys, references];
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ModelType &&
+          runtimeType == other.runtimeType &&
+          const ObjectComparator().arePropsEqual(props, other.props);
+
+  @override
+  int get hashCode => const ObjectComparator().hashProps(props);
+}
+
+class ModelKey {
+  final Set<String> fields;
+  final bool primary;
+  final bool unique;
+
+  ///
+  ModelKey({
+    required this.fields,
+    required this.primary,
+    required this.unique,
+  });
+
+  @override
+  String toString() {
+    return 'ModelKey{fields: $fields, primary: $primary, unique: $unique}';
+  }
+
+  List<Object> get props => [fields, primary, unique];
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ModelKey &&
+          runtimeType == other.runtimeType &&
+          const ObjectComparator().arePropsEqual(props, other.props);
+
+  @override
+  int get hashCode => const ObjectComparator().hashProps(props);
 }
 
 class ModelField {
@@ -106,19 +149,32 @@ class ModelField {
   final bool optional;
   final Expr? defaultValue;
 
+  ///
   ModelField(
     this.name,
     this.type, {
     required this.nullable,
-    required this.optional,
+    bool? optional,
     this.defaultValue,
-  });
+  }) : optional = optional ?? (nullable || defaultValue != null);
 
   @override
   String toString() {
     return '$name${optional ? '' : '*'}: ${type.name}${nullable ? '?' : ''}'
         '${defaultValue == null ? '' : ' = $defaultValue'}';
   }
+
+  List<Object?> get props => [name, type, nullable, optional, defaultValue];
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ModelField &&
+          runtimeType == other.runtimeType &&
+          const ObjectComparator().arePropsEqual(props, other.props);
+
+  @override
+  int get hashCode => const ObjectComparator().hashProps(props);
 }
 
 class ModelReference {
@@ -127,6 +183,7 @@ class ModelReference {
   final ObjectName foreignTable;
   final ReferenceKind kind;
 
+  ///
   ModelReference(
     this.name,
     this.columns,
@@ -136,8 +193,21 @@ class ModelReference {
 
   @override
   String toString() {
-    return 'ModelReference{name: $name, columns: $columns, foreignTable: $foreignTable, kind: $kind}';
+    return 'ModelReference{name: $name, columns: $columns,'
+        ' foreignTable: $foreignTable, kind: $kind}';
   }
+
+  List<Object?> get props => [name, columns, foreignTable, kind];
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ModelReference &&
+          runtimeType == other.runtimeType &&
+          const ObjectComparator().arePropsEqual(props, other.props);
+
+  @override
+  int get hashCode => const ObjectComparator().hashProps(props);
 }
 
 class ColRef {
@@ -150,15 +220,72 @@ class ColRef {
   String toString() {
     return 'ColRef{source: $source, referenced: $referenced}';
   }
+
+  List<Object?> get props => [source, referenced];
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ColRef &&
+          runtimeType == other.runtimeType &&
+          const ObjectComparator().arePropsEqual(props, other.props);
+
+  @override
+  int get hashCode => const ObjectComparator().hashProps(props);
 }
 
 enum ReferenceKind { many, oneRequired, oneOptional }
 
-class CodePosition {
+class DataClassProps {
+  final String name;
+  final Map<String, Object?> fields;
+
+  const DataClassProps(this.name, this.fields);
+
+  List<Object?> get props => [name, fields];
+
+  Map<String, Object?> toJson() => {'name': name, 'fields': fields};
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is DataClassProps &&
+          runtimeType == other.runtimeType &&
+          const ObjectComparator().arePropsEqual(props, other.props);
+
+  @override
+  int get hashCode => const ObjectComparator().hashProps(props);
+}
+
+mixin BaseDataClass {
+  DataClassProps get props;
+
+  Map<String, Object?> toJson() => props.fields;
+
+  @override
+  String toString() {
+    final p = props;
+    final fields = p.fields.toString();
+    return '${p.name}(${fields.substring(1, fields.length - 1)})';
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is BaseDataClass &&
+          runtimeType == other.runtimeType &&
+          props == other.props;
+
+  @override
+  int get hashCode => props.hashCode;
+}
+
+class CodePosition with BaseDataClass {
   final int index;
   final int column;
   final int line;
 
+  ///
   CodePosition({
     required this.index,
     required this.column,
@@ -182,9 +309,15 @@ class CodePosition {
     }
     return CodePosition(index: index, column: column, line: line);
   }
+
+  @override
+  DataClassProps get props => DataClassProps(
+        'CodePosition',
+        {'index': index, 'column': column, 'line': line},
+      );
 }
 
-class StatementInfo {
+class StatementInfo with BaseDataClass {
   final SqlAst statement;
   final String text;
   final CodePosition start;
@@ -196,6 +329,7 @@ class StatementInfo {
   final List<SqlPlaceholder> placeholders;
   final String identifier;
 
+  ///
   StatementInfo({
     required this.statement,
     required this.text,
@@ -208,6 +342,23 @@ class StatementInfo {
     required this.placeholders,
     required this.identifier,
   });
+
+  @override
+  DataClassProps get props => DataClassProps(
+        'StatementInfo',
+        {
+          'statement': statement,
+          'text': text,
+          'start': start,
+          'end': end,
+          'isSelect': isSelect,
+          'model': model,
+          'preparedStatement': preparedStatement,
+          'prepareError': prepareError,
+          'placeholders': placeholders,
+          'identifier': identifier,
+        },
+      );
 }
 
 class SqlTypeFinder {
@@ -399,7 +550,8 @@ class SqlTypeFinder {
       AlterIndex() => 'ALTER_INDEX:${stmt.name.joined}',
       SqlInsert() => 'INSERT:${stmt.tableName.joined}',
       SqlUpdate() => 'UPDATE:${identifierTableFactor(stmt.table.relation)}',
-      SqlDelete() => 'DELETE:${stmt.tables.map((e) => e.joined).join(',')}',
+      SqlDelete() =>
+        'DELETE:${stmt.from.map((e) => identifierTableFactor(e.relation)).join(',')}',
       SqlQuery() => 'QUERY:${setExprIdentifier(stmt.body)}',
       StartTransaction() => 'START_TRANSACTION',
       Commit() => 'COMMIT',
@@ -485,7 +637,7 @@ class SqlTypeFinder {
               return;
             }
             if (table != null) {
-              table.keys.add((
+              table.keys.add(ModelKey(
                 unique: stmt.unique,
                 primary: false,
                 fields: fields.cast(),
@@ -536,7 +688,7 @@ class SqlTypeFinder {
           ColumnOptionNotNull() => nullable = false,
           ColumnOptionDefault() => defaultValue = opt.value,
           ColumnOptionUnique() => () {
-              model.keys.add((
+              model.keys.add(ModelKey(
                 fields: {ident.value},
                 unique: true,
                 primary: opt.value.isPrimary,
@@ -572,7 +724,7 @@ class SqlTypeFinder {
 
     for (final c in table.constraints) {
       (switch (c) {
-        UniqueConstraint() => model.keys.add((
+        UniqueConstraint() => model.keys.add(ModelKey(
             fields: c.columns.map((c) => c.value).toSet(),
             primary: c.isPrimary,
             unique: true,
@@ -590,7 +742,7 @@ class SqlTypeFinder {
         // TODO display as key
         IndexConstraint(:final columns) ||
         FullTextOrSpatialConstraint(:final columns) =>
-          model.keys.add((
+          model.keys.add(ModelKey(
             fields: columns.map((c) => c.value).toSet(),
             primary: false,
             unique: false,
@@ -1205,6 +1357,7 @@ class SqlTypeFinder {
       UnaryOperator.minus ||
       UnaryOperator.pgAbs =>
         switch (t) {
+          // TODO: check
           BaseType.int || BaseType.bigint || BaseType.double => t,
           _ => BaseType.double,
         },
@@ -1235,14 +1388,15 @@ class SqlTypeFinder {
   }
 
   BaseType binaryOpType(BinaryOp expr) {
-    exprType(expr.left.value(parsed));
-    exprType(expr.right.value(parsed));
+    final left = exprType(expr.left.value(parsed));
+    final right = exprType(expr.right.value(parsed));
     final op = expr.op;
     return switch (op) {
-      // TODO: take into account operands
-      BinaryOperatorPlus() || BinaryOperatorMinus() => BaseType.double,
-      BinaryOperatorMultiply() => BaseType.double,
-      BinaryOperatorDivide() => BaseType.double,
+      BinaryOperatorPlus() ||
+      BinaryOperatorMinus() ||
+      BinaryOperatorMultiply() =>
+        mergeNumericType(left, right),
+      BinaryOperatorDivide() => mergeNumericType(left, right, allowInt: false),
       BinaryOperatorModulo() => BaseType.int,
       BinaryOperatorStringConcat() => BaseType.string,
       BinaryOperatorGt() ||
@@ -1275,6 +1429,24 @@ class SqlTypeFinder {
       BinaryOperatorPgRegexNotIMatch() =>
         BaseType.bool,
       BinaryOperatorPgCustomBinaryOperator() => BaseType.binary,
+    };
+  }
+
+  BTypeNum mergeNumericType(
+    BType a,
+    BType b, {
+    BTypeNum orElse = BType.numeric,
+    bool allowInt = true,
+  }) {
+    return switch ((a, b)) {
+      (BType.numeric, _) || (_, BType.numeric) => BType.numeric,
+      (BTypeDecimal(), _) || (_, BTypeDecimal()) => BType.decimal,
+      (BTypeFloat(), _) || (_, BTypeFloat()) => BType.double,
+      (BTypeBigInt(), _) ||
+      (_, BTypeBigInt()) =>
+        allowInt ? BType.bigint : BType.double,
+      (BTypeInteger(), BTypeInteger()) => allowInt ? BType.int : BType.double,
+      _ => orElse,
     };
   }
 
@@ -1330,6 +1502,22 @@ class TypeWithNullability {
   final bool isNullable;
 
   TypeWithNullability(this.type, this.isNullable);
+
+  @override
+  String toString() {
+    return 'TypeWithNullability{type: $type, isNullable: $isNullable}';
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is TypeWithNullability &&
+          runtimeType == other.runtimeType &&
+          type == other.type &&
+          isNullable == other.isNullable;
+
+  @override
+  int get hashCode => type.hashCode ^ isNullable.hashCode;
 }
 
 class SelectedTable {
@@ -1569,7 +1757,7 @@ class SqlScope {
   }
 }
 
-class SqlPlaceholder {
+class SqlPlaceholder with BaseDataClass {
   final SqlValuePlaceholder ast;
   final int index;
   final BaseType type;
@@ -1578,6 +1766,13 @@ class SqlPlaceholder {
   String get nameOrIndex => name ?? index.toString();
 
   const SqlPlaceholder(this.ast, this.index, this.type);
+
+  @override
+  DataClassProps get props => DataClassProps('SqlPlaceholder', {
+        'ast': ast,
+        'index': index,
+        'type': type,
+      });
 }
 
 extension SqlPlaceholderPositional on List<SqlPlaceholder> {

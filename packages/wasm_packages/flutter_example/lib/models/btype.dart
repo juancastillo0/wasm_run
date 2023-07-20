@@ -8,6 +8,7 @@ sealed class BType {
   static const bool = BTypeBool();
   static const int = BTypeInteger();
   static const double = BTypeFloat();
+  static const decimal = BTypeDecimal();
   static const numeric = BTypeNumeric();
   // numeric
   static const string = BTypeString();

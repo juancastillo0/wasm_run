@@ -1088,7 +1088,6 @@ class SqlAstVisitor {
     _process(node.or);
     processObjectName(node.tableName);
     processListIdent(node.columns); // TODO: ObjectName vs List<Ident>
-    _process(node.columns);
     processSqlQuery(node.source);
     if (node.partitioned != null) processListExpr(node.partitioned!);
     processListIdent(node.afterColumns);
