@@ -13,10 +13,14 @@ class SqlJsonTypeFinder {
 
   BType? typeFromJsonFunction(String name, List<Expr> args) {
     final argsTypes = args.map(finder.exprType).toList();
+
+    BType jsonTypeOrDynamic(BType value) =>
+        isJsonType(value) ? value : BType.jsonDynamic;
+
     return switch ((name, argsTypes)) {
 // There are 15 scalar functions and operators:
       ('json' || 'to_json' || 'to_jsonb', [final json]) =>
-        json is BTypeJson ? json : BType.jsonDynamic, // (json)
+        jsonTypeOrDynamic(json), // (json)
       (
         'json_array' ||
             'JSON_ARRAY' ||
@@ -25,8 +29,8 @@ class SqlJsonTypeFinder {
         final values
       ) =>
         BTypeJsonArray(
-          values.every((e) => e is BTypeJson)
-              ? (values.toSet().singleOrNull as BTypeJson?) ?? BType.jsonDynamic
+          values.every(isJsonType)
+              ? (values.toSet().singleOrNull) ?? BType.jsonDynamic
               : BType.jsonDynamic,
         ), // (value1,value2,...)
       (
@@ -92,12 +96,12 @@ class SqlJsonTypeFinder {
             // TODO: json_object('{a, 1, b, "def", c, 3.5}') → {"a" : "1", "b" : "def", "c" : "3.5"}
             return const BTypeJsonUnKeyedObject(BType.jsonDynamic);
           }
-          final Map<String, BTypeJson> map = {};
+          final Map<String, BType> map = {};
           for (int i = 0; i + 1 < labelsAndValues.length; i += 2) {
             final key = finder.exprValue(args[i]);
             final value = labelsAndValues[i + 1];
             if (key != null) {
-              map[key] = value is BTypeJson ? value : BType.jsonDynamic;
+              map[key] = jsonTypeOrDynamic(value);
             }
           }
           return BTypeJsonObject(map);
@@ -122,8 +126,7 @@ class SqlJsonTypeFinder {
         'json_group_array' || 'JSON_ARRAYAGG' || 'json_agg' || 'jsonb_agg',
         [final value]
       ) =>
-        BTypeJsonArray(
-            value is BTypeJson ? value : BType.jsonDynamic), // (value)
+        BTypeJsonArray(jsonTypeOrDynamic(value)), // (value)
       (
         'json_group_object' ||
             'JSON_OBJECTAGG' ||
@@ -131,9 +134,7 @@ class SqlJsonTypeFinder {
             'jsonb_object_agg',
         [final name, final value]
       ) =>
-        BTypeJsonUnKeyedObject(
-          value is BTypeJson ? value : BType.jsonDynamic,
-        ), // (name,value)
+        BTypeJsonUnKeyedObject(jsonTypeOrDynamic(value)), // (name,value)
 // The two table-valued functions are:
 
       // TODO: value could be json_tree.value could be inferred from json
@@ -249,11 +250,14 @@ class SqlJsonTypeFinder {
         [final json, final path, ...final varsAndSilent]
       ) =>
         BType.jsonDynamic,
-      ('json_array_elements' || 'jsonb_array_elements_text', [final json]) =>
+      ('json_array_elements' || 'jsonb_array_elements', [final json]) =>
         json is BTypeJsonArray
             ? BTypeSqlList(json.values)
-            : const BTypeSqlList(BType.string),
-      ('json_array_elements_text' || 'jsonb_array_elements', [final json]) =>
+            : const BTypeSqlList(BType.jsonDynamic),
+      (
+        'json_array_elements_text' || 'jsonb_array_elements_text',
+        [final json]
+      ) =>
         const BTypeSqlList(BType.string),
       (
         'array_to_json',

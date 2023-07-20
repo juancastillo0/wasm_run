@@ -5,6 +5,7 @@ import 'package:sql_parser/sql_parser.dart';
 import 'package:sqlite3/common.dart';
 
 class SqlParserState extends ChangeNotifier with ErrorNotifier {
+  ///
   SqlParserState(this.sqlParser, this.sqlite3) : db = sqlite3.openInMemory() {
     sqlController.addListener(_update);
     sqlController.text = '''
