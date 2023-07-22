@@ -1,8 +1,6 @@
 // ignore_for_file: unused_local_variable
 
-import 'package:flutter_example/models/btype.dart';
-import 'package:flutter_example/sql_types.dart';
-import 'package:sql_parser/sql_parser.dart';
+import 'package:typesql/src/sql_types.dart';
 
 class SqlJsonTypeFinder {
   final SqlTypeFinder finder;

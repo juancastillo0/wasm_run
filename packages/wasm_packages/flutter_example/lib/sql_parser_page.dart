@@ -3,10 +3,9 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_example/flutter_utils.dart';
 import 'package:flutter_example/sql_parser_state.dart';
-import 'package:flutter_example/sql_types.dart';
 import 'package:flutter_example/state.dart';
 import 'package:flutter_example/widgets/code_text_field.dart';
-import 'package:sql_parser/sql_parser.dart';
+import 'package:typesql/typesql.dart';
 
 Container get errorContainer => Container(
       padding: const EdgeInsets.all(12.0),
@@ -111,19 +110,20 @@ class SqlParserPage extends StatelessWidget {
                   SizedBox(
                     height: 120,
                     child: SingleChildScrollView(
-                        child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        ErrorMessage(state: state),
-                        ...state.typeFinder?.statementsInfo
-                                .where((e) => e.prepareError != null)
-                                .map(
-                                  (e) => Text('${e.prepareError}')
-                                      .containerObject(errorContainer),
-                                ) ??
-                            []
-                      ],
-                    )),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          ErrorMessage(state: state),
+                          ...state.typeFinder?.statementsInfo
+                                  .where((e) => e.prepareError != null)
+                                  .map(
+                                    (e) => Text('${e.prepareError}')
+                                        .containerObject(errorContainer),
+                                  ) ??
+                              []
+                        ],
+                      ),
+                    ),
                   ),
                 ],
               ),

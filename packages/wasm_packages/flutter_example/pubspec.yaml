@@ -54,6 +54,10 @@ dependencies:
     git:
       url: https://github.com/juancastillo0/file_system_access_web.git
       ref: 7b88010f653a49ec2cb8e98052bbb164ce9c0242
+  typesql:
+    path: ../sql_parser/typesql
+  typesql_generator:
+    path: ../sql_parser/typesql_generator
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -88,6 +92,10 @@ dependency_overrides:
     path: ../wasm_parser
   sql_parser:
     path: ../sql_parser
+  typesql:
+    path: ../sql_parser/typesql
+  typesql_generator:
+    path: ../sql_parser/typesql_generator
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

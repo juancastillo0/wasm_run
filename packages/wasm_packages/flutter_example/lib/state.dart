@@ -4,11 +4,11 @@ import 'package:compression_rs/compression_rs_in_mem_worker.dart'
 import 'package:flutter/foundation.dart' show ChangeNotifier, ValueNotifier;
 import 'package:flutter_example/image_rs_state.dart';
 import 'package:flutter_example/sql_parser_state.dart';
-import 'package:flutter_example/sqlite/sqlite.dart';
 import 'package:flutter_example/wasm_parser_state.dart';
 import 'package:image_rs/image_rs.dart';
 import 'package:rust_crypto/rust_crypto.dart';
 import 'package:sql_parser/sql_parser.dart';
+import 'package:typesql/sqlite.dart';
 import 'package:wasm_parser/wasm_parser.dart';
 
 import 'compression_rs_state.dart';

@@ -1,14 +1,16 @@
 // ignore_for_file: unnecessary_parenthesis, unnecessary_statements, unnecessary_brace_in_string_interps
 
-import 'package:flutter_example/dependencies_sorting.dart';
-import 'package:flutter_example/models/btype.dart';
-import 'package:flutter_example/sql_json.dart';
+import 'package:typesql/src/btype.dart';
+import 'package:typesql/src/sql_json.dart';
 import 'package:sql_parser/sql_parser.dart';
 import 'package:sql_parser/visitor.dart';
 import 'package:sqlite3/common.dart';
+import 'package:typesql/src/dependencies_sorting.dart';
+import 'package:typesql/src/sql_executor.dart';
 import 'package:wasm_wit_component/wasm_wit_component.dart';
 
 export 'package:sql_parser/sql_parser.dart';
+export 'package:typesql/src/btype.dart';
 
 BaseType toDartType(DataType t) {
   return switch (t) {
@@ -76,7 +78,6 @@ class ModelType {
   final List<ModelKey> keys;
   final List<ModelReference> references;
 
-  ///
   ModelType(
     this.fields, {
     List<ModelKey>? keys,
@@ -240,62 +241,6 @@ class ColRef {
 }
 
 enum ReferenceKind { many, oneRequired, oneOptional }
-
-class DataClassProps {
-  final String name;
-  final Map<String, Object?> fields;
-
-  const DataClassProps(this.name, this.fields);
-
-  List<Object?> get props => [name, fields];
-
-  Map<String, Object?> toJson() => {'name': name, 'fields': fields};
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is DataClassProps &&
-          runtimeType == other.runtimeType &&
-          const ObjectComparator().arePropsEqual(props, other.props);
-
-  @override
-  int get hashCode => const ObjectComparator().hashProps(props);
-}
-
-Object? toSqlValue(Object? value) {
-  if (value == null) return null;
-  if (value is DateTime) return value.toIso8601String();
-  if (value is Duration) return value.inMicroseconds;
-  if (value is List) return value.map(toSqlValue).toList();
-  if (value is Option) return toSqlValue(value.value);
-  if (value is Map) return value.map((k, v) => MapEntry(k, toSqlValue(v)));
-  return value;
-}
-
-mixin BaseDataClass {
-  DataClassProps get dataClassProps;
-
-  Map<String, Object?> toJson() => dataClassProps.fields.map(
-        (key, value) => MapEntry(key, toSqlValue(value)),
-      );
-
-  @override
-  String toString() {
-    final p = dataClassProps;
-    final fields = p.fields.toString();
-    return '${p.name}(${fields.substring(1, fields.length - 1)})';
-  }
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is BaseDataClass &&
-          runtimeType == other.runtimeType &&
-          dataClassProps == other.dataClassProps;
-
-  @override
-  int get hashCode => dataClassProps.hashCode;
-}
 
 class CodePosition with BaseDataClass {
   final int index;

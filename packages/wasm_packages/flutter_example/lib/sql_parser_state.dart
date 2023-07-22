@@ -1,8 +1,8 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_example/flutter_utils.dart';
-import 'package:flutter_example/sql_types.dart';
-import 'package:sql_parser/sql_parser.dart';
 import 'package:sqlite3/common.dart';
+import 'package:typesql/typesql.dart';
+import 'package:typesql_generator/typesql_generator.dart';
 
 class SqlParserState extends ChangeNotifier with ErrorNotifier {
   ///
@@ -64,6 +64,7 @@ WHERE users.id = 1 and posts.subtitle is not null;
   final Map<SqlAst, List<String>> _params = {};
 
   String _previousText = '';
+  String dartOutput = '';
   ParsedSql? parsedSql;
   SqlTypeFinder? typeFinder;
   StatementInfo? selectedStatement;
@@ -104,6 +105,7 @@ WHERE users.id = 1 and posts.subtitle is not null;
         selectedStatement =
             index == -1 ? null : typeFinder!.statementsInfo[index];
       }
+      dartOutput = generateDartFromSql('sql', typeFinder!);
       setError('');
     }
   }

@@ -1,9 +1,9 @@
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_example/sql_parser_state.dart';
-import 'package:flutter_example/sql_types.dart';
-import 'package:flutter_example/sqlite/sqlite.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:typesql/sqlite.dart';
+import 'package:typesql/typesql.dart';
 // ignore: depend_on_referenced_packages
 import 'package:wasm_run/wasm_run.dart';
 

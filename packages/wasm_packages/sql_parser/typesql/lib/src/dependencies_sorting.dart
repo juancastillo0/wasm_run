@@ -1,5 +1,5 @@
 import 'package:sql_parser/visitor.dart';
-import 'sql_types.dart';
+import 'package:typesql/src/sql_types.dart';
 
 /// L ← Empty list that will contain the sorted elements
 /// S ← Set of all nodes with no incoming edge
