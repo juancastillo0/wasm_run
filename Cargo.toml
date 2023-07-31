@@ -10,4 +10,5 @@ exclude = [
     "packages/wasm_packages/compression_rs/compression_rs_wasm/Cargo.toml",
     "packages/wasm_packages/wasm_parser/wasm_parser_wasm/Cargo.toml",
     "packages/wasm_packages/sql_parser/sql_parser_wasm/Cargo.toml",
+    "packages/wasm_packages/y_crdt/y_crdt_wasm/Cargo.toml",
 ]
