@@ -80,6 +80,7 @@ class ${ReCase(fileName).pascalCase}Queries {
   static const Map<Type, SqlTypeData> tableSpecs = {
   ''');
 
+  final List<String> tableControllerGenerics = [];
   for (final t in typed.allTables.entries) {
     final className = ReCase(t.key).pascalCase;
     final updateModelInterface = 'SqlUpdateModel<${className}>';
@@ -98,7 +99,7 @@ class ${ReCase(fileName).pascalCase}Queries {
       model: GenModel(
         tableName: t.key,
         interfaces: [
-          if (addedUpdate != null) addedUpdate else updateModelInterface,
+          if (addedUpdate == null) updateModelInterface,
           insertModelInterface,
         ],
       ),
@@ -112,7 +113,7 @@ class ${ReCase(fileName).pascalCase}Queries {
       model: GenModel(
         tableName: t.key,
         interfaces: [
-          if (addedInsert != null) addedInsert else insertModelInterface,
+          if (addedInsert == null) insertModelInterface,
           if (addedUpdate == null) updateModelInterface,
           'SqlReturnModel',
         ],
@@ -129,12 +130,23 @@ class ${ReCase(fileName).pascalCase}Queries {
         .map((e) =>
             "(name: '${e.name}', type: ${e.type.instantiation}, hasDefault: ${e.defaultValue != null})")
         .join(',');
+
+    final generics = '<${className}, ${addedUpdate ?? className}>';
+    tableControllerGenerics.add(
+      'SqlTypedController$generics ${ReCase(t.key).camelCase}Controller',
+    );
     bufQueries.writeln(
-      "  ${className}: SqlTypeData<${className}, ${addedUpdate ?? className}>.value("
+      "  ${className}: SqlTypeData$generics.value("
       "'${t.key}', [${fields}], ${className}.fromJson),",
     );
   }
   bufQueries.writeln('};'); // close tableSpecs
+
+  bufQueries.writeln(
+    tableControllerGenerics
+        .map((e) => 'late final $e = SqlTypedController(typedExecutor);')
+        .join('\n'),
+  );
 
   final Map<String, int> classNames = {};
 

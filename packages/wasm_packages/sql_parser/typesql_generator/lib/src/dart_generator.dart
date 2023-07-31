@@ -18,6 +18,7 @@ class GenModel {
       allNullable || useOptional && f.optional || f.nullable;
   bool optional(ModelField f) =>
       allNullable || useOptional && f.optional || !useOptional && f.nullable;
+  bool nullableOption(ModelField f) => allNullable && f.nullable;
 
   GenModel copyWith({
     bool? useOptional,
@@ -92,7 +93,10 @@ void addFieldsAndConstructor(
       [className, name],
       model.nullable(c) ? c.type.nullable() : c.type,
     );
-    buf.writeln('  final ${ty.name} $name;');
+    final tyName = model.nullableOption(c)
+        ? 'Option<${ty.name.substring(0, ty.name.length - 1)}>?'
+        : ty.name;
+    buf.writeln('  final ${tyName} $name;');
   }
   buf.writeln('const $className({');
   for (final c in t.fields) {
@@ -118,12 +122,22 @@ void addFromJson(
   GenModel model = const GenModel(),
 }) {
   final fields = t.fields.map((c) {
+    // TODO: maybe use the same for inserts?
+    final nullableOption = model.nullableOption(c);
     final nullable = model.nullable(c);
+    final fName = ReCase(c.name).camelCase;
     final ty = SqlTypeToDart(
-      [className, ReCase(c.name).camelCase],
-      nullable ? c.type.nullable() : c.type,
+      [className, fName],
+      nullableOption
+          ? c.type.notNull()
+          : nullable
+              ? c.type.nullable()
+              : c.type,
     );
-    return "${ReCase(c.name).camelCase}:${ty.fromJson},";
+    final fj = nullableOption
+        ? '$fName == null ? null : Option.fromJson($fName, ($fName) => ${ty.fromJson})'
+        : ty.fromJson;
+    return "${ReCase(c.name).camelCase}:${fj},";
   }).join();
   buf.writeln('''
 factory ${className}.fromJson(Object? obj_) {
@@ -211,7 +225,8 @@ String? addModelClassInsert(
   GenModel model = const GenModel(),
 }) {
   final name = '${className}Insert';
-  final didGenerate = t.fields.any((e) => e.nullable);
+  final didGenerate =
+      t.fields.any((e) => e.defaultValue != null && !e.nullable);
   if (didGenerate) {
     addModelClass(
       buf,

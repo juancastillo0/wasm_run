@@ -1,13 +1,26 @@
+import 'dart:convert';
+
 import 'package:typesql/src/sql_types.dart';
 import 'package:wasm_wit_component/wasm_wit_component.dart';
 
-export 'package:wasm_wit_component/wasm_wit_component.dart' show Option;
+export 'package:wasm_wit_component/wasm_wit_component.dart'
+    show Option, Some, None;
 
 class SqlExecArgs with BaseDataClass {
   final String sql;
   final List<Object?> params;
+  final List<SqlExecArgs>? inTransaction;
 
-  const SqlExecArgs(this.sql, [this.params = const []]);
+  const SqlExecArgs(this.sql, [this.params = const [], this.inTransaction]);
+
+  Iterable<SqlExecArgs> flatten() sync* {
+    yield this;
+    if (inTransaction != null) {
+      for (final t in inTransaction!) {
+        yield* t.flatten();
+      }
+    }
+  }
 
   Future<SqlExecution> execute(SqlExecutor executor) =>
       executor.execute(sql, params);
@@ -16,7 +29,7 @@ class SqlExecArgs with BaseDataClass {
   @override
   DataClassProps get dataClassProps => DataClassProps(
         'SqlExecArgs',
-        {'sql': sql, 'params': params},
+        {'sql': sql, 'params': params, 'inTransaction': inTransaction},
       );
 }
 
@@ -25,20 +38,70 @@ typedef SqlRows = List<List<Object?>>;
 // TODO: prepare
 class SqlExec<T> {
   final SqlExecArgs args;
+  final bool resultInLast;
   final Future<T> Function(SqlExecutor executor) run;
 
-  SqlExec(this.args, this.run);
+  SqlExec(this.args, this.run, {this.resultInLast = false});
 
   SqlExec<List<R>> addReturning<R extends SqlReturnModel>(
     SqlTypeData<R, dynamic> data,
   ) {
-    final fields = data.fields.map((e) => e.name);
-    final sql = '${args.sql} RETURNING ${fields.join(',')}';
+    String updateSql(String sql) {
+      final fields = data.fields.map((e) => e.name);
+      return '$sql RETURNING ${fields.join(',')}';
+    }
 
-    return SqlExec(args, (executor) async {
-      final rows = await executor.query(sql, args.params);
-      return data.parseRows(rows);
-    });
+    final inTransaction = args.inTransaction;
+    if (inTransaction != null && inTransaction.isNotEmpty) {
+      if (resultInLast) {
+        final last = SqlExecArgs(
+          updateSql(inTransaction.last.sql),
+          inTransaction.last.params,
+        );
+        final args_ = SqlExecArgs(
+          args.sql,
+          args.params,
+          [...inTransaction.sublist(0, inTransaction.length - 1), last],
+        );
+        return SqlExec(args_, (executor) async {
+          final result = await executor.transaction(() async {
+            for (final e in [args_].followedBy(args_.inTransaction!)) {
+              if (identical(e, last)) break;
+              await executor.execute(e.sql, e.params);
+            }
+            final rows = await executor.query(last.sql, last.params);
+            return data.parseRows(rows);
+          });
+          return result!;
+        });
+      } else {
+        final all = args
+            .flatten()
+            .map((e) => SqlExecArgs(updateSql(e.sql), e.params))
+            .toList();
+        final args_ = SqlExecArgs(
+          all.first.sql,
+          args.params,
+          all.sublist(1),
+        );
+        return SqlExec(args_, (executor) async {
+          final result = await executor.transaction(() async {
+            final results = await Future.wait(
+              all.map((e) => executor.query(e.sql, e.params)),
+            );
+            return results.expand(data.parseRows).toList();
+          });
+          return result!;
+        });
+      }
+    } else {
+      final args_ = SqlExecArgs(updateSql(args.sql), args.params);
+
+      return SqlExec(args_, (executor) async {
+        final rows = await executor.query(args_.sql, args.params);
+        return data.parseRows(rows);
+      });
+    }
   }
 
   static SqlExec<SqlExecution> insert(SqlInsertModel model) {
@@ -57,12 +120,12 @@ class SqlExec<T> {
     U model,
   ) {
     final items = sqlItemsKey(key);
-    final fields = model.dataClassProps.fields;
-    // TODO: Option vs nullable
-    final set = fields.keys.map((v) => '$v = ?').join(",");
+    final fields =
+        model.dataClassProps.fields.entries.where((e) => e.value != null);
+    final set = fields.map((v) => '${v.key} = ?').join(",");
     final args = SqlExecArgs(
       "UPDATE ${model.table} SET $set WHERE ${items.where}",
-      [...fields.values.map(toSqlValue), ...items.params],
+      [...fields.map((e) => e.value).map(toSqlValue), ...items.params],
     );
     return SqlExec(args, args.execute);
   }
@@ -70,7 +133,7 @@ class SqlExec<T> {
   static SqlExec<SqlExecution> delete(SqlUniqueKeyModel<dynamic, dynamic> key) {
     final items = sqlItemsKey(key);
     final args = SqlExecArgs(
-      "DELETE ${key.table} WHERE ${items.where}",
+      "DELETE FROM ${key.table} WHERE ${items.where}",
       items.params,
     );
     return SqlExec(args, args.execute);
@@ -82,19 +145,56 @@ class SqlExec<T> {
   ) {
     final items = mergeSqlItems(keys.map(sqlItemsKey));
     final args = SqlExecArgs(
-      "DELETE ${keys.first.table} WHERE (${items.where.join(") OR (")})",
+      "DELETE FROM ${keys.first.table} WHERE (${items.where.join(") OR (")})",
       items.params,
+    );
+    return SqlExec(args, args.execute);
+  }
+
+  static SqlExec<SqlExecution> insertMany<T extends SqlReturnModel>(
+    SqlTypeData<T, dynamic> ty,
+    List<SqlInsertModel<T>> models,
+  ) {
+    final table = models.first.table;
+    final fields = models.map((e) => e.dataClassProps).toList();
+    final keys = fields.expand((e) => e.fields.keys).toSet();
+    bool isDefault(String k, Object? value) {
+      final t = ty.fields.firstWhere((e) => e.name == k);
+      return value == null && t.type is! BTypeNullable && t.hasDefault;
+    }
+
+    final values = fields
+        .map(
+          (f) =>
+              '(${keys.map((k) => isDefault(k, f.fields[k]) ? 'DEFAULT' : '?').join(',')})',
+        )
+        .join(',');
+    final params = fields
+        .expand(
+          (f) => keys
+              .where((k) => !isDefault(k, f.fields[k]))
+              .map((k) => f.fields[k]),
+        )
+        .map(toSqlValue)
+        .toList(growable: false);
+    final args = SqlExecArgs(
+      "INSERT INTO ${table}('${keys.join("','")}') VALUES ${values}",
+      params,
     );
     return SqlExec(args, args.execute);
   }
 }
 
 abstract class SqlExecutor {
+  SqlDialect get dialect;
+
   Future<SqlExecution> execute(String sql, [List<Object?>? params]);
 
   Future<SqlRows> query(String sql, [List<Object?>? params]);
 
   Future<SqlPreparedStatement> prepare(String sql);
+
+  Future<T?> transaction<T>(Future<T> Function() transact);
 
   Future<SqlExecution> insert(SqlInsertModel model) =>
       SqlExec.insert(model).run(this);
@@ -175,11 +275,11 @@ abstract class SqlTypeData<T extends SqlReturnModel,
     String table,
     List<SqlTypeDataField> fields,
     T Function(Object? row) parseModel,
-  ) = SqlTypeDataFromValues<T, U>;
+  ) = _SqlTypeDataValue<T, U>;
 }
 
-class SqlTypeDataFromValues<T extends SqlReturnModel,
-    U extends SqlUpdateModel<T>> extends SqlTypeData<T, U> {
+class _SqlTypeDataValue<T extends SqlReturnModel, U extends SqlUpdateModel<T>>
+    extends SqlTypeData<T, U> {
   @override
   final String table;
   @override
@@ -187,7 +287,7 @@ class SqlTypeDataFromValues<T extends SqlReturnModel,
 
   final T Function(Object? row) _parseRow;
 
-  const SqlTypeDataFromValues(this.table, this.fields, this._parseRow);
+  const _SqlTypeDataValue(this.table, this.fields, this._parseRow);
 
   @override
   T parseRow(Object? row) {
@@ -201,7 +301,7 @@ class SqlTypedController<T extends SqlReturnModel,
   final SqlTypeData<T, U> type;
 
   SqlTypedController(this.executor)
-      : type = executor.types[T] as SqlTypeData<T, U>;
+      : type = executor.getType<T>() as SqlTypeData<T, U>;
 
   Future<T?> selectUnique(SqlUniqueKeyModel<T, U> key) =>
       executor.selectUnique(key);
@@ -217,6 +317,14 @@ class SqlTypedController<T extends SqlReturnModel,
       .run(executor.executor)
       .then(extractFirst);
 
+  Future<SqlExecution> insertMany(List<SqlInsertModel<T>> models) =>
+      SqlExec.insertMany(type, models).run(executor.executor);
+
+  Future<List<T>> insertManyReturning(List<SqlInsertModel<T>> models) =>
+      SqlExec.insertMany(type, models)
+          .addReturning(type)
+          .run(executor.executor);
+
   Future<T?> updateReturning(SqlUniqueKeyModel<T, U> key, U model) =>
       SqlExec.update(key, model)
           .addReturning(type)
@@ -227,6 +335,9 @@ class SqlTypedController<T extends SqlReturnModel,
       .addReturning(type)
       .run(executor.executor)
       .then(extractFirstOrNull);
+
+  Future<List<T>> deleteManyReturning(List<SqlUniqueKeyModel<T, U>> keys) =>
+      SqlExec.deleteMany(keys).addReturning(type).run(executor.executor);
 }
 
 T extractFirst<T>(List<T> l) => l.first;
@@ -241,11 +352,7 @@ class SqlTypedExecutor {
   SqlTypedExecutor(this.executor, {required this.types})
       : tables = types.map((key, value) => MapEntry(value.table, value));
 
-  SqlTypeData<T, dynamic> getType<T extends SqlReturnModel>() =>
-      types[T] as SqlTypeData<T, dynamic>;
-
-  SqlTypedController<T, U>
-      controller<T extends SqlReturnModel, U extends SqlUpdateModel<T>>() {
+  SqlTypeData<T, dynamic> getType<T extends SqlReturnModel>() {
     if (!types.containsKey(T)) {
       throw ArgumentError.value(
         T,
@@ -253,41 +360,20 @@ class SqlTypedExecutor {
         'Type not found in types: ${types.keys}',
       );
     }
-    return SqlTypedController(this);
+    return types[T] as SqlTypeData<T, dynamic>;
   }
+
+  SqlTypedController<T, U>
+      controller<T extends SqlReturnModel, U extends SqlUpdateModel<T>>() =>
+          SqlTypedController(this);
 
   // TODO: return value in SqlExecution
 
   Future<SqlExecution> insertMany(List<SqlInsertModel> models) async {
     if (models.isEmpty) return SqlExecution.empty;
-
     final table = models.first.table;
     final ty = tables[table]!;
-    final fields = models.map((e) => e.dataClassProps).toList();
-    final keys = fields.expand((e) => e.fields.keys).toSet();
-    bool isDefault(String k, Object? value) {
-      final t = ty.fields.firstWhere((e) => e.name == k);
-      return value == null && t.type is! BTypeNullable && t.hasDefault;
-    }
-
-    final values = fields
-        .map(
-          (f) =>
-              '(${keys.map((k) => isDefault(k, f.fields[k]) ? 'DEFAULT' : '?').join(',')})',
-        )
-        .join(',');
-    final args = fields
-        .expand(
-          (f) => keys
-              .where((k) => !isDefault(k, f.fields[k]))
-              .map((k) => f.fields[k]),
-        )
-        .map(toSqlValue)
-        .toList(growable: false);
-    return executor.execute(
-      "INSERT INTO ${table}('${keys.join("','")}') VALUES ${values}",
-      args,
-    );
+    return SqlExec.insertMany(ty, models).run(executor);
   }
 
   Future<T?> selectUnique<T extends SqlReturnModel>(
@@ -502,18 +588,15 @@ class _SqlPreparedStatement implements SqlPreparedStatement {
 class SqlExecution {
   final String lastInsertId;
   final int updaterRows;
-  final SqlRows? returnedRows;
 
   const SqlExecution({
     required this.lastInsertId,
     required this.updaterRows,
-    required this.returnedRows,
   });
 
   static const empty = SqlExecution(
     lastInsertId: '',
     updaterRows: 0,
-    returnedRows: null,
   );
 }
 
@@ -551,7 +634,17 @@ Object? toSqlValue(Object? value) {
   if (value is Duration) return value.inMicroseconds;
   if (value is List) return value.map(toSqlValue).toList();
   if (value is Option) return toSqlValue(value.value);
-  if (value is Map) return value.map((k, v) => MapEntry(k, toSqlValue(v)));
+  if (value is Map) return jsonEncode(value);
+  return value;
+}
+
+Object? toJsonValue(Object? value) {
+  if (value == null) return null;
+  if (value is DateTime) return value.toIso8601String();
+  if (value is Duration) return value.inMicroseconds;
+  if (value is List) return value.map(toJsonValue).toList();
+  if (value is Option) return value.toJson(toJsonValue);
+  if (value is Map) return value.map((k, v) => MapEntry(k, toJsonValue(v)));
   return value;
 }
 
@@ -559,7 +652,7 @@ mixin BaseDataClass {
   DataClassProps get dataClassProps;
 
   Map<String, Object?> toJson() => dataClassProps.fields.map(
-        (key, value) => MapEntry(key, toSqlValue(value)),
+        (key, value) => MapEntry(key, toJsonValue(value)),
       );
 
   @override

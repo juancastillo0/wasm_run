@@ -106,3 +106,5 @@ SELECT posts.id,
 FROM posts
     LEFT JOIN posts_topics pt ON pt.post_id = posts.id
 GROUP BY posts.id;
+--
+DELETE FROM users WHERE (id = ?) RETURNING id,name;
