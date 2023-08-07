@@ -1,25 +1,27 @@
 package y-crdt-namespace:y-crdt
 
 world y-crdt {
-    /// A record is a class with named fields
-    /// There are enum, list, variant, option, result, tuple and union types
-    record model {
-      /// Comment for a field
-      integer: s32,
-    }
+    use y-doc-methods-types.{y-event}
 
-    /// An import is a function that is provided by the host environment (Dart)
-    import map-integer: func(value: s32) -> float64
-
-    /// export
-    export run: func(value: model) -> result<float64, string>
+    import event-callback: func(function-id: u32, event: y-event)
+    import event-deep-callback: func(function-id: u32, event: list<y-event>)
 
     // TODO: should_load auto_load
 
     export y-doc-methods
 }
 
-interface y-doc-methods {
+interface y-doc-methods-types {
+
+    union y-event {
+      y-array-event,
+      y-map-event,
+      y-text-event,
+    }
+
+    record event-observer {
+      ref: u32,
+    }
 
     union y-value {
       json-value-item,
@@ -65,167 +67,89 @@ interface y-doc-methods {
       ref: u32,
     }
 
-    enum offset-kind {
-        /// Compute editable strings length and offset using UTF-8 byte count.
-        bytes,
-        /// Compute editable strings length and offset using UTF-16 chars count.
-        utf16,
-        /// Compute editable strings length and offset using Unicode code points number.
-        utf32,
+    type event-path = list<event-path-item>
+    union event-path-item {
+      string,
+      u32,
     }
-
-    record y-doc-options {
-      /// Globally unique client identifier. This value must be unique across all active collaborating
-      /// peers, otherwise a update collisions will happen, causing document store state to be corrupted.
-      ///
-      /// Default value: randomly generated.
-      client-id: u64,
-      /// A globally unique identifier for this document.
-      ///
-      /// Default value: randomly generated UUID v4.
-      guid: string,
-      /// Associate this document with a collection. This only plays a role if your provider has
-      /// a concept of collection.
-      ///
-      /// Default value: `None`.
-      collection-id: option<string>,
-      /// How to we count offsets and lengths used in text operations.
-      ///
-      /// Default value: [OffsetKind::Bytes].
-      offset-kind: offset-kind,
-      /// Determines if transactions commits should try to perform GC-ing of deleted items.
-      ///
-      /// Default value: `false`.
-      skip-gc: bool,
-      /// If a subdocument, automatically load document. If this is a subdocument, remote peers will
-      /// load the document as well automatically.
-      ///
-      /// Default value: `false`.
-      auto-load: bool,
-      /// Whether the document should be synced by the provider now.
-      /// This is toggled to true when you call ydoc.load().
-      ///
-      /// Default value: `true`.
-      should-load: bool,
-  }
-
-    y-doc-new: func(options: option<y-doc-options>) -> y-doc
-    y-doc-parent-doc: func(ref: y-doc) -> option<y-doc>
-    y-doc-id: func(ref: y-doc) -> u64
-    y-doc-guid: func(ref: y-doc) -> string
-    y-doc-read-transaction: func(ref: y-doc) -> read-transaction
-    y-doc-write-transaction: func(ref: y-doc, origin: origin) -> write-transaction
-    y-doc-text: func(ref: y-doc, name: string) -> y-text
-    y-doc-array: func(ref: y-doc, name: string) -> y-array
-    y-doc-map: func(ref: y-doc, name: string) -> y-map
-    y-doc-xml-fragment: func(ref: y-doc, name: string) -> y-xml-fragment
-    y-doc-xml-element: func(ref: y-doc, name: string) -> y-xml-element
-    y-doc-xml-text: func(ref: y-doc, name: string) -> y-xml-text
-    y-doc-on-update-v1: func(ref: y-doc, function-id: u32)
-    // on_after_transaction
-    // on_subdocs
-    // on_destroy
-    // load
-    // destroy
-    subdocs: func(ref: y-doc, txn: y-transaction) -> list<string>
-    subdoc-guids: func(ref: y-doc, txn: y-transaction) -> list<string>
-
-    encode-state-vector: func(ref: y-doc) -> list<u8>
-    // debug_update_v1
-
-    type error = string
-    type origin = list<u8>
-
-    encode-state-as-update: func(ref: y-doc, vector: option<list<u8>>) -> result<list<u8>, error>
-    encode-state-as-update-v2: func(ref: y-doc, vector: option<list<u8>>) -> result<list<u8>, error>
-    apply-update: func(ref: y-doc, diff: list<u8>, origin: origin) -> result<_, error>
-    apply-update-v2: func(ref: y-doc, diff: list<u8>, origin: origin) -> result<_, error>
-
-    transaction-is-readonly: func(txn: y-transaction) -> bool
-    transaction-is-writeable: func(txn: y-transaction) -> bool
-    transaction-origin: func(txn: y-transaction) -> option<origin>
-    transaction-commit: func(txn: y-transaction)
-    transaction-state-vector-v1: func(txn: y-transaction) -> list<u8>
-    transaction-diff-v1: func(txn: y-transaction, vector: option<list<u8>>) -> result<list<u8>, error>
-    transaction-diff-v2: func(txn: y-transaction, vector: option<list<u8>>) -> result<list<u8>, error>
-    transaction-apply-v2: func(txn: y-transaction, diff: list<u8>) -> result<_, error>
-
-    transaction-encode-update: func(txn: y-transaction) -> list<u8>
-    transaction-encode-update-v2: func(txn: y-transaction) -> list<u8>
-
-
-    // record y-value {
-    //   ref: u32,
-    // }
 
     record y-array-event {
-      // ref: u32,
-      // inner: *const ArrayEvent,
-      txn: write-transaction,
-      target: y-value,
-      delta: y-array-event-delta,
-      path: string,
+      target: y-array,
+      delta: list<y-array-delta>,
+      path: event-path,
     }
 
-    union y-array-event-delta {
-      y-array-event-insert,
-      y-array-event-delete,
-      y-array-event-retain,
+    union y-array-delta {
+      y-array-delta-insert,
+      y-array-delta-delete,
+      y-array-delta-retain,
     }
 
-    record y-array-event-insert {
+    record y-array-delta-insert {
       insert: list<y-value>,
     }
-    record y-array-event-delete {
+    record y-array-delta-delete {
       delete: u32,
     }
-    record y-array-event-retain {
+    record y-array-delta-retain {
       retain: u32,
     }
 
-    // YMapEvent
-    // YTextEvent
-    // YXmlEvent
-    // YXmlTextEvent
-    // YSubdocsEvent
-    // YSubdocsObserver(SubdocsSubscription)
-    // YDestroyObserver(DestroySubscription)
-    // YAfterTransactionEvent
-    // YAfterTransactionObserver(TransactionCleanupSubscription)
-    // YUpdateObserver(UpdateSubscription)
+    record y-map-event {
+      // txn: write-transaction,
+      // target: y-value,
+      target: y-map,
+      keys: list<tuple<string, y-map-delta>>,
+      path: event-path,
+    }
 
-    // YArrayObserver
-    // YTextObserver
-    // YMapObserver
-    // ... other observers
-    // YEventObserver
+    record y-map-delta {
+      action: y-map-delta-action,
+      old-value: option<y-value>,
+      new-value: option<y-value>,
+    }
 
+    enum y-map-delta-action {
+      insert,
+      update,
+      delete,
+    }
 
-    type text-attrs = json-object
-    type implicit-transaction = option<y-transaction>
+    record y-text-event {
+      // txn: write-transaction,
+      // target: y-value,
+      target: y-text,
+      delta: list<y-text-delta>,
+      path: event-path,
+    }
+    
+    /// https://quilljs.com/docs/delta/
+    union y-text-delta {
+      y-text-delta-insert,
+      y-text-delta-delete,
+      y-text-delta-retain,
+    }
+    record y-text-delta-insert {
+      // TODO: could be an Embeds object
+      insert: string,
+      attributes: option<text-attrs>,
+    }
+    record y-text-delta-delete {
+      delete: u32,
+    }
+    record y-text-delta-retain {
+      retain: u32,
+      attributes: option<text-attrs>,
+    }
 
-    y-text-new: func(init: option<string>) -> y-text
-    y-text-prelim: func(ref: y-text) -> bool
-    y-text-length: func(ref: y-text, txn: implicit-transaction) -> u32
-    y-text-to-string: func(ref: y-text, txn: implicit-transaction) -> string
-    y-text-to-json: func(ref: y-text, txn: implicit-transaction) -> string
-    y-text-insert: func(ref: y-text, index: u32, chunk: string, attributes: option<text-attrs>, txn: implicit-transaction)
-    y-text-insert-embed: func(ref: y-text, index: u32, embed: json-value-item, attributes: option<text-attrs>, txn: implicit-transaction)
-    y-text-format: func(ref: y-text, index: u32, length: u32, attributes: text-attrs, txn: implicit-transaction)
-    y-text-push: func(ref: y-text, chunk: string, attributes: option<text-attrs>, txn: implicit-transaction)
-    y-text-delete: func(ref: y-text, index: u32, length: u32, txn: implicit-transaction)
-    // TODO: y-text-to-delta: func(ref: y-text, index: u32, length: u32, txn: implicit-transaction)
-    y-text-observe: func(ref: y-text, function-id: u32)
-    y-text-observe-deep: func(ref: y-text, function-id: u32)
-
-    // YSnapshot(Snapshot)
-
-    // type json-value = list<tuple<string, string>>
-    // type json-object = list<tuple<string, json-value-item>>
-    // type json-array = list<json-value-item>
+    // TODO: should we add fields/methods from Snapshot?
+    record y-snapshot {
+      ref: u32,
+    }
 
     type json-object = json-value-item
     type json-array = json-value-item
+    type text-attrs = json-object
 
     record json-value-item {
       item: json-value,
@@ -258,10 +182,196 @@ interface y-doc-methods {
       big-int(s64),
       str(string),
       buffer(list<u8>),
-      /// TODO: use json-array-ref
       array(json-array-ref),
       map(json-map-ref),
     }
+
+}
+
+interface y-doc-methods {
+    use y-doc-methods-types.{
+      y-event,
+      event-observer,
+      y-value,
+      y-doc,
+      y-transaction,
+      read-transaction,
+      write-transaction,
+      y-text,
+      y-array,
+      y-map,
+      y-xml-fragment,
+      y-xml-element,
+      y-xml-text,
+      event-path,
+      event-path-item,
+      y-array-event,
+      y-array-delta,
+      y-array-delta-insert,
+      y-array-delta-delete,
+      y-array-delta-retain,
+      y-map-event,
+      y-map-delta,
+      y-map-delta-action,
+      y-text-event,
+      y-text-delta,
+      y-text-delta-insert,
+      y-text-delta-delete,
+      y-text-delta-retain,
+      y-snapshot,
+      json-object,
+      json-array,
+      json-value-item,
+      json-value-ref,
+      json-array-ref,
+      json-map-ref,
+      json-value,
+      text-attrs,
+    }
+
+    type error = string
+    type origin = list<u8>
+    type implicit-transaction = option<y-transaction>
+
+    y-doc-dispose: func(ref: y-doc) -> bool
+    y-text-dispose: func(ref: y-text) -> bool
+    y-array-dispose: func(ref: y-array) -> bool
+    y-map-dispose: func(ref: y-map) -> bool
+    y-xml-element-dispose: func(ref: y-xml-element) -> bool
+    y-xml-fragment-dispose: func(ref: y-xml-fragment) -> bool
+    y-xml-text-dispose: func(ref: y-xml-text) -> bool
+    y-transaction-dispose: func(ref: y-transaction) -> bool
+    y-value-dispose: func(ref: y-value) -> bool
+    callback-dispose: func(ref: event-observer) -> bool
+
+    enum offset-kind {
+        /// Compute editable strings length and offset using UTF-8 byte count.
+        bytes,
+        /// Compute editable strings length and offset using UTF-16 chars count.
+        utf16,
+        /// Compute editable strings length and offset using Unicode code points number.
+        utf32,
+    }
+
+    record y-doc-options {
+      /// Globally unique client identifier. This value must be unique across all active collaborating
+      /// peers, otherwise a update collisions will happen, causing document store state to be corrupted.
+      ///
+      /// Default value: randomly generated.
+      client-id: option<u64>,
+      /// A globally unique identifier for this document.
+      ///
+      /// Default value: randomly generated UUID v4.
+      guid: option<string>,
+      /// Associate this document with a collection. This only plays a role if your provider has
+      /// a concept of collection.
+      ///
+      /// Default value: `None`.
+      collection-id: option<string>,
+      /// How to we count offsets and lengths used in text operations.
+      ///
+      /// Default value: [OffsetKind::Bytes].
+      offset-kind: option<offset-kind>,
+      /// Determines if transactions commits should try to perform GC-ing of deleted items.
+      ///
+      /// Default value: `false`.
+      skip-gc: option<bool>,
+      /// If a subdocument, automatically load document. If this is a subdocument, remote peers will
+      /// load the document as well automatically.
+      ///
+      /// Default value: `false`.
+      auto-load: option<bool>,
+      /// Whether the document should be synced by the provider now.
+      /// This is toggled to true when you call ydoc.load().
+      ///
+      /// Default value: `true`.
+      should-load: option<bool>,
+    }
+
+    y-doc-new: func(options: option<y-doc-options>) -> y-doc
+    y-doc-parent-doc: func(ref: y-doc) -> option<y-doc>
+    y-doc-id: func(ref: y-doc) -> u64
+    y-doc-guid: func(ref: y-doc) -> string
+    y-doc-read-transaction: func(ref: y-doc) -> read-transaction
+    y-doc-write-transaction: func(ref: y-doc, origin: origin) -> write-transaction
+    y-doc-text: func(ref: y-doc, name: string) -> y-text
+    y-doc-array: func(ref: y-doc, name: string) -> y-array
+    y-doc-map: func(ref: y-doc, name: string) -> y-map
+    y-doc-xml-fragment: func(ref: y-doc, name: string) -> y-xml-fragment
+    y-doc-xml-element: func(ref: y-doc, name: string) -> y-xml-element
+    y-doc-xml-text: func(ref: y-doc, name: string) -> y-xml-text
+    y-doc-on-update-v1: func(ref: y-doc, function-id: u32) -> event-observer
+    // on_after_transaction
+    // on_subdocs
+    // on_destroy
+    load: func(ref: y-doc, parent-txn: implicit-transaction)
+    destroy: func(ref: y-doc, parent-txn: implicit-transaction)
+    subdocs: func(ref: y-doc, txn: implicit-transaction) -> list<y-doc>
+    subdoc-guids: func(ref: y-doc, txn: implicit-transaction) -> list<string>
+
+    encode-state-vector: func(ref: y-doc) -> list<u8>
+    // debug_update_v1
+
+
+    encode-state-as-update: func(ref: y-doc, vector: option<list<u8>>) -> result<list<u8>, error>
+    encode-state-as-update-v2: func(ref: y-doc, vector: option<list<u8>>) -> result<list<u8>, error>
+    apply-update: func(ref: y-doc, diff: list<u8>, origin: origin) -> result<_, error>
+    apply-update-v2: func(ref: y-doc, diff: list<u8>, origin: origin) -> result<_, error>
+
+    transaction-origin: func(txn: y-transaction) -> option<origin>
+    transaction-commit: func(txn: y-transaction)
+    transaction-state-vector-v1: func(txn: y-transaction) -> list<u8>
+    transaction-diff-v1: func(txn: y-transaction, vector: option<list<u8>>) -> result<list<u8>, error>
+    transaction-diff-v2: func(txn: y-transaction, vector: option<list<u8>>) -> result<list<u8>, error>
+    transaction-apply-v1: func(txn: y-transaction, diff: list<u8>) -> result<_, error>
+    transaction-apply-v2: func(txn: y-transaction, diff: list<u8>) -> result<_, error>
+
+    transaction-encode-update: func(txn: y-transaction) -> list<u8>
+    transaction-encode-update-v2: func(txn: y-transaction) -> list<u8>
+
+
+    // YMapEvent
+    // YTextEvent
+    // YXmlEvent
+    // YXmlTextEvent
+    // YSubdocsEvent
+    // YSubdocsObserver(SubdocsSubscription)
+    // YDestroyObserver(DestroySubscription)
+    // YAfterTransactionEvent
+    // YAfterTransactionObserver(TransactionCleanupSubscription)
+    // YUpdateObserver(UpdateSubscription)
+
+    // YArrayObserver
+    // YTextObserver
+    // YMapObserver
+    // ... other observers
+    // YEventObserver
+
+
+    y-text-new: func(init: option<string>) -> y-text
+    y-text-prelim: func(ref: y-text) -> bool
+    y-text-length: func(ref: y-text, txn: implicit-transaction) -> u32
+    y-text-to-string: func(ref: y-text, txn: implicit-transaction) -> string
+    y-text-to-json: func(ref: y-text, txn: implicit-transaction) -> string
+    y-text-insert: func(ref: y-text, index: u32, chunk: string, attributes: option<text-attrs>, txn: implicit-transaction)
+    y-text-insert-embed: func(ref: y-text, index: u32, embed: json-value-item, attributes: option<text-attrs>, txn: implicit-transaction)
+    y-text-format: func(ref: y-text, index: u32, length: u32, attributes: text-attrs, txn: implicit-transaction)
+    y-text-push: func(ref: y-text, chunk: string, attributes: option<text-attrs>, txn: implicit-transaction)
+    y-text-delete: func(ref: y-text, index: u32, length: u32, txn: implicit-transaction)
+    /// https://quilljs.com/docs/delta/
+    /// TODO: implement compute_ychange: Option<Function>,
+    y-text-to-delta: func(ref: y-text, snapshot: option<y-snapshot>, prev-snapshot: option<y-snapshot>, txn: implicit-transaction) -> list<y-text-delta>
+    y-text-observe: func(ref: y-text, function-id: u32) -> event-observer
+    y-text-observe-deep: func(ref: y-text, function-id: u32) -> event-observer
+
+    snapshot: func(doc: y-doc) -> y-snapshot
+    equal-snapshot: func(left: y-snapshot, right: y-snapshot) -> bool
+    encode-snapshot-v1: func(snapshot: y-snapshot) -> list<u8>
+    encode-snapshot-v2: func(snapshot: y-snapshot) -> list<u8>
+    decode-snapshot-v1: func(snapshot: list<u8>) -> result<y-snapshot, error>
+    decode-snapshot-v2: func(snapshot: list<u8>) -> result<y-snapshot, error>
+    encode-state-from-snapshot-v1: func(doc: y-doc, snapshot: y-snapshot) -> result<list<u8>, error>
+    encode-state-from-snapshot-v2: func(doc: y-doc, snapshot: y-snapshot) -> result<list<u8>, error>
 
     y-array-new: func(init: option<json-array>) -> y-array
     y-array-prelim: func(ref: y-array) -> bool
@@ -272,9 +382,9 @@ interface y-doc-methods {
     y-array-delete: func(ref: y-array, index: u32, length: u32, txn: implicit-transaction)
     y-array-move-content: func(ref: y-array, source: u32, target: u32, txn: implicit-transaction)
     y-array-get: func(ref: y-array, index: u32, txn: implicit-transaction) -> result<y-value, error>
-    // TODO: iterable y-array-values: func(ref: y-array, txn: implicit-transaction) -> json-value-item
-    y-array-observe: func(ref: y-array, function-id: u32)
-    y-array-observe-deep: func(ref: y-array, function-id: u32)
+    y-array-values: func(ref: y-array, txn: implicit-transaction) -> list<y-value>
+    y-array-observe: func(ref: y-array, function-id: u32) -> event-observer
+    y-array-observe-deep: func(ref: y-array, function-id: u32) -> event-observer
 
 
     y-map-new: func(init: option<json-object>) -> y-map
@@ -284,9 +394,9 @@ interface y-doc-methods {
     y-map-set: func(ref: y-map, key: string, value: json-value-item, txn: implicit-transaction)
     y-map-delete: func(ref: y-map, key: string, txn: implicit-transaction)
     y-map-get: func(ref: y-map, key: string, txn: implicit-transaction) -> option<y-value>
-    // entries
-    y-map-observe: func(ref: y-map, function-id: u32)
-    y-map-observe-deep: func(ref: y-map, function-id: u32)
+    y-map-entries: func(ref: y-map, txn: implicit-transaction) -> list<tuple<string, y-value>>
+    y-map-observe: func(ref: y-map, function-id: u32) -> event-observer
+    y-map-observe-deep: func(ref: y-map, function-id: u32) -> event-observer
 
 
     y-xml-element-name: func(ref: y-xml-element) -> option<string>

@@ -160,6 +160,57 @@ class YXmlElement implements YValue, ToJsonSerializable {
   static const _spec = RecordType([(label: 'ref', t: U32())]);
 }
 
+class YTextDeltaDelete implements YTextDelta, ToJsonSerializable {
+  final int /*U32*/ delete;
+  const YTextDeltaDelete({
+    required this.delete,
+  });
+
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
+  factory YTextDeltaDelete.fromJson(Object? json_) {
+    final json = json_ is Map
+        ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
+        : json_;
+    return switch (json) {
+      [final delete] || (final delete,) => YTextDeltaDelete(
+          delete: delete! as int,
+        ),
+      _ => throw Exception('Invalid JSON $json_')
+    };
+  }
+
+  /// Returns this as a serializable JSON value.
+  @override
+  Map<String, Object?> toJson() => {
+        'runtimeType': 'YTextDeltaDelete',
+        'delete': delete,
+      };
+
+  /// Returns this as a WASM canonical abi value.
+  List<Object?> toWasm() => [delete];
+  @override
+  String toString() =>
+      'YTextDeltaDelete${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
+
+  /// Returns a new instance by overriding the values passed as arguments
+  YTextDeltaDelete copyWith({
+    int /*U32*/ ? delete,
+  }) =>
+      YTextDeltaDelete(delete: delete ?? this.delete);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is YTextDeltaDelete &&
+          const ObjectComparator().arePropsEqual(_props, other._props);
+  @override
+  int get hashCode => const ObjectComparator().hashProps(_props);
+
+  // ignore: unused_field
+  List<Object?> get _props => [delete];
+  static const _spec = RecordType([(label: 'delete', t: U32())]);
+}
+
 class YText implements YValue, ToJsonSerializable {
   final int /*U32*/ ref;
   const YText({
@@ -209,6 +260,78 @@ class YText implements YValue, ToJsonSerializable {
   // ignore: unused_field
   List<Object?> get _props => [ref];
   static const _spec = RecordType([(label: 'ref', t: U32())]);
+}
+
+class YSnapshot implements ToJsonSerializable {
+  final int /*U32*/ ref;
+  const YSnapshot({
+    required this.ref,
+  });
+
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
+  factory YSnapshot.fromJson(Object? json_) {
+    final json = json_ is Map
+        ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
+        : json_;
+    return switch (json) {
+      [final ref] || (final ref,) => YSnapshot(
+          ref: ref! as int,
+        ),
+      _ => throw Exception('Invalid JSON $json_')
+    };
+  }
+
+  /// Returns this as a serializable JSON value.
+  @override
+  Map<String, Object?> toJson() => {
+        'runtimeType': 'YSnapshot',
+        'ref': ref,
+      };
+
+  /// Returns this as a WASM canonical abi value.
+  List<Object?> toWasm() => [ref];
+  @override
+  String toString() =>
+      'YSnapshot${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
+
+  /// Returns a new instance by overriding the values passed as arguments
+  YSnapshot copyWith({
+    int /*U32*/ ? ref,
+  }) =>
+      YSnapshot(ref: ref ?? this.ref);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is YSnapshot &&
+          const ObjectComparator().arePropsEqual(_props, other._props);
+  @override
+  int get hashCode => const ObjectComparator().hashProps(_props);
+
+  // ignore: unused_field
+  List<Object?> get _props => [ref];
+  static const _spec = RecordType([(label: 'ref', t: U32())]);
+}
+
+enum YMapDeltaAction implements ToJsonSerializable {
+  insert,
+  update,
+  delete;
+
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
+  factory YMapDeltaAction.fromJson(Object? json) {
+    return ToJsonSerializable.enumFromJson(json, values, _spec);
+  }
+
+  /// Returns this as a serializable JSON value.
+  @override
+  Map<String, Object?> toJson() =>
+      {'runtimeType': 'YMapDeltaAction', _spec.labels[index]: null};
+
+  /// Returns this as a WASM canonical abi value.
+  int toWasm() => index;
+  static const _spec = EnumType(['insert', 'update', 'delete']);
 }
 
 class YMap implements YValue, ToJsonSerializable {
@@ -313,20 +436,20 @@ class YDoc implements YValue, ToJsonSerializable {
   static const _spec = RecordType([(label: 'ref', t: U32())]);
 }
 
-class YArrayEventRetain implements YArrayEventDelta, ToJsonSerializable {
+class YArrayDeltaRetain implements YArrayDelta, ToJsonSerializable {
   final int /*U32*/ retain;
-  const YArrayEventRetain({
+  const YArrayDeltaRetain({
     required this.retain,
   });
 
   /// Returns a new instance from a JSON value.
   /// May throw if the value does not have the expected structure.
-  factory YArrayEventRetain.fromJson(Object? json_) {
+  factory YArrayDeltaRetain.fromJson(Object? json_) {
     final json = json_ is Map
         ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
         : json_;
     return switch (json) {
-      [final retain] || (final retain,) => YArrayEventRetain(
+      [final retain] || (final retain,) => YArrayDeltaRetain(
           retain: retain! as int,
         ),
       _ => throw Exception('Invalid JSON $json_')
@@ -336,7 +459,7 @@ class YArrayEventRetain implements YArrayEventDelta, ToJsonSerializable {
   /// Returns this as a serializable JSON value.
   @override
   Map<String, Object?> toJson() => {
-        'runtimeType': 'YArrayEventRetain',
+        'runtimeType': 'YArrayDeltaRetain',
         'retain': retain,
       };
 
@@ -344,17 +467,17 @@ class YArrayEventRetain implements YArrayEventDelta, ToJsonSerializable {
   List<Object?> toWasm() => [retain];
   @override
   String toString() =>
-      'YArrayEventRetain${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
+      'YArrayDeltaRetain${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
 
   /// Returns a new instance by overriding the values passed as arguments
-  YArrayEventRetain copyWith({
+  YArrayDeltaRetain copyWith({
     int /*U32*/ ? retain,
   }) =>
-      YArrayEventRetain(retain: retain ?? this.retain);
+      YArrayDeltaRetain(retain: retain ?? this.retain);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is YArrayEventRetain &&
+      other is YArrayDeltaRetain &&
           const ObjectComparator().arePropsEqual(_props, other._props);
   @override
   int get hashCode => const ObjectComparator().hashProps(_props);
@@ -364,20 +487,20 @@ class YArrayEventRetain implements YArrayEventDelta, ToJsonSerializable {
   static const _spec = RecordType([(label: 'retain', t: U32())]);
 }
 
-class YArrayEventDelete implements YArrayEventDelta, ToJsonSerializable {
+class YArrayDeltaDelete implements YArrayDelta, ToJsonSerializable {
   final int /*U32*/ delete;
-  const YArrayEventDelete({
+  const YArrayDeltaDelete({
     required this.delete,
   });
 
   /// Returns a new instance from a JSON value.
   /// May throw if the value does not have the expected structure.
-  factory YArrayEventDelete.fromJson(Object? json_) {
+  factory YArrayDeltaDelete.fromJson(Object? json_) {
     final json = json_ is Map
         ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
         : json_;
     return switch (json) {
-      [final delete] || (final delete,) => YArrayEventDelete(
+      [final delete] || (final delete,) => YArrayDeltaDelete(
           delete: delete! as int,
         ),
       _ => throw Exception('Invalid JSON $json_')
@@ -387,7 +510,7 @@ class YArrayEventDelete implements YArrayEventDelta, ToJsonSerializable {
   /// Returns this as a serializable JSON value.
   @override
   Map<String, Object?> toJson() => {
-        'runtimeType': 'YArrayEventDelete',
+        'runtimeType': 'YArrayDeltaDelete',
         'delete': delete,
       };
 
@@ -395,17 +518,17 @@ class YArrayEventDelete implements YArrayEventDelta, ToJsonSerializable {
   List<Object?> toWasm() => [delete];
   @override
   String toString() =>
-      'YArrayEventDelete${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
+      'YArrayDeltaDelete${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
 
   /// Returns a new instance by overriding the values passed as arguments
-  YArrayEventDelete copyWith({
+  YArrayDeltaDelete copyWith({
     int /*U32*/ ? delete,
   }) =>
-      YArrayEventDelete(delete: delete ?? this.delete);
+      YArrayDeltaDelete(delete: delete ?? this.delete);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is YArrayEventDelete &&
+      other is YArrayDeltaDelete &&
           const ObjectComparator().arePropsEqual(_props, other._props);
   @override
   int get hashCode => const ObjectComparator().hashProps(_props);
@@ -601,196 +724,6 @@ sealed class YTransaction implements ToJsonSerializable {
       };
 // ignore: unused_field
   static const _spec = Union([ReadTransaction._spec, WriteTransaction._spec]);
-}
-
-typedef Origin = Uint8List;
-
-enum OffsetKind implements ToJsonSerializable {
-  /// Compute editable strings length and offset using UTF-8 byte count.
-  bytes,
-
-  /// Compute editable strings length and offset using UTF-16 chars count.
-  utf16,
-
-  /// Compute editable strings length and offset using Unicode code points number.
-  utf32;
-
-  /// Returns a new instance from a JSON value.
-  /// May throw if the value does not have the expected structure.
-  factory OffsetKind.fromJson(Object? json) {
-    return ToJsonSerializable.enumFromJson(json, values, _spec);
-  }
-
-  /// Returns this as a serializable JSON value.
-  @override
-  Map<String, Object?> toJson() =>
-      {'runtimeType': 'OffsetKind', _spec.labels[index]: null};
-
-  /// Returns this as a WASM canonical abi value.
-  int toWasm() => index;
-  static const _spec = EnumType(['bytes', 'utf16', 'utf32']);
-}
-
-class YDocOptions implements ToJsonSerializable {
-  /// Globally unique client identifier. This value must be unique across all active collaborating
-  /// peers, otherwise a update collisions will happen, causing document store state to be corrupted.
-  ///
-  /// Default value: randomly generated.
-  final BigInt /*U64*/ clientId;
-
-  /// A globally unique identifier for this document.
-  ///
-  /// Default value: randomly generated UUID v4.
-  final String guid;
-
-  /// Associate this document with a collection. This only plays a role if your provider has
-  /// a concept of collection.
-  ///
-  /// Default value: `None`.
-  final String? collectionId;
-
-  /// How to we count offsets and lengths used in text operations.
-  ///
-  /// Default value: [OffsetKind::Bytes].
-  final OffsetKind offsetKind;
-
-  /// Determines if transactions commits should try to perform GC-ing of deleted items.
-  ///
-  /// Default value: `false`.
-  final bool skipGc;
-
-  /// If a subdocument, automatically load document. If this is a subdocument, remote peers will
-  /// load the document as well automatically.
-  ///
-  /// Default value: `false`.
-  final bool autoLoad;
-
-  /// Whether the document should be synced by the provider now.
-  /// This is toggled to true when you call ydoc.load().
-  ///
-  /// Default value: `true`.
-  final bool shouldLoad;
-  const YDocOptions({
-    required this.clientId,
-    required this.guid,
-    this.collectionId,
-    required this.offsetKind,
-    required this.skipGc,
-    required this.autoLoad,
-    required this.shouldLoad,
-  });
-
-  /// Returns a new instance from a JSON value.
-  /// May throw if the value does not have the expected structure.
-  factory YDocOptions.fromJson(Object? json_) {
-    final json = json_ is Map
-        ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
-        : json_;
-    return switch (json) {
-      [
-        final clientId,
-        final guid,
-        final collectionId,
-        final offsetKind,
-        final skipGc,
-        final autoLoad,
-        final shouldLoad
-      ] ||
-      (
-        final clientId,
-        final guid,
-        final collectionId,
-        final offsetKind,
-        final skipGc,
-        final autoLoad,
-        final shouldLoad
-      ) =>
-        YDocOptions(
-          clientId: bigIntFromJson(clientId),
-          guid: guid is String ? guid : (guid! as ParsedString).value,
-          collectionId: Option.fromJson(
-              collectionId,
-              (some) =>
-                  some is String ? some : (some! as ParsedString).value).value,
-          offsetKind: OffsetKind.fromJson(offsetKind),
-          skipGc: skipGc! as bool,
-          autoLoad: autoLoad! as bool,
-          shouldLoad: shouldLoad! as bool,
-        ),
-      _ => throw Exception('Invalid JSON $json_')
-    };
-  }
-
-  /// Returns this as a serializable JSON value.
-  @override
-  Map<String, Object?> toJson() => {
-        'runtimeType': 'YDocOptions',
-        'client-id': clientId.toString(),
-        'guid': guid,
-        'collection-id': (collectionId == null
-            ? const None().toJson()
-            : Option.fromValue(collectionId).toJson()),
-        'offset-kind': offsetKind.toJson(),
-        'skip-gc': skipGc,
-        'auto-load': autoLoad,
-        'should-load': shouldLoad,
-      };
-
-  /// Returns this as a WASM canonical abi value.
-  List<Object?> toWasm() => [
-        clientId,
-        guid,
-        (collectionId == null
-            ? const None().toWasm()
-            : Option.fromValue(collectionId).toWasm()),
-        offsetKind.toWasm(),
-        skipGc,
-        autoLoad,
-        shouldLoad
-      ];
-  @override
-  String toString() =>
-      'YDocOptions${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
-
-  /// Returns a new instance by overriding the values passed as arguments
-  YDocOptions copyWith({
-    BigInt /*U64*/ ? clientId,
-    String? guid,
-    Option<String>? collectionId,
-    OffsetKind? offsetKind,
-    bool? skipGc,
-    bool? autoLoad,
-    bool? shouldLoad,
-  }) =>
-      YDocOptions(
-          clientId: clientId ?? this.clientId,
-          guid: guid ?? this.guid,
-          collectionId:
-              collectionId != null ? collectionId.value : this.collectionId,
-          offsetKind: offsetKind ?? this.offsetKind,
-          skipGc: skipGc ?? this.skipGc,
-          autoLoad: autoLoad ?? this.autoLoad,
-          shouldLoad: shouldLoad ?? this.shouldLoad);
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is YDocOptions &&
-          const ObjectComparator().arePropsEqual(_props, other._props);
-  @override
-  int get hashCode => const ObjectComparator().hashProps(_props);
-
-  // ignore: unused_field
-  List<Object?> get _props =>
-      [clientId, guid, collectionId, offsetKind, skipGc, autoLoad, shouldLoad];
-  static const _spec = RecordType([
-    (label: 'client-id', t: U64()),
-    (label: 'guid', t: StringType()),
-    (label: 'collection-id', t: OptionType(StringType())),
-    (label: 'offset-kind', t: OffsetKind._spec),
-    (label: 'skip-gc', t: Bool()),
-    (label: 'auto-load', t: Bool()),
-    (label: 'should-load', t: Bool())
-  ]);
 }
 
 class JsonValueRef implements ToJsonSerializable {
@@ -1160,11 +1093,8 @@ class JsonValueBuffer implements JsonValue {
   int get hashCode => const ObjectComparator().hashValue(value);
 }
 
-/// TODO: use json-array-ref
 class JsonValueArray implements JsonValue {
   final JsonArrayRef value;
-
-  /// TODO: use json-array-ref
   const JsonValueArray(this.value);
 
   /// Returns this as a serializable JSON value.
@@ -1389,6 +1319,1018 @@ sealed class YValue implements ToJsonSerializable {
   ]);
 }
 
+class YMapDelta implements ToJsonSerializable {
+  final YMapDeltaAction action;
+  final YValue? oldValue;
+  final YValue? newValue;
+  const YMapDelta({
+    required this.action,
+    this.oldValue,
+    this.newValue,
+  });
+
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
+  factory YMapDelta.fromJson(Object? json_) {
+    final json = json_ is Map
+        ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
+        : json_;
+    return switch (json) {
+      [final action, final oldValue, final newValue] ||
+      (final action, final oldValue, final newValue) =>
+        YMapDelta(
+          action: YMapDeltaAction.fromJson(action),
+          oldValue:
+              Option.fromJson(oldValue, (some) => YValue.fromJson(some)).value,
+          newValue:
+              Option.fromJson(newValue, (some) => YValue.fromJson(some)).value,
+        ),
+      _ => throw Exception('Invalid JSON $json_')
+    };
+  }
+
+  /// Returns this as a serializable JSON value.
+  @override
+  Map<String, Object?> toJson() => {
+        'runtimeType': 'YMapDelta',
+        'action': action.toJson(),
+        'old-value': (oldValue == null
+            ? const None().toJson()
+            : Option.fromValue(oldValue).toJson((some) => some.toJson())),
+        'new-value': (newValue == null
+            ? const None().toJson()
+            : Option.fromValue(newValue).toJson((some) => some.toJson())),
+      };
+
+  /// Returns this as a WASM canonical abi value.
+  List<Object?> toWasm() => [
+        action.toWasm(),
+        (oldValue == null
+            ? const None().toWasm()
+            : Option.fromValue(oldValue).toWasm(YValue.toWasm)),
+        (newValue == null
+            ? const None().toWasm()
+            : Option.fromValue(newValue).toWasm(YValue.toWasm))
+      ];
+  @override
+  String toString() =>
+      'YMapDelta${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
+
+  /// Returns a new instance by overriding the values passed as arguments
+  YMapDelta copyWith({
+    YMapDeltaAction? action,
+    Option<YValue>? oldValue,
+    Option<YValue>? newValue,
+  }) =>
+      YMapDelta(
+          action: action ?? this.action,
+          oldValue: oldValue != null ? oldValue.value : this.oldValue,
+          newValue: newValue != null ? newValue.value : this.newValue);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is YMapDelta &&
+          const ObjectComparator().arePropsEqual(_props, other._props);
+  @override
+  int get hashCode => const ObjectComparator().hashProps(_props);
+
+  // ignore: unused_field
+  List<Object?> get _props => [action, oldValue, newValue];
+  static const _spec = RecordType([
+    (label: 'action', t: YMapDeltaAction._spec),
+    (label: 'old-value', t: OptionType(YValue._spec)),
+    (label: 'new-value', t: OptionType(YValue._spec))
+  ]);
+}
+
+class YArrayDeltaInsert implements YArrayDelta, ToJsonSerializable {
+  final List<YValue> insert;
+  const YArrayDeltaInsert({
+    required this.insert,
+  });
+
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
+  factory YArrayDeltaInsert.fromJson(Object? json_) {
+    final json = json_ is Map
+        ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
+        : json_;
+    return switch (json) {
+      [final insert] || (final insert,) => YArrayDeltaInsert(
+          insert: (insert! as Iterable).map(YValue.fromJson).toList(),
+        ),
+      _ => throw Exception('Invalid JSON $json_')
+    };
+  }
+
+  /// Returns this as a serializable JSON value.
+  @override
+  Map<String, Object?> toJson() => {
+        'runtimeType': 'YArrayDeltaInsert',
+        'insert': insert.map((e) => e.toJson()).toList(),
+      };
+
+  /// Returns this as a WASM canonical abi value.
+  List<Object?> toWasm() => [insert.map(YValue.toWasm).toList(growable: false)];
+  @override
+  String toString() =>
+      'YArrayDeltaInsert${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
+
+  /// Returns a new instance by overriding the values passed as arguments
+  YArrayDeltaInsert copyWith({
+    List<YValue>? insert,
+  }) =>
+      YArrayDeltaInsert(insert: insert ?? this.insert);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is YArrayDeltaInsert &&
+          const ObjectComparator().arePropsEqual(_props, other._props);
+  @override
+  int get hashCode => const ObjectComparator().hashProps(_props);
+
+  // ignore: unused_field
+  List<Object?> get _props => [insert];
+  static const _spec =
+      RecordType([(label: 'insert', t: ListType(YValue._spec))]);
+}
+
+sealed class YArrayDelta implements ToJsonSerializable {
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
+  factory YArrayDelta.fromJson(Object? json_) {
+    Object? json = json_;
+    if (json is Map) {
+      final rt = json['runtimeType'];
+      if (rt is String) {
+        json = (
+          const ['YArrayDeltaInsert', 'YArrayDeltaDelete', 'YArrayDeltaRetain']
+              .indexOf(rt),
+          json
+        );
+      } else {
+        final MapEntry(:key, :value) = json.entries.first;
+        json = (key is int ? key : int.parse(key! as String), value);
+      }
+    }
+    return switch (json) {
+      (0, final value) || [0, final value] => YArrayDeltaInsert.fromJson(value),
+      (1, final value) || [1, final value] => YArrayDeltaDelete.fromJson(value),
+      (2, final value) || [2, final value] => YArrayDeltaRetain.fromJson(value),
+      _ => throw Exception('Invalid JSON $json_'),
+    };
+  }
+
+  /// Returns this as a serializable JSON value.
+  @override
+  Map<String, Object?> toJson();
+
+  /// Returns this as a WASM canonical abi value.
+  static (int, Object?) toWasm(YArrayDelta value) => switch (value) {
+        YArrayDeltaInsert() => (0, value.toWasm()),
+        YArrayDeltaDelete() => (1, value.toWasm()),
+        YArrayDeltaRetain() => (2, value.toWasm()),
+      };
+// ignore: unused_field
+  static const _spec = Union([
+    YArrayDeltaInsert._spec,
+    YArrayDeltaDelete._spec,
+    YArrayDeltaRetain._spec
+  ]);
+}
+
+typedef JsonObject = JsonValueItem;
+typedef TextAttrs = JsonObject;
+
+class YTextDeltaRetain implements YTextDelta, ToJsonSerializable {
+  final int /*U32*/ retain;
+  final TextAttrs? attributes;
+  const YTextDeltaRetain({
+    required this.retain,
+    this.attributes,
+  });
+
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
+  factory YTextDeltaRetain.fromJson(Object? json_) {
+    final json = json_ is Map
+        ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
+        : json_;
+    return switch (json) {
+      [final retain, final attributes] ||
+      (final retain, final attributes) =>
+        YTextDeltaRetain(
+          retain: retain! as int,
+          attributes: Option.fromJson(
+              attributes, (some) => JsonValueItem.fromJson(some)).value,
+        ),
+      _ => throw Exception('Invalid JSON $json_')
+    };
+  }
+
+  /// Returns this as a serializable JSON value.
+  @override
+  Map<String, Object?> toJson() => {
+        'runtimeType': 'YTextDeltaRetain',
+        'retain': retain,
+        'attributes': (attributes == null
+            ? const None().toJson()
+            : Option.fromValue(attributes).toJson((some) => some.toJson())),
+      };
+
+  /// Returns this as a WASM canonical abi value.
+  List<Object?> toWasm() => [
+        retain,
+        (attributes == null
+            ? const None().toWasm()
+            : Option.fromValue(attributes).toWasm((some) => some.toWasm()))
+      ];
+  @override
+  String toString() =>
+      'YTextDeltaRetain${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
+
+  /// Returns a new instance by overriding the values passed as arguments
+  YTextDeltaRetain copyWith({
+    int /*U32*/ ? retain,
+    Option<TextAttrs>? attributes,
+  }) =>
+      YTextDeltaRetain(
+          retain: retain ?? this.retain,
+          attributes: attributes != null ? attributes.value : this.attributes);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is YTextDeltaRetain &&
+          const ObjectComparator().arePropsEqual(_props, other._props);
+  @override
+  int get hashCode => const ObjectComparator().hashProps(_props);
+
+  // ignore: unused_field
+  List<Object?> get _props => [retain, attributes];
+  static const _spec = RecordType([
+    (label: 'retain', t: U32()),
+    (label: 'attributes', t: OptionType(JsonValueItem._spec))
+  ]);
+}
+
+class YTextDeltaInsert implements YTextDelta, ToJsonSerializable {
+  final String insert;
+  final TextAttrs? attributes;
+  const YTextDeltaInsert({
+    required this.insert,
+    this.attributes,
+  });
+
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
+  factory YTextDeltaInsert.fromJson(Object? json_) {
+    final json = json_ is Map
+        ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
+        : json_;
+    return switch (json) {
+      [final insert, final attributes] ||
+      (final insert, final attributes) =>
+        YTextDeltaInsert(
+          insert: insert is String ? insert : (insert! as ParsedString).value,
+          attributes: Option.fromJson(
+              attributes, (some) => JsonValueItem.fromJson(some)).value,
+        ),
+      _ => throw Exception('Invalid JSON $json_')
+    };
+  }
+
+  /// Returns this as a serializable JSON value.
+  @override
+  Map<String, Object?> toJson() => {
+        'runtimeType': 'YTextDeltaInsert',
+        'insert': insert,
+        'attributes': (attributes == null
+            ? const None().toJson()
+            : Option.fromValue(attributes).toJson((some) => some.toJson())),
+      };
+
+  /// Returns this as a WASM canonical abi value.
+  List<Object?> toWasm() => [
+        insert,
+        (attributes == null
+            ? const None().toWasm()
+            : Option.fromValue(attributes).toWasm((some) => some.toWasm()))
+      ];
+  @override
+  String toString() =>
+      'YTextDeltaInsert${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
+
+  /// Returns a new instance by overriding the values passed as arguments
+  YTextDeltaInsert copyWith({
+    String? insert,
+    Option<TextAttrs>? attributes,
+  }) =>
+      YTextDeltaInsert(
+          insert: insert ?? this.insert,
+          attributes: attributes != null ? attributes.value : this.attributes);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is YTextDeltaInsert &&
+          const ObjectComparator().arePropsEqual(_props, other._props);
+  @override
+  int get hashCode => const ObjectComparator().hashProps(_props);
+
+  // ignore: unused_field
+  List<Object?> get _props => [insert, attributes];
+  static const _spec = RecordType([
+    (label: 'insert', t: StringType()),
+    (label: 'attributes', t: OptionType(JsonValueItem._spec))
+  ]);
+}
+
+/// https://quilljs.com/docs/delta/
+sealed class YTextDelta implements ToJsonSerializable {
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
+  factory YTextDelta.fromJson(Object? json_) {
+    Object? json = json_;
+    if (json is Map) {
+      final rt = json['runtimeType'];
+      if (rt is String) {
+        json = (
+          const ['YTextDeltaInsert', 'YTextDeltaDelete', 'YTextDeltaRetain']
+              .indexOf(rt),
+          json
+        );
+      } else {
+        final MapEntry(:key, :value) = json.entries.first;
+        json = (key is int ? key : int.parse(key! as String), value);
+      }
+    }
+    return switch (json) {
+      (0, final value) || [0, final value] => YTextDeltaInsert.fromJson(value),
+      (1, final value) || [1, final value] => YTextDeltaDelete.fromJson(value),
+      (2, final value) || [2, final value] => YTextDeltaRetain.fromJson(value),
+      _ => throw Exception('Invalid JSON $json_'),
+    };
+  }
+
+  /// Returns this as a serializable JSON value.
+  @override
+  Map<String, Object?> toJson();
+
+  /// Returns this as a WASM canonical abi value.
+  static (int, Object?) toWasm(YTextDelta value) => switch (value) {
+        YTextDeltaInsert() => (0, value.toWasm()),
+        YTextDeltaDelete() => (1, value.toWasm()),
+        YTextDeltaRetain() => (2, value.toWasm()),
+      };
+// ignore: unused_field
+  static const _spec = Union(
+      [YTextDeltaInsert._spec, YTextDeltaDelete._spec, YTextDeltaRetain._spec]);
+}
+
+typedef JsonArray = JsonValueItem;
+
+sealed class EventPathItem implements ToJsonSerializable {
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
+  factory EventPathItem.fromJson(Object? json_) {
+    Object? json = json_;
+    if (json is Map) {
+      final rt = json['runtimeType'];
+      if (rt is String) {
+        json = (
+          const ['EventPathItemString', 'EventPathItemIntU32'].indexOf(rt),
+          json
+        );
+      } else {
+        final MapEntry(:key, :value) = json.entries.first;
+        json = (key is int ? key : int.parse(key! as String), value);
+      }
+    }
+    return switch (json) {
+      (0, final value) || [0, final value] => EventPathItemString(
+          value is String ? value : (value! as ParsedString).value),
+      (1, final value) ||
+      [1, final value] =>
+        EventPathItemIntU32(value! as int),
+      _ => throw Exception('Invalid JSON $json_'),
+    };
+  }
+  const factory EventPathItem.string(String value) = EventPathItemString;
+  const factory EventPathItem.intU32(int /*U32*/ value) = EventPathItemIntU32;
+
+  /// Returns this as a serializable JSON value.
+  @override
+  Map<String, Object?> toJson();
+
+  /// Returns this as a WASM canonical abi value.
+  static (int, Object?) toWasm(EventPathItem value) => switch (value) {
+        EventPathItemString() => value.toWasm(),
+        EventPathItemIntU32() => value.toWasm(),
+      };
+// ignore: unused_field
+  static const _spec = Union([StringType(), U32()]);
+}
+
+class EventPathItemString implements EventPathItem {
+  final String value;
+  const EventPathItemString(this.value);
+
+  /// Returns this as a serializable JSON value.
+  @override
+  Map<String, Object?> toJson() =>
+      {'runtimeType': 'EventPathItemString', '0': value};
+
+  /// Returns this as a WASM canonical abi value.
+  (int, Object?) toWasm() => (0, value);
+  @override
+  String toString() => 'EventPathItemString($value)';
+  @override
+  bool operator ==(Object other) =>
+      other is EventPathItemString &&
+      const ObjectComparator().areEqual(other.value, value);
+  @override
+  int get hashCode => const ObjectComparator().hashValue(value);
+}
+
+class EventPathItemIntU32 implements EventPathItem {
+  final int /*U32*/ value;
+  const EventPathItemIntU32(this.value);
+
+  /// Returns this as a serializable JSON value.
+  @override
+  Map<String, Object?> toJson() =>
+      {'runtimeType': 'EventPathItemIntU32', '1': value};
+
+  /// Returns this as a WASM canonical abi value.
+  (int, Object?) toWasm() => (1, value);
+  @override
+  String toString() => 'EventPathItemIntU32($value)';
+  @override
+  bool operator ==(Object other) =>
+      other is EventPathItemIntU32 &&
+      const ObjectComparator().areEqual(other.value, value);
+  @override
+  int get hashCode => const ObjectComparator().hashValue(value);
+}
+
+typedef EventPath = List<EventPathItem>;
+
+class YTextEvent implements YEvent, ToJsonSerializable {
+  final YText target;
+  final List<YTextDelta> delta;
+  final EventPath path;
+  const YTextEvent({
+    required this.target,
+    required this.delta,
+    required this.path,
+  });
+
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
+  factory YTextEvent.fromJson(Object? json_) {
+    final json = json_ is Map
+        ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
+        : json_;
+    return switch (json) {
+      [final target, final delta, final path] ||
+      (final target, final delta, final path) =>
+        YTextEvent(
+          target: YText.fromJson(target),
+          delta: (delta! as Iterable).map(YTextDelta.fromJson).toList(),
+          path: (path! as Iterable).map(EventPathItem.fromJson).toList(),
+        ),
+      _ => throw Exception('Invalid JSON $json_')
+    };
+  }
+
+  /// Returns this as a serializable JSON value.
+  @override
+  Map<String, Object?> toJson() => {
+        'runtimeType': 'YTextEvent',
+        'target': target.toJson(),
+        'delta': delta.map((e) => e.toJson()).toList(),
+        'path': path.map((e) => e.toJson()).toList(),
+      };
+
+  /// Returns this as a WASM canonical abi value.
+  List<Object?> toWasm() => [
+        target.toWasm(),
+        delta.map(YTextDelta.toWasm).toList(growable: false),
+        path.map(EventPathItem.toWasm).toList(growable: false)
+      ];
+  @override
+  String toString() =>
+      'YTextEvent${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
+
+  /// Returns a new instance by overriding the values passed as arguments
+  YTextEvent copyWith({
+    YText? target,
+    List<YTextDelta>? delta,
+    EventPath? path,
+  }) =>
+      YTextEvent(
+          target: target ?? this.target,
+          delta: delta ?? this.delta,
+          path: path ?? this.path);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is YTextEvent &&
+          const ObjectComparator().arePropsEqual(_props, other._props);
+  @override
+  int get hashCode => const ObjectComparator().hashProps(_props);
+
+  // ignore: unused_field
+  List<Object?> get _props => [target, delta, path];
+  static const _spec = RecordType([
+    (label: 'target', t: YText._spec),
+    (label: 'delta', t: ListType(YTextDelta._spec)),
+    (label: 'path', t: ListType(EventPathItem._spec))
+  ]);
+}
+
+class YMapEvent implements YEvent, ToJsonSerializable {
+  final YMap target;
+  final List<
+      (
+        String,
+        YMapDelta,
+      )> keys;
+  final EventPath path;
+  const YMapEvent({
+    required this.target,
+    required this.keys,
+    required this.path,
+  });
+
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
+  factory YMapEvent.fromJson(Object? json_) {
+    final json = json_ is Map
+        ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
+        : json_;
+    return switch (json) {
+      [final target, final keys, final path] ||
+      (final target, final keys, final path) =>
+        YMapEvent(
+          target: YMap.fromJson(target),
+          keys: (keys! as Iterable)
+              .map((e) => (() {
+                    final l = e is Map
+                        ? List.generate(2, (i) => e[i.toString()],
+                            growable: false)
+                        : e;
+                    return switch (l) {
+                      [final v0, final v1] || (final v0, final v1) => (
+                          v0 is String ? v0 : (v0! as ParsedString).value,
+                          YMapDelta.fromJson(v1),
+                        ),
+                      _ => throw Exception('Invalid JSON $e')
+                    };
+                  })())
+              .toList(),
+          path: (path! as Iterable).map(EventPathItem.fromJson).toList(),
+        ),
+      _ => throw Exception('Invalid JSON $json_')
+    };
+  }
+
+  /// Returns this as a serializable JSON value.
+  @override
+  Map<String, Object?> toJson() => {
+        'runtimeType': 'YMapEvent',
+        'target': target.toJson(),
+        'keys': keys.map((e) => [e.$1, e.$2.toJson()]).toList(),
+        'path': path.map((e) => e.toJson()).toList(),
+      };
+
+  /// Returns this as a WASM canonical abi value.
+  List<Object?> toWasm() => [
+        target.toWasm(),
+        keys.map((e) => [e.$1, e.$2.toWasm()]).toList(growable: false),
+        path.map(EventPathItem.toWasm).toList(growable: false)
+      ];
+  @override
+  String toString() =>
+      'YMapEvent${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
+
+  /// Returns a new instance by overriding the values passed as arguments
+  YMapEvent copyWith({
+    YMap? target,
+    List<
+            (
+              String,
+              YMapDelta,
+            )>?
+        keys,
+    EventPath? path,
+  }) =>
+      YMapEvent(
+          target: target ?? this.target,
+          keys: keys ?? this.keys,
+          path: path ?? this.path);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is YMapEvent &&
+          const ObjectComparator().arePropsEqual(_props, other._props);
+  @override
+  int get hashCode => const ObjectComparator().hashProps(_props);
+
+  // ignore: unused_field
+  List<Object?> get _props => [target, keys, path];
+  static const _spec = RecordType([
+    (label: 'target', t: YMap._spec),
+    (label: 'keys', t: ListType(Tuple([StringType(), YMapDelta._spec]))),
+    (label: 'path', t: ListType(EventPathItem._spec))
+  ]);
+}
+
+class YArrayEvent implements YEvent, ToJsonSerializable {
+  final YArray target;
+  final List<YArrayDelta> delta;
+  final EventPath path;
+  const YArrayEvent({
+    required this.target,
+    required this.delta,
+    required this.path,
+  });
+
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
+  factory YArrayEvent.fromJson(Object? json_) {
+    final json = json_ is Map
+        ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
+        : json_;
+    return switch (json) {
+      [final target, final delta, final path] ||
+      (final target, final delta, final path) =>
+        YArrayEvent(
+          target: YArray.fromJson(target),
+          delta: (delta! as Iterable).map(YArrayDelta.fromJson).toList(),
+          path: (path! as Iterable).map(EventPathItem.fromJson).toList(),
+        ),
+      _ => throw Exception('Invalid JSON $json_')
+    };
+  }
+
+  /// Returns this as a serializable JSON value.
+  @override
+  Map<String, Object?> toJson() => {
+        'runtimeType': 'YArrayEvent',
+        'target': target.toJson(),
+        'delta': delta.map((e) => e.toJson()).toList(),
+        'path': path.map((e) => e.toJson()).toList(),
+      };
+
+  /// Returns this as a WASM canonical abi value.
+  List<Object?> toWasm() => [
+        target.toWasm(),
+        delta.map(YArrayDelta.toWasm).toList(growable: false),
+        path.map(EventPathItem.toWasm).toList(growable: false)
+      ];
+  @override
+  String toString() =>
+      'YArrayEvent${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
+
+  /// Returns a new instance by overriding the values passed as arguments
+  YArrayEvent copyWith({
+    YArray? target,
+    List<YArrayDelta>? delta,
+    EventPath? path,
+  }) =>
+      YArrayEvent(
+          target: target ?? this.target,
+          delta: delta ?? this.delta,
+          path: path ?? this.path);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is YArrayEvent &&
+          const ObjectComparator().arePropsEqual(_props, other._props);
+  @override
+  int get hashCode => const ObjectComparator().hashProps(_props);
+
+  // ignore: unused_field
+  List<Object?> get _props => [target, delta, path];
+  static const _spec = RecordType([
+    (label: 'target', t: YArray._spec),
+    (label: 'delta', t: ListType(YArrayDelta._spec)),
+    (label: 'path', t: ListType(EventPathItem._spec))
+  ]);
+}
+
+sealed class YEvent implements ToJsonSerializable {
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
+  factory YEvent.fromJson(Object? json_) {
+    Object? json = json_;
+    if (json is Map) {
+      final rt = json['runtimeType'];
+      if (rt is String) {
+        json = (
+          const ['YArrayEvent', 'YMapEvent', 'YTextEvent'].indexOf(rt),
+          json
+        );
+      } else {
+        final MapEntry(:key, :value) = json.entries.first;
+        json = (key is int ? key : int.parse(key! as String), value);
+      }
+    }
+    return switch (json) {
+      (0, final value) || [0, final value] => YArrayEvent.fromJson(value),
+      (1, final value) || [1, final value] => YMapEvent.fromJson(value),
+      (2, final value) || [2, final value] => YTextEvent.fromJson(value),
+      _ => throw Exception('Invalid JSON $json_'),
+    };
+  }
+
+  /// Returns this as a serializable JSON value.
+  @override
+  Map<String, Object?> toJson();
+
+  /// Returns this as a WASM canonical abi value.
+  static (int, Object?) toWasm(YEvent value) => switch (value) {
+        YArrayEvent() => (0, value.toWasm()),
+        YMapEvent() => (1, value.toWasm()),
+        YTextEvent() => (2, value.toWasm()),
+      };
+// ignore: unused_field
+  static const _spec =
+      Union([YArrayEvent._spec, YMapEvent._spec, YTextEvent._spec]);
+}
+
+class EventObserver implements ToJsonSerializable {
+  final int /*U32*/ ref;
+  const EventObserver({
+    required this.ref,
+  });
+
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
+  factory EventObserver.fromJson(Object? json_) {
+    final json = json_ is Map
+        ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
+        : json_;
+    return switch (json) {
+      [final ref] || (final ref,) => EventObserver(
+          ref: ref! as int,
+        ),
+      _ => throw Exception('Invalid JSON $json_')
+    };
+  }
+
+  /// Returns this as a serializable JSON value.
+  @override
+  Map<String, Object?> toJson() => {
+        'runtimeType': 'EventObserver',
+        'ref': ref,
+      };
+
+  /// Returns this as a WASM canonical abi value.
+  List<Object?> toWasm() => [ref];
+  @override
+  String toString() =>
+      'EventObserver${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
+
+  /// Returns a new instance by overriding the values passed as arguments
+  EventObserver copyWith({
+    int /*U32*/ ? ref,
+  }) =>
+      EventObserver(ref: ref ?? this.ref);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is EventObserver &&
+          const ObjectComparator().arePropsEqual(_props, other._props);
+  @override
+  int get hashCode => const ObjectComparator().hashProps(_props);
+
+  // ignore: unused_field
+  List<Object?> get _props => [ref];
+  static const _spec = RecordType([(label: 'ref', t: U32())]);
+}
+
+typedef Origin = Uint8List;
+
+enum OffsetKind implements ToJsonSerializable {
+  /// Compute editable strings length and offset using UTF-8 byte count.
+  bytes,
+
+  /// Compute editable strings length and offset using UTF-16 chars count.
+  utf16,
+
+  /// Compute editable strings length and offset using Unicode code points number.
+  utf32;
+
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
+  factory OffsetKind.fromJson(Object? json) {
+    return ToJsonSerializable.enumFromJson(json, values, _spec);
+  }
+
+  /// Returns this as a serializable JSON value.
+  @override
+  Map<String, Object?> toJson() =>
+      {'runtimeType': 'OffsetKind', _spec.labels[index]: null};
+
+  /// Returns this as a WASM canonical abi value.
+  int toWasm() => index;
+  static const _spec = EnumType(['bytes', 'utf16', 'utf32']);
+}
+
+class YDocOptions implements ToJsonSerializable {
+  /// Globally unique client identifier. This value must be unique across all active collaborating
+  /// peers, otherwise a update collisions will happen, causing document store state to be corrupted.
+  ///
+  /// Default value: randomly generated.
+  final BigInt /*U64*/ ? clientId;
+
+  /// A globally unique identifier for this document.
+  ///
+  /// Default value: randomly generated UUID v4.
+  final String? guid;
+
+  /// Associate this document with a collection. This only plays a role if your provider has
+  /// a concept of collection.
+  ///
+  /// Default value: `None`.
+  final String? collectionId;
+
+  /// How to we count offsets and lengths used in text operations.
+  ///
+  /// Default value: [OffsetKind::Bytes].
+  final OffsetKind? offsetKind;
+
+  /// Determines if transactions commits should try to perform GC-ing of deleted items.
+  ///
+  /// Default value: `false`.
+  final bool? skipGc;
+
+  /// If a subdocument, automatically load document. If this is a subdocument, remote peers will
+  /// load the document as well automatically.
+  ///
+  /// Default value: `false`.
+  final bool? autoLoad;
+
+  /// Whether the document should be synced by the provider now.
+  /// This is toggled to true when you call ydoc.load().
+  ///
+  /// Default value: `true`.
+  final bool? shouldLoad;
+  const YDocOptions({
+    this.clientId,
+    this.guid,
+    this.collectionId,
+    this.offsetKind,
+    this.skipGc,
+    this.autoLoad,
+    this.shouldLoad,
+  });
+
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
+  factory YDocOptions.fromJson(Object? json_) {
+    final json = json_ is Map
+        ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
+        : json_;
+    return switch (json) {
+      [
+        final clientId,
+        final guid,
+        final collectionId,
+        final offsetKind,
+        final skipGc,
+        final autoLoad,
+        final shouldLoad
+      ] ||
+      (
+        final clientId,
+        final guid,
+        final collectionId,
+        final offsetKind,
+        final skipGc,
+        final autoLoad,
+        final shouldLoad
+      ) =>
+        YDocOptions(
+          clientId:
+              Option.fromJson(clientId, (some) => bigIntFromJson(some)).value,
+          guid: Option.fromJson(
+              guid,
+              (some) =>
+                  some is String ? some : (some! as ParsedString).value).value,
+          collectionId: Option.fromJson(
+              collectionId,
+              (some) =>
+                  some is String ? some : (some! as ParsedString).value).value,
+          offsetKind:
+              Option.fromJson(offsetKind, (some) => OffsetKind.fromJson(some))
+                  .value,
+          skipGc: Option.fromJson(skipGc, (some) => some! as bool).value,
+          autoLoad: Option.fromJson(autoLoad, (some) => some! as bool).value,
+          shouldLoad:
+              Option.fromJson(shouldLoad, (some) => some! as bool).value,
+        ),
+      _ => throw Exception('Invalid JSON $json_')
+    };
+  }
+
+  /// Returns this as a serializable JSON value.
+  @override
+  Map<String, Object?> toJson() => {
+        'runtimeType': 'YDocOptions',
+        'client-id': (clientId == null
+            ? const None().toJson()
+            : Option.fromValue(clientId).toJson((some) => some.toString())),
+        'guid': (guid == null
+            ? const None().toJson()
+            : Option.fromValue(guid).toJson()),
+        'collection-id': (collectionId == null
+            ? const None().toJson()
+            : Option.fromValue(collectionId).toJson()),
+        'offset-kind': (offsetKind == null
+            ? const None().toJson()
+            : Option.fromValue(offsetKind).toJson((some) => some.toJson())),
+        'skip-gc': (skipGc == null
+            ? const None().toJson()
+            : Option.fromValue(skipGc).toJson()),
+        'auto-load': (autoLoad == null
+            ? const None().toJson()
+            : Option.fromValue(autoLoad).toJson()),
+        'should-load': (shouldLoad == null
+            ? const None().toJson()
+            : Option.fromValue(shouldLoad).toJson()),
+      };
+
+  /// Returns this as a WASM canonical abi value.
+  List<Object?> toWasm() => [
+        (clientId == null
+            ? const None().toWasm()
+            : Option.fromValue(clientId).toWasm()),
+        (guid == null
+            ? const None().toWasm()
+            : Option.fromValue(guid).toWasm()),
+        (collectionId == null
+            ? const None().toWasm()
+            : Option.fromValue(collectionId).toWasm()),
+        (offsetKind == null
+            ? const None().toWasm()
+            : Option.fromValue(offsetKind).toWasm((some) => some.toWasm())),
+        (skipGc == null
+            ? const None().toWasm()
+            : Option.fromValue(skipGc).toWasm()),
+        (autoLoad == null
+            ? const None().toWasm()
+            : Option.fromValue(autoLoad).toWasm()),
+        (shouldLoad == null
+            ? const None().toWasm()
+            : Option.fromValue(shouldLoad).toWasm())
+      ];
+  @override
+  String toString() =>
+      'YDocOptions${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
+
+  /// Returns a new instance by overriding the values passed as arguments
+  YDocOptions copyWith({
+    Option<BigInt /*U64*/ >? clientId,
+    Option<String>? guid,
+    Option<String>? collectionId,
+    Option<OffsetKind>? offsetKind,
+    Option<bool>? skipGc,
+    Option<bool>? autoLoad,
+    Option<bool>? shouldLoad,
+  }) =>
+      YDocOptions(
+          clientId: clientId != null ? clientId.value : this.clientId,
+          guid: guid != null ? guid.value : this.guid,
+          collectionId:
+              collectionId != null ? collectionId.value : this.collectionId,
+          offsetKind: offsetKind != null ? offsetKind.value : this.offsetKind,
+          skipGc: skipGc != null ? skipGc.value : this.skipGc,
+          autoLoad: autoLoad != null ? autoLoad.value : this.autoLoad,
+          shouldLoad: shouldLoad != null ? shouldLoad.value : this.shouldLoad);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is YDocOptions &&
+          const ObjectComparator().arePropsEqual(_props, other._props);
+  @override
+  int get hashCode => const ObjectComparator().hashProps(_props);
+
+  // ignore: unused_field
+  List<Object?> get _props =>
+      [clientId, guid, collectionId, offsetKind, skipGc, autoLoad, shouldLoad];
+  static const _spec = RecordType([
+    (label: 'client-id', t: OptionType(U64())),
+    (label: 'guid', t: OptionType(StringType())),
+    (label: 'collection-id', t: OptionType(StringType())),
+    (label: 'offset-kind', t: OptionType(OffsetKind._spec)),
+    (label: 'skip-gc', t: OptionType(Bool())),
+    (label: 'auto-load', t: OptionType(Bool())),
+    (label: 'should-load', t: OptionType(Bool()))
+  ]);
+}
+
 class YUndoEvent implements ToJsonSerializable {
   final JsonValueItem origin;
   final JsonValueItem kind;
@@ -1460,260 +2402,67 @@ class YUndoEvent implements ToJsonSerializable {
   ]);
 }
 
-class YArrayEventInsert implements YArrayEventDelta, ToJsonSerializable {
-  final List<YValue> insert;
-  const YArrayEventInsert({
-    required this.insert,
-  });
-
-  /// Returns a new instance from a JSON value.
-  /// May throw if the value does not have the expected structure.
-  factory YArrayEventInsert.fromJson(Object? json_) {
-    final json = json_ is Map
-        ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
-        : json_;
-    return switch (json) {
-      [final insert] || (final insert,) => YArrayEventInsert(
-          insert: (insert! as Iterable).map(YValue.fromJson).toList(),
-        ),
-      _ => throw Exception('Invalid JSON $json_')
-    };
-  }
-
-  /// Returns this as a serializable JSON value.
-  @override
-  Map<String, Object?> toJson() => {
-        'runtimeType': 'YArrayEventInsert',
-        'insert': insert.map((e) => e.toJson()).toList(),
-      };
-
-  /// Returns this as a WASM canonical abi value.
-  List<Object?> toWasm() => [insert.map(YValue.toWasm).toList(growable: false)];
-  @override
-  String toString() =>
-      'YArrayEventInsert${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
-
-  /// Returns a new instance by overriding the values passed as arguments
-  YArrayEventInsert copyWith({
-    List<YValue>? insert,
-  }) =>
-      YArrayEventInsert(insert: insert ?? this.insert);
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is YArrayEventInsert &&
-          const ObjectComparator().arePropsEqual(_props, other._props);
-  @override
-  int get hashCode => const ObjectComparator().hashProps(_props);
-
-  // ignore: unused_field
-  List<Object?> get _props => [insert];
-  static const _spec =
-      RecordType([(label: 'insert', t: ListType(YValue._spec))]);
-}
-
-sealed class YArrayEventDelta implements ToJsonSerializable {
-  /// Returns a new instance from a JSON value.
-  /// May throw if the value does not have the expected structure.
-  factory YArrayEventDelta.fromJson(Object? json_) {
-    Object? json = json_;
-    if (json is Map) {
-      final rt = json['runtimeType'];
-      if (rt is String) {
-        json = (
-          const ['YArrayEventInsert', 'YArrayEventDelete', 'YArrayEventRetain']
-              .indexOf(rt),
-          json
-        );
-      } else {
-        final MapEntry(:key, :value) = json.entries.first;
-        json = (key is int ? key : int.parse(key! as String), value);
-      }
-    }
-    return switch (json) {
-      (0, final value) || [0, final value] => YArrayEventInsert.fromJson(value),
-      (1, final value) || [1, final value] => YArrayEventDelete.fromJson(value),
-      (2, final value) || [2, final value] => YArrayEventRetain.fromJson(value),
-      _ => throw Exception('Invalid JSON $json_'),
-    };
-  }
-
-  /// Returns this as a serializable JSON value.
-  @override
-  Map<String, Object?> toJson();
-
-  /// Returns this as a WASM canonical abi value.
-  static (int, Object?) toWasm(YArrayEventDelta value) => switch (value) {
-        YArrayEventInsert() => (0, value.toWasm()),
-        YArrayEventDelete() => (1, value.toWasm()),
-        YArrayEventRetain() => (2, value.toWasm()),
-      };
-// ignore: unused_field
-  static const _spec = Union([
-    YArrayEventInsert._spec,
-    YArrayEventDelete._spec,
-    YArrayEventRetain._spec
-  ]);
-}
-
-class YArrayEvent implements ToJsonSerializable {
-  final WriteTransaction txn;
-  final YValue target;
-  final YArrayEventDelta delta;
-  final String path;
-  const YArrayEvent({
-    required this.txn,
-    required this.target,
-    required this.delta,
-    required this.path,
-  });
-
-  /// Returns a new instance from a JSON value.
-  /// May throw if the value does not have the expected structure.
-  factory YArrayEvent.fromJson(Object? json_) {
-    final json = json_ is Map
-        ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
-        : json_;
-    return switch (json) {
-      [final txn, final target, final delta, final path] ||
-      (final txn, final target, final delta, final path) =>
-        YArrayEvent(
-          txn: WriteTransaction.fromJson(txn),
-          target: YValue.fromJson(target),
-          delta: YArrayEventDelta.fromJson(delta),
-          path: path is String ? path : (path! as ParsedString).value,
-        ),
-      _ => throw Exception('Invalid JSON $json_')
-    };
-  }
-
-  /// Returns this as a serializable JSON value.
-  @override
-  Map<String, Object?> toJson() => {
-        'runtimeType': 'YArrayEvent',
-        'txn': txn.toJson(),
-        'target': target.toJson(),
-        'delta': delta.toJson(),
-        'path': path,
-      };
-
-  /// Returns this as a WASM canonical abi value.
-  List<Object?> toWasm() => [
-        txn.toWasm(),
-        YValue.toWasm(target),
-        YArrayEventDelta.toWasm(delta),
-        path
-      ];
-  @override
-  String toString() =>
-      'YArrayEvent${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
-
-  /// Returns a new instance by overriding the values passed as arguments
-  YArrayEvent copyWith({
-    WriteTransaction? txn,
-    YValue? target,
-    YArrayEventDelta? delta,
-    String? path,
-  }) =>
-      YArrayEvent(
-          txn: txn ?? this.txn,
-          target: target ?? this.target,
-          delta: delta ?? this.delta,
-          path: path ?? this.path);
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is YArrayEvent &&
-          const ObjectComparator().arePropsEqual(_props, other._props);
-  @override
-  int get hashCode => const ObjectComparator().hashProps(_props);
-
-  // ignore: unused_field
-  List<Object?> get _props => [txn, target, delta, path];
-  static const _spec = RecordType([
-    (label: 'txn', t: WriteTransaction._spec),
-    (label: 'target', t: YValue._spec),
-    (label: 'delta', t: YArrayEventDelta._spec),
-    (label: 'path', t: StringType())
-  ]);
-}
-
-typedef JsonObject = JsonValueItem;
-typedef TextAttrs = JsonObject;
-typedef JsonArray = JsonValueItem;
 typedef ImplicitTransaction = Option<YTransaction>;
 typedef Error = String;
 
-/// A record is a class with named fields
-/// There are enum, list, variant, option, result, tuple and union types
-class Model implements ToJsonSerializable {
-  /// Comment for a field
-  final int /*S32*/ integer;
-
-  /// A record is a class with named fields
-  /// There are enum, list, variant, option, result, tuple and union types
-  const Model({
-    required this.integer,
-  });
-
-  /// Returns a new instance from a JSON value.
-  /// May throw if the value does not have the expected structure.
-  factory Model.fromJson(Object? json_) {
-    final json = json_ is Map
-        ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
-        : json_;
-    return switch (json) {
-      [final integer] || (final integer,) => Model(
-          integer: integer! as int,
-        ),
-      _ => throw Exception('Invalid JSON $json_')
-    };
-  }
-
-  /// Returns this as a serializable JSON value.
-  @override
-  Map<String, Object?> toJson() => {
-        'runtimeType': 'Model',
-        'integer': integer,
-      };
-
-  /// Returns this as a WASM canonical abi value.
-  List<Object?> toWasm() => [integer];
-  @override
-  String toString() =>
-      'Model${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
-
-  /// Returns a new instance by overriding the values passed as arguments
-  Model copyWith({
-    int /*S32*/ ? integer,
-  }) =>
-      Model(integer: integer ?? this.integer);
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is Model &&
-          const ObjectComparator().arePropsEqual(_props, other._props);
-  @override
-  int get hashCode => const ObjectComparator().hashProps(_props);
-
-  // ignore: unused_field
-  List<Object?> get _props => [integer];
-  static const _spec = RecordType([(label: 'integer', t: S32())]);
-}
-
 class YCrdtWorldImports {
-  /// An import is a function that is provided by the host environment (Dart)
-  final double /*F64*/ Function({
-    required int /*S32*/ value,
-  }) mapInteger;
+  final void Function({
+    required int /*U32*/ functionId,
+    required YEvent event,
+  }) eventCallback;
+  final void Function({
+    required int /*U32*/ functionId,
+    required List<YEvent> event,
+  }) eventDeepCallback;
   const YCrdtWorldImports({
-    required this.mapInteger,
+    required this.eventCallback,
+    required this.eventDeepCallback,
   });
 }
 
 class YDocMethods {
   YDocMethods(WasmLibrary library)
-      : _yDocNew = library.getComponentFunction(
+      : _yDocDispose = library.getComponentFunction(
+          'y-crdt-namespace:y-crdt/y-doc-methods#y-doc-dispose',
+          const FuncType([('ref', YDoc._spec)], [('', Bool())]),
+        )!,
+        _yTextDispose = library.getComponentFunction(
+          'y-crdt-namespace:y-crdt/y-doc-methods#y-text-dispose',
+          const FuncType([('ref', YText._spec)], [('', Bool())]),
+        )!,
+        _yArrayDispose = library.getComponentFunction(
+          'y-crdt-namespace:y-crdt/y-doc-methods#y-array-dispose',
+          const FuncType([('ref', YArray._spec)], [('', Bool())]),
+        )!,
+        _yMapDispose = library.getComponentFunction(
+          'y-crdt-namespace:y-crdt/y-doc-methods#y-map-dispose',
+          const FuncType([('ref', YMap._spec)], [('', Bool())]),
+        )!,
+        _yXmlElementDispose = library.getComponentFunction(
+          'y-crdt-namespace:y-crdt/y-doc-methods#y-xml-element-dispose',
+          const FuncType([('ref', YXmlElement._spec)], [('', Bool())]),
+        )!,
+        _yXmlFragmentDispose = library.getComponentFunction(
+          'y-crdt-namespace:y-crdt/y-doc-methods#y-xml-fragment-dispose',
+          const FuncType([('ref', YXmlFragment._spec)], [('', Bool())]),
+        )!,
+        _yXmlTextDispose = library.getComponentFunction(
+          'y-crdt-namespace:y-crdt/y-doc-methods#y-xml-text-dispose',
+          const FuncType([('ref', YXmlText._spec)], [('', Bool())]),
+        )!,
+        _yTransactionDispose = library.getComponentFunction(
+          'y-crdt-namespace:y-crdt/y-doc-methods#y-transaction-dispose',
+          const FuncType([('ref', YTransaction._spec)], [('', Bool())]),
+        )!,
+        _yValueDispose = library.getComponentFunction(
+          'y-crdt-namespace:y-crdt/y-doc-methods#y-value-dispose',
+          const FuncType([('ref', YValue._spec)], [('', Bool())]),
+        )!,
+        _callbackDispose = library.getComponentFunction(
+          'y-crdt-namespace:y-crdt/y-doc-methods#callback-dispose',
+          const FuncType([('ref', EventObserver._spec)], [('', Bool())]),
+        )!,
+        _yDocNew = library.getComponentFunction(
           'y-crdt-namespace:y-crdt/y-doc-methods#y-doc-new',
           const FuncType(
               [('options', OptionType(YDocOptions._spec))], [('', YDoc._spec)]),
@@ -1771,16 +2520,33 @@ class YDocMethods {
         )!,
         _yDocOnUpdateV1 = library.getComponentFunction(
           'y-crdt-namespace:y-crdt/y-doc-methods#y-doc-on-update-v1',
-          const FuncType([('ref', YDoc._spec), ('function-id', U32())], []),
+          const FuncType([('ref', YDoc._spec), ('function-id', U32())],
+              [('', EventObserver._spec)]),
+        )!,
+        _load = library.getComponentFunction(
+          'y-crdt-namespace:y-crdt/y-doc-methods#load',
+          const FuncType([
+            ('ref', YDoc._spec),
+            ('parent-txn', OptionType(YTransaction._spec))
+          ], []),
+        )!,
+        _destroy = library.getComponentFunction(
+          'y-crdt-namespace:y-crdt/y-doc-methods#destroy',
+          const FuncType([
+            ('ref', YDoc._spec),
+            ('parent-txn', OptionType(YTransaction._spec))
+          ], []),
         )!,
         _subdocs = library.getComponentFunction(
           'y-crdt-namespace:y-crdt/y-doc-methods#subdocs',
-          const FuncType([('ref', YDoc._spec), ('txn', YTransaction._spec)],
-              [('', ListType(StringType()))]),
+          const FuncType(
+              [('ref', YDoc._spec), ('txn', OptionType(YTransaction._spec))],
+              [('', ListType(YDoc._spec))]),
         )!,
         _subdocGuids = library.getComponentFunction(
           'y-crdt-namespace:y-crdt/y-doc-methods#subdoc-guids',
-          const FuncType([('ref', YDoc._spec), ('txn', YTransaction._spec)],
+          const FuncType(
+              [('ref', YDoc._spec), ('txn', OptionType(YTransaction._spec))],
               [('', ListType(StringType()))]),
         )!,
         _encodeStateVector = library.getComponentFunction(
@@ -1819,14 +2585,6 @@ class YDocMethods {
             ('', ResultType(null, StringType()))
           ]),
         )!,
-        _transactionIsReadonly = library.getComponentFunction(
-          'y-crdt-namespace:y-crdt/y-doc-methods#transaction-is-readonly',
-          const FuncType([('txn', YTransaction._spec)], [('', Bool())]),
-        )!,
-        _transactionIsWriteable = library.getComponentFunction(
-          'y-crdt-namespace:y-crdt/y-doc-methods#transaction-is-writeable',
-          const FuncType([('txn', YTransaction._spec)], [('', Bool())]),
-        )!,
         _transactionOrigin = library.getComponentFunction(
           'y-crdt-namespace:y-crdt/y-doc-methods#transaction-origin',
           const FuncType([('txn', YTransaction._spec)],
@@ -1857,6 +2615,12 @@ class YDocMethods {
           ], [
             ('', ResultType(ListType(U8()), StringType()))
           ]),
+        )!,
+        _transactionApplyV1 = library.getComponentFunction(
+          'y-crdt-namespace:y-crdt/y-doc-methods#transaction-apply-v1',
+          const FuncType(
+              [('txn', YTransaction._spec), ('diff', ListType(U8()))],
+              [('', ResultType(null, StringType()))]),
         )!,
         _transactionApplyV2 = library.getComponentFunction(
           'y-crdt-namespace:y-crdt/y-doc-methods#transaction-apply-v2',
@@ -1947,13 +2711,66 @@ class YDocMethods {
             ('txn', OptionType(YTransaction._spec))
           ], []),
         )!,
+        _yTextToDelta = library.getComponentFunction(
+          'y-crdt-namespace:y-crdt/y-doc-methods#y-text-to-delta',
+          const FuncType([
+            ('ref', YText._spec),
+            ('snapshot', OptionType(YSnapshot._spec)),
+            ('prev-snapshot', OptionType(YSnapshot._spec)),
+            ('txn', OptionType(YTransaction._spec))
+          ], [
+            ('', ListType(YTextDelta._spec))
+          ]),
+        )!,
         _yTextObserve = library.getComponentFunction(
           'y-crdt-namespace:y-crdt/y-doc-methods#y-text-observe',
-          const FuncType([('ref', YText._spec), ('function-id', U32())], []),
+          const FuncType([('ref', YText._spec), ('function-id', U32())],
+              [('', EventObserver._spec)]),
         )!,
         _yTextObserveDeep = library.getComponentFunction(
           'y-crdt-namespace:y-crdt/y-doc-methods#y-text-observe-deep',
-          const FuncType([('ref', YText._spec), ('function-id', U32())], []),
+          const FuncType([('ref', YText._spec), ('function-id', U32())],
+              [('', EventObserver._spec)]),
+        )!,
+        _snapshot = library.getComponentFunction(
+          'y-crdt-namespace:y-crdt/y-doc-methods#snapshot',
+          const FuncType([('doc', YDoc._spec)], [('', YSnapshot._spec)]),
+        )!,
+        _equalSnapshot = library.getComponentFunction(
+          'y-crdt-namespace:y-crdt/y-doc-methods#equal-snapshot',
+          const FuncType(
+              [('left', YSnapshot._spec), ('right', YSnapshot._spec)],
+              [('', Bool())]),
+        )!,
+        _encodeSnapshotV1 = library.getComponentFunction(
+          'y-crdt-namespace:y-crdt/y-doc-methods#encode-snapshot-v1',
+          const FuncType(
+              [('snapshot', YSnapshot._spec)], [('', ListType(U8()))]),
+        )!,
+        _encodeSnapshotV2 = library.getComponentFunction(
+          'y-crdt-namespace:y-crdt/y-doc-methods#encode-snapshot-v2',
+          const FuncType(
+              [('snapshot', YSnapshot._spec)], [('', ListType(U8()))]),
+        )!,
+        _decodeSnapshotV1 = library.getComponentFunction(
+          'y-crdt-namespace:y-crdt/y-doc-methods#decode-snapshot-v1',
+          const FuncType([('snapshot', ListType(U8()))],
+              [('', ResultType(YSnapshot._spec, StringType()))]),
+        )!,
+        _decodeSnapshotV2 = library.getComponentFunction(
+          'y-crdt-namespace:y-crdt/y-doc-methods#decode-snapshot-v2',
+          const FuncType([('snapshot', ListType(U8()))],
+              [('', ResultType(YSnapshot._spec, StringType()))]),
+        )!,
+        _encodeStateFromSnapshotV1 = library.getComponentFunction(
+          'y-crdt-namespace:y-crdt/y-doc-methods#encode-state-from-snapshot-v1',
+          const FuncType([('doc', YDoc._spec), ('snapshot', YSnapshot._spec)],
+              [('', ResultType(ListType(U8()), StringType()))]),
+        )!,
+        _encodeStateFromSnapshotV2 = library.getComponentFunction(
+          'y-crdt-namespace:y-crdt/y-doc-methods#encode-state-from-snapshot-v2',
+          const FuncType([('doc', YDoc._spec), ('snapshot', YSnapshot._spec)],
+              [('', ResultType(ListType(U8()), StringType()))]),
         )!,
         _yArrayNew = library.getComponentFunction(
           'y-crdt-namespace:y-crdt/y-doc-methods#y-array-new',
@@ -2021,13 +2838,21 @@ class YDocMethods {
             ('', ResultType(YValue._spec, StringType()))
           ]),
         )!,
+        _yArrayValues = library.getComponentFunction(
+          'y-crdt-namespace:y-crdt/y-doc-methods#y-array-values',
+          const FuncType(
+              [('ref', YArray._spec), ('txn', OptionType(YTransaction._spec))],
+              [('', ListType(YValue._spec))]),
+        )!,
         _yArrayObserve = library.getComponentFunction(
           'y-crdt-namespace:y-crdt/y-doc-methods#y-array-observe',
-          const FuncType([('ref', YArray._spec), ('function-id', U32())], []),
+          const FuncType([('ref', YArray._spec), ('function-id', U32())],
+              [('', EventObserver._spec)]),
         )!,
         _yArrayObserveDeep = library.getComponentFunction(
           'y-crdt-namespace:y-crdt/y-doc-methods#y-array-observe-deep',
-          const FuncType([('ref', YArray._spec), ('function-id', U32())], []),
+          const FuncType([('ref', YArray._spec), ('function-id', U32())],
+              [('', EventObserver._spec)]),
         )!,
         _yMapNew = library.getComponentFunction(
           'y-crdt-namespace:y-crdt/y-doc-methods#y-map-new',
@@ -2077,13 +2902,24 @@ class YDocMethods {
             ('', OptionType(YValue._spec))
           ]),
         )!,
+        _yMapEntries = library.getComponentFunction(
+          'y-crdt-namespace:y-crdt/y-doc-methods#y-map-entries',
+          const FuncType([
+            ('ref', YMap._spec),
+            ('txn', OptionType(YTransaction._spec))
+          ], [
+            ('', ListType(Tuple([StringType(), YValue._spec])))
+          ]),
+        )!,
         _yMapObserve = library.getComponentFunction(
           'y-crdt-namespace:y-crdt/y-doc-methods#y-map-observe',
-          const FuncType([('ref', YMap._spec), ('function-id', U32())], []),
+          const FuncType([('ref', YMap._spec), ('function-id', U32())],
+              [('', EventObserver._spec)]),
         )!,
         _yMapObserveDeep = library.getComponentFunction(
           'y-crdt-namespace:y-crdt/y-doc-methods#y-map-observe-deep',
-          const FuncType([('ref', YMap._spec), ('function-id', U32())], []),
+          const FuncType([('ref', YMap._spec), ('function-id', U32())],
+              [('', EventObserver._spec)]),
         )!,
         _yXmlElementName = library.getComponentFunction(
           'y-crdt-namespace:y-crdt/y-doc-methods#y-xml-element-name',
@@ -2152,6 +2988,96 @@ class YDocMethods {
             ('', U32())
           ]),
         )!;
+  final ListValue Function(ListValue) _yDocDispose;
+  bool yDocDispose({
+    required YDoc ref,
+  }) {
+    final results = _yDocDispose([ref.toWasm()]);
+    final result = results[0];
+    return result! as bool;
+  }
+
+  final ListValue Function(ListValue) _yTextDispose;
+  bool yTextDispose({
+    required YText ref,
+  }) {
+    final results = _yTextDispose([ref.toWasm()]);
+    final result = results[0];
+    return result! as bool;
+  }
+
+  final ListValue Function(ListValue) _yArrayDispose;
+  bool yArrayDispose({
+    required YArray ref,
+  }) {
+    final results = _yArrayDispose([ref.toWasm()]);
+    final result = results[0];
+    return result! as bool;
+  }
+
+  final ListValue Function(ListValue) _yMapDispose;
+  bool yMapDispose({
+    required YMap ref,
+  }) {
+    final results = _yMapDispose([ref.toWasm()]);
+    final result = results[0];
+    return result! as bool;
+  }
+
+  final ListValue Function(ListValue) _yXmlElementDispose;
+  bool yXmlElementDispose({
+    required YXmlElement ref,
+  }) {
+    final results = _yXmlElementDispose([ref.toWasm()]);
+    final result = results[0];
+    return result! as bool;
+  }
+
+  final ListValue Function(ListValue) _yXmlFragmentDispose;
+  bool yXmlFragmentDispose({
+    required YXmlFragment ref,
+  }) {
+    final results = _yXmlFragmentDispose([ref.toWasm()]);
+    final result = results[0];
+    return result! as bool;
+  }
+
+  final ListValue Function(ListValue) _yXmlTextDispose;
+  bool yXmlTextDispose({
+    required YXmlText ref,
+  }) {
+    final results = _yXmlTextDispose([ref.toWasm()]);
+    final result = results[0];
+    return result! as bool;
+  }
+
+  final ListValue Function(ListValue) _yTransactionDispose;
+  bool yTransactionDispose({
+    required YTransaction ref,
+  }) {
+    final results = _yTransactionDispose([YTransaction.toWasm(ref)]);
+    final result = results[0];
+    return result! as bool;
+  }
+
+  final ListValue Function(ListValue) _yValueDispose;
+  bool yValueDispose({
+    required YValue ref,
+  }) {
+    final results = _yValueDispose([YValue.toWasm(ref)]);
+    final result = results[0];
+    return result! as bool;
+  }
+
+  final ListValue Function(ListValue) _callbackDispose;
+  bool callbackDispose({
+    required EventObserver ref,
+  }) {
+    final results = _callbackDispose([ref.toWasm()]);
+    final result = results[0];
+    return result! as bool;
+  }
+
   final ListValue Function(ListValue) _yDocNew;
   YDoc yDocNew({
     YDocOptions? options,
@@ -2272,31 +3198,67 @@ class YDocMethods {
   }
 
   final ListValue Function(ListValue) _yDocOnUpdateV1;
-  void yDocOnUpdateV1({
+  EventObserver yDocOnUpdateV1({
     required YDoc ref,
     required int /*U32*/ functionId,
   }) {
-    _yDocOnUpdateV1([ref.toWasm(), functionId]);
+    final results = _yDocOnUpdateV1([ref.toWasm(), functionId]);
+    final result = results[0];
+    return EventObserver.fromJson(result);
+  }
+
+  final ListValue Function(ListValue) _load;
+  void load({
+    required YDoc ref,
+    YTransaction? parentTxn,
+  }) {
+    _load([
+      ref.toWasm(),
+      (parentTxn == null
+          ? const None().toWasm()
+          : Option.fromValue(parentTxn).toWasm(YTransaction.toWasm))
+    ]);
+  }
+
+  final ListValue Function(ListValue) _destroy;
+  void destroy({
+    required YDoc ref,
+    YTransaction? parentTxn,
+  }) {
+    _destroy([
+      ref.toWasm(),
+      (parentTxn == null
+          ? const None().toWasm()
+          : Option.fromValue(parentTxn).toWasm(YTransaction.toWasm))
+    ]);
   }
 
   final ListValue Function(ListValue) _subdocs;
-  List<String> subdocs({
+  List<YDoc> subdocs({
     required YDoc ref,
-    required YTransaction txn,
+    YTransaction? txn,
   }) {
-    final results = _subdocs([ref.toWasm(), YTransaction.toWasm(txn)]);
+    final results = _subdocs([
+      ref.toWasm(),
+      (txn == null
+          ? const None().toWasm()
+          : Option.fromValue(txn).toWasm(YTransaction.toWasm))
+    ]);
     final result = results[0];
-    return (result! as Iterable)
-        .map((e) => e is String ? e : (e! as ParsedString).value)
-        .toList();
+    return (result! as Iterable).map(YDoc.fromJson).toList();
   }
 
   final ListValue Function(ListValue) _subdocGuids;
   List<String> subdocGuids({
     required YDoc ref,
-    required YTransaction txn,
+    YTransaction? txn,
   }) {
-    final results = _subdocGuids([ref.toWasm(), YTransaction.toWasm(txn)]);
+    final results = _subdocGuids([
+      ref.toWasm(),
+      (txn == null
+          ? const None().toWasm()
+          : Option.fromValue(txn).toWasm(YTransaction.toWasm))
+    ]);
     final result = results[0];
     return (result! as Iterable)
         .map((e) => e is String ? e : (e! as ParsedString).value)
@@ -2376,24 +3338,6 @@ class YDocMethods {
         (error) => error is String ? error : (error! as ParsedString).value);
   }
 
-  final ListValue Function(ListValue) _transactionIsReadonly;
-  bool transactionIsReadonly({
-    required YTransaction txn,
-  }) {
-    final results = _transactionIsReadonly([YTransaction.toWasm(txn)]);
-    final result = results[0];
-    return result! as bool;
-  }
-
-  final ListValue Function(ListValue) _transactionIsWriteable;
-  bool transactionIsWriteable({
-    required YTransaction txn,
-  }) {
-    final results = _transactionIsWriteable([YTransaction.toWasm(txn)]);
-    final result = results[0];
-    return result! as bool;
-  }
-
   final ListValue Function(ListValue) _transactionOrigin;
   Origin? transactionOrigin({
     required YTransaction txn,
@@ -2460,6 +3404,17 @@ class YDocMethods {
         result,
         (ok) =>
             (ok is Uint8List ? ok : Uint8List.fromList((ok! as List).cast())),
+        (error) => error is String ? error : (error! as ParsedString).value);
+  }
+
+  final ListValue Function(ListValue) _transactionApplyV1;
+  Result<void, Error> transactionApplyV1({
+    required YTransaction txn,
+    required Uint8List diff,
+  }) {
+    final results = _transactionApplyV1([YTransaction.toWasm(txn), diff]);
+    final result = results[0];
+    return Result.fromJson(result, (ok) => null,
         (error) => error is String ? error : (error! as ParsedString).value);
   }
 
@@ -2658,20 +3613,141 @@ class YDocMethods {
     ]);
   }
 
+  final ListValue Function(ListValue) _yTextToDelta;
+
+  /// https://quilljs.com/docs/delta/
+  /// TODO: implement compute_ychange: Option<Function>,
+  List<YTextDelta> yTextToDelta({
+    required YText ref,
+    YSnapshot? snapshot,
+    YSnapshot? prevSnapshot,
+    YTransaction? txn,
+  }) {
+    final results = _yTextToDelta([
+      ref.toWasm(),
+      (snapshot == null
+          ? const None().toWasm()
+          : Option.fromValue(snapshot).toWasm((some) => some.toWasm())),
+      (prevSnapshot == null
+          ? const None().toWasm()
+          : Option.fromValue(prevSnapshot).toWasm((some) => some.toWasm())),
+      (txn == null
+          ? const None().toWasm()
+          : Option.fromValue(txn).toWasm(YTransaction.toWasm))
+    ]);
+    final result = results[0];
+    return (result! as Iterable).map(YTextDelta.fromJson).toList();
+  }
+
   final ListValue Function(ListValue) _yTextObserve;
-  void yTextObserve({
+  EventObserver yTextObserve({
     required YText ref,
     required int /*U32*/ functionId,
   }) {
-    _yTextObserve([ref.toWasm(), functionId]);
+    final results = _yTextObserve([ref.toWasm(), functionId]);
+    final result = results[0];
+    return EventObserver.fromJson(result);
   }
 
   final ListValue Function(ListValue) _yTextObserveDeep;
-  void yTextObserveDeep({
+  EventObserver yTextObserveDeep({
     required YText ref,
     required int /*U32*/ functionId,
   }) {
-    _yTextObserveDeep([ref.toWasm(), functionId]);
+    final results = _yTextObserveDeep([ref.toWasm(), functionId]);
+    final result = results[0];
+    return EventObserver.fromJson(result);
+  }
+
+  final ListValue Function(ListValue) _snapshot;
+  YSnapshot snapshot({
+    required YDoc doc,
+  }) {
+    final results = _snapshot([doc.toWasm()]);
+    final result = results[0];
+    return YSnapshot.fromJson(result);
+  }
+
+  final ListValue Function(ListValue) _equalSnapshot;
+  bool equalSnapshot({
+    required YSnapshot left,
+    required YSnapshot right,
+  }) {
+    final results = _equalSnapshot([left.toWasm(), right.toWasm()]);
+    final result = results[0];
+    return result! as bool;
+  }
+
+  final ListValue Function(ListValue) _encodeSnapshotV1;
+  Uint8List encodeSnapshotV1({
+    required YSnapshot snapshot,
+  }) {
+    final results = _encodeSnapshotV1([snapshot.toWasm()]);
+    final result = results[0];
+    return (result is Uint8List
+        ? result
+        : Uint8List.fromList((result! as List).cast()));
+  }
+
+  final ListValue Function(ListValue) _encodeSnapshotV2;
+  Uint8List encodeSnapshotV2({
+    required YSnapshot snapshot,
+  }) {
+    final results = _encodeSnapshotV2([snapshot.toWasm()]);
+    final result = results[0];
+    return (result is Uint8List
+        ? result
+        : Uint8List.fromList((result! as List).cast()));
+  }
+
+  final ListValue Function(ListValue) _decodeSnapshotV1;
+  Result<YSnapshot, Error> decodeSnapshotV1({
+    required Uint8List snapshot,
+  }) {
+    final results = _decodeSnapshotV1([snapshot]);
+    final result = results[0];
+    return Result.fromJson(result, (ok) => YSnapshot.fromJson(ok),
+        (error) => error is String ? error : (error! as ParsedString).value);
+  }
+
+  final ListValue Function(ListValue) _decodeSnapshotV2;
+  Result<YSnapshot, Error> decodeSnapshotV2({
+    required Uint8List snapshot,
+  }) {
+    final results = _decodeSnapshotV2([snapshot]);
+    final result = results[0];
+    return Result.fromJson(result, (ok) => YSnapshot.fromJson(ok),
+        (error) => error is String ? error : (error! as ParsedString).value);
+  }
+
+  final ListValue Function(ListValue) _encodeStateFromSnapshotV1;
+  Result<Uint8List, Error> encodeStateFromSnapshotV1({
+    required YDoc doc,
+    required YSnapshot snapshot,
+  }) {
+    final results =
+        _encodeStateFromSnapshotV1([doc.toWasm(), snapshot.toWasm()]);
+    final result = results[0];
+    return Result.fromJson(
+        result,
+        (ok) =>
+            (ok is Uint8List ? ok : Uint8List.fromList((ok! as List).cast())),
+        (error) => error is String ? error : (error! as ParsedString).value);
+  }
+
+  final ListValue Function(ListValue) _encodeStateFromSnapshotV2;
+  Result<Uint8List, Error> encodeStateFromSnapshotV2({
+    required YDoc doc,
+    required YSnapshot snapshot,
+  }) {
+    final results =
+        _encodeStateFromSnapshotV2([doc.toWasm(), snapshot.toWasm()]);
+    final result = results[0];
+    return Result.fromJson(
+        result,
+        (ok) =>
+            (ok is Uint8List ? ok : Uint8List.fromList((ok! as List).cast())),
+        (error) => error is String ? error : (error! as ParsedString).value);
   }
 
   final ListValue Function(ListValue) _yArrayNew;
@@ -2810,20 +3886,39 @@ class YDocMethods {
         (error) => error is String ? error : (error! as ParsedString).value);
   }
 
+  final ListValue Function(ListValue) _yArrayValues;
+  List<YValue> yArrayValues({
+    required YArray ref,
+    YTransaction? txn,
+  }) {
+    final results = _yArrayValues([
+      ref.toWasm(),
+      (txn == null
+          ? const None().toWasm()
+          : Option.fromValue(txn).toWasm(YTransaction.toWasm))
+    ]);
+    final result = results[0];
+    return (result! as Iterable).map(YValue.fromJson).toList();
+  }
+
   final ListValue Function(ListValue) _yArrayObserve;
-  void yArrayObserve({
+  EventObserver yArrayObserve({
     required YArray ref,
     required int /*U32*/ functionId,
   }) {
-    _yArrayObserve([ref.toWasm(), functionId]);
+    final results = _yArrayObserve([ref.toWasm(), functionId]);
+    final result = results[0];
+    return EventObserver.fromJson(result);
   }
 
   final ListValue Function(ListValue) _yArrayObserveDeep;
-  void yArrayObserveDeep({
+  EventObserver yArrayObserveDeep({
     required YArray ref,
     required int /*U32*/ functionId,
   }) {
-    _yArrayObserveDeep([ref.toWasm(), functionId]);
+    final results = _yArrayObserveDeep([ref.toWasm(), functionId]);
+    final result = results[0];
+    return EventObserver.fromJson(result);
   }
 
   final ListValue Function(ListValue) _yMapNew;
@@ -2927,20 +4022,56 @@ class YDocMethods {
     return Option.fromJson(result, (some) => YValue.fromJson(some)).value;
   }
 
+  final ListValue Function(ListValue) _yMapEntries;
+  List<
+      (
+        String,
+        YValue,
+      )> yMapEntries({
+    required YMap ref,
+    YTransaction? txn,
+  }) {
+    final results = _yMapEntries([
+      ref.toWasm(),
+      (txn == null
+          ? const None().toWasm()
+          : Option.fromValue(txn).toWasm(YTransaction.toWasm))
+    ]);
+    final result = results[0];
+    return (result! as Iterable)
+        .map((e) => (() {
+              final l = e is Map
+                  ? List.generate(2, (i) => e[i.toString()], growable: false)
+                  : e;
+              return switch (l) {
+                [final v0, final v1] || (final v0, final v1) => (
+                    v0 is String ? v0 : (v0! as ParsedString).value,
+                    YValue.fromJson(v1),
+                  ),
+                _ => throw Exception('Invalid JSON $e')
+              };
+            })())
+        .toList();
+  }
+
   final ListValue Function(ListValue) _yMapObserve;
-  void yMapObserve({
+  EventObserver yMapObserve({
     required YMap ref,
     required int /*U32*/ functionId,
   }) {
-    _yMapObserve([ref.toWasm(), functionId]);
+    final results = _yMapObserve([ref.toWasm(), functionId]);
+    final result = results[0];
+    return EventObserver.fromJson(result);
   }
 
   final ListValue Function(ListValue) _yMapObserveDeep;
-  void yMapObserveDeep({
+  EventObserver yMapObserveDeep({
     required YMap ref,
     required int /*U32*/ functionId,
   }) {
-    _yMapObserveDeep([ref.toWasm(), functionId]);
+    final results = _yMapObserveDeep([ref.toWasm(), functionId]);
+    final result = results[0];
+    return EventObserver.fromJson(result);
   }
 
   final ListValue Function(ListValue) _yXmlElementName;
@@ -3070,12 +4201,7 @@ class YCrdtWorld {
   YCrdtWorld({
     required this.imports,
     required this.library,
-  })  : yDocMethods = YDocMethods(library),
-        _run = library.getComponentFunction(
-          'run',
-          const FuncType([('value', Model._spec)],
-              [('', ResultType(Float64(), StringType()))]),
-        )!;
+  }) : yDocMethods = YDocMethods(library);
 
   static Future<YCrdtWorld> init(
     WasmInstanceBuilder builder, {
@@ -3085,33 +4211,42 @@ class YCrdtWorld {
     WasmLibrary getLib() => library;
 
     {
-      const ft = FuncType([('value', S32())], [('', Float64())]);
+      const ft =
+          FuncType([('function-id', U32()), ('event', YEvent._spec)], []);
 
-      (ListValue, void Function()) execImportsMapInteger(ListValue args) {
+      (ListValue, void Function()) execImportsEventCallback(ListValue args) {
         final args0 = args[0];
-        final results = imports.mapInteger(value: args0! as int);
-        return ([results], () {});
+        final args1 = args[1];
+        imports.eventCallback(
+            functionId: args0! as int, event: YEvent.fromJson(args1));
+        return (const [], () {});
       }
 
       final lowered = loweredImportFunction(
-          r'$root#map-integer', ft, execImportsMapInteger, getLib);
-      builder.addImport(r'$root', 'map-integer', lowered);
+          r'$root#event-callback', ft, execImportsEventCallback, getLib);
+      builder.addImport(r'$root', 'event-callback', lowered);
+    }
+    {
+      const ft = FuncType(
+          [('function-id', U32()), ('event', ListType(YEvent._spec))], []);
+
+      (ListValue, void Function()) execImportsEventDeepCallback(
+          ListValue args) {
+        final args0 = args[0];
+        final args1 = args[1];
+        imports.eventDeepCallback(
+            functionId: args0! as int,
+            event: (args1! as Iterable).map(YEvent.fromJson).toList());
+        return (const [], () {});
+      }
+
+      final lowered = loweredImportFunction(r'$root#event-deep-callback', ft,
+          execImportsEventDeepCallback, getLib);
+      builder.addImport(r'$root', 'event-deep-callback', lowered);
     }
     final instance = await builder.build();
 
     library = WasmLibrary(instance, int64Type: Int64TypeConfig.bigInt);
     return YCrdtWorld(imports: imports, library: library);
-  }
-
-  final ListValue Function(ListValue) _run;
-
-  /// export
-  Result<double /*F64*/, String> run({
-    required Model value,
-  }) {
-    final results = _run([value.toWasm()]);
-    final result = results[0];
-    return Result.fromJson(result, (ok) => ok! as double,
-        (error) => error is String ? error : (error! as ParsedString).value);
   }
 }

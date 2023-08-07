@@ -5,11 +5,20 @@ Future<void> main() async {
   final world = await createYCrdt(
     wasiConfig: WasiConfig(preopenedDirs: [], webBrowserFileSystem: {}),
     imports: YCrdtWorldImports(
-      mapInteger: ({required value}) => value * 2,
+      eventCallback: ({required event, required functionId}) {},
+      eventDeepCallback: ({required event, required functionId}) {},
     ),
   );
-  
-  final result = world.run(value: Model(integer: -3));
-  print(result);
-  assert(result == const Ok<double, String>(-6.0));
+
+  final doc = world.yDocMethods.yDocNew();
+  final docFinalizer =
+      Finalizer<YDoc>((p0) => world.yDocMethods.yDocDispose(ref: p0));
+  docFinalizer.attach(doc, doc);
+
+  final text = world.yDocMethods.yDocText(ref: doc, name: 'name');
+  final length = world.yDocMethods.yTextLength(ref: text);
+  assert(length == 0);
+
+  world.yDocMethods.yTextPush(ref: text, chunk: 'hello');
+  assert(world.yDocMethods.yTextToString(ref: text) == 'hello');
 }
