@@ -242,6 +242,7 @@ interface y-doc-methods {
     y-xml-text-dispose: func(ref: y-xml-text) -> bool
     y-transaction-dispose: func(ref: y-transaction) -> bool
     y-value-dispose: func(ref: y-value) -> bool
+    y-snapshot-dispose: func(ref: y-snapshot) -> bool
     callback-dispose: func(ref: event-observer) -> bool
 
     enum offset-kind {
@@ -304,10 +305,10 @@ interface y-doc-methods {
     // on_after_transaction
     // on_subdocs
     // on_destroy
-    load: func(ref: y-doc, parent-txn: implicit-transaction)
-    destroy: func(ref: y-doc, parent-txn: implicit-transaction)
-    subdocs: func(ref: y-doc, txn: implicit-transaction) -> list<y-doc>
-    subdoc-guids: func(ref: y-doc, txn: implicit-transaction) -> list<string>
+    y-doc-load: func(ref: y-doc, parent-txn: implicit-transaction)
+    y-doc-destroy: func(ref: y-doc, parent-txn: implicit-transaction)
+    y-doc-subdocs: func(ref: y-doc, txn: implicit-transaction) -> list<y-doc>
+    y-doc-subdoc-guids: func(ref: y-doc, txn: implicit-transaction) -> list<string>
 
     encode-state-vector: func(ref: y-doc) -> list<u8>
     // debug_update_v1

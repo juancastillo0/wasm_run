@@ -1,5 +1,11 @@
 // Use a procedural macro to generate bindings for the world we specified in `y-crdt.wit`
-wit_bindgen::generate!("y-crdt");
+wit_bindgen::generate!({
+    path: "wit/y-crdt.wit",
+    exports: {
+        world: WitImplementation,
+        "y-crdt-namespace:y-crdt/y-doc-methods": WitImplementation,
+    },
+});
 
 use exports::y_crdt_namespace::y_crdt::y_doc_methods::*;
 use lib0::any::Any;
@@ -371,8 +377,6 @@ struct YTextInner(RefCell<SharedType<TextRef, String>>);
 // implementing all the necessary exported interfaces for this component.
 struct WitImplementation;
 
-export_y_crdt!(WitImplementation);
-
 fn parse_options(options: YDocOptions) -> Options {
     let mut opts = Options::default();
     options.client_id.map(|v| opts.client_id = v);
@@ -430,6 +434,9 @@ impl YDocMethods for WitImplementation {
             YValue::YXmlText(a) => Self::y_xml_text_dispose(a),
             YValue::YDoc(a) => Self::y_doc_dispose(a),
         }
+    }
+    fn y_snapshot_dispose(snapshot: YSnapshot) -> bool {
+        with_mut(|state: &mut GlobalState| state.snapshots.remove(&snapshot.ref_).is_some())
     }
     fn callback_dispose(obs: EventObserver) -> bool {
         with_mut(|state| state.callbacks.remove(&obs.ref_).is_some())
@@ -514,7 +521,7 @@ impl YDocMethods for WitImplementation {
         todo!()
     }
 
-    fn subdocs(doc: YDoc, txn: ImplicitTransaction) -> Vec<YDoc> {
+    fn y_doc_subdocs(doc: YDoc, txn: ImplicitTransaction) -> Vec<YDoc> {
         with_mut_all(|state, txs| {
             let doc = &state.docs[&doc.ref_];
             let list: Vec<_> = YTransactionInner::from_transact(txn, doc, txs)
@@ -528,7 +535,7 @@ impl YDocMethods for WitImplementation {
         })
     }
 
-    fn subdoc_guids(doc: YDoc, txn: ImplicitTransaction) -> Vec<String> {
+    fn y_doc_subdoc_guids(doc: YDoc, txn: ImplicitTransaction) -> Vec<String> {
         with_mut_all(|state, txs| {
             let doc = &state.docs[&doc.ref_];
             YTransactionInner::from_transact(txn, doc, txs)
@@ -539,7 +546,7 @@ impl YDocMethods for WitImplementation {
         })
     }
 
-    fn load(doc: YDoc, txn: ImplicitTransaction) {
+    fn y_doc_load(doc: YDoc, txn: ImplicitTransaction) {
         with_mut_all(|state, txs| {
             let d = &state.docs[&doc.ref_];
             if let Some(YTransaction::WriteTransaction(txn)) = txn {
@@ -554,7 +561,7 @@ impl YDocMethods for WitImplementation {
         })
     }
 
-    fn destroy(doc: YDoc, txn: ImplicitTransaction) {
+    fn y_doc_destroy(doc: YDoc, txn: ImplicitTransaction) {
         with_mut_all(|state, txs| {
             let d = state.docs.get_mut(&doc.ref_).unwrap();
             if let Some(YTransaction::WriteTransaction(txn)) = txn {
@@ -917,7 +924,7 @@ impl YDocMethods for WitImplementation {
             let subs = unsafe {
                 std::mem::transmute(v.observe(move |e_txn, e| {
                     let event = map_text_event(text.clone(), e_txn, e);
-                    event_callback(function_id, event)
+                    event_callback(function_id, &event)
                 }))
             };
             state.save_callback(subs)
@@ -927,17 +934,7 @@ impl YDocMethods for WitImplementation {
     fn y_text_observe_deep(text: YText, function_id: u32) -> EventObserver {
         with_mut(|state| {
             let v = state.texts.get_mut(&text.ref_).unwrap();
-            let subs = unsafe {
-                std::mem::transmute(v.observe_deep(move |e_txn, e| {
-                    with_mut(|state| {
-                        let events = e
-                            .iter()
-                            .map(|e| map_event(state, e_txn, e))
-                            .collect::<Vec<_>>();
-                        event_deep_callback(function_id, &events)
-                    })
-                }))
-            };
+            let subs = unsafe { std::mem::transmute(v.observe_deep(observer_deep(function_id))) };
             state.save_callback(subs)
         })
     }
@@ -1020,11 +1017,24 @@ impl YDocMethods for WitImplementation {
     }
 
     fn y_array_observe(array: YArray, function_id: u32) -> EventObserver {
-        todo!()
+        with_mut(|state| {
+            let v = state.arrays.get_mut(&array.ref_).unwrap();
+            let subs = unsafe {
+                std::mem::transmute(v.observe(move |e_txn, e| {
+                    let event = map_array_event(array.clone(), e_txn, e);
+                    event_callback(function_id, &event)
+                }))
+            };
+            state.save_callback(subs)
+        })
     }
 
     fn y_array_observe_deep(array: YArray, function_id: u32) -> EventObserver {
-        todo!()
+        with_mut(|state| {
+            let v = state.arrays.get_mut(&array.ref_).unwrap();
+            let subs = unsafe { std::mem::transmute(v.observe_deep(observer_deep(function_id))) };
+            state.save_callback(subs)
+        })
     }
 
     fn y_map_new(_: Option<JsonObject>) -> YMap {
@@ -1083,11 +1093,24 @@ impl YDocMethods for WitImplementation {
     }
 
     fn y_map_observe(map: YMap, function_id: u32) -> EventObserver {
-        todo!()
+        with_mut(|state| {
+            let v = state.maps.get_mut(&map.ref_).unwrap();
+            let subs = unsafe {
+                std::mem::transmute(v.observe(move |e_txn, e| {
+                    let event = map_map_event(map.clone(), e_txn, e);
+                    event_callback(function_id, &event)
+                }))
+            };
+            state.save_callback(subs)
+        })
     }
 
     fn y_map_observe_deep(map: YMap, function_id: u32) -> EventObserver {
-        todo!()
+        with_mut(|state| {
+            let v = state.maps.get_mut(&map.ref_).unwrap();
+            let subs = unsafe { std::mem::transmute(v.observe_deep(observer_deep(function_id))) };
+            state.save_callback(subs)
+        })
     }
 
     fn y_xml_element_name(_: YXmlElement) -> Option<String> {
@@ -1142,54 +1165,30 @@ fn map_text_delta(d: &Delta) -> YTextDelta {
     }
 }
 
-fn map_array_delta(d: &Change) -> YArrayDeltaOwned {
+fn map_array_delta(d: &Change) -> YArrayDelta {
     match d {
         Change::Added(v) => {
             let insert = v.iter().map(|v| map_y_value(v.clone())).collect::<Vec<_>>();
-            let slice = unsafe { std::mem::transmute(insert.iter().collect::<Vec<_>>()) };
-            YArrayDeltaOwned::YArrayDeltaInsert(YArrayDeltaInsertOwned { insert, slice })
+            YArrayDelta::YArrayDeltaInsert(YArrayDeltaInsert { insert })
         }
-        Change::Removed(c) => YArrayDeltaOwned::YArrayDeltaDelete(YArrayDeltaDelete { delete: *c }),
-        Change::Retain(v) => YArrayDeltaOwned::YArrayDeltaRetain(YArrayDeltaRetain { retain: *v }),
+        Change::Removed(c) => YArrayDelta::YArrayDeltaDelete(YArrayDeltaDelete { delete: *c }),
+        Change::Retain(v) => YArrayDelta::YArrayDeltaRetain(YArrayDeltaRetain { retain: *v }),
     }
 }
 
-pub enum YArrayDeltaOwned {
-    YArrayDeltaInsert(YArrayDeltaInsertOwned),
-    YArrayDeltaDelete(YArrayDeltaDelete),
-    YArrayDeltaRetain(YArrayDeltaRetain),
-}
-
-pub struct YArrayDeltaInsertOwned {
-    insert: Vec<YValue>,
-    slice: Vec<&'static YValue>,
-}
-
-impl YArrayDeltaOwned {
-    fn to_ref(&self) -> YArrayDelta {
-        match self {
-            YArrayDeltaOwned::YArrayDeltaInsert(v) => {
-                YArrayDelta::YArrayDeltaInsert(YArrayDeltaInsert { insert: &v.slice })
-            }
-            YArrayDeltaOwned::YArrayDeltaDelete(v) => YArrayDelta::YArrayDeltaDelete(*v),
-            YArrayDeltaOwned::YArrayDeltaRetain(v) => YArrayDelta::YArrayDeltaRetain(*v),
-        }
-    }
-}
-
-fn map_map_delta(d: &EntryChange) -> YMapDeltaOwned {
+fn map_map_delta(d: &EntryChange) -> YMapDelta {
     match d {
-        EntryChange::Inserted(v) => YMapDeltaOwned {
+        EntryChange::Inserted(v) => YMapDelta {
             action: YMapDeltaAction::Insert,
             old_value: None,
             new_value: Some(map_y_value(v.clone())),
         },
-        EntryChange::Removed(c) => YMapDeltaOwned {
+        EntryChange::Removed(c) => YMapDelta {
             action: YMapDeltaAction::Delete,
             old_value: Some(map_y_value(c.clone())),
             new_value: None,
         },
-        EntryChange::Updated(v, v2) => YMapDeltaOwned {
+        EntryChange::Updated(v, v2) => YMapDelta {
             action: YMapDeltaAction::Update,
             old_value: Some(map_y_value(v.clone())),
             new_value: Some(map_y_value(v2.clone())),
@@ -1391,7 +1390,7 @@ fn diff_v2<T: ReadTxn>(txn: &T, vector: Option<Vec<u8>>) -> Result<Vec<u8>, Stri
     Ok(encoder.to_vec())
 }
 
-fn map_event<'a>(state: &mut GlobalState, e_txn: &'a TransactionMut<'_>, e: &Event) -> YEvent<'a> {
+fn map_event<'a>(state: &mut GlobalState, e_txn: &TransactionMut<'_>, e: &Event) -> YEvent {
     // Event {
     //     Text(TextEvent),
     //     Array(ArrayEvent),
@@ -1416,28 +1415,23 @@ fn map_event<'a>(state: &mut GlobalState, e_txn: &'a TransactionMut<'_>, e: &Eve
     }
 }
 
-fn map_text_event<'a>(text: YText, e_txn: &'a TransactionMut<'_>, e: &TextEvent) -> YEvent<'a> {
+fn map_text_event<'a>(text: YText, e_txn: &TransactionMut<'_>, e: &TextEvent) -> YEvent {
     let p = e.path();
     let path = p
         .iter()
         .map(|v| match v {
             PathSegment::Index(i) => EventPathItem::U32(*i),
-            PathSegment::Key(k) => EventPathItem::String(k),
+            PathSegment::Key(k) => EventPathItem::String(k.to_string()),
         })
         .collect::<Vec<EventPathItem>>();
-    YEvent::YTextEvent(unsafe {
-        std::mem::transmute(YTextEvent {
-            path: &path,
-            delta: e
-                .delta(e_txn)
-                .iter()
-                .map(map_text_delta)
-                .collect::<Vec<_>>()
-                .iter()
-                .collect::<Vec<_>>()
-                .as_slice(),
-            target: text,
-        })
+    YEvent::YTextEvent(YTextEvent {
+        path,
+        delta: e
+            .delta(e_txn)
+            .iter()
+            .map(map_text_delta)
+            .collect::<Vec<_>>(),
+        target: text,
     })
 }
 
@@ -1445,63 +1439,47 @@ fn map_path_segment<'a>(p: &VecDeque<PathSegment>) -> Vec<EventPathItem> {
     p.iter()
         .map(|v| match v {
             PathSegment::Index(i) => EventPathItem::U32(*i),
-            PathSegment::Key(k) => EventPathItem::String(k),
+            PathSegment::Key(k) => EventPathItem::String(k.to_string()),
         })
         .collect::<Vec<EventPathItem>>()
 }
 
-fn map_array_event<'a>(array: YArray, e_txn: &'a TransactionMut<'_>, e: &ArrayEvent) -> YEvent<'a> {
+fn map_array_event<'a>(array: YArray, e_txn: &TransactionMut<'_>, e: &ArrayEvent) -> YEvent {
     let p = e.path();
     let path = map_path_segment(&p);
-    YEvent::YArrayEvent(unsafe {
-        std::mem::transmute(YArrayEvent {
-            path: &path,
-            delta: e
-                .delta(e_txn)
-                .iter()
-                .map(map_array_delta)
-                .collect::<Vec<_>>()
-                .iter()
-                .map(|a| a.to_ref())
-                .collect::<Vec<_>>()
-                .as_slice(),
-            target: array,
-        })
+    YEvent::YArrayEvent(YArrayEvent {
+        path,
+        delta: e
+            .delta(e_txn)
+            .iter()
+            .map(map_array_delta)
+            .collect::<Vec<_>>(),
+        target: array,
     })
 }
 
-struct YMapDeltaOwned {
-    pub action: YMapDeltaAction,
-    pub old_value: Option<YValue>,
-    pub new_value: Option<YValue>,
+fn map_map_event<'a>(map: YMap, e_txn: &'a TransactionMut<'_>, e: &MapEvent) -> YEvent {
+    let p = e.path();
+    let path = map_path_segment(&p);
+    YEvent::YMapEvent(YMapEvent {
+        path,
+        keys: e
+            .keys(e_txn)
+            .iter()
+            .map(|(k, v)| (k.to_string(), map_map_delta(v)))
+            .collect::<Vec<_>>(),
+        target: map,
+    })
 }
 
-impl YMapDeltaOwned {
-    fn to_ref(&self) -> YMapDelta {
-        YMapDelta {
-            action: self.action,
-            old_value: self.old_value.as_ref(),
-            new_value: self.new_value.as_ref(),
-        }
+fn observer_deep(function_id: u32) -> impl Fn(&TransactionMut<'_>, &Events) {
+    move |e_txn: &TransactionMut<'_>, e: &Events| {
+        with_mut(|state| {
+            let events = e
+                .iter()
+                .map(|e| map_event(state, e_txn, e))
+                .collect::<Vec<_>>();
+            event_deep_callback(function_id, &events)
+        })
     }
-}
-
-fn map_map_event<'a>(map: YMap, e_txn: &'a TransactionMut<'_>, e: &MapEvent) -> YEvent<'a> {
-    let p = e.path();
-    let path = map_path_segment(&p);
-    YEvent::YMapEvent(unsafe {
-        std::mem::transmute(YMapEvent {
-            path: &path,
-            keys: e
-                .keys(e_txn)
-                .iter()
-                .map(|(k, v)| (k.as_ref(), map_map_delta(v)))
-                .collect::<Vec<_>>()
-                .iter()
-                .map(|(k, v)| (*k, v.to_ref()))
-                .collect::<Vec<_>>()
-                .as_slice(),
-            target: map,
-        })
-    })
 }

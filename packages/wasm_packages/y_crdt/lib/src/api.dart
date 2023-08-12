@@ -3,7 +3,12 @@ import 'dart:typed_data';
 import 'package:wasm_wit_component/wasm_wit_component.dart';
 import 'package:y_crdt/src/y_crdt_wit.gen.dart';
 
+export 'package:wasm_wit_component/wasm_wit_component.dart'
+    show Result, Ok, Err;
+export 'package:y_crdt/src/y_crdt_wit.gen.dart' show YDocOptions, OffsetKind;
+
 part 'json_value.dart';
+part 'y_event.dart';
 
 class YCrdtApiImports implements YCrdtWorldImports {
   int _lastFunctionId = 0;
@@ -77,6 +82,7 @@ class YCrdt {
   late final _valueFinalizer = Finalizer<YValue>(_disposeValue);
   late final _transactionFinalizer =
       Finalizer<YTransaction>(_disposeTransaction);
+  late final _snapshotFinalizer = Finalizer<YSnapshot>(_disposeSnapshot);
 
   YCrdt(this.world, this.callbacks);
 
@@ -88,23 +94,23 @@ class YCrdt {
     return _m.yTransactionDispose(ref: ref);
   }
 
-  YDocI newDoc() => YDocI._(_m.yDocNew(), this);
+  bool _disposeSnapshot(YSnapshot ref) {
+    return _m.ySnapshotDispose(ref: ref);
+  }
 
-  // TODO: should it be List<String>?
-  List<YDocI> subdocs({
-    required YDocI doc,
-    required YTransactionI txn,
-  }) =>
-      _m
-          .subdocs(ref: doc._ref, txn: txn._ref)
-          .map((d) => YDocI._(d, this))
-          .toList();
+  YDocI newDoc({YDocOptions? options}) =>
+      YDocI._(_m.yDocNew(options: options), this);
 
-  List<String> subdocGuids({
-    required YDocI doc,
-    required YTransactionI txn,
-  }) =>
-      _m.subdocGuids(ref: doc._ref, txn: txn._ref);
+  YSnapshotI snapshot(YDocI doc) =>
+      YSnapshotI._(_m.snapshot(doc: doc._ref), this);
+
+  Result<YSnapshotI, String> snapshotDecodeV1(Uint8List snapshot) => _m
+      .decodeSnapshotV1(snapshot: snapshot)
+      .map((ok) => YSnapshotI._(ok, this));
+
+  Result<YSnapshotI, String> snapshotDecodeV2(Uint8List snapshot) => _m
+      .decodeSnapshotV2(snapshot: snapshot)
+      .map((ok) => YSnapshotI._(ok, this));
 
   Uint8List encodeStateVector({
     required YDocI doc,
@@ -139,8 +145,32 @@ class YCrdt {
 }
 
 /// [YValueI] or [AnyVal]
-sealed class YValueAny {}
+sealed class YValueAny {
+  const YValueAny();
 
+  factory YValueAny.fromValue(YValue yValue, YCrdt ycrdt) {
+    return switch (yValue) {
+      JsonValueItem() => AnyVal.fromItem(yValue),
+      YText() => YTextI._(yValue, ycrdt),
+      YArray() => YArrayI._(yValue, ycrdt),
+      YMap() => YMapI._(yValue, ycrdt),
+      YXmlFragment() => YXmlFragmentI._(yValue, ycrdt),
+      YXmlElement() => YXmlElementI._(yValue, ycrdt),
+      YXmlText() => YXmlTextI._(yValue, ycrdt),
+      YDoc() => YDocI._(yValue, ycrdt),
+    };
+  }
+}
+
+/// Any of:
+/// - [YDocI]
+/// - [YArrayI]
+/// - [YMapI]
+/// - [YTextI]
+/// - [YXmlTextI]
+/// - [YXmlElementI]
+/// - [YXmlFragmentI]
+/// // TODO: ToJsonSerializable
 sealed class YValueI extends YValueAny {
   YValue get _ref;
   final YCrdt _world;
@@ -156,6 +186,25 @@ class YDocI extends YValueI {
   final YDoc _ref;
 
   YDocI._(this._ref, super._world);
+
+  void load({YTransaction? parentTxn}) =>
+      _m.yDocLoad(ref: _ref, parentTxn: parentTxn);
+
+  void destroy({YTransaction? parentTxn}) =>
+      _m.yDocDestroy(ref: _ref, parentTxn: parentTxn);
+
+  List<YDocI> subdocs({
+    required YTransactionI txn,
+  }) =>
+      _m
+          .yDocSubdocs(ref: _ref, txn: txn._ref)
+          .map((d) => YDocI._(d, _world))
+          .toList();
+
+  List<String> subdocGuids({
+    required YTransactionI txn,
+  }) =>
+      _m.yDocSubdocGuids(ref: _ref, txn: txn._ref);
 
   YDocI? parentDoc() {
     final d = _m.yDocParentDoc(ref: _ref);
@@ -186,10 +235,11 @@ class YDocI extends YValueI {
   YXmlTextI xmlText({required String name}) =>
       YXmlTextI._(_m.yDocXmlText(ref: _ref, name: name), _world);
 
+  // TODO: toJson()
   // TODO: on-update-v1
 }
 
-typedef TextAttrs = Map<String, AnyVal>;
+typedef TextAttrsI = Map<String, AnyVal>;
 
 class YTextI extends YValueI {
   @override
@@ -214,7 +264,7 @@ class YTextI extends YValueI {
   void insert({
     required int /*U32*/ index,
     required String chunk,
-    TextAttrs? attributes,
+    TextAttrsI? attributes,
     YTransactionI? txn,
   }) =>
       _m.yTextInsert(
@@ -228,7 +278,7 @@ class YTextI extends YValueI {
   void insertEmbed({
     required int /*U32*/ index,
     required AnyVal embed,
-    TextAttrs? attributes,
+    TextAttrsI? attributes,
     YTransactionI? txn,
   }) =>
       _m.yTextInsertEmbed(
@@ -239,10 +289,21 @@ class YTextI extends YValueI {
               attributes == null ? null : AnyVal.map(attributes).toItem(),
           txn: txn?._ref);
 
+  List<YTextDelta> yTextToDelta({
+    YSnapshotI? snapshot,
+    YSnapshotI? prevSnapshot,
+    YTransactionI? txn,
+  }) =>
+      _m.yTextToDelta(
+          ref: _ref,
+          snapshot: snapshot?._ref,
+          prevSnapshot: prevSnapshot?._ref,
+          txn: txn?._ref);
+
   void format({
     required int /*U32*/ index,
     required int /*U32*/ length,
-    required TextAttrs attributes,
+    required TextAttrsI attributes,
     YTransactionI? txn,
   }) =>
       _m.yTextFormat(
@@ -252,9 +313,9 @@ class YTextI extends YValueI {
           attributes: AnyVal.map(attributes).toItem(),
           txn: txn?._ref);
 
-  void push({
-    required String chunk,
-    TextAttrs? attributes,
+  void push(
+    String chunk, {
+    TextAttrsI? attributes,
     YTransactionI? txn,
   }) =>
       _m.yTextPush(
@@ -272,19 +333,19 @@ class YTextI extends YValueI {
       _m.yTextDelete(ref: _ref, index_: index, length: length, txn: txn?._ref);
 
   void Function() observe(
-    void Function(YTextEvent event) function,
+    void Function(YTextEventI event) function,
   ) =>
       _world.callbacks.addCallback(
-        function,
+        (YTextEvent e) => function(YTextEventI.fromValue(e, _world)),
         (functionId) => _m.yTextObserve(ref: _ref, functionId: functionId),
         _m.callbackDispose,
       );
 
   void Function() observeDeep(
-    void Function(List<YEvent> event) function,
+    void Function(List<YEventI> event) function,
   ) =>
       _world.callbacks.addDeepCallback(
-        function,
+        (e) => function(e.map((v) => YEventI.fromValue(v, _world)).toList()),
         (functionId) => _m.yTextObserveDeep(ref: _ref, functionId: functionId),
         _m.callbackDispose,
       );
@@ -354,32 +415,23 @@ class YArrayI extends YValueI {
         _m.yArrayGet(ref: _ref, index_: index, txn: txn?._ref);
     if (result.isError) return Err(result.error!);
 
-    return Ok(switch (result.ok!) {
-      final JsonValueItem value => AnyVal.fromItem(value),
-      final YText value => YTextI._(value, _world),
-      final YArray value => YArrayI._(value, _world),
-      final YMap value => YMapI._(value, _world),
-      final YXmlFragment value => YXmlFragmentI._(value, _world),
-      final YXmlElement value => YXmlElementI._(value, _world),
-      final YXmlText value => YXmlTextI._(value, _world),
-      final YDoc value => YDocI._(value, _world),
-    });
+    return Ok(YValueAny.fromValue(result.ok!, _world));
   }
 
   void Function() observe(
-    void Function(YArrayEvent event) function,
+    void Function(YArrayEventI event) function,
   ) =>
       _world.callbacks.addCallback(
-        function,
+        (YArrayEvent e) => function(YArrayEventI.fromValue(e, _world)),
         (functionId) => _m.yArrayObserve(ref: _ref, functionId: functionId),
         _m.callbackDispose,
       );
 
   void Function() observeDeep(
-    void Function(List<YEvent> event) function,
+    void Function(List<YEventI> event) function,
   ) =>
       _world.callbacks.addDeepCallback(
-        function,
+        (e) => function(e.map((v) => YEventI.fromValue(v, _world)).toList()),
         (functionId) => _m.yArrayObserveDeep(ref: _ref, functionId: functionId),
         _m.callbackDispose,
       );
@@ -410,39 +462,40 @@ class YMapI extends YValueI {
   }) =>
       (AnyVal.fromItem(_m.yMapToJson(ref: _ref, txn: txn?._ref)) as AnyValMap)
           .value;
-  void set({
-    required String key,
-    required AnyVal value,
+  void set(
+    String key,
+    AnyVal value, {
     YTransactionI? txn,
   }) =>
       _m.yMapSet(ref: _ref, key: key, value: value.toItem(), txn: txn?._ref);
 
-  void delete({
-    required String key,
+  void delete(
+    String key, {
     YTransactionI? txn,
   }) =>
       _m.yMapDelete(ref: _ref, key: key, txn: txn?._ref);
 
-  YValue? get({
-    required String key,
+  // TODO: positional param
+  YValue? get(
+    String key, {
     YTransactionI? txn,
   }) =>
       _m.yMapGet(ref: _ref, key: key, txn: txn?._ref);
 
   void Function() observe(
-    void Function(YMapEvent event) function,
+    void Function(YMapEventI event) function,
   ) =>
       _world.callbacks.addCallback(
-        function,
+        (YMapEvent e) => function(YMapEventI.fromValue(e, _world)),
         (functionId) => _m.yMapObserve(ref: _ref, functionId: functionId),
         _m.callbackDispose,
       );
 
   void Function() observeDeep(
-    void Function(List<YEvent> event) function,
+    void Function(List<YEventI> event) function,
   ) =>
       _world.callbacks.addDeepCallback(
-        function,
+        (e) => function(e.map((v) => YEventI.fromValue(v, _world)).toList()),
         (functionId) => _m.yMapObserveDeep(ref: _ref, functionId: functionId),
         _m.callbackDispose,
       );
@@ -478,10 +531,9 @@ abstract class YTransactionI {
     _world._transactionFinalizer.attach(this, _ref);
   }
 
-  bool isReadonly() =>
-      this is ReadTransactionI; // _m.transactionIsReadonly(txn: _ref);
-  bool isWriteable() =>
-      this is WriteTransactionI; // _m.transactionIsWriteable(txn: _ref);
+  bool get isReadonly => this is ReadTransactionI;
+  bool get isWriteable => this is WriteTransactionI;
+
   Origin? origin() => _m.transactionOrigin(txn: _ref);
 
   void commit() => _m.transactionCommit(txn: _ref);
@@ -493,6 +545,9 @@ abstract class YTransactionI {
 
   Result<Uint8List, Error> diffV2({Uint8List? vector}) =>
       _m.transactionDiffV2(txn: _ref, vector: vector);
+
+  Result<void, Error> applyV1({required Uint8List diff}) =>
+      _m.transactionApplyV1(txn: _ref, diff: diff);
 
   Result<void, Error> applyV2({required Uint8List diff}) =>
       _m.transactionApplyV2(txn: _ref, diff: diff);
@@ -514,4 +569,25 @@ class WriteTransactionI extends YTransactionI {
   final WriteTransaction _ref;
 
   WriteTransactionI._(this._ref, super._world);
+}
+
+class YSnapshotI {
+  final YSnapshot _ref;
+  final YCrdt _world;
+  YDocMethods get _m => _world._m;
+
+  YSnapshotI._(this._ref, this._world) {
+    _world._snapshotFinalizer.attach(this, _ref);
+  }
+
+  bool equal(YSnapshotI other) =>
+      _m.equalSnapshot(left: _ref, right: other._ref);
+
+  Uint8List encodeV1() => _m.encodeSnapshotV1(snapshot: _ref);
+  Uint8List encodeV2() => _m.encodeSnapshotV2(snapshot: _ref);
+
+  Result<Uint8List, String> encodeStateV1({required YDocI doc}) =>
+      _m.encodeStateFromSnapshotV1(doc: doc._ref, snapshot: _ref);
+  Result<Uint8List, String> encodeStateV2({required YDocI doc}) =>
+      _m.encodeStateFromSnapshotV2(doc: doc._ref, snapshot: _ref);
 }

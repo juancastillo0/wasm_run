@@ -1,10 +1,10 @@
-import 'package:wasm_run/load_module.dart';
 import 'package:wasm_run/wasm_run.dart';
-import 'package:y_crdt/src/y_crdt_wit.gen.dart';
+import 'package:y_crdt/src/api.dart';
+import 'package:y_crdt/wit_world.dart';
 
-export 'package:y_crdt/src/y_crdt_wit.gen.dart';
+export 'package:y_crdt/src/api.dart';
 
-/// Creates a [YCrdtWorld] with the given [wasiConfig].
+/// Creates a [YCrdt] with the given [wasiConfig].
 /// It setsUp the dynamic library for wasm_run in native platforms and
 /// loads the y_crdt WASM module from the file system or
 /// from the url pointing to 'lib/y_crdt_wasm.wasm'.
@@ -15,30 +15,18 @@ export 'package:y_crdt/src/y_crdt_wit.gen.dart';
 /// from a different HTTP endpoint. By default, it will load the WASM module
 /// from the file system in `lib/y_crdt_wasm.wasm` either reading it directly
 /// in native platforms or with a GET request for Dart web.
-Future<YCrdtWorld> createYCrdt({
-  required WasiConfig wasiConfig,
-  required YCrdtWorldImports imports,
+Future<YCrdt> ycrdtApi({
+  WasiConfig wasiConfig = const WasiConfig(
+    preopenedDirs: [],
+    webBrowserFileSystem: {},
+  ),
   Future<WasmModule> Function()? loadModule,
-  WorkersConfig? workersConfig,
 }) async {
-  await WasmRunLibrary.setUp(override: false);
-
-  final WasmModule module;
-  if (loadModule != null) {
-    module = await loadModule();
-  } else {
-    final uri = await WasmFileUris.uriForPackage(
-      package: 'y_crdt',
-      libPath: 'assets/y_crdt_wasm.wasm',
-      envVariable: 'Y_CRDT_WASM_PATH',
-    );
-    final uris = WasmFileUris(uri: uri);
-    module = await uris.loadModule();
-  }
-  final builder = module.builder(
+  final callbacks = YCrdtApiImports();
+  final world = await createYCrdt(
+    loadModule: loadModule,
     wasiConfig: wasiConfig,
-    workersConfig: workersConfig,
+    imports: callbacks,
   );
-
-  return YCrdtWorld.init(builder, imports: imports);
+  return YCrdt(world, callbacks);
 }

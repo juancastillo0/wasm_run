@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:y_crdt/src/api.dart';
+import 'package:y_crdt/wit_world.dart';
 import 'package:y_crdt/y_crdt.dart';
 import 'package:test/test.dart';
 import 'package:wasm_wit_component/wasm_wit_component.dart';
@@ -77,7 +78,7 @@ void main() {
       final length = text.length(txn: txn);
       expect(length, 0);
 
-      text.push(chunk: 'hello', txn: txn);
+      text.push('hello', txn: txn);
       final newLength = text.length(txn: txn);
       final content = text.toString(txn: txn);
 
@@ -87,12 +88,7 @@ void main() {
     });
 
     test('doc text', () async {
-      final callbacks = YCrdtApiImports();
-      final world = await createYCrdt(
-        wasiConfig: WasiConfig(preopenedDirs: [], webBrowserFileSystem: {}),
-        imports: callbacks,
-      );
-      final ycrdt = YCrdt(world, callbacks);
+      final ycrdt = await ycrdtApi();
 
       final doc = ycrdt.newDoc();
       final text = doc.text(name: 'name');
@@ -100,7 +96,7 @@ void main() {
       final length = text.length();
       expect(length, 0);
 
-      text.push(chunk: 'hello');
+      text.push('hello');
       final newLength = text.length();
       final content = text.toString();
 
@@ -109,18 +105,13 @@ void main() {
     });
 
     test('observe', () async {
-      final callbacks = YCrdtApiImports();
-      final world = await createYCrdt(
-        wasiConfig: WasiConfig(preopenedDirs: [], webBrowserFileSystem: {}),
-        imports: callbacks,
-      );
-      final ycrdt = YCrdt(world, callbacks);
+      final ycrdt = await ycrdtApi();
 
       final doc = ycrdt.newDoc();
       final array = doc.array(name: 'arr');
 
-      final List<YArrayEvent> events = [];
-      array.observe(events.add);
+      final List<YArrayEventI> events = [];
+      final cancelSubs = array.observe(events.add);
 
       final length = array.length();
       expect(length, 0);
@@ -132,6 +123,18 @@ void main() {
 
       expect(content, toAdd);
       expect(newLength, 2);
+      expect(events, hasLength(1));
+      expect(events.first.delta, [YArrayDeltaIInsert(insert: toAdd)]);
+      expect(events.first.path, <EventPathItem>[]);
+
+      // TODO: test event content and create models
+      cancelSubs();
+
+      final item2 = AnyVal.str('item2');
+      array.insert(index: 1, items: [item2]);
+      expect(array.length(), 3);
+      expect(array.get(1).unwrap(), item2);
+      // no new events
       expect(events, hasLength(1));
     });
   });

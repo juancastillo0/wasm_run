@@ -1,4 +1,4 @@
-import 'package:y_crdt/y_crdt.dart';
+import 'package:y_crdt/wit_world.dart';
 import 'package:wasm_wit_component/wasm_wit_component.dart';
 
 Future<void> main() async {

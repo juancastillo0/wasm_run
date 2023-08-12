@@ -2458,6 +2458,10 @@ class YDocMethods {
           'y-crdt-namespace:y-crdt/y-doc-methods#y-value-dispose',
           const FuncType([('ref', YValue._spec)], [('', Bool())]),
         )!,
+        _ySnapshotDispose = library.getComponentFunction(
+          'y-crdt-namespace:y-crdt/y-doc-methods#y-snapshot-dispose',
+          const FuncType([('ref', YSnapshot._spec)], [('', Bool())]),
+        )!,
         _callbackDispose = library.getComponentFunction(
           'y-crdt-namespace:y-crdt/y-doc-methods#callback-dispose',
           const FuncType([('ref', EventObserver._spec)], [('', Bool())]),
@@ -2523,28 +2527,28 @@ class YDocMethods {
           const FuncType([('ref', YDoc._spec), ('function-id', U32())],
               [('', EventObserver._spec)]),
         )!,
-        _load = library.getComponentFunction(
-          'y-crdt-namespace:y-crdt/y-doc-methods#load',
+        _yDocLoad = library.getComponentFunction(
+          'y-crdt-namespace:y-crdt/y-doc-methods#y-doc-load',
           const FuncType([
             ('ref', YDoc._spec),
             ('parent-txn', OptionType(YTransaction._spec))
           ], []),
         )!,
-        _destroy = library.getComponentFunction(
-          'y-crdt-namespace:y-crdt/y-doc-methods#destroy',
+        _yDocDestroy = library.getComponentFunction(
+          'y-crdt-namespace:y-crdt/y-doc-methods#y-doc-destroy',
           const FuncType([
             ('ref', YDoc._spec),
             ('parent-txn', OptionType(YTransaction._spec))
           ], []),
         )!,
-        _subdocs = library.getComponentFunction(
-          'y-crdt-namespace:y-crdt/y-doc-methods#subdocs',
+        _yDocSubdocs = library.getComponentFunction(
+          'y-crdt-namespace:y-crdt/y-doc-methods#y-doc-subdocs',
           const FuncType(
               [('ref', YDoc._spec), ('txn', OptionType(YTransaction._spec))],
               [('', ListType(YDoc._spec))]),
         )!,
-        _subdocGuids = library.getComponentFunction(
-          'y-crdt-namespace:y-crdt/y-doc-methods#subdoc-guids',
+        _yDocSubdocGuids = library.getComponentFunction(
+          'y-crdt-namespace:y-crdt/y-doc-methods#y-doc-subdoc-guids',
           const FuncType(
               [('ref', YDoc._spec), ('txn', OptionType(YTransaction._spec))],
               [('', ListType(StringType()))]),
@@ -3069,6 +3073,15 @@ class YDocMethods {
     return result! as bool;
   }
 
+  final ListValue Function(ListValue) _ySnapshotDispose;
+  bool ySnapshotDispose({
+    required YSnapshot ref,
+  }) {
+    final results = _ySnapshotDispose([ref.toWasm()]);
+    final result = results[0];
+    return result! as bool;
+  }
+
   final ListValue Function(ListValue) _callbackDispose;
   bool callbackDispose({
     required EventObserver ref,
@@ -3207,12 +3220,12 @@ class YDocMethods {
     return EventObserver.fromJson(result);
   }
 
-  final ListValue Function(ListValue) _load;
-  void load({
+  final ListValue Function(ListValue) _yDocLoad;
+  void yDocLoad({
     required YDoc ref,
     YTransaction? parentTxn,
   }) {
-    _load([
+    _yDocLoad([
       ref.toWasm(),
       (parentTxn == null
           ? const None().toWasm()
@@ -3220,12 +3233,12 @@ class YDocMethods {
     ]);
   }
 
-  final ListValue Function(ListValue) _destroy;
-  void destroy({
+  final ListValue Function(ListValue) _yDocDestroy;
+  void yDocDestroy({
     required YDoc ref,
     YTransaction? parentTxn,
   }) {
-    _destroy([
+    _yDocDestroy([
       ref.toWasm(),
       (parentTxn == null
           ? const None().toWasm()
@@ -3233,12 +3246,12 @@ class YDocMethods {
     ]);
   }
 
-  final ListValue Function(ListValue) _subdocs;
-  List<YDoc> subdocs({
+  final ListValue Function(ListValue) _yDocSubdocs;
+  List<YDoc> yDocSubdocs({
     required YDoc ref,
     YTransaction? txn,
   }) {
-    final results = _subdocs([
+    final results = _yDocSubdocs([
       ref.toWasm(),
       (txn == null
           ? const None().toWasm()
@@ -3248,12 +3261,12 @@ class YDocMethods {
     return (result! as Iterable).map(YDoc.fromJson).toList();
   }
 
-  final ListValue Function(ListValue) _subdocGuids;
-  List<String> subdocGuids({
+  final ListValue Function(ListValue) _yDocSubdocGuids;
+  List<String> yDocSubdocGuids({
     required YDoc ref,
     YTransaction? txn,
   }) {
-    final results = _subdocGuids([
+    final results = _yDocSubdocGuids([
       ref.toWasm(),
       (txn == null
           ? const None().toWasm()
