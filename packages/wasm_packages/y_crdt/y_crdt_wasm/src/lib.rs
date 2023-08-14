@@ -17,9 +17,10 @@ use std::ops::Deref;
 use std::rc::Rc;
 use std::sync::Arc;
 use y_crdt_namespace::y_crdt::y_doc_methods_types::{
-    EventPathItem, JsonArrayRef, JsonMapRef, JsonValue, YArrayDelta, YArrayDeltaDelete,
-    YArrayDeltaInsert, YArrayDeltaRetain, YArrayEvent, YMapDelta, YMapDeltaAction, YMapEvent,
-    YTextDeltaDelete, YTextDeltaInsert, YTextDeltaRetain, YTextEvent,
+    EventPathItem, JsonArrayRef, JsonMapRef, JsonValue, StackItemSets, StartLength, YArrayDelta,
+    YArrayDeltaDelete, YArrayDeltaInsert, YArrayDeltaRetain, YArrayEvent, YMapDelta,
+    YMapDeltaAction, YMapEvent, YTextDeltaDelete, YTextDeltaInsert, YTextDeltaRetain, YTextEvent,
+    YUndoKind,
 };
 use yrs::block::{ClientID, ItemContent, Prelim, Unused};
 use yrs::types::array::ArrayEvent;
@@ -30,7 +31,7 @@ use yrs::types::{
     Attrs, Branch, BranchPtr, Change, DeepEventsSubscription, DeepObservable, Delta, EntryChange,
     Event, Events, Path, PathSegment, ToJson, TypeRef, Value,
 };
-use yrs::undo::{EventKind, UndoEventSubscription};
+use yrs::undo::{EventKind, StackItem, UndoEventSubscription};
 use yrs::updates::decoder::{Decode, DecoderV1};
 use yrs::updates::encoder::{Encode, Encoder, EncoderV1, EncoderV2};
 use yrs::{
@@ -47,6 +48,7 @@ use once_cell::unsync::Lazy;
 thread_local! {
     static IMAGES_MAP: Lazy<RefCell<GlobalState>> = Lazy::new(|| Default::default());
     static TXN_STATE: Lazy<RefCell<TxnState>> = Lazy::new(|| Default::default());
+    static UNDO_STATE: Lazy<RefCell<UndoState>> = Lazy::new(|| Default::default());
 }
 
 #[derive(Default)]
@@ -61,11 +63,6 @@ pub struct GlobalState {
     pub xml_texts: HashMap<u32, XmlTextRef>,
     pub snapshots: HashMap<u32, Snapshot>,
     pub callbacks: HashMap<u32, Subscription<Arc<dyn std::any::Any>>>,
-}
-
-struct CallbackSubs {
-    subs: Subscription<Arc<dyn std::any::Any>>,
-    function_id: u32,
 }
 
 impl GlobalState {
@@ -166,6 +163,21 @@ impl TxnState {
     }
 }
 
+#[derive(Default)]
+pub struct UndoState {
+    pub last_id: u32,
+    pub undo_managers: HashMap<u32, UndoManager>,
+}
+
+impl UndoState {
+    fn save_undo_manager(&mut self, um: UndoManager) -> UndoManagerRef {
+        self.last_id += 1;
+        let id = self.last_id;
+        self.undo_managers.insert(id, um);
+        UndoManagerRef { ref_: id }
+    }
+}
+
 fn with_mut<T>(f: impl FnOnce(&mut GlobalState) -> T) -> T {
     IMAGES_MAP.with(|v| f(&mut v.borrow_mut()))
 }
@@ -182,6 +194,18 @@ fn operation<T>(image_ref: YDoc, f: impl FnOnce(&Doc) -> T) -> T {
     with(|state| {
         let img = &state.docs[&image_ref.ref_];
         f(img)
+    })
+}
+
+fn with_undo_state<T>(f: impl FnOnce(&mut GlobalState, &mut UndoState) -> T) -> T {
+    IMAGES_MAP.with(|v| UNDO_STATE.with(|state| f(&mut v.borrow_mut(), &mut state.borrow_mut())))
+}
+
+fn with_undo_manager<T>(um: UndoManagerRef, f: impl FnOnce(&mut UndoManager) -> T) -> T {
+    UNDO_STATE.with(|v| {
+        let v = &mut v.borrow_mut();
+        let um = v.undo_managers.get_mut(&um.ref_).unwrap();
+        f(um)
     })
 }
 
@@ -426,12 +450,12 @@ impl YDocMethods for WitImplementation {
     fn y_value_dispose(value: YValue) -> bool {
         match value {
             YValue::JsonValueItem(_) => false,
-            YValue::YText(a) => Self::y_text_dispose(a),
-            YValue::YArray(a) => Self::y_array_dispose(a),
-            YValue::YMap(a) => Self::y_map_dispose(a),
-            YValue::YXmlElement(a) => Self::y_xml_element_dispose(a),
-            YValue::YXmlFragment(a) => Self::y_xml_fragment_dispose(a),
-            YValue::YXmlText(a) => Self::y_xml_text_dispose(a),
+            YValue::YType(YType::YText(a)) => Self::y_text_dispose(a),
+            YValue::YType(YType::YArray(a)) => Self::y_array_dispose(a),
+            YValue::YType(YType::YMap(a)) => Self::y_map_dispose(a),
+            YValue::YType(YType::YXmlElement(a)) => Self::y_xml_element_dispose(a),
+            YValue::YType(YType::YXmlFragment(a)) => Self::y_xml_fragment_dispose(a),
+            YValue::YType(YType::YXmlText(a)) => Self::y_xml_text_dispose(a),
             YValue::YDoc(a) => Self::y_doc_dispose(a),
         }
     }
@@ -1149,18 +1173,158 @@ impl YDocMethods for WitImplementation {
     fn y_xml_text_length(_: YXmlText, txn: ImplicitTransaction) -> u32 {
         todo!()
     }
+
+    // YUndoManager
+
+    fn undo_manager_new(doc: YDoc, scope: YType, options: UndoManagerOptions) -> UndoManagerRef {
+        with_undo_state(|state, undo_state| {
+            let doc = &state.docs[&doc.ref_];
+            let mut o = yrs::undo::Options::default();
+            // o.timestamp = Rc::new(|| js_sys::Date::now() as u64);
+
+            if let Some(millis) = options.capture_timeout_millis {
+                o.capture_timeout_millis = millis as u64;
+            }
+            if let Some(array) = options.tracked_origins {
+                for v in array.iter() {
+                    o.tracked_origins.insert(v.as_slice().into());
+                }
+            }
+            let scope = branch_from_type(state, &scope);
+            undo_state.save_undo_manager(UndoManager::with_options(&doc, &scope, o))
+        })
+    }
+
+    fn undo_manager_add_to_scope(um: UndoManagerRef, ytypes: Vec<YType>) {
+        with_undo_state(|state, undo_state| {
+            let um = undo_state.undo_managers.get_mut(&um.ref_).unwrap();
+            for scope in ytypes.iter() {
+                let scope = branch_from_type(state, scope);
+                um.expand_scope(&scope);
+            }
+        })
+    }
+
+    fn undo_manager_add_tracked_origin(um: UndoManagerRef, origin: Vec<u8>) {
+        with_undo_manager(um, |um| um.include_origin(origin.as_slice()))
+    }
+
+    fn undo_manager_remove_tracked_origin(um: UndoManagerRef, origin: Vec<u8>) {
+        with_undo_manager(um, |um| um.exclude_origin(origin.as_slice()))
+    }
+
+    fn undo_manager_clear(um: UndoManagerRef) -> Result<(), String> {
+        with_undo_manager(um, |um| um.clear().map_err(|err| err.to_string()))
+    }
+
+    fn undo_manager_stop_capturing(um: UndoManagerRef) {
+        with_undo_manager(um, |um| um.reset())
+    }
+
+    fn undo_manager_undo(um: UndoManagerRef) -> Result<bool, String> {
+        with_undo_manager(um, |um| um.undo().map_err(|err| err.to_string()))
+    }
+
+    fn undo_manager_redo(um: UndoManagerRef) -> Result<bool, String> {
+        with_undo_manager(um, |um| um.redo().map_err(|err| err.to_string()))
+    }
+
+    fn undo_manager_can_undo(um: UndoManagerRef) -> bool {
+        with_undo_manager(um, |um| um.can_undo())
+    }
+
+    fn undo_manager_can_redo(um: UndoManagerRef) -> bool {
+        with_undo_manager(um, |um| um.can_redo())
+    }
+
+    fn undo_manager_on_item_added(um: UndoManagerRef, function_id: u32) -> EventObserver {
+        with_undo_state(|state, undo_state| {
+            let subs = unsafe {
+                std::mem::transmute(
+                    undo_state
+                        .undo_managers
+                        .get_mut(&um.ref_)
+                        .unwrap()
+                        .observe_item_added(move |_, e| {
+                            let event = map_undo_event(e);
+                            undo_event_callback(function_id, &event)
+                        }),
+                )
+            };
+            state.save_callback(subs)
+        })
+    }
+
+    fn undo_manager_on_item_popped(um: UndoManagerRef, function_id: u32) -> EventObserver {
+        with_undo_state(|state, undo_state| {
+            let subs = unsafe {
+                std::mem::transmute(
+                    undo_state
+                        .undo_managers
+                        .get_mut(&um.ref_)
+                        .unwrap()
+                        .observe_item_popped(move |_, e| {
+                            let event = map_undo_event(e);
+                            undo_event_callback(function_id, &event)
+                        }),
+                )
+            };
+            state.save_callback(subs)
+        })
+    }
+}
+
+fn map_undo_event(e: &yrs::undo::Event) -> YUndoEvent {
+    YUndoEvent {
+        kind: match e.kind {
+            EventKind::Undo => YUndoKind::Undo,
+            EventKind::Redo => YUndoKind::Redo,
+        },
+        origin: e.origin.as_ref().map(|v| v.as_ref().to_vec()),
+        stack_item: StackItemSets {
+            deletions: delete_set_into_map(e.item.deletions()),
+            insertions: delete_set_into_map(e.item.insertions()),
+        },
+    }
+}
+
+fn delete_set_into_map(ds: &DeleteSet) -> Vec<(u64, Vec<StartLength>)> {
+    ds.iter()
+        .map(|(&k, v)| {
+            let value = v
+                .iter()
+                .map(|r| {
+                    let start = r.start;
+                    let length = r.end - r.start;
+                    StartLength { start, length }
+                })
+                .collect();
+            (k, value)
+        })
+        .collect()
+}
+
+fn branch_from_type<'a>(state: &'a GlobalState, scope: &YType) -> &'a dyn AsRef<Branch> {
+    match scope {
+        YType::YArray(a) => &state.arrays[&a.ref_],
+        YType::YMap(m) => &state.maps[&m.ref_],
+        YType::YText(t) => &state.texts[&t.ref_],
+        YType::YXmlElement(e) => &state.xml_elements[&e.ref_],
+        YType::YXmlText(e) => &state.xml_texts[&e.ref_],
+        YType::YXmlFragment(f) => &state.xml_fragments[&f.ref_],
+    }
 }
 
 fn map_text_delta(d: &Delta) -> YTextDelta {
     match d {
         Delta::Inserted(v, attrs) => YTextDelta::YTextDeltaInsert(YTextDeltaInsert {
             insert: string_from_value(v),
-            attributes: None,
+            attributes: map_attributes(attrs.clone()),
         }),
         Delta::Deleted(c) => YTextDelta::YTextDeltaDelete(YTextDeltaDelete { delete: *c }),
         Delta::Retain(v, attrs) => YTextDelta::YTextDeltaRetain(YTextDeltaRetain {
             retain: *v,
-            attributes: None,
+            attributes: map_attributes(attrs.clone()),
         }),
     }
 }
@@ -1199,11 +1363,15 @@ fn map_map_delta(d: &EntryChange) -> YMapDelta {
 fn ytext_change_into_delta(diff: Diff<YChange>) -> YTextDelta {
     YTextDelta::YTextDeltaInsert(YTextDeltaInsert {
         insert: string_from_value(&diff.insert),
-        attributes: diff.attributes.map(|a| {
-            map_any_json_value(Any::Map(Box::new(
-                a.into_iter().map(|(k, v)| (k.to_string(), v)).collect(),
-            )))
-        }),
+        attributes: map_attributes(diff.attributes),
+    })
+}
+
+fn map_attributes(m: Option<Box<HashMap<Arc<str>, Any>>>) -> Option<JsonValueItem> {
+    m.map(|a| {
+        map_any_json_value(Any::Map(Box::new(
+            a.into_iter().map(|(k, v)| (k.to_string(), v)).collect(),
+        )))
     })
 }
 
@@ -1225,14 +1393,18 @@ fn parse_attrs(attributes: JsonObject) -> HashMap<Arc<str>, Any> {
 fn map_y_value(v: Value) -> YValue {
     match v {
         Value::Any(a) => YValue::JsonValueItem(map_any_json_value(a)),
-        Value::YText(a) => YValue::YText(with_mut(|state| state.save_text(a))),
-        Value::YArray(a) => YValue::YArray(with_mut(|state| state.save_array(a))),
-        Value::YMap(a) => YValue::YMap(with_mut(|state| state.save_map(a))),
-        Value::YXmlElement(a) => YValue::YXmlElement(with_mut(|state| state.save_xml_element(a))),
-        Value::YXmlFragment(a) => {
-            YValue::YXmlFragment(with_mut(|state| state.save_xml_fragment(a)))
+        Value::YText(a) => YValue::YType(YType::YText(with_mut(|state| state.save_text(a)))),
+        Value::YArray(a) => YValue::YType(YType::YArray(with_mut(|state| state.save_array(a)))),
+        Value::YMap(a) => YValue::YType(YType::YMap(with_mut(|state| state.save_map(a)))),
+        Value::YXmlElement(a) => YValue::YType(YType::YXmlElement(with_mut(|state| {
+            state.save_xml_element(a)
+        }))),
+        Value::YXmlFragment(a) => YValue::YType(YType::YXmlFragment(with_mut(|state| {
+            state.save_xml_fragment(a)
+        }))),
+        Value::YXmlText(a) => {
+            YValue::YType(YType::YXmlText(with_mut(|state| state.save_xml_text(a))))
         }
-        Value::YXmlText(a) => YValue::YXmlText(with_mut(|state| state.save_xml_text(a))),
         Value::YDoc(a) => YValue::YDoc(with_mut(|state| state.save_doc(a))),
     }
 }
@@ -1240,16 +1412,22 @@ fn map_y_value(v: Value) -> YValue {
 fn map_value(v: YValue) -> Value {
     match v {
         YValue::JsonValueItem(a) => Value::Any(map_json_value_any(a)),
-        YValue::YText(a) => Value::YText(with_mut(|state| state.texts[&a.ref_].clone())),
-        YValue::YArray(a) => Value::YArray(with_mut(|state| state.arrays[&a.ref_].clone())),
-        YValue::YMap(a) => Value::YMap(with_mut(|state| state.maps[&a.ref_].clone())),
-        YValue::YXmlElement(a) => {
+        YValue::YType(YType::YText(a)) => {
+            Value::YText(with_mut(|state| state.texts[&a.ref_].clone()))
+        }
+        YValue::YType(YType::YArray(a)) => {
+            Value::YArray(with_mut(|state| state.arrays[&a.ref_].clone()))
+        }
+        YValue::YType(YType::YMap(a)) => Value::YMap(with_mut(|state| state.maps[&a.ref_].clone())),
+        YValue::YType(YType::YXmlElement(a)) => {
             Value::YXmlElement(with_mut(|state| state.xml_elements[&a.ref_].clone()))
         }
-        YValue::YXmlFragment(a) => {
+        YValue::YType(YType::YXmlFragment(a)) => {
             Value::YXmlFragment(with_mut(|state| state.xml_fragments[&a.ref_].clone()))
         }
-        YValue::YXmlText(a) => Value::YXmlText(with_mut(|state| state.xml_texts[&a.ref_].clone())),
+        YValue::YType(YType::YXmlText(a)) => {
+            Value::YXmlText(with_mut(|state| state.xml_texts[&a.ref_].clone()))
+        }
         YValue::YDoc(a) => Value::YDoc(with_mut(|state| state.docs[&a.ref_].clone())),
     }
 }

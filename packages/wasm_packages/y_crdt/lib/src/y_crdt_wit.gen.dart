@@ -7,7 +7,7 @@ import 'dart:typed_data';
 
 import 'package:wasm_wit_component/wasm_wit_component.dart';
 
-class YXmlText implements YValue, ToJsonSerializable {
+class YXmlText implements YType, ToJsonSerializable {
   final int /*U32*/ ref;
   const YXmlText({
     required this.ref,
@@ -58,7 +58,7 @@ class YXmlText implements YValue, ToJsonSerializable {
   static const _spec = RecordType([(label: 'ref', t: U32())]);
 }
 
-class YXmlFragment implements YValue, ToJsonSerializable {
+class YXmlFragment implements YType, ToJsonSerializable {
   final int /*U32*/ ref;
   const YXmlFragment({
     required this.ref,
@@ -109,7 +109,7 @@ class YXmlFragment implements YValue, ToJsonSerializable {
   static const _spec = RecordType([(label: 'ref', t: U32())]);
 }
 
-class YXmlElement implements YValue, ToJsonSerializable {
+class YXmlElement implements YType, ToJsonSerializable {
   final int /*U32*/ ref;
   const YXmlElement({
     required this.ref,
@@ -158,6 +158,26 @@ class YXmlElement implements YValue, ToJsonSerializable {
   // ignore: unused_field
   List<Object?> get _props => [ref];
   static const _spec = RecordType([(label: 'ref', t: U32())]);
+}
+
+enum YUndoKind implements ToJsonSerializable {
+  undo,
+  redo;
+
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
+  factory YUndoKind.fromJson(Object? json) {
+    return ToJsonSerializable.enumFromJson(json, values, _spec);
+  }
+
+  /// Returns this as a serializable JSON value.
+  @override
+  Map<String, Object?> toJson() =>
+      {'runtimeType': 'YUndoKind', _spec.labels[index]: null};
+
+  /// Returns this as a WASM canonical abi value.
+  int toWasm() => index;
+  static const _spec = EnumType(['undo', 'redo']);
 }
 
 class YTextDeltaDelete implements YTextDelta, ToJsonSerializable {
@@ -211,7 +231,7 @@ class YTextDeltaDelete implements YTextDelta, ToJsonSerializable {
   static const _spec = RecordType([(label: 'delete', t: U32())]);
 }
 
-class YText implements YValue, ToJsonSerializable {
+class YText implements YType, ToJsonSerializable {
   final int /*U32*/ ref;
   const YText({
     required this.ref,
@@ -334,7 +354,7 @@ enum YMapDeltaAction implements ToJsonSerializable {
   static const _spec = EnumType(['insert', 'update', 'delete']);
 }
 
-class YMap implements YValue, ToJsonSerializable {
+class YMap implements YType, ToJsonSerializable {
   final int /*U32*/ ref;
   const YMap({
     required this.ref,
@@ -538,7 +558,7 @@ class YArrayDeltaDelete implements YArrayDelta, ToJsonSerializable {
   static const _spec = RecordType([(label: 'delete', t: U32())]);
 }
 
-class YArray implements YValue, ToJsonSerializable {
+class YArray implements YType, ToJsonSerializable {
   final int /*U32*/ ref;
   const YArray({
     required this.ref,
@@ -587,6 +607,65 @@ class YArray implements YValue, ToJsonSerializable {
   // ignore: unused_field
   List<Object?> get _props => [ref];
   static const _spec = RecordType([(label: 'ref', t: U32())]);
+}
+
+sealed class YType implements YValue, ToJsonSerializable {
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
+  factory YType.fromJson(Object? json_) {
+    Object? json = json_;
+    if (json is Map) {
+      final rt = json['runtimeType'];
+      if (rt is String) {
+        json = (
+          const [
+            'YText',
+            'YArray',
+            'YMap',
+            'YXmlFragment',
+            'YXmlElement',
+            'YXmlText'
+          ].indexOf(rt),
+          json
+        );
+      } else {
+        final MapEntry(:key, :value) = json.entries.first;
+        json = (key is int ? key : int.parse(key! as String), value);
+      }
+    }
+    return switch (json) {
+      (0, final value) || [0, final value] => YText.fromJson(value),
+      (1, final value) || [1, final value] => YArray.fromJson(value),
+      (2, final value) || [2, final value] => YMap.fromJson(value),
+      (3, final value) || [3, final value] => YXmlFragment.fromJson(value),
+      (4, final value) || [4, final value] => YXmlElement.fromJson(value),
+      (5, final value) || [5, final value] => YXmlText.fromJson(value),
+      _ => throw Exception('Invalid JSON $json_'),
+    };
+  }
+
+  /// Returns this as a serializable JSON value.
+  @override
+  Map<String, Object?> toJson();
+
+  /// Returns this as a WASM canonical abi value.
+  static (int, Object?) toWasm(YType value) => switch (value) {
+        YText() => (0, value.toWasm()),
+        YArray() => (1, value.toWasm()),
+        YMap() => (2, value.toWasm()),
+        YXmlFragment() => (3, value.toWasm()),
+        YXmlElement() => (4, value.toWasm()),
+        YXmlText() => (5, value.toWasm()),
+      };
+// ignore: unused_field
+  static const _spec = Union([
+    YText._spec,
+    YArray._spec,
+    YMap._spec,
+    YXmlFragment._spec,
+    YXmlElement._spec,
+    YXmlText._spec
+  ]);
 }
 
 class WriteTransaction implements YTransaction, ToJsonSerializable {
@@ -638,6 +717,273 @@ class WriteTransaction implements YTransaction, ToJsonSerializable {
   // ignore: unused_field
   List<Object?> get _props => [ref];
   static const _spec = RecordType([(label: 'ref', t: U32())]);
+}
+
+class StartLength implements ToJsonSerializable {
+  final int /*U32*/ start;
+  final int /*U32*/ length;
+  const StartLength({
+    required this.start,
+    required this.length,
+  });
+
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
+  factory StartLength.fromJson(Object? json_) {
+    final json = json_ is Map
+        ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
+        : json_;
+    return switch (json) {
+      [final start, final length] || (final start, final length) => StartLength(
+          start: start! as int,
+          length: length! as int,
+        ),
+      _ => throw Exception('Invalid JSON $json_')
+    };
+  }
+
+  /// Returns this as a serializable JSON value.
+  @override
+  Map<String, Object?> toJson() => {
+        'runtimeType': 'StartLength',
+        'start': start,
+        'length': length,
+      };
+
+  /// Returns this as a WASM canonical abi value.
+  List<Object?> toWasm() => [start, length];
+  @override
+  String toString() =>
+      'StartLength${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
+
+  /// Returns a new instance by overriding the values passed as arguments
+  StartLength copyWith({
+    int /*U32*/ ? start,
+    int /*U32*/ ? length,
+  }) =>
+      StartLength(start: start ?? this.start, length: length ?? this.length);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is StartLength &&
+          const ObjectComparator().arePropsEqual(_props, other._props);
+  @override
+  int get hashCode => const ObjectComparator().hashProps(_props);
+
+  // ignore: unused_field
+  List<Object?> get _props => [start, length];
+  static const _spec =
+      RecordType([(label: 'start', t: U32()), (label: 'length', t: U32())]);
+}
+
+class StackItemSets implements ToJsonSerializable {
+  final List<
+      (
+        BigInt /*U64*/,
+        List<StartLength>,
+      )> insertions;
+  final List<
+      (
+        BigInt /*U64*/,
+        List<StartLength>,
+      )> deletions;
+  const StackItemSets({
+    required this.insertions,
+    required this.deletions,
+  });
+
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
+  factory StackItemSets.fromJson(Object? json_) {
+    final json = json_ is Map
+        ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
+        : json_;
+    return switch (json) {
+      [final insertions, final deletions] ||
+      (final insertions, final deletions) =>
+        StackItemSets(
+          insertions: (insertions! as Iterable)
+              .map((e) => (() {
+                    final l = e is Map
+                        ? List.generate(2, (i) => e[i.toString()],
+                            growable: false)
+                        : e;
+                    return switch (l) {
+                      [final v0, final v1] || (final v0, final v1) => (
+                          bigIntFromJson(v0),
+                          (v1! as Iterable).map(StartLength.fromJson).toList(),
+                        ),
+                      _ => throw Exception('Invalid JSON $e')
+                    };
+                  })())
+              .toList(),
+          deletions: (deletions! as Iterable)
+              .map((e) => (() {
+                    final l = e is Map
+                        ? List.generate(2, (i) => e[i.toString()],
+                            growable: false)
+                        : e;
+                    return switch (l) {
+                      [final v0, final v1] || (final v0, final v1) => (
+                          bigIntFromJson(v0),
+                          (v1! as Iterable).map(StartLength.fromJson).toList(),
+                        ),
+                      _ => throw Exception('Invalid JSON $e')
+                    };
+                  })())
+              .toList(),
+        ),
+      _ => throw Exception('Invalid JSON $json_')
+    };
+  }
+
+  /// Returns this as a serializable JSON value.
+  @override
+  Map<String, Object?> toJson() => {
+        'runtimeType': 'StackItemSets',
+        'insertions': insertions
+            .map((e) => [e.$1.toString(), e.$2.map((e) => e.toJson()).toList()])
+            .toList(),
+        'deletions': deletions
+            .map((e) => [e.$1.toString(), e.$2.map((e) => e.toJson()).toList()])
+            .toList(),
+      };
+
+  /// Returns this as a WASM canonical abi value.
+  List<Object?> toWasm() => [
+        insertions
+            .map((e) =>
+                [e.$1, e.$2.map((e) => e.toWasm()).toList(growable: false)])
+            .toList(growable: false),
+        deletions
+            .map((e) =>
+                [e.$1, e.$2.map((e) => e.toWasm()).toList(growable: false)])
+            .toList(growable: false)
+      ];
+  @override
+  String toString() =>
+      'StackItemSets${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
+
+  /// Returns a new instance by overriding the values passed as arguments
+  StackItemSets copyWith({
+    List<
+            (
+              BigInt /*U64*/,
+              List<StartLength>,
+            )>?
+        insertions,
+    List<
+            (
+              BigInt /*U64*/,
+              List<StartLength>,
+            )>?
+        deletions,
+  }) =>
+      StackItemSets(
+          insertions: insertions ?? this.insertions,
+          deletions: deletions ?? this.deletions);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is StackItemSets &&
+          const ObjectComparator().arePropsEqual(_props, other._props);
+  @override
+  int get hashCode => const ObjectComparator().hashProps(_props);
+
+  // ignore: unused_field
+  List<Object?> get _props => [insertions, deletions];
+  static const _spec = RecordType([
+    (
+      label: 'insertions',
+      t: ListType(Tuple([U64(), ListType(StartLength._spec)]))
+    ),
+    (
+      label: 'deletions',
+      t: ListType(Tuple([U64(), ListType(StartLength._spec)]))
+    )
+  ]);
+}
+
+class YUndoEvent implements ToJsonSerializable {
+  final Uint8List? origin;
+  final YUndoKind kind;
+  final StackItemSets stackItem;
+  const YUndoEvent({
+    this.origin,
+    required this.kind,
+    required this.stackItem,
+  });
+
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
+  factory YUndoEvent.fromJson(Object? json_) {
+    final json = json_ is Map
+        ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
+        : json_;
+    return switch (json) {
+      [final origin, final kind, final stackItem] ||
+      (final origin, final kind, final stackItem) =>
+        YUndoEvent(
+          origin: Option.fromJson(
+              origin,
+              (some) => (some is Uint8List
+                  ? some
+                  : Uint8List.fromList((some! as List).cast()))).value,
+          kind: YUndoKind.fromJson(kind),
+          stackItem: StackItemSets.fromJson(stackItem),
+        ),
+      _ => throw Exception('Invalid JSON $json_')
+    };
+  }
+
+  /// Returns this as a serializable JSON value.
+  @override
+  Map<String, Object?> toJson() => {
+        'runtimeType': 'YUndoEvent',
+        'origin': (origin == null
+            ? const None().toJson()
+            : Option.fromValue(origin).toJson((some) => some.toList())),
+        'kind': kind.toJson(),
+        'stack-item': stackItem.toJson(),
+      };
+
+  /// Returns this as a WASM canonical abi value.
+  List<Object?> toWasm() => [
+        (origin == null
+            ? const None().toWasm()
+            : Option.fromValue(origin).toWasm()),
+        kind.toWasm(),
+        stackItem.toWasm()
+      ];
+  @override
+  String toString() =>
+      'YUndoEvent${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
+
+  /// Returns a new instance by overriding the values passed as arguments
+  YUndoEvent copyWith({
+    Option<Uint8List>? origin,
+    YUndoKind? kind,
+    StackItemSets? stackItem,
+  }) =>
+      YUndoEvent(
+          origin: origin != null ? origin.value : this.origin,
+          kind: kind ?? this.kind,
+          stackItem: stackItem ?? this.stackItem);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is YUndoEvent &&
+          const ObjectComparator().arePropsEqual(_props, other._props);
+  @override
+  int get hashCode => const ObjectComparator().hashProps(_props);
+
+  // ignore: unused_field
+  List<Object?> get _props => [origin, kind, stackItem];
+  static const _spec = RecordType([
+    (label: 'origin', t: OptionType(ListType(U8()))),
+    (label: 'kind', t: YUndoKind._spec),
+    (label: 'stack-item', t: StackItemSets._spec)
+  ]);
 }
 
 class ReadTransaction implements YTransaction, ToJsonSerializable {
@@ -1260,19 +1606,7 @@ sealed class YValue implements ToJsonSerializable {
     if (json is Map) {
       final rt = json['runtimeType'];
       if (rt is String) {
-        json = (
-          const [
-            'JsonValueItem',
-            'YText',
-            'YArray',
-            'YMap',
-            'YXmlFragment',
-            'YXmlElement',
-            'YXmlText',
-            'YDoc'
-          ].indexOf(rt),
-          json
-        );
+        json = (const ['JsonValueItem', 'YDoc', 'YType'].indexOf(rt), json);
       } else {
         final MapEntry(:key, :value) = json.entries.first;
         json = (key is int ? key : int.parse(key! as String), value);
@@ -1280,13 +1614,8 @@ sealed class YValue implements ToJsonSerializable {
     }
     return switch (json) {
       (0, final value) || [0, final value] => JsonValueItem.fromJson(value),
-      (1, final value) || [1, final value] => YText.fromJson(value),
-      (2, final value) || [2, final value] => YArray.fromJson(value),
-      (3, final value) || [3, final value] => YMap.fromJson(value),
-      (4, final value) || [4, final value] => YXmlFragment.fromJson(value),
-      (5, final value) || [5, final value] => YXmlElement.fromJson(value),
-      (6, final value) || [6, final value] => YXmlText.fromJson(value),
-      (7, final value) || [7, final value] => YDoc.fromJson(value),
+      (1, final value) || [1, final value] => YDoc.fromJson(value),
+      (2, final value) || [2, final value] => YType.fromJson(value),
       _ => throw Exception('Invalid JSON $json_'),
     };
   }
@@ -1298,25 +1627,11 @@ sealed class YValue implements ToJsonSerializable {
   /// Returns this as a WASM canonical abi value.
   static (int, Object?) toWasm(YValue value) => switch (value) {
         JsonValueItem() => (0, value.toWasm()),
-        YText() => (1, value.toWasm()),
-        YArray() => (2, value.toWasm()),
-        YMap() => (3, value.toWasm()),
-        YXmlFragment() => (4, value.toWasm()),
-        YXmlElement() => (5, value.toWasm()),
-        YXmlText() => (6, value.toWasm()),
-        YDoc() => (7, value.toWasm()),
+        YDoc() => (1, value.toWasm()),
+        YType() => (2, YType.toWasm(value)),
       };
 // ignore: unused_field
-  static const _spec = Union([
-    JsonValueItem._spec,
-    YText._spec,
-    YArray._spec,
-    YMap._spec,
-    YXmlFragment._spec,
-    YXmlElement._spec,
-    YXmlText._spec,
-    YDoc._spec
-  ]);
+  static const _spec = Union([JsonValueItem._spec, YDoc._spec, YType._spec]);
 }
 
 class YMapDelta implements ToJsonSerializable {
@@ -2110,7 +2425,179 @@ class EventObserver implements ToJsonSerializable {
   static const _spec = RecordType([(label: 'ref', t: U32())]);
 }
 
+class UndoManagerRef implements ToJsonSerializable {
+  final int /*U32*/ ref;
+  const UndoManagerRef({
+    required this.ref,
+  });
+
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
+  factory UndoManagerRef.fromJson(Object? json_) {
+    final json = json_ is Map
+        ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
+        : json_;
+    return switch (json) {
+      [final ref] || (final ref,) => UndoManagerRef(
+          ref: ref! as int,
+        ),
+      _ => throw Exception('Invalid JSON $json_')
+    };
+  }
+
+  /// Returns this as a serializable JSON value.
+  @override
+  Map<String, Object?> toJson() => {
+        'runtimeType': 'UndoManagerRef',
+        'ref': ref,
+      };
+
+  /// Returns this as a WASM canonical abi value.
+  List<Object?> toWasm() => [ref];
+  @override
+  String toString() =>
+      'UndoManagerRef${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
+
+  /// Returns a new instance by overriding the values passed as arguments
+  UndoManagerRef copyWith({
+    int /*U32*/ ? ref,
+  }) =>
+      UndoManagerRef(ref: ref ?? this.ref);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is UndoManagerRef &&
+          const ObjectComparator().arePropsEqual(_props, other._props);
+  @override
+  int get hashCode => const ObjectComparator().hashProps(_props);
+
+  // ignore: unused_field
+  List<Object?> get _props => [ref];
+  static const _spec = RecordType([(label: 'ref', t: U32())]);
+}
+
 typedef Origin = Uint8List;
+
+class UndoManagerOptions implements ToJsonSerializable {
+  /// Undo-/redo-able updates are grouped together in time-constrained snapshots. This field
+  /// determines the period of time, every snapshot will be automatically made in.
+  final BigInt /*U64*/ ? captureTimeoutMillis;
+
+  /// List of origins tracked by corresponding [UndoManager].
+  /// If provided, it will track only updates made within transactions of specific origin.
+  /// If not provided, it will track only updates made within transaction with no origin defined.
+  final List<Origin>? trackedOrigins;
+
+  /// Custom logic decider, that along with [tracked-origins] can be used to determine if
+  /// transaction changes should be captured or not.
+  final bool? captureTransaction;
+  const UndoManagerOptions({
+    this.captureTimeoutMillis,
+    this.trackedOrigins,
+    this.captureTransaction,
+  });
+
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
+  factory UndoManagerOptions.fromJson(Object? json_) {
+    final json = json_ is Map
+        ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
+        : json_;
+    return switch (json) {
+      [
+        final captureTimeoutMillis,
+        final trackedOrigins,
+        final captureTransaction
+      ] ||
+      (
+        final captureTimeoutMillis,
+        final trackedOrigins,
+        final captureTransaction
+      ) =>
+        UndoManagerOptions(
+          captureTimeoutMillis: Option.fromJson(
+              captureTimeoutMillis, (some) => bigIntFromJson(some)).value,
+          trackedOrigins: Option.fromJson(
+              trackedOrigins,
+              (some) => (some! as Iterable)
+                  .map((e) => (e is Uint8List
+                      ? e
+                      : Uint8List.fromList((e! as List).cast())))
+                  .toList()).value,
+          captureTransaction:
+              Option.fromJson(captureTransaction, (some) => some! as bool)
+                  .value,
+        ),
+      _ => throw Exception('Invalid JSON $json_')
+    };
+  }
+
+  /// Returns this as a serializable JSON value.
+  @override
+  Map<String, Object?> toJson() => {
+        'runtimeType': 'UndoManagerOptions',
+        'capture-timeout-millis': (captureTimeoutMillis == null
+            ? const None().toJson()
+            : Option.fromValue(captureTimeoutMillis)
+                .toJson((some) => some.toString())),
+        'tracked-origins': (trackedOrigins == null
+            ? const None().toJson()
+            : Option.fromValue(trackedOrigins)
+                .toJson((some) => some.map((e) => e.toList()).toList())),
+        'capture-transaction': (captureTransaction == null
+            ? const None().toJson()
+            : Option.fromValue(captureTransaction).toJson()),
+      };
+
+  /// Returns this as a WASM canonical abi value.
+  List<Object?> toWasm() => [
+        (captureTimeoutMillis == null
+            ? const None().toWasm()
+            : Option.fromValue(captureTimeoutMillis).toWasm()),
+        (trackedOrigins == null
+            ? const None().toWasm()
+            : Option.fromValue(trackedOrigins).toWasm()),
+        (captureTransaction == null
+            ? const None().toWasm()
+            : Option.fromValue(captureTransaction).toWasm())
+      ];
+  @override
+  String toString() =>
+      'UndoManagerOptions${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
+
+  /// Returns a new instance by overriding the values passed as arguments
+  UndoManagerOptions copyWith({
+    Option<BigInt /*U64*/ >? captureTimeoutMillis,
+    Option<List<Origin>>? trackedOrigins,
+    Option<bool>? captureTransaction,
+  }) =>
+      UndoManagerOptions(
+          captureTimeoutMillis: captureTimeoutMillis != null
+              ? captureTimeoutMillis.value
+              : this.captureTimeoutMillis,
+          trackedOrigins: trackedOrigins != null
+              ? trackedOrigins.value
+              : this.trackedOrigins,
+          captureTransaction: captureTransaction != null
+              ? captureTransaction.value
+              : this.captureTransaction);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is UndoManagerOptions &&
+          const ObjectComparator().arePropsEqual(_props, other._props);
+  @override
+  int get hashCode => const ObjectComparator().hashProps(_props);
+
+  // ignore: unused_field
+  List<Object?> get _props =>
+      [captureTimeoutMillis, trackedOrigins, captureTransaction];
+  static const _spec = RecordType([
+    (label: 'capture-timeout-millis', t: OptionType(U64())),
+    (label: 'tracked-origins', t: OptionType(ListType(ListType(U8())))),
+    (label: 'capture-transaction', t: OptionType(Bool()))
+  ]);
+}
 
 enum OffsetKind implements ToJsonSerializable {
   /// Compute editable strings length and offset using UTF-8 byte count.
@@ -2331,77 +2818,6 @@ class YDocOptions implements ToJsonSerializable {
   ]);
 }
 
-class YUndoEvent implements ToJsonSerializable {
-  final JsonValueItem origin;
-  final JsonValueItem kind;
-  final JsonValueItem stackItem;
-  const YUndoEvent({
-    required this.origin,
-    required this.kind,
-    required this.stackItem,
-  });
-
-  /// Returns a new instance from a JSON value.
-  /// May throw if the value does not have the expected structure.
-  factory YUndoEvent.fromJson(Object? json_) {
-    final json = json_ is Map
-        ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
-        : json_;
-    return switch (json) {
-      [final origin, final kind, final stackItem] ||
-      (final origin, final kind, final stackItem) =>
-        YUndoEvent(
-          origin: JsonValueItem.fromJson(origin),
-          kind: JsonValueItem.fromJson(kind),
-          stackItem: JsonValueItem.fromJson(stackItem),
-        ),
-      _ => throw Exception('Invalid JSON $json_')
-    };
-  }
-
-  /// Returns this as a serializable JSON value.
-  @override
-  Map<String, Object?> toJson() => {
-        'runtimeType': 'YUndoEvent',
-        'origin': origin.toJson(),
-        'kind': kind.toJson(),
-        'stack-item': stackItem.toJson(),
-      };
-
-  /// Returns this as a WASM canonical abi value.
-  List<Object?> toWasm() =>
-      [origin.toWasm(), kind.toWasm(), stackItem.toWasm()];
-  @override
-  String toString() =>
-      'YUndoEvent${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
-
-  /// Returns a new instance by overriding the values passed as arguments
-  YUndoEvent copyWith({
-    JsonValueItem? origin,
-    JsonValueItem? kind,
-    JsonValueItem? stackItem,
-  }) =>
-      YUndoEvent(
-          origin: origin ?? this.origin,
-          kind: kind ?? this.kind,
-          stackItem: stackItem ?? this.stackItem);
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is YUndoEvent &&
-          const ObjectComparator().arePropsEqual(_props, other._props);
-  @override
-  int get hashCode => const ObjectComparator().hashProps(_props);
-
-  // ignore: unused_field
-  List<Object?> get _props => [origin, kind, stackItem];
-  static const _spec = RecordType([
-    (label: 'origin', t: JsonValueItem._spec),
-    (label: 'kind', t: JsonValueItem._spec),
-    (label: 'stack-item', t: JsonValueItem._spec)
-  ]);
-}
-
 typedef ImplicitTransaction = Option<YTransaction>;
 typedef Error = String;
 
@@ -2414,9 +2830,14 @@ class YCrdtWorldImports {
     required int /*U32*/ functionId,
     required List<YEvent> event,
   }) eventDeepCallback;
+  final void Function({
+    required int /*U32*/ functionId,
+    required YUndoEvent event,
+  }) undoEventCallback;
   const YCrdtWorldImports({
     required this.eventCallback,
     required this.eventDeepCallback,
+    required this.undoEventCallback,
   });
 }
 
@@ -2991,6 +3412,72 @@ class YDocMethods {
           ], [
             ('', U32())
           ]),
+        )!,
+        _undoManagerNew = library.getComponentFunction(
+          'y-crdt-namespace:y-crdt/y-doc-methods#undo-manager-new',
+          const FuncType([
+            ('doc', YDoc._spec),
+            ('scope', YType._spec),
+            ('options', UndoManagerOptions._spec)
+          ], [
+            ('', UndoManagerRef._spec)
+          ]),
+        )!,
+        _undoManagerAddToScope = library.getComponentFunction(
+          'y-crdt-namespace:y-crdt/y-doc-methods#undo-manager-add-to-scope',
+          const FuncType([
+            ('ref', UndoManagerRef._spec),
+            ('ytypes', ListType(YType._spec))
+          ], []),
+        )!,
+        _undoManagerAddTrackedOrigin = library.getComponentFunction(
+          'y-crdt-namespace:y-crdt/y-doc-methods#undo-manager-add-tracked-origin',
+          const FuncType(
+              [('ref', UndoManagerRef._spec), ('origin', ListType(U8()))], []),
+        )!,
+        _undoManagerRemoveTrackedOrigin = library.getComponentFunction(
+          'y-crdt-namespace:y-crdt/y-doc-methods#undo-manager-remove-tracked-origin',
+          const FuncType(
+              [('ref', UndoManagerRef._spec), ('origin', ListType(U8()))], []),
+        )!,
+        _undoManagerClear = library.getComponentFunction(
+          'y-crdt-namespace:y-crdt/y-doc-methods#undo-manager-clear',
+          const FuncType([('ref', UndoManagerRef._spec)],
+              [('', ResultType(null, StringType()))]),
+        )!,
+        _undoManagerStopCapturing = library.getComponentFunction(
+          'y-crdt-namespace:y-crdt/y-doc-methods#undo-manager-stop-capturing',
+          const FuncType([('ref', UndoManagerRef._spec)], []),
+        )!,
+        _undoManagerUndo = library.getComponentFunction(
+          'y-crdt-namespace:y-crdt/y-doc-methods#undo-manager-undo',
+          const FuncType([('ref', UndoManagerRef._spec)],
+              [('', ResultType(Bool(), StringType()))]),
+        )!,
+        _undoManagerRedo = library.getComponentFunction(
+          'y-crdt-namespace:y-crdt/y-doc-methods#undo-manager-redo',
+          const FuncType([('ref', UndoManagerRef._spec)],
+              [('', ResultType(Bool(), StringType()))]),
+        )!,
+        _undoManagerCanUndo = library.getComponentFunction(
+          'y-crdt-namespace:y-crdt/y-doc-methods#undo-manager-can-undo',
+          const FuncType([('ref', UndoManagerRef._spec)], [('', Bool())]),
+        )!,
+        _undoManagerCanRedo = library.getComponentFunction(
+          'y-crdt-namespace:y-crdt/y-doc-methods#undo-manager-can-redo',
+          const FuncType([('ref', UndoManagerRef._spec)], [('', Bool())]),
+        )!,
+        _undoManagerOnItemAdded = library.getComponentFunction(
+          'y-crdt-namespace:y-crdt/y-doc-methods#undo-manager-on-item-added',
+          const FuncType(
+              [('ref', UndoManagerRef._spec), ('function-id', U32())],
+              [('', EventObserver._spec)]),
+        )!,
+        _undoManagerOnItemPopped = library.getComponentFunction(
+          'y-crdt-namespace:y-crdt/y-doc-methods#undo-manager-on-item-popped',
+          const FuncType(
+              [('ref', UndoManagerRef._spec), ('function-id', U32())],
+              [('', EventObserver._spec)]),
         )!;
   final ListValue Function(ListValue) _yDocDispose;
   bool yDocDispose({
@@ -4204,6 +4691,118 @@ class YDocMethods {
     final result = results[0];
     return result! as int;
   }
+
+  final ListValue Function(ListValue) _undoManagerNew;
+  UndoManagerRef undoManagerNew({
+    required YDoc doc,
+    required YType scope,
+    required UndoManagerOptions options,
+  }) {
+    final results =
+        _undoManagerNew([doc.toWasm(), YType.toWasm(scope), options.toWasm()]);
+    final result = results[0];
+    return UndoManagerRef.fromJson(result);
+  }
+
+  final ListValue Function(ListValue) _undoManagerAddToScope;
+  void undoManagerAddToScope({
+    required UndoManagerRef ref,
+    required List<YType> ytypes,
+  }) {
+    _undoManagerAddToScope(
+        [ref.toWasm(), ytypes.map(YType.toWasm).toList(growable: false)]);
+  }
+
+  final ListValue Function(ListValue) _undoManagerAddTrackedOrigin;
+  void undoManagerAddTrackedOrigin({
+    required UndoManagerRef ref,
+    required Origin origin,
+  }) {
+    _undoManagerAddTrackedOrigin([ref.toWasm(), origin]);
+  }
+
+  final ListValue Function(ListValue) _undoManagerRemoveTrackedOrigin;
+  void undoManagerRemoveTrackedOrigin({
+    required UndoManagerRef ref,
+    required Origin origin,
+  }) {
+    _undoManagerRemoveTrackedOrigin([ref.toWasm(), origin]);
+  }
+
+  final ListValue Function(ListValue) _undoManagerClear;
+  Result<void, Error> undoManagerClear({
+    required UndoManagerRef ref,
+  }) {
+    final results = _undoManagerClear([ref.toWasm()]);
+    final result = results[0];
+    return Result.fromJson(result, (ok) => null,
+        (error) => error is String ? error : (error! as ParsedString).value);
+  }
+
+  final ListValue Function(ListValue) _undoManagerStopCapturing;
+  void undoManagerStopCapturing({
+    required UndoManagerRef ref,
+  }) {
+    _undoManagerStopCapturing([ref.toWasm()]);
+  }
+
+  final ListValue Function(ListValue) _undoManagerUndo;
+  Result<bool, Error> undoManagerUndo({
+    required UndoManagerRef ref,
+  }) {
+    final results = _undoManagerUndo([ref.toWasm()]);
+    final result = results[0];
+    return Result.fromJson(result, (ok) => ok! as bool,
+        (error) => error is String ? error : (error! as ParsedString).value);
+  }
+
+  final ListValue Function(ListValue) _undoManagerRedo;
+  Result<bool, Error> undoManagerRedo({
+    required UndoManagerRef ref,
+  }) {
+    final results = _undoManagerRedo([ref.toWasm()]);
+    final result = results[0];
+    return Result.fromJson(result, (ok) => ok! as bool,
+        (error) => error is String ? error : (error! as ParsedString).value);
+  }
+
+  final ListValue Function(ListValue) _undoManagerCanUndo;
+  bool undoManagerCanUndo({
+    required UndoManagerRef ref,
+  }) {
+    final results = _undoManagerCanUndo([ref.toWasm()]);
+    final result = results[0];
+    return result! as bool;
+  }
+
+  final ListValue Function(ListValue) _undoManagerCanRedo;
+  bool undoManagerCanRedo({
+    required UndoManagerRef ref,
+  }) {
+    final results = _undoManagerCanRedo([ref.toWasm()]);
+    final result = results[0];
+    return result! as bool;
+  }
+
+  final ListValue Function(ListValue) _undoManagerOnItemAdded;
+  EventObserver undoManagerOnItemAdded({
+    required UndoManagerRef ref,
+    required int /*U32*/ functionId,
+  }) {
+    final results = _undoManagerOnItemAdded([ref.toWasm(), functionId]);
+    final result = results[0];
+    return EventObserver.fromJson(result);
+  }
+
+  final ListValue Function(ListValue) _undoManagerOnItemPopped;
+  EventObserver undoManagerOnItemPopped({
+    required UndoManagerRef ref,
+    required int /*U32*/ functionId,
+  }) {
+    final results = _undoManagerOnItemPopped([ref.toWasm(), functionId]);
+    final result = results[0];
+    return EventObserver.fromJson(result);
+  }
 }
 
 class YCrdtWorld {
@@ -4256,6 +4855,23 @@ class YCrdtWorld {
       final lowered = loweredImportFunction(r'$root#event-deep-callback', ft,
           execImportsEventDeepCallback, getLib);
       builder.addImport(r'$root', 'event-deep-callback', lowered);
+    }
+    {
+      const ft =
+          FuncType([('function-id', U32()), ('event', YUndoEvent._spec)], []);
+
+      (ListValue, void Function()) execImportsUndoEventCallback(
+          ListValue args) {
+        final args0 = args[0];
+        final args1 = args[1];
+        imports.undoEventCallback(
+            functionId: args0! as int, event: YUndoEvent.fromJson(args1));
+        return (const [], () {});
+      }
+
+      final lowered = loweredImportFunction(r'$root#undo-event-callback', ft,
+          execImportsUndoEventCallback, getLib);
+      builder.addImport(r'$root', 'undo-event-callback', lowered);
     }
     final instance = await builder.build();
 

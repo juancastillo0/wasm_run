@@ -7,6 +7,7 @@ Future<void> main() async {
     imports: YCrdtWorldImports(
       eventCallback: ({required event, required functionId}) {},
       eventDeepCallback: ({required event, required functionId}) {},
+      undoEventCallback: ({required event, required functionId}) {},
     ),
   );
 

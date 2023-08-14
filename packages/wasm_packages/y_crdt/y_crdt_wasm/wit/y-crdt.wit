@@ -1,10 +1,11 @@
 package y-crdt-namespace:y-crdt
 
 world y-crdt {
-    use y-doc-methods-types.{y-event}
+    use y-doc-methods-types.{y-event, y-undo-event}
 
     import event-callback: func(function-id: u32, event: y-event)
     import event-deep-callback: func(function-id: u32, event: list<y-event>)
+    import undo-event-callback: func(function-id: u32, event: y-undo-event)
 
     // TODO: should_load auto_load
 
@@ -25,13 +26,17 @@ interface y-doc-methods-types {
 
     union y-value {
       json-value-item,
+      y-doc,
+      y-type,
+    }
+
+    union y-type {
       y-text,
       y-array,
       y-map,
       y-xml-fragment,
       y-xml-element,
       y-xml-text,
-      y-doc,
     }
 
     record y-doc {
@@ -186,6 +191,26 @@ interface y-doc-methods-types {
       map(json-map-ref),
     }
 
+    record y-undo-event {
+      origin: option<list<u8>>,
+      kind: y-undo-kind,
+      stack-item: stack-item-sets,
+    }
+
+    enum y-undo-kind {
+      undo,
+      redo,
+    }
+
+    record stack-item-sets {
+      insertions: list<tuple<u64, list<start-length>>>,
+      deletions: list<tuple<u64, list<start-length>>>,
+    }
+
+    record start-length {
+      start: u32,
+      length: u32,
+    }
 }
 
 interface y-doc-methods {
@@ -227,6 +252,8 @@ interface y-doc-methods {
       json-map-ref,
       json-value,
       text-attrs,
+      y-type,
+      y-undo-event,
     }
 
     type error = string
@@ -243,6 +270,7 @@ interface y-doc-methods {
     y-transaction-dispose: func(ref: y-transaction) -> bool
     y-value-dispose: func(ref: y-value) -> bool
     y-snapshot-dispose: func(ref: y-snapshot) -> bool
+    undo-manager-dispose: func(ref: undo-manager-ref) -> bool
     callback-dispose: func(ref: event-observer) -> bool
 
     enum offset-kind {
@@ -452,9 +480,36 @@ interface y-doc-methods {
     // fn encode_sticky_index(rpos: &JsValue) -> Result<Uint8Array, JsValue>
     // fn decode_sticky_index(bin: Uint8Array) -> Result<JsValue, JsValue>
 
-    record y-undo-event {
-      origin: json-value-item,
-      kind: json-value-item,
-      stack-item: json-value-item,
+    record undo-manager-options {
+      /// Undo-/redo-able updates are grouped together in time-constrained snapshots. This field
+      /// determines the period of time, every snapshot will be automatically made in.
+      capture-timeout-millis: option<u64>,
+      /// List of origins tracked by corresponding [UndoManager].
+      /// If provided, it will track only updates made within transactions of specific origin.
+      /// If not provided, it will track only updates made within transaction with no origin defined.
+      tracked-origins: option<list<origin>>,
+      /// Custom logic decider, that along with [tracked-origins] can be used to determine if
+      /// transaction changes should be captured or not.
+      capture-transaction: option<bool>,
+      // /// Custom clock function, that can be used to generate timestamps used by
+      // /// [Options::capture-timeout_millis].
+      // timestamp: Rc<dyn Fn() -> u64>,
     }
+
+    record undo-manager-ref {
+      ref: u32,
+    }
+
+    undo-manager-new: func(doc: y-doc, scope: y-type, options: undo-manager-options) -> undo-manager-ref
+    undo-manager-add-to-scope: func(ref: undo-manager-ref, ytypes: list<y-type>) 
+    undo-manager-add-tracked-origin: func(ref: undo-manager-ref, origin: origin) 
+    undo-manager-remove-tracked-origin: func(ref: undo-manager-ref, origin: origin) 
+    undo-manager-clear: func(ref: undo-manager-ref) -> result<_, error> 
+    undo-manager-stop-capturing: func(ref: undo-manager-ref) 
+    undo-manager-undo: func(ref: undo-manager-ref) -> result<bool, error> 
+    undo-manager-redo: func(ref: undo-manager-ref) -> result<bool, error> 
+    undo-manager-can-undo: func(ref: undo-manager-ref) -> bool 
+    undo-manager-can-redo: func(ref: undo-manager-ref) -> bool 
+    undo-manager-on-item-added: func(ref: undo-manager-ref, function-id: u32) -> event-observer 
+    undo-manager-on-item-popped: func(ref: undo-manager-ref, function-id: u32) -> event-observer 
 }
