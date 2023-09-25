@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:rust_crypto/src/api.dart';
+import 'package:rust_crypto/src/rust_crypto_wit.gen.dart';
 import 'package:test/test.dart';
 import 'package:wasm_run/load_module.dart';
 import 'package:wasm_wit_component/wasm_wit_component.dart';

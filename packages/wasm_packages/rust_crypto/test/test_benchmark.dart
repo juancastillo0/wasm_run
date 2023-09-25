@@ -4,7 +4,7 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:pointycastle/export.dart' as pointycastle;
-import 'package:rust_crypto/src/api.dart';
+import 'package:rust_crypto/src/rust_crypto_wit.gen.dart';
 import 'package:wasm_wit_component/wasm_wit_component.dart';
 
 // import 'package:webcrypto/webcrypto.dart' as webcrypto;

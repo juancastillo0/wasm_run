@@ -1,13 +1,16 @@
-/// Support for doing something awesome.
+/// Cryptography library for Dart and Flutter. Uses RustCrypto WASM module
 ///
-/// More dartdocs go here.
+/// - hashes/digests: sha1, sha2, blake3, md5, crc32
+/// - hmac
+/// - argon2
+/// - aes-gcm-siv
 library;
 
-import 'package:rust_crypto/src/api.dart';
+import 'package:rust_crypto/src/rust_crypto_wit.gen.dart';
 import 'package:wasm_run/load_module.dart';
 import 'package:wasm_wit_component/wasm_wit_component.dart';
 
-export 'src/api.dart';
+export 'src/rust_crypto_wit.gen.dart';
 export 'package:wasm_run/wasm_run.dart';
 
 const _isWeb = identical(0, 0.0);
