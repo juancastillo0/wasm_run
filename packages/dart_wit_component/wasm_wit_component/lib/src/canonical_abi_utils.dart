@@ -23,7 +23,7 @@ const LIST_GROWABLE =
 List<T> singleList<T>(T value) => List.filled(1, value, growable: false);
 
 // ### Context
-
+// TODO(git): CallContext
 class Context {
   final CanonicalOptions opts;
 
@@ -39,4 +39,17 @@ class Context {
   int borrow_count = 0;
 
   Context(this.opts, this.inst);
+
+  void track_owning_lend(Handle lending_handle) {
+    assert(lending_handle.own);
+    lending_handle.lend_count += 1;
+    lenders.add(lending_handle);
+  }
+
+  void exit_call() {
+    trap_if(borrow_count != 0);
+    for (final h in lenders) {
+      h.lend_count -= 1;
+    }
+  }
 }

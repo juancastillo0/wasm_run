@@ -2,22 +2,204 @@
 
 // ignore_for_file: require_trailing_commas, unnecessary_raw_strings, unnecessary_non_null_assertion
 
+import 'dart:async';
 // ignore: unused_import
 import 'dart:typed_data';
 
 import 'package:wasm_wit_component/wasm_wit_component.dart';
 
-typedef T9 = List<String>;
-typedef T8 = Result<void, void>;
-typedef T6 = Result<String, void>;
-typedef T4 = Option<int /*U32*/ >;
-typedef T3 = String;
-typedef T2 = (
-  int /*U32*/,
-  BigInt /*U64*/,
-);
-typedef T10 = T9;
-typedef T1 = int /*U32*/;
+/// values of this type will be one of the specified cases
+sealed class HumanTypesInterface implements ToJsonSerializable {
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
+  factory HumanTypesInterface.fromJson(Object? json_) {
+    Object? json = json_;
+    if (json is Map) {
+      final MapEntry(:key, :value) =
+          json.entries.firstWhere((e) => e.key != 'runtimeType');
+      json = (
+        key is int ? key : _spec.cases.indexWhere((c) => c.label == key),
+        value,
+      );
+    }
+    return switch (json) {
+      (0, null) || [0, null] => const HumanTypesInterfaceBaby(),
+      (1, final value) ||
+      [1, final value] =>
+        HumanTypesInterfaceChild(value! as int),
+      (2, null) || [2, null] => const HumanTypesInterfaceAdult(),
+      _ => throw Exception('Invalid JSON $json_'),
+    };
+  }
+  const factory HumanTypesInterface.baby() = HumanTypesInterfaceBaby;
+  const factory HumanTypesInterface.child(int /*U32*/ value) =
+      HumanTypesInterfaceChild;
+  const factory HumanTypesInterface.adult() = HumanTypesInterfaceAdult;
+  @override
+  Map<String, Object?> toJson();
+
+  /// Returns this as a WASM canonical abi value.
+  (int, Object?) toWasm();
+  static const _spec =
+      Variant([Case('baby', null), Case('child', U32()), Case('adult', null)]);
+}
+
+class HumanTypesInterfaceBaby implements HumanTypesInterface {
+  const HumanTypesInterfaceBaby();
+  @override
+  Map<String, Object?> toJson() =>
+      {'runtimeType': 'HumanTypesInterfaceBaby', 'baby': null};
+
+  /// Returns this as a WASM canonical abi value.
+  @override
+  (int, Object?) toWasm() => (0, null);
+  @override
+  String toString() => 'HumanTypesInterfaceBaby()';
+  @override
+  bool operator ==(Object other) => other is HumanTypesInterfaceBaby;
+  @override
+  int get hashCode => (HumanTypesInterfaceBaby).hashCode;
+}
+
+/// type payload
+class HumanTypesInterfaceChild implements HumanTypesInterface {
+  final int /*U32*/ value;
+
+  /// type payload
+  const HumanTypesInterfaceChild(this.value);
+  @override
+  Map<String, Object?> toJson() =>
+      {'runtimeType': 'HumanTypesInterfaceChild', 'child': value};
+
+  /// Returns this as a WASM canonical abi value.
+  @override
+  (int, Object?) toWasm() => (1, value);
+  @override
+  String toString() => 'HumanTypesInterfaceChild($value)';
+  @override
+  bool operator ==(Object other) =>
+      other is HumanTypesInterfaceChild &&
+      const ObjectComparator().areEqual(other.value, value);
+  @override
+  int get hashCode => const ObjectComparator().hashValue(value);
+}
+
+class HumanTypesInterfaceAdult implements HumanTypesInterface {
+  const HumanTypesInterfaceAdult();
+  @override
+  Map<String, Object?> toJson() =>
+      {'runtimeType': 'HumanTypesInterfaceAdult', 'adult': null};
+
+  /// Returns this as a WASM canonical abi value.
+  @override
+  (int, Object?) toWasm() => (2, null);
+  @override
+  String toString() => 'HumanTypesInterfaceAdult()';
+  @override
+  bool operator ==(Object other) => other is HumanTypesInterfaceAdult;
+  @override
+  int get hashCode => (HumanTypesInterfaceAdult).hashCode;
+}
+
+/// similar to `variant`, but no type payloads
+enum ErrnoTypesInterface implements ToJsonSerializable {
+  tooBig,
+  tooSmall,
+  tooFast,
+  tooSlow;
+
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
+  factory ErrnoTypesInterface.fromJson(Object? json) {
+    return ToJsonSerializable.enumFromJson(json, values, _spec);
+  }
+  @override
+  Map<String, Object?> toJson() =>
+      {'runtimeType': 'ErrnoTypesInterface', _spec.labels[index]: null};
+
+  /// Returns this as a WASM canonical abi value.
+  int toWasm() => index;
+  static const _spec =
+      EnumType(['too-big', 'too-small', 'too-fast', 'too-slow']);
+}
+
+/// similar to `variant`, but doesn't require naming cases and all variants
+/// have a type payload -- note that this is not a C union, it still has a
+/// discriminant
+sealed class Input implements ToJsonSerializable {
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
+  factory Input.fromJson(Object? json_) {
+    Object? json = json_;
+    if (json is Map) {
+      final rt = json['runtimeType'];
+      if (rt is String) {
+        json = (const ['InputBigIntU64', 'InputString'].indexOf(rt), json);
+      } else {
+        final MapEntry(:key, :value) = json.entries.first;
+        json = (key is int ? key : int.parse(key! as String), value);
+      }
+    }
+    return switch (json) {
+      (0, final value) ||
+      [0, final value] =>
+        InputBigIntU64(bigIntFromJson(value)),
+      (1, final value) ||
+      [1, final value] =>
+        InputString(value is String ? value : (value! as ParsedString).value),
+      _ => throw Exception('Invalid JSON $json_'),
+    };
+  }
+  const factory Input.bigIntU64(BigInt /*U64*/ value) = InputBigIntU64;
+  const factory Input.string(String value) = InputString;
+  @override
+  Map<String, Object?> toJson();
+
+  /// Returns this as a WASM canonical abi value.
+  static (int, Object?) toWasm(Input value) => switch (value) {
+        InputBigIntU64() => value.toWasm(),
+        InputString() => value.toWasm(),
+      };
+// ignore: unused_field
+  static const _spec = Union([U64(), StringType()]);
+}
+
+class InputBigIntU64 implements Input {
+  final BigInt /*U64*/ value;
+  const InputBigIntU64(this.value);
+  @override
+  Map<String, Object?> toJson() =>
+      {'runtimeType': 'InputBigIntU64', '0': value.toString()};
+
+  /// Returns this as a WASM canonical abi value.
+  (int, Object?) toWasm() => (0, value);
+  @override
+  String toString() => 'InputBigIntU64($value)';
+  @override
+  bool operator ==(Object other) =>
+      other is InputBigIntU64 &&
+      const ObjectComparator().areEqual(other.value, value);
+  @override
+  int get hashCode => const ObjectComparator().hashValue(value);
+}
+
+class InputString implements Input {
+  final String value;
+  const InputString(this.value);
+  @override
+  Map<String, Object?> toJson() => {'runtimeType': 'InputString', '1': value};
+
+  /// Returns this as a WASM canonical abi value.
+  (int, Object?) toWasm() => (1, value);
+  @override
+  String toString() => 'InputString($value)';
+  @override
+  bool operator ==(Object other) =>
+      other is InputString &&
+      const ObjectComparator().areEqual(other.value, value);
+  @override
+  int get hashCode => const ObjectComparator().hashValue(value);
+}
 
 /// a bitflags type
 class Permissions implements ToJsonSerializable {
@@ -50,8 +232,6 @@ class Permissions implements ToJsonSerializable {
     final flagsBits = FlagsBits.fromJson(json, flagsKeys: _spec.labels);
     return Permissions(flagsBits);
   }
-
-  /// Returns this as a serializable JSON value.
   @override
   Map<String, Object?> toJson() =>
       flagsBits.toJson()..['runtimeType'] = 'Permissions';
@@ -186,8 +366,6 @@ class ManyFlags implements ToJsonSerializable {
     final flagsBits = FlagsBits.fromJson(json, flagsKeys: _spec.labels);
     return ManyFlags(flagsBits);
   }
-
-  /// Returns this as a serializable JSON value.
   @override
   Map<String, Object?> toJson() =>
       flagsBits.toJson()..['runtimeType'] = 'ManyFlags';
@@ -354,219 +532,13 @@ class ManyFlags implements ToJsonSerializable {
   ]);
 }
 
-/// similar to `variant`, but doesn't require naming cases and all variants
-/// have a type payload -- note that this is not a C union, it still has a
-/// discriminant
-sealed class Input implements ToJsonSerializable {
-  /// Returns a new instance from a JSON value.
-  /// May throw if the value does not have the expected structure.
-  factory Input.fromJson(Object? json_) {
-    Object? json = json_;
-    if (json is Map) {
-      final rt = json['runtimeType'];
-      if (rt is String) {
-        json = (const ['InputBigIntU64', 'InputString'].indexOf(rt), json);
-      } else {
-        final MapEntry(:key, :value) = json.entries.first;
-        json = (key is int ? key : int.parse(key! as String), value);
-      }
-    }
-    return switch (json) {
-      (0, final value) ||
-      [0, final value] =>
-        InputBigIntU64(bigIntFromJson(value)),
-      (1, final value) ||
-      [1, final value] =>
-        InputString(value is String ? value : (value! as ParsedString).value),
-      _ => throw Exception('Invalid JSON $json_'),
-    };
-  }
-  const factory Input.bigIntU64(BigInt /*U64*/ value) = InputBigIntU64;
-  const factory Input.string(String value) = InputString;
-
-  /// Returns this as a serializable JSON value.
-  @override
-  Map<String, Object?> toJson();
-
-  /// Returns this as a WASM canonical abi value.
-  static (int, Object?) toWasm(Input value) => switch (value) {
-        InputBigIntU64() => value.toWasm(),
-        InputString() => value.toWasm(),
-      };
-// ignore: unused_field
-  static const _spec = Union([U64(), StringType()]);
-}
-
-class InputBigIntU64 implements Input {
-  final BigInt /*U64*/ value;
-  const InputBigIntU64(this.value);
-
-  /// Returns this as a serializable JSON value.
-  @override
-  Map<String, Object?> toJson() =>
-      {'runtimeType': 'InputBigIntU64', '0': value.toString()};
-
-  /// Returns this as a WASM canonical abi value.
-  (int, Object?) toWasm() => (0, value);
-  @override
-  String toString() => 'InputBigIntU64($value)';
-  @override
-  bool operator ==(Object other) =>
-      other is InputBigIntU64 &&
-      const ObjectComparator().areEqual(other.value, value);
-  @override
-  int get hashCode => const ObjectComparator().hashValue(value);
-}
-
-class InputString implements Input {
-  final String value;
-  const InputString(this.value);
-
-  /// Returns this as a serializable JSON value.
-  @override
-  Map<String, Object?> toJson() => {'runtimeType': 'InputString', '1': value};
-
-  /// Returns this as a WASM canonical abi value.
-  (int, Object?) toWasm() => (1, value);
-  @override
-  String toString() => 'InputString($value)';
-  @override
-  bool operator ==(Object other) =>
-      other is InputString &&
-      const ObjectComparator().areEqual(other.value, value);
-  @override
-  int get hashCode => const ObjectComparator().hashValue(value);
-}
-
-/// values of this type will be one of the specified cases
-sealed class HumanTypesInterface implements ToJsonSerializable {
-  /// Returns a new instance from a JSON value.
-  /// May throw if the value does not have the expected structure.
-  factory HumanTypesInterface.fromJson(Object? json_) {
-    Object? json = json_;
-    if (json is Map) {
-      final MapEntry(:key, :value) =
-          json.entries.firstWhere((e) => e.key != 'runtimeType');
-      json = (
-        key is int ? key : _spec.cases.indexWhere((c) => c.label == key),
-        value,
-      );
-    }
-    return switch (json) {
-      (0, null) || [0, null] => const HumanTypesInterfaceBaby(),
-      (1, final value) ||
-      [1, final value] =>
-        HumanTypesInterfaceChild(value! as int),
-      (2, null) || [2, null] => const HumanTypesInterfaceAdult(),
-      _ => throw Exception('Invalid JSON $json_'),
-    };
-  }
-  const factory HumanTypesInterface.baby() = HumanTypesInterfaceBaby;
-  const factory HumanTypesInterface.child(int /*U32*/ value) =
-      HumanTypesInterfaceChild;
-  const factory HumanTypesInterface.adult() = HumanTypesInterfaceAdult;
-
-  /// Returns this as a serializable JSON value.
-  @override
-  Map<String, Object?> toJson();
-
-  /// Returns this as a WASM canonical abi value.
-  (int, Object?) toWasm();
-  static const _spec =
-      Variant([Case('baby', null), Case('child', U32()), Case('adult', null)]);
-}
-
-class HumanTypesInterfaceBaby implements HumanTypesInterface {
-  const HumanTypesInterfaceBaby();
-
-  /// Returns this as a serializable JSON value.
-  @override
-  Map<String, Object?> toJson() =>
-      {'runtimeType': 'HumanTypesInterfaceBaby', 'baby': null};
-
-  /// Returns this as a WASM canonical abi value.
-  @override
-  (int, Object?) toWasm() => (0, null);
-  @override
-  String toString() => 'HumanTypesInterfaceBaby()';
-  @override
-  bool operator ==(Object other) => other is HumanTypesInterfaceBaby;
-  @override
-  int get hashCode => (HumanTypesInterfaceBaby).hashCode;
-}
-
-/// type payload
-class HumanTypesInterfaceChild implements HumanTypesInterface {
-  final int /*U32*/ value;
-
-  /// type payload
-  const HumanTypesInterfaceChild(this.value);
-
-  /// Returns this as a serializable JSON value.
-  @override
-  Map<String, Object?> toJson() =>
-      {'runtimeType': 'HumanTypesInterfaceChild', 'child': value};
-
-  /// Returns this as a WASM canonical abi value.
-  @override
-  (int, Object?) toWasm() => (1, value);
-  @override
-  String toString() => 'HumanTypesInterfaceChild($value)';
-  @override
-  bool operator ==(Object other) =>
-      other is HumanTypesInterfaceChild &&
-      const ObjectComparator().areEqual(other.value, value);
-  @override
-  int get hashCode => const ObjectComparator().hashValue(value);
-}
-
-class HumanTypesInterfaceAdult implements HumanTypesInterface {
-  const HumanTypesInterfaceAdult();
-
-  /// Returns this as a serializable JSON value.
-  @override
-  Map<String, Object?> toJson() =>
-      {'runtimeType': 'HumanTypesInterfaceAdult', 'adult': null};
-
-  /// Returns this as a WASM canonical abi value.
-  @override
-  (int, Object?) toWasm() => (2, null);
-  @override
-  String toString() => 'HumanTypesInterfaceAdult()';
-  @override
-  bool operator ==(Object other) => other is HumanTypesInterfaceAdult;
-  @override
-  int get hashCode => (HumanTypesInterfaceAdult).hashCode;
-}
-
-/// similar to `variant`, but no type payloads
-enum ErrnoTypesInterface implements ToJsonSerializable {
-  tooBig,
-  tooSmall,
-  tooFast,
-  tooSlow;
-
-  /// Returns a new instance from a JSON value.
-  /// May throw if the value does not have the expected structure.
-  factory ErrnoTypesInterface.fromJson(Object? json) {
-    return ToJsonSerializable.enumFromJson(json, values, _spec);
-  }
-
-  /// Returns this as a serializable JSON value.
-  @override
-  Map<String, Object?> toJson() =>
-      {'runtimeType': 'ErrnoTypesInterface', _spec.labels[index]: null};
-
-  /// Returns this as a WASM canonical abi value.
-  int toWasm() => index;
-  static const _spec =
-      EnumType(['too-big', 'too-small', 'too-fast', 'too-slow']);
-}
-
-typedef T7 = Result<String /*Char*/, ErrnoTypesInterface>;
-
-/// no "ok" type
-typedef T5TypesInterface = Result<void, ErrnoTypesInterface>;
+typedef T1 = int /*U32*/;
+typedef T2 = (
+  int /*U32*/,
+  BigInt /*U64*/,
+);
+typedef T3 = String;
+typedef T4 = Option<int /*U32*/ >;
 
 /// "package of named fields"
 class R implements ToJsonSerializable {
@@ -676,8 +648,6 @@ class R implements ToJsonSerializable {
       _ => throw Exception('Invalid JSON $json_')
     };
   }
-
-  /// Returns this as a serializable JSON value.
   @override
   Map<String, Object?> toJson() => {
         'runtimeType': 'R',
@@ -796,6 +766,155 @@ class R implements ToJsonSerializable {
   ]);
 }
 
+/// no "ok" type
+typedef T5TypesInterface = Result<void, ErrnoTypesInterface>;
+typedef T6 = Result<String, void>;
+typedef T7 = Result<String /*Char*/, ErrnoTypesInterface>;
+typedef T8 = Result<void, void>;
+typedef T9 = List<String>;
+typedef T10 = T9;
+
+class RoundTripNumbersData implements ToJsonSerializable {
+  final int /*U8*/ un8;
+  final int /*U16*/ un16;
+  final int /*U32*/ un32;
+  final BigInt /*U64*/ un64;
+  final int /*S8*/ si8;
+  final int /*S16*/ si16;
+  final int /*S32*/ si32;
+  final BigInt /*S64*/ si64;
+  final double /*F32*/ f32;
+  final double /*F64*/ f64;
+  const RoundTripNumbersData({
+    required this.un8,
+    required this.un16,
+    required this.un32,
+    required this.un64,
+    required this.si8,
+    required this.si16,
+    required this.si32,
+    required this.si64,
+    required this.f32,
+    required this.f64,
+  });
+
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
+  factory RoundTripNumbersData.fromJson(Object? json_) {
+    final json = json_ is Map
+        ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
+        : json_;
+    return switch (json) {
+      [
+        final un8,
+        final un16,
+        final un32,
+        final un64,
+        final si8,
+        final si16,
+        final si32,
+        final si64,
+        final f32,
+        final f64
+      ] ||
+      (
+        final un8,
+        final un16,
+        final un32,
+        final un64,
+        final si8,
+        final si16,
+        final si32,
+        final si64,
+        final f32,
+        final f64
+      ) =>
+        RoundTripNumbersData(
+          un8: un8! as int,
+          un16: un16! as int,
+          un32: un32! as int,
+          un64: bigIntFromJson(un64),
+          si8: si8! as int,
+          si16: si16! as int,
+          si32: si32! as int,
+          si64: bigIntFromJson(si64),
+          f32: f32! as double,
+          f64: f64! as double,
+        ),
+      _ => throw Exception('Invalid JSON $json_')
+    };
+  }
+  @override
+  Map<String, Object?> toJson() => {
+        'runtimeType': 'RoundTripNumbersData',
+        'un8': un8,
+        'un16': un16,
+        'un32': un32,
+        'un64': un64.toString(),
+        'si8': si8,
+        'si16': si16,
+        'si32': si32,
+        'si64': si64.toString(),
+        'f32': f32,
+        'f64': f64,
+      };
+
+  /// Returns this as a WASM canonical abi value.
+  List<Object?> toWasm() =>
+      [un8, un16, un32, un64, si8, si16, si32, si64, f32, f64];
+  @override
+  String toString() =>
+      'RoundTripNumbersData${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
+
+  /// Returns a new instance by overriding the values passed as arguments
+  RoundTripNumbersData copyWith({
+    int /*U8*/ ? un8,
+    int /*U16*/ ? un16,
+    int /*U32*/ ? un32,
+    BigInt /*U64*/ ? un64,
+    int /*S8*/ ? si8,
+    int /*S16*/ ? si16,
+    int /*S32*/ ? si32,
+    BigInt /*S64*/ ? si64,
+    double /*F32*/ ? f32,
+    double /*F64*/ ? f64,
+  }) =>
+      RoundTripNumbersData(
+          un8: un8 ?? this.un8,
+          un16: un16 ?? this.un16,
+          un32: un32 ?? this.un32,
+          un64: un64 ?? this.un64,
+          si8: si8 ?? this.si8,
+          si16: si16 ?? this.si16,
+          si32: si32 ?? this.si32,
+          si64: si64 ?? this.si64,
+          f32: f32 ?? this.f32,
+          f64: f64 ?? this.f64);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is RoundTripNumbersData &&
+          const ObjectComparator().arePropsEqual(_props, other._props);
+  @override
+  int get hashCode => const ObjectComparator().hashProps(_props);
+
+  // ignore: unused_field
+  List<Object?> get _props =>
+      [un8, un16, un32, un64, si8, si16, si32, si64, f32, f64];
+  static const _spec = RecordType([
+    (label: 'un8', t: U8()),
+    (label: 'un16', t: U16()),
+    (label: 'un32', t: U32()),
+    (label: 'un64', t: U64()),
+    (label: 'si8', t: S8()),
+    (label: 'si16', t: S16()),
+    (label: 'si32', t: S32()),
+    (label: 'si64', t: S64()),
+    (label: 'f32', t: Float32()),
+    (label: 'f64', t: Float64())
+  ]);
+}
+
 class RoundTripNumbersListData implements ToJsonSerializable {
   final Uint8List un8;
   final Uint16List un16;
@@ -905,8 +1024,6 @@ class RoundTripNumbersListData implements ToJsonSerializable {
       _ => throw Exception('Invalid JSON $json_')
     };
   }
-
-  /// Returns this as a serializable JSON value.
   @override
   Map<String, Object?> toJson() => {
         'runtimeType': 'RoundTripNumbersListData',
@@ -1018,149 +1135,6 @@ class RoundTripNumbersListData implements ToJsonSerializable {
   ]);
 }
 
-class RoundTripNumbersData implements ToJsonSerializable {
-  final int /*U8*/ un8;
-  final int /*U16*/ un16;
-  final int /*U32*/ un32;
-  final BigInt /*U64*/ un64;
-  final int /*S8*/ si8;
-  final int /*S16*/ si16;
-  final int /*S32*/ si32;
-  final BigInt /*S64*/ si64;
-  final double /*F32*/ f32;
-  final double /*F64*/ f64;
-  const RoundTripNumbersData({
-    required this.un8,
-    required this.un16,
-    required this.un32,
-    required this.un64,
-    required this.si8,
-    required this.si16,
-    required this.si32,
-    required this.si64,
-    required this.f32,
-    required this.f64,
-  });
-
-  /// Returns a new instance from a JSON value.
-  /// May throw if the value does not have the expected structure.
-  factory RoundTripNumbersData.fromJson(Object? json_) {
-    final json = json_ is Map
-        ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
-        : json_;
-    return switch (json) {
-      [
-        final un8,
-        final un16,
-        final un32,
-        final un64,
-        final si8,
-        final si16,
-        final si32,
-        final si64,
-        final f32,
-        final f64
-      ] ||
-      (
-        final un8,
-        final un16,
-        final un32,
-        final un64,
-        final si8,
-        final si16,
-        final si32,
-        final si64,
-        final f32,
-        final f64
-      ) =>
-        RoundTripNumbersData(
-          un8: un8! as int,
-          un16: un16! as int,
-          un32: un32! as int,
-          un64: bigIntFromJson(un64),
-          si8: si8! as int,
-          si16: si16! as int,
-          si32: si32! as int,
-          si64: bigIntFromJson(si64),
-          f32: f32! as double,
-          f64: f64! as double,
-        ),
-      _ => throw Exception('Invalid JSON $json_')
-    };
-  }
-
-  /// Returns this as a serializable JSON value.
-  @override
-  Map<String, Object?> toJson() => {
-        'runtimeType': 'RoundTripNumbersData',
-        'un8': un8,
-        'un16': un16,
-        'un32': un32,
-        'un64': un64.toString(),
-        'si8': si8,
-        'si16': si16,
-        'si32': si32,
-        'si64': si64.toString(),
-        'f32': f32,
-        'f64': f64,
-      };
-
-  /// Returns this as a WASM canonical abi value.
-  List<Object?> toWasm() =>
-      [un8, un16, un32, un64, si8, si16, si32, si64, f32, f64];
-  @override
-  String toString() =>
-      'RoundTripNumbersData${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
-
-  /// Returns a new instance by overriding the values passed as arguments
-  RoundTripNumbersData copyWith({
-    int /*U8*/ ? un8,
-    int /*U16*/ ? un16,
-    int /*U32*/ ? un32,
-    BigInt /*U64*/ ? un64,
-    int /*S8*/ ? si8,
-    int /*S16*/ ? si16,
-    int /*S32*/ ? si32,
-    BigInt /*S64*/ ? si64,
-    double /*F32*/ ? f32,
-    double /*F64*/ ? f64,
-  }) =>
-      RoundTripNumbersData(
-          un8: un8 ?? this.un8,
-          un16: un16 ?? this.un16,
-          un32: un32 ?? this.un32,
-          un64: un64 ?? this.un64,
-          si8: si8 ?? this.si8,
-          si16: si16 ?? this.si16,
-          si32: si32 ?? this.si32,
-          si64: si64 ?? this.si64,
-          f32: f32 ?? this.f32,
-          f64: f64 ?? this.f64);
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is RoundTripNumbersData &&
-          const ObjectComparator().arePropsEqual(_props, other._props);
-  @override
-  int get hashCode => const ObjectComparator().hashProps(_props);
-
-  // ignore: unused_field
-  List<Object?> get _props =>
-      [un8, un16, un32, un64, si8, si16, si32, si64, f32, f64];
-  static const _spec = RecordType([
-    (label: 'un8', t: U8()),
-    (label: 'un16', t: U16()),
-    (label: 'un32', t: U32()),
-    (label: 'un64', t: U64()),
-    (label: 'si8', t: S8()),
-    (label: 'si16', t: S16()),
-    (label: 'si32', t: S32()),
-    (label: 'si64', t: S64()),
-    (label: 'f32', t: Float32()),
-    (label: 'f64', t: Float64())
-  ]);
-}
-
 typedef ErrnoApiImports = ErrnoTypesInterface;
 
 /// Same name as the type in `types-interface`, but this is a different type
@@ -1224,8 +1198,6 @@ sealed class HumanApiImports implements ToJsonSerializable {
         Option<String>?,
         (BigInt /*S64*/,),
       ) value) = HumanApiImportsAdult;
-
-  /// Returns this as a serializable JSON value.
   @override
   Map<String, Object?> toJson();
 
@@ -1246,8 +1218,6 @@ sealed class HumanApiImports implements ToJsonSerializable {
 
 class HumanApiImportsBaby implements HumanApiImports {
   const HumanApiImportsBaby();
-
-  /// Returns this as a serializable JSON value.
   @override
   Map<String, Object?> toJson() =>
       {'runtimeType': 'HumanApiImportsBaby', 'baby': null};
@@ -1266,8 +1236,6 @@ class HumanApiImportsBaby implements HumanApiImports {
 class HumanApiImportsChild implements HumanApiImports {
   final BigInt /*U64*/ value;
   const HumanApiImportsChild(this.value);
-
-  /// Returns this as a serializable JSON value.
   @override
   Map<String, Object?> toJson() =>
       {'runtimeType': 'HumanApiImportsChild', 'child': value.toString()};
@@ -1292,8 +1260,6 @@ class HumanApiImportsAdult implements HumanApiImports {
     (BigInt /*S64*/,),
   ) value;
   const HumanApiImportsAdult(this.value);
-
-  /// Returns this as a serializable JSON value.
   @override
   Map<String, Object?> toJson() => {
         'runtimeType': 'HumanApiImportsAdult',
@@ -1365,8 +1331,6 @@ class ErrnoApi implements ToJsonSerializable {
       _ => throw Exception('Invalid JSON $json_')
     };
   }
-
-  /// Returns this as a serializable JSON value.
   @override
   Map<String, Object?> toJson() => {
         'runtimeType': 'ErrnoApi',
@@ -1421,6 +1385,67 @@ class ErrnoApi implements ToJsonSerializable {
 
 /// Comment for t5 in api
 typedef T5Api = Result<void, ErrnoApi?>;
+
+class R1 implements ToJsonSerializable {
+  final int _rep;
+  final TypesExampleWorld _world;
+
+  R1._(this._rep, this._world) {
+    _world._r1Finalizer.attach(this, _rep);
+  }
+
+  factory R1.fromJson(Object? json) {
+    return R1._(json! as int, TypesExampleWorld.currentZoneWorld()!);
+  }
+
+  @override
+  Object? toJson() => _rep;
+
+  int toWasm() => _rep;
+
+  /// constructor for r1
+  factory R1.constructorR1(
+    Api api, {
+    required String name,
+  }) {
+    return api.constructorR1(name: name);
+  }
+
+  /// Comment for f2
+  int /*U32*/ length() {
+    return _world.api.methodR1Length(self: this);
+  }
+
+  String name() {
+    return _world.api.methodR1Name(self: this);
+  }
+
+  static String staticDefault(
+    Api api,
+  ) {
+    return api.staticR1StaticDefault();
+  }
+
+  /// Comment for static f1
+  static String staticF1(
+    Api api, {
+    required R1 a,
+  }) {
+    return api.staticR1StaticF1(a: a);
+  }
+
+  static R1 merge(
+    Api api, {
+    required R1 lhs,
+    required R1 rhs,
+  }) {
+    return api.staticR1Merge(lhs: lhs, rhs: rhs);
+  }
+
+  static const _spec =
+      ResourceType('types-example-namespace:types-example-pkg/api#r1');
+}
+
 typedef T2Renamed = T2;
 
 enum LogLevel implements ToJsonSerializable {
@@ -1435,8 +1460,6 @@ enum LogLevel implements ToJsonSerializable {
   factory LogLevel.fromJson(Object? json) {
     return ToJsonSerializable.enumFromJson(json, values, _spec);
   }
-
-  /// Returns this as a serializable JSON value.
   @override
   Map<String, Object?> toJson() =>
       {'runtimeType': 'LogLevel', _spec.labels[index]: null};
@@ -1452,8 +1475,6 @@ class Empty implements ToJsonSerializable {
   /// Returns a new instance from a JSON value.
   /// May throw if the value does not have the expected structure.
   factory Empty.fromJson(Object? _) => const Empty();
-
-  /// Returns this as a serializable JSON value.
   @override
   Map<String, Object?> toJson() => {
         'runtimeType': 'Empty',
@@ -1529,13 +1550,14 @@ class TypesExampleWorldImports {
 }
 
 class RoundTripNumbers {
-  RoundTripNumbers(WasmLibrary library)
-      : _roundTripNumbers = library.getComponentFunction(
+  final TypesExampleWorld _world;
+  RoundTripNumbers(this._world)
+      : _roundTripNumbers = _world.library.getComponentFunction(
           'types-example-namespace:types-example-pkg/round-trip-numbers#round-trip-numbers',
           const FuncType([('data', RoundTripNumbersData._spec)],
               [('', RoundTripNumbersData._spec)]),
         )!,
-        _roundTripNumbersList = library.getComponentFunction(
+        _roundTripNumbersList = _world.library.getComponentFunction(
           'types-example-namespace:types-example-pkg/round-trip-numbers#round-trip-numbers-list',
           const FuncType([('data', RoundTripNumbersListData._spec)],
               [('', RoundTripNumbersListData._spec)]),
@@ -1546,7 +1568,7 @@ class RoundTripNumbers {
   }) {
     final results = _roundTripNumbers([data.toWasm()]);
     final result = results[0];
-    return RoundTripNumbersData.fromJson(result);
+    return _world.withContext(() => RoundTripNumbersData.fromJson(result));
   }
 
   final ListValue Function(ListValue) _roundTripNumbersList;
@@ -1555,20 +1577,21 @@ class RoundTripNumbers {
   }) {
     final results = _roundTripNumbersList([data.toWasm()]);
     final result = results[0];
-    return RoundTripNumbersListData.fromJson(result);
+    return _world.withContext(() => RoundTripNumbersListData.fromJson(result));
   }
 }
 
 class Api {
-  Api(WasmLibrary library)
-      : _f12 = library.getComponentFunction(
+  final TypesExampleWorld _world;
+  Api(this._world)
+      : _f12 = _world.library.getComponentFunction(
           'types-example-namespace:types-example-pkg/api#f12',
           const FuncType([], [
             ('val-one', Tuple([S32()])),
             ('val2', StringType())
           ]),
         )!,
-        _class_ = library.getComponentFunction(
+        _class_ = _world.library.getComponentFunction(
           'types-example-namespace:types-example-pkg/api#class',
           const FuncType([
             (
@@ -1580,7 +1603,7 @@ class Api {
             ('', Tuple([]))
           ]),
         )!,
-        _continue_ = library.getComponentFunction(
+        _continue_ = _world.library.getComponentFunction(
           'types-example-namespace:types-example-pkg/api#continue',
           const FuncType([
             ('abstract', OptionType(ResultType(null, ErrnoApi._spec))),
@@ -1589,7 +1612,7 @@ class Api {
             ('implements', OptionType(Tuple([])))
           ]),
         )!,
-        _recordFunc = library.getComponentFunction(
+        _recordFunc = _world.library.getComponentFunction(
           'types-example-namespace:types-example-pkg/api#record-func',
           const FuncType([
             ('r', R._spec),
@@ -1602,6 +1625,40 @@ class Api {
             ('p', Permissions._spec),
             ('i', Input._spec)
           ]),
+        )!,
+        _constructorR1 = _world.library.getComponentFunction(
+          'types-example-namespace:types-example-pkg/api#[constructor]r1',
+          const FuncType([('name', StringType())], [('', Own(R1._spec))]),
+        )!,
+        _methodR1Length = _world.library.getComponentFunction(
+          'types-example-namespace:types-example-pkg/api#[method]r1.length',
+          const FuncType([('self', Borrow(R1._spec))], [('', U32())]),
+        )!,
+        _methodR1Name = _world.library.getComponentFunction(
+          'types-example-namespace:types-example-pkg/api#[method]r1.name',
+          const FuncType([('self', Borrow(R1._spec))], [('', StringType())]),
+        )!,
+        _staticR1StaticDefault = _world.library.getComponentFunction(
+          'types-example-namespace:types-example-pkg/api#[static]r1.static-default',
+          const FuncType([], [('', StringType())]),
+        )!,
+        _staticR1StaticF1 = _world.library.getComponentFunction(
+          'types-example-namespace:types-example-pkg/api#[static]r1.static-f1',
+          const FuncType([('a', Own(R1._spec))], [('', StringType())]),
+        )!,
+        _staticR1Merge = _world.library.getComponentFunction(
+          'types-example-namespace:types-example-pkg/api#[static]r1.merge',
+          const FuncType([('lhs', Borrow(R1._spec)), ('rhs', Borrow(R1._spec))],
+              [('', Own(R1._spec))]),
+        )!,
+        _staticF1 = _world.library.getComponentFunction(
+          'types-example-namespace:types-example-pkg/api#static-f1',
+          const FuncType([('a', Own(R1._spec))], [('', StringType())]),
+        )!,
+        _merge = _world.library.getComponentFunction(
+          'types-example-namespace:types-example-pkg/api#merge',
+          const FuncType([('lhs', Borrow(R1._spec)), ('rhs', Borrow(R1._spec))],
+              [('', Own(R1._spec))]),
         )!;
   final ListValue Function(ListValue) _f12;
 
@@ -1610,18 +1667,18 @@ class Api {
     final results = _f12([]);
     final r0 = results[0];
     final r1 = results[1];
-    return (
-      valOne: (() {
-        final l = r0 is Map
-            ? List.generate(1, (i) => r0[i.toString()], growable: false)
-            : r0;
-        return switch (l) {
-          [final v0] || (final v0,) => (v0! as int,),
-          _ => throw Exception('Invalid JSON $r0')
-        };
-      })(),
-      val2: r1 is String ? r1 : (r1! as ParsedString).value,
-    );
+    return _world.withContext(() => (
+          valOne: (() {
+            final l = r0 is Map
+                ? List.generate(1, (i) => r0[i.toString()], growable: false)
+                : r0;
+            return switch (l) {
+              [final v0] || (final v0,) => (v0! as int,),
+              _ => throw Exception('Invalid JSON $r0')
+            };
+          })(),
+          val2: r1 is String ? r1 : (r1! as ParsedString).value,
+        ));
   }
 
   final ListValue Function(ListValue) _class_;
@@ -1655,7 +1712,8 @@ class Api {
       []
     ]);
     final r0 = results[0];
-    return (implements_: Option.fromJson(r0, (some) => ()).value,);
+    return _world.withContext(
+        () => (implements_: Option.fromJson(r0, (some) => ()).value,));
   }
 
   final ListValue Function(ListValue) _recordFunc;
@@ -1673,27 +1731,106 @@ class Api {
     final r1 = results[1];
     final r2 = results[2];
     final r3 = results[3];
-    return (
-      r: R.fromJson(r0),
-      e: ErrnoTypesInterface.fromJson(r1),
-      p: Permissions.fromJson(r2),
-      i: Input.fromJson(r3),
-    );
+    return _world.withContext(() => (
+          r: R.fromJson(r0),
+          e: ErrnoTypesInterface.fromJson(r1),
+          p: Permissions.fromJson(r2),
+          i: Input.fromJson(r3),
+        ));
+  }
+
+  final ListValue Function(ListValue) _constructorR1;
+
+  /// constructor for r1
+  R1 constructorR1({
+    required String name,
+  }) {
+    final results = _constructorR1([name]);
+    final result = results[0];
+    return _world.withContext(() => R1.fromJson(result));
+  }
+
+  final ListValue Function(ListValue) _methodR1Length;
+
+  /// Comment for f2
+  int /*U32*/ methodR1Length({
+    required R1 self,
+  }) {
+    final results = _methodR1Length([self.toWasm()]);
+    final result = results[0];
+    return result! as int;
+  }
+
+  final ListValue Function(ListValue) _methodR1Name;
+  String methodR1Name({
+    required R1 self,
+  }) {
+    final results = _methodR1Name([self.toWasm()]);
+    final result = results[0];
+    return result is String ? result : (result! as ParsedString).value;
+  }
+
+  final ListValue Function(ListValue) _staticR1StaticDefault;
+  String staticR1StaticDefault() {
+    final results = _staticR1StaticDefault([]);
+    final result = results[0];
+    return result is String ? result : (result! as ParsedString).value;
+  }
+
+  final ListValue Function(ListValue) _staticR1StaticF1;
+
+  /// Comment for static f1
+  String staticR1StaticF1({
+    required R1 a,
+  }) {
+    final results = _staticR1StaticF1([a.toWasm()]);
+    final result = results[0];
+    return result is String ? result : (result! as ParsedString).value;
+  }
+
+  final ListValue Function(ListValue) _staticR1Merge;
+  R1 staticR1Merge({
+    required R1 lhs,
+    required R1 rhs,
+  }) {
+    final results = _staticR1Merge([lhs.toWasm(), rhs.toWasm()]);
+    final result = results[0];
+    return _world.withContext(() => R1.fromJson(result));
+  }
+
+  final ListValue Function(ListValue) _staticF1;
+  String staticF1({
+    required R1 a,
+  }) {
+    final results = _staticF1([a.toWasm()]);
+    final result = results[0];
+    return result is String ? result : (result! as ParsedString).value;
+  }
+
+  final ListValue Function(ListValue) _merge;
+  R1 merge({
+    required R1 lhs,
+    required R1 rhs,
+  }) {
+    final results = _merge([lhs.toWasm(), rhs.toWasm()]);
+    final result = results[0];
+    return _world.withContext(() => R1.fromJson(result));
   }
 }
 
 class TypesExampleWorld {
   final TypesExampleWorldImports imports;
   final WasmLibrary library;
-  final RoundTripNumbers roundTripNumbers;
-  final Api api;
+  late final _r1Finalizer = Finalizer<int>(
+    (i) => canon_resource_drop(library.componentInstance, R1._spec, i),
+  );
+  late final RoundTripNumbers roundTripNumbers;
+  late final Api api;
 
   TypesExampleWorld({
     required this.imports,
     required this.library,
-  })  : roundTripNumbers = RoundTripNumbers(library),
-        api = Api(library),
-        _fF1 = library.getComponentFunction(
+  })  : _fF1 = library.getComponentFunction(
           'f-f1',
           const FuncType([('typedef', ListType(StringType()))],
               [('', ListType(StringType()))]),
@@ -1725,7 +1862,10 @@ class TypesExampleWorld {
           ], [
             ('', Tuple([OptionType(U8()), S8()]))
           ]),
-        )!;
+        )! {
+    roundTripNumbers = RoundTripNumbers(this);
+    api = Api(this);
+  }
 
   static Future<TypesExampleWorld> init(
     WasmInstanceBuilder builder, {
@@ -1872,6 +2012,7 @@ class TypesExampleWorld {
           'round-trip-numbers-list',
           lowered);
     }
+    builder.addImports(resourceImports(getLib, R1._spec));
     {
       const ft =
           FuncType([('message', StringType()), ('level', LogLevel._spec)], []);
@@ -1891,9 +2032,17 @@ class TypesExampleWorld {
     }
     final instance = await builder.build();
 
-    library = WasmLibrary(instance, int64Type: Int64TypeConfig.bigInt);
+    library = WasmLibrary(instance,
+        componentId: 'types-example-namespace:types-example-pkg/types-example',
+        int64Type: Int64TypeConfig.bigInt);
     return TypesExampleWorld(imports: imports, library: library);
   }
+
+  static final _zoneKey = Object();
+  late final _zoneValues = {_zoneKey: this};
+  static TypesExampleWorld? currentZoneWorld() =>
+      Zone.current[_zoneKey] as TypesExampleWorld?;
+  T withContext<T>(T Function() fn) => runZoned(fn, zoneValues: _zoneValues);
 
   final ListValue Function(ListValue) _fF1;
   T10 fF1({
@@ -1901,9 +2050,9 @@ class TypesExampleWorld {
   }) {
     final results = _fF1([typedef_]);
     final result = results[0];
-    return (result! as Iterable)
+    return withContext(() => (result! as Iterable)
         .map((e) => e is String ? e : (e! as ParsedString).value)
-        .toList();
+        .toList());
   }
 
   final ListValue Function(ListValue) _f1;
@@ -1922,10 +2071,10 @@ class TypesExampleWorld {
     ]);
     final r0 = results[0];
     final r1 = results[1];
-    return (
-      valP1: bigIntFromJson(r0),
-      val2: r1 is String ? r1 : (r1! as ParsedString).value,
-    );
+    return withContext(() => (
+          valP1: bigIntFromJson(r0),
+          val2: r1 is String ? r1 : (r1! as ParsedString).value,
+        ));
   }
 
   final ListValue Function(ListValue) _reNamed;
@@ -1944,18 +2093,18 @@ class TypesExampleWorld {
           : Option.fromValue(e).toWasm((some) => some.toWasm()))
     ]);
     final result = results[0];
-    return (() {
-      final l = result is Map
-          ? List.generate(2, (i) => result[i.toString()], growable: false)
-          : result;
-      return switch (l) {
-        [final v0, final v1] || (final v0, final v1) => (
-            v0! as int,
-            bigIntFromJson(v1),
-          ),
-        _ => throw Exception('Invalid JSON $result')
-      };
-    })();
+    return withContext(() => (() {
+          final l = result is Map
+              ? List.generate(2, (i) => result[i.toString()], growable: false)
+              : result;
+          return switch (l) {
+            [final v0, final v1] || (final v0, final v1) => (
+                v0! as int,
+                bigIntFromJson(v1),
+              ),
+            _ => throw Exception('Invalid JSON $result')
+          };
+        })());
   }
 
   final ListValue Function(ListValue) _reNamed2;
@@ -1971,17 +2120,17 @@ class TypesExampleWorld {
       e.toWasm()
     ]);
     final result = results[0];
-    return (() {
-      final l = result is Map
-          ? List.generate(2, (i) => result[i.toString()], growable: false)
-          : result;
-      return switch (l) {
-        [final v0, final v1] || (final v0, final v1) => (
-            Option.fromJson(v0, (some) => some! as int).value,
-            v1! as int,
-          ),
-        _ => throw Exception('Invalid JSON $result')
-      };
-    })();
+    return withContext(() => (() {
+          final l = result is Map
+              ? List.generate(2, (i) => result[i.toString()], growable: false)
+              : result;
+          return switch (l) {
+            [final v0, final v1] || (final v0, final v1) => (
+                Option.fromJson(v0, (some) => some! as int).value,
+                v1! as int,
+              ),
+            _ => throw Exception('Invalid JSON $result')
+          };
+        })());
   }
 }

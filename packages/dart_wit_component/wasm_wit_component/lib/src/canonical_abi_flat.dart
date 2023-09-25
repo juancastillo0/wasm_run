@@ -359,8 +359,8 @@ List<FlatValue> lower_flat(Context cx, Object? v, ValType t) {
       _lower_flat_record(cx, toRecordValue(v, fields), fields),
     final Variant t => _lower_flat_variant(cx, toVariantValue(v, t.cases), t),
     Flags(:final labels) => _lower_flat_flags(v! as FlagsValue, labels),
-    Own() => [FlatValue(FlatType.i32, lower_own(cx, v! as Handle, t_))],
-    Borrow() => [FlatValue(FlatType.i32, lower_borrow(cx, v! as Handle, t_))],
+    Own() => [FlatValue(FlatType.i32, lower_own(cx, v! as int, t_))],
+    Borrow() => [FlatValue(FlatType.i32, lower_borrow(cx, v! as int, t_))],
   };
 }
 // #

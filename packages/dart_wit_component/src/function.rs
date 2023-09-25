@@ -1,8 +1,13 @@
 use wit_parser::*;
 
-use crate::{generate::add_docs, strings::Normalize, types::Parsed};
+use crate::{
+    generate::add_docs,
+    strings::Normalize,
+    types::{function_resource, Parsed},
+};
 
 pub enum FuncKind {
+    Resource(TypeOwner),
     MethodCall,
     Method,
     Field,
@@ -142,10 +147,13 @@ impl Parsed<'_> {
     ) {
         let world_prefix = self.0.name_world_key(key);
         let interface_id = self.world_key_type_name(key);
+        let world_name = heck::AsPascalCase(&self.0.worlds.iter().next().unwrap().1.name);
         let name = heck::AsPascalCase(interface_id);
         add_docs(&mut s, &interface.docs);
         if is_export {
-            s.push_str(&format!("class {name} {{ {name}(WasmLibrary library)"));
+            s.push_str(&format!(
+                "class {name} {{ final {world_name}World _world; {name}(this._world)"
+            ));
             if interface.functions.is_empty() {
                 s.push_str(";");
             } else {
@@ -161,7 +169,7 @@ impl Parsed<'_> {
                             "getComponentFunction"
                         };
                         s.push_str(&format!(
-                            "_{} = library.{fn_name}('{world_prefix}#{id}', const {},)!",
+                            "_{} = _world.library.{fn_name}('{world_prefix}#{id}', const {},)!",
                             id.as_var(),
                             self.function_spec(f)
                         ));
@@ -173,7 +181,7 @@ impl Parsed<'_> {
             }
 
             interface.functions.iter().for_each(|(_id, f)| {
-                self.add_function(&mut s, f, FuncKind::MethodCall);
+                self.add_function(&mut s, f, FuncKind::MethodCall, false);
             });
             s.push_str("}");
         } else {
@@ -182,7 +190,7 @@ impl Parsed<'_> {
             }
             s.push_str(&format!("abstract class {name}Import {{",));
             interface.functions.iter().for_each(|(id, f)| {
-                self.add_function(&mut s, f, FuncKind::Method);
+                self.add_function(&mut s, f, FuncKind::Method, false);
                 if let Some(func_imports) = func_imports {
                     func_imports.push_str(&self.function_import(Some(key), id, f));
                 }
@@ -232,10 +240,19 @@ impl Parsed<'_> {
         }
     }
 
-    pub fn add_function(&self, mut s: &mut String, f: &Function, kind: FuncKind) {
+    pub fn add_function(&self, mut s: &mut String, f: &Function, kind: FuncKind, from_world: bool) {
+        let is_static = match f.kind {
+            FunctionKind::Static(_) | FunctionKind::Constructor(_) => true,
+            _ => false,
+        };
+        let is_resource = match kind {
+            FuncKind::Resource(_) => true,
+            _ => false,
+        };
         let mut params = f
             .params
             .iter()
+            .filter(|(name, _)| !is_resource || name != "self")
             .map(|(name, ty)| self.type_param(name, ty, false))
             .collect::<String>();
         if params.len() > 0 {
@@ -268,6 +285,81 @@ impl Parsed<'_> {
                 add_docs(&mut s, &f.docs);
                 s.push_str(&format!("{results} {name}({params});",))
             }
+            FuncKind::Resource(owner) => {
+                add_docs(&mut s, &f.docs);
+                let async_ = if self.2.async_worker { "async " } else { "" };
+                let static_ = if let (FunctionKind::Static(_), _)
+                | (FunctionKind::Constructor(_), true) =
+                    (&f.kind, self.2.async_worker)
+                {
+                    "static "
+                } else {
+                    ""
+                };
+
+                let owner_getter = match owner {
+                    TypeOwner::World(_) => {
+                        if is_static {
+                            "world.".to_string()
+                        } else {
+                            "_world.".to_string()
+                        }
+                    }
+                    TypeOwner::Interface(i) => {
+                        if is_static {
+                            format!("{}.", self.0.interfaces[i].name.as_ref().unwrap().as_var())
+                        } else {
+                            format!(
+                                "_world.{}.",
+                                self.0.interfaces[i].name.as_ref().unwrap().as_var()
+                            )
+                        }
+                    }
+                    TypeOwner::None => "".to_string(),
+                };
+                if is_static {
+                    let w_name = heck::AsPascalCase(&self.0.worlds.iter().next().unwrap().1.name);
+                    match owner {
+                        TypeOwner::Interface(i) => {
+                            let n = self.0.interfaces[i].name.as_ref().unwrap();
+                            params = format!("{} {}, {params}", n.as_type(), n.as_var());
+                        }
+                        _ => {
+                            params = format!("{w_name}World world, {params}");
+                        }
+                    }
+                }
+                if let (FunctionKind::Constructor(_), false) = (&f.kind, self.2.async_worker) {
+                    s.push_str(&format!("factory {results}.{name}({params}) {{"));
+                } else {
+                    let n = if let Some(r) = function_resource(&f.kind) {
+                        let ty_name =
+                            heck::AsPascalCase(self.0.types[*r].name.as_ref().unwrap()).to_string();
+                        let mut m = name.match_indices(&ty_name);
+                        (&name.as_str()[m.next().unwrap().0 + ty_name.len()..]).as_fn()
+                    } else {
+                        name.clone()
+                    };
+                    s.push_str(&format!("{static_}{results} {n}({params}) {async_}{{"));
+                }
+                {
+                    let args = f
+                        .params
+                        .iter()
+                        .map(|(name, _)| {
+                            let g = if !is_static && name == "self" {
+                                "this".to_string()
+                            } else {
+                                name.as_var()
+                            };
+                            format!("{}: {}", name.as_var(), g,)
+                        })
+                        .collect::<Vec<_>>()
+                        .join(", ");
+                    s.push_str(&format!("return {owner_getter}{name}({args});"));
+                }
+                s.push_str("}");
+            }
             FuncKind::MethodCall => {
                 // s.push_str(&format!("late final _{} = lookup('{}');", f.name, f.name));
                 if self.2.async_worker {
@@ -298,15 +390,28 @@ impl Parsed<'_> {
                         .map(|(name, ty)| self.type_to_wasm(&name.as_var(), ty))
                         .collect::<Vec<_>>()
                         .join(", ");
+                    let results_with_ctx = match &f.results {
+                        Results::Anon(Type::Id(_)) => true,
+                        Results::Named(p) => !p.is_empty(),
+                        _ => false,
+                    };
                     let ret = match &f.results {
                         Results::Anon(a) => {
                             if self.is_unit(&a) {
                                 "return ();".to_string()
                             } else {
-                                format!(
-                                    "final result = results[0];return {};",
-                                    self.type_from_json("result", a)
-                                )
+                                if results_with_ctx {
+                                    let parse_prefix = if from_world { "" } else { "_world." };
+                                    format!(
+                                        "final result = results[0];return {parse_prefix}withContext(() => {});",
+                                        self.type_from_json("result", a)
+                                    )
+                                } else {
+                                    format!(
+                                        "final result = results[0];return {};",
+                                        self.type_from_json("result", a)
+                                    )
+                                }
                             }
                         }
                         Results::Named(results) => {
@@ -328,8 +433,12 @@ impl Parsed<'_> {
                                     })
                                     .collect::<Vec<_>>()
                                     .join(", ");
-
-                                format!("{assign}return ({values},);")
+                                if results_with_ctx {
+                                    let parse_prefix = if from_world { "" } else { "_world." };
+                                    format!("{assign}return {parse_prefix}withContext(() => ({values},));")
+                                } else {
+                                    format!("{assign}return ({values},);")
+                                }
                             }
                         }
                     };

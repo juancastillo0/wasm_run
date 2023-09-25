@@ -1,7 +1,7 @@
 use crate::{
     function::FuncKind, strings::Normalize, types::*, Int64TypeConfig, WitGeneratorConfig,
 };
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use wit_parser::*;
 
 pub fn document_to_dart(
@@ -57,7 +57,8 @@ pub fn document_to_dart(
             }
         });
     }
-    resolve.types.iter().for_each(|(_id, ty)| {
+    resolve.types.iter().for_each(|(id, ty)| {
+        let docs = &ty.docs;
         if let (TypeDefKind::Type(ty), Some(name)) =
             (&ty.kind, p.type_def_to_name_definition(ty).as_ref())
         {
@@ -66,16 +67,18 @@ pub fn document_to_dart(
                 let ty = resolve.types.get(*ref_id).unwrap();
                 if let Some(ref_name) = p.type_def_to_name_definition(ty).as_ref() {
                     if ref_name != name {
+                        add_docs(&mut s, docs);
                         s.push_str(&format!("typedef {name} = {ref_name};"));
                     }
                 }
             } else {
                 let ref_name = p.type_to_str(ty);
+                add_docs(&mut s, docs);
                 s.push_str(&format!("typedef {name} = {ref_name};"));
             }
             return;
         }
-        let definition = p.type_def_to_definition(ty);
+        let definition = p.type_def_to_definition(&id, ty);
 
         if !definition.is_empty() {
             s.push_str(&definition);
@@ -85,8 +88,8 @@ pub fn document_to_dart(
 
     resolve.worlds.iter().for_each(|(_id, w)| {
         let w_name = heck::AsPascalCase(&w.name);
-
         let mut func_imports = String::new();
+        let mut world_resource_finalizer = String::new();
         // Imports Interfaces as Dart classes
         p.add_interfaces(
             &mut s,
@@ -94,6 +97,44 @@ pub fn document_to_dart(
             false,
             Some(&mut func_imports),
         );
+        let mut interfaces = HashSet::<InterfaceId>::new();
+        w.exports.iter().for_each(|(k, _v)| {
+            if let WorldKey::Interface(i) = k {
+                interfaces.insert(*i);
+            }
+        });
+        resolve
+            .types
+            .iter()
+            .for_each(|(__id, ty)| match (&ty.owner, &ty.kind) {
+                (TypeOwner::World(w_id), TypeDefKind::Resource) if _id == *w_id => {
+                    let resource_name = p.type_def_to_name_definition(ty).unwrap();
+                    let resource_name_var = resource_name.as_var();
+                    world_resource_finalizer.push_str(&format!(
+                        "late final _{resource_name_var}Finalizer = Finalizer<int>(
+                      (i) => canon_resource_drop(library.componentInstance, {resource_name}._spec, i),
+                    );"
+                    ));
+                    func_imports.push_str(&format!(
+                        "builder.addImports(resourceImports(getLib, {resource_name}._spec));"
+                    ));
+                }
+                (TypeOwner::Interface(i_id), TypeDefKind::Resource)
+                    if interfaces.contains(i_id) =>
+                {
+                    let resource_name = p.type_def_to_name_definition(ty).unwrap();
+                    let resource_name_var = resource_name.as_var();
+                    world_resource_finalizer.push_str(&format!(
+                        "late final _{resource_name_var}Finalizer = Finalizer<int>(
+                      (i) => canon_resource_drop(library.componentInstance, {resource_name}._spec, i),
+                    );"
+                    ));
+                    func_imports.push_str(&format!(
+                        "builder.addImports(resourceImports(getLib, {resource_name}._spec));"
+                    ));
+                }
+                _ => (),
+            });
         // World Imports
         s.push_str(&format!("class {w_name}WorldImports {{"));
         if w.imports.is_empty() {
@@ -118,7 +159,7 @@ pub fn document_to_dart(
                     WorldItem::Type(_type_id) => {}
                     WorldItem::Function(f) => {
                         constructor.push_str(&format!("required this.{id_name},"));
-                        p.add_function(&mut s, f, FuncKind::Field);
+                        p.add_function(&mut s, f, FuncKind::Field, false);
 
                         func_imports.push_str(&p.function_import(None, id, f));
                     }
@@ -143,17 +184,19 @@ pub fn document_to_dart(
         s.push_str(&format!(
             "class {w_name}World {{
             final {w_name}WorldImports imports;
-            final WasmLibrary library;",
+            final WasmLibrary library;
+            {world_resource_finalizer}",
         ));
         let mut constructor: Vec<String> = vec![];
+        let mut constructor_body: Vec<String> = vec![];
         let mut methods = String::new();
         w.exports.iter().for_each(|(key, i)| {
             let id = p.world_key_type_name(key);
             let id_name = id.as_var();
             match i {
                 WorldItem::Interface(_interface_id) => {
-                    constructor.push(format!("{id_name} = {}(library)", heck::AsPascalCase(id)));
-                    s.push_str(&format!("final {} {id_name};", heck::AsPascalCase(id),));
+                    constructor_body.push(format!("{id_name} = {}(this);", heck::AsPascalCase(id)));
+                    s.push_str(&format!("late final {} {id_name};", heck::AsPascalCase(id),));
                 }
                 WorldItem::Type(_type_id) => {}
                 WorldItem::Function(f) => {
@@ -166,7 +209,7 @@ pub fn document_to_dart(
                         "_{id_name} = library.{fn_name}('{id}', const {},)!",
                         p.function_spec(f)
                     ));
-                    p.add_function(&mut methods, f, FuncKind::MethodCall);
+                    p.add_function(&mut methods, f, FuncKind::MethodCall, true);
                 }
             };
         });
@@ -180,7 +223,15 @@ pub fn document_to_dart(
         if constructor.is_empty() {
             s.push_str(";");
         } else {
-            s.push_str(&format!(": {};", constructor.join(", ")));
+            if constructor_body.is_empty() {
+                s.push_str(&format!(": {};", constructor.join(", ")));
+            } else {
+                s.push_str(&format!(
+                    ": {} {{{}}}",
+                    constructor.join(", "),
+                    constructor_body.join("\n")
+                ));
+            }
         }
 
         let int64_type = match p.2.int64_type {
@@ -192,10 +243,12 @@ pub fn document_to_dart(
         let instantiate = if p.2.async_worker {
             worker_instantiation(int64_type)
         } else {
+            let package = resolve.packages.get(w.package.unwrap()).unwrap();
+            let component_id = format!("{}/{}", package.name, w.name);
             format!(
                 "final instance = await builder.build();
 
-library = WasmLibrary(instance, int64Type: {int64_type});"
+library = WasmLibrary(instance, componentId: '{component_id}', int64Type: {int64_type});"
             )
         };
 
@@ -211,6 +264,12 @@ library = WasmLibrary(instance, int64Type: {int64_type});"
                     {instantiate}
                     return {w_name}World(imports: imports, library: library);
                 }}
+
+                static final _zoneKey = Object();
+                late final _zoneValues = {{_zoneKey: this}};
+                static {w_name}World? currentZoneWorld() =>
+                    Zone.current[_zoneKey] as {w_name}World?;
+                T withContext<T>(T Function() fn) => runZoned(fn, zoneValues: _zoneValues);
 
                 {methods}
             ",
@@ -304,6 +363,7 @@ const HEADER: &str = "
 
 // ignore_for_file: require_trailing_commas, unnecessary_raw_strings, unnecessary_non_null_assertion
 
+import 'dart:async';
 // ignore: unused_import
 import 'dart:typed_data';
 

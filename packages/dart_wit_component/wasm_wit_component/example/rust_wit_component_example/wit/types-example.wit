@@ -140,6 +140,22 @@ interface api {
 
   /// Function with a record, enum, flags and union types
   record-func: func(r: r, e: errno-renamed, p: permissions, i: input) -> (r: r, e: errno-renamed, p: permissions, i: input)
+
+  resource r1 {
+    /// constructor for r1
+    constructor(name: string)
+    /// Comment for f2
+    length: func() -> u32
+    name: func() -> string
+
+    static-default: static func() -> string
+    /// Comment for static f1
+    static-f1: static func(a: r1) -> string
+    merge: static func(lhs: borrow<r1>, rhs: borrow<r1>) -> r1
+  }
+
+  static-f1: func(a: r1) -> string
+  merge: func(lhs: borrow<r1>, rhs: borrow<r1>) -> r1
 }
 
 use api-imports as imports

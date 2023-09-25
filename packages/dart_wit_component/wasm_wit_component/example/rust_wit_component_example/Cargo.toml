@@ -8,4 +8,4 @@ edition = "2021"
 crate-type = ['cdylib']
 
 [dependencies]
-wit-bindgen = { git = "https://github.com/bytecodealliance/wit-bindgen", version = "0.7.0", rev = "131746313de2f90d2688afbbc40c4a7ca309fe0d" }
+wit-bindgen = { git = "https://github.com/bytecodealliance/wit-bindgen", version = "0.10.0", rev = "e32a150f876c291784d9cead97c58fac97cf216c" }

@@ -632,5 +632,24 @@ class _TypesWorldTest {
       expect(result, data);
       expect(roundTripNumbersHostImpl.roundTripNumbersData[6], data);
     }
+
+    {
+      final api = world.api;
+      final r1 = R1.constructorR1(api, name: '1');
+
+      expect(r1.length(), 1);
+      expect(r1.name(), '1');
+
+      final def = R1.staticDefault(api);
+      expect(def, 'DEFAULT');
+
+      final rMerged = R1.merge(api, lhs: r1, rhs: r1);
+      expect(rMerged.length(), 2);
+      expect(rMerged.name(), '11');
+
+      final r2 = R1.constructorR1(api, name: '22');
+      expect(r2.length(), 2);
+      expect(r2.name(), '22');
+    }
   }
 }

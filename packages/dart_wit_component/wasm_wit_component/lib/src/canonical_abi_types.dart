@@ -348,10 +348,19 @@ class Flags extends DespecializedValType {
 /// specific component instance pointed to by impl with a particular function closure as the dtor.
 // @dataclass
 class ResourceType {
-  final ComponentInstance impl;
-  final void Function(int)? dtor;
+  // TODO: impl and dtor
+  // final ComponentInstance impl;
+  // final void Function(int)? dtor;
+  final String resourceId;
 
-  ResourceType(this.impl, this.dtor);
+  String get packageName =>
+      resourceId.substring(0, resourceId.lastIndexOf('/'));
+  String get componentInstance =>
+      resourceId.substring(0, resourceId.lastIndexOf('#'));
+  String get resourceName =>
+      resourceId.substring(resourceId.lastIndexOf('#') + 1);
+
+  const ResourceType(this.resourceId);
 }
 
 sealed class Resource extends DespecializedValType {

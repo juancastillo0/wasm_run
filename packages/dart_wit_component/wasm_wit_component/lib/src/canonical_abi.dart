@@ -5,7 +5,7 @@
 import 'dart:async' show Completer;
 import 'dart:typed_data' show ByteData, Endian, Uint8List;
 
-import 'package:wasm_run/wasm_run.dart' show i64;
+import 'package:wasm_run/wasm_run.dart' show WasmInstance, i64;
 import 'package:wasm_wit_component/src/canonical_abi_cache.dart';
 import 'package:wasm_wit_component/src/canonical_abi_flat.dart';
 import 'package:wasm_wit_component/src/canonical_abi_load_store.dart';
@@ -83,7 +83,14 @@ class CanonicalOptions {
 // #
 
 class ComponentInstance {
-  ComponentInstance({required this.int64Type});
+  ComponentInstance({
+    required this.id,
+    required this.instance,
+    required this.int64Type,
+  });
+
+  final WasmInstance instance;
+  final String id;
 
   /// Indicates whether the instance may call out to an import
   bool may_leave = true;
@@ -160,6 +167,7 @@ class ComponentInstance {
 
 // #
 
+// TODO(git): rename HandleElem
 /// Represent handle values referring to resources
 class Handle {
   /// The rep field of Handle stores the representation value (currently fixed to i32)
@@ -171,25 +179,10 @@ class Handle {
   /// This count is used below to dynamically enforce the invariant that a
   /// handle cannot be dropped while it has currently lent out a borrow.
   int lend_count = 0;
+  final bool own;
+  final Context? scope;
 
-  Handle(this.rep);
-}
-
-// @dataclass
-class OwnHandle extends Handle {
-  OwnHandle(super.rep);
-}
-
-/// The BorrowHandle class additionally stores the Context of the call that
-/// created this borrow for the purposes of borrow_count bookkeeping below.
-/// Until async is added to the Component Model, because of the non-reentrancy
-/// of components, there is at most one callee Context alive for a given component
-/// and thus the [cx] field of BorrowHandle can be optimized away.
-// @dataclass
-class BorrowHandle extends Handle {
-  Context? cx;
-
-  BorrowHandle(super.rep, this.cx);
+  Handle(this.rep, {required this.own, this.scope});
 }
 
 // #
@@ -207,7 +200,7 @@ class HandleTable {
   final List<Handle?> array = [];
   final List<int> free = [];
 
-  int add(Handle h, ValType t) {
+  int add(Handle h) {
     final int i;
     if (free.isNotEmpty) {
       i = free.removeLast();
@@ -217,7 +210,6 @@ class HandleTable {
       i = array.length;
       array.add(h);
     }
-    if (t is Borrow) (h as BorrowHandle).cx!.borrow_count += 1;
     return i;
   }
 
@@ -228,29 +220,8 @@ class HandleTable {
     return array[i]!;
   }
 
-  /// Used to transfer or drop a handle out of the handle table.
-  /// transfer_or_drop adds the removed handle to the [free] list
-  /// for later recycling by [add]
-  ///
-  /// The lend_count guard ensures that no dangling borrows are created when
-  /// destroying a resource. The bookkeeping performed for borrowed handles
-  /// records the fulfillment of the obligation of the borrower to drop
-  /// the handle before the end of the call.
-  Handle transfer_or_drop(int i, Resource t, {required bool drop}) {
+  Handle remove(ResourceType rt, int i) {
     final h = get(i);
-    trap_if(h.lend_count != 0);
-    switch (t) {
-      case Own():
-        trap_if(h is! OwnHandle);
-        if (drop && t.rt.dtor != null) {
-          trap_if(!t.rt.impl.may_enter);
-          t.rt.dtor!(h.rep);
-        }
-
-      case Borrow():
-        trap_if(h is! BorrowHandle);
-        (h as BorrowHandle).cx!.borrow_count -= 1;
-    }
     array[i] = null;
     free.add(i);
     return h;
@@ -276,12 +247,9 @@ class HandleTables {
     return rt_to_table[rt]!;
   }
 
-  int add(Handle h, Resource t) => table(t.rt).add(h, t);
-  Handle get(int i, ResourceType rt) => table(rt).get(i);
-  Handle transfer(int i, Resource t) =>
-      table(t.rt).transfer_or_drop(i, t, drop: true);
-  Handle drop(int i, Resource t) =>
-      table(t.rt).transfer_or_drop(i, t, drop: true);
+  int add(ResourceType rt, Handle h) => table(rt).add(h);
+  Handle get(ResourceType rt, int i) => table(rt).get(i);
+  Handle remove(ResourceType rt, int i) => table(rt).remove(rt, i);
 }
 
 // ### `lift`
@@ -367,11 +335,13 @@ class HandleTables {
 
   void post_return() {
     opts.post_return?.call(flat_results);
-    trap_if(cx.borrow_count != 0);
+    cx.exit_call();
   }
 
   return (results, post_return);
 }
+
+int _execution = 0;
 
 Future<(ListValue, void Function())> canon_lift_async(
   CanonicalOptions opts,
@@ -385,6 +355,7 @@ Future<(ListValue, void Function())> canon_lift_async(
   while (inst._asyncCompleter != null) {
     await inst._asyncCompleter!.future;
   }
+  final e = _execution++;
   final cx = Context(opts, inst);
   trap_if(!inst.may_enter);
 
@@ -422,7 +393,7 @@ Future<(ListValue, void Function())> canon_lift_async(
 
   void post_return() {
     opts.post_return?.call(flat_results);
-    trap_if(cx.borrow_count != 0);
+    cx.exit_call();
   }
 
   return (results, post_return);
@@ -527,6 +498,7 @@ List<FlatValue> canon_lower(
   inst.may_leave = true;
 
   post_return();
+  cx.exit_call();
 
   for (final h in cx.lenders) {
     h.lend_count -= 1;
@@ -544,19 +516,35 @@ typedef CanonLowerCallee = (ListValue, void Function()) Function(
 // ### `resource.new`
 
 int canon_resource_new(ComponentInstance inst, ResourceType rt, int rep) {
-  final h = OwnHandle(rep);
-  return inst.handles.add(h, Own(rt));
+  final h = Handle(rep, own: true);
+  return inst.handles.add(rt, h);
 }
 
 // ### `resource.drop`
 
-void canon_resource_drop(ComponentInstance inst, Resource t, int i) {
-  inst.handles.drop(i, t);
+void canon_resource_drop(ComponentInstance inst, ResourceType rt, int i) {
+  final h = inst.handles.remove(rt, i);
+  if (h.own) {
+    assert(h.scope == null);
+    trap_if(h.lend_count != 0);
+    // TODO: trap_if(inst != rt.impl && !rt.impl.may_enter);
+    //  rt.dtor?.call(h.rep);
+    // trap_if(inst.id != rt.componentInstance && !rt.impl.may_enter);
+
+    /// types-example-namespace:types-example-pkg/api#[dtor]r1
+    final dtor = inst.instance
+        .getFunction('${rt.componentInstance}#[dtor]${rt.resourceName}');
+    dtor?.call([h.rep]);
+  } else {
+    assert(h.scope != null);
+    assert(h.scope!.borrow_count > 0);
+    h.scope!.borrow_count -= 1;
+  }
 }
 
 // ### `resource.rep`
 
 int canon_resource_rep(ComponentInstance inst, ResourceType rt, int i) {
-  final h = inst.handles.get(i, rt);
+  final h = inst.handles.get(rt, i);
   return h.rep;
 }

@@ -170,6 +170,7 @@ typedef RecordValue = Map<String, Object?>;
 typedef VariantValue = RecordValue;
 typedef FlagsValue = Uint32List;
 typedef TupleValue = RecordValue;
+typedef HandleRep = int;
 
 typedef VariantValue2 = (int, Object?);
 
@@ -348,8 +349,11 @@ FlagsValue _load_flags(Context cx, int ptr, List<String> labels) {
 ///
 /// Note that [t] refers to an own type and thus [HandleTables.transfer] will,
 /// as shown above, ensure that the handle at index i is an [OwnHandle]
-Handle lift_own(Context cx, int i, Resource t) {
-  return cx.inst.handles.transfer(i, t);
+int lift_own(Context cx, int i, Resource t) {
+  final h = cx.inst.handles.remove(t.rt, i);
+  trap_if(h.lend_count != 0);
+  trap_if(!h.own);
+  return h.rep;
 }
 
 // #
@@ -360,11 +364,12 @@ Handle lift_own(Context cx, int i, Resource t) {
 /// that the lent handle will not be dropped before the end of the call
 /// (see the matching decrement in [canon_lower])
 /// which transitively ensures that the lent resource will not be destroyed.
-BorrowHandle lift_borrow(Context cx, int i, Resource t) {
-  final h = cx.inst.handles.get(i, t.rt);
-  h.lend_count += 1;
-  cx.lenders.add(h);
-  return BorrowHandle(h.rep, null);
+int lift_borrow(Context cx, int i, Resource t) {
+  final h = cx.inst.handles.get(t.rt, i);
+  if (h.own) {
+    cx.track_owning_lend(h);
+  }
+  return h.rep;
 }
 // ### Storing
 
@@ -398,8 +403,8 @@ void store(Context cx, Object? v, ValType t, int ptr) {
     Variant(:final cases) =>
       _store_variant(cx, toVariantValue(v, cases), ptr, cases),
     Flags(:final labels) => _store_flags(cx, v! as FlagsValue, ptr, labels),
-    Own() => store_int(cx, lower_own(cx, v! as Handle, t_), ptr, 4),
-    Borrow() => store_int(cx, lower_borrow(cx, v! as Handle, t_), ptr, 4),
+    Own() => store_int(cx, lower_own(cx, v! as HandleRep, t_), ptr, 4),
+    Borrow() => store_int(cx, lower_borrow(cx, v! as HandleRep, t_), ptr, 4),
   };
 }
 
@@ -428,9 +433,10 @@ void Function(Object? v, int ptr) _storeFunction(Context cx, ValType t) {
         _store_variant(cx, toVariantValue(v, cases), ptr, cases),
     Flags(:final labels) => (v, ptr) =>
         _store_flags(cx, v! as FlagsValue, ptr, labels),
-    Own() => (v, ptr) => store_int(cx, lower_own(cx, v! as Handle, t_), ptr, 4),
+    Own() => (v, ptr) =>
+        store_int(cx, lower_own(cx, v! as HandleRep, t_), ptr, 4),
     Borrow() => (v, ptr) =>
-        store_int(cx, lower_borrow(cx, v! as Handle, t_), ptr, 4),
+        store_int(cx, lower_borrow(cx, v! as HandleRep, t_), ptr, 4),
   };
 }
 // #
@@ -604,9 +610,9 @@ void _store_flags(Context cx, FlagsValue v, int ptr, List<String> labels) {
 
 /// Finally, own and borrow handles are lowered by inserting them into the
 /// current component instance's [HandleTable]
-int lower_own(Context cx, Handle h, Resource t) {
-  assert(h is OwnHandle);
-  return cx.inst.handles.add(h, t);
+int lower_own(Context cx, HandleRep rep, Resource t) {
+  final h = Handle(rep, own: true); // TODO: , scope: cx?
+  return cx.inst.handles.add(t.rt, h);
 }
 
 /// Finally, own and borrow handles are lowered by inserting them into the
@@ -617,9 +623,11 @@ int lower_own(Context cx, Handle h, Resource t) {
 /// the resource type, the only thing the borrowed handle is good for
 /// is calling resource.rep, so lowering might as well avoid the overhead
 /// of creating an intermediate borrow handle.
-int lower_borrow(Context cx, Handle h, Resource t) {
-  assert(h is BorrowHandle);
-  if (cx.inst == t.rt.impl) return h.rep;
-  (h as BorrowHandle).cx = cx;
-  return cx.inst.handles.add(h, t);
+int lower_borrow(Context cx, HandleRep rep, Resource t) {
+  if (cx.inst.id.split('/').first == t.rt.packageName) {
+    return rep;
+  }
+  final h = Handle(rep, own: false, scope: cx);
+  cx.borrow_count += 1;
+  return cx.inst.handles.add(t.rt, h);
 }

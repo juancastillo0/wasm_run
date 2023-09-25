@@ -1,8 +1,16 @@
 // Use a procedural macro to generate bindings for the world we specified in
 // `host.wit`
-wit_bindgen::generate!("types-example");
+wit_bindgen::generate!({
+    path: "wit/types-example.wit",
+    exports: {
+        world: MyHost,
+        "types-example-namespace:types-example-pkg/round-trip-numbers": MyHost,
+        "types-example-namespace:types-example-pkg/api": MyHost,
+        "types-example-namespace:types-example-pkg/api/r1": ResourceR1,
+    },
+});
 
-use exports::types_example_namespace::types_example_pkg::*;
+use exports::types_example_namespace::types_example_pkg::{api, *};
 use types_example_namespace::types_example_pkg::{
     api_imports as imports, round_trip_numbers as round_trip_numbers_host, types_interface,
 };
@@ -79,20 +87,22 @@ impl api::Api for MyHost {
             if let Err(r) = r {
                 _ = match (r.str, r.a_u1, r.c, r.list_s1.first()) {
                     (Some(s), _, None, Some(i)) => {
-                        imports::api_a1_b2(&[&imports::Human::Adult((s, None, (*i,)))])
+                        imports::api_a1_b2(&[imports::Human::Adult((s, None, (*i,)))])
                     }
-                    (None, _, Some(ch), Some(i)) => imports::api_a1_b2(&[&imports::Human::Adult(
-                        (ch.to_lowercase().to_string(), Some(None), (*i,)),
-                    )]),
+                    (None, _, Some(ch), Some(i)) => imports::api_a1_b2(&[imports::Human::Adult((
+                        ch.to_lowercase().to_string(),
+                        Some(None),
+                        (*i,),
+                    ))]),
                     (Some(s), _, Some(ch), Some(i)) => {
-                        imports::api_a1_b2(&[&imports::Human::Adult((
+                        imports::api_a1_b2(&[imports::Human::Adult((
                             s.clone(),
                             Some(Some(format!("{s}{ch}"))),
                             (*i,),
                         ))])
                     }
-                    (None, v, _, _) => imports::api_a1_b2(&[&imports::Human::Child(v)]),
-                    _ => imports::api_a1_b2(&[&imports::Human::Baby]),
+                    (None, v, _, _) => imports::api_a1_b2(&[imports::Human::Child(v)]),
+                    _ => imports::api_a1_b2(&[imports::Human::Baby]),
                 };
             } else {
                 _ = imports::api_a1_b2(&[]);
@@ -115,6 +125,14 @@ impl api::Api for MyHost {
         types_interface::Input,
     ) {
         imports::record_func(&r, e, p, &i)
+    }
+
+    fn static_f1(a: api::OwnR1) -> wit_bindgen::rt::string::String {
+        <ResourceR1 as api::R1>::static_f1(a)
+    }
+
+    fn merge(lhs: &api::RepR1, rhs: &api::RepR1) -> api::OwnR1 {
+        <ResourceR1 as api::R1>::merge(lhs, rhs)
     }
 }
 
@@ -181,4 +199,33 @@ impl round_trip_numbers::RoundTripNumbers for MyHost {
     }
 }
 
-export_types_example!(MyHost);
+pub struct ResourceR1(String);
+
+impl api::R1 for ResourceR1 {
+    #[doc = " constructor for r1"]
+    fn new(name: wit_bindgen::rt::string::String) -> Self {
+        ResourceR1(name)
+    }
+
+    #[doc = " Comment for f2"]
+    fn length(&self) -> u32 {
+        self.0.len().try_into().unwrap()
+    }
+
+    fn name(&self) -> wit_bindgen::rt::string::String {
+        self.0.clone()
+    }
+
+    fn static_default() -> wit_bindgen::rt::string::String {
+        "DEFAULT".to_string()
+    }
+
+    #[doc = " Comment for static f1"]
+    fn static_f1(a: api::OwnR1) -> wit_bindgen::rt::string::String {
+        a.0.clone()
+    }
+
+    fn merge(lhs: &api::RepR1, rhs: &api::RepR1) -> api::OwnR1 {
+        api::OwnR1::new(ResourceR1(format!("{}{}", lhs.0, rhs.0)))
+    }
+}

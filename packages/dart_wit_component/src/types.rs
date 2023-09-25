@@ -1,6 +1,8 @@
 use std::collections::HashMap;
 
-use crate::{generate::*, strings::Normalize, Int64TypeConfig, WitGeneratorConfig};
+use crate::{
+    function::FuncKind, generate::*, strings::Normalize, Int64TypeConfig, WitGeneratorConfig,
+};
 use wit_parser::*;
 
 pub struct Parsed<'a>(
@@ -175,6 +177,7 @@ impl Parsed<'_> {
             TypeDefKind::Union(_union) => format!("{getter}.toJson()"),
             TypeDefKind::Flags(_flags) => format!("{getter}.toJson()"),
             TypeDefKind::Variant(_variant) => format!("{getter}.toJson()"),
+            TypeDefKind::Resource | TypeDefKind::Handle(_) => format!("{getter}.toWasm()"),
             TypeDefKind::Option(ty) => {
                 let inner = self.type_to_json_inner("some", &ty);
                 let inner = mapper_func("some", &inner, false);
@@ -286,6 +289,7 @@ impl Parsed<'_> {
             }
             TypeDefKind::Flags(_flags) => format!("{getter}.toWasm()"),
             TypeDefKind::Variant(_variant) => format!("{getter}.toWasm()"),
+            TypeDefKind::Resource | TypeDefKind::Handle(_) => format!("{getter}.toWasm()"),
             TypeDefKind::Option(ty) => {
                 format!(
                     "{getter}.toWasm({})",
@@ -461,8 +465,46 @@ impl Parsed<'_> {
                 self.type_def_to_spec_option(s.element),
             ),
             TypeDefKind::Type(ty) => self.type_to_spec(&ty),
+            TypeDefKind::Resource => format!("ResourceType('{}')", self.type_handle_id(ty)),
+            TypeDefKind::Handle(h) => match h {
+                Handle::Own(resource_id) => format!(
+                    "Own({}._spec)",
+                    self.0
+                        .types
+                        .get(*resource_id)
+                        .unwrap()
+                        .name
+                        .as_ref()
+                        .unwrap()
+                        .as_type()
+                ),
+                Handle::Borrow(resource_id) => {
+                    format!(
+                        "Borrow({}._spec)",
+                        self.0
+                            .types
+                            .get(*resource_id)
+                            .unwrap()
+                            .name
+                            .as_ref()
+                            .unwrap()
+                            .as_type()
+                    )
+                }
+            },
             TypeDefKind::Unknown => unimplemented!("Unknown type"),
         }
+    }
+
+    pub fn type_handle_id(&self, ty: &TypeDef) -> String {
+        let (_, package) = self.0.packages.iter().last().unwrap();
+        let owner = self.type_owner_name(ty.owner);
+        format!(
+            "{}/{}#{}",
+            package.name,
+            owner.unwrap_or("".to_string()),
+            ty.name.as_ref().unwrap_or(&"".to_string())
+        )
     }
 
     pub fn type_from_json(&self, getter: &str, ty: &Type) -> String {
@@ -605,6 +647,8 @@ impl Parsed<'_> {
                 self.type_def_from_json_option(getter, s.element),
             ),
             TypeDefKind::Type(ty) => self.type_from_json_inner(getter, &ty),
+            TypeDefKind::Resource => format!("{}.fromJson({getter})", name.unwrap()),
+            TypeDefKind::Handle(h) => format!("{}.fromJson({getter})", self.type_def_to_name_definition(self.handle_ty(h)).unwrap()),
             TypeDefKind::Unknown => unimplemented!("Unknown type"),
         }
     }
@@ -613,7 +657,7 @@ impl Parsed<'_> {
         match ty {
             Type::Id(ty_id) => {
                 let ty_def = self.0.types.get(*ty_id).unwrap();
-                self.type_def_to_definition(ty_def)
+                self.type_def_to_definition(ty_id, ty_def)
             }
             Type::Bool => "".to_string(),
             Type::String => "".to_string(),
@@ -631,6 +675,16 @@ impl Parsed<'_> {
         }
     }
 
+    fn handle_ty(&self, t: &Handle) -> &TypeDef {
+        self.0
+            .types
+            .get(*match t {
+                Handle::Borrow(ty_id) => ty_id,
+                Handle::Own(ty_id) => ty_id,
+            })
+            .unwrap()
+    }
+
     fn type_def_to_name(&self, ty: &TypeDef, allow_alias: bool) -> String {
         let name = self.type_def_to_name_definition(ty);
         if allow_alias && name.is_some() {
@@ -642,6 +696,8 @@ impl Parsed<'_> {
             TypeDefKind::Union(_union) => name.unwrap(),
             TypeDefKind::Flags(_flags) => name.unwrap(),
             TypeDefKind::Variant(_variant) => name.unwrap(),
+            TypeDefKind::Resource => name.unwrap(),
+            TypeDefKind::Handle(t) => self.type_def_to_name_definition(self.handle_ty(t)).unwrap(),
             TypeDefKind::Tuple(t) => {
                 let values = t
                     .types
@@ -683,15 +739,19 @@ impl Parsed<'_> {
         }
     }
 
+    fn type_owner_name(&self, owner: TypeOwner) -> Option<String> {
+        match owner {
+            TypeOwner::World(id) => Some(self.0.worlds.get(id).unwrap().name.clone()),
+            TypeOwner::Interface(id) => self.0.interfaces.get(id).unwrap().name.clone(),
+            TypeOwner::None => None,
+        }
+    }
+
     pub fn type_def_to_name_definition(&self, ty: &TypeDef) -> Option<String> {
         if let Some(v) = &ty.name {
             let defined = self.1.get(v as &str);
             if let Some(def) = defined {
-                let owner = match ty.owner {
-                    TypeOwner::World(id) => Some(self.0.worlds.get(id).unwrap().name.clone()),
-                    TypeOwner::Interface(id) => self.0.interfaces.get(id).unwrap().name.clone(),
-                    TypeOwner::None => None,
-                };
+                let owner = self.type_owner_name(ty.owner);
                 let name = format!(
                     "{v}-{}",
                     owner.unwrap_or_else(|| def
@@ -733,11 +793,9 @@ impl Parsed<'_> {
                 s.push_str(self.method_comment(MethodComment::FromJson));
                 s.push_str(&m);
             }
-            s.push_str(self.method_comment(MethodComment::ToJson));
             s.push_str("@override ");
             s.push_str(&methods.to_json(name, self));
         }
-
         s.push_str(self.method_comment(MethodComment::ToWasm));
         s.push_str(&methods.to_wasm(name, self));
 
@@ -784,7 +842,7 @@ impl Parsed<'_> {
         }
     }
 
-    pub fn type_def_to_definition(&self, ty: &TypeDef) -> String {
+    pub fn type_def_to_definition(&self, id_ty: &TypeId, ty: &TypeDef) -> String {
         let name = self.type_def_to_name_definition(ty);
 
         let mut s = String::new();
@@ -937,7 +995,6 @@ impl Parsed<'_> {
                     };
                 });
 
-                s.push_str(self.method_comment(MethodComment::ToJson));
                 s.push_str("@override Map<String, Object?> toJson();\n");
                 if self.2.same_class_union {
                     s.push_str(self.method_comment(MethodComment::ToWasm));
@@ -1021,7 +1078,7 @@ impl Parsed<'_> {
                     self.add_methods_trait(&mut cases_string, &class_name,&(i, v));
                     cases_string.push_str("}");
                 });
-                s.push_str(self.method_comment(MethodComment::ToJson));
+
                 s.push_str("@override Map<String, Object?> toJson();\n");
                 s.push_str(self.method_comment(MethodComment::ToWasm));
                 s.push_str("(int, Object?) toWasm();\n");
@@ -1101,13 +1158,85 @@ impl Parsed<'_> {
                 s.push_str("}");
                 s
             }
+            TypeDefKind::Resource => {
+                let name = name.unwrap();
+                let implements = self.implements(&name);
+                let world_name = heck::AsPascalCase(format!(
+                    "{}World",
+                    self.0.worlds.iter().last().unwrap().1.name
+                ));
+                let name_var = name.as_var();
+
+                s.push_str(&format!(
+                    "class {name} {implements}{{
+                    final int _rep;
+                    final {world_name} _world;
+
+                    {name}._(this._rep, this._world) {{
+                        _world._{name_var}Finalizer.attach(this, _rep);
+                    }}
+
+                    factory {name}.fromJson(Object? json) {{
+                        return {name}._(json! as int, {world_name}.currentZoneWorld()!);
+                    }}
+                    
+                    @override
+                    Object? toJson() => _rep;
+
+                    int toWasm() => _rep;"
+                ));
+                match ty.owner {
+                    TypeOwner::Interface(ii) => {
+                        self.0.interfaces[ii]
+                            .functions
+                            .iter()
+                            .for_each(|(_f_name, f)| {
+                                if let Some(res) = function_resource(&f.kind) {
+                                    if res == id_ty {
+                                        self.add_function(
+                                            &mut s,
+                                            f,
+                                            FuncKind::Resource(ty.owner),
+                                            false,
+                                        );
+                                    }
+                                };
+                            })
+                    }
+                    TypeOwner::World(ii) => {
+                        self.0.worlds[ii].exports.iter().for_each(|(_f_name, f)| {
+                            if let WorldItem::Function(f) = f {
+                                if let Some(res) = function_resource(&f.kind) {
+                                    if res == id_ty {
+                                        self.add_function(
+                                            &mut s,
+                                            f,
+                                            FuncKind::Resource(ty.owner),
+                                            false,
+                                        );
+                                    }
+                                };
+                            }
+                        })
+                    }
+                    TypeOwner::None => {}
+                };
+
+                s.push_str(&format!(
+                    "static const _spec = ResourceType('{}');",
+                    self.type_handle_id(ty)
+                ));
+                s.push_str("}"); // close  class
+                s
+            }
             TypeDefKind::Type(ty) => self.type_to_dart_definition(ty),
             TypeDefKind::List(_)
             | TypeDefKind::Tuple(_)
             | TypeDefKind::Option(_)
             | TypeDefKind::Result(_)
             | TypeDefKind::Future(_)
-            | TypeDefKind::Stream(_) => {
+            | TypeDefKind::Stream(_)
+            | TypeDefKind::Handle(_) => {
                 if let Some(name) = name {
                     s.push_str(&format!(
                         "typedef {name} = {};",
@@ -1118,5 +1247,14 @@ impl Parsed<'_> {
             }
             TypeDefKind::Unknown => todo!(),
         }
+    }
+}
+
+pub fn function_resource(kind: &FunctionKind) -> Option<&TypeId> {
+    match kind {
+        FunctionKind::Constructor(res) | FunctionKind::Method(res) | FunctionKind::Static(res) => {
+            Some(res)
+        }
+        _ => None,
     }
 }
