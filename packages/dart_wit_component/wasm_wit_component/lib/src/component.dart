@@ -185,6 +185,47 @@ WasmFunction loweredImportFunction(
   return lowered;
 }
 
+List<WasmImport> resourceImports(
+  WasmLibrary Function() getWasmLibrary,
+  ResourceType rt,
+) {
+  return [
+    WasmImport(
+      '[export]${rt.componentInstance}',
+      '[resource-new]${rt.resourceName}',
+      WasmFunction(
+        (Object? a) => canon_resource_new(
+            getWasmLibrary().componentInstance, rt, a! as int),
+        params: const [ValueTy.i32],
+        results: const [ValueTy.i32],
+      ),
+    ),
+    WasmImport(
+      '[export]${rt.componentInstance}',
+      '[resource-rep]${rt.resourceName}',
+      WasmFunction(
+        (Object? a) => canon_resource_rep(
+            getWasmLibrary().componentInstance, rt, a! as int),
+        params: const [ValueTy.i32],
+        results: const [ValueTy.i32],
+      ),
+    ),
+    WasmImport(
+      '[export]${rt.componentInstance}',
+      '[resource-drop]${rt.resourceName}',
+      WasmFunction(
+        (Object? a) => canon_resource_drop(
+          getWasmLibrary().componentInstance,
+          rt,
+          a! as int,
+        ),
+        params: const [ValueTy.i32],
+        results: const [],
+      ),
+    ),
+  ];
+}
+
 /// Returns a [BigInt] from a JSON [value].
 BigInt bigIntFromJson(Object? value) {
   if (value is BigInt) {
@@ -207,6 +248,7 @@ class WasmLibrary {
   /// the WASM component model.
   WasmLibrary(
     this.instance, {
+    String componentId = '',
     // TODO: get encoding from instance exports
     this.stringEncoding = StringEncoding.utf8,
     Int64TypeConfig int64Type = Int64TypeConfig.bigInt,
@@ -215,7 +257,11 @@ class WasmLibrary {
         wasmMemory = wasmMemory ??
             instance.getMemory('memory') ??
             instance.exports.values.whereType<WasmMemory>().first,
-        componentInstance = ComponentInstance(int64Type: int64Type);
+        componentInstance = ComponentInstance(
+          id: componentId,
+          instance: instance,
+          int64Type: int64Type,
+        );
 
   /// The [WasmInstance] that implements the WASM component model.
   final WasmInstance instance;
@@ -227,6 +273,15 @@ class WasmLibrary {
   final StringEncoding stringEncoding;
 
   final Function _realloc;
+
+  static final _zoneValue = Object();
+
+  static WasmLibrary? currentZoneLibrary() =>
+      Zone.current[_zoneValue] as WasmLibrary?;
+
+  T withContext<T>(T Function() fn) {
+    return runZoned(fn, zoneValues: {_zoneValue: this});
+  }
 
   /// Reallocates a section of memory to a new size.
   /// May be used to grow or shrink the memory.
