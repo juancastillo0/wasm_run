@@ -2883,6 +2883,10 @@ class YDocMethods {
           'y-crdt-namespace:y-crdt/y-doc-methods#y-snapshot-dispose',
           const FuncType([('ref', YSnapshot._spec)], [('', Bool())]),
         )!,
+        _undoManagerDispose = library.getComponentFunction(
+          'y-crdt-namespace:y-crdt/y-doc-methods#undo-manager-dispose',
+          const FuncType([('ref', UndoManagerRef._spec)], [('', Bool())]),
+        )!,
         _callbackDispose = library.getComponentFunction(
           'y-crdt-namespace:y-crdt/y-doc-methods#callback-dispose',
           const FuncType([('ref', EventObserver._spec)], [('', Bool())]),
@@ -3565,6 +3569,15 @@ class YDocMethods {
     required YSnapshot ref,
   }) {
     final results = _ySnapshotDispose([ref.toWasm()]);
+    final result = results[0];
+    return result! as bool;
+  }
+
+  final ListValue Function(ListValue) _undoManagerDispose;
+  bool undoManagerDispose({
+    required UndoManagerRef ref,
+  }) {
+    final results = _undoManagerDispose([ref.toWasm()]);
     final result = results[0];
     return result! as bool;
   }

@@ -465,6 +465,9 @@ impl YDocMethods for WitImplementation {
     fn callback_dispose(obs: EventObserver) -> bool {
         with_mut(|state| state.callbacks.remove(&obs.ref_).is_some())
     }
+    fn undo_manager_dispose(obs: UndoManagerRef) -> bool {
+        UNDO_STATE.with(|state| state.borrow_mut().undo_managers.remove(&obs.ref_).is_some())
+    }
     // TextRef
     // ArrayRef
     // MapRef

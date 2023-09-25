@@ -22,6 +22,10 @@ class YCrdtApiImports implements YCrdtWorldImports {
   void Function({required List<YEvent> event, required int functionId})
       get eventDeepCallback => _eventDeepCallback;
 
+  @override
+  void Function({required YUndoEvent event, required int functionId})
+      get undoEventCallback => _undoEventCallback;
+
   void _eventCallback({
     required YEvent event,
     required int functionId,
@@ -35,6 +39,17 @@ class YCrdtApiImports implements YCrdtWorldImports {
 
   void _eventDeepCallback({
     required List<YEvent> event,
+    required int functionId,
+  }) {
+    final callback = _callbacks[functionId];
+    if (callback == null) {
+      throw Exception('Callback not found for functionId: $functionId');
+    }
+    callback.callback(event);
+  }
+
+  void _undoEventCallback({
+    required YUndoEvent event,
     required int functionId,
   }) {
     final callback = _callbacks[functionId];
@@ -83,20 +98,16 @@ class YCrdt {
   late final _transactionFinalizer =
       Finalizer<YTransaction>(_disposeTransaction);
   late final _snapshotFinalizer = Finalizer<YSnapshot>(_disposeSnapshot);
+  late final _undoManagerFinalizer = Finalizer(_disposeUndoManager);
 
   YCrdt(this.world, this.callbacks);
 
-  bool _disposeValue(YValue ref) {
-    return _m.yValueDispose(ref: ref);
-  }
-
-  bool _disposeTransaction(YTransaction ref) {
-    return _m.yTransactionDispose(ref: ref);
-  }
-
-  bool _disposeSnapshot(YSnapshot ref) {
-    return _m.ySnapshotDispose(ref: ref);
-  }
+  bool _disposeValue(YValue ref) => _m.yValueDispose(ref: ref);
+  bool _disposeTransaction(YTransaction ref) =>
+      _m.yTransactionDispose(ref: ref);
+  bool _disposeSnapshot(YSnapshot ref) => _m.ySnapshotDispose(ref: ref);
+  bool _disposeUndoManager(UndoManagerRef ref) =>
+      _m.undoManagerDispose(ref: ref);
 
   YDocI newDoc({YDocOptions? options}) =>
       YDocI._(_m.yDocNew(options: options), this);
@@ -111,6 +122,20 @@ class YCrdt {
   Result<YSnapshotI, String> snapshotDecodeV2(Uint8List snapshot) => _m
       .decodeSnapshotV2(snapshot: snapshot)
       .map((ok) => YSnapshotI._(ok, this));
+
+  YUndoManager undoManager(
+    YDocI doc,
+    YValueI scope, {
+    UndoManagerOptions options = const UndoManagerOptions(),
+  }) =>
+      YUndoManager._(
+        _m.undoManagerNew(
+            //  TODO: remove as YType
+            doc: doc._ref,
+            options: options,
+            scope: scope._ref as YType),
+        this,
+      );
 
   Uint8List encodeStateVector({
     required YDocI doc,
@@ -178,6 +203,16 @@ sealed class YValueI extends YValueAny {
 
   YValueI(this._world) {
     _world._valueFinalizer.attach(this, _ref);
+  }
+}
+
+class YUndoManager {
+  final UndoManagerRef _ref;
+  final YCrdt _world;
+  YDocMethods get _m => _world._m;
+
+  YUndoManager._(this._ref, this._world) {
+    _world._undoManagerFinalizer.attach(this, _ref);
   }
 }
 
