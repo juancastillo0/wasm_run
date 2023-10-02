@@ -48,7 +48,7 @@ class WasmRunLibrary {
   /// manually.
   ///
   /// When building a pure Dart application (backend or cli, for example),
-  /// you must call `setDynamicLibrary(<nativeLibraryForYourPlatform>)`
+  /// you can call `WasmRunLibrary.set(<nativeLibraryForYourPlatform>)`
   /// before using the package. The <nativeLibraryForYourPlatform> can be
   /// downloaded from the releases of the Github repository of the package:
   /// https://github.com/juancastillo0/wasm_run/releases
@@ -111,7 +111,9 @@ WasmRunDart defaultInstance() {
       if (!WasmRunLibrary._isWeb) {
         print(
           'When building a pure Dart application (backend or cli, for example),'
-          ' you must call `setDynamicLibrary(<nativeLibraryForYourPlatform>)`'
+          ' you must execute the cli command `wasm_run:setup`'
+          ' to download the binary locally, run `WasmRunLibrary.setUp`, or'
+          ' call `WasmRunLibrary.set(<nativeLibraryForYourPlatform>)`'
           ' before using the library. The <nativeLibraryForYourPlatform> can'
           ' be downloaded from the releases of the github repository'
           ' of the package.',
