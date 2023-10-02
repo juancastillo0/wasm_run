@@ -33,6 +33,81 @@ analyzer:
     use_super_parameters: warning
     unawaited_futures: warning
     prefer_final_locals: warning
+    unused_element: warning
+
+    avoid_empty_else: warning
+    avoid_relative_lib_imports: warning
+    avoid_shadowing_type_parameters: warning
+    avoid_types_as_parameter_names: warning
+    camel_case_extensions: warning
+    camel_case_types: warning
+    curly_braces_in_flow_control_structures: warning
+    depend_on_referenced_packages: warning
+    empty_catches: warning
+    file_names: warning
+    hash_and_equals: warning
+    non_constant_identifier_names: warning
+    null_check_on_nullable_type_parameter: warning
+    package_prefixed_library_names: warning
+    prefer_generic_function_type_aliases: warning
+    prefer_is_empty: warning
+    prefer_is_not_empty: warning
+    prefer_iterable_whereType: warning
+    provide_deprecation_message: warning
+    void_checks: warning
+
+    annotate_overrides: warning
+    avoid_function_literals_in_foreach_calls: warning
+    avoid_init_to_null: warning
+    avoid_null_checks_in_equality_operators: warning
+    avoid_renaming_method_parameters: warning
+    avoid_return_types_on_setters: warning
+    avoid_returning_null_for_void: warning
+    avoid_single_cascade_in_expression_statements: warning
+    constant_identifier_names: warning
+    control_flow_in_finally: warning
+    empty_constructor_bodies: warning
+    empty_statements: warning
+    implementation_imports: warning
+    library_names: warning
+    library_prefixes: warning
+    no_leading_underscores_for_library_prefixes: warning
+    no_leading_underscores_for_local_identifiers: warning
+    null_closures: warning
+    overridden_fields: warning
+    package_names: warning
+    prefer_adjacent_string_concatenation: warning
+    prefer_collection_literals: warning
+    prefer_conditional_assignment: warning
+    prefer_contains: warning
+    prefer_equal_for_default_values: warning
+    prefer_final_fields: warning
+    prefer_for_elements_to_map_fromIterable: warning
+    prefer_function_declarations_over_variables: warning
+    prefer_if_null_operators: warning
+    prefer_initializing_formals: warning
+    prefer_inlined_adds: warning
+    prefer_interpolation_to_compose_strings: warning
+    prefer_is_not_operator: warning
+    prefer_null_aware_operators: warning
+    prefer_spread_collections: warning
+    prefer_void_to_null: warning
+    recursive_getters: warning
+    slash_for_doc_comments: warning
+    type_init_formals: warning
+    unnecessary_brace_in_string_interps: warning
+    unnecessary_const: warning
+    unnecessary_constructor_name: warning
+    unnecessary_getters_setters: warning
+    unnecessary_new: warning
+    unnecessary_null_aware_assignments: warning
+    unnecessary_null_in_if_null_operators: warning
+    unnecessary_nullable_for_final_variable_declarations: warning
+    unnecessary_string_escapes: warning
+    unnecessary_string_interpolations: warning
+    unnecessary_this: warning
+    use_function_type_syntax_for_parameters: warning
+    use_rethrow_when_possible: warning
 
 # You can customize the lint rules set to your own liking. A list of all rules
 # can be found at https://dart-lang.github.io/linter/lints/options/options.html
