@@ -1,6 +1,5 @@
 use std::fmt::Display;
 
-use crate::bridge_generated::{wire_ExternalValue, NewWithNullPtr};
 use anyhow::Result;
 use flutter_rust_bridge::RustOpaque;
 
@@ -424,12 +423,6 @@ pub enum ExternalValue {
     Table(RustOpaque<Table>),
     Memory(RustOpaque<Memory>),
     SharedMemory(crate::api::WasmRunSharedMemory),
-}
-
-impl Default for wire_ExternalValue {
-    fn default() -> Self {
-        wire_ExternalValue::new_with_null_ptr()
-    }
 }
 
 #[cfg(not(feature = "wasmtime"))]
