@@ -101,12 +101,22 @@ void wasiTest({TestArgs? testArgs}) {
         ),
         WasmModuleImport(
           'wasi_snapshot_preview1',
+          'path_open',
+          WasmExternalKind.function,
+        ),
+        WasmModuleImport(
+          'wasi_snapshot_preview1',
           'environ_get',
           WasmExternalKind.function,
         ),
         WasmModuleImport(
           'wasi_snapshot_preview1',
           'environ_sizes_get',
+          WasmExternalKind.function,
+        ),
+        WasmModuleImport(
+          'wasi_snapshot_preview1',
+          'fd_close',
           WasmExternalKind.function,
         ),
         WasmModuleImport(
