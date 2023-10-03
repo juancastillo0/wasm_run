@@ -563,7 +563,7 @@ default world host {
             PACKAGE_DIR
         );
         let output_path = format!(
-            "{}/../wasm_packages/rust_crypto/lib/src/api.dart",
+            "{}/../wasm_packages/rust_crypto/lib/src/rust_crypto_wit.gen.dart",
             PACKAGE_DIR
         );
         parse_and_write_generation(

@@ -88,20 +88,20 @@ class _$ExternalTypeCopyWithImpl<$Res, $Val extends ExternalType>
 }
 
 /// @nodoc
-abstract class _$$ExternalType_FuncCopyWith<$Res> {
-  factory _$$ExternalType_FuncCopyWith(
-          _$ExternalType_Func value, $Res Function(_$ExternalType_Func) then) =
-      __$$ExternalType_FuncCopyWithImpl<$Res>;
+abstract class _$$ExternalType_FuncImplCopyWith<$Res> {
+  factory _$$ExternalType_FuncImplCopyWith(_$ExternalType_FuncImpl value,
+          $Res Function(_$ExternalType_FuncImpl) then) =
+      __$$ExternalType_FuncImplCopyWithImpl<$Res>;
   @useResult
   $Res call({FuncTy field0});
 }
 
 /// @nodoc
-class __$$ExternalType_FuncCopyWithImpl<$Res>
-    extends _$ExternalTypeCopyWithImpl<$Res, _$ExternalType_Func>
-    implements _$$ExternalType_FuncCopyWith<$Res> {
-  __$$ExternalType_FuncCopyWithImpl(
-      _$ExternalType_Func _value, $Res Function(_$ExternalType_Func) _then)
+class __$$ExternalType_FuncImplCopyWithImpl<$Res>
+    extends _$ExternalTypeCopyWithImpl<$Res, _$ExternalType_FuncImpl>
+    implements _$$ExternalType_FuncImplCopyWith<$Res> {
+  __$$ExternalType_FuncImplCopyWithImpl(_$ExternalType_FuncImpl _value,
+      $Res Function(_$ExternalType_FuncImpl) _then)
       : super(_value, _then);
 
   @pragma('vm:prefer-inline')
@@ -109,7 +109,7 @@ class __$$ExternalType_FuncCopyWithImpl<$Res>
   $Res call({
     Object? field0 = null,
   }) {
-    return _then(_$ExternalType_Func(
+    return _then(_$ExternalType_FuncImpl(
       null == field0
           ? _value.field0
           : field0 // ignore: cast_nullable_to_non_nullable
@@ -120,8 +120,8 @@ class __$$ExternalType_FuncCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$ExternalType_Func implements ExternalType_Func {
-  const _$ExternalType_Func(this.field0);
+class _$ExternalType_FuncImpl implements ExternalType_Func {
+  const _$ExternalType_FuncImpl(this.field0);
 
   @override
   final FuncTy field0;
@@ -135,7 +135,7 @@ class _$ExternalType_Func implements ExternalType_Func {
   bool operator ==(dynamic other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$ExternalType_Func &&
+            other is _$ExternalType_FuncImpl &&
             (identical(other.field0, field0) || other.field0 == field0));
   }
 
@@ -145,8 +145,9 @@ class _$ExternalType_Func implements ExternalType_Func {
   @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
-  _$$ExternalType_FuncCopyWith<_$ExternalType_Func> get copyWith =>
-      __$$ExternalType_FuncCopyWithImpl<_$ExternalType_Func>(this, _$identity);
+  _$$ExternalType_FuncImplCopyWith<_$ExternalType_FuncImpl> get copyWith =>
+      __$$ExternalType_FuncImplCopyWithImpl<_$ExternalType_FuncImpl>(
+          this, _$identity);
 
   @override
   @optionalTypeArgs
@@ -224,30 +225,31 @@ class _$ExternalType_Func implements ExternalType_Func {
 }
 
 abstract class ExternalType_Func implements ExternalType {
-  const factory ExternalType_Func(final FuncTy field0) = _$ExternalType_Func;
+  const factory ExternalType_Func(final FuncTy field0) =
+      _$ExternalType_FuncImpl;
 
   @override
   FuncTy get field0;
   @JsonKey(ignore: true)
-  _$$ExternalType_FuncCopyWith<_$ExternalType_Func> get copyWith =>
+  _$$ExternalType_FuncImplCopyWith<_$ExternalType_FuncImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract class _$$ExternalType_GlobalCopyWith<$Res> {
-  factory _$$ExternalType_GlobalCopyWith(_$ExternalType_Global value,
-          $Res Function(_$ExternalType_Global) then) =
-      __$$ExternalType_GlobalCopyWithImpl<$Res>;
+abstract class _$$ExternalType_GlobalImplCopyWith<$Res> {
+  factory _$$ExternalType_GlobalImplCopyWith(_$ExternalType_GlobalImpl value,
+          $Res Function(_$ExternalType_GlobalImpl) then) =
+      __$$ExternalType_GlobalImplCopyWithImpl<$Res>;
   @useResult
   $Res call({GlobalTy field0});
 }
 
 /// @nodoc
-class __$$ExternalType_GlobalCopyWithImpl<$Res>
-    extends _$ExternalTypeCopyWithImpl<$Res, _$ExternalType_Global>
-    implements _$$ExternalType_GlobalCopyWith<$Res> {
-  __$$ExternalType_GlobalCopyWithImpl(
-      _$ExternalType_Global _value, $Res Function(_$ExternalType_Global) _then)
+class __$$ExternalType_GlobalImplCopyWithImpl<$Res>
+    extends _$ExternalTypeCopyWithImpl<$Res, _$ExternalType_GlobalImpl>
+    implements _$$ExternalType_GlobalImplCopyWith<$Res> {
+  __$$ExternalType_GlobalImplCopyWithImpl(_$ExternalType_GlobalImpl _value,
+      $Res Function(_$ExternalType_GlobalImpl) _then)
       : super(_value, _then);
 
   @pragma('vm:prefer-inline')
@@ -255,7 +257,7 @@ class __$$ExternalType_GlobalCopyWithImpl<$Res>
   $Res call({
     Object? field0 = null,
   }) {
-    return _then(_$ExternalType_Global(
+    return _then(_$ExternalType_GlobalImpl(
       null == field0
           ? _value.field0
           : field0 // ignore: cast_nullable_to_non_nullable
@@ -266,8 +268,8 @@ class __$$ExternalType_GlobalCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$ExternalType_Global implements ExternalType_Global {
-  const _$ExternalType_Global(this.field0);
+class _$ExternalType_GlobalImpl implements ExternalType_Global {
+  const _$ExternalType_GlobalImpl(this.field0);
 
   @override
   final GlobalTy field0;
@@ -281,7 +283,7 @@ class _$ExternalType_Global implements ExternalType_Global {
   bool operator ==(dynamic other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$ExternalType_Global &&
+            other is _$ExternalType_GlobalImpl &&
             (identical(other.field0, field0) || other.field0 == field0));
   }
 
@@ -291,8 +293,8 @@ class _$ExternalType_Global implements ExternalType_Global {
   @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
-  _$$ExternalType_GlobalCopyWith<_$ExternalType_Global> get copyWith =>
-      __$$ExternalType_GlobalCopyWithImpl<_$ExternalType_Global>(
+  _$$ExternalType_GlobalImplCopyWith<_$ExternalType_GlobalImpl> get copyWith =>
+      __$$ExternalType_GlobalImplCopyWithImpl<_$ExternalType_GlobalImpl>(
           this, _$identity);
 
   @override
@@ -372,30 +374,30 @@ class _$ExternalType_Global implements ExternalType_Global {
 
 abstract class ExternalType_Global implements ExternalType {
   const factory ExternalType_Global(final GlobalTy field0) =
-      _$ExternalType_Global;
+      _$ExternalType_GlobalImpl;
 
   @override
   GlobalTy get field0;
   @JsonKey(ignore: true)
-  _$$ExternalType_GlobalCopyWith<_$ExternalType_Global> get copyWith =>
+  _$$ExternalType_GlobalImplCopyWith<_$ExternalType_GlobalImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract class _$$ExternalType_TableCopyWith<$Res> {
-  factory _$$ExternalType_TableCopyWith(_$ExternalType_Table value,
-          $Res Function(_$ExternalType_Table) then) =
-      __$$ExternalType_TableCopyWithImpl<$Res>;
+abstract class _$$ExternalType_TableImplCopyWith<$Res> {
+  factory _$$ExternalType_TableImplCopyWith(_$ExternalType_TableImpl value,
+          $Res Function(_$ExternalType_TableImpl) then) =
+      __$$ExternalType_TableImplCopyWithImpl<$Res>;
   @useResult
   $Res call({TableTy field0});
 }
 
 /// @nodoc
-class __$$ExternalType_TableCopyWithImpl<$Res>
-    extends _$ExternalTypeCopyWithImpl<$Res, _$ExternalType_Table>
-    implements _$$ExternalType_TableCopyWith<$Res> {
-  __$$ExternalType_TableCopyWithImpl(
-      _$ExternalType_Table _value, $Res Function(_$ExternalType_Table) _then)
+class __$$ExternalType_TableImplCopyWithImpl<$Res>
+    extends _$ExternalTypeCopyWithImpl<$Res, _$ExternalType_TableImpl>
+    implements _$$ExternalType_TableImplCopyWith<$Res> {
+  __$$ExternalType_TableImplCopyWithImpl(_$ExternalType_TableImpl _value,
+      $Res Function(_$ExternalType_TableImpl) _then)
       : super(_value, _then);
 
   @pragma('vm:prefer-inline')
@@ -403,7 +405,7 @@ class __$$ExternalType_TableCopyWithImpl<$Res>
   $Res call({
     Object? field0 = null,
   }) {
-    return _then(_$ExternalType_Table(
+    return _then(_$ExternalType_TableImpl(
       null == field0
           ? _value.field0
           : field0 // ignore: cast_nullable_to_non_nullable
@@ -414,8 +416,8 @@ class __$$ExternalType_TableCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$ExternalType_Table implements ExternalType_Table {
-  const _$ExternalType_Table(this.field0);
+class _$ExternalType_TableImpl implements ExternalType_Table {
+  const _$ExternalType_TableImpl(this.field0);
 
   @override
   final TableTy field0;
@@ -429,7 +431,7 @@ class _$ExternalType_Table implements ExternalType_Table {
   bool operator ==(dynamic other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$ExternalType_Table &&
+            other is _$ExternalType_TableImpl &&
             (identical(other.field0, field0) || other.field0 == field0));
   }
 
@@ -439,8 +441,8 @@ class _$ExternalType_Table implements ExternalType_Table {
   @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
-  _$$ExternalType_TableCopyWith<_$ExternalType_Table> get copyWith =>
-      __$$ExternalType_TableCopyWithImpl<_$ExternalType_Table>(
+  _$$ExternalType_TableImplCopyWith<_$ExternalType_TableImpl> get copyWith =>
+      __$$ExternalType_TableImplCopyWithImpl<_$ExternalType_TableImpl>(
           this, _$identity);
 
   @override
@@ -519,30 +521,31 @@ class _$ExternalType_Table implements ExternalType_Table {
 }
 
 abstract class ExternalType_Table implements ExternalType {
-  const factory ExternalType_Table(final TableTy field0) = _$ExternalType_Table;
+  const factory ExternalType_Table(final TableTy field0) =
+      _$ExternalType_TableImpl;
 
   @override
   TableTy get field0;
   @JsonKey(ignore: true)
-  _$$ExternalType_TableCopyWith<_$ExternalType_Table> get copyWith =>
+  _$$ExternalType_TableImplCopyWith<_$ExternalType_TableImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract class _$$ExternalType_MemoryCopyWith<$Res> {
-  factory _$$ExternalType_MemoryCopyWith(_$ExternalType_Memory value,
-          $Res Function(_$ExternalType_Memory) then) =
-      __$$ExternalType_MemoryCopyWithImpl<$Res>;
+abstract class _$$ExternalType_MemoryImplCopyWith<$Res> {
+  factory _$$ExternalType_MemoryImplCopyWith(_$ExternalType_MemoryImpl value,
+          $Res Function(_$ExternalType_MemoryImpl) then) =
+      __$$ExternalType_MemoryImplCopyWithImpl<$Res>;
   @useResult
   $Res call({MemoryTy field0});
 }
 
 /// @nodoc
-class __$$ExternalType_MemoryCopyWithImpl<$Res>
-    extends _$ExternalTypeCopyWithImpl<$Res, _$ExternalType_Memory>
-    implements _$$ExternalType_MemoryCopyWith<$Res> {
-  __$$ExternalType_MemoryCopyWithImpl(
-      _$ExternalType_Memory _value, $Res Function(_$ExternalType_Memory) _then)
+class __$$ExternalType_MemoryImplCopyWithImpl<$Res>
+    extends _$ExternalTypeCopyWithImpl<$Res, _$ExternalType_MemoryImpl>
+    implements _$$ExternalType_MemoryImplCopyWith<$Res> {
+  __$$ExternalType_MemoryImplCopyWithImpl(_$ExternalType_MemoryImpl _value,
+      $Res Function(_$ExternalType_MemoryImpl) _then)
       : super(_value, _then);
 
   @pragma('vm:prefer-inline')
@@ -550,7 +553,7 @@ class __$$ExternalType_MemoryCopyWithImpl<$Res>
   $Res call({
     Object? field0 = null,
   }) {
-    return _then(_$ExternalType_Memory(
+    return _then(_$ExternalType_MemoryImpl(
       null == field0
           ? _value.field0
           : field0 // ignore: cast_nullable_to_non_nullable
@@ -561,8 +564,8 @@ class __$$ExternalType_MemoryCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$ExternalType_Memory implements ExternalType_Memory {
-  const _$ExternalType_Memory(this.field0);
+class _$ExternalType_MemoryImpl implements ExternalType_Memory {
+  const _$ExternalType_MemoryImpl(this.field0);
 
   @override
   final MemoryTy field0;
@@ -576,7 +579,7 @@ class _$ExternalType_Memory implements ExternalType_Memory {
   bool operator ==(dynamic other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$ExternalType_Memory &&
+            other is _$ExternalType_MemoryImpl &&
             (identical(other.field0, field0) || other.field0 == field0));
   }
 
@@ -586,8 +589,8 @@ class _$ExternalType_Memory implements ExternalType_Memory {
   @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
-  _$$ExternalType_MemoryCopyWith<_$ExternalType_Memory> get copyWith =>
-      __$$ExternalType_MemoryCopyWithImpl<_$ExternalType_Memory>(
+  _$$ExternalType_MemoryImplCopyWith<_$ExternalType_MemoryImpl> get copyWith =>
+      __$$ExternalType_MemoryImplCopyWithImpl<_$ExternalType_MemoryImpl>(
           this, _$identity);
 
   @override
@@ -667,12 +670,12 @@ class _$ExternalType_Memory implements ExternalType_Memory {
 
 abstract class ExternalType_Memory implements ExternalType {
   const factory ExternalType_Memory(final MemoryTy field0) =
-      _$ExternalType_Memory;
+      _$ExternalType_MemoryImpl;
 
   @override
   MemoryTy get field0;
   @JsonKey(ignore: true)
-  _$$ExternalType_MemoryCopyWith<_$ExternalType_Memory> get copyWith =>
+  _$$ExternalType_MemoryImplCopyWith<_$ExternalType_MemoryImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
@@ -756,20 +759,20 @@ class _$ExternalValueCopyWithImpl<$Res, $Val extends ExternalValue>
 }
 
 /// @nodoc
-abstract class _$$ExternalValue_FuncCopyWith<$Res> {
-  factory _$$ExternalValue_FuncCopyWith(_$ExternalValue_Func value,
-          $Res Function(_$ExternalValue_Func) then) =
-      __$$ExternalValue_FuncCopyWithImpl<$Res>;
+abstract class _$$ExternalValue_FuncImplCopyWith<$Res> {
+  factory _$$ExternalValue_FuncImplCopyWith(_$ExternalValue_FuncImpl value,
+          $Res Function(_$ExternalValue_FuncImpl) then) =
+      __$$ExternalValue_FuncImplCopyWithImpl<$Res>;
   @useResult
   $Res call({WFunc field0});
 }
 
 /// @nodoc
-class __$$ExternalValue_FuncCopyWithImpl<$Res>
-    extends _$ExternalValueCopyWithImpl<$Res, _$ExternalValue_Func>
-    implements _$$ExternalValue_FuncCopyWith<$Res> {
-  __$$ExternalValue_FuncCopyWithImpl(
-      _$ExternalValue_Func _value, $Res Function(_$ExternalValue_Func) _then)
+class __$$ExternalValue_FuncImplCopyWithImpl<$Res>
+    extends _$ExternalValueCopyWithImpl<$Res, _$ExternalValue_FuncImpl>
+    implements _$$ExternalValue_FuncImplCopyWith<$Res> {
+  __$$ExternalValue_FuncImplCopyWithImpl(_$ExternalValue_FuncImpl _value,
+      $Res Function(_$ExternalValue_FuncImpl) _then)
       : super(_value, _then);
 
   @pragma('vm:prefer-inline')
@@ -777,7 +780,7 @@ class __$$ExternalValue_FuncCopyWithImpl<$Res>
   $Res call({
     Object? field0 = null,
   }) {
-    return _then(_$ExternalValue_Func(
+    return _then(_$ExternalValue_FuncImpl(
       null == field0
           ? _value.field0
           : field0 // ignore: cast_nullable_to_non_nullable
@@ -788,8 +791,8 @@ class __$$ExternalValue_FuncCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$ExternalValue_Func implements ExternalValue_Func {
-  const _$ExternalValue_Func(this.field0);
+class _$ExternalValue_FuncImpl implements ExternalValue_Func {
+  const _$ExternalValue_FuncImpl(this.field0);
 
   @override
   final WFunc field0;
@@ -803,7 +806,7 @@ class _$ExternalValue_Func implements ExternalValue_Func {
   bool operator ==(dynamic other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$ExternalValue_Func &&
+            other is _$ExternalValue_FuncImpl &&
             (identical(other.field0, field0) || other.field0 == field0));
   }
 
@@ -813,8 +816,8 @@ class _$ExternalValue_Func implements ExternalValue_Func {
   @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
-  _$$ExternalValue_FuncCopyWith<_$ExternalValue_Func> get copyWith =>
-      __$$ExternalValue_FuncCopyWithImpl<_$ExternalValue_Func>(
+  _$$ExternalValue_FuncImplCopyWith<_$ExternalValue_FuncImpl> get copyWith =>
+      __$$ExternalValue_FuncImplCopyWithImpl<_$ExternalValue_FuncImpl>(
           this, _$identity);
 
   @override
@@ -899,30 +902,31 @@ class _$ExternalValue_Func implements ExternalValue_Func {
 }
 
 abstract class ExternalValue_Func implements ExternalValue {
-  const factory ExternalValue_Func(final WFunc field0) = _$ExternalValue_Func;
+  const factory ExternalValue_Func(final WFunc field0) =
+      _$ExternalValue_FuncImpl;
 
   @override
   WFunc get field0;
   @JsonKey(ignore: true)
-  _$$ExternalValue_FuncCopyWith<_$ExternalValue_Func> get copyWith =>
+  _$$ExternalValue_FuncImplCopyWith<_$ExternalValue_FuncImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract class _$$ExternalValue_GlobalCopyWith<$Res> {
-  factory _$$ExternalValue_GlobalCopyWith(_$ExternalValue_Global value,
-          $Res Function(_$ExternalValue_Global) then) =
-      __$$ExternalValue_GlobalCopyWithImpl<$Res>;
+abstract class _$$ExternalValue_GlobalImplCopyWith<$Res> {
+  factory _$$ExternalValue_GlobalImplCopyWith(_$ExternalValue_GlobalImpl value,
+          $Res Function(_$ExternalValue_GlobalImpl) then) =
+      __$$ExternalValue_GlobalImplCopyWithImpl<$Res>;
   @useResult
   $Res call({Global field0});
 }
 
 /// @nodoc
-class __$$ExternalValue_GlobalCopyWithImpl<$Res>
-    extends _$ExternalValueCopyWithImpl<$Res, _$ExternalValue_Global>
-    implements _$$ExternalValue_GlobalCopyWith<$Res> {
-  __$$ExternalValue_GlobalCopyWithImpl(_$ExternalValue_Global _value,
-      $Res Function(_$ExternalValue_Global) _then)
+class __$$ExternalValue_GlobalImplCopyWithImpl<$Res>
+    extends _$ExternalValueCopyWithImpl<$Res, _$ExternalValue_GlobalImpl>
+    implements _$$ExternalValue_GlobalImplCopyWith<$Res> {
+  __$$ExternalValue_GlobalImplCopyWithImpl(_$ExternalValue_GlobalImpl _value,
+      $Res Function(_$ExternalValue_GlobalImpl) _then)
       : super(_value, _then);
 
   @pragma('vm:prefer-inline')
@@ -930,7 +934,7 @@ class __$$ExternalValue_GlobalCopyWithImpl<$Res>
   $Res call({
     Object? field0 = null,
   }) {
-    return _then(_$ExternalValue_Global(
+    return _then(_$ExternalValue_GlobalImpl(
       null == field0
           ? _value.field0
           : field0 // ignore: cast_nullable_to_non_nullable
@@ -941,8 +945,8 @@ class __$$ExternalValue_GlobalCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$ExternalValue_Global implements ExternalValue_Global {
-  const _$ExternalValue_Global(this.field0);
+class _$ExternalValue_GlobalImpl implements ExternalValue_Global {
+  const _$ExternalValue_GlobalImpl(this.field0);
 
   @override
   final Global field0;
@@ -956,7 +960,7 @@ class _$ExternalValue_Global implements ExternalValue_Global {
   bool operator ==(dynamic other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$ExternalValue_Global &&
+            other is _$ExternalValue_GlobalImpl &&
             (identical(other.field0, field0) || other.field0 == field0));
   }
 
@@ -966,9 +970,10 @@ class _$ExternalValue_Global implements ExternalValue_Global {
   @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
-  _$$ExternalValue_GlobalCopyWith<_$ExternalValue_Global> get copyWith =>
-      __$$ExternalValue_GlobalCopyWithImpl<_$ExternalValue_Global>(
-          this, _$identity);
+  _$$ExternalValue_GlobalImplCopyWith<_$ExternalValue_GlobalImpl>
+      get copyWith =>
+          __$$ExternalValue_GlobalImplCopyWithImpl<_$ExternalValue_GlobalImpl>(
+              this, _$identity);
 
   @override
   @optionalTypeArgs
@@ -1053,30 +1058,30 @@ class _$ExternalValue_Global implements ExternalValue_Global {
 
 abstract class ExternalValue_Global implements ExternalValue {
   const factory ExternalValue_Global(final Global field0) =
-      _$ExternalValue_Global;
+      _$ExternalValue_GlobalImpl;
 
   @override
   Global get field0;
   @JsonKey(ignore: true)
-  _$$ExternalValue_GlobalCopyWith<_$ExternalValue_Global> get copyWith =>
-      throw _privateConstructorUsedError;
+  _$$ExternalValue_GlobalImplCopyWith<_$ExternalValue_GlobalImpl>
+      get copyWith => throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract class _$$ExternalValue_TableCopyWith<$Res> {
-  factory _$$ExternalValue_TableCopyWith(_$ExternalValue_Table value,
-          $Res Function(_$ExternalValue_Table) then) =
-      __$$ExternalValue_TableCopyWithImpl<$Res>;
+abstract class _$$ExternalValue_TableImplCopyWith<$Res> {
+  factory _$$ExternalValue_TableImplCopyWith(_$ExternalValue_TableImpl value,
+          $Res Function(_$ExternalValue_TableImpl) then) =
+      __$$ExternalValue_TableImplCopyWithImpl<$Res>;
   @useResult
   $Res call({Table field0});
 }
 
 /// @nodoc
-class __$$ExternalValue_TableCopyWithImpl<$Res>
-    extends _$ExternalValueCopyWithImpl<$Res, _$ExternalValue_Table>
-    implements _$$ExternalValue_TableCopyWith<$Res> {
-  __$$ExternalValue_TableCopyWithImpl(
-      _$ExternalValue_Table _value, $Res Function(_$ExternalValue_Table) _then)
+class __$$ExternalValue_TableImplCopyWithImpl<$Res>
+    extends _$ExternalValueCopyWithImpl<$Res, _$ExternalValue_TableImpl>
+    implements _$$ExternalValue_TableImplCopyWith<$Res> {
+  __$$ExternalValue_TableImplCopyWithImpl(_$ExternalValue_TableImpl _value,
+      $Res Function(_$ExternalValue_TableImpl) _then)
       : super(_value, _then);
 
   @pragma('vm:prefer-inline')
@@ -1084,7 +1089,7 @@ class __$$ExternalValue_TableCopyWithImpl<$Res>
   $Res call({
     Object? field0 = null,
   }) {
-    return _then(_$ExternalValue_Table(
+    return _then(_$ExternalValue_TableImpl(
       null == field0
           ? _value.field0
           : field0 // ignore: cast_nullable_to_non_nullable
@@ -1095,8 +1100,8 @@ class __$$ExternalValue_TableCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$ExternalValue_Table implements ExternalValue_Table {
-  const _$ExternalValue_Table(this.field0);
+class _$ExternalValue_TableImpl implements ExternalValue_Table {
+  const _$ExternalValue_TableImpl(this.field0);
 
   @override
   final Table field0;
@@ -1110,7 +1115,7 @@ class _$ExternalValue_Table implements ExternalValue_Table {
   bool operator ==(dynamic other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$ExternalValue_Table &&
+            other is _$ExternalValue_TableImpl &&
             (identical(other.field0, field0) || other.field0 == field0));
   }
 
@@ -1120,8 +1125,8 @@ class _$ExternalValue_Table implements ExternalValue_Table {
   @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
-  _$$ExternalValue_TableCopyWith<_$ExternalValue_Table> get copyWith =>
-      __$$ExternalValue_TableCopyWithImpl<_$ExternalValue_Table>(
+  _$$ExternalValue_TableImplCopyWith<_$ExternalValue_TableImpl> get copyWith =>
+      __$$ExternalValue_TableImplCopyWithImpl<_$ExternalValue_TableImpl>(
           this, _$identity);
 
   @override
@@ -1206,30 +1211,31 @@ class _$ExternalValue_Table implements ExternalValue_Table {
 }
 
 abstract class ExternalValue_Table implements ExternalValue {
-  const factory ExternalValue_Table(final Table field0) = _$ExternalValue_Table;
+  const factory ExternalValue_Table(final Table field0) =
+      _$ExternalValue_TableImpl;
 
   @override
   Table get field0;
   @JsonKey(ignore: true)
-  _$$ExternalValue_TableCopyWith<_$ExternalValue_Table> get copyWith =>
+  _$$ExternalValue_TableImplCopyWith<_$ExternalValue_TableImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract class _$$ExternalValue_MemoryCopyWith<$Res> {
-  factory _$$ExternalValue_MemoryCopyWith(_$ExternalValue_Memory value,
-          $Res Function(_$ExternalValue_Memory) then) =
-      __$$ExternalValue_MemoryCopyWithImpl<$Res>;
+abstract class _$$ExternalValue_MemoryImplCopyWith<$Res> {
+  factory _$$ExternalValue_MemoryImplCopyWith(_$ExternalValue_MemoryImpl value,
+          $Res Function(_$ExternalValue_MemoryImpl) then) =
+      __$$ExternalValue_MemoryImplCopyWithImpl<$Res>;
   @useResult
   $Res call({Memory field0});
 }
 
 /// @nodoc
-class __$$ExternalValue_MemoryCopyWithImpl<$Res>
-    extends _$ExternalValueCopyWithImpl<$Res, _$ExternalValue_Memory>
-    implements _$$ExternalValue_MemoryCopyWith<$Res> {
-  __$$ExternalValue_MemoryCopyWithImpl(_$ExternalValue_Memory _value,
-      $Res Function(_$ExternalValue_Memory) _then)
+class __$$ExternalValue_MemoryImplCopyWithImpl<$Res>
+    extends _$ExternalValueCopyWithImpl<$Res, _$ExternalValue_MemoryImpl>
+    implements _$$ExternalValue_MemoryImplCopyWith<$Res> {
+  __$$ExternalValue_MemoryImplCopyWithImpl(_$ExternalValue_MemoryImpl _value,
+      $Res Function(_$ExternalValue_MemoryImpl) _then)
       : super(_value, _then);
 
   @pragma('vm:prefer-inline')
@@ -1237,7 +1243,7 @@ class __$$ExternalValue_MemoryCopyWithImpl<$Res>
   $Res call({
     Object? field0 = null,
   }) {
-    return _then(_$ExternalValue_Memory(
+    return _then(_$ExternalValue_MemoryImpl(
       null == field0
           ? _value.field0
           : field0 // ignore: cast_nullable_to_non_nullable
@@ -1248,8 +1254,8 @@ class __$$ExternalValue_MemoryCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$ExternalValue_Memory implements ExternalValue_Memory {
-  const _$ExternalValue_Memory(this.field0);
+class _$ExternalValue_MemoryImpl implements ExternalValue_Memory {
+  const _$ExternalValue_MemoryImpl(this.field0);
 
   @override
   final Memory field0;
@@ -1263,7 +1269,7 @@ class _$ExternalValue_Memory implements ExternalValue_Memory {
   bool operator ==(dynamic other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$ExternalValue_Memory &&
+            other is _$ExternalValue_MemoryImpl &&
             (identical(other.field0, field0) || other.field0 == field0));
   }
 
@@ -1273,9 +1279,10 @@ class _$ExternalValue_Memory implements ExternalValue_Memory {
   @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
-  _$$ExternalValue_MemoryCopyWith<_$ExternalValue_Memory> get copyWith =>
-      __$$ExternalValue_MemoryCopyWithImpl<_$ExternalValue_Memory>(
-          this, _$identity);
+  _$$ExternalValue_MemoryImplCopyWith<_$ExternalValue_MemoryImpl>
+      get copyWith =>
+          __$$ExternalValue_MemoryImplCopyWithImpl<_$ExternalValue_MemoryImpl>(
+              this, _$identity);
 
   @override
   @optionalTypeArgs
@@ -1360,32 +1367,32 @@ class _$ExternalValue_Memory implements ExternalValue_Memory {
 
 abstract class ExternalValue_Memory implements ExternalValue {
   const factory ExternalValue_Memory(final Memory field0) =
-      _$ExternalValue_Memory;
+      _$ExternalValue_MemoryImpl;
 
   @override
   Memory get field0;
   @JsonKey(ignore: true)
-  _$$ExternalValue_MemoryCopyWith<_$ExternalValue_Memory> get copyWith =>
-      throw _privateConstructorUsedError;
+  _$$ExternalValue_MemoryImplCopyWith<_$ExternalValue_MemoryImpl>
+      get copyWith => throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract class _$$ExternalValue_SharedMemoryCopyWith<$Res> {
-  factory _$$ExternalValue_SharedMemoryCopyWith(
-          _$ExternalValue_SharedMemory value,
-          $Res Function(_$ExternalValue_SharedMemory) then) =
-      __$$ExternalValue_SharedMemoryCopyWithImpl<$Res>;
+abstract class _$$ExternalValue_SharedMemoryImplCopyWith<$Res> {
+  factory _$$ExternalValue_SharedMemoryImplCopyWith(
+          _$ExternalValue_SharedMemoryImpl value,
+          $Res Function(_$ExternalValue_SharedMemoryImpl) then) =
+      __$$ExternalValue_SharedMemoryImplCopyWithImpl<$Res>;
   @useResult
   $Res call({WasmRunSharedMemory field0});
 }
 
 /// @nodoc
-class __$$ExternalValue_SharedMemoryCopyWithImpl<$Res>
-    extends _$ExternalValueCopyWithImpl<$Res, _$ExternalValue_SharedMemory>
-    implements _$$ExternalValue_SharedMemoryCopyWith<$Res> {
-  __$$ExternalValue_SharedMemoryCopyWithImpl(
-      _$ExternalValue_SharedMemory _value,
-      $Res Function(_$ExternalValue_SharedMemory) _then)
+class __$$ExternalValue_SharedMemoryImplCopyWithImpl<$Res>
+    extends _$ExternalValueCopyWithImpl<$Res, _$ExternalValue_SharedMemoryImpl>
+    implements _$$ExternalValue_SharedMemoryImplCopyWith<$Res> {
+  __$$ExternalValue_SharedMemoryImplCopyWithImpl(
+      _$ExternalValue_SharedMemoryImpl _value,
+      $Res Function(_$ExternalValue_SharedMemoryImpl) _then)
       : super(_value, _then);
 
   @pragma('vm:prefer-inline')
@@ -1393,7 +1400,7 @@ class __$$ExternalValue_SharedMemoryCopyWithImpl<$Res>
   $Res call({
     Object? field0 = null,
   }) {
-    return _then(_$ExternalValue_SharedMemory(
+    return _then(_$ExternalValue_SharedMemoryImpl(
       null == field0
           ? _value.field0
           : field0 // ignore: cast_nullable_to_non_nullable
@@ -1404,8 +1411,8 @@ class __$$ExternalValue_SharedMemoryCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$ExternalValue_SharedMemory implements ExternalValue_SharedMemory {
-  const _$ExternalValue_SharedMemory(this.field0);
+class _$ExternalValue_SharedMemoryImpl implements ExternalValue_SharedMemory {
+  const _$ExternalValue_SharedMemoryImpl(this.field0);
 
   @override
   final WasmRunSharedMemory field0;
@@ -1419,7 +1426,7 @@ class _$ExternalValue_SharedMemory implements ExternalValue_SharedMemory {
   bool operator ==(dynamic other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$ExternalValue_SharedMemory &&
+            other is _$ExternalValue_SharedMemoryImpl &&
             (identical(other.field0, field0) || other.field0 == field0));
   }
 
@@ -1429,9 +1436,9 @@ class _$ExternalValue_SharedMemory implements ExternalValue_SharedMemory {
   @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
-  _$$ExternalValue_SharedMemoryCopyWith<_$ExternalValue_SharedMemory>
-      get copyWith => __$$ExternalValue_SharedMemoryCopyWithImpl<
-          _$ExternalValue_SharedMemory>(this, _$identity);
+  _$$ExternalValue_SharedMemoryImplCopyWith<_$ExternalValue_SharedMemoryImpl>
+      get copyWith => __$$ExternalValue_SharedMemoryImplCopyWithImpl<
+          _$ExternalValue_SharedMemoryImpl>(this, _$identity);
 
   @override
   @optionalTypeArgs
@@ -1516,12 +1523,12 @@ class _$ExternalValue_SharedMemory implements ExternalValue_SharedMemory {
 
 abstract class ExternalValue_SharedMemory implements ExternalValue {
   const factory ExternalValue_SharedMemory(final WasmRunSharedMemory field0) =
-      _$ExternalValue_SharedMemory;
+      _$ExternalValue_SharedMemoryImpl;
 
   @override
   WasmRunSharedMemory get field0;
   @JsonKey(ignore: true)
-  _$$ExternalValue_SharedMemoryCopyWith<_$ExternalValue_SharedMemory>
+  _$$ExternalValue_SharedMemoryImplCopyWith<_$ExternalValue_SharedMemoryImpl>
       get copyWith => throw _privateConstructorUsedError;
 }
 
@@ -1593,20 +1600,20 @@ class _$ParallelExecCopyWithImpl<$Res, $Val extends ParallelExec>
 }
 
 /// @nodoc
-abstract class _$$ParallelExec_OkCopyWith<$Res> {
-  factory _$$ParallelExec_OkCopyWith(
-          _$ParallelExec_Ok value, $Res Function(_$ParallelExec_Ok) then) =
-      __$$ParallelExec_OkCopyWithImpl<$Res>;
+abstract class _$$ParallelExec_OkImplCopyWith<$Res> {
+  factory _$$ParallelExec_OkImplCopyWith(_$ParallelExec_OkImpl value,
+          $Res Function(_$ParallelExec_OkImpl) then) =
+      __$$ParallelExec_OkImplCopyWithImpl<$Res>;
   @useResult
   $Res call({List<WasmVal> field0});
 }
 
 /// @nodoc
-class __$$ParallelExec_OkCopyWithImpl<$Res>
-    extends _$ParallelExecCopyWithImpl<$Res, _$ParallelExec_Ok>
-    implements _$$ParallelExec_OkCopyWith<$Res> {
-  __$$ParallelExec_OkCopyWithImpl(
-      _$ParallelExec_Ok _value, $Res Function(_$ParallelExec_Ok) _then)
+class __$$ParallelExec_OkImplCopyWithImpl<$Res>
+    extends _$ParallelExecCopyWithImpl<$Res, _$ParallelExec_OkImpl>
+    implements _$$ParallelExec_OkImplCopyWith<$Res> {
+  __$$ParallelExec_OkImplCopyWithImpl(
+      _$ParallelExec_OkImpl _value, $Res Function(_$ParallelExec_OkImpl) _then)
       : super(_value, _then);
 
   @pragma('vm:prefer-inline')
@@ -1614,7 +1621,7 @@ class __$$ParallelExec_OkCopyWithImpl<$Res>
   $Res call({
     Object? field0 = null,
   }) {
-    return _then(_$ParallelExec_Ok(
+    return _then(_$ParallelExec_OkImpl(
       null == field0
           ? _value._field0
           : field0 // ignore: cast_nullable_to_non_nullable
@@ -1625,8 +1632,8 @@ class __$$ParallelExec_OkCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$ParallelExec_Ok implements ParallelExec_Ok {
-  const _$ParallelExec_Ok(final List<WasmVal> field0) : _field0 = field0;
+class _$ParallelExec_OkImpl implements ParallelExec_Ok {
+  const _$ParallelExec_OkImpl(final List<WasmVal> field0) : _field0 = field0;
 
   final List<WasmVal> _field0;
   @override
@@ -1645,7 +1652,7 @@ class _$ParallelExec_Ok implements ParallelExec_Ok {
   bool operator ==(dynamic other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$ParallelExec_Ok &&
+            other is _$ParallelExec_OkImpl &&
             const DeepCollectionEquality().equals(other._field0, _field0));
   }
 
@@ -1656,8 +1663,9 @@ class _$ParallelExec_Ok implements ParallelExec_Ok {
   @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
-  _$$ParallelExec_OkCopyWith<_$ParallelExec_Ok> get copyWith =>
-      __$$ParallelExec_OkCopyWithImpl<_$ParallelExec_Ok>(this, _$identity);
+  _$$ParallelExec_OkImplCopyWith<_$ParallelExec_OkImpl> get copyWith =>
+      __$$ParallelExec_OkImplCopyWithImpl<_$ParallelExec_OkImpl>(
+          this, _$identity);
 
   @override
   @optionalTypeArgs
@@ -1729,30 +1737,31 @@ class _$ParallelExec_Ok implements ParallelExec_Ok {
 }
 
 abstract class ParallelExec_Ok implements ParallelExec {
-  const factory ParallelExec_Ok(final List<WasmVal> field0) = _$ParallelExec_Ok;
+  const factory ParallelExec_Ok(final List<WasmVal> field0) =
+      _$ParallelExec_OkImpl;
 
   @override
   List<WasmVal> get field0;
   @JsonKey(ignore: true)
-  _$$ParallelExec_OkCopyWith<_$ParallelExec_Ok> get copyWith =>
+  _$$ParallelExec_OkImplCopyWith<_$ParallelExec_OkImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract class _$$ParallelExec_ErrCopyWith<$Res> {
-  factory _$$ParallelExec_ErrCopyWith(
-          _$ParallelExec_Err value, $Res Function(_$ParallelExec_Err) then) =
-      __$$ParallelExec_ErrCopyWithImpl<$Res>;
+abstract class _$$ParallelExec_ErrImplCopyWith<$Res> {
+  factory _$$ParallelExec_ErrImplCopyWith(_$ParallelExec_ErrImpl value,
+          $Res Function(_$ParallelExec_ErrImpl) then) =
+      __$$ParallelExec_ErrImplCopyWithImpl<$Res>;
   @useResult
   $Res call({String field0});
 }
 
 /// @nodoc
-class __$$ParallelExec_ErrCopyWithImpl<$Res>
-    extends _$ParallelExecCopyWithImpl<$Res, _$ParallelExec_Err>
-    implements _$$ParallelExec_ErrCopyWith<$Res> {
-  __$$ParallelExec_ErrCopyWithImpl(
-      _$ParallelExec_Err _value, $Res Function(_$ParallelExec_Err) _then)
+class __$$ParallelExec_ErrImplCopyWithImpl<$Res>
+    extends _$ParallelExecCopyWithImpl<$Res, _$ParallelExec_ErrImpl>
+    implements _$$ParallelExec_ErrImplCopyWith<$Res> {
+  __$$ParallelExec_ErrImplCopyWithImpl(_$ParallelExec_ErrImpl _value,
+      $Res Function(_$ParallelExec_ErrImpl) _then)
       : super(_value, _then);
 
   @pragma('vm:prefer-inline')
@@ -1760,7 +1769,7 @@ class __$$ParallelExec_ErrCopyWithImpl<$Res>
   $Res call({
     Object? field0 = null,
   }) {
-    return _then(_$ParallelExec_Err(
+    return _then(_$ParallelExec_ErrImpl(
       null == field0
           ? _value.field0
           : field0 // ignore: cast_nullable_to_non_nullable
@@ -1771,8 +1780,8 @@ class __$$ParallelExec_ErrCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$ParallelExec_Err implements ParallelExec_Err {
-  const _$ParallelExec_Err(this.field0);
+class _$ParallelExec_ErrImpl implements ParallelExec_Err {
+  const _$ParallelExec_ErrImpl(this.field0);
 
   @override
   final String field0;
@@ -1786,7 +1795,7 @@ class _$ParallelExec_Err implements ParallelExec_Err {
   bool operator ==(dynamic other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$ParallelExec_Err &&
+            other is _$ParallelExec_ErrImpl &&
             (identical(other.field0, field0) || other.field0 == field0));
   }
 
@@ -1796,8 +1805,9 @@ class _$ParallelExec_Err implements ParallelExec_Err {
   @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
-  _$$ParallelExec_ErrCopyWith<_$ParallelExec_Err> get copyWith =>
-      __$$ParallelExec_ErrCopyWithImpl<_$ParallelExec_Err>(this, _$identity);
+  _$$ParallelExec_ErrImplCopyWith<_$ParallelExec_ErrImpl> get copyWith =>
+      __$$ParallelExec_ErrImplCopyWithImpl<_$ParallelExec_ErrImpl>(
+          this, _$identity);
 
   @override
   @optionalTypeArgs
@@ -1869,30 +1879,30 @@ class _$ParallelExec_Err implements ParallelExec_Err {
 }
 
 abstract class ParallelExec_Err implements ParallelExec {
-  const factory ParallelExec_Err(final String field0) = _$ParallelExec_Err;
+  const factory ParallelExec_Err(final String field0) = _$ParallelExec_ErrImpl;
 
   @override
   String get field0;
   @JsonKey(ignore: true)
-  _$$ParallelExec_ErrCopyWith<_$ParallelExec_Err> get copyWith =>
+  _$$ParallelExec_ErrImplCopyWith<_$ParallelExec_ErrImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract class _$$ParallelExec_CallCopyWith<$Res> {
-  factory _$$ParallelExec_CallCopyWith(
-          _$ParallelExec_Call value, $Res Function(_$ParallelExec_Call) then) =
-      __$$ParallelExec_CallCopyWithImpl<$Res>;
+abstract class _$$ParallelExec_CallImplCopyWith<$Res> {
+  factory _$$ParallelExec_CallImplCopyWith(_$ParallelExec_CallImpl value,
+          $Res Function(_$ParallelExec_CallImpl) then) =
+      __$$ParallelExec_CallImplCopyWithImpl<$Res>;
   @useResult
   $Res call({FunctionCall field0});
 }
 
 /// @nodoc
-class __$$ParallelExec_CallCopyWithImpl<$Res>
-    extends _$ParallelExecCopyWithImpl<$Res, _$ParallelExec_Call>
-    implements _$$ParallelExec_CallCopyWith<$Res> {
-  __$$ParallelExec_CallCopyWithImpl(
-      _$ParallelExec_Call _value, $Res Function(_$ParallelExec_Call) _then)
+class __$$ParallelExec_CallImplCopyWithImpl<$Res>
+    extends _$ParallelExecCopyWithImpl<$Res, _$ParallelExec_CallImpl>
+    implements _$$ParallelExec_CallImplCopyWith<$Res> {
+  __$$ParallelExec_CallImplCopyWithImpl(_$ParallelExec_CallImpl _value,
+      $Res Function(_$ParallelExec_CallImpl) _then)
       : super(_value, _then);
 
   @pragma('vm:prefer-inline')
@@ -1900,7 +1910,7 @@ class __$$ParallelExec_CallCopyWithImpl<$Res>
   $Res call({
     Object? field0 = null,
   }) {
-    return _then(_$ParallelExec_Call(
+    return _then(_$ParallelExec_CallImpl(
       null == field0
           ? _value.field0
           : field0 // ignore: cast_nullable_to_non_nullable
@@ -1911,8 +1921,8 @@ class __$$ParallelExec_CallCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$ParallelExec_Call implements ParallelExec_Call {
-  const _$ParallelExec_Call(this.field0);
+class _$ParallelExec_CallImpl implements ParallelExec_Call {
+  const _$ParallelExec_CallImpl(this.field0);
 
   @override
   final FunctionCall field0;
@@ -1926,7 +1936,7 @@ class _$ParallelExec_Call implements ParallelExec_Call {
   bool operator ==(dynamic other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$ParallelExec_Call &&
+            other is _$ParallelExec_CallImpl &&
             (identical(other.field0, field0) || other.field0 == field0));
   }
 
@@ -1936,8 +1946,9 @@ class _$ParallelExec_Call implements ParallelExec_Call {
   @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
-  _$$ParallelExec_CallCopyWith<_$ParallelExec_Call> get copyWith =>
-      __$$ParallelExec_CallCopyWithImpl<_$ParallelExec_Call>(this, _$identity);
+  _$$ParallelExec_CallImplCopyWith<_$ParallelExec_CallImpl> get copyWith =>
+      __$$ParallelExec_CallImplCopyWithImpl<_$ParallelExec_CallImpl>(
+          this, _$identity);
 
   @override
   @optionalTypeArgs
@@ -2010,12 +2021,12 @@ class _$ParallelExec_Call implements ParallelExec_Call {
 
 abstract class ParallelExec_Call implements ParallelExec {
   const factory ParallelExec_Call(final FunctionCall field0) =
-      _$ParallelExec_Call;
+      _$ParallelExec_CallImpl;
 
   @override
   FunctionCall get field0;
   @JsonKey(ignore: true)
-  _$$ParallelExec_CallCopyWith<_$ParallelExec_Call> get copyWith =>
+  _$$ParallelExec_CallImplCopyWith<_$ParallelExec_CallImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
@@ -2110,20 +2121,20 @@ class _$WasmValCopyWithImpl<$Res, $Val extends WasmVal>
 }
 
 /// @nodoc
-abstract class _$$WasmVal_i32CopyWith<$Res> {
-  factory _$$WasmVal_i32CopyWith(
-          _$WasmVal_i32 value, $Res Function(_$WasmVal_i32) then) =
-      __$$WasmVal_i32CopyWithImpl<$Res>;
+abstract class _$$WasmVal_i32ImplCopyWith<$Res> {
+  factory _$$WasmVal_i32ImplCopyWith(
+          _$WasmVal_i32Impl value, $Res Function(_$WasmVal_i32Impl) then) =
+      __$$WasmVal_i32ImplCopyWithImpl<$Res>;
   @useResult
   $Res call({int field0});
 }
 
 /// @nodoc
-class __$$WasmVal_i32CopyWithImpl<$Res>
-    extends _$WasmValCopyWithImpl<$Res, _$WasmVal_i32>
-    implements _$$WasmVal_i32CopyWith<$Res> {
-  __$$WasmVal_i32CopyWithImpl(
-      _$WasmVal_i32 _value, $Res Function(_$WasmVal_i32) _then)
+class __$$WasmVal_i32ImplCopyWithImpl<$Res>
+    extends _$WasmValCopyWithImpl<$Res, _$WasmVal_i32Impl>
+    implements _$$WasmVal_i32ImplCopyWith<$Res> {
+  __$$WasmVal_i32ImplCopyWithImpl(
+      _$WasmVal_i32Impl _value, $Res Function(_$WasmVal_i32Impl) _then)
       : super(_value, _then);
 
   @pragma('vm:prefer-inline')
@@ -2131,7 +2142,7 @@ class __$$WasmVal_i32CopyWithImpl<$Res>
   $Res call({
     Object? field0 = null,
   }) {
-    return _then(_$WasmVal_i32(
+    return _then(_$WasmVal_i32Impl(
       null == field0
           ? _value.field0
           : field0 // ignore: cast_nullable_to_non_nullable
@@ -2142,8 +2153,8 @@ class __$$WasmVal_i32CopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$WasmVal_i32 implements WasmVal_i32 {
-  const _$WasmVal_i32(this.field0);
+class _$WasmVal_i32Impl implements WasmVal_i32 {
+  const _$WasmVal_i32Impl(this.field0);
 
   @override
   final int field0;
@@ -2157,7 +2168,7 @@ class _$WasmVal_i32 implements WasmVal_i32 {
   bool operator ==(dynamic other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$WasmVal_i32 &&
+            other is _$WasmVal_i32Impl &&
             (identical(other.field0, field0) || other.field0 == field0));
   }
 
@@ -2167,8 +2178,8 @@ class _$WasmVal_i32 implements WasmVal_i32 {
   @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
-  _$$WasmVal_i32CopyWith<_$WasmVal_i32> get copyWith =>
-      __$$WasmVal_i32CopyWithImpl<_$WasmVal_i32>(this, _$identity);
+  _$$WasmVal_i32ImplCopyWith<_$WasmVal_i32Impl> get copyWith =>
+      __$$WasmVal_i32ImplCopyWithImpl<_$WasmVal_i32Impl>(this, _$identity);
 
   @override
   @optionalTypeArgs
@@ -2264,30 +2275,30 @@ class _$WasmVal_i32 implements WasmVal_i32 {
 }
 
 abstract class WasmVal_i32 implements WasmVal {
-  const factory WasmVal_i32(final int field0) = _$WasmVal_i32;
+  const factory WasmVal_i32(final int field0) = _$WasmVal_i32Impl;
 
   @override
   int get field0;
   @JsonKey(ignore: true)
-  _$$WasmVal_i32CopyWith<_$WasmVal_i32> get copyWith =>
+  _$$WasmVal_i32ImplCopyWith<_$WasmVal_i32Impl> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract class _$$WasmVal_i64CopyWith<$Res> {
-  factory _$$WasmVal_i64CopyWith(
-          _$WasmVal_i64 value, $Res Function(_$WasmVal_i64) then) =
-      __$$WasmVal_i64CopyWithImpl<$Res>;
+abstract class _$$WasmVal_i64ImplCopyWith<$Res> {
+  factory _$$WasmVal_i64ImplCopyWith(
+          _$WasmVal_i64Impl value, $Res Function(_$WasmVal_i64Impl) then) =
+      __$$WasmVal_i64ImplCopyWithImpl<$Res>;
   @useResult
   $Res call({int field0});
 }
 
 /// @nodoc
-class __$$WasmVal_i64CopyWithImpl<$Res>
-    extends _$WasmValCopyWithImpl<$Res, _$WasmVal_i64>
-    implements _$$WasmVal_i64CopyWith<$Res> {
-  __$$WasmVal_i64CopyWithImpl(
-      _$WasmVal_i64 _value, $Res Function(_$WasmVal_i64) _then)
+class __$$WasmVal_i64ImplCopyWithImpl<$Res>
+    extends _$WasmValCopyWithImpl<$Res, _$WasmVal_i64Impl>
+    implements _$$WasmVal_i64ImplCopyWith<$Res> {
+  __$$WasmVal_i64ImplCopyWithImpl(
+      _$WasmVal_i64Impl _value, $Res Function(_$WasmVal_i64Impl) _then)
       : super(_value, _then);
 
   @pragma('vm:prefer-inline')
@@ -2295,7 +2306,7 @@ class __$$WasmVal_i64CopyWithImpl<$Res>
   $Res call({
     Object? field0 = null,
   }) {
-    return _then(_$WasmVal_i64(
+    return _then(_$WasmVal_i64Impl(
       null == field0
           ? _value.field0
           : field0 // ignore: cast_nullable_to_non_nullable
@@ -2306,8 +2317,8 @@ class __$$WasmVal_i64CopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$WasmVal_i64 implements WasmVal_i64 {
-  const _$WasmVal_i64(this.field0);
+class _$WasmVal_i64Impl implements WasmVal_i64 {
+  const _$WasmVal_i64Impl(this.field0);
 
   @override
   final int field0;
@@ -2321,7 +2332,7 @@ class _$WasmVal_i64 implements WasmVal_i64 {
   bool operator ==(dynamic other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$WasmVal_i64 &&
+            other is _$WasmVal_i64Impl &&
             (identical(other.field0, field0) || other.field0 == field0));
   }
 
@@ -2331,8 +2342,8 @@ class _$WasmVal_i64 implements WasmVal_i64 {
   @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
-  _$$WasmVal_i64CopyWith<_$WasmVal_i64> get copyWith =>
-      __$$WasmVal_i64CopyWithImpl<_$WasmVal_i64>(this, _$identity);
+  _$$WasmVal_i64ImplCopyWith<_$WasmVal_i64Impl> get copyWith =>
+      __$$WasmVal_i64ImplCopyWithImpl<_$WasmVal_i64Impl>(this, _$identity);
 
   @override
   @optionalTypeArgs
@@ -2428,30 +2439,30 @@ class _$WasmVal_i64 implements WasmVal_i64 {
 }
 
 abstract class WasmVal_i64 implements WasmVal {
-  const factory WasmVal_i64(final int field0) = _$WasmVal_i64;
+  const factory WasmVal_i64(final int field0) = _$WasmVal_i64Impl;
 
   @override
   int get field0;
   @JsonKey(ignore: true)
-  _$$WasmVal_i64CopyWith<_$WasmVal_i64> get copyWith =>
+  _$$WasmVal_i64ImplCopyWith<_$WasmVal_i64Impl> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract class _$$WasmVal_f32CopyWith<$Res> {
-  factory _$$WasmVal_f32CopyWith(
-          _$WasmVal_f32 value, $Res Function(_$WasmVal_f32) then) =
-      __$$WasmVal_f32CopyWithImpl<$Res>;
+abstract class _$$WasmVal_f32ImplCopyWith<$Res> {
+  factory _$$WasmVal_f32ImplCopyWith(
+          _$WasmVal_f32Impl value, $Res Function(_$WasmVal_f32Impl) then) =
+      __$$WasmVal_f32ImplCopyWithImpl<$Res>;
   @useResult
   $Res call({double field0});
 }
 
 /// @nodoc
-class __$$WasmVal_f32CopyWithImpl<$Res>
-    extends _$WasmValCopyWithImpl<$Res, _$WasmVal_f32>
-    implements _$$WasmVal_f32CopyWith<$Res> {
-  __$$WasmVal_f32CopyWithImpl(
-      _$WasmVal_f32 _value, $Res Function(_$WasmVal_f32) _then)
+class __$$WasmVal_f32ImplCopyWithImpl<$Res>
+    extends _$WasmValCopyWithImpl<$Res, _$WasmVal_f32Impl>
+    implements _$$WasmVal_f32ImplCopyWith<$Res> {
+  __$$WasmVal_f32ImplCopyWithImpl(
+      _$WasmVal_f32Impl _value, $Res Function(_$WasmVal_f32Impl) _then)
       : super(_value, _then);
 
   @pragma('vm:prefer-inline')
@@ -2459,7 +2470,7 @@ class __$$WasmVal_f32CopyWithImpl<$Res>
   $Res call({
     Object? field0 = null,
   }) {
-    return _then(_$WasmVal_f32(
+    return _then(_$WasmVal_f32Impl(
       null == field0
           ? _value.field0
           : field0 // ignore: cast_nullable_to_non_nullable
@@ -2470,8 +2481,8 @@ class __$$WasmVal_f32CopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$WasmVal_f32 implements WasmVal_f32 {
-  const _$WasmVal_f32(this.field0);
+class _$WasmVal_f32Impl implements WasmVal_f32 {
+  const _$WasmVal_f32Impl(this.field0);
 
   @override
   final double field0;
@@ -2485,7 +2496,7 @@ class _$WasmVal_f32 implements WasmVal_f32 {
   bool operator ==(dynamic other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$WasmVal_f32 &&
+            other is _$WasmVal_f32Impl &&
             (identical(other.field0, field0) || other.field0 == field0));
   }
 
@@ -2495,8 +2506,8 @@ class _$WasmVal_f32 implements WasmVal_f32 {
   @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
-  _$$WasmVal_f32CopyWith<_$WasmVal_f32> get copyWith =>
-      __$$WasmVal_f32CopyWithImpl<_$WasmVal_f32>(this, _$identity);
+  _$$WasmVal_f32ImplCopyWith<_$WasmVal_f32Impl> get copyWith =>
+      __$$WasmVal_f32ImplCopyWithImpl<_$WasmVal_f32Impl>(this, _$identity);
 
   @override
   @optionalTypeArgs
@@ -2592,30 +2603,30 @@ class _$WasmVal_f32 implements WasmVal_f32 {
 }
 
 abstract class WasmVal_f32 implements WasmVal {
-  const factory WasmVal_f32(final double field0) = _$WasmVal_f32;
+  const factory WasmVal_f32(final double field0) = _$WasmVal_f32Impl;
 
   @override
   double get field0;
   @JsonKey(ignore: true)
-  _$$WasmVal_f32CopyWith<_$WasmVal_f32> get copyWith =>
+  _$$WasmVal_f32ImplCopyWith<_$WasmVal_f32Impl> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract class _$$WasmVal_f64CopyWith<$Res> {
-  factory _$$WasmVal_f64CopyWith(
-          _$WasmVal_f64 value, $Res Function(_$WasmVal_f64) then) =
-      __$$WasmVal_f64CopyWithImpl<$Res>;
+abstract class _$$WasmVal_f64ImplCopyWith<$Res> {
+  factory _$$WasmVal_f64ImplCopyWith(
+          _$WasmVal_f64Impl value, $Res Function(_$WasmVal_f64Impl) then) =
+      __$$WasmVal_f64ImplCopyWithImpl<$Res>;
   @useResult
   $Res call({double field0});
 }
 
 /// @nodoc
-class __$$WasmVal_f64CopyWithImpl<$Res>
-    extends _$WasmValCopyWithImpl<$Res, _$WasmVal_f64>
-    implements _$$WasmVal_f64CopyWith<$Res> {
-  __$$WasmVal_f64CopyWithImpl(
-      _$WasmVal_f64 _value, $Res Function(_$WasmVal_f64) _then)
+class __$$WasmVal_f64ImplCopyWithImpl<$Res>
+    extends _$WasmValCopyWithImpl<$Res, _$WasmVal_f64Impl>
+    implements _$$WasmVal_f64ImplCopyWith<$Res> {
+  __$$WasmVal_f64ImplCopyWithImpl(
+      _$WasmVal_f64Impl _value, $Res Function(_$WasmVal_f64Impl) _then)
       : super(_value, _then);
 
   @pragma('vm:prefer-inline')
@@ -2623,7 +2634,7 @@ class __$$WasmVal_f64CopyWithImpl<$Res>
   $Res call({
     Object? field0 = null,
   }) {
-    return _then(_$WasmVal_f64(
+    return _then(_$WasmVal_f64Impl(
       null == field0
           ? _value.field0
           : field0 // ignore: cast_nullable_to_non_nullable
@@ -2634,8 +2645,8 @@ class __$$WasmVal_f64CopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$WasmVal_f64 implements WasmVal_f64 {
-  const _$WasmVal_f64(this.field0);
+class _$WasmVal_f64Impl implements WasmVal_f64 {
+  const _$WasmVal_f64Impl(this.field0);
 
   @override
   final double field0;
@@ -2649,7 +2660,7 @@ class _$WasmVal_f64 implements WasmVal_f64 {
   bool operator ==(dynamic other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$WasmVal_f64 &&
+            other is _$WasmVal_f64Impl &&
             (identical(other.field0, field0) || other.field0 == field0));
   }
 
@@ -2659,8 +2670,8 @@ class _$WasmVal_f64 implements WasmVal_f64 {
   @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
-  _$$WasmVal_f64CopyWith<_$WasmVal_f64> get copyWith =>
-      __$$WasmVal_f64CopyWithImpl<_$WasmVal_f64>(this, _$identity);
+  _$$WasmVal_f64ImplCopyWith<_$WasmVal_f64Impl> get copyWith =>
+      __$$WasmVal_f64ImplCopyWithImpl<_$WasmVal_f64Impl>(this, _$identity);
 
   @override
   @optionalTypeArgs
@@ -2756,30 +2767,30 @@ class _$WasmVal_f64 implements WasmVal_f64 {
 }
 
 abstract class WasmVal_f64 implements WasmVal {
-  const factory WasmVal_f64(final double field0) = _$WasmVal_f64;
+  const factory WasmVal_f64(final double field0) = _$WasmVal_f64Impl;
 
   @override
   double get field0;
   @JsonKey(ignore: true)
-  _$$WasmVal_f64CopyWith<_$WasmVal_f64> get copyWith =>
+  _$$WasmVal_f64ImplCopyWith<_$WasmVal_f64Impl> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract class _$$WasmVal_v128CopyWith<$Res> {
-  factory _$$WasmVal_v128CopyWith(
-          _$WasmVal_v128 value, $Res Function(_$WasmVal_v128) then) =
-      __$$WasmVal_v128CopyWithImpl<$Res>;
+abstract class _$$WasmVal_v128ImplCopyWith<$Res> {
+  factory _$$WasmVal_v128ImplCopyWith(
+          _$WasmVal_v128Impl value, $Res Function(_$WasmVal_v128Impl) then) =
+      __$$WasmVal_v128ImplCopyWithImpl<$Res>;
   @useResult
   $Res call({U8Array16 field0});
 }
 
 /// @nodoc
-class __$$WasmVal_v128CopyWithImpl<$Res>
-    extends _$WasmValCopyWithImpl<$Res, _$WasmVal_v128>
-    implements _$$WasmVal_v128CopyWith<$Res> {
-  __$$WasmVal_v128CopyWithImpl(
-      _$WasmVal_v128 _value, $Res Function(_$WasmVal_v128) _then)
+class __$$WasmVal_v128ImplCopyWithImpl<$Res>
+    extends _$WasmValCopyWithImpl<$Res, _$WasmVal_v128Impl>
+    implements _$$WasmVal_v128ImplCopyWith<$Res> {
+  __$$WasmVal_v128ImplCopyWithImpl(
+      _$WasmVal_v128Impl _value, $Res Function(_$WasmVal_v128Impl) _then)
       : super(_value, _then);
 
   @pragma('vm:prefer-inline')
@@ -2787,7 +2798,7 @@ class __$$WasmVal_v128CopyWithImpl<$Res>
   $Res call({
     Object? field0 = null,
   }) {
-    return _then(_$WasmVal_v128(
+    return _then(_$WasmVal_v128Impl(
       null == field0
           ? _value.field0
           : field0 // ignore: cast_nullable_to_non_nullable
@@ -2798,8 +2809,8 @@ class __$$WasmVal_v128CopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$WasmVal_v128 implements WasmVal_v128 {
-  const _$WasmVal_v128(this.field0);
+class _$WasmVal_v128Impl implements WasmVal_v128 {
+  const _$WasmVal_v128Impl(this.field0);
 
   @override
   final U8Array16 field0;
@@ -2813,7 +2824,7 @@ class _$WasmVal_v128 implements WasmVal_v128 {
   bool operator ==(dynamic other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$WasmVal_v128 &&
+            other is _$WasmVal_v128Impl &&
             const DeepCollectionEquality().equals(other.field0, field0));
   }
 
@@ -2824,8 +2835,8 @@ class _$WasmVal_v128 implements WasmVal_v128 {
   @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
-  _$$WasmVal_v128CopyWith<_$WasmVal_v128> get copyWith =>
-      __$$WasmVal_v128CopyWithImpl<_$WasmVal_v128>(this, _$identity);
+  _$$WasmVal_v128ImplCopyWith<_$WasmVal_v128Impl> get copyWith =>
+      __$$WasmVal_v128ImplCopyWithImpl<_$WasmVal_v128Impl>(this, _$identity);
 
   @override
   @optionalTypeArgs
@@ -2921,30 +2932,30 @@ class _$WasmVal_v128 implements WasmVal_v128 {
 }
 
 abstract class WasmVal_v128 implements WasmVal {
-  const factory WasmVal_v128(final U8Array16 field0) = _$WasmVal_v128;
+  const factory WasmVal_v128(final U8Array16 field0) = _$WasmVal_v128Impl;
 
   @override
   U8Array16 get field0;
   @JsonKey(ignore: true)
-  _$$WasmVal_v128CopyWith<_$WasmVal_v128> get copyWith =>
+  _$$WasmVal_v128ImplCopyWith<_$WasmVal_v128Impl> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract class _$$WasmVal_funcRefCopyWith<$Res> {
-  factory _$$WasmVal_funcRefCopyWith(
-          _$WasmVal_funcRef value, $Res Function(_$WasmVal_funcRef) then) =
-      __$$WasmVal_funcRefCopyWithImpl<$Res>;
+abstract class _$$WasmVal_funcRefImplCopyWith<$Res> {
+  factory _$$WasmVal_funcRefImplCopyWith(_$WasmVal_funcRefImpl value,
+          $Res Function(_$WasmVal_funcRefImpl) then) =
+      __$$WasmVal_funcRefImplCopyWithImpl<$Res>;
   @useResult
   $Res call({WFunc? field0});
 }
 
 /// @nodoc
-class __$$WasmVal_funcRefCopyWithImpl<$Res>
-    extends _$WasmValCopyWithImpl<$Res, _$WasmVal_funcRef>
-    implements _$$WasmVal_funcRefCopyWith<$Res> {
-  __$$WasmVal_funcRefCopyWithImpl(
-      _$WasmVal_funcRef _value, $Res Function(_$WasmVal_funcRef) _then)
+class __$$WasmVal_funcRefImplCopyWithImpl<$Res>
+    extends _$WasmValCopyWithImpl<$Res, _$WasmVal_funcRefImpl>
+    implements _$$WasmVal_funcRefImplCopyWith<$Res> {
+  __$$WasmVal_funcRefImplCopyWithImpl(
+      _$WasmVal_funcRefImpl _value, $Res Function(_$WasmVal_funcRefImpl) _then)
       : super(_value, _then);
 
   @pragma('vm:prefer-inline')
@@ -2952,7 +2963,7 @@ class __$$WasmVal_funcRefCopyWithImpl<$Res>
   $Res call({
     Object? field0 = freezed,
   }) {
-    return _then(_$WasmVal_funcRef(
+    return _then(_$WasmVal_funcRefImpl(
       freezed == field0
           ? _value.field0
           : field0 // ignore: cast_nullable_to_non_nullable
@@ -2963,8 +2974,8 @@ class __$$WasmVal_funcRefCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$WasmVal_funcRef implements WasmVal_funcRef {
-  const _$WasmVal_funcRef([this.field0]);
+class _$WasmVal_funcRefImpl implements WasmVal_funcRef {
+  const _$WasmVal_funcRefImpl([this.field0]);
 
   @override
   final WFunc? field0;
@@ -2978,7 +2989,7 @@ class _$WasmVal_funcRef implements WasmVal_funcRef {
   bool operator ==(dynamic other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$WasmVal_funcRef &&
+            other is _$WasmVal_funcRefImpl &&
             (identical(other.field0, field0) || other.field0 == field0));
   }
 
@@ -2988,8 +2999,9 @@ class _$WasmVal_funcRef implements WasmVal_funcRef {
   @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
-  _$$WasmVal_funcRefCopyWith<_$WasmVal_funcRef> get copyWith =>
-      __$$WasmVal_funcRefCopyWithImpl<_$WasmVal_funcRef>(this, _$identity);
+  _$$WasmVal_funcRefImplCopyWith<_$WasmVal_funcRefImpl> get copyWith =>
+      __$$WasmVal_funcRefImplCopyWithImpl<_$WasmVal_funcRefImpl>(
+          this, _$identity);
 
   @override
   @optionalTypeArgs
@@ -3085,30 +3097,30 @@ class _$WasmVal_funcRef implements WasmVal_funcRef {
 }
 
 abstract class WasmVal_funcRef implements WasmVal {
-  const factory WasmVal_funcRef([final WFunc? field0]) = _$WasmVal_funcRef;
+  const factory WasmVal_funcRef([final WFunc? field0]) = _$WasmVal_funcRefImpl;
 
   @override
   WFunc? get field0;
   @JsonKey(ignore: true)
-  _$$WasmVal_funcRefCopyWith<_$WasmVal_funcRef> get copyWith =>
+  _$$WasmVal_funcRefImplCopyWith<_$WasmVal_funcRefImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract class _$$WasmVal_externRefCopyWith<$Res> {
-  factory _$$WasmVal_externRefCopyWith(
-          _$WasmVal_externRef value, $Res Function(_$WasmVal_externRef) then) =
-      __$$WasmVal_externRefCopyWithImpl<$Res>;
+abstract class _$$WasmVal_externRefImplCopyWith<$Res> {
+  factory _$$WasmVal_externRefImplCopyWith(_$WasmVal_externRefImpl value,
+          $Res Function(_$WasmVal_externRefImpl) then) =
+      __$$WasmVal_externRefImplCopyWithImpl<$Res>;
   @useResult
   $Res call({int? field0});
 }
 
 /// @nodoc
-class __$$WasmVal_externRefCopyWithImpl<$Res>
-    extends _$WasmValCopyWithImpl<$Res, _$WasmVal_externRef>
-    implements _$$WasmVal_externRefCopyWith<$Res> {
-  __$$WasmVal_externRefCopyWithImpl(
-      _$WasmVal_externRef _value, $Res Function(_$WasmVal_externRef) _then)
+class __$$WasmVal_externRefImplCopyWithImpl<$Res>
+    extends _$WasmValCopyWithImpl<$Res, _$WasmVal_externRefImpl>
+    implements _$$WasmVal_externRefImplCopyWith<$Res> {
+  __$$WasmVal_externRefImplCopyWithImpl(_$WasmVal_externRefImpl _value,
+      $Res Function(_$WasmVal_externRefImpl) _then)
       : super(_value, _then);
 
   @pragma('vm:prefer-inline')
@@ -3116,7 +3128,7 @@ class __$$WasmVal_externRefCopyWithImpl<$Res>
   $Res call({
     Object? field0 = freezed,
   }) {
-    return _then(_$WasmVal_externRef(
+    return _then(_$WasmVal_externRefImpl(
       freezed == field0
           ? _value.field0
           : field0 // ignore: cast_nullable_to_non_nullable
@@ -3127,8 +3139,8 @@ class __$$WasmVal_externRefCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$WasmVal_externRef implements WasmVal_externRef {
-  const _$WasmVal_externRef([this.field0]);
+class _$WasmVal_externRefImpl implements WasmVal_externRef {
+  const _$WasmVal_externRefImpl([this.field0]);
 
   @override
   final int? field0;
@@ -3142,7 +3154,7 @@ class _$WasmVal_externRef implements WasmVal_externRef {
   bool operator ==(dynamic other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$WasmVal_externRef &&
+            other is _$WasmVal_externRefImpl &&
             (identical(other.field0, field0) || other.field0 == field0));
   }
 
@@ -3152,8 +3164,9 @@ class _$WasmVal_externRef implements WasmVal_externRef {
   @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
-  _$$WasmVal_externRefCopyWith<_$WasmVal_externRef> get copyWith =>
-      __$$WasmVal_externRefCopyWithImpl<_$WasmVal_externRef>(this, _$identity);
+  _$$WasmVal_externRefImplCopyWith<_$WasmVal_externRefImpl> get copyWith =>
+      __$$WasmVal_externRefImplCopyWithImpl<_$WasmVal_externRefImpl>(
+          this, _$identity);
 
   @override
   @optionalTypeArgs
@@ -3249,11 +3262,12 @@ class _$WasmVal_externRef implements WasmVal_externRef {
 }
 
 abstract class WasmVal_externRef implements WasmVal {
-  const factory WasmVal_externRef([final int? field0]) = _$WasmVal_externRef;
+  const factory WasmVal_externRef([final int? field0]) =
+      _$WasmVal_externRefImpl;
 
   @override
   int? get field0;
   @JsonKey(ignore: true)
-  _$$WasmVal_externRefCopyWith<_$WasmVal_externRef> get copyWith =>
+  _$$WasmVal_externRefImplCopyWith<_$WasmVal_externRefImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
