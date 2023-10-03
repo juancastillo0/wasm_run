@@ -205,6 +205,7 @@ class _CLIArgs {
   _CLIArgs({
     required this.arguments,
     required List<String>? valueNames,
+    String? configFile,
   })  : positional = [],
         namedBool = {},
         namedValues = {} {
@@ -222,6 +223,10 @@ class _CLIArgs {
       }
       final parts = arg.$2.substring(2).split('=');
       String name = parts[0];
+      if (name == configFile) {
+        _addFromFile(parts[1]);
+        continue;
+      }
       if (valueNames != null && valueNames.contains(name)) {
         // Named Values
         final list = namedValues.putIfAbsent(name, () => []);
@@ -281,5 +286,38 @@ class _CLIArgs {
         '${options.map((e) => e.name).join(', ')}',
       ),
     );
+  }
+
+  void _addFromFile(String path) {
+    final contents = File(path).readAsStringSync();
+    final wrongConfigFile = Exception(
+      'Invalid config file $path. Should be a map or list of maps.',
+    );
+
+    var valuesJson = jsonDecode(contents);
+    if (valuesJson is Map<String, dynamic>) {
+      valuesJson = [valuesJson];
+    }
+    if (valuesJson is! List) {
+      // TODO: multiple config files?
+      throw wrongConfigFile;
+    }
+    for (final item in valuesJson) {
+      if (item is! Map<String, dynamic>) {
+        throw wrongConfigFile;
+      }
+      for (final entry in item.entries) {
+        final key = entry.key;
+        final value = entry.value;
+        if (value is bool) {
+          namedBool[key] = value;
+        } else if (value is String) {
+          final list = namedValues.putIfAbsent(key, () => []);
+          list.add(value);
+        } else {
+          throw wrongConfigFile;
+        }
+      }
+    }
   }
 }
