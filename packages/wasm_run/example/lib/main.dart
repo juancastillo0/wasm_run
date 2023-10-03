@@ -1066,7 +1066,7 @@ class Parser {
 
 class FileData {
   final int size;
-  final bool read_only;
+  final bool readOnly;
   final int? modified;
   final int? accessed;
   final int? created;
@@ -1074,7 +1074,7 @@ class FileData {
   ///
   FileData({
     required this.size,
-    required this.read_only,
+    required this.readOnly,
     required this.modified,
     required this.accessed,
     required this.created,
@@ -1082,14 +1082,14 @@ class FileData {
 
   factory FileData.fromParser(Parser p) {
     final size = p.parseUint64();
-    final read_only = p.parseBool();
+    final readOnly = p.parseBool();
     final modified = p.parseNullable(() => p.parseUint64());
     final accessed = p.parseNullable(() => p.parseUint64());
     final created = p.parseNullable(() => p.parseUint64());
 
     return FileData(
       size: size,
-      read_only: read_only,
+      readOnly: readOnly,
       modified: modified,
       accessed: accessed,
       created: created,
@@ -1098,7 +1098,7 @@ class FileData {
 
   @override
   String toString() {
-    return 'FileData(size: $size, read_only: $read_only, modified: $modified,'
+    return 'FileData(size: $size, readOnly: $readOnly, modified: $modified,'
         ' accessed: $accessed, created: $created)';
   }
 }

@@ -1,4 +1,5 @@
 import 'dart:collection' show Queue, UnmodifiableMapView;
+import 'dart:convert' show utf8;
 import 'dart:js_util' as js_util;
 import 'dart:typed_data' show Uint8List;
 
@@ -550,9 +551,13 @@ class _Instance extends WasmInstance {
         // (directory ? oflagsDIRECTORY : 0) |
         (exclusive ? oflagsEXCL : 0);
     for (final dir in directories) {
+      final dirName = utf8.decode(dir.prestat_name);
+      if (!path.startsWith(dirName)) {
+        continue;
+      }
       final value = dir.path_open(
         0,
-        path,
+        path.substring(dirName.length),
         oflags,
         i64.fromInt(0),
         i64.fromInt(0),

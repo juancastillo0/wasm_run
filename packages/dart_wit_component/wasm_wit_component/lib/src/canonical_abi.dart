@@ -341,8 +341,6 @@ class HandleTables {
   return (results, post_return);
 }
 
-int _execution = 0;
-
 Future<(ListValue, void Function())> canon_lift_async(
   CanonicalOptions opts,
   ComponentInstance inst,
@@ -355,7 +353,7 @@ Future<(ListValue, void Function())> canon_lift_async(
   while (inst._asyncCompleter != null) {
     await inst._asyncCompleter!.future;
   }
-  final e = _execution++;
+
   final cx = Context(opts, inst);
   trap_if(!inst.may_enter);
 
