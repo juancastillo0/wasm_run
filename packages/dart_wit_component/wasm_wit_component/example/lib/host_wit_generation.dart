@@ -3,6 +3,7 @@ const hostWitDartOutput = r'''
 
 // ignore_for_file: require_trailing_commas, unnecessary_raw_strings, unnecessary_non_null_assertion
 
+import 'dart:async';
 // ignore: unused_import
 import 'dart:typed_data';
 
@@ -33,8 +34,6 @@ class RecordTest implements ToJsonSerializable {
       _ => throw Exception('Invalid JSON $json_')
     };
   }
-
-  /// Returns this as a serializable JSON value.
   @override
   Map<String, Object?> toJson() => {
         'runtimeType': 'RecordTest',
@@ -134,9 +133,16 @@ class HostWorld {
     }
     final instance = await builder.build();
 
-    library = WasmLibrary(instance, int64Type: Int64TypeConfig.bigInt);
+    library = WasmLibrary(instance,
+        componentId: 'host-namespace:host-pkg/host',
+        int64Type: Int64TypeConfig.bigInt);
     return HostWorld(imports: imports, library: library);
   }
+
+  static final _zoneKey = Object();
+  late final _zoneValues = {_zoneKey: this};
+  static HostWorld? currentZoneWorld() => Zone.current[_zoneKey] as HostWorld?;
+  T withContext<T>(T Function() fn) => runZoned(fn, zoneValues: _zoneValues);
 
   final ListValue Function(ListValue) _run;
   void run() {
@@ -147,7 +153,7 @@ class HostWorld {
   RecordTest get_() {
     final results = _get_([]);
     final result = results[0];
-    return RecordTest.fromJson(result);
+    return withContext(() => RecordTest.fromJson(result));
   }
 
   final ListValue Function(ListValue) _map;
@@ -156,7 +162,7 @@ class HostWorld {
   }) {
     final results = _map([rec.toWasm()]);
     final result = results[0];
-    return RecordTest.fromJson(result);
+    return withContext(() => RecordTest.fromJson(result));
   }
 
   final ListValue Function(ListValue) _mapI;
@@ -166,7 +172,7 @@ class HostWorld {
   }) {
     final results = _mapI([rec.toWasm(), i]);
     final result = results[0];
-    return RecordTest.fromJson(result);
+    return withContext(() => RecordTest.fromJson(result));
   }
 
   final ListValue Function(ListValue) _receiveI;

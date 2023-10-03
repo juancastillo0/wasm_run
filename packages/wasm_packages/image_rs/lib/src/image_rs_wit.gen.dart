@@ -2,38 +2,61 @@
 
 // ignore_for_file: require_trailing_commas, unnecessary_raw_strings, unnecessary_non_null_assertion
 
+import 'dart:async';
 // ignore: unused_import
 import 'dart:typed_data';
 
 import 'package:wasm_wit_component/wasm_wit_component.dart';
 
-enum PixelType implements ToJsonSerializable {
-  /// RGB pixel
-  rgb,
-
-  /// RGB with alpha (RGBA pixel)
-  rgba,
-
-  /// Grayscale pixel
-  luma,
-
-  /// Grayscale with alpha
-  lumaA;
+class Image implements ToJsonSerializable {
+  final Uint8List bytes;
+  const Image({
+    required this.bytes,
+  });
 
   /// Returns a new instance from a JSON value.
   /// May throw if the value does not have the expected structure.
-  factory PixelType.fromJson(Object? json) {
-    return ToJsonSerializable.enumFromJson(json, values, _spec);
+  factory Image.fromJson(Object? json_) {
+    final json = json_ is Map
+        ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
+        : json_;
+    return switch (json) {
+      [final bytes] || (final bytes,) => Image(
+          bytes: (bytes is Uint8List
+              ? bytes
+              : Uint8List.fromList((bytes! as List).cast())),
+        ),
+      _ => throw Exception('Invalid JSON $json_')
+    };
   }
-
-  /// Returns this as a serializable JSON value.
   @override
-  Map<String, Object?> toJson() =>
-      {'runtimeType': 'PixelType', _spec.labels[index]: null};
+  Map<String, Object?> toJson() => {
+        'runtimeType': 'Image',
+        'bytes': bytes.toList(),
+      };
 
   /// Returns this as a WASM canonical abi value.
-  int toWasm() => index;
-  static const _spec = EnumType(['rgb', 'rgba', 'luma', 'luma-a']);
+  List<Object?> toWasm() => [bytes];
+  @override
+  String toString() =>
+      'Image${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
+
+  /// Returns a new instance by overriding the values passed as arguments
+  Image copyWith({
+    Uint8List? bytes,
+  }) =>
+      Image(bytes: bytes ?? this.bytes);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Image &&
+          const ObjectComparator().arePropsEqual(_props, other._props);
+  @override
+  int get hashCode => const ObjectComparator().hashProps(_props);
+
+  // ignore: unused_field
+  List<Object?> get _props => [bytes];
+  static const _spec = RecordType([(label: 'bytes', t: ListType(U8()))]);
 }
 
 class ImageSize implements ToJsonSerializable {
@@ -58,8 +81,6 @@ class ImageSize implements ToJsonSerializable {
       _ => throw Exception('Invalid JSON $json_')
     };
   }
-
-  /// Returns this as a serializable JSON value.
   @override
   Map<String, Object?> toJson() => {
         'runtimeType': 'ImageSize',
@@ -93,135 +114,6 @@ class ImageSize implements ToJsonSerializable {
       RecordType([(label: 'width', t: U32()), (label: 'height', t: U32())]);
 }
 
-enum ImageFormat implements ToJsonSerializable {
-  /// All supported color types	Same as decoding
-  png,
-
-  /// Baseline and progressive	Baseline JPEG
-  jpeg,
-
-  /// Yes	Yes
-  gif,
-
-  /// Yes	Rgb8, Rgba8, Gray8, GrayA8
-  bmp,
-
-  /// Yes	Yes
-  ico,
-
-  /// Baseline(no fax support) + LZW + PackBits	Rgb8, Rgba8, Gray8
-  tiff,
-
-  /// Yes	Rgb8, Rgba8*
-  webP,
-
-  /// No**	Lossy
-  avif,
-
-  /// PBM, PGM, PPM, standard PAM	Yes
-  pnm,
-
-  /// DXT1, DXT3, DXT5	No
-  dds,
-
-  /// Yes	Rgb8, Rgba8, Bgr8, Bgra8, Gray8, GrayA8
-  tga,
-
-  /// Rgb32F, Rgba32F (no dwa compression)	Rgb32F, Rgba32F (no dwa compression)
-  openExr,
-
-  /// Yes	Yes
-  farbfeld,
-  hdr,
-  qoi,
-  unknown;
-
-  /// Returns a new instance from a JSON value.
-  /// May throw if the value does not have the expected structure.
-  factory ImageFormat.fromJson(Object? json) {
-    return ToJsonSerializable.enumFromJson(json, values, _spec);
-  }
-
-  /// Returns this as a serializable JSON value.
-  @override
-  Map<String, Object?> toJson() =>
-      {'runtimeType': 'ImageFormat', _spec.labels[index]: null};
-
-  /// Returns this as a WASM canonical abi value.
-  int toWasm() => index;
-  static const _spec = EnumType([
-    'png',
-    'jpeg',
-    'gif',
-    'bmp',
-    'ico',
-    'tiff',
-    'web-p',
-    'avif',
-    'pnm',
-    'dds',
-    'tga',
-    'open-exr',
-    'farbfeld',
-    'hdr',
-    'qoi',
-    'unknown'
-  ]);
-}
-
-class Image implements ToJsonSerializable {
-  final Uint8List bytes;
-  const Image({
-    required this.bytes,
-  });
-
-  /// Returns a new instance from a JSON value.
-  /// May throw if the value does not have the expected structure.
-  factory Image.fromJson(Object? json_) {
-    final json = json_ is Map
-        ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
-        : json_;
-    return switch (json) {
-      [final bytes] || (final bytes,) => Image(
-          bytes: (bytes is Uint8List
-              ? bytes
-              : Uint8List.fromList((bytes! as List).cast())),
-        ),
-      _ => throw Exception('Invalid JSON $json_')
-    };
-  }
-
-  /// Returns this as a serializable JSON value.
-  @override
-  Map<String, Object?> toJson() => {
-        'runtimeType': 'Image',
-        'bytes': bytes.toList(),
-      };
-
-  /// Returns this as a WASM canonical abi value.
-  List<Object?> toWasm() => [bytes];
-  @override
-  String toString() =>
-      'Image${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
-
-  /// Returns a new instance by overriding the values passed as arguments
-  Image copyWith({
-    Uint8List? bytes,
-  }) =>
-      Image(bytes: bytes ?? this.bytes);
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is Image &&
-          const ObjectComparator().arePropsEqual(_props, other._props);
-  @override
-  int get hashCode => const ObjectComparator().hashProps(_props);
-
-  // ignore: unused_field
-  List<Object?> get _props => [bytes];
-  static const _spec = RecordType([(label: 'bytes', t: ListType(U8()))]);
-}
-
 enum ColorType implements ToJsonSerializable {
   l8,
   la8,
@@ -240,8 +132,6 @@ enum ColorType implements ToJsonSerializable {
   factory ColorType.fromJson(Object? json) {
     return ToJsonSerializable.enumFromJson(json, values, _spec);
   }
-
-  /// Returns this as a serializable JSON value.
   @override
   Map<String, Object?> toJson() =>
       {'runtimeType': 'ColorType', _spec.labels[index]: null};
@@ -293,8 +183,6 @@ class ImageRef implements ToJsonSerializable {
       _ => throw Exception('Invalid JSON $json_')
     };
   }
-
-  /// Returns this as a serializable JSON value.
   @override
   Map<String, Object?> toJson() => {
         'runtimeType': 'ImageRef',
@@ -340,6 +228,138 @@ class ImageRef implements ToJsonSerializable {
   ]);
 }
 
+enum ImageFormat implements ToJsonSerializable {
+  /// All supported color types	Same as decoding
+  png,
+
+  /// Baseline and progressive	Baseline JPEG
+  jpeg,
+
+  /// Yes	Yes
+  gif,
+
+  /// Yes	Rgb8, Rgba8, Gray8, GrayA8
+  bmp,
+
+  /// Yes	Yes
+  ico,
+
+  /// Baseline(no fax support) + LZW + PackBits	Rgb8, Rgba8, Gray8
+  tiff,
+
+  /// Yes	Rgb8, Rgba8*
+  webP,
+
+  /// No**	Lossy
+  avif,
+
+  /// PBM, PGM, PPM, standard PAM	Yes
+  pnm,
+
+  /// DXT1, DXT3, DXT5	No
+  dds,
+
+  /// Yes	Rgb8, Rgba8, Bgr8, Bgra8, Gray8, GrayA8
+  tga,
+
+  /// Rgb32F, Rgba32F (no dwa compression)	Rgb32F, Rgba32F (no dwa compression)
+  openExr,
+
+  /// Yes	Yes
+  farbfeld,
+  hdr,
+  qoi,
+  unknown;
+
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
+  factory ImageFormat.fromJson(Object? json) {
+    return ToJsonSerializable.enumFromJson(json, values, _spec);
+  }
+  @override
+  Map<String, Object?> toJson() =>
+      {'runtimeType': 'ImageFormat', _spec.labels[index]: null};
+
+  /// Returns this as a WASM canonical abi value.
+  int toWasm() => index;
+  static const _spec = EnumType([
+    'png',
+    'jpeg',
+    'gif',
+    'bmp',
+    'ico',
+    'tiff',
+    'web-p',
+    'avif',
+    'pnm',
+    'dds',
+    'tga',
+    'open-exr',
+    'farbfeld',
+    'hdr',
+    'qoi',
+    'unknown'
+  ]);
+}
+
+enum PixelType implements ToJsonSerializable {
+  /// RGB pixel
+  rgb,
+
+  /// RGB with alpha (RGBA pixel)
+  rgba,
+
+  /// Grayscale pixel
+  luma,
+
+  /// Grayscale with alpha
+  lumaA;
+
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
+  factory PixelType.fromJson(Object? json) {
+    return ToJsonSerializable.enumFromJson(json, values, _spec);
+  }
+  @override
+  Map<String, Object?> toJson() =>
+      {'runtimeType': 'PixelType', _spec.labels[index]: null};
+
+  /// Returns this as a WASM canonical abi value.
+  int toWasm() => index;
+  static const _spec = EnumType(['rgb', 'rgba', 'luma', 'luma-a']);
+}
+
+enum FilterType implements ToJsonSerializable {
+  /// Nearest Neighbor
+  nearest,
+
+  /// Linear Filter
+  triangle,
+
+  /// Cubic Filter
+  catmullRom,
+
+  /// Gaussian Filter
+  gaussian,
+
+  /// Lanczos with window 3
+  lanczos3;
+
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
+  factory FilterType.fromJson(Object? json) {
+    return ToJsonSerializable.enumFromJson(json, values, _spec);
+  }
+  @override
+  Map<String, Object?> toJson() =>
+      {'runtimeType': 'FilterType', _spec.labels[index]: null};
+
+  /// Returns this as a WASM canonical abi value.
+  int toWasm() => index;
+  static const _spec =
+      EnumType(['nearest', 'triangle', 'catmull-rom', 'gaussian', 'lanczos3']);
+}
+
 class ImageCrop implements ToJsonSerializable {
   final int /*U32*/ x;
   final int /*U32*/ y;
@@ -370,8 +390,6 @@ class ImageCrop implements ToJsonSerializable {
       _ => throw Exception('Invalid JSON $json_')
     };
   }
-
-  /// Returns this as a serializable JSON value.
   @override
   Map<String, Object?> toJson() => {
         'runtimeType': 'ImageCrop',
@@ -417,38 +435,7 @@ class ImageCrop implements ToJsonSerializable {
   ]);
 }
 
-enum FilterType implements ToJsonSerializable {
-  /// Nearest Neighbor
-  nearest,
-
-  /// Linear Filter
-  triangle,
-
-  /// Cubic Filter
-  catmullRom,
-
-  /// Gaussian Filter
-  gaussian,
-
-  /// Lanczos with window 3
-  lanczos3;
-
-  /// Returns a new instance from a JSON value.
-  /// May throw if the value does not have the expected structure.
-  factory FilterType.fromJson(Object? json) {
-    return ToJsonSerializable.enumFromJson(json, values, _spec);
-  }
-
-  /// Returns this as a serializable JSON value.
-  @override
-  Map<String, Object?> toJson() =>
-      {'runtimeType': 'FilterType', _spec.labels[index]: null};
-
-  /// Returns this as a WASM canonical abi value.
-  int toWasm() => index;
-  static const _spec =
-      EnumType(['nearest', 'triangle', 'catmull-rom', 'gaussian', 'lanczos3']);
-}
+typedef ImageError = String;
 
 sealed class ImageErrorV implements ToJsonSerializable {
   /// Returns a new instance from a JSON value.
@@ -485,8 +472,6 @@ sealed class ImageErrorV implements ToJsonSerializable {
   const factory ImageErrorV.limits(String value) = ImageErrorVLimits;
   const factory ImageErrorV.unsupported(String value) = ImageErrorVUnsupported;
   const factory ImageErrorV.ioError(String value) = ImageErrorVIoError;
-
-  /// Returns this as a serializable JSON value.
   @override
   Map<String, Object?> toJson();
 
@@ -516,8 +501,6 @@ class ImageErrorVDecoding implements ImageErrorV {
   /// or that no format could be determined, or that it did not match format specific
   /// requirements set by the caller.
   const ImageErrorVDecoding(this.value);
-
-  /// Returns this as a serializable JSON value.
   @override
   Map<String, Object?> toJson() =>
       {'runtimeType': 'ImageErrorVDecoding', 'decoding': value};
@@ -551,8 +534,6 @@ class ImageErrorVEncoding implements ImageErrorV {
   /// is ambiguous. In some cases it might also happen that the dimensions can not be used with
   /// the format.
   const ImageErrorVEncoding(this.value);
-
-  /// Returns this as a serializable JSON value.
   @override
   Map<String, Object?> toJson() =>
       {'runtimeType': 'ImageErrorVEncoding', 'encoding': value};
@@ -582,8 +563,6 @@ class ImageErrorVParameter implements ImageErrorV {
   /// This is a catch-all case for strictly internal operations such as scaling, conversions,
   /// etc. that involve no external format specifications.
   const ImageErrorVParameter(this.value);
-
-  /// Returns this as a serializable JSON value.
   @override
   Map<String, Object?> toJson() =>
       {'runtimeType': 'ImageErrorVParameter', 'parameter': value};
@@ -613,8 +592,6 @@ class ImageErrorVLimits implements ImageErrorV {
   /// Errors of this type are limits set by the user or environment, *not* inherent in a specific
   /// format or operation that was executed.
   const ImageErrorVLimits(this.value);
-
-  /// Returns this as a serializable JSON value.
   @override
   Map<String, Object?> toJson() =>
       {'runtimeType': 'ImageErrorVLimits', 'limits': value};
@@ -648,8 +625,6 @@ class ImageErrorVUnsupported implements ImageErrorV {
   /// * the implementation does not yet exist, or
   /// * no abstraction for a lower level could be found.
   const ImageErrorVUnsupported(this.value);
-
-  /// Returns this as a serializable JSON value.
   @override
   Map<String, Object?> toJson() =>
       {'runtimeType': 'ImageErrorVUnsupported', 'unsupported': value};
@@ -673,8 +648,6 @@ class ImageErrorVIoError implements ImageErrorV {
 
   /// An error occurred while interacting with the environment.
   const ImageErrorVIoError(this.value);
-
-  /// Returns this as a serializable JSON value.
   @override
   Map<String, Object?> toJson() =>
       {'runtimeType': 'ImageErrorVIoError', 'io-error': value};
@@ -692,67 +665,66 @@ class ImageErrorVIoError implements ImageErrorV {
   int get hashCode => const ObjectComparator().hashValue(value);
 }
 
-typedef ImageError = String;
-
 class ImageRsWorldImports {
   const ImageRsWorldImports();
 }
 
 class Operations {
-  Operations(WasmLibrary library)
-      : _blur = library.getComponentFunction(
+  final ImageRsWorld _world;
+  Operations(this._world)
+      : _blur = _world.library.getComponentFunction(
           'wasm-run-dart:image-rs/operations#blur',
           const FuncType([('image-ref', ImageRef._spec), ('value', Float32())],
               [('', ImageRef._spec)]),
         )!,
-        _brighten = library.getComponentFunction(
+        _brighten = _world.library.getComponentFunction(
           'wasm-run-dart:image-rs/operations#brighten',
           const FuncType([('image-ref', ImageRef._spec), ('value', S32())],
               [('', ImageRef._spec)]),
         )!,
-        _huerotate = library.getComponentFunction(
+        _huerotate = _world.library.getComponentFunction(
           'wasm-run-dart:image-rs/operations#huerotate',
           const FuncType([('image-ref', ImageRef._spec), ('value', S32())],
               [('', ImageRef._spec)]),
         )!,
-        _adjustContrast = library.getComponentFunction(
+        _adjustContrast = _world.library.getComponentFunction(
           'wasm-run-dart:image-rs/operations#adjust-contrast',
           const FuncType([('image-ref', ImageRef._spec), ('c', Float32())],
               [('', ImageRef._spec)]),
         )!,
-        _crop = library.getComponentFunction(
+        _crop = _world.library.getComponentFunction(
           'wasm-run-dart:image-rs/operations#crop',
           const FuncType(
               [('image-ref', ImageRef._spec), ('image-crop', ImageCrop._spec)],
               [('', ImageRef._spec)]),
         )!,
-        _filter3x3 = library.getComponentFunction(
+        _filter3x3 = _world.library.getComponentFunction(
           'wasm-run-dart:image-rs/operations#filter3x3',
           const FuncType(
               [('image-ref', ImageRef._spec), ('kernel', ListType(Float32()))],
               [('', ImageRef._spec)]),
         )!,
-        _flipHorizontal = library.getComponentFunction(
+        _flipHorizontal = _world.library.getComponentFunction(
           'wasm-run-dart:image-rs/operations#flip-horizontal',
           const FuncType(
               [('image-ref', ImageRef._spec)], [('', ImageRef._spec)]),
         )!,
-        _flipVertical = library.getComponentFunction(
+        _flipVertical = _world.library.getComponentFunction(
           'wasm-run-dart:image-rs/operations#flip-vertical',
           const FuncType(
               [('image-ref', ImageRef._spec)], [('', ImageRef._spec)]),
         )!,
-        _grayscale = library.getComponentFunction(
+        _grayscale = _world.library.getComponentFunction(
           'wasm-run-dart:image-rs/operations#grayscale',
           const FuncType(
               [('image-ref', ImageRef._spec)], [('', ImageRef._spec)]),
         )!,
-        _invert = library.getComponentFunction(
+        _invert = _world.library.getComponentFunction(
           'wasm-run-dart:image-rs/operations#invert',
           const FuncType(
               [('image-ref', ImageRef._spec)], [('', ImageRef._spec)]),
         )!,
-        _resize = library.getComponentFunction(
+        _resize = _world.library.getComponentFunction(
           'wasm-run-dart:image-rs/operations#resize',
           const FuncType([
             ('image-ref', ImageRef._spec),
@@ -762,7 +734,7 @@ class Operations {
             ('', ImageRef._spec)
           ]),
         )!,
-        _resizeExact = library.getComponentFunction(
+        _resizeExact = _world.library.getComponentFunction(
           'wasm-run-dart:image-rs/operations#resize-exact',
           const FuncType([
             ('image-ref', ImageRef._spec),
@@ -772,7 +744,7 @@ class Operations {
             ('', ImageRef._spec)
           ]),
         )!,
-        _resizeToFill = library.getComponentFunction(
+        _resizeToFill = _world.library.getComponentFunction(
           'wasm-run-dart:image-rs/operations#resize-to-fill',
           const FuncType([
             ('image-ref', ImageRef._spec),
@@ -782,22 +754,22 @@ class Operations {
             ('', ImageRef._spec)
           ]),
         )!,
-        _rotate180 = library.getComponentFunction(
+        _rotate180 = _world.library.getComponentFunction(
           'wasm-run-dart:image-rs/operations#rotate180',
           const FuncType(
               [('image-ref', ImageRef._spec)], [('', ImageRef._spec)]),
         )!,
-        _rotate270 = library.getComponentFunction(
+        _rotate270 = _world.library.getComponentFunction(
           'wasm-run-dart:image-rs/operations#rotate270',
           const FuncType(
               [('image-ref', ImageRef._spec)], [('', ImageRef._spec)]),
         )!,
-        _rotate90 = library.getComponentFunction(
+        _rotate90 = _world.library.getComponentFunction(
           'wasm-run-dart:image-rs/operations#rotate90',
           const FuncType(
               [('image-ref', ImageRef._spec)], [('', ImageRef._spec)]),
         )!,
-        _unsharpen = library.getComponentFunction(
+        _unsharpen = _world.library.getComponentFunction(
           'wasm-run-dart:image-rs/operations#unsharpen',
           const FuncType([
             ('image-ref', ImageRef._spec),
@@ -807,19 +779,19 @@ class Operations {
             ('', ImageRef._spec)
           ]),
         )!,
-        _thumbnail = library.getComponentFunction(
+        _thumbnail = _world.library.getComponentFunction(
           'wasm-run-dart:image-rs/operations#thumbnail',
           const FuncType(
               [('image-ref', ImageRef._spec), ('size', ImageSize._spec)],
               [('', ImageRef._spec)]),
         )!,
-        _thumbnailExact = library.getComponentFunction(
+        _thumbnailExact = _world.library.getComponentFunction(
           'wasm-run-dart:image-rs/operations#thumbnail-exact',
           const FuncType(
               [('image-ref', ImageRef._spec), ('size', ImageSize._spec)],
               [('', ImageRef._spec)]),
         )!,
-        _overlay = library.getComponentFunction(
+        _overlay = _world.library.getComponentFunction(
           'wasm-run-dart:image-rs/operations#overlay',
           const FuncType([
             ('image-ref', ImageRef._spec),
@@ -830,7 +802,7 @@ class Operations {
             ('', ImageRef._spec)
           ]),
         )!,
-        _replace = library.getComponentFunction(
+        _replace = _world.library.getComponentFunction(
           'wasm-run-dart:image-rs/operations#replace',
           const FuncType([
             ('image-ref', ImageRef._spec),
@@ -850,7 +822,7 @@ class Operations {
   }) {
     final results = _blur([imageRef.toWasm(), value]);
     final result = results[0];
-    return ImageRef.fromJson(result);
+    return _world.withContext(() => ImageRef.fromJson(result));
   }
 
   final ListValue Function(ListValue) _brighten;
@@ -862,7 +834,7 @@ class Operations {
   }) {
     final results = _brighten([imageRef.toWasm(), value]);
     final result = results[0];
-    return ImageRef.fromJson(result);
+    return _world.withContext(() => ImageRef.fromJson(result));
   }
 
   final ListValue Function(ListValue) _huerotate;
@@ -874,7 +846,7 @@ class Operations {
   }) {
     final results = _huerotate([imageRef.toWasm(), value]);
     final result = results[0];
-    return ImageRef.fromJson(result);
+    return _world.withContext(() => ImageRef.fromJson(result));
   }
 
   final ListValue Function(ListValue) _adjustContrast;
@@ -886,7 +858,7 @@ class Operations {
   }) {
     final results = _adjustContrast([imageRef.toWasm(), c]);
     final result = results[0];
-    return ImageRef.fromJson(result);
+    return _world.withContext(() => ImageRef.fromJson(result));
   }
 
   final ListValue Function(ListValue) _crop;
@@ -898,7 +870,7 @@ class Operations {
   }) {
     final results = _crop([imageRef.toWasm(), imageCrop.toWasm()]);
     final result = results[0];
-    return ImageRef.fromJson(result);
+    return _world.withContext(() => ImageRef.fromJson(result));
   }
 
   final ListValue Function(ListValue) _filter3x3;
@@ -910,7 +882,7 @@ class Operations {
   }) {
     final results = _filter3x3([imageRef.toWasm(), kernel]);
     final result = results[0];
-    return ImageRef.fromJson(result);
+    return _world.withContext(() => ImageRef.fromJson(result));
   }
 
   final ListValue Function(ListValue) _flipHorizontal;
@@ -921,7 +893,7 @@ class Operations {
   }) {
     final results = _flipHorizontal([imageRef.toWasm()]);
     final result = results[0];
-    return ImageRef.fromJson(result);
+    return _world.withContext(() => ImageRef.fromJson(result));
   }
 
   final ListValue Function(ListValue) _flipVertical;
@@ -932,7 +904,7 @@ class Operations {
   }) {
     final results = _flipVertical([imageRef.toWasm()]);
     final result = results[0];
-    return ImageRef.fromJson(result);
+    return _world.withContext(() => ImageRef.fromJson(result));
   }
 
   final ListValue Function(ListValue) _grayscale;
@@ -943,7 +915,7 @@ class Operations {
   }) {
     final results = _grayscale([imageRef.toWasm()]);
     final result = results[0];
-    return ImageRef.fromJson(result);
+    return _world.withContext(() => ImageRef.fromJson(result));
   }
 
   final ListValue Function(ListValue) _invert;
@@ -954,7 +926,7 @@ class Operations {
   }) {
     final results = _invert([imageRef.toWasm()]);
     final result = results[0];
-    return ImageRef.fromJson(result);
+    return _world.withContext(() => ImageRef.fromJson(result));
   }
 
   final ListValue Function(ListValue) _resize;
@@ -969,7 +941,7 @@ class Operations {
     final results =
         _resize([imageRef.toWasm(), size.toWasm(), filter.toWasm()]);
     final result = results[0];
-    return ImageRef.fromJson(result);
+    return _world.withContext(() => ImageRef.fromJson(result));
   }
 
   final ListValue Function(ListValue) _resizeExact;
@@ -984,7 +956,7 @@ class Operations {
     final results =
         _resizeExact([imageRef.toWasm(), size.toWasm(), filter.toWasm()]);
     final result = results[0];
-    return ImageRef.fromJson(result);
+    return _world.withContext(() => ImageRef.fromJson(result));
   }
 
   final ListValue Function(ListValue) _resizeToFill;
@@ -1001,7 +973,7 @@ class Operations {
     final results =
         _resizeToFill([imageRef.toWasm(), size.toWasm(), filter.toWasm()]);
     final result = results[0];
-    return ImageRef.fromJson(result);
+    return _world.withContext(() => ImageRef.fromJson(result));
   }
 
   final ListValue Function(ListValue) _rotate180;
@@ -1012,7 +984,7 @@ class Operations {
   }) {
     final results = _rotate180([imageRef.toWasm()]);
     final result = results[0];
-    return ImageRef.fromJson(result);
+    return _world.withContext(() => ImageRef.fromJson(result));
   }
 
   final ListValue Function(ListValue) _rotate270;
@@ -1023,7 +995,7 @@ class Operations {
   }) {
     final results = _rotate270([imageRef.toWasm()]);
     final result = results[0];
-    return ImageRef.fromJson(result);
+    return _world.withContext(() => ImageRef.fromJson(result));
   }
 
   final ListValue Function(ListValue) _rotate90;
@@ -1034,7 +1006,7 @@ class Operations {
   }) {
     final results = _rotate90([imageRef.toWasm()]);
     final result = results[0];
-    return ImageRef.fromJson(result);
+    return _world.withContext(() => ImageRef.fromJson(result));
   }
 
   final ListValue Function(ListValue) _unsharpen;
@@ -1047,7 +1019,7 @@ class Operations {
   }) {
     final results = _unsharpen([imageRef.toWasm(), sigma, threshold]);
     final result = results[0];
-    return ImageRef.fromJson(result);
+    return _world.withContext(() => ImageRef.fromJson(result));
   }
 
   final ListValue Function(ListValue) _thumbnail;
@@ -1060,7 +1032,7 @@ class Operations {
   }) {
     final results = _thumbnail([imageRef.toWasm(), size.toWasm()]);
     final result = results[0];
-    return ImageRef.fromJson(result);
+    return _world.withContext(() => ImageRef.fromJson(result));
   }
 
   final ListValue Function(ListValue) _thumbnailExact;
@@ -1073,7 +1045,7 @@ class Operations {
   }) {
     final results = _thumbnailExact([imageRef.toWasm(), size.toWasm()]);
     final result = results[0];
-    return ImageRef.fromJson(result);
+    return _world.withContext(() => ImageRef.fromJson(result));
   }
 
   final ListValue Function(ListValue) _overlay;
@@ -1087,7 +1059,7 @@ class Operations {
   }) {
     final results = _overlay([imageRef.toWasm(), other.toWasm(), x, y]);
     final result = results[0];
-    return ImageRef.fromJson(result);
+    return _world.withContext(() => ImageRef.fromJson(result));
   }
 
   final ListValue Function(ListValue) _replace;
@@ -1101,20 +1073,19 @@ class Operations {
   }) {
     final results = _replace([imageRef.toWasm(), other.toWasm(), x, y]);
     final result = results[0];
-    return ImageRef.fromJson(result);
+    return _world.withContext(() => ImageRef.fromJson(result));
   }
 }
 
 class ImageRsWorld {
   final ImageRsWorldImports imports;
   final WasmLibrary library;
-  final Operations operations;
+  late final Operations operations;
 
   ImageRsWorld({
     required this.imports,
     required this.library,
-  })  : operations = Operations(library),
-        _guessBufferFormat = library.getComponentFunction(
+  })  : _guessBufferFormat = library.getComponentFunction(
           'guess-buffer-format',
           const FuncType([('buffer', ListType(U8()))],
               [('', ResultType(ImageFormat._spec, StringType()))]),
@@ -1172,7 +1143,9 @@ class ImageRsWorld {
           const FuncType(
               [('image', ImageRef._spec), ('format', ImageFormat._spec)],
               [('', ResultType(ListType(U8()), StringType()))]),
-        )!;
+        )! {
+    operations = Operations(this);
+  }
 
   static Future<ImageRsWorld> init(
     WasmInstanceBuilder builder, {
@@ -1183,9 +1156,17 @@ class ImageRsWorld {
 
     final instance = await builder.build();
 
-    library = WasmLibrary(instance, int64Type: Int64TypeConfig.bigInt);
+    library = WasmLibrary(instance,
+        componentId: 'wasm-run-dart:image-rs/image-rs',
+        int64Type: Int64TypeConfig.bigInt);
     return ImageRsWorld(imports: imports, library: library);
   }
+
+  static final _zoneKey = Object();
+  late final _zoneValues = {_zoneKey: this};
+  static ImageRsWorld? currentZoneWorld() =>
+      Zone.current[_zoneKey] as ImageRsWorld?;
+  T withContext<T>(T Function() fn) => runZoned(fn, zoneValues: _zoneValues);
 
   final ListValue Function(ListValue) _guessBufferFormat;
   Result<ImageFormat, ImageError> guessBufferFormat({
@@ -1193,8 +1174,10 @@ class ImageRsWorld {
   }) {
     final results = _guessBufferFormat([buffer]);
     final result = results[0];
-    return Result.fromJson(result, (ok) => ImageFormat.fromJson(ok),
-        (error) => error is String ? error : (error! as ParsedString).value);
+    return withContext(() => Result.fromJson(
+        result,
+        (ok) => ImageFormat.fromJson(ok),
+        (error) => error is String ? error : (error! as ParsedString).value));
   }
 
   final ListValue Function(ListValue) _fileImageSize;
@@ -1203,8 +1186,10 @@ class ImageRsWorld {
   }) {
     final results = _fileImageSize([path]);
     final result = results[0];
-    return Result.fromJson(result, (ok) => ImageSize.fromJson(ok),
-        (error) => error is String ? error : (error! as ParsedString).value);
+    return withContext(() => Result.fromJson(
+        result,
+        (ok) => ImageSize.fromJson(ok),
+        (error) => error is String ? error : (error! as ParsedString).value));
   }
 
   final ListValue Function(ListValue) _formatExtensions;
@@ -1213,9 +1198,9 @@ class ImageRsWorld {
   }) {
     final results = _formatExtensions([format.toWasm()]);
     final result = results[0];
-    return (result! as Iterable)
+    return withContext(() => (result! as Iterable)
         .map((e) => e is String ? e : (e! as ParsedString).value)
-        .toList();
+        .toList());
   }
 
   final ListValue Function(ListValue) _imageBufferPointerAndSize;
@@ -1227,18 +1212,18 @@ class ImageRsWorld {
   }) {
     final results = _imageBufferPointerAndSize([imageRef.toWasm()]);
     final result = results[0];
-    return (() {
-      final l = result is Map
-          ? List.generate(2, (i) => result[i.toString()], growable: false)
-          : result;
-      return switch (l) {
-        [final v0, final v1] || (final v0, final v1) => (
-            v0! as int,
-            v1! as int,
-          ),
-        _ => throw Exception('Invalid JSON $result')
-      };
-    })();
+    return withContext(() => (() {
+          final l = result is Map
+              ? List.generate(2, (i) => result[i.toString()], growable: false)
+              : result;
+          return switch (l) {
+            [final v0, final v1] || (final v0, final v1) => (
+                v0! as int,
+                v1! as int,
+              ),
+            _ => throw Exception('Invalid JSON $result')
+          };
+        })());
   }
 
   final ListValue Function(ListValue) _copyImageBuffer;
@@ -1247,7 +1232,7 @@ class ImageRsWorld {
   }) {
     final results = _copyImageBuffer([imageRef.toWasm()]);
     final result = results[0];
-    return Image.fromJson(result);
+    return withContext(() => Image.fromJson(result));
   }
 
   final ListValue Function(ListValue) _disposeImage;
@@ -1256,8 +1241,8 @@ class ImageRsWorld {
   }) {
     final results = _disposeImage([image.toWasm()]);
     final result = results[0];
-    return Result.fromJson(result, (ok) => ok! as int,
-        (error) => error is String ? error : (error! as ParsedString).value);
+    return withContext(() => Result.fromJson(result, (ok) => ok! as int,
+        (error) => error is String ? error : (error! as ParsedString).value));
   }
 
   final ListValue Function(ListValue) _readBuffer;
@@ -1269,8 +1254,10 @@ class ImageRsWorld {
   }) {
     final results = _readBuffer([buffer]);
     final result = results[0];
-    return Result.fromJson(result, (ok) => ImageRef.fromJson(ok),
-        (error) => error is String ? error : (error! as ParsedString).value);
+    return withContext(() => Result.fromJson(
+        result,
+        (ok) => ImageRef.fromJson(ok),
+        (error) => error is String ? error : (error! as ParsedString).value));
   }
 
   final ListValue Function(ListValue) _readFile;
@@ -1282,8 +1269,10 @@ class ImageRsWorld {
   }) {
     final results = _readFile([path]);
     final result = results[0];
-    return Result.fromJson(result, (ok) => ImageRef.fromJson(ok),
-        (error) => error is String ? error : (error! as ParsedString).value);
+    return withContext(() => Result.fromJson(
+        result,
+        (ok) => ImageRef.fromJson(ok),
+        (error) => error is String ? error : (error! as ParsedString).value));
   }
 
   final ListValue Function(ListValue) _saveFile;
@@ -1296,8 +1285,8 @@ class ImageRsWorld {
   }) {
     final results = _saveFile([image.toWasm(), path]);
     final result = results[0];
-    return Result.fromJson(result, (ok) => ok! as int,
-        (error) => error is String ? error : (error! as ParsedString).value);
+    return withContext(() => Result.fromJson(result, (ok) => ok! as int,
+        (error) => error is String ? error : (error! as ParsedString).value));
   }
 
   final ListValue Function(ListValue) _convertColor;
@@ -1309,7 +1298,7 @@ class ImageRsWorld {
   }) {
     final results = _convertColor([image.toWasm(), color.toWasm()]);
     final result = results[0];
-    return ImageRef.fromJson(result);
+    return withContext(() => ImageRef.fromJson(result));
   }
 
   final ListValue Function(ListValue) _convertFormat;
@@ -1321,10 +1310,10 @@ class ImageRsWorld {
   }) {
     final results = _convertFormat([image.toWasm(), format.toWasm()]);
     final result = results[0];
-    return Result.fromJson(
+    return withContext(() => Result.fromJson(
         result,
         (ok) =>
             (ok is Uint8List ? ok : Uint8List.fromList((ok! as List).cast())),
-        (error) => error is String ? error : (error! as ParsedString).value);
+        (error) => error is String ? error : (error! as ParsedString).value));
   }
 }

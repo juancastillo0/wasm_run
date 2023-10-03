@@ -45,7 +45,7 @@ class RustCryptoTest {
   }
 
   Future<void> sha256() async {
-    final data = await File('lib/src/api.dart').readAsBytes();
+    final data = await File('lib/src/rust_crypto_wit.gen.dart').readAsBytes();
 
     final cryptographySync = cryptography.Sha256().toSync();
     final pointycastleSha256 = pointycastle.SHA256Digest();
@@ -76,7 +76,7 @@ class RustCryptoTest {
   }
 
   Future<void> hmac() async {
-    final data = await File('lib/src/api.dart').readAsBytes();
+    final data = await File('lib/src/rust_crypto_wit.gen.dart').readAsBytes();
 
     final cryptographySync = cryptography.Hmac(cryptography.Sha512()).toSync();
     final random = Random.secure();
@@ -197,7 +197,7 @@ class RustCryptoTest {
   }
 
   Future<void> aesGcmSiv() async {
-    final data = await File('lib/src/api.dart').readAsBytes();
+    final data = await File('lib/src/rust_crypto_wit.gen.dart').readAsBytes();
     const kind = AesKind.bits128;
     const macLength = 128;
     final key = world.aesGcmSiv.generateKey(kind: kind);

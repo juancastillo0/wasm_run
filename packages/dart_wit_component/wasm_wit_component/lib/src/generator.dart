@@ -2,71 +2,69 @@
 
 // ignore_for_file: require_trailing_commas, unnecessary_raw_strings, unnecessary_non_null_assertion
 
+import 'dart:async';
 // ignore: unused_import
 import 'dart:typed_data';
 
 import 'package:wasm_wit_component/wasm_wit_component.dart';
 
-class WitFile implements ToJsonSerializable {
-  /// The file path.
+/// The paths in the file system that contain the wit files.
+class FileSystemPaths implements WitGeneratorInput, ToJsonSerializable {
+  /// May be a file or a directory.
+  /// When it is a directory, all files in the directory will be used as input.
+  /// When it is a file, only that file will be used as input, and
+  /// you will not be able to use `use pkg` imports.
   /// The file name will be used as the name of the generated world.
-  final String path;
+  final String inputPath;
 
-  /// The contents of the file.
-  final String contents;
-  const WitFile({
-    required this.path,
-    required this.contents,
+  /// The paths in the file system that contain the wit files.
+  const FileSystemPaths({
+    required this.inputPath,
   });
 
   /// Returns a new instance from a JSON value.
   /// May throw if the value does not have the expected structure.
-  factory WitFile.fromJson(Object? json_) {
+  factory FileSystemPaths.fromJson(Object? json_) {
     final json = json_ is Map
         ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
         : json_;
     return switch (json) {
-      [final path, final contents] || (final path, final contents) => WitFile(
-          path: path is String ? path : (path! as ParsedString).value,
-          contents:
-              contents is String ? contents : (contents! as ParsedString).value,
+      [final inputPath] || (final inputPath,) => FileSystemPaths(
+          inputPath: inputPath is String
+              ? inputPath
+              : (inputPath! as ParsedString).value,
         ),
       _ => throw Exception('Invalid JSON $json_')
     };
   }
-
-  /// Returns this as a serializable JSON value.
   @override
   Map<String, Object?> toJson() => {
-        'runtimeType': 'WitFile',
-        'path': path,
-        'contents': contents,
+        'runtimeType': 'FileSystemPaths',
+        'input-path': inputPath,
       };
 
   /// Returns this as a WASM canonical abi value.
-  List<Object?> toWasm() => [path, contents];
+  List<Object?> toWasm() => [inputPath];
   @override
   String toString() =>
-      'WitFile${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
+      'FileSystemPaths${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
 
   /// Returns a new instance by overriding the values passed as arguments
-  WitFile copyWith({
-    String? path,
-    String? contents,
+  FileSystemPaths copyWith({
+    String? inputPath,
   }) =>
-      WitFile(path: path ?? this.path, contents: contents ?? this.contents);
+      FileSystemPaths(inputPath: inputPath ?? this.inputPath);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is WitFile &&
+      other is FileSystemPaths &&
           const ObjectComparator().arePropsEqual(_props, other._props);
   @override
   int get hashCode => const ObjectComparator().hashProps(_props);
 
   // ignore: unused_field
-  List<Object?> get _props => [path, contents];
-  static const _spec = RecordType(
-      [(label: 'path', t: StringType()), (label: 'contents', t: StringType())]);
+  List<Object?> get _props => [inputPath];
+  static const _spec = RecordType([(label: 'input-path', t: StringType())]);
 }
 
 /// Configures how 64 bit integers are represented in the generated code.
@@ -108,8 +106,6 @@ enum Int64TypeConfig implements ToJsonSerializable {
   factory Int64TypeConfig.fromJson(Object? json) {
     return ToJsonSerializable.enumFromJson(json, values, _spec);
   }
-
-  /// Returns this as a serializable JSON value.
   @override
   Map<String, Object?> toJson() =>
       {'runtimeType': 'Int64TypeConfig', _spec.labels[index]: null};
@@ -118,6 +114,66 @@ enum Int64TypeConfig implements ToJsonSerializable {
   int toWasm() => index;
   static const _spec = EnumType(
       ['native-object', 'big-int', 'big-int-unsigned-only', 'core-int']);
+}
+
+class WitFile implements ToJsonSerializable {
+  /// The file path.
+  /// The file name will be used as the name of the generated world.
+  final String path;
+
+  /// The contents of the file.
+  final String contents;
+  const WitFile({
+    required this.path,
+    required this.contents,
+  });
+
+  /// Returns a new instance from a JSON value.
+  /// May throw if the value does not have the expected structure.
+  factory WitFile.fromJson(Object? json_) {
+    final json = json_ is Map
+        ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
+        : json_;
+    return switch (json) {
+      [final path, final contents] || (final path, final contents) => WitFile(
+          path: path is String ? path : (path! as ParsedString).value,
+          contents:
+              contents is String ? contents : (contents! as ParsedString).value,
+        ),
+      _ => throw Exception('Invalid JSON $json_')
+    };
+  }
+  @override
+  Map<String, Object?> toJson() => {
+        'runtimeType': 'WitFile',
+        'path': path,
+        'contents': contents,
+      };
+
+  /// Returns this as a WASM canonical abi value.
+  List<Object?> toWasm() => [path, contents];
+  @override
+  String toString() =>
+      'WitFile${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
+
+  /// Returns a new instance by overriding the values passed as arguments
+  WitFile copyWith({
+    String? path,
+    String? contents,
+  }) =>
+      WitFile(path: path ?? this.path, contents: contents ?? this.contents);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is WitFile &&
+          const ObjectComparator().arePropsEqual(_props, other._props);
+  @override
+  int get hashCode => const ObjectComparator().hashProps(_props);
+
+  // ignore: unused_field
+  List<Object?> get _props => [path, contents];
+  static const _spec = RecordType(
+      [(label: 'path', t: StringType()), (label: 'contents', t: StringType())]);
 }
 
 /// Files paths and their contents.
@@ -151,8 +207,6 @@ class InMemoryFiles implements WitGeneratorInput, ToJsonSerializable {
       _ => throw Exception('Invalid JSON $json_')
     };
   }
-
-  /// Returns this as a serializable JSON value.
   @override
   Map<String, Object?> toJson() => {
         'runtimeType': 'InMemoryFiles',
@@ -193,67 +247,6 @@ class InMemoryFiles implements WitGeneratorInput, ToJsonSerializable {
   ]);
 }
 
-/// The paths in the file system that contain the wit files.
-class FileSystemPaths implements WitGeneratorInput, ToJsonSerializable {
-  /// May be a file or a directory.
-  /// When it is a directory, all files in the directory will be used as input.
-  /// When it is a file, only that file will be used as input, and
-  /// you will not be able to use `use pkg` imports.
-  /// The file name will be used as the name of the generated world.
-  final String inputPath;
-
-  /// The paths in the file system that contain the wit files.
-  const FileSystemPaths({
-    required this.inputPath,
-  });
-
-  /// Returns a new instance from a JSON value.
-  /// May throw if the value does not have the expected structure.
-  factory FileSystemPaths.fromJson(Object? json_) {
-    final json = json_ is Map
-        ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
-        : json_;
-    return switch (json) {
-      [final inputPath] || (final inputPath,) => FileSystemPaths(
-          inputPath: inputPath is String
-              ? inputPath
-              : (inputPath! as ParsedString).value,
-        ),
-      _ => throw Exception('Invalid JSON $json_')
-    };
-  }
-
-  /// Returns this as a serializable JSON value.
-  @override
-  Map<String, Object?> toJson() => {
-        'runtimeType': 'FileSystemPaths',
-        'input-path': inputPath,
-      };
-
-  /// Returns this as a WASM canonical abi value.
-  List<Object?> toWasm() => [inputPath];
-  @override
-  String toString() =>
-      'FileSystemPaths${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
-
-  /// Returns a new instance by overriding the values passed as arguments
-  FileSystemPaths copyWith({
-    String? inputPath,
-  }) =>
-      FileSystemPaths(inputPath: inputPath ?? this.inputPath);
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is FileSystemPaths &&
-          const ObjectComparator().arePropsEqual(_props, other._props);
-  @override
-  int get hashCode => const ObjectComparator().hashProps(_props);
-
-  // ignore: unused_field
-  List<Object?> get _props => [inputPath];
-  static const _spec = RecordType([(label: 'input-path', t: StringType())]);
-}
-
 /// The file inputs to use for the code generation.
 sealed class WitGeneratorInput implements ToJsonSerializable {
   /// Returns a new instance from a JSON value.
@@ -275,8 +268,6 @@ sealed class WitGeneratorInput implements ToJsonSerializable {
       _ => throw Exception('Invalid JSON $json_'),
     };
   }
-
-  /// Returns this as a serializable JSON value.
   @override
   Map<String, Object?> toJson();
 
@@ -419,8 +410,6 @@ class WitGeneratorConfig implements ToJsonSerializable {
       _ => throw Exception('Invalid JSON $json_')
     };
   }
-
-  /// Returns this as a serializable JSON value.
   @override
   Map<String, Object?> toJson() => {
         'runtimeType': 'WitGeneratorConfig',
@@ -581,9 +570,17 @@ class DartWitGeneratorWorld {
 
     final instance = await builder.build();
 
-    library = WasmLibrary(instance, int64Type: Int64TypeConfig.bigInt);
+    library = WasmLibrary(instance,
+        componentId: 'wasm-run-dart:dart-wit-generator/dart-wit-generator',
+        int64Type: Int64TypeConfig.bigInt);
     return DartWitGeneratorWorld(imports: imports, library: library);
   }
+
+  static final _zoneKey = Object();
+  late final _zoneValues = {_zoneKey: this};
+  static DartWitGeneratorWorld? currentZoneWorld() =>
+      Zone.current[_zoneKey] as DartWitGeneratorWorld?;
+  T withContext<T>(T Function() fn) => runZoned(fn, zoneValues: _zoneValues);
 
   final ListValue Function(ListValue) _generate;
 
@@ -593,8 +590,10 @@ class DartWitGeneratorWorld {
   }) {
     final results = _generate([config.toWasm()]);
     final result = results[0];
-    return Result.fromJson(result, (ok) => WitFile.fromJson(ok),
-        (error) => error is String ? error : (error! as ParsedString).value);
+    return withContext(() => Result.fromJson(
+        result,
+        (ok) => WitFile.fromJson(ok),
+        (error) => error is String ? error : (error! as ParsedString).value));
   }
 
   final ListValue Function(ListValue) _generateToFile;
@@ -606,7 +605,7 @@ class DartWitGeneratorWorld {
   }) {
     final results = _generateToFile([config.toWasm(), filePath]);
     final result = results[0];
-    return Result.fromJson(result, (ok) => null,
-        (error) => error is String ? error : (error! as ParsedString).value);
+    return withContext(() => Result.fromJson(result, (ok) => null,
+        (error) => error is String ? error : (error! as ParsedString).value));
   }
 }

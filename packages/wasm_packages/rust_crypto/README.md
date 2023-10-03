@@ -13,7 +13,7 @@ and the Flutter guide for
 
 
 ```sh
-dart run ../../dart_wit_component/wasm_wit_component/bin/generate.dart rust_crypto_wasm/wit/rust-crypto.wit lib/src/api.dart
+dart run ../../dart_wit_component/wasm_wit_component/bin/generate.dart rust_crypto_wasm/wit/rust-crypto.wit lib/src/rust_crypto_wit.gen.dart
 ```
 
 ```sh
