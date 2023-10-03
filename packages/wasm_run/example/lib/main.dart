@@ -1,7 +1,6 @@
 // ignore_for_file: avoid_print, prefer_const_literals_to_create_immutables
 
 import 'dart:convert';
-import 'dart:ffi' as ffi;
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -640,7 +639,7 @@ void testAll({TestArgs? testArgs}) {
       addTearDown(() => File(library).deleteSync());
       expect(WasmRunLibrary.isReachable(), true);
 
-      final dynLib = ffi.DynamicLibrary.open(library);
+      final dynLib = openDynamicLibrary(library);
       expect(
         () => WasmRunLibrary.set(dynLib),
         throwsA(

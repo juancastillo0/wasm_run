@@ -296,7 +296,7 @@ void wasiTest({TestArgs? testArgs}) {
 
       print(data);
       expect(data.size, binary.lengthInBytes);
-      expect(data.read_only, false);
+      expect(data.readOnly, false);
       if (data.created != null && isLibrary) {
         // may be null for some platforms
         expect(startTimestamp, lessThanOrEqualTo(data.created!));
