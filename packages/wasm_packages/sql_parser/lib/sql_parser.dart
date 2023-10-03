@@ -87,4 +87,3 @@ extension SqlFunctionRefValue on SqlFunctionRef {
 extension TableWithJoinsRefValue on TableWithJoinsRef {
   TableWithJoins value(ParsedSql parsed) => parsed.tableWithJoinsRefs[index_];
 }
-
