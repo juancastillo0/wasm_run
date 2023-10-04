@@ -9,7 +9,9 @@ String getRunnerIdentity() {
   return impl.getRunnerIdentityImpl();
 }
 
+typedef OpenDynamicLibraryResult = impl.OpenDynamicLibraryResultImpl;
+
 /// Opens the dynamic library at the given [path].
-Object openDynamicLibrary(String path) {
+OpenDynamicLibraryResult openDynamicLibrary(String path) {
   return impl.openDynamicLibraryImpl(path);
 }

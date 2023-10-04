@@ -5,5 +5,7 @@ String getRunnerIdentityImpl() {
   return '${Platform.operatingSystem}: ${Platform.operatingSystemVersion}';
 }
 
-Object openDynamicLibraryImpl(String library) =>
+typedef OpenDynamicLibraryResultImpl = ffi.DynamicLibrary;
+
+OpenDynamicLibraryResultImpl openDynamicLibraryImpl(String library) =>
     ffi.DynamicLibrary.open(library);

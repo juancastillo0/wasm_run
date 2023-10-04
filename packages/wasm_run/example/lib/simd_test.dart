@@ -156,7 +156,7 @@ void simdTests() {
         ),
       );
       final instance = module.builder().buildSync();
-
+      if (!isLibrary) return;
       final result = instance.getFunction('g')!([
         U8Array16(
           Uint8List.sublistView(Float32List.fromList([2.3, 5, 10.90, 41.94])),
