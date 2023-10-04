@@ -134,6 +134,10 @@ List<FlatValue> _mapFlatToValues(List<Object?> values, List<FlatType> types) {
 
 List<Object?> _mapValuesToFlat(Int64TypeConfig config, List<FlatValue> values) {
   return values.map((e) {
+    const isWeb = identical(0, 0.0);
+    if (isWeb && e.t == FlatType.i64 && e.v is int) {
+      return i64.fromInt(e.v as int);
+    }
     // if (e.t == FlatType.i64) {
     //   return switch (config) {
     //     Int64TypeConfig.bigInt => i64.fromBigInt(e.v as BigInt),

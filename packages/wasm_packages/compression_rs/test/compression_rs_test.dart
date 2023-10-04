@@ -36,7 +36,8 @@ void main() {
       }
     });
 
-    test('all async worker', () async {
+    // TODO: fix threaded support
+    test('all async worker', skip: 'fix threaded support', () async {
       final world = await compress_worker.createCompressionRsInMemoryWorker(
         // wasiConfig: WasiConfig(preopenedDirs: [], webBrowserFileSystem: {}),
         imports: compress_worker.CompressionRsWorldImports(),

@@ -796,7 +796,15 @@ class RustCryptoWorld {
   RustCryptoWorld({
     required this.imports,
     required this.library,
-  });
+  }) {
+    fsHash = FsHash(this);
+    hashes = Hashes(this);
+    sha2 = Sha2(this);
+    blake3 = Blake3(this);
+    hmac = Hmac(this);
+    argon2 = Argon2(this);
+    aesGcmSiv = AesGcmSiv(this);
+  }
 
   static Future<RustCryptoWorld> init(
     WasmInstanceBuilder builder, {

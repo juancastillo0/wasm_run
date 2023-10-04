@@ -1,7 +1,8 @@
 const hostWitDartOutput = r'''
 // FILE GENERATED FROM WIT
 
-// ignore_for_file: require_trailing_commas, unnecessary_raw_strings, unnecessary_non_null_assertion
+// ignore: lines_longer_than_80_chars
+// ignore_for_file: require_trailing_commas, unnecessary_raw_strings, unnecessary_non_null_assertion, unused_element, avoid_returning_null_for_void
 
 import 'dart:async';
 // ignore: unused_import

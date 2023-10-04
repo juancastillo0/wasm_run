@@ -220,19 +220,20 @@ pub fn document_to_dart(
             required this.library,
         }})"
         ));
-        if constructor.is_empty() {
+        if constructor.is_empty() && constructor_body.is_empty() {
             s.push_str(";");
-        } else {
-            if constructor_body.is_empty() {
+        } else if constructor_body.is_empty() {
                 s.push_str(&format!(": {};", constructor.join(", ")));
-            } else {
-                s.push_str(&format!(
-                    ": {} {{{}}}",
-                    constructor.join(", "),
-                    constructor_body.join("\n")
-                ));
-            }
+        } else if constructor.is_empty() {
+            s.push_str(&format!("{{{}}}", constructor_body.join("\n")));
+        } else {
+            s.push_str(&format!(
+                ": {} {{{}}}",
+                constructor.join(", "),
+                constructor_body.join("\n")
+            ));
         }
+        
 
         let int64_type = match p.2.int64_type {
             Int64TypeConfig::BigInt => "Int64TypeConfig.bigInt",
@@ -361,7 +362,8 @@ pub fn extract_dart_docs(docs: &Docs) -> Option<String> {
 const HEADER: &str = "
 // FILE GENERATED FROM WIT
 
-// ignore_for_file: require_trailing_commas, unnecessary_raw_strings, unnecessary_non_null_assertion
+// ignore: lines_longer_than_80_chars
+// ignore_for_file: require_trailing_commas, unnecessary_raw_strings, unnecessary_non_null_assertion, unused_element, avoid_returning_null_for_void
 
 import 'dart:async';
 // ignore: unused_import
