@@ -2322,7 +2322,15 @@ class CompressionRsWorld {
   CompressionRsWorld({
     required this.imports,
     required this.library,
-  });
+  }) {
+    brotli = Brotli(this);
+    lz4 = Lz4(this);
+    zstd = Zstd(this);
+    deflate = Deflate(this);
+    gzip = Gzip(this);
+    zlib = Zlib(this);
+    archive = Archive(this);
+  }
 
   static Future<CompressionRsWorld> init(
     WasmInstanceBuilder builder, {
