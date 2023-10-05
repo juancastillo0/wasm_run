@@ -527,6 +527,33 @@ void testAll({TestArgs? testArgs}) {
       final uris = WasmFileUris.fromList([initialUri]);
       // TODO: save to file? fallback to uri if not found in simd/threads?
 
+      final runtimeFeatures = await wasmRuntimeFeatures();
+      try {
+        await uris.loadModule(getUriBodyBytes: (uri) async => Uint8List(0));
+        throw Exception('should not reach');
+      } on WasmFileUrisException catch (e) {
+        expect(e.errors, hasLength(2));
+        final toString = e.toString();
+        expect(
+          toString,
+          contains(
+            'WasmFileUrisException(WasmFileUris(uri: https://example.com/assets/wasm.wasm',
+          ),
+        );
+        expect(
+          toString,
+          contains('fallbackUri: https://example.com/assets/wasm.wasm'),
+        );
+        expect(
+          toString,
+          contains(
+            runtimeFeatures.supportedFeatures.threads
+                ? 'Url "https://example.com/assets/wasm.threadsSimd.wasm" returned an empty body'
+                : 'Url "https://example.com/assets/wasm.wasm" returned an empty body',
+          ),
+        );
+      }
+
       for (final v in [
         {
           'threads': false,
@@ -581,30 +608,6 @@ void testAll({TestArgs? testArgs}) {
           ),
         );
         expect(uri, v['uri']);
-
-        try {
-          await uris.loadModule(getUriBodyBytes: (uri) async => Uint8List(0));
-          throw Exception('should not reach');
-        } on WasmFileUrisException catch (e) {
-          expect(e.errors, hasLength(2));
-          final toString = e.toString();
-          expect(
-            toString,
-            contains(
-              'WasmFileUrisException(WasmFileUris(uri: https://example.com/assets/wasm.wasm',
-            ),
-          );
-          expect(
-            toString,
-            contains('fallbackUri: https://example.com/assets/wasm.wasm'),
-          );
-          expect(
-            toString,
-            contains(
-              'Url "https://example.com/assets/wasm.threadsSimd.wasm" returned an empty body',
-            ),
-          );
-        }
       }
     },
   );
