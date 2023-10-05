@@ -52,10 +52,13 @@ Future<void> setUpDesktopDynamicLibrary({String? dynamicLibraryPath}) async {
   final archiveFile = await writeToFile('temp/$archiveName', response);
   print('Downloaded archive $archiveUrl to ${archiveFile.path}');
 
+  final tempFilePath =
+      root.resolve('temp').toFilePath(windows: Platform.isWindows);
+
   /// Extract archive.
   final info = await Process.run(
     'tar',
-    ['xzf', archiveFile.path, '-C', root.resolve('temp').path],
+    ['xzf', archiveFile.path, '-C', tempFilePath],
   );
   if (info.exitCode != 0) {
     throw Exception(
