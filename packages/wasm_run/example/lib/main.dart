@@ -517,7 +517,7 @@ void testAll({TestArgs? testArgs}) {
     () async {
       final initialUri = WasmFileUris(
         uri: Uri.parse('https://example.com/assets/wasm.wasm'),
-        simdUri: Uri.parse('https://example.com/assets/wasm.threads.wasm'),
+        simdUri: Uri.parse('https://example.com/assets/wasm.simd.wasm'),
         threadsSimdUri:
             Uri.parse('https://example.com/assets/wasm.threadsSimd.wasm'),
         fallback: WasmFileUris(
@@ -550,8 +550,8 @@ void testAll({TestArgs? testArgs}) {
             runtimeFeatures.supportedFeatures.threads &&
                     runtimeFeatures.supportedFeatures.simd
                 ? 'Url "https://example.com/assets/wasm.threadsSimd.wasm" returned an empty body'
-                : runtimeFeatures.supportedFeatures.threads
-                    ? 'Url "https://example.com/assets/wasm.threads.wasm" returned an empty body'
+                : runtimeFeatures.supportedFeatures.simd
+                    ? 'Url "https://example.com/assets/wasm.simd.wasm" returned an empty body'
                     : 'Url "https://example.com/assets/wasm.wasm" returned an empty body',
           ),
         );

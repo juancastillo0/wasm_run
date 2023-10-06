@@ -36,22 +36,15 @@ Future<DartWitGeneratorWorld> createDartWitGenerator({
         ? './packages/wasm_wit_component/dart_wit_component.wasm'
         : '$baseUrl/wasm_run-v${WasmRunLibrary.version}/dart_wit_component.wasm';
 
-    WasmFileUris uris = WasmFileUris(uri: Uri.parse(wasmUrl));
-    if (!_isWeb) {
-      final packageDir = File.fromUri(Platform.script).parent.parent;
-      final wasmFile = packageDir.uri.resolve('lib/dart_wit_component.wasm');
-      if (File(wasmFile.toFilePath()).existsSync()) {
-        uris = WasmFileUris(uri: wasmFile, fallback: uris);
-      } else if (_getRootDirectory() case final Directory root) {
-        uris = WasmFileUris(
-          uri: root.uri.resolve(
-            'packages/dart_wit_component/wasm_wit_component/lib/dart_wit_component.wasm',
-          ),
-          fallback: uris,
-        );
-      }
-    }
-
+    final uri = await WasmFileUris.uriForPackage(
+      package: 'wasm_wit_component',
+      libPath: 'dart_wit_component.wasm',
+      envVariable: 'DART_WIT_COMPONENT_WASM_PATH',
+    );
+    final uris = WasmFileUris(
+      uri: uri,
+      fallback: WasmFileUris(uri: Uri.parse(wasmUrl)),
+    );
     module = await uris.loadModule();
   }
   final builder = module.builder(
