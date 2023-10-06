@@ -162,7 +162,9 @@ world host {
       final String witPath;
       if (!isWeb && getDirectory != null) {
         final dir = await getDirectory();
-        final file = File(dir.uri.resolve('host.wit').toFilePath())
+        final file = File(
+          dir.uri.resolve('host.wit').toFilePath(windows: Platform.isWindows),
+        )
           ..createSync(recursive: true)
           ..writeAsStringSync(hostWitContents);
         addTearDown(file.deleteSync);
