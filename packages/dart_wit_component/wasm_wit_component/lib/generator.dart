@@ -77,17 +77,6 @@ WitGeneratorConfig defaultGeneratorConfig({
   );
 }
 
-Directory? _getRootDirectory() {
-  var dir = Directory.current;
-  while (!File('${dir.path}${Platform.pathSeparator}melos.yaml').existsSync()) {
-    if (dir.path == '/' || dir.path == '' || dir.path == dir.parent.path) {
-      return null;
-    }
-    dir = dir.parent;
-  }
-  return dir;
-}
-
 /// Creates a [WasiConfig] from the given [witPath].
 /// If [witPath] is a file, it will use its parent directory as the
 /// preopened directory for the WASI config.
