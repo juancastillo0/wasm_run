@@ -87,7 +87,7 @@ WasiConfig wasiConfigFromPath(
   String witPath, {
   Map<String, WasiDirectory>? webBrowserFileSystem,
 }) {
-  String allowedPath = witPath;
+  Uri allowedPath = Uri.parse(witPath);
   if (!_isWeb) {
     final type = FileSystemEntity.typeSync(witPath);
     if (type == FileSystemEntityType.notFound) {
@@ -97,14 +97,15 @@ WasiConfig wasiConfigFromPath(
     final allowedDir = type == FileSystemEntityType.file
         ? File(witPath).parent
         : Directory(witPath);
-    allowedPath = allowedDir.path;
+    allowedPath = allowedDir.uri;
   }
   return WasiConfig(
     inheritEnv: true,
     preopenedDirs: [
       PreopenedDir(
-        hostPath: allowedPath,
-        wasmGuestPath: allowedPath,
+        hostPath:
+            allowedPath.toFilePath(windows: !_isWeb && Platform.isWindows),
+        wasmGuestPath: allowedPath.toFilePath(windows: false),
       ),
     ],
     webBrowserFileSystem: webBrowserFileSystem ?? {},

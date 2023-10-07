@@ -169,9 +169,7 @@ world host {
           ..writeAsStringSync(hostWitContents);
         addTearDown(file.deleteSync);
 
-        witPath = Platform.isWindows
-            ? (file.path.split(r'\')..[0] = '').join('/')
-            : file.path;
+        witPath = file.path;
       } else {
         witPath = isWeb
             ? 'host/host.wit'
