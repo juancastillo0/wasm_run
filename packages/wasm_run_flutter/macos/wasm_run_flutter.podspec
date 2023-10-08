@@ -8,14 +8,16 @@ url = "https://github.com/juancastillo0/wasm_run/releases/download/#{release_tag
 local_zip_name = "#{release_tag_name}.zip"
 `
 cd Frameworks
-rm -rf #{framework_name}
 
 if [ ! -f #{local_zip_name} ]
 then
+  rm -rf #{framework_name}
   curl -L #{url} -o #{local_zip_name}
+  unzip #{local_zip_name}
+  truncate -s 0 #{local_zip_name}
+  rm -rf #{framework_name}/ios-*
 fi
 
-unzip #{local_zip_name}
 cd -
 `
 
@@ -37,5 +39,5 @@ Pod::Spec.new do |s|
   s.vendored_frameworks = "Frameworks/#{framework_name}"
 
   s.ios.deployment_target = '11.0'
-  s.osx.deployment_target = '10.11'
+  s.osx.deployment_target = '10.13'
 end
