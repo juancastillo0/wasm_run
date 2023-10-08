@@ -17,26 +17,34 @@ project(${PROJECT_NAME} LANGUAGES CXX)
 # Download the binaries if they are not already present.
 set(LibRoot "${CMAKE_CURRENT_SOURCE_DIR}/${LibraryVersion}")
 set(ArchivePath "${LibRoot}.tar.gz")
-if(NOT EXISTS ${ArchivePath})
-  file(DOWNLOAD
-    "https://github.com/juancastillo0/wasm_run/releases/download/${LibraryVersion}/other.tar.gz"
-    ${ArchivePath}
-    TLS_VERIFY ON
-  )
-endif()
+set(BinaryPath "${FLUTTER_TARGET_PLATFORM}/wasm_run_dart.dll")
 
-# Extract the binaries, overriding any already present.
-file(REMOVE_RECURSE ${LibRoot})
-file(MAKE_DIRECTORY ${LibRoot})
-execute_process(
-  COMMAND ${CMAKE_COMMAND} -E tar xzf ${ArchivePath}
-  WORKING_DIRECTORY ${LibRoot}
-)
+if(NOT EXISTS "${LibRoot}/${BinaryPath}")
+  if(NOT EXISTS ${ArchivePath})
+    file(DOWNLOAD
+      "https://github.com/juancastillo0/wasm_run/releases/download/${LibraryVersion}/other.tar.gz"
+      ${ArchivePath}
+      TLS_VERIFY ON
+    )
+  endif()
+
+  # Extract the binaries, overriding any already present.
+  file(REMOVE_RECURSE ${LibRoot})
+  file(MAKE_DIRECTORY "${LibRoot}/${FLUTTER_TARGET_PLATFORM}" "${LibRoot}/temp")
+  execute_process(
+    COMMAND ${CMAKE_COMMAND} -E tar xzf ${ArchivePath}
+    WORKING_DIRECTORY  "${LibRoot}/temp"
+  )
+  
+  # Move windows .dll and clean up archive files
+  file(COPY_FILE "${LibRoot}/temp/${BinaryPath}" "${LibRoot}/${BinaryPath}")
+  file(REMOVE_RECURSE ${ArchivePath} "${LibRoot}/temp")
+endif()
 
 # List of absolute paths to libraries that should be bundled with the plugin.
 # This list could contain prebuilt libraries, or libraries created by an
 # external build triggered from this build file.
 set(wasm_run_flutter_bundled_libraries
-  "${LibRoot}/${FLUTTER_TARGET_PLATFORM}/wasm_run_dart.dll"
+  "${LibRoot}/${BinaryPath}"
   PARENT_SCOPE
 )
