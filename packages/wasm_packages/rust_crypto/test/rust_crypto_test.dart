@@ -72,11 +72,11 @@ Future<RustCryptoWorld> initTypesWorld({
     module = await compileWasmModule(bytes);
   } else {
     final wasmUris = WasmFileUris(
-      uri: Uri.parse(
-        _isWeb
-            ? './packages/rust_crypto/assets/rust_crypto_wasm.wasm'
-            : '${getRootDirectory().path}/packages/wasm_packages/rust_crypto/lib/assets/rust_crypto_wasm.wasm',
-      ),
+      uri: _isWeb
+          ? Uri.parse('./packages/rust_crypto/assets/rust_crypto_wasm.wasm')
+          : Uri.file(
+              '${getRootDirectory().path}/packages/wasm_packages/rust_crypto/lib/assets/rust_crypto_wasm.wasm',
+            ),
     );
     module = await wasmUris.loadModule();
   }

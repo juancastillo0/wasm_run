@@ -71,10 +71,15 @@ Directory getRootDirectory() {
 
 String getWitComponentExamplePath() {
   final root = getRootDirectory();
-  final base =
-      '${root.path}/packages/dart_wit_component/wasm_wit_component/example/lib/rust_wit_component_example.wasm';
+  final base = root.uri.resolve(
+    'packages/dart_wit_component/wasm_wit_component/example/lib/rust_wit_component_example.wasm',
+  );
   if (isRelease()) {
-    return '$base/target/wasm32-unknown-unknown/release/rust_wit_component_example.wasm';
+    return root.uri
+        .resolve(
+          'packages/dart_wit_component/wasm_wit_component/example/rust_wit_component_example/target/wasm32-unknown-unknown/release/rust_wit_component_example.wasm',
+        )
+        .toFilePath();
   }
-  return base;
+  return base.toFilePath();
 }

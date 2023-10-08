@@ -21,7 +21,13 @@ Future<void> generateCli(List<String> arguments) async {
 
   final wasiConfig = wasiConfigFromPath(witInputPath);
   final world = await createDartWitGenerator(wasiConfig: wasiConfig);
-  final config = args.config;
+  final config = args.config.copyWith(
+    inputs: FileSystemPaths(
+      inputPath: Uri.file((args.config.inputs as FileSystemPaths).inputPath)
+          // wasi does not support windows "\" sepparated paths
+          .toFilePath(windows: false),
+    ),
+  );
 
   Future<void> generate() async {
     final result = world.generate(config: config);

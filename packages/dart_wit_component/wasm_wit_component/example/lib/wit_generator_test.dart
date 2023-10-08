@@ -18,21 +18,23 @@ void witDartGeneratorTests({Future<Directory> Function()? getDirectory}) {
       if (Platform.isAndroid || Platform.isIOS) return;
 
       final root = getRootDirectory();
-      final base = '${root.path}/packages/dart_wit_component';
+      final base = root.uri.resolve('packages/dart_wit_component/');
 
-      final output = File('$base/wasm_wit_component/test/temp/generator.dart');
+      final output = File.fromUri(
+        base.resolve('wasm_wit_component/test/temp/generator.dart'),
+      );
       try {
         // 'dart run wasm_wit_component/bin/generate.dart wit/dart-wit-generator.wit wasm_wit_component/lib/src/generator.dart'
         await generateCli([
-          '$base/wit/dart-wit-generator.wit',
+          base.resolve('wit/dart-wit-generator.wit').toFilePath(),
           output.path,
         ]);
 
         final content = await output.readAsString();
         final formatted = _formatter.format(content);
-        final expected =
-            await File('$base/wasm_wit_component/lib/src/generator.dart')
-                .readAsString();
+        final expected = await File.fromUri(
+          base.resolve('wasm_wit_component/lib/src/generator.dart'),
+        ).readAsString();
         expect(formatted, expected.replaceAll('\r\n', '\n'));
       } finally {
         if (output.existsSync()) {
@@ -173,7 +175,12 @@ world host {
       } else {
         witPath = isWeb
             ? 'host/host.wit'
-            : '${getRootDirectory().path}/packages/dart_wit_component/wasm_wit_component/example/lib/host.wit';
+            : getRootDirectory()
+                .uri
+                .resolve(
+                  'packages/dart_wit_component/wasm_wit_component/example/lib/host.wit',
+                )
+                .toFilePath();
       }
       final wasiConfig = wasiConfigFromPath(
         witPath,
@@ -183,11 +190,15 @@ world host {
               'host.wit': WasiFile(
                 const Utf8Encoder().convert(hostWitContents),
               )
-            })
+            }),
         },
       );
       final g = await createDartWitGenerator(wasiConfig: wasiConfig);
-      final inputs = FileSystemPaths(inputPath: witPath);
+      final inputs = FileSystemPaths(
+        inputPath: isWeb
+            ? witPath
+            : '${wasiConfig.preopenedDirs.first.wasmGuestPath}host.wit',
+      );
 
       _validateHostResult(g, inputs);
     });

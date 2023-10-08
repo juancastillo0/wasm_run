@@ -50,11 +50,11 @@ Future<TypesExampleWorld> initTypesWorld(
     module = await compileWasmModule(bytes);
   } else {
     final wasmUris = WasmFileUris(
-      uri: Uri.parse(
-        _isWeb
-            ? './packages/wasm_wit_component_example/rust_wit_component_example.wasm'
-            : getWitComponentExamplePath(),
-      ),
+      uri: _isWeb
+          ? Uri.parse(
+              './packages/wasm_wit_component_example/rust_wit_component_example.wasm',
+            )
+          : Uri.file(getWitComponentExamplePath()),
     );
     module = await wasmUris.loadModule();
   }
