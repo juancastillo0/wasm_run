@@ -68,6 +68,9 @@ ExternalLibrary createLibraryImpl() {
       final lib = DynamicLibrary.open(nativeDir.resolve(libName).toFilePath());
       return _validateLibrary(lib);
     } catch (_) {}
+    try {
+      return localTestingLibraryImpl();
+    } catch (_) {}
 
     throw Exception(
       'WasmRun library not found. Did you run `dart run wasm_run:setup`?',
