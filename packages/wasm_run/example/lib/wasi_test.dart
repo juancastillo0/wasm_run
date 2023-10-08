@@ -20,12 +20,13 @@ Future<Uint8List> getWasiExample({
       '../../rust_wasi_example/target/wasm32-wasi/debug/rust_wasi_example.wasm',
       '../rust_wasi_example/target/wasm32-wasi/release/rust_wasi_example.wasm',
       '../../rust_wasi_example/target/wasm32-wasi/release/rust_wasi_example.wasm',
-      getRootDirectory()
-          .uri
-          .resolve(
-            'packages/wasm_run_flutter/example/assets/rust_wasi_example.wasm',
-          )
-          .toFilePath(),
+      if (!isWeb)
+        getRootDirectory()
+            .uri
+            .resolve(
+              'packages/wasm_run_flutter/example/assets/rust_wasi_example.wasm',
+            )
+            .toFilePath(),
     ];
     for (final element in wasmFiles) {
       try {
