@@ -183,6 +183,11 @@ Future<Uint8List> getThreadsExample() async {
     final wasmFiles = [
       '${root.path}/packages/rust_threads_example/target/wasm32-unknown-unknown/release/rust_threads_example.wasm',
       '${root.path}/packages/rust_threads_example/target/wasm32-unknown-unknown/debug/rust_threads_example.wasm',
+      root.uri
+          .resolve(
+            'packages/wasm_run_flutter/example/assets/rust_threads_example.wasm',
+          )
+          .toFilePath(),
     ];
     for (final element in wasmFiles) {
       try {

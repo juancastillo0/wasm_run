@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:test/test.dart';
 import 'package:wasm_run/wasm_run.dart';
 import 'package:wasm_run_example/main.dart';
+import 'package:wasm_run_example/threads_test.dart';
 import 'package:wasm_run_example/wasi_base64.dart';
 
 Future<Uint8List> getWasiExample({
@@ -19,6 +20,12 @@ Future<Uint8List> getWasiExample({
       '../../rust_wasi_example/target/wasm32-wasi/debug/rust_wasi_example.wasm',
       '../rust_wasi_example/target/wasm32-wasi/release/rust_wasi_example.wasm',
       '../../rust_wasi_example/target/wasm32-wasi/release/rust_wasi_example.wasm',
+      getRootDirectory()
+          .uri
+          .resolve(
+            'packages/wasm_run_flutter/example/assets/rust_wasi_example.wasm',
+          )
+          .toFilePath(),
     ];
     for (final element in wasmFiles) {
       try {
