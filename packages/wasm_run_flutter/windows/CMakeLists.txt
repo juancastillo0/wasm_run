@@ -30,15 +30,15 @@ if(NOT EXISTS "${LibRoot}/${BinaryPath}")
 
   # Extract the binaries, overriding any already present.
   file(REMOVE_RECURSE ${LibRoot})
-  file(MAKE_DIRECTORY "${LibRoot}/${FLUTTER_TARGET_PLATFORM}" "${LibRoot}/temp")
+  file(MAKE_DIRECTORY ${LibRoot})
   execute_process(
     COMMAND ${CMAKE_COMMAND} -E tar xzf ${ArchivePath}
-    WORKING_DIRECTORY  "${LibRoot}/temp"
+    WORKING_DIRECTORY ${LibRoot}
   )
   
-  # Move windows .dll and clean up archive files
-  file(COPY_FILE "${LibRoot}/temp/${BinaryPath}" "${LibRoot}/${BinaryPath}")
-  file(REMOVE_RECURSE ${ArchivePath} "${LibRoot}/temp")
+  # Clean up archive files
+  file(GLOB LinuxBinaries "${LibRoot}/linux-*")
+  file(REMOVE_RECURSE ${ArchivePath} ${LinuxBinaries})
 endif()
 
 # List of absolute paths to libraries that should be bundled with the plugin.
