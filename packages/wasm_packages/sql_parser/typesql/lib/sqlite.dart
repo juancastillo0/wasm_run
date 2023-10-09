@@ -1,6 +1,6 @@
 import 'package:sqlite3/common.dart';
-import 'src/sqlite/_sqlite_io.dart' if (dart.library.html) '_sqlite_web.dart'
-    as impl;
+import 'src/sqlite/_sqlite_io.dart'
+    if (dart.library.html) 'src/sqlite/_sqlite_web.dart' as impl;
 
 export 'package:sqlite3/common.dart';
 
