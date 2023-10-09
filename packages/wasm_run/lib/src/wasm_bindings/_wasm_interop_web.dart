@@ -582,7 +582,8 @@ WasmExternal _makeWasmFunction(Function value, String? name) {
     call: ([args]) {
       final result = js_util.callMethod<Object?>(value, 'apply', [null, args]);
       if (result is List) return result;
-      if (isVoidReturn(result)) return const [];
+      if (js_util.typeofEquals<dynamic>(result, 'undefined') ||
+          isVoidReturn(result)) return const [];
       return List.filled(1, result);
     },
     // results is not supported on web https://github.com/WebAssembly/js-types/blob/main/proposals/js-types/Overview.md
