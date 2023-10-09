@@ -43,8 +43,8 @@ build/
 packages/wasm_run/coverage
 packages/rust_wasi_example/Cargo.lock
 scripts/config_api.exe
-packages/flutter_wasmi/example/macos/Flutter/ephemeral/Flutter-Generated.xcconfig
-packages/flutter_wasmi/example/ios/Flutter/Generated.xcconfig
+packages/flutter_wasmi/example/macos/Flutter/ephemeral/flutter_export_environment.sh
 packages/flutter_wasmi/example/ios/Flutter/flutter_export_environment.sh
 packages/flutter_wasmi/example/android/local.properties
-packages/flutter_wasmi/example/macos/Flutter/ephemeral/flutter_export_environment.sh
+packages/flutter_wasmi/example/ios/Flutter/Generated.xcconfig
+packages/flutter_wasmi/example/macos/Flutter/ephemeral/Flutter-Generated.xcconfig
