@@ -23,11 +23,15 @@ A Web Assembly executor for the Dart programming language.
 
 Currently it uses the [`wasmtime 9.0`](https://github.com/bytecodealliance/wasmtime) or [`wasmi 0.30`](https://github.com/paritytech/wasmi) Rust crates for parsing and executing WASM modules. Bindings are created using [`package:flutter_rust_bridge`](https://github.com/fzyzcjy/flutter_rust_bridge).
 
-| Pub                                                                                                            | Source                                                                  | Description                                                    |
-| -------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- | -------------------------------------------------------------- |
-| [![version](https://img.shields.io/pub/v/wasm_run.svg)](https://pub.dev/packages/wasm_run)                     | [wasm_run](./packages/wasm_run/)                                        | Wasm executor and utilities                                    |
-| [![version](https://img.shields.io/pub/v/wasm_run_flutter.svg)](https://pub.dev/packages/wasm_run_flutter)     | [wasm_run_flutter](./packages/wasm_run_flutter/)                        | Native libraries to use `package:wasm_run` in Flutter projects |
-| [![version](https://img.shields.io/pub/v/wasm_wit_component.svg)](https://pub.dev/packages/wasm_wit_component) | [wasm_wit_component](./packages/dart_wit_component/wasm_wit_component/) | Wit bindings and code generator for Wasm components            |
+| Pub                                                                                                            | Source                                                                  | Description                                                                                                                                       |
+| -------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [![version](https://img.shields.io/pub/v/wasm_run.svg)](https://pub.dev/packages/wasm_run)                     | [wasm_run](./packages/wasm_run/)                                        | Wasm executor and utilities                                                                                                                       |
+| [![version](https://img.shields.io/pub/v/wasm_run_flutter.svg)](https://pub.dev/packages/wasm_run_flutter)     | [wasm_run_flutter](./packages/wasm_run_flutter/)                        | Native libraries to use `package:wasm_run` in Flutter projects                                                                                    |
+| [![version](https://img.shields.io/pub/v/wasm_wit_component.svg)](https://pub.dev/packages/wasm_wit_component) | [wasm_wit_component](./packages/dart_wit_component/wasm_wit_component/) | Wit bindings and code generator for Wasm components                                                                                               |
+| [![version](https://img.shields.io/pub/v/compression_rs.svg)](https://pub.dev/packages/compression_rs)         | [compression_rs](./packages/wasm_packages/compression_rs/)              | Compression, decompression, zip and tar achieves (brotli, lz4, zstd, gzip, zlib, ...)                                                             |
+| [![version](https://img.shields.io/pub/v/image_rs.svg)](https://pub.dev/packages/image_rs)                     | [image_rs](./packages/wasm_packages/image_rs/)                          | Enconding, deconding, transformations and operations over multiple image formats (png, jpeg, ico, gif, bmp, tiff, webp, avif, tga, farbfeld, ...) |
+| [![version](https://img.shields.io/pub/v/rust_crypto.svg)](https://pub.dev/packages/rust_crypto)               | [rust_crypto](./packages/wasm_packages/rust_crypto/)                    | Hashes, Hmacs, Argon2 Passwords and AES-GCM-SIV encryption. Digests for sha1, sha2, md5, blake3, crc32                                            |
+| [![version](https://img.shields.io/pub/v/wasm_parser.svg)](https://pub.dev/packages/wasm_parser)               | [wasm_parser](./packages/wasm_packages/wasm_parser/)                    | Wasm, Wat and Wit parser, validator, printer and Wasm component tools                                                                             |
 
 
 - [Dart Wasm Run](#dart-wasm-run)
@@ -47,6 +51,7 @@ Currently it uses the [`wasmtime 9.0`](https://github.com/bytecodealliance/wasmt
   - [Web Assembly System Interface (WASI)](#web-assembly-system-interface-wasi)
     - [WASI Examples](#wasi-examples)
       - [Dart Wit Component Generator](#dart-wit-component-generator)
+      - [WASI Web](#wasi-web)
     - [Stdio (stdin, stdout, stderr)](#stdio-stdin-stdout-stderr)
     - [Directories](#directories)
     - [Environment and Arguments](#environment-and-arguments)
@@ -62,6 +67,15 @@ Currently it uses the [`wasmtime 9.0`](https://github.com/bytecodealliance/wasmt
   - [Integers, BigInt and Web Browsers](#integers-bigint-and-web-browsers)
   - [Load Wasm Modules with `WasmFileUris`](#load-wasm-modules-with-wasmfileuris)
   - [Configure Dynamic Libraries with `WasmRunLibrary`](#configure-dynamic-libraries-with-wasmrunlibrary)
+  - [WasmInstanceBuilder](#wasminstancebuilder)
+  - [WasmInstanceFuel](#wasminstancefuel)
+  - [Wit Tutorial](#wit-tutorial)
+    - [Dart Package](#dart-package)
+    - [Rust Package](#rust-package)
+    - [Rust Implementation and Wit Package API](#rust-implementation-and-wit-package-api)
+    - [Build WASM](#build-wasm)
+    - [Generate WIT Host Dart Bindings](#generate-wit-host-dart-bindings)
+    - [Loading and Testing the Dart Library](#loading-and-testing-the-dart-library)
 
 
 
@@ -122,7 +136,7 @@ We provide [`package:wasm_run_flutter`](./packages/wasm_run_flutter/) to bundle 
 
 ### Pure Dart (CLI/Backend/Web)
 
-For pure Dart application (backend or cli, for example), you may download the compiled dynamic libraries for each platform and specify the `ffi.DynamicLibrary` in the `setDynamicLibrary` function or execute the [script](./packages/wasm_run/bin/setup.dart) `dart run wasm_run:setup` to download the right library for your current platform and configure it so that you don't need to call `setDynamicLibrary` manually. The compiled libraries can be found in the [releases assets](https://github.com/juancastillo0/wasm_run/releases) of this repository.
+For pure Dart application (backend or cli, for example), you may download the compiled dynamic libraries for each platform and specify the `ffi.DynamicLibrary` in the `WasmRunLibrary.set` function or execute the [script](./packages/wasm_run/bin/setup.dart) `dart run wasm_run:setup` (or the function `WasmRunLibrary.setUp`) to download the right library for your current platform and configure it so that you don't need to call `WasmRunLibrary.set` manually. The compiled libraries can be found in the [releases assets](https://github.com/juancastillo0/wasm_run/releases) of this repository.
 
 For the web platform we provide the same interface but it uses the WASM runtime provided by the browser instead of the native library (you may also use the Wasmi WASM module // TODO: not implemented yet).
 
@@ -160,6 +174,8 @@ At the moment this is experimental and will not work in the Wasmi runtime.
 The native implementation uses Rust's [rayon](https://docs.rs/rayon/latest/rayon/)
 crate to execute tasks with a [work-stealing](https://en.wikipedia.org/wiki/Work_stealing)
 scheduler. 
+
+To use it you must call `WasmInstance.runParallel` with the `WasmFunction` to execute and the group of arguments to pass to the different threads.
 
 The web implementation uses web workers for running the functions and a simple task
 queue for scheduling.
@@ -207,9 +223,15 @@ or, if you have `cargo-wasi` installed:
 
 Another example of a Wasm module using Wasi is the [Dart Wit Component Generator](#generate-dart-code-from-wit-files).
 
+#### WASI Web
+
+We use the [bjorn3/browser_wasi_shim](https://github.com/bjorn3/browser_wasi_shim) JavaScript library that provides a shim around the browser API and an in-memory file system with `webBrowserFileSystem`.
+
 ### Stdio (stdin, stdout, stderr)
 
 You may choose to inherit stdin, stdout and stderr from the current process. Or capture stdout and stderr to execute some custom logic for the stdio exposed by the execution of the specific WASI module.
+
+`WasmInstance.stderr` and `WasmInstance.stdout` provide the captured Streams.
 
 ### Directories
 
@@ -289,13 +311,13 @@ dependencies:
   wasm_run: 0.0.1
 ```
 
-Fetch the dynamic libraries for your platform by using: 
+Fetch the dynamic libraries for your platform by running (or the function `WasmRunLibrary.setUp`): 
 
 ```
-dart pub run wasm_run:setup
+dart run wasm_run:setup
 ```
 
-Or provide a custom dynamic library from the releases with `setDynamicLibrary`.
+Or provide a custom dynamic library from the releases with `WasmRunLibrary.set`.
 
 ## Usage
 
@@ -397,3 +419,95 @@ The `WasmRunLibrary` static utility class allows you to configure the external a
   - Flutter: This will do nothing in Flutter since the libraries are already configured for you. 
   - Pure Dart: It will download the right binary for your platform from the [releases assets](https://github.com/juancastillo0/wasm_run/releases) in this repository and place it in `.dart_tool/wasm_run/<wasm_run_dart_dynamic_library>` or in the path provided by the `WASM_RUN_DART_DYNAMIC_LIBRARY` environment variable. You can also run it with `dart run wasm_run:setup` in a project that depends on `wasm_run`.
   - Web Dart: It will configure your `html.document.head` with script tags (import the libraries) required to use the [wasm-feature-detect](https://github.com/GoogleChromeLabs/wasm-feature-detect) and [bjorn3/browser_wasi_shim](https://github.com/bjorn3/browser_wasi_shim) JavaScript libraries.
+
+
+## WasmInstanceBuilder
+
+## WasmInstanceFuel
+
+## Wit Tutorial
+
+In the following sections we will create a Dart package that uses a Wasm Wit component generated from a Rust implementation.
+
+First we will create a [Dart package](#dart-package) and setup the [Rust implementation](#rust-package) within it. Then we will create a [Wit package API](#rust-implementation-and-wit-package-api)
+with the connected Rust implementation. This Rust package will be [built to Wasm](#build-wasm), either to a `wasm32-wasi` or `wasm32-unknown-unknown` target
+depending on whether you require WASI (system) APIs. After that we will [generate the wit Dart binding](#generate-wit-host-dart-bindings) 
+using `package:wasm_wit_component`'s `generate` CLI command. Finally, we will setup the [Wasm module loading and implement some tests](#loading-and-testing-the-dart-library)
+for the wasm implementation within Dart.
+
+### Dart Package
+
+```sh
+dart create --template package your_package
+```
+
+```sh
+cd your_package
+```
+
+### Rust Package
+
+```sh
+cargo new --lib your_package_wasm
+```
+
+```sh
+cd your_package_wasm
+```
+
+Edit the generated `Cargo.toml`:
+
+```toml
+[lib]
+crate-type = ['cdylib']
+
+[dependencies]
+wit-bindgen = { git = "https://github.com/bytecodealliance/wit-bindgen", version = "0.7.0", rev = "131746313de2f90d2688afbbc40c4a7ca309fe0d" }
+image = "0.24.6"
+```
+
+### Rust Implementation and Wit Package API
+
+```wit
+package your-package-namespace:your-package
+
+world your-package {
+  hello: func() -> string
+}
+```
+
+Within `your_package_wasm/src/lib.rs`:
+
+```rust
+
+```
+
+### Build WASM
+
+```sh
+cargo add cargo-wasi
+```
+
+```sh
+cargo wasi build --release
+```
+
+```sh
+cp target/wasm32-wasi/release/your_package_wasm.wasm ../lib/your_package_wasm.wasm
+```
+
+### Generate WIT Host Dart Bindings
+
+```sh
+cd ..
+```
+
+```sh
+dart pub add wasm_wit_component wasm_run
+```
+
+```sh
+dart run wasm_wit_component:generate your_package_wasm/wit/your-package.wit lib/src/your_package_wit.gen.dart
+```
+
+### Loading and Testing the Dart Library

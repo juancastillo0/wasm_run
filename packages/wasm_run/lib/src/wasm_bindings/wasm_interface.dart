@@ -40,7 +40,11 @@ export 'package:wasm_run/src/int64_bigint/int64_bigint.dart';
 abstract class WasmModule {
   /// A builder that creates a new [WasmInstance] from this module.
   /// It configures the imports and definitions of the instance.
-  /// [wasiConfig] is not supported in the browser executor.
+  /// [wasiConfig] is used to configure WASI imports, environment variables,
+  /// arguments and the file system access.
+  /// [workersConfig] is used to configure the number of workers and the
+  /// web worker script url. The module should support atomics, threads and
+  /// shared memory to be able to use workers.
   WasmInstanceBuilder builder({
     WasiConfig? wasiConfig,
     WorkersConfig? workersConfig,
@@ -179,6 +183,9 @@ class WasiConfig implements WasiConfigNative {
 /// To instantiate this builder you may use [WasmInstanceBuilder.build]
 /// or [WasmInstanceBuilder.build].
 abstract class WasmInstanceBuilder {
+  /// The wasm module associated with this instance builder.
+  WasmModule get module;
+
   /// Creates a new memory with [minPages] and [maxPages] pages.
   WasmMemory createMemory({required int minPages, int? maxPages});
 
@@ -279,6 +286,15 @@ abstract class WasmInstance {
 
   /// The exports of this instance.
   Map<String, WasmExternal> get exports;
+
+  /// Opens a file with [path] and returns a [WasiFile] if it exists.
+  Future<WasiFile?> wasiOpenFile(
+    String path, {
+    bool create = false,
+    bool truncate = false,
+    // bool directory = false,
+    bool exclusive = false,
+  });
 
   /// When using WASI with [WasiConfig] in [WasmModule.builder],
   /// this is the stderr stream.

@@ -7,7 +7,7 @@ typedef I64 = int; // int | BigInt;
 I64 int64FromIntImpl(int value) => value;
 
 I64 int64FromBigIntImpl(BigInt value) {
-  return value.toInt();
+  return value.toSigned(64).toInt();
 }
 
 int toIntImpl(Object d) => d as I64;

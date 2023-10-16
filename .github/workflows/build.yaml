@@ -3,8 +3,8 @@ name: Build & Test
 on:
   pull_request:
   push:
-    branches:
-      - main
+    branches-ignore:
+      - gh-pages
   schedule:
     # runs the CI everyday at 10AM
     - cron: "0 10 * * *"

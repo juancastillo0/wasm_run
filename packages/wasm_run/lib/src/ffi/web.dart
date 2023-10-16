@@ -1,10 +1,12 @@
 import 'dart:html' as html;
+import 'dart:js_util' as js_util;
+import 'dart:typed_data';
 
-import 'package:flutter_rust_bridge/flutter_rust_bridge.dart';
+import 'package:flutter_rust_bridge/flutter_rust_bridge.dart' as frb;
 import 'package:wasm_run/src/bridge_generated.dart';
 import 'package:wasm_run/src/ffi.dart';
 
-typedef ExternalLibrary = WasmModule;
+typedef ExternalLibrary = frb.WasmModule;
 
 WasmRunDart createWrapperImpl(ExternalLibrary module) =>
     WasmRunDartImpl.wasm(module);
@@ -19,20 +21,35 @@ ExternalLibrary createLibraryImpl() {
 
 Future<void> setUpLibraryImpl({required bool features, required bool wasi}) {
   return Future.wait([
-    if (features)
-      _injectSrcScript(
-        kIsFlutter
-            ? './assets/packages/wasm_run/lib/assets/wasm-feature-detect.js'
-            : './packages/wasm_run/assets/wasm-feature-detect.js',
-      ),
-    if (wasi)
-      _injectSrcScript(
-        kIsFlutter
-            ? './assets/packages/wasm_run/lib/assets/browser_wasi_shim.js'
-            : './packages/wasm_run/assets/browser_wasi_shim.js',
-        type: 'module',
-      ),
+    if (features) _setUpWasmFeatureDetect(),
+    if (wasi) _setUpBrowserWasiShim(),
   ]);
+}
+
+Future<void>? _setUpFeatureDetectFuture;
+Future<void>? _setUpBrowserWasiShimFuture;
+
+Future<void> _setUpWasmFeatureDetect() {
+  if (js_util.hasProperty(js_util.globalThis, 'wasmFeatureDetect')) {
+    return Future.value();
+  }
+  return _setUpFeatureDetectFuture ??= _injectSrcScript(
+    kIsFlutter
+        ? './assets/packages/wasm_run/lib/assets/wasm-feature-detect.js'
+        : './packages/wasm_run/assets/wasm-feature-detect.js',
+  );
+}
+
+Future<void> _setUpBrowserWasiShim() {
+  if (js_util.hasProperty(js_util.globalThis, 'browser_wasi_shim')) {
+    return Future.value();
+  }
+  return _setUpBrowserWasiShimFuture ??= _injectSrcScript(
+    kIsFlutter
+        ? './assets/packages/wasm_run/lib/assets/browser_wasi_shim.js'
+        : './packages/wasm_run/assets/browser_wasi_shim.js',
+    type: 'module',
+  );
 }
 
 /// Injects a `script` with a `src` dynamically into the
@@ -49,4 +66,16 @@ Future<void> _injectSrcScript(
   assert(html.document.head != null, 'html.document.head is null');
   html.document.head!.append(script);
   return script.onLoad.first;
+}
+
+Future<Uint8List> getUriBodyBytesImpl(Uri uri) async {
+  final req = await html.HttpRequest.request(
+    uri.toString(),
+    responseType: 'arraybuffer',
+  );
+  final response = req.response;
+  if (response is! ByteBuffer) {
+    throw Exception('Failed to fetch $uri: ${req.status}');
+  }
+  return response.asUint8List();
 }

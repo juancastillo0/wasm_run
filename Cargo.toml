@@ -5,4 +5,11 @@ exclude = [
     "packages/dart_wit_component",
     "packages/rust_threads_example",
     "packages/dart_wit_component/wasm_wit_component/example/rust_wit_component_example/Cargo.toml",
+    "packages/wasm_packages/rust_crypto/rust_crypto_wasm/Cargo.toml",
+    "packages/wasm_packages/image_rs/image_rs_wasm/Cargo.toml",
+    "packages/wasm_packages/compression_rs/compression_rs_wasm/Cargo.toml",
+    "packages/wasm_packages/wasm_parser/wasm_parser_wasm/Cargo.toml",
+    "packages/wasm_packages/sql_parser/sql_parser_wasm/Cargo.toml",
+    "packages/wasm_packages/y_crdt/y_crdt_wasm/Cargo.toml",
 ]
+resolver = "2"

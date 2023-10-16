@@ -11,7 +11,7 @@ topics:
   - ffi
 
 environment:
-  sdk: ">=2.19.0 <4.0.0"
+  sdk: ">=3.0.0 <4.0.0"
 
 flutter:
   assets:
@@ -20,15 +20,14 @@ flutter:
 dependencies:
   meta: ^1.8.0
   ffi: ^2.0.1
-  flutter_rust_bridge: ">=1.72.2 <1.80.0"
+  flutter_rust_bridge: ^1.82.0
   freezed_annotation: ^2.2.0
   wasm_interop: ^2.0.1
   logging: ^1.1.0
   collection: ^1.17.0
-  http: ^0.13.5
 
 dev_dependencies:
-  ffigen: ^7.2.10
+  ffigen: ">=8.0.0 <10.0.0"
   test: ^1.21.0
   build_runner: ^2.3.3
   freezed: ^2.3.2

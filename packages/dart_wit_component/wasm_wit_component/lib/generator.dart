@@ -8,7 +8,7 @@ export 'package:wasm_wit_component/src/generator.dart';
 
 const _isWeb = identical(0, 0.0);
 
-/// Creates a [DartWitGeneratorWorld] from for the given [wasiConfig].
+/// Creates a [DartWitGeneratorWorld] with the given [wasiConfig].
 /// It setsUp the dynamic library for wasm_run for native platforms and
 /// loads the dart_wit_component WASM module from the file system or
 /// from the releases of wasm_run repository.
@@ -20,7 +20,7 @@ const _isWeb = identical(0, 0.0);
 /// from the file system in `lib/dart_wit_component.wasm` either reading it directly
 /// in native platforms or with a GET request for Dart web. As a fallback
 /// it will use the releases from the wasm_run repository.
-Future<DartWitGeneratorWorld> generator({
+Future<DartWitGeneratorWorld> createDartWitGenerator({
   required WasiConfig wasiConfig,
   Future<WasmModule> Function()? loadModule,
 }) async {
@@ -36,13 +36,15 @@ Future<DartWitGeneratorWorld> generator({
         ? './packages/wasm_wit_component/dart_wit_component.wasm'
         : '$baseUrl/wasm_run-v${WasmRunLibrary.version}/dart_wit_component.wasm';
 
-    WasmFileUris uris = WasmFileUris(uri: Uri.parse(wasmUrl));
-    if (!_isWeb) {
-      final packageDir = File.fromUri(Platform.script).parent.parent;
-      final wasmFile = packageDir.uri.resolve('lib/dart_wit_component.wasm');
-      uris = WasmFileUris(uri: wasmFile, fallback: uris);
-    }
-
+    final uri = await WasmFileUris.uriForPackage(
+      package: 'wasm_wit_component',
+      libPath: 'dart_wit_component.wasm',
+      envVariable: 'DART_WIT_COMPONENT_WASM_PATH',
+    );
+    final uris = WasmFileUris(
+      uri: uri,
+      fallback: WasmFileUris(uri: Uri.parse(wasmUrl)),
+    );
     module = await uris.loadModule();
   }
   final builder = module.builder(
@@ -55,6 +57,26 @@ Future<DartWitGeneratorWorld> generator({
   return world;
 }
 
+/// Returns a [WitGeneratorConfig] with the default configuration
+WitGeneratorConfig defaultGeneratorConfig({
+  required WitGeneratorInput inputs,
+}) {
+  return WitGeneratorConfig(
+    inputs: inputs,
+    jsonSerialization: true,
+    copyWith_: true,
+    equalityAndHashCode: true,
+    toString_: true,
+    generateDocs: true,
+    useNullForOption: true,
+    requiredOption: false,
+    int64Type: Int64TypeConfig.bigInt,
+    typedNumberLists: true,
+    asyncWorker: false,
+    sameClassUnion: true,
+  );
+}
+
 /// Creates a [WasiConfig] from the given [witPath].
 /// If [witPath] is a file, it will use its parent directory as the
 /// preopened directory for the WASI config.
@@ -65,7 +87,7 @@ WasiConfig wasiConfigFromPath(
   String witPath, {
   Map<String, WasiDirectory>? webBrowserFileSystem,
 }) {
-  String allowedPath = witPath;
+  Uri allowedPath = Uri.parse(witPath);
   if (!_isWeb) {
     final type = FileSystemEntity.typeSync(witPath);
     if (type == FileSystemEntityType.notFound) {
@@ -75,14 +97,15 @@ WasiConfig wasiConfigFromPath(
     final allowedDir = type == FileSystemEntityType.file
         ? File(witPath).parent
         : Directory(witPath);
-    allowedPath = allowedDir.path;
+    allowedPath = allowedDir.uri;
   }
   return WasiConfig(
     inheritEnv: true,
     preopenedDirs: [
       PreopenedDir(
-        hostPath: allowedPath,
-        wasmGuestPath: allowedPath,
+        hostPath:
+            allowedPath.toFilePath(windows: !_isWeb && Platform.isWindows),
+        wasmGuestPath: allowedPath.toFilePath(windows: false),
       ),
     ],
     webBrowserFileSystem: webBrowserFileSystem ?? {},

@@ -11,7 +11,7 @@ cd $BUILD_DIR
 # By default use wasmtime
 bash "../scripts/config_api.sh" wasmtime
 
-export MACOSX_DEPLOYMENT_TARGET=10.11
+export MACOSX_DEPLOYMENT_TARGET=10.13
 export IPHONEOS_DEPLOYMENT_TARGET=11.0
 
 # Build static libs

@@ -1,0 +1,15 @@
+[package]
+name = "y_crdt_wasm"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+crate-type = ['cdylib']
+
+[dependencies]
+lib0 = "0.16.9"
+once_cell = "1.18.0"
+wit-bindgen = { git = "https://github.com/bytecodealliance/wit-bindgen", version = "0.9.0", rev = "31b561e5a31fb8d52ba24186d0cc83a2efa5670d" }
+yrs = "0.16.9"

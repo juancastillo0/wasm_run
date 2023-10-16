@@ -5,15 +5,22 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:test/test.dart';
+import 'package:wasm_run/load_module.dart';
 // TODO(wat): implement wat in main api
 // ignore: implementation_imports
 import 'package:wasm_run/src/ffi.dart' show defaultInstance;
+// ignore: implementation_imports
+import 'package:wasm_run/src/ffi/setup_dynamic_library.dart'
+    show setUpDesktopDynamicLibrary;
 import 'package:wasm_run/wasm_run.dart';
 import 'package:wasm_run_example/runner_identity/runner_identity.dart';
 import 'package:wasm_run_example/simd_test.dart' show simdTests;
 import 'package:wasm_run_example/threads_test.dart';
 import 'package:wasm_run_example/wasi_test.dart';
-import 'package:wasm_wit_component_example/types_gen_test.dart';
+import 'package:wasm_wit_component_example/types_gen_big_int_test.dart'
+    show typesGenBigIntWitComponentTests;
+import 'package:wasm_wit_component_example/types_gen_test.dart'
+    show typesGenWitComponentTests;
 import 'package:wasm_wit_component_example/wit_generator_test.dart';
 
 const isWeb = identical(0, 0.0);
@@ -505,9 +512,114 @@ void testAll({TestArgs? testArgs}) {
       [-1.4, i64.fromBigInt(BigInt.from(5))],
     );
   });
+  test(
+    'loading with WasmFileUris',
+    () async {
+      final initialUri = WasmFileUris(
+        uri: Uri.parse('https://example.com/assets/wasm.wasm'),
+        simdUri: Uri.parse('https://example.com/assets/wasm.simd.wasm'),
+        threadsSimdUri:
+            Uri.parse('https://example.com/assets/wasm.threadsSimd.wasm'),
+        fallback: WasmFileUris(
+          uri: Uri.parse('https://example.com/assets/wasm.fallback.wasm'),
+        ),
+      );
+      final uris = WasmFileUris.fromList([initialUri]);
+      // TODO: save to file? fallback to uri if not found in simd/threads?
+
+      final runtimeFeatures = await wasmRuntimeFeatures();
+      try {
+        await uris.loadModule(getUriBodyBytes: (uri) async => Uint8List(0));
+        throw Exception('should not reach');
+      } on WasmFileUrisException catch (e) {
+        expect(e.errors, hasLength(2));
+        final toString = e.toString();
+        expect(
+          toString,
+          contains(
+            'WasmFileUrisException(WasmFileUris(uri: https://example.com/assets/wasm.wasm',
+          ),
+        );
+        expect(
+          toString,
+          contains('fallbackUri: https://example.com/assets/wasm.wasm'),
+        );
+        expect(
+          toString,
+          contains(
+            runtimeFeatures.supportedFeatures.threads &&
+                    runtimeFeatures.supportedFeatures.simd
+                ? 'Url "https://example.com/assets/wasm.threadsSimd.wasm" returned an empty body'
+                : runtimeFeatures.supportedFeatures.simd
+                    ? 'Url "https://example.com/assets/wasm.simd.wasm" returned an empty body'
+                    : 'Url "https://example.com/assets/wasm.wasm" returned an empty body',
+          ),
+        );
+      }
+
+      for (final v in [
+        {
+          'threads': false,
+          'simd': false,
+          'uri': initialUri.uri,
+        },
+        {
+          'threads': true,
+          'simd': true,
+          'uri': initialUri.threadsSimdUri,
+        },
+        {
+          'threads': false,
+          'simd': true,
+          'uri': initialUri.simdUri,
+        },
+        {
+          'threads': true,
+          'simd': false,
+          'uri': initialUri.uri,
+        },
+      ]) {
+        final features = WasmFeatures(
+          mutableGlobal: true,
+          saturatingFloatToInt: true,
+          signExtension: true,
+          referenceTypes: true,
+          multiValue: true,
+          bulkMemory: true,
+          simd: v['simd']! as bool,
+          relaxedSimd: true,
+          threads: v['threads']! as bool,
+          tailCall: true,
+          floats: true,
+          multiMemory: true,
+          exceptions: true,
+          memory64: true,
+          extendedConst: true,
+          componentModel: true,
+          memoryControl: true,
+          garbageCollection: true,
+          typeReflection: true,
+        );
+
+        final uri = uris.uriForFeatures(
+          WasmRuntimeFeatures(
+            isBrowser: false,
+            name: 'wasmtime',
+            version: '0.2.1',
+            defaultFeatures: features,
+            supportedFeatures: features,
+          ),
+        );
+        expect(uri, v['uri']);
+      }
+    },
+  );
 
   /// WIT Component tests
   typesGenWitComponentTests(
+    getWitComponentExampleBytes: testArgs?.getWitComponentExampleBytes,
+  );
+  typesGenBigIntWitComponentTests(
     getWitComponentExampleBytes: testArgs?.getWitComponentExampleBytes,
   );
 
@@ -519,6 +631,43 @@ void testAll({TestArgs? testArgs}) {
 
   /// Threads tests
   threadsTest(testArgs: testArgs);
+
+  test(
+    'setUpDesktopDynamicLibrary',
+    testOn: 'windows || mac-os || linux',
+    () async {
+      if (Platform.isAndroid || Platform.isIOS) return;
+
+      final library = Directory.current.uri
+          .resolve('dart_wasm_run_dynamic_library')
+          .toFilePath();
+      await setUpDesktopDynamicLibrary(dynamicLibraryPath: library);
+      addTearDown(() => File(library).deleteSync());
+      expect(WasmRunLibrary.isReachable(), true);
+
+      final dynLib = openDynamicLibrary(library);
+      expect(
+        () => WasmRunLibrary.set(dynLib),
+        throwsA(
+          predicate(
+            (p0) => p0
+                .toString()
+                .contains('WasmRun bindings were already configured'),
+          ),
+        ),
+      );
+      expect(
+        () => WasmRunLibrary.setUp(override: true),
+        throwsA(
+          predicate(
+            (p0) => p0
+                .toString()
+                .contains('WasmRun bindings were already configured'),
+          ),
+        ),
+      );
+    },
+  );
 
   test('multi value', () async {
     final binary = await getBinary(
@@ -922,7 +1071,7 @@ class Parser {
 
 class FileData {
   final int size;
-  final bool read_only;
+  final bool readOnly;
   final int? modified;
   final int? accessed;
   final int? created;
@@ -930,7 +1079,7 @@ class FileData {
   ///
   FileData({
     required this.size,
-    required this.read_only,
+    required this.readOnly,
     required this.modified,
     required this.accessed,
     required this.created,
@@ -938,14 +1087,14 @@ class FileData {
 
   factory FileData.fromParser(Parser p) {
     final size = p.parseUint64();
-    final read_only = p.parseBool();
+    final readOnly = p.parseBool();
     final modified = p.parseNullable(() => p.parseUint64());
     final accessed = p.parseNullable(() => p.parseUint64());
     final created = p.parseNullable(() => p.parseUint64());
 
     return FileData(
       size: size,
-      read_only: read_only,
+      readOnly: readOnly,
       modified: modified,
       accessed: accessed,
       created: created,
@@ -954,7 +1103,7 @@ class FileData {
 
   @override
   String toString() {
-    return 'FileData(size: $size, read_only: $read_only, modified: $modified,'
+    return 'FileData(size: $size, readOnly: $readOnly, modified: $modified,'
         ' accessed: $accessed, created: $created)';
   }
 }

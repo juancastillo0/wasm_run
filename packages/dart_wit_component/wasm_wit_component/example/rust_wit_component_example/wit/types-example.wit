@@ -5,7 +5,12 @@ interface types-interface {
   record r {
     a: u32,
     b: string,
-    c: list<tuple<string, option<t4>>>
+    c: list<tuple<string, option<t4>>>,
+    d: option<option<tuple<list<s64>, option<option<u64>>>>>,
+    e: errno,
+    i: input,
+    p: permissions,
+    f: many-flags,
   }
 
   /// values of this type will be one of the specified cases
@@ -39,6 +44,13 @@ interface types-interface {
     exec,
   }
 
+  flags many-flags {
+    f1, f2, f3, f4, f5, f6, f7, f8, f9, f10,
+    f11, f12, f13, f14, f15, f16, f17, f18, f19, f20,
+    f21, f22, f23, f24, f25, f26, f27, f28, f29, f30,
+    f31, f32, f33,
+  }
+
   // type aliases are allowed to primitive types and additionally here are some
   // examples of other types
   type t1 = u32
@@ -68,12 +80,30 @@ interface round-trip-numbers {
     f64: float64,
   }
 
+  record round-trip-numbers-list-data {
+    un8: list<u8>,
+    un16: list<u16>,
+    un32: list<u32>,
+    un64: list<u64>,
+    si8: list<s8>,
+    si16: list<s16>,
+    si32: list<s32>,
+    si64: list<s64>,
+    si64-list: list<list<s64>>,
+    un64-list: list<list<u64>>,
+    un8-list: list<list<u8>>,
+    f32: list<float32>,
+    f64: list<float64>,
+  }
+
   round-trip-numbers: func(data: round-trip-numbers-data) -> round-trip-numbers-data
+
+  round-trip-numbers-list: func(data: round-trip-numbers-list-data) -> round-trip-numbers-list-data
 }
 
 /// Comment for import interface
 interface api-imports {
-  use types-interface.{t7}
+  use types-interface.{t7, r, permissions, input, errno}
 
   /// Same name as the type in `types-interface`, but this is a different type
   variant human {
@@ -83,9 +113,14 @@ interface api-imports {
   }
 
   api-a1-b2: func(arg: list<human>) -> (h1: t7, val2: human)
+
+  /// Function with a record, enum, flags and union types
+  record-func: func(r: r, e: errno, p: permissions, i: input) -> (r: r, e: errno, p: permissions, i: input)
 }
 
 interface api {
+  use types-interface.{r, permissions, input, errno as errno-renamed}
+
   /// Comment for export function
   f12: func() -> (val-one: tuple<s32>, val2: string)
 
@@ -102,6 +137,25 @@ interface api {
 
   class: func(break: option<option<t5>>) -> tuple<>
   continue: func(abstract: option<result<_, errno>>, extends: tuple<>) -> (%implements: option<tuple<>>)
+
+  /// Function with a record, enum, flags and union types
+  record-func: func(r: r, e: errno-renamed, p: permissions, i: input) -> (r: r, e: errno-renamed, p: permissions, i: input)
+
+  resource r1 {
+    /// constructor for r1
+    constructor(name: string)
+    /// Comment for f2
+    length: func() -> u32
+    name: func() -> string
+
+    static-default: static func() -> string
+    /// Comment for static f1
+    static-f1: static func(a: r1) -> string
+    merge: static func(lhs: borrow<r1>, rhs: borrow<r1>) -> r1
+  }
+
+  static-f1: func(a: r1) -> string
+  merge: func(lhs: borrow<r1>, rhs: borrow<r1>) -> r1
 }
 
 use api-imports as imports

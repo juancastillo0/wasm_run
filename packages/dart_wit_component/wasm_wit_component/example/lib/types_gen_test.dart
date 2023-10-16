@@ -1,60 +1,40 @@
 // ignore_for_file: avoid_print
 
-import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:test/test.dart';
 import 'package:wasm_run/load_module.dart';
 import 'package:wasm_wit_component/wasm_wit_component.dart';
+import 'package:wasm_wit_component_example/test_utils.dart';
 import 'package:wasm_wit_component_example/types_gen.dart';
-import 'package:wasm_wit_component_example/wit_generator_test.dart';
 
-bool _kReleaseMode = true;
 const _isWeb = identical(0, 0.0);
 
 void typesGenWitComponentTests({
   Future<Uint8List> Function()? getWitComponentExampleBytes,
 }) async {
-  // ignore: prefer_asserts_with_message
-  assert(
-    (() {
-      _kReleaseMode = false;
-      return true;
-    })(),
-  );
-
-  if (_kReleaseMode) {
+  if (isRelease()) {
     final test = await _TypesWorldTest.init();
     final clock = Stopwatch()..start();
     const count = 10000;
     for (int i = 0; i < count; i++) {
       test.test(expect: (a, b) {});
       test.importsImpl.apiA1B2Data.clear();
+      test.importsImpl.recordFuncData.clear();
       test.inlineImpl.inlineImpData.clear();
       test.printed.clear();
+      test.roundTripNumbersHostImpl.roundTripNumbersData.clear();
+      test.roundTripNumbersHostImpl.roundTripNumbersListData.clear();
     }
     print('count $count ${clock.elapsedMilliseconds}ms');
   } else {
     group('types gen', () {
       test('test types', () async {
         final test = await _TypesWorldTest.init(getWitComponentExampleBytes);
-        test.test(expect: expect);
+        test.test(expect: expectEq);
       });
     });
   }
-}
-
-String _getWitComponentExample() {
-  final root = getRootDirectory();
-  final base =
-      '${root.path}/packages/dart_wit_component/wasm_wit_component/example/rust_wit_component_example';
-  final releasePath =
-      '$base/target/wasm32-unknown-unknown/release/rust_wit_component_example.wasm';
-  if (_kReleaseMode) return releasePath;
-  final debugPath =
-      '$base/target/wasm32-unknown-unknown/debug/rust_wit_component_example.wasm';
-  if (File(debugPath).existsSync()) return debugPath;
-  return releasePath;
 }
 
 Future<TypesExampleWorld> initTypesWorld(
@@ -70,11 +50,11 @@ Future<TypesExampleWorld> initTypesWorld(
     module = await compileWasmModule(bytes);
   } else {
     final wasmUris = WasmFileUris(
-      uri: Uri.parse(
-        _isWeb
-            ? './packages/wasm_wit_component_example/rust_wit_component_example.wasm'
-            : _getWitComponentExample(),
-      ),
+      uri: _isWeb
+          ? Uri.parse(
+              './packages/wasm_wit_component_example/rust_wit_component_example.wasm',
+            )
+          : Uri.file(getWitComponentExamplePath()),
     );
     module = await wasmUris.loadModule();
   }
@@ -106,6 +86,9 @@ class _InlineImpl implements InlineImport {
 
 class _ImportsImpl implements ApiImportsImport {
   final List<List<HumanApiImports>> apiA1B2Data = [];
+  final List<({ErrnoApiImports e, Input i, Permissions p, R r})>
+      recordFuncData = [];
+
   @override
   ({T7 h1, HumanApiImports val2}) apiA1B2({
     required List<HumanApiImports> arg,
@@ -113,14 +96,34 @@ class _ImportsImpl implements ApiImportsImport {
     apiA1B2Data.add(arg);
     return (h1: Ok(arg.length.toString()), val2: const HumanApiImports.baby());
   }
+
+  @override
+  ({ErrnoApiImports e, Input i, Permissions p, R r}) recordFunc({
+    required R r,
+    required ErrnoApiImports e,
+    required Permissions p,
+    required Input i,
+  }) {
+    final data = (e: e, i: i, p: p, r: r);
+    recordFuncData.add(data);
+    return data;
+  }
 }
 
 class _RoundTripNumbersHostImpl implements RoundTripNumbersImport {
   final List<RoundTripNumbersData> roundTripNumbersData = [];
+  final List<RoundTripNumbersListData> roundTripNumbersListData = [];
 
   @override
   RoundTripNumbersData roundTripNumbers({required RoundTripNumbersData data}) {
     roundTripNumbersData.add(data);
+    return data;
+  }
+
+  @override
+  RoundTripNumbersListData roundTripNumbersList(
+      {required RoundTripNumbersListData data}) {
+    roundTripNumbersListData.add(data);
     return data;
   }
 }
@@ -168,6 +171,117 @@ class _TypesWorldTest {
 
   void test({required void Function(Object?, Object?) expect}) {
     {
+      final data = RoundTripNumbersListData(
+        f32: Float32List.fromList([0, 1, 2.3]),
+        f64: Float64List.fromList([0, 1, 2.3]),
+        si16: Int16List.fromList([]),
+        si32: Int32List.fromList([0, 3, -1, 44]),
+        si64: [0, 2, -44],
+        si64List: [
+          [0, 2, -44],
+          []
+        ],
+        si8: Int8List.fromList([1, 32]),
+        un16: Uint16List.fromList([2, 33]),
+        un32: Uint32List.fromList([0, 3323]),
+        un64: [0, 2, 44],
+        un64List: [
+          [0, 2, 44],
+          []
+        ],
+        un8: Uint8List.fromList([1, 32]),
+        un8List: [
+          Uint8List.fromList([1, 32]),
+          Uint8List.fromList([])
+        ],
+      );
+      final response = world.roundTripNumbers.roundTripNumbersList(data: data);
+      expect(response, data);
+      expect(roundTripNumbersHostImpl.roundTripNumbersListData[0], data);
+    }
+    {
+      const data = RoundTripNumbersListData(
+        f32: [0, 1, 2.3],
+        f64: [0, 1, 2.3],
+        si16: [],
+        si32: [0, 3, -1, 44],
+        si64: [0, 2, -44],
+        si64List: [
+          [0, 2, -44],
+          []
+        ],
+        si8: [1, 32],
+        un16: [2, 33],
+        un32: [0, 3323],
+        un64: [0, 2, 44],
+        un64List: [
+          [0, 2, 44],
+          []
+        ],
+        un8: [1, 32],
+        un8List: [
+          [1, 32],
+          []
+        ],
+      );
+      final mapped = data.copyWith(f32: [0, 1, 2.299999952316284]);
+      final response = world.roundTripNumbers.roundTripNumbersList(data: data);
+      expect(response, mapped);
+      expect(roundTripNumbersHostImpl.roundTripNumbersListData[1], mapped);
+    }
+
+    {
+      final data = (
+        r: R(
+          a: 3,
+          b: 'dawd',
+          c: [('da', Some(Some(3)))],
+          e: ErrnoTypesInterface.tooSlow,
+          f: ManyFlags.all(),
+          i: Input.string('value'),
+          p: Permissions.all(),
+          d: None(),
+        ),
+        e: ErrnoTypesInterface.tooBig,
+        p: Permissions.fromBool(exec: true),
+        i: Input.intU64(4),
+      );
+      final result = world.api.recordFunc(
+        e: data.e,
+        i: data.i,
+        p: data.p,
+        r: data.r,
+      );
+
+      expect(result, data);
+      expect(importsImpl.recordFuncData[0], data);
+    }
+    {
+      final data = (
+        r: R(
+          a: 303,
+          b: 'dawd',
+          c: [('dappodaw', Some(None()))],
+          e: ErrnoTypesInterface.tooSlow,
+          f: ManyFlags.none(),
+          i: Input.intU64(0),
+          p: Permissions.none(),
+          d: Some(Some(([3], Some(None())))),
+        ),
+        e: ErrnoTypesInterface.tooBig,
+        p: Permissions.fromBool(read: true, write: true),
+        i: Input.string('0'),
+      );
+      final result = world.api.recordFunc(
+        e: data.e,
+        i: data.i,
+        p: data.p,
+        r: data.r,
+      );
+      expect(result, data);
+      expect(importsImpl.recordFuncData[1], data);
+    }
+    {
       // TODO: test string multi char
       final (:valP1, :val2) = world.f1(f: 3.4, fList: [('s', 0.33)]);
       expect(valP1, 1079613850);
@@ -188,7 +302,7 @@ class _TypesWorldTest {
 
     final ret2 = world.fF1(typedef_: ['dwd']);
     expect(ret2, ['dwd', 'last_value']);
-    expect(printed, [(LogLevel.info, 'dwd')]);
+    expect([printed[0].$1, printed[0].$2], [LogLevel.info, 'dwd']);
 
     {
       final (a, b) = world.reNamed();
@@ -305,7 +419,7 @@ class _TypesWorldTest {
         abstract_: const Some(Ok(null)),
       );
       expect(importsImpl.apiA1B2Data[0], <Object?>[]);
-      expect(implements_, const Some(()));
+      expect(implements_ == const Some(()), true);
     }
     {
       world.api.continue_(
@@ -320,8 +434,8 @@ class _TypesWorldTest {
         )),
       );
       expect(
-        importsImpl.apiA1B2Data[1].map((e) => e.toJson()),
-        [const HumanApiImports.adult(('ss', None(), (33,))).toJson()],
+        importsImpl.apiA1B2Data[1],
+        [const HumanApiImports.adult(('ss', None(), (33,)))],
       );
     }
     {
@@ -337,8 +451,8 @@ class _TypesWorldTest {
         )),
       );
       expect(
-        importsImpl.apiA1B2Data[2].map((e) => e.toJson()),
-        [const HumanApiImports.adult(('k', Some(None()), (-33,))).toJson()],
+        importsImpl.apiA1B2Data[2],
+        [const HumanApiImports.adult(('k', Some(None()), (-33,)))],
       );
     }
     {
@@ -354,11 +468,8 @@ class _TypesWorldTest {
         )),
       );
       expect(
-        importsImpl.apiA1B2Data[3].map((e) => e.toJson()),
-        [
-          const HumanApiImports.adult(('poi', Some(Some('poik')), (34943,)))
-              .toJson()
-        ],
+        importsImpl.apiA1B2Data[3],
+        [const HumanApiImports.adult(('poi', Some(Some('poik')), (34943,)))],
       );
     }
     {
@@ -374,8 +485,8 @@ class _TypesWorldTest {
         )),
       );
       expect(
-        importsImpl.apiA1B2Data[4].map((e) => e.toJson()),
-        [const HumanApiImports.child(2).toJson()],
+        importsImpl.apiA1B2Data[4],
+        [const HumanApiImports.child(2)],
       );
     }
     {
@@ -391,8 +502,8 @@ class _TypesWorldTest {
         )),
       );
       expect(
-        importsImpl.apiA1B2Data[5].map((e) => e.toJson()),
-        [const HumanApiImports.baby().toJson()],
+        importsImpl.apiA1B2Data[5],
+        [const HumanApiImports.baby()],
       );
     }
 

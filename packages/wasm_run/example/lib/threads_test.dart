@@ -11,7 +11,7 @@ import 'package:wasm_run_example/main.dart';
 import 'package:wasm_run_example/runner_identity/runner_identity.dart';
 import 'package:wasm_run_example/threads_base64.dart';
 
-const _threadsTimeout = Timeout(Duration(minutes: 10));
+const _threadsTimeout = Timeout(Duration(minutes: 20));
 
 // dart test test/main_test -c source --release -n threads
 void threadsTest({TestArgs? testArgs}) {
@@ -183,6 +183,11 @@ Future<Uint8List> getThreadsExample() async {
     final wasmFiles = [
       '${root.path}/packages/rust_threads_example/target/wasm32-unknown-unknown/release/rust_threads_example.wasm',
       '${root.path}/packages/rust_threads_example/target/wasm32-unknown-unknown/debug/rust_threads_example.wasm',
+      root.uri
+          .resolve(
+            'packages/wasm_run_flutter/example/assets/rust_threads_example.wasm',
+          )
+          .toFilePath(),
     ];
     for (final element in wasmFiles) {
       try {

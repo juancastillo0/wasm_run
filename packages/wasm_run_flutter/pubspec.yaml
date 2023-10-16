@@ -26,7 +26,7 @@ dependencies:
 
 dev_dependencies:
   ffi: ^2.0.1
-  ffigen: ^6.1.2
+  ffigen: ">=8.0.0 <10.0.0"
   very_good_analysis: ^5.0.0
 
 # For information on the generic Dart part of this file, see the
@@ -50,14 +50,19 @@ flutter:
     platforms:
       android:
         ffiPlugin: true
+        dartPluginClass: WasmRunFlutterNative
       ios:
         ffiPlugin: true
+        dartPluginClass: WasmRunFlutterNative
       linux:
         ffiPlugin: true
+        dartPluginClass: WasmRunFlutterNative
       macos:
         ffiPlugin: true
+        dartPluginClass: WasmRunFlutterNative
       windows:
         ffiPlugin: true
+        dartPluginClass: WasmRunFlutterNative
       web:
         pluginClass: WasmRunFlutterWeb
         fileName: wasm_run_flutter_web.dart

@@ -1,0 +1,126 @@
+package wasm-run-dart:rust-crypto
+
+interface fs-hash {
+    enum hash-kind {
+        md5,
+        sha1,
+        sha224,
+        sha256,
+        sha384,
+        sha512,
+        blake3,
+    }
+
+    hash-file: func(kind: hash-kind, path: string) -> result<list<u8>, string>
+    hmac-file: func(kind: hash-kind, key: list<u8>, path: string) -> result<list<u8>, string>
+    crc32-file: func(path: string) -> result<u32, string>
+}
+
+interface hashes {
+    sha1: func(bytes: list<u8>) -> list<u8>
+    md5: func(bytes: list<u8>) -> list<u8>
+    crc32: func(bytes: list<u8>) -> u32
+}
+
+interface sha2 {
+    sha224: func(bytes: list<u8>) -> list<u8>
+    sha256: func(bytes: list<u8>) -> list<u8>
+    sha384: func(bytes: list<u8>) -> list<u8>
+    sha512: func(bytes: list<u8>) -> list<u8>
+}
+
+interface blake3 {
+    hash: func(bytes: list<u8>) -> list<u8>
+    mac-keyed-hash: func(key: list<u8>, bytes: list<u8>) -> result<list<u8>, string>
+    derive-key: func(context: string, input-key-material: list<u8>) -> list<u8>
+}
+
+interface hmac {
+    /// Returned when the HMAC key does not have the expected length.
+    type hmac-error = string
+
+    hmac-sha224: func(key: list<u8>, bytes: list<u8>) -> result<list<u8>, hmac-error>
+    hmac-sha256: func(key: list<u8>, bytes: list<u8>) -> result<list<u8>, hmac-error>
+    hmac-sha384: func(key: list<u8>, bytes: list<u8>) -> result<list<u8>, hmac-error>
+    hmac-sha512: func(key: list<u8>, bytes: list<u8>) -> result<list<u8>, hmac-error>
+    hmac-blake3: func(key: list<u8>, bytes: list<u8>) -> result<list<u8>, hmac-error>
+}
+
+interface argon2 {
+    record argon2-config {
+        version: argon2-version,
+        algorithm: argon2-algorithm,
+        secret: option<list<u8>>,
+        /// Memory size in 1 KiB blocks. Between 1 and (2^32)-1.
+        memory-cost: u32,
+        /// Number of iterations. Between 1 and (2^32)-1.
+        time-cost: u32,
+        /// Degree of parallelism. Between 1 and 255.
+        parallelism-cost: u32,
+        /// Size of the KDF output in bytes. Default 32.
+        output-length: option<u32>,
+    }
+
+    enum argon2-algorithm {
+        argon2d,
+        argon2i,
+        argon2id,
+    }
+
+    enum argon2-version {
+        v0x10,
+        v0x13,
+    }
+
+    /// This type corresponds to the parsed representation of a PHC string as
+    /// described in the PHC string format specification ($argon2id$v=19$...).
+    type password-hash = string
+
+    default-config: func() -> argon2-config
+
+    generate-salt: func() -> string
+
+    /// Hash password to PHC string ($argon2id$v=19$...)
+    hash-password: func(config: argon2-config, password: list<u8>, salt: string) -> result<password-hash, string>
+
+    verify-password: func(password: list<u8>, hash: password-hash, secret: option<list<u8>>) -> result<bool, string>
+
+    /// This useful for transforming a password into cryptographic keys
+    /// for e.g. password-based encryption.
+    raw-hash: func(config: argon2-config, password: list<u8>, salt: list<u8>) -> result<list<u8>, string>
+}
+
+interface aes-gcm-siv {
+    enum aes-kind {
+        bits128,
+        bits256,
+    }
+
+    generate-key: func(kind: aes-kind) -> list<u8>
+
+    encrypt: func(
+        kind: aes-kind,
+        key: list<u8>,
+        nonce: list<u8>,
+        plain-text: list<u8>,
+        associated-data: option<list<u8>>,
+    ) -> result<list<u8>, string>
+
+    decrypt: func(
+        kind: aes-kind,
+        key: list<u8>,
+        nonce: list<u8>,
+        cipher-text: list<u8>,
+        associated-data: option<list<u8>>,
+    ) -> result<list<u8>, string>
+}
+
+world rust-crypto {
+    export fs-hash
+    export hashes
+    export sha2
+    export blake3
+    export hmac
+    export argon2
+    export aes-gcm-siv
+}

@@ -10,11 +10,17 @@ topics:
   - codegen
   - interop
 
+flutter:
+  assets:
+    - lib/dart_wit_component.wasm
+
 environment:
   sdk: ">=3.0.0 <4.0.0"
 
 dependencies:
   wasm_run: ^0.0.1
+  args: ^2.4.0
+  recase: ^4.1.0
 
 dev_dependencies:
   very_good_analysis: ^5.0.0

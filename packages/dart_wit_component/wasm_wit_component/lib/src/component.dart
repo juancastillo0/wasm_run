@@ -1,205 +1,29 @@
+import 'dart:async';
 import 'dart:math' as math;
 import 'dart:typed_data';
 
-import 'package:wasm_wit_component/src/canonical_abi.dart';
-import 'package:wasm_wit_component/src/canonical_abi_cache.dart';
-// TODO: ignore: implementation_imports
+// ignore: implementation_imports
 import 'package:wasm_run/src/wasm_bindings/make_function_num_args.dart';
 import 'package:wasm_run/wasm_run.dart';
+import 'package:wasm_wit_component/generator.dart' show Int64TypeConfig;
+import 'package:wasm_wit_component/src/canonical_abi.dart';
+import 'package:wasm_wit_component/src/canonical_abi_cache.dart';
+import 'package:wasm_wit_component/src/record_equality.dart' show recordToList;
 
-/// A Rust-style Result type.
-sealed class Result<O, E> {
-  const factory Result.ok(O ok) = Ok<O, E>;
-  const factory Result.err(E error) = Err<O, E>;
+export 'package:wasm_wit_component/generator.dart' show Int64TypeConfig;
+export 'package:wasm_wit_component/src/flags_bits.dart' show FlagsBits;
+export 'package:wasm_wit_component/src/models.dart';
 
-  /// Returns `true` if this is an [Ok] instance
-  bool get isOk;
-
-  /// Returns `true` if this is an [Err] instance
-  bool get isError;
-
-  /// Returns the contained [O] ok value, if present, otherwise returns null
-  O? get ok;
-
-  /// Returns the contained [E] error value, if present, otherwise returns null
-  E? get error;
-
-  factory Result.fromJson(
-    Object? json,
-    O Function(Object? json) ok,
-    E Function(Object? json) err,
-  ) {
-    return switch (json) {
-      {'ok': final o} || (0, final o) => Ok(ok(o)),
-      {'error': final e} || (1, final e) => Err(err(e)),
-      _ => throw Exception('Invalid JSON for Result: $json'),
-    };
-  }
-
-  Map<String, Object?> toJson([
-    Object? Function(O value)? mapOk,
-    Object? Function(E value)? mapError,
-  ]);
-}
-
-/// A Rust-style Result type's success value.
-class Ok<O, E> implements Result<O, E> {
-  @override
-  final O ok;
-  const Ok(this.ok);
-
-  @override
-  bool get isOk => true;
-  @override
-  bool get isError => false;
-  @override
-  E? get error => null;
-
-  @override
-  Map<String, Object?> toJson([
-    Object? Function(O value)? mapOk,
-    Object? Function(E value)? mapError,
-  ]) =>
-      {'ok': mapOk == null ? ok : mapOk(ok)};
-
-  @override
-  bool operator ==(Object other) =>
-      other is Ok<O, E> &&
-      other.runtimeType == runtimeType &&
-      comparator.areEqual(ok, other.ok);
-
-  @override
-  int get hashCode => runtimeType.hashCode ^ comparator.hashValue(ok);
-
-  @override
-  String toString() {
-    return 'Ok<$O, $E>($ok)';
-  }
-}
-
-/// A Rust-style Result type's failure value.
-class Err<O, E> implements Result<O, E> {
-  @override
-  final E error;
-  const Err(this.error);
-
-  @override
-  bool get isOk => false;
-  @override
-  bool get isError => true;
-  @override
-  O? get ok => null;
-
-  @override
-  Map<String, Object?> toJson([
-    Object? Function(O value)? mapOk,
-    Object? Function(E value)? mapError,
-  ]) =>
-      {'error': mapError == null ? error : mapError(error)};
-
-  @override
-  bool operator ==(Object other) =>
-      other is Err<O, E> &&
-      other.runtimeType == runtimeType &&
-      comparator.areEqual(error, other.error);
-
-  @override
-  int get hashCode => runtimeType.hashCode ^ comparator.hashValue(error);
-
-  @override
-  String toString() {
-    return 'Err<$O, $E>($error)';
-  }
-}
-
-/// A Rust-style Option type.
-sealed class Option<T extends Object> {
-  const factory Option.some(T value) = Some;
-  const factory Option.none() = None;
-
-  factory Option.fromJson(Object? json, T Function(Object? json) some) {
-    return switch (json) {
-      null => None(),
-      {'none': null} || (0, null) => None(),
-      {'some': final o} || (1, final o) => Some(some(o)),
-      _ => throw Exception('Invalid JSON for Option: $json'),
-    };
-  }
-
-  /// Returns the contained [T] value, if present, otherwise returns null
-  T? get value;
-
-  /// Returns `true` if this is a [Some] instance
-  bool get isSome;
-
-  /// Returns `true` if this is a [None] instance
-  bool get isNone;
-
-  Map<String, Object?> toJson([Object? Function(T value)? mapValue]);
-}
-
-/// A Rust-style Option type's Some value.
-class Some<T extends Object> implements Option<T> {
-  @override
-  final T value;
-  const Some(this.value);
-
-  @override
-  bool get isSome => true;
-  @override
-  bool get isNone => false;
-
-  @override
-  Map<String, Object?> toJson([Object? Function(T value)? mapValue]) =>
-      {'some': mapValue == null ? value : mapValue(value)};
-
-  @override
-  bool operator ==(Object other) =>
-      other is Some<T> &&
-      other.runtimeType == runtimeType &&
-      comparator.areEqual(value, other.value);
-
-  @override
-  int get hashCode => runtimeType.hashCode ^ comparator.hashValue(value);
-
-  @override
-  String toString() {
-    return 'Some<$T>($value)';
-  }
-}
-
-/// A Rust-style Option type's None value.
-class None<T extends Object> implements Option<T> {
-  const None();
-  @override
-  T? get value => null;
-  @override
-  bool get isSome => false;
-  @override
-  bool get isNone => true;
-
-  @override
-  Map<String, Object?> toJson([Object? Function(T value)? mapValue]) =>
-      {'none': null};
-
-  @override
-  bool operator ==(Object other) => other is None;
-
-  @override
-  int get hashCode => (None).hashCode;
-
-  @override
-  String toString() {
-    return 'None<$T>()';
-  }
-}
-
+/// The [ObjectComparator] used to compare equality between objects
+/// and calculate their hash codes.
 ObjectComparator comparator = const ObjectComparator();
 
+/// Used to compare equality between objects and calculate their hash codes.
 class ObjectComparator {
+  /// Used to compare equality between objects and calculate their hash codes.
   const ObjectComparator();
 
-  /// Returns true if [a] and [b] are equal.
+  /// Returns true if the values within [a] and [b] are equal.
   bool arePropsEqual(List<Object?> a, List<Object?> b) => areEqual(a, b);
 
   /// Returns true if [a] and [b] are equal.
@@ -218,6 +42,8 @@ class ObjectComparator {
                   areEqual(otherValue, e.value);
             },
           );
+    } else if (a is Record && b is Record) {
+      return areEqual(recordToList(a), recordToList(b));
     } else {
       return a == b;
     }
@@ -245,6 +71,8 @@ class ObjectComparator {
       return Object.hashAllUnordered(
         e.entries.map((e) => hashProps([e.key, e.value])),
       );
+    } else if (e is Record) {
+      return hashProps(recordToList(e));
     } else {
       return e;
     }
@@ -283,34 +111,42 @@ ByteData flagBitsFromJson(Object? json_, Flags spec) {
   }
 }
 
-/// Maps a [FlattenType] core wasm type to a [ValueTy].
-ValueTy _flatToWasmType(FlattenType e) {
+/// Maps a [FlatType] core wasm type to a [ValueTy].
+ValueTy _flatToWasmType(FlatType e) {
   return switch (e) {
-    FlattenType.i32 => ValueTy.i32,
-    FlattenType.i64 => ValueTy.i64,
-    FlattenType.f32 => ValueTy.f32,
-    FlattenType.f64 => ValueTy.f64,
+    FlatType.i32 => ValueTy.i32,
+    FlatType.i64 => ValueTy.i64,
+    FlatType.f32 => ValueTy.f32,
+    FlatType.f64 => ValueTy.f64,
   };
 }
 
-List<Value> _mapFlatToValues(List<Object?> values, List<FlattenType> types) {
+List<FlatValue> _mapFlatToValues(List<Object?> values, List<FlatType> types) {
   return values.indexed.map((e) {
     final type = types[e.$1];
     // const isWeb = identical(0, 0.0);
     // if (isWeb && type == FlattenType.i64 && e.$2 is int) {
     //   return Value(type, i64.fromInt(e.$2! as int));
     // }
-    return Value(type, e.$2!);
+    return FlatValue(type, e.$2!);
   }).toList(growable: false);
 }
 
-List<Object?> _mapValuesToFlat(List<Value> values) {
+List<Object?> _mapValuesToFlat(Int64TypeConfig config, List<FlatValue> values) {
   return values.map((e) {
-    // TODO: this may change if we use BigInt
     const isWeb = identical(0, 0.0);
-    if (isWeb && e.t == FlattenType.i64 && e.v is int) {
+    if (isWeb && e.t == FlatType.i64 && e.v is int) {
       return i64.fromInt(e.v as int);
     }
+    // if (e.t == FlatType.i64) {
+    //   return switch (config) {
+    //     Int64TypeConfig.bigInt => i64.fromBigInt(e.v as BigInt),
+    //     Int64TypeConfig.bigIntUnsignedOnly =>
+    //       e.v is int ? i64.fromInt(e.v as int) : i64.fromBigInt(e.v as BigInt),
+    //     Int64TypeConfig.coreInt => i64.fromInt(e.v as int),
+    //     Int64TypeConfig.nativeObject => e.v,
+    //   };
+    // }
     return e.v;
   }).toList(growable: false);
 }
@@ -328,7 +164,7 @@ WasmFunction loweredImportFunction(
   List<Object?> call([List<Object?>? args]) {
     final library = getWasmLibrary();
     final mappedArgs = args == null || args.isEmpty
-        ? const <Value>[]
+        ? const <FlatValue>[]
         : _mapFlatToValues(args, flattenedFt.params);
     final results = canon_lower(
       library._functionOptions(null),
@@ -340,7 +176,7 @@ WasmFunction loweredImportFunction(
       computedFt: computedFt,
     );
     if (results.isEmpty) return const [];
-    return _mapValuesToFlat(results);
+    return _mapValuesToFlat(library.componentInstance.int64Type, results);
   }
 
   final lowered = WasmFunction(
@@ -354,6 +190,60 @@ WasmFunction loweredImportFunction(
   return lowered;
 }
 
+List<WasmImport> resourceImports(
+  WasmLibrary Function() getWasmLibrary,
+  ResourceType rt,
+) {
+  return [
+    WasmImport(
+      '[export]${rt.componentInstance}',
+      '[resource-new]${rt.resourceName}',
+      WasmFunction(
+        (Object? a) => canon_resource_new(
+            getWasmLibrary().componentInstance, rt, a! as int),
+        params: const [ValueTy.i32],
+        results: const [ValueTy.i32],
+      ),
+    ),
+    WasmImport(
+      '[export]${rt.componentInstance}',
+      '[resource-rep]${rt.resourceName}',
+      WasmFunction(
+        (Object? a) => canon_resource_rep(
+            getWasmLibrary().componentInstance, rt, a! as int),
+        params: const [ValueTy.i32],
+        results: const [ValueTy.i32],
+      ),
+    ),
+    WasmImport(
+      '[export]${rt.componentInstance}',
+      '[resource-drop]${rt.resourceName}',
+      WasmFunction(
+        (Object? a) => canon_resource_drop(
+          getWasmLibrary().componentInstance,
+          rt,
+          a! as int,
+        ),
+        params: const [ValueTy.i32],
+        results: const [],
+      ),
+    ),
+  ];
+}
+
+/// Returns a [BigInt] from a JSON [value].
+BigInt bigIntFromJson(Object? value) {
+  if (value is BigInt) {
+    return value;
+  } else if (value is String) {
+    return BigInt.parse(value);
+  } else if (value is num) {
+    return BigInt.from(value);
+  } else {
+    return i64.toBigInt(value!);
+  }
+}
+
 /// A [WasmLibrary] is a wrapper around a [WasmInstance] that provides
 /// convenience methods for interacting with the instance that implements
 /// the WASM component model.
@@ -361,21 +251,42 @@ class WasmLibrary {
   /// A [WasmLibrary] is a wrapper around a [WasmInstance] that provides
   /// convenience methods for interacting with the instance that implements
   /// the WASM component model.
-  WasmLibrary(this.instance, {this.stringEncoding = StringEncoding.utf8})
-      : _realloc = instance.getFunction('cabi_realloc')!.inner,
-        wasmMemory = instance.getMemory('memory') ??
-            instance.exports.values.whereType<WasmMemory>().first;
+  WasmLibrary(
+    this.instance, {
+    String componentId = '',
+    // TODO: get encoding from instance exports
+    this.stringEncoding = StringEncoding.utf8,
+    Int64TypeConfig int64Type = Int64TypeConfig.bigInt,
+    WasmMemory? wasmMemory,
+  })  : _realloc = instance.getFunction('cabi_realloc')!.inner,
+        wasmMemory = wasmMemory ??
+            instance.getMemory('memory') ??
+            instance.exports.values.whereType<WasmMemory>().first,
+        componentInstance = ComponentInstance(
+          id: componentId,
+          instance: instance,
+          int64Type: int64Type,
+        );
 
   /// The [WasmInstance] that implements the WASM component model.
   final WasmInstance instance;
 
   /// The [ComponentInstance] for tracking handles and checking invariants.
-  final ComponentInstance componentInstance = ComponentInstance();
+  final ComponentInstance componentInstance;
 
   /// The [StringEncoding] to use for strings.
   final StringEncoding stringEncoding;
 
   final Function _realloc;
+
+  static final _zoneValue = Object();
+
+  static WasmLibrary? currentZoneLibrary() =>
+      Zone.current[_zoneValue] as WasmLibrary?;
+
+  T withContext<T>(T Function() fn) {
+    return runZoned(fn, zoneValues: {_zoneValue: this});
+  }
 
   /// Reallocates a section of memory to a new size.
   /// May be used to grow or shrink the memory.
@@ -397,7 +308,9 @@ class WasmLibrary {
     _byteData = ByteData.sublistView(_view!);
   }
 
-  CanonicalOptions _functionOptions(void Function(List<Value>)? postReturn) {
+  CanonicalOptions _functionOptions(
+    void Function(List<FlatValue>)? postReturn,
+  ) {
     final options = CanonicalOptions(
       _updateMemoryView,
       _getView,
@@ -409,11 +322,11 @@ class WasmLibrary {
     return options;
   }
 
-  void Function(List<Value>)? postReturnFunction(String functionName) {
+  void Function(List<FlatValue>)? postReturnFunction(String functionName) {
     final postFunc = instance.getFunction('cabi_post_$functionName');
     if (postFunc == null) return null;
     return (flatResults) {
-      postFunc(_mapValuesToFlat(flatResults));
+      postFunc(_mapValuesToFlat(componentInstance.int64Type, flatResults));
     };
   }
 
@@ -421,7 +334,7 @@ class WasmLibrary {
   /// with the given [name] and [ft] ([FuncType]).
   /// The function is constructed by flattening the [ft] and then calling
   /// [canon_lift] to create a function that can be called with a list of
-  /// core Wasm [Value]s.
+  /// core Wasm [FlatValue]s.
   ListValue Function(ListValue args)? getComponentFunction(
     String name,
     FuncType ft,
@@ -431,8 +344,8 @@ class WasmLibrary {
     final computedFt = ComputedTypeData.cacheFunction(ft);
     final flattenedFt = computedFt.liftCoreType;
     final postFunc = postReturnFunction(name);
-    List<Value> coreFunc(List<Value> p) {
-      final args = _mapValuesToFlat(p);
+    List<FlatValue> coreFunc(List<FlatValue> p) {
+      final args = _mapValuesToFlat(componentInstance.int64Type, p);
       final results = func.call(args);
       if (results.isEmpty) return const [];
       return _mapFlatToValues(results, flattenedFt.results);
@@ -441,6 +354,44 @@ class WasmLibrary {
     final options = _functionOptions(postFunc);
     return (ListValue args) {
       final (funcLift, post) = canon_lift(
+        options,
+        componentInstance,
+        coreFunc,
+        ft,
+        args,
+        computedFt: computedFt,
+      );
+      post();
+
+      return funcLift;
+    };
+  }
+
+  /// Returns a Function that can be used to call the component function
+  /// with the given [name] and [ft] ([FuncType]).
+  /// The function is constructed by flattening the [ft] and then calling
+  /// [canon_lift] to create a function that can be called with a list of
+  /// core Wasm [FlatValue]s.
+  Future<ListValue> Function(ListValue args)? getComponentFunctionWorker(
+    String name,
+    FuncType ft,
+  ) {
+    final func = instance.getFunction(name);
+    if (func == null) return null;
+    final computedFt = ComputedTypeData.cacheFunction(ft);
+    final flattenedFt = computedFt.liftCoreType;
+    final postFunc = postReturnFunction(name);
+    Future<List<FlatValue>> coreFunc(List<FlatValue> p) async {
+      final args = _mapValuesToFlat(componentInstance.int64Type, p);
+      final resultsParallel = await instance.runParallel(func, [args]);
+      final results = resultsParallel[0];
+      if (results.isEmpty) return const [];
+      return _mapFlatToValues(results, flattenedFt.results);
+    }
+
+    final options = _functionOptions(postFunc);
+    return (ListValue args) async {
+      final (funcLift, post) = await canon_lift_async(
         options,
         componentInstance,
         coreFunc,

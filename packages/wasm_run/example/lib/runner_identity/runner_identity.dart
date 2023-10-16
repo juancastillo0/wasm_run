@@ -8,3 +8,10 @@ import 'package:wasm_run_example/runner_identity/io.dart'
 String getRunnerIdentity() {
   return impl.getRunnerIdentityImpl();
 }
+
+typedef OpenDynamicLibraryResult = impl.OpenDynamicLibraryResultImpl;
+
+/// Opens the dynamic library at the given [path].
+OpenDynamicLibraryResult openDynamicLibrary(String path) {
+  return impl.openDynamicLibraryImpl(path);
+}

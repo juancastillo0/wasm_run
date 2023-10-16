@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:ffi' as ffi;
+import 'dart:io';
 import 'dart:typed_data' show Uint8List;
 
 import 'package:flutter_rust_bridge/flutter_rust_bridge.dart'
@@ -109,7 +110,9 @@ WasmVal _fromWasmValueRaw(ValueTy ty, Object? value, WasmRunModuleId module) {
     case ValueTy.i32:
       return WasmVal.i32(value! as int);
     case ValueTy.i64:
-      return WasmVal.i64(value is int ? value : (value! as BigInt).toInt());
+      return WasmVal.i64(
+        value is int ? value : (value! as BigInt).toSigned(64).toInt(),
+      );
     case ValueTy.f32:
       return WasmVal.f32(value! as double);
     case ValueTy.f64:
@@ -191,7 +194,7 @@ WasmFunction _toWasmFunction(WFunc func, WasmRunModuleId module, String? name) {
 }
 
 WasmExternal _toWasmExternal(ModuleExportValue value, _Instance instance) {
-  final module = instance.builder.module;
+  final module = instance.builder.mod;
   return value.value.when(
     sharedMemory: _SharedMemory.new,
     func: (func) => _toWasmFunction(func, module, value.desc.name),
@@ -371,53 +374,39 @@ class _References {
       externRef: (id) => getReference(id, module),
     );
   }
-
-  static WasmValue dartValueTypedFromWasm(WasmVal raw, WasmRunModuleId module) {
-    return raw.when(
-      i32: WasmValue.i32,
-      i64: WasmValue.i64,
-      f32: WasmValue.f32,
-      f64: WasmValue.f64,
-      v128: WasmValue.v128,
-      funcRef: (func) {
-        if (func == null) return const WasmValue.funcRef(null);
-        return WasmValue.funcRef(_toWasmFunction(func, module, null));
-      },
-      externRef: (id) => WasmValue.externRef(getReference(id, module)),
-    );
-  }
 }
 
 class _Builder extends WasmInstanceBuilder {
-  final _WasmModule compiledModule;
-  final WasmRunModuleId module;
+  @override
+  final _WasmModule module;
+  final WasmRunModuleId mod;
   final WasiConfig? wasiConfig;
   final _WasmInstanceFuel? _fuel;
 
-  _Builder(this.compiledModule, this.module, this.wasiConfig)
-      : _fuel = (compiledModule.config.consumeFuel ?? false)
-            ? _WasmInstanceFuel(module)
+  _Builder(this.module, this.mod, this.wasiConfig)
+      : _fuel = (module.config.consumeFuel ?? false)
+            ? _WasmInstanceFuel(mod)
             : null;
 
   @override
   WasmGlobal createGlobal(WasmValue value, {required bool mutable}) {
-    final global = module.createGlobal(
-      value: _fromWasmValue(value, module),
+    final global = mod.createGlobal(
+      value: _fromWasmValue(value, mod),
       mutable: mutable,
     );
-    return _Global(global, module);
+    return _Global(global, mod);
   }
 
   @override
   WasmMemory createMemory({required int minPages, int? maxPages}) {
-    final memory = module.createMemory(
+    final memory = mod.createMemory(
       memoryType: MemoryTy(
         shared: false,
         minimum: minPages,
         maximum: maxPages,
       ),
     );
-    return _Memory(memory, module);
+    return _Memory(memory, mod);
   }
 
   @override
@@ -426,16 +415,16 @@ class _Builder extends WasmInstanceBuilder {
     required int minSize,
     int? maxSize,
   }) {
-    final inner = _fromWasmValue(value, module);
+    final inner = _fromWasmValue(value, mod);
     return _Table(
-      module.createTable(
+      mod.createTable(
         value: inner,
         tableType: TableArgs(
           minimum: minSize,
           maximum: maxSize,
         ),
       ),
-      module,
+      mod,
     );
   }
 
@@ -452,7 +441,7 @@ class _Builder extends WasmInstanceBuilder {
       table: (table) => ExternalValue.table((table as _Table).table),
       global: (global) => ExternalValue.global((global as _Global).global),
       function: (function) {
-        final desc = compiledModule.module.getModuleImports().firstWhere(
+        final desc = module.module.getModuleImports().firstWhere(
               (e) => e.module == moduleName && e.name == name,
               // TODO: this is different behavior from web. On web wrong imports are ignored
               orElse: () => throw Exception(
@@ -493,8 +482,8 @@ class _Builder extends WasmInstanceBuilder {
             results: expectedResults,
           );
         }
-        final functionId = _References.getOrCreateId(functionToSave, module);
-        final func = module.createFunction(
+        final functionId = _References.getOrCreateId(functionToSave, mod);
+        final func = mod.createFunction(
           functionPointer: _References.globalWasmFunctionPointer,
           functionId: functionId,
           paramTypes: type.field0.parameters,
@@ -509,7 +498,7 @@ class _Builder extends WasmInstanceBuilder {
   }
 
   void linkImport(String moduleName, String name, ExternalValue value) {
-    module.linkImports(
+    mod.linkImports(
       imports: [ModuleImport(module: moduleName, name: name, value: value)],
     );
   }
@@ -519,13 +508,13 @@ class _Builder extends WasmInstanceBuilder {
 
   @override
   WasmInstance buildSync() {
-    final instance = module.instantiateSync();
+    final instance = mod.instantiateSync();
     return _Instance(instance, this);
   }
 
   @override
   Future<WasmInstance> build() async {
-    final instance = await module.instantiate();
+    final instance = await mod.instantiate();
     return _Instance(instance, this);
   }
 }
@@ -560,7 +549,7 @@ class _Instance extends WasmInstance {
   final WasmRunInstanceId instance;
   final _Builder builder;
   @override
-  _WasmModule get module => builder.compiledModule;
+  _WasmModule get module => builder.module;
 
   @override
   late final Map<String, WasmExternal> exports;
@@ -577,15 +566,13 @@ class _Instance extends WasmInstance {
     final wasiConfig = builder.wasiConfig;
     if (wasiConfig != null) {
       if (wasiConfig.captureStderr) {
-        _stderr ??= builder.module
-            .stdioStream(kind: StdIOKind.stderr)
-            .asBroadcastStream();
+        _stderr ??=
+            builder.mod.stdioStream(kind: StdIOKind.stderr).asBroadcastStream();
         _stderr!.first;
       }
-      if (wasiConfig.captureStderr) {
-        _stdout ??= builder.module
-            .stdioStream(kind: StdIOKind.stdout)
-            .asBroadcastStream();
+      if (wasiConfig.captureStdout) {
+        _stdout ??=
+            builder.mod.stdioStream(kind: StdIOKind.stdout).asBroadcastStream();
         _stdout!.first;
       }
 
@@ -614,7 +601,7 @@ class _Instance extends WasmInstance {
         'Only exported function can be run with `runParallel`',
       ),
     );
-    final runner = builder.module;
+    final runner = builder.mod;
     if (argsLists.any((args) => args.length != function.params.length)) {
       throw Exception(
         'argsLists.any((element) => element.length != function.params.length)',
@@ -656,7 +643,7 @@ class _Instance extends WasmInstance {
           call: (call) {
             final results =
                 _References.executeFunction(call.functionId, call.args);
-            builder.module.workerExecution(
+            builder.mod.workerExecution(
               workerIndex: call.workerIndex,
               results: results,
             );
@@ -672,6 +659,36 @@ class _Instance extends WasmInstance {
 
   @override
   WasmInstanceFuel? fuel() => builder.fuel();
+
+  @override
+  Future<WasiFile?> wasiOpenFile(
+    String path, {
+    bool create = false,
+    bool truncate = false,
+    // bool directory = false,
+    bool exclusive = false,
+  }) async {
+    if (builder.wasiConfig == null) return null;
+    final wasi = builder.wasiConfig!;
+    final dir = wasi.preopenedDirs.firstWhere(
+      (element) => path.startsWith(element.wasmGuestPath),
+      orElse: () => throw Exception('No preopened dir for $path'),
+    );
+    final filePath = path.substring(dir.wasmGuestPath.length);
+    final fileUri = Uri.parse(dir.hostPath).resolve(filePath);
+    final file = File.fromUri(fileUri);
+    if (create) {
+      await file.create(recursive: true, exclusive: exclusive);
+    }
+    final Uint8List bytes;
+    if (truncate) {
+      bytes = Uint8List(0);
+      await file.writeAsBytes(bytes);
+    } else {
+      bytes = await file.readAsBytes();
+    }
+    return WasiFile(bytes);
+  }
 
   @override
   Stream<Uint8List> get stderr {

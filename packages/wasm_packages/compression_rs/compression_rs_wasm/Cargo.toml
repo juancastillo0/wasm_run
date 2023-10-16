@@ -1,0 +1,50 @@
+[package]
+name = "compression_rs_wasm"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+crate-type = ['cdylib']
+
+[dependencies]
+brotli = { version = "3.3.4", optional = true }
+flate2 = "1.0.26"
+# lz4 = "1.24.0" # c bindings
+lz4_flex = { version = "0.11.0", optional = true }
+tar = { version = "0.4.38", optional = true }
+wit-bindgen = { git = "https://github.com/bytecodealliance/wit-bindgen", version = "0.7.0", rev = "131746313de2f90d2688afbbc40c4a7ca309fe0d" }
+zip = { version = "0.6.6", optional = true, default-features = false, features = [
+    "aes-crypto",
+    "deflate",
+    "time",
+    # removed "zstd"
+] }
+ruzstd = { version = "0.4.0", optional = true }
+time = { version = "0.3.0", optional = true }
+# zstd = "0.12.3" # c bindings
+
+[features]
+default = [
+    "brotli",
+    "lz4",
+    "zstd",
+    "gzip",
+    "zlib",
+    "deflate",
+    "tar",
+    "zip",
+    "wasi",
+]
+nobrotli = ["gzip", "zlib", "deflate", "tar", "zip", "wasi"]
+worker = ["gzip", "zlib", "deflate", "tar", "zip"]
+brotli = ["dep:brotli"]
+wasi = []
+gzip = []
+zlib = []
+deflate = []
+zstd = ["dep:ruzstd"]
+lz4 = ["dep:lz4_flex"]
+tar = ["dep:tar"]
+zip = ["dep:zip", "dep:time"]

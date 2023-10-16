@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:test/test.dart';
 import 'package:wasm_run/wasm_run.dart';
 import 'package:wasm_run_example/main.dart';
+import 'package:wasm_run_example/threads_test.dart';
 import 'package:wasm_run_example/wasi_base64.dart';
 
 Future<Uint8List> getWasiExample({
@@ -19,6 +20,13 @@ Future<Uint8List> getWasiExample({
       '../../rust_wasi_example/target/wasm32-wasi/debug/rust_wasi_example.wasm',
       '../rust_wasi_example/target/wasm32-wasi/release/rust_wasi_example.wasm',
       '../../rust_wasi_example/target/wasm32-wasi/release/rust_wasi_example.wasm',
+      if (!isWeb)
+        getRootDirectory()
+            .uri
+            .resolve(
+              'packages/wasm_run_flutter/example/assets/rust_wasi_example.wasm',
+            )
+            .toFilePath(),
     ];
     for (final element in wasmFiles) {
       try {
@@ -207,8 +215,8 @@ void wasiTest({TestArgs? testArgs}) {
     expect(DateTime.now().millisecondsSinceEpoch, greaterThan(t));
 
     final memory = instance1.getMemory('memory')!;
-    final _alloc = instance1.getFunction('alloc')!.inner;
-    final alloc = (int bytes) => _alloc(bytes) as int;
+    final alloc_ = instance1.getFunction('alloc')!.inner;
+    int alloc(int bytes) => alloc_(bytes) as int;
     final dealloc = instance1.getFunction('dealloc')!.inner as void Function(
       int offset,
       int bytes,
@@ -296,7 +304,7 @@ void wasiTest({TestArgs? testArgs}) {
 
       print(data);
       expect(data.size, binary.lengthInBytes);
-      expect(data.read_only, false);
+      expect(data.readOnly, false);
       if (data.created != null && isLibrary) {
         // may be null for some platforms
         expect(startTimestamp, lessThanOrEqualTo(data.created!));

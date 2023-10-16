@@ -1,17 +1,70 @@
 use std::collections::HashMap;
 
-use crate::{generate::*, strings::Normalize};
+use crate::{
+    function::FuncKind, generate::*, strings::Normalize, Int64TypeConfig, WitGeneratorConfig,
+};
 use wit_parser::*;
-
 
 pub struct Parsed<'a>(
     pub &'a Resolve,
     pub HashMap<&'a str, Vec<&'a TypeDef>>,
+    pub WitGeneratorConfig,
+    pub HashMap<String, Vec<String>>,
 );
 
-impl Parsed<'_> {
+const FROM_JSON_COMMENT: &str = "/// Returns a new instance from a JSON value.
+/// May throw if the value does not have the expected structure.\n";
+const TO_JSON_COMMENT: &str = "/// Returns this as a serializable JSON value.\n";
+const TO_WASM_COMMENT: &str = "/// Returns this as a WASM canonical abi value.\n";
+const COPY_WITH_COMMENT: &str =
+    "/// Returns a new instance by overriding the values passed as arguments\n";
 
+enum MethodComment {
+    FromJson,
+    ToJson,
+    ToWasm,
+    CopyWith,
+}
+
+fn mapper_func(getter: &str, current: &str, is_required: bool) -> String {
+    let func_params = format!("({getter})");
+    if current == getter {
+        if is_required {
+            "null".to_string()
+        } else {
+            "".to_string()
+        }
+    } else if current.ends_with(&func_params) {
+        let current_func = current.trim_end_matches(&func_params);
+        current_func.to_string()
+    } else {
+        format!("{func_params} => {current}")
+    }
+}
+
+impl Parsed<'_> {
     pub fn type_to_str(&self, ty: &Type) -> String {
+        match ty {
+            Type::Id(ty_id) => {
+                let ty_def = self.0.types.get(*ty_id).unwrap();
+
+                if let (TypeDefKind::Option(ty), true) = (&ty_def.kind, self.2.use_null_for_option)
+                {
+                    let value = format!("{}?", self.type_to_str_inner(ty));
+                    // TODO: remove when this ships https://github.com/dart-lang/sdk/issues/52591
+                    if value == "()?" {
+                        "Object?".to_string()
+                    } else {
+                        value
+                    }
+                } else {
+                    self.type_def_to_name(ty_def, true)
+                }
+            }
+            _ => self.type_to_str_inner(ty),
+        }
+    }
+    fn type_to_str_inner(&self, ty: &Type) -> String {
         match ty {
             Type::Id(ty_id) => {
                 let ty_def = self.0.types.get(*ty_id).unwrap();
@@ -25,11 +78,38 @@ impl Parsed<'_> {
             Type::S8 => "int /*S8*/".to_string(),
             Type::S16 => "int /*S16*/".to_string(),
             Type::S32 => "int /*S32*/".to_string(),
-            Type::S64 => "int /*S64*/".to_string(),
+            Type::S64 => match self.2.int64_type {
+                Int64TypeConfig::BigInt => "BigInt /*S64*/".to_string(),
+                Int64TypeConfig::NativeObject => "Object /*S64*/".to_string(),
+                Int64TypeConfig::BigIntUnsignedOnly => "int /*S64*/".to_string(),
+                Int64TypeConfig::CoreInt => "int /*S64*/".to_string(),
+            },
             Type::U8 => "int /*U8*/".to_string(),
             Type::U16 => "int /*U16*/".to_string(),
             Type::U32 => "int /*U32*/".to_string(),
-            Type::U64 => "int /*U64*/".to_string(),
+            Type::U64 => match self.2.int64_type {
+                Int64TypeConfig::BigInt => "BigInt /*U64*/".to_string(),
+                Int64TypeConfig::NativeObject => "Object /*U64*/".to_string(),
+                Int64TypeConfig::BigIntUnsignedOnly => "BigInt /*U64*/".to_string(),
+                Int64TypeConfig::CoreInt => "int /*U64*/".to_string(),
+            },
+        }
+    }
+
+    fn list_typed_data(&self, ty: &Type) -> Option<String> {
+        if !self.2.typed_number_lists {
+            return None;
+        }
+        match ty {
+            Type::Float32 => Some("Float32List".to_string()),
+            Type::Float64 => Some("Float64List".to_string()),
+            Type::S8 => Some("Int8List".to_string()),
+            Type::S16 => Some("Int16List".to_string()),
+            Type::S32 => Some("Int32List".to_string()),
+            Type::U8 => Some("Uint8List".to_string()),
+            Type::U16 => Some("Uint16List".to_string()),
+            Type::U32 => Some("Uint32List".to_string()),
+            _ => None,
         }
     }
 
@@ -38,6 +118,129 @@ impl Parsed<'_> {
             Type::Id(ty_id) => {
                 let ty_def = self.0.types.get(*ty_id).unwrap();
                 self.type_def_to_json(getter, ty_def)
+            }
+            _ => self.type_to_json_inner(getter, ty),
+        }
+    }
+
+    fn type_to_json_inner(&self, getter: &str, ty: &Type) -> String {
+        match ty {
+            Type::Id(ty_id) => {
+                let ty_def = self.0.types.get(*ty_id).unwrap();
+                self.type_def_to_json_inner(getter, ty_def)
+            }
+            Type::Bool => getter.to_string(),
+            Type::String => getter.to_string(),
+            Type::Char => getter.to_string(),
+            Type::Float32 => getter.to_string(),
+            Type::Float64 => getter.to_string(),
+            Type::S8 => getter.to_string(),
+            Type::S16 => getter.to_string(),
+            Type::S32 => getter.to_string(),
+            Type::S64 => match self.2.int64_type {
+                Int64TypeConfig::BigInt => format!("{getter}.toString()"),
+                Int64TypeConfig::NativeObject => format!("i64.toBigInt({getter}).toString()"),
+                Int64TypeConfig::BigIntUnsignedOnly => getter.to_string(),
+                Int64TypeConfig::CoreInt => getter.to_string(),
+            },
+            Type::U8 => getter.to_string(),
+            Type::U16 => getter.to_string(),
+            Type::U32 => getter.to_string(),
+            Type::U64 => match self.2.int64_type {
+                Int64TypeConfig::BigInt => format!("{getter}.toString()"),
+                Int64TypeConfig::NativeObject => format!("i64.toBigInt({getter}).toString()"),
+                Int64TypeConfig::BigIntUnsignedOnly => format!("{getter}.toString()"),
+                Int64TypeConfig::CoreInt => getter.to_string(),
+            },
+        }
+    }
+
+    fn type_def_to_json(&self, getter: &str, ty: &TypeDef) -> String {
+        match &ty.kind {
+            TypeDefKind::Option(ty) => {
+                let mapped = self.type_to_json_inner("some", &ty);
+                let mapped = mapper_func("some", &mapped, false);
+                if self.2.use_null_for_option {
+                    format!("({getter} == null ? const None().toJson() : Option.fromValue({getter}).toJson({mapped}))")
+                } else {
+                    format!("{getter}.toJson({mapped})")
+                }
+            }
+            _ => self.type_def_to_json_inner(getter, ty),
+        }
+    }
+
+    fn type_def_to_json_inner(&self, getter: &str, ty: &TypeDef) -> String {
+        match &ty.kind {
+            TypeDefKind::Record(_record) => format!("{getter}.toJson()"),
+            TypeDefKind::Enum(_enum_) => format!("{getter}.toJson()"),
+            TypeDefKind::Union(_union) => format!("{getter}.toJson()"),
+            TypeDefKind::Flags(_flags) => format!("{getter}.toJson()"),
+            TypeDefKind::Variant(_variant) => format!("{getter}.toJson()"),
+            TypeDefKind::Resource | TypeDefKind::Handle(_) => format!("{getter}.toWasm()"),
+            TypeDefKind::Option(ty) => {
+                let inner = self.type_to_json_inner("some", &ty);
+                let inner = mapper_func("some", &inner, false);
+                format!("{getter}.toJson({inner})")
+            }
+            TypeDefKind::Result(r) => {
+                let map_ok = r.ok.map_or_else(
+                    || "null".to_string(),
+                    |ok| {
+                        let to_json = self.type_to_json("ok", &ok);
+                        mapper_func("ok", &to_json, true)
+                    },
+                );
+                let map_err = r.err.map_or_else(
+                    || "null".to_string(),
+                    |error| {
+                        let to_json = self.type_to_json("error", &error);
+                        mapper_func("error", &to_json, true)
+                    },
+                );
+                format!("{getter}.toJson({map_ok}, {map_err})")
+            }
+            TypeDefKind::Tuple(t) => {
+                let list = t
+                    .types
+                    .iter()
+                    .enumerate()
+                    .map(|(i, t)| self.type_to_json(&format!("{getter}.${ind}", ind = i + 1), t))
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                format!("[{list}]")
+            }
+            TypeDefKind::List(ty) => {
+                let inner = self.type_to_json("e", &ty);
+                if inner == "e" {
+                    format!("{getter}.toList()")
+                } else {
+                    let inner = mapper_func("e", &inner, true);
+                    format!("{getter}.map({inner}).toList()")
+                }
+            }
+            TypeDefKind::Future(_ty) => unreachable!("Future"),
+            TypeDefKind::Stream(_s) => unreachable!("Stream"),
+            TypeDefKind::Type(ty) => self.type_to_json_inner(getter, &ty),
+            TypeDefKind::Unknown => unimplemented!("Unknown type"),
+        }
+    }
+
+    pub fn type_to_wasm(&self, getter: &str, ty: &Type) -> String {
+        match ty {
+            Type::Id(ty_id) => {
+                let ty_def = self.0.types.get(*ty_id).unwrap();
+                self.type_def_to_wasm(getter, ty_def)
+            }
+            _ => self.type_to_wasm_inner(getter, ty),
+        }
+    }
+
+    fn type_to_wasm_inner(&self, getter: &str, ty: &Type) -> String {
+        match ty {
+            Type::Id(ty_id) => {
+                let ty_def = self.0.types.get(*ty_id).unwrap();
+                self.type_def_to_wasm_inner(getter, ty_def)
             }
             Type::Bool => getter.to_string(),
             Type::String => getter.to_string(),
@@ -55,64 +258,116 @@ impl Parsed<'_> {
         }
     }
 
-    pub fn type_def_to_json(&self, getter: &str, ty: &TypeDef) -> String {
+    fn type_def_to_wasm(&self, getter: &str, ty: &TypeDef) -> String {
         match &ty.kind {
-            TypeDefKind::Record(_record) => format!("{getter}.toJson()"),
-            TypeDefKind::Enum(_enum_) => format!("{getter}.toJson()"),
-            TypeDefKind::Union(_union) => format!("{getter}.toJson()"),
-            TypeDefKind::Flags(_flags) => format!("{getter}.toJson()"),
-            TypeDefKind::Variant(_variant) => format!("{getter}.toJson()"),
-            TypeDefKind::Option(ty) => format!(
-                "{getter}.toJson((some) => {})",
-                self.type_to_json("some", &ty)
-            ),
-            TypeDefKind::Result(r) => format!(
-                "{getter}.toJson({}, {})",
-                r.ok.map_or_else(
-                    || "null".to_string(),
-                    |ok| {
-                        let to_json = self.type_to_json("ok", &ok);
-                        if to_json == "ok" {
-                            return "null".to_string();
-                        }
-                        format!("(ok) => {to_json}")
-                    }
-                ),
-                r.err.map_or_else(
-                    || "null".to_string(),
-                    |error| {
-                        let to_json = self.type_to_json("error", &error);
-                        if to_json == "error" {
-                            return "null".to_string();
-                        }
-                        format!("(error) => {to_json}")
-                    }
-                )
-            ),
-            TypeDefKind::Tuple(t) => {
+            TypeDefKind::Option(ty) => {
+                let mapper = self.type_to_wasm_inner("some", &ty);
+                let mapper = mapper_func("some", &mapper, false);
+                if self.2.use_null_for_option {
+                    format!("({getter} == null ? const None().toWasm() : Option.fromValue({getter}).toWasm({mapper}))")
+                } else {
+                    format!("{getter}.toWasm({mapper})")
+                }
+            }
+            _ => self.type_def_to_wasm_inner(getter, ty),
+        }
+    }
+
+    fn type_def_to_wasm_inner(&self, getter: &str, ty: &TypeDef) -> String {
+        match &ty.kind {
+            TypeDefKind::Record(_record) => format!("{getter}.toWasm()"),
+            TypeDefKind::Enum(_enum_) => format!("{getter}.toWasm()"),
+            TypeDefKind::Union(_union) => {
+                if self.2.same_class_union {
+                    format!(
+                        "{}.toWasm({getter})",
+                        self.type_def_to_name_definition(ty).unwrap()
+                    )
+                } else {
+                    format!("{getter}.toWasm()")
+                }
+            }
+            TypeDefKind::Flags(_flags) => format!("{getter}.toWasm()"),
+            TypeDefKind::Variant(_variant) => format!("{getter}.toWasm()"),
+            TypeDefKind::Resource | TypeDefKind::Handle(_) => format!("{getter}.toWasm()"),
+            TypeDefKind::Option(ty) => {
                 format!(
-                    "[{}]",
-                    t.types
-                        .iter()
-                        .enumerate()
-                        .map(|(i, t)| self.type_to_json(&format!("{getter}.${ind}", ind = i + 1), t))
-                        .collect::<Vec<_>>()
-                        .join(", "),
+                    "{getter}.toWasm({})",
+                    mapper_func("some", &self.type_to_wasm_inner("some", &ty), false)
                 )
             }
-            TypeDefKind::List(ty) => format!(
-                // TODO: if {} is just e, maybe don't copy
-                "{getter}.map((e) => {}).toList()",
-                self.type_to_json("e", &ty)
-            ),
+            TypeDefKind::Result(r) => {
+                let map_ok = r.ok.map_or_else(
+                    || "null".to_string(),
+                    |ok| {
+                        let to_wasm = self.type_to_wasm("ok", &ok);
+                        mapper_func("ok", &to_wasm, true)
+                    },
+                );
+                let map_err = r.err.map_or_else(
+                    || "null".to_string(),
+                    |error| {
+                        let to_wasm = self.type_to_wasm("error", &error);
+                        mapper_func("error", &to_wasm, true)
+                    },
+                );
+                format!("{getter}.toWasm({map_ok}, {map_err})")
+            }
+            TypeDefKind::Tuple(t) => {
+                let list = t
+                    .types
+                    .iter()
+                    .enumerate()
+                    .map(|(i, t)| self.type_to_wasm(&format!("{getter}.${ind}", ind = i + 1), t))
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                format!("[{list}]")
+            }
+            TypeDefKind::List(ty) => {
+                let inner = self.type_to_wasm("e", &ty);
+                // In toJson() we use toList(), but in toWasm() we just use the list directly
+                // If we need to map, we use toList(growable: false).
+                if inner == "e" {
+                    format!("{getter}")
+                } else {
+                    let inner = mapper_func("e", &inner, true);
+                    format!("{getter}.map({inner}).toList(growable: false)")
+                }
+            }
             TypeDefKind::Future(_ty) => unreachable!("Future"),
             TypeDefKind::Stream(_s) => unreachable!("Stream"),
-            TypeDefKind::Type(ty) => self.type_to_json(getter, &ty),
+            TypeDefKind::Type(ty) => self.type_to_wasm_inner(getter, &ty),
             TypeDefKind::Unknown => unimplemented!("Unknown type"),
         }
     }
 
+    pub fn type_class_name(&self, ty: &Type) -> Option<String> {
+        if let Type::Id(ty_id) = ty {
+            let ty_def = self.0.types.get(*ty_id).unwrap();
+            if let (
+                Some(name),
+                TypeDefKind::Record(_)
+                | TypeDefKind::Enum(_)
+                | TypeDefKind::Union(_)
+                | TypeDefKind::Variant(_)
+                | TypeDefKind::Flags(_),
+            ) = (self.type_def_to_name_definition(ty_def), &ty_def.kind)
+            {
+                return Some(name);
+            }
+        }
+        None
+    }
+
     pub fn type_to_spec(&self, ty: &Type) -> String {
+        if let Some(name) = self.type_class_name(ty) {
+            format!("{name}._spec")
+        } else {
+            self.type_to_spec_inner(ty)
+        }
+    }
+
+    fn type_to_spec_inner(&self, ty: &Type) -> String {
         match ty {
             Type::Id(ty_id) => {
                 let ty_def = self.0.types.get(*ty_id).unwrap();
@@ -141,15 +396,15 @@ impl Parsed<'_> {
 
     pub fn type_def_to_spec(&self, ty: &TypeDef) -> String {
         match &ty.kind {
-            TypeDefKind::Record(record) => format!(
-                "Record([{}])",
-                record
+            TypeDefKind::Record(record) => {
+                let fields = record
                     .fields
                     .iter()
                     .map(|t| format!("(label: '{}', t: {})", t.name, self.type_to_spec(&t.ty)))
                     .collect::<Vec<_>>()
-                    .join(", ")
-            ),
+                    .join(", ");
+                format!("RecordType([{fields}])")
+            }
             TypeDefKind::Enum(enum_) => format!(
                 "EnumType(['{}'])",
                 enum_
@@ -177,15 +432,15 @@ impl Parsed<'_> {
                     .collect::<Vec<_>>()
                     .join("', '")
             ),
-            TypeDefKind::Variant(variant) => format!(
-                "Variant([{}])",
-                variant
+            TypeDefKind::Variant(variant) => {
+                let options = variant
                     .cases
                     .iter()
                     .map(|t| format!("Case('{}', {})", t.name, self.type_def_to_spec_option(t.ty)))
                     .collect::<Vec<_>>()
-                    .join(", ")
-            ),
+                    .join(", ");
+                format!("Variant([{options}])")
+            }
             TypeDefKind::Tuple(t) => {
                 format!(
                     "Tuple([{}])",
@@ -210,11 +465,70 @@ impl Parsed<'_> {
                 self.type_def_to_spec_option(s.element),
             ),
             TypeDefKind::Type(ty) => self.type_to_spec(&ty),
+            TypeDefKind::Resource => format!("ResourceType('{}')", self.type_handle_id(ty)),
+            TypeDefKind::Handle(h) => match h {
+                Handle::Own(resource_id) => format!(
+                    "Own({}._spec)",
+                    self.0
+                        .types
+                        .get(*resource_id)
+                        .unwrap()
+                        .name
+                        .as_ref()
+                        .unwrap()
+                        .as_type()
+                ),
+                Handle::Borrow(resource_id) => {
+                    format!(
+                        "Borrow({}._spec)",
+                        self.0
+                            .types
+                            .get(*resource_id)
+                            .unwrap()
+                            .name
+                            .as_ref()
+                            .unwrap()
+                            .as_type()
+                    )
+                }
+            },
             TypeDefKind::Unknown => unimplemented!("Unknown type"),
         }
     }
 
+    pub fn type_handle_id(&self, ty: &TypeDef) -> String {
+        let (_, package) = self.0.packages.iter().last().unwrap();
+        let owner = self.type_owner_name(ty.owner);
+        format!(
+            "{}/{}#{}",
+            package.name,
+            owner.unwrap_or("".to_string()),
+            ty.name.as_ref().unwrap_or(&"".to_string())
+        )
+    }
+
     pub fn type_from_json(&self, getter: &str, ty: &Type) -> String {
+        match ty {
+            Type::Id(ty_id) => {
+                let ty_def = self.0.types.get(*ty_id).unwrap();
+
+                match &ty_def.kind {
+                    TypeDefKind::Option(_ty) => {
+                        let val = self.type_def_from_json(getter, ty_def);
+                        if self.2.use_null_for_option {
+                            format!("{val}.value")
+                        } else {
+                            val
+                        }
+                    }
+                    _ => self.type_def_from_json(getter, ty_def),
+                }
+            }
+            _ => self.type_from_json_inner(getter, ty),
+        }
+    }
+
+    fn type_from_json_inner(&self, getter: &str, ty: &Type) -> String {
         match ty {
             Type::Id(ty_id) => {
                 let ty_def = self.0.types.get(*ty_id).unwrap();
@@ -230,20 +544,30 @@ impl Parsed<'_> {
             Type::S8 => format!("{getter}! as int"),
             Type::S16 => format!("{getter}! as int"),
             Type::S32 => format!("{getter}! as int"),
-            Type::S64 => format!("{getter}! as int"),
+            Type::S64 => match self.2.int64_type {
+                Int64TypeConfig::BigInt => format!("bigIntFromJson({getter})"),
+                Int64TypeConfig::NativeObject => format!("{getter}!"),
+                Int64TypeConfig::BigIntUnsignedOnly => format!("{getter}! as int"),
+                Int64TypeConfig::CoreInt => format!("{getter}! as int"),
+            },
             Type::U8 => format!("{getter}! as int"),
             Type::U16 => format!("{getter}! as int"),
             Type::U32 => format!("{getter}! as int"),
-            Type::U64 => format!("{getter}! as int"),
+            Type::U64 => match self.2.int64_type {
+                Int64TypeConfig::BigInt => format!("bigIntFromJson({getter})"),
+                Int64TypeConfig::NativeObject => format!("{getter}!"),
+                Int64TypeConfig::BigIntUnsignedOnly => format!("bigIntFromJson({getter})"),
+                Int64TypeConfig::CoreInt => format!("{getter}! as int"),
+            },
         }
     }
 
-    pub fn type_def_from_json_option(&self, getter: &str, r: Option<Type>) -> String {
+    fn type_def_from_json_option(&self, getter: &str, r: Option<Type>) -> String {
         r.map(|ty| self.type_from_json(getter, &ty))
             .unwrap_or("null".to_string())
     }
 
-    pub fn type_def_from_json(&self, getter: &str, ty: &TypeDef) -> String {
+    fn type_def_from_json(&self, getter: &str, ty: &TypeDef) -> String {
         let name = self.type_def_to_name_definition(ty);
         match &ty.kind {
             TypeDefKind::Record(_record) => format!("{}.fromJson({getter})", name.unwrap()),
@@ -260,27 +584,28 @@ impl Parsed<'_> {
                         .collect::<Vec<_>>()
                         .join(",");
                     let s_comma = if t.types.len() == 1 { "," } else { "" };
+                    let length = t.types.len();
+                    let values =  t.types
+                            .iter()
+                            .enumerate()
+                            .map(|(i, t)| self.type_from_json(&format!("v{i}"), t))
+                            .collect::<Vec<_>>()
+                            .join(", ");
+
                     format!(
                         "(() {{final l = {getter} is Map
                         ? List.generate({length}, (i) => {getter}[i.toString()], growable: false)
                         : {getter};
                         return switch (l) {{
-                            [{spread}] || ({spread}{s_comma}) => ({},),
+                            [{spread}] || ({spread}{s_comma}) => ({values},),
                             _ => throw Exception('Invalid JSON ${getter}')}};
-                        }})()",
-                        t.types
-                            .iter()
-                            .enumerate()
-                            .map(|(i, t)| self.type_from_json(&format!("v{i}"), t))
-                            .collect::<Vec<_>>()
-                            .join(", "),
-                        length = t.types.len(),
+                        }})()"
                     )
                 }
             }
             TypeDefKind::Option(ty) => format!(
                 "Option.fromJson({getter}, (some) => {})",
-                self.type_from_json("some", &ty)
+                self.type_from_json_inner("some", &ty)
             ),
             TypeDefKind::Result(r) => format!(
                 "Result.fromJson({getter}, (ok) => {}, (error) => {})",
@@ -289,17 +614,27 @@ impl Parsed<'_> {
             ),
             // TypeDefKind::Option(ty) => format!(
             //     "{getter} == null ? none : {}",
-            //     self.type_from_json(getter, &ty)
+            //     self.type_from_json_inner(getter, &ty)
             // ),
             // TypeDefKind::Result(r) => format!(
             //     "({getter} as Map).containsKey('ok') ? Ok({}) : Err({})",
             //     self.type_def_from_json_option(&format!("({getter} as Map)['ok']"), r.ok),
             //     self.type_def_from_json_option(&format!("({getter} as Map)['error']"), r.err),
             // ),
-            TypeDefKind::List(ty) => format!(
-                "({getter}! as Iterable).map((e) => {}).toList()",
-                self.type_from_json("e", &ty)
-            ),
+            TypeDefKind::List(ty) => self
+                .list_typed_data(ty)
+                .map(|type_data|
+                    format!("({getter} is {type_data} ? {getter} : {type_data}.fromList(({getter}! as List).cast()))")
+                )
+                .unwrap_or_else(|| {
+                    let inner = self.type_from_json("e", &ty);
+                    if inner == "e" {
+                        format!("({getter}! as Iterable).toList()")
+                    } else {
+                        let inner = mapper_func("e", &inner, true);
+                        format!("({getter}! as Iterable).map({inner}).toList()")
+                    }
+                }),
             TypeDefKind::Future(ty) => {
                 format!(
                     "FutureType({})",
@@ -311,7 +646,9 @@ impl Parsed<'_> {
                 // TODO: stream.end
                 self.type_def_from_json_option(getter, s.element),
             ),
-            TypeDefKind::Type(ty) => self.type_from_json(getter, &ty),
+            TypeDefKind::Type(ty) => self.type_from_json_inner(getter, &ty),
+            TypeDefKind::Resource => format!("{}.fromJson({getter})", name.unwrap()),
+            TypeDefKind::Handle(h) => format!("{}.fromJson({getter})", self.type_def_to_name_definition(self.handle_ty(h)).unwrap()),
             TypeDefKind::Unknown => unimplemented!("Unknown type"),
         }
     }
@@ -320,7 +657,7 @@ impl Parsed<'_> {
         match ty {
             Type::Id(ty_id) => {
                 let ty_def = self.0.types.get(*ty_id).unwrap();
-                self.type_def_to_definition(ty_def)
+                self.type_def_to_definition(ty_id, ty_def)
             }
             Type::Bool => "".to_string(),
             Type::String => "".to_string(),
@@ -338,7 +675,17 @@ impl Parsed<'_> {
         }
     }
 
-    pub fn type_def_to_name(&self, ty: &TypeDef, allow_alias: bool) -> String {
+    fn handle_ty(&self, t: &Handle) -> &TypeDef {
+        self.0
+            .types
+            .get(*match t {
+                Handle::Borrow(ty_id) => ty_id,
+                Handle::Own(ty_id) => ty_id,
+            })
+            .unwrap()
+    }
+
+    fn type_def_to_name(&self, ty: &TypeDef, allow_alias: bool) -> String {
         let name = self.type_def_to_name_definition(ty);
         if allow_alias && name.is_some() {
             return name.unwrap();
@@ -349,20 +696,21 @@ impl Parsed<'_> {
             TypeDefKind::Union(_union) => name.unwrap(),
             TypeDefKind::Flags(_flags) => name.unwrap(),
             TypeDefKind::Variant(_variant) => name.unwrap(),
+            TypeDefKind::Resource => name.unwrap(),
+            TypeDefKind::Handle(t) => self.type_def_to_name_definition(self.handle_ty(t)).unwrap(),
             TypeDefKind::Tuple(t) => {
-                format!(
-                    "({})",
-                    t.types
-                        .iter()
-                        .map(|t| {
-                            let mut s = self.type_to_str(t);
-                            s.push_str(", ");
-                            s
-                        })
-                        .collect::<String>()
-                )
+                let values = t
+                    .types
+                    .iter()
+                    .map(|t| {
+                        let mut s = self.type_to_str(t);
+                        s.push_str(", ");
+                        s
+                    })
+                    .collect::<String>();
+                format!("({values})")
             }
-            TypeDefKind::Option(ty) => format!("Option<{}>", self.type_to_str(&ty)),
+            TypeDefKind::Option(ty) => format!("Option<{}>", self.type_to_str_inner(&ty)),
             TypeDefKind::Result(r) => format!(
                 "Result<{}, {}>",
                 r.ok.map(|ty| self.type_to_str(&ty))
@@ -371,7 +719,9 @@ impl Parsed<'_> {
                     .map(|ty| self.type_to_str(&ty))
                     .unwrap_or("void".to_string())
             ),
-            TypeDefKind::List(ty) => format!("List<{}>", self.type_to_str(&ty)),
+            TypeDefKind::List(ty) => self
+                .list_typed_data(ty)
+                .unwrap_or_else(|| format!("List<{}>", self.type_to_str(&ty))),
             TypeDefKind::Future(ty) => format!(
                 "Future<{}>",
                 ty.map(|ty| self.type_to_str(&ty))
@@ -384,8 +734,16 @@ impl Parsed<'_> {
                     .map(|ty| self.type_to_str(&ty))
                     .unwrap_or("void".to_string()),
             ),
-            TypeDefKind::Type(ty) => self.type_to_str(&ty),
+            TypeDefKind::Type(ty) => self.type_to_str_inner(&ty),
             TypeDefKind::Unknown => unimplemented!("Unknown type"),
+        }
+    }
+
+    fn type_owner_name(&self, owner: TypeOwner) -> Option<String> {
+        match owner {
+            TypeOwner::World(id) => Some(self.0.worlds.get(id).unwrap().name.clone()),
+            TypeOwner::Interface(id) => self.0.interfaces.get(id).unwrap().name.clone(),
+            TypeOwner::None => None,
         }
     }
 
@@ -393,14 +751,14 @@ impl Parsed<'_> {
         if let Some(v) = &ty.name {
             let defined = self.1.get(v as &str);
             if let Some(def) = defined {
-                let owner = match ty.owner {
-                    TypeOwner::World(id) => Some(&self.0.worlds.get(id).unwrap().name),
-                    TypeOwner::Interface(id) => self.0.interfaces.get(id).unwrap().name.as_ref(),
-                    TypeOwner::None => None,
-                };
+                let owner = self.type_owner_name(ty.owner);
                 let name = format!(
                     "{v}-{}",
-                    owner.unwrap_or(&def.iter().position(|e| (*e).eq(ty)).unwrap().to_string())
+                    owner.unwrap_or_else(|| def
+                        .iter()
+                        .position(|e| (*e).eq(ty))
+                        .unwrap()
+                        .to_string())
                 );
                 Some(heck::AsPascalCase(name).to_string())
             } else {
@@ -411,7 +769,80 @@ impl Parsed<'_> {
         }
     }
 
-    pub fn type_def_to_definition(&self, ty: &TypeDef) -> String {
+    fn method_comment(&self, comment: MethodComment) -> &str {
+        if self.2.generate_docs {
+            match comment {
+                MethodComment::CopyWith => COPY_WITH_COMMENT,
+                MethodComment::ToJson => TO_JSON_COMMENT,
+                MethodComment::ToWasm => TO_WASM_COMMENT,
+                MethodComment::FromJson => FROM_JSON_COMMENT,
+            }
+        } else {
+            ""
+        }
+    }
+
+    fn add_methods_trait<T: crate::methods::GeneratedMethodsTrait>(
+        &self,
+        s: &mut String,
+        name: &str,
+        methods: &T,
+    ) {
+        if self.2.json_serialization {
+            if let Some(m) = methods.from_json(name, self) {
+                s.push_str(self.method_comment(MethodComment::FromJson));
+                s.push_str(&m);
+            }
+            s.push_str("@override ");
+            s.push_str(&methods.to_json(name, self));
+        }
+        s.push_str(self.method_comment(MethodComment::ToWasm));
+        s.push_str(&methods.to_wasm(name, self));
+
+        if self.2.to_string {
+            if let Some(m) = methods.to_string(name, self) {
+                s.push_str(&m);
+            }
+        }
+        if self.2.copy_with {
+            if let Some(m) = methods.copy_with(name, self) {
+                s.push_str(self.method_comment(MethodComment::CopyWith));
+                s.push_str(&m);
+            }
+        }
+        if self.2.equality_and_hash_code {
+            if let Some(m) = methods.equality_hash_code(name, self) {
+                s.push_str(&m);
+            }
+        }
+    }
+
+    pub fn comparator(&self) -> &str {
+        self.2
+            .object_comparator
+            .as_deref()
+            .unwrap_or("const ObjectComparator()")
+    }
+
+    pub fn implements(&self, name: &str) -> String {
+        // TODO: check json_serialize config
+        self.3
+            .get(name)
+            .map(|v| format!("implements {}, ToJsonSerializable ", v.join(",")))
+            .unwrap_or("implements ToJsonSerializable ".to_string())
+    }
+
+    fn union_case_class(&self, case: &UnionCase, name: &str) -> String {
+        if let Some(class_name) = self.type_class_name(&case.ty) {
+            class_name
+        } else {
+            let ty = self.type_to_str(&case.ty);
+            let inner_name = heck::AsPascalCase(&ty);
+            format!("{name}{inner_name}")
+        }
+    }
+
+    pub fn type_def_to_definition(&self, id_ty: &TypeId, ty: &TypeDef) -> String {
         let name = self.type_def_to_name_definition(ty);
 
         let mut s = String::new();
@@ -419,7 +850,8 @@ impl Parsed<'_> {
         match &ty.kind {
             TypeDefKind::Record(r) => {
                 let name = name.unwrap();
-                s.push_str(&format!("class {name} {{"));
+                let implements = self.implements(&name);
+                s.push_str(&format!("class {name} {implements}{{"));
                 r.fields.iter().for_each(|f| {
                     add_docs(&mut s, &f.docs);
                     s.push_str(&format!(
@@ -428,89 +860,29 @@ impl Parsed<'_> {
                         f.name.as_var()
                     ));
                 });
+                add_docs(&mut s, &ty.docs);
                 if r.fields.is_empty() {
-                    s.push_str(&format!("\n\nconst {name}();",));
+                    s.push_str(&format!("const {name}();",));
                 } else {
-                    s.push_str(&format!("\n\nconst {name}({{",));
+                    s.push_str(&format!("const {name}({{",));
                     r.fields.iter().for_each(|f| {
-                        s.push_str(&format!("required this.{},", f.name.as_var()));
+                        s.push_str(&self.type_param(&f.name, &f.ty, true));
                     });
                     s.push_str("});");
                 }
-                if r.fields.is_empty() {
-                    s.push_str(&format!(
-                        "\n\nfactory {name}.fromJson(Object? _) => const {name}();"
-                    ));
-                } else {
-                    let spread = r
-                        .fields
-                        .iter()
-                        .map(|f| format!("final {}", f.name.as_var()))
-                        .collect::<Vec<_>>()
-                        .join(",");
-                    let s_comma = if r.fields.len() == 1 { "," } else { "" };
-                    s.push_str(&format!(
-                        "\n\nfactory {name}.fromJson(Object? json_) {{
-                        final json = json_ is Map ? _spec.fields.map((f) => json_[f.label]).toList(growable: false) : json_;
-                        return switch (json) {{
-                            [{spread}] || ({spread}{s_comma}) => {name}({}),
-                            _ => throw Exception('Invalid JSON $json_')}};
-                        }}",
-                        r.fields
-                            .iter()
-                            .map(|f| format!(
-                                "{}: {},",
-                                f.name.as_var(),
-                                self.type_from_json(&f.name.as_var(), &f.ty)
-                            ))
-                            .collect::<String>()
-                    ));
-                }
+
+                self.add_methods_trait(&mut s, &name, r);
+
                 s.push_str(&format!(
-                    "\nMap<String, Object?> toJson() => {{{}}};
-                    {name} copyWith({copy_with_params}) => {name}({copy_with_content});
-                    List<Object?> get props => [{fields}];
-                    @override\nString toString() => '{name}${{Map.fromIterables(_spec.fields.map((f) => f.label), props)}}';
-                    @override\nbool operator ==(Object other) => identical(this, other) || other is {name} && comparator.arePropsEqual(props, other.props);
-                    @override\nint get hashCode => comparator.hashProps(props);
-                    ",
-                    r.fields
-                        .iter()
-                        .map(|f| format!(
-                            "'{}': {},",
-                            f.name,
-                            self.type_to_json(&f.name.as_var(), &f.ty)
-                        ))
-                        .collect::<String>(),
+                    "// ignore: unused_field
+                    List<Object?> get _props => [{fields}];",
                     fields = r
                         .fields
                         .iter()
                         .map(|f| f.name.as_var())
                         .collect::<Vec<_>>()
                         .join(","),
-                    copy_with_params = if r.fields.is_empty() { 
-                        "".to_string() 
-                    } else { 
-                        format!("{{{}}}", r
-                                .fields
-                                .iter()
-                                .map(|f| format!("{}? {},", self.type_to_str(&f.ty), f.name.as_var(), ))
-                                .collect::<String>()
-                        )
-                    },
-                    copy_with_content = if r.fields.is_empty() { 
-                        "".to_string()
-                     } else { 
-                        r
-                        .fields
-                        .iter()
-                        .map(|f| format!("{}: {} ?? this.{}", f.name.as_var(), f.name.as_var(), f.name.as_var()))
-                        .collect::<Vec<_>>()
-                        .join(",")
-                    },
-                
                 ));
-
                 s.push_str(&format!(
                     "static const _spec = {};",
                     self.type_def_to_spec(&ty)
@@ -520,7 +892,8 @@ impl Parsed<'_> {
             }
             TypeDefKind::Enum(e) => {
                 let name = name.unwrap();
-                s.push_str(&format!("enum {name} {{"));
+                let implements = self.implements(&name);
+                s.push_str(&format!("enum {name} {implements}{{"));
                 e.cases.iter().enumerate().for_each(|(i, v)| {
                     add_docs(&mut s, &v.docs);
                     s.push_str(&format!(
@@ -530,16 +903,7 @@ impl Parsed<'_> {
                     ));
                 });
 
-                s.push_str(&format!(
-                    "factory {name}.fromJson(Object? json_) {{
-                        final json = json_ is Map ? json_.keys.first : json_;
-                        if (json is String) {{
-                            final index = _spec.labels.indexOf(json);
-                            return index != -1 ? values[index] : values.byName(json);
-                        }}
-                        return values[json! as int];}}",
-                ));
-                s.push_str("\nObject? toJson() => _spec.labels[index];\n");
+                self.add_methods_trait(&mut s, &name, e);
 
                 s.push_str(&format!(
                     "static const _spec = {};",
@@ -550,49 +914,112 @@ impl Parsed<'_> {
             }
             TypeDefKind::Union(u) => {
                 let name = name.unwrap();
-                s.push_str(&format!(
-                    "sealed class {name} {{
-                    factory {name}.fromJson(Object? json_) {{
-                        Object? json = json_;
-                        if (json is Map) {{
-                            final k = json.keys.first;
-                            json = (k is int ? k : int.parse(k! as String), json.values.first);
-                        }}
-                        return switch (json) {{ {} _ => throw Exception('Invalid JSON $json_'), }};
-                    }}",
-                    u.cases
+                let from_json_comment = self.method_comment(MethodComment::FromJson);
+                let switch_cases = u
+                    .cases
+                    .iter()
+                    .enumerate()
+                    .map(|(i, v)| {
+                        let inner_from_json = self.type_from_json("value", &v.ty);
+                        let parsed = if let Some(_) = self.type_class_name(&v.ty) {
+                            inner_from_json
+                        } else {
+                            let ty = self.type_to_str(&v.ty);
+                            let inner_name = heck::AsPascalCase(&ty);
+                            format!("{name}{inner_name}({inner_from_json})")
+                        };
+                        format!("({i}, final value) || [{i}, final value] => {parsed},")
+                    })
+                    .collect::<String>();
+
+                let implements = self.implements(&name);
+                if self.2.same_class_union {
+                    let runtime_types = u
+                        .cases
+                        .iter()
+                        .map(|c| self.union_case_class(c, &name))
+                        .collect::<Vec<_>>()
+                        .join("', '");
+                    s.push_str(&format!(
+                        "sealed class {name} {implements}{{
+                        {from_json_comment}factory {name}.fromJson(Object? json_) {{
+                            Object? json = json_;
+                            if (json is Map) {{
+                                final rt = json['runtimeType'];
+                                if (rt is String) {{
+                                    json = (const ['{runtime_types}'].indexOf(rt), json);
+                                }} else {{
+                                    final MapEntry(:key, :value) = json.entries.first;
+                                    json = (key is int ? key : int.parse(key! as String), value);
+                                }}
+                            }}
+                            return switch (json) {{ {switch_cases} _ => throw Exception('Invalid JSON $json_'), }};
+                        }}",
+                    ));
+                } else {
+                    s.push_str(&format!(
+                        "sealed class {name} {implements}{{
+                        {from_json_comment}factory {name}.fromJson(Object? json_) {{
+                            Object? json = json_;
+                            if (json is Map) {{
+                                final MapEntry(:key, :value) = json.entries.firstWhere((e) => e.key != 'runtimeType');
+                                json = (key is int ? key : int.parse(key! as String), value);
+                            }}
+                            return switch (json) {{ {switch_cases} _ => throw Exception('Invalid JSON $json_'), }};
+                        }}",
+                    ));
+                }
+                let mut cases_string = String::new();
+                u.cases.iter().enumerate().for_each(|(i, v)| {
+                    let ty = self.type_to_str(&v.ty);
+                    let inner_name = heck::AsPascalCase(&ty);
+                    let docs = extract_dart_docs(&v.docs).unwrap_or("".to_string());
+
+                    if let (true, Some(class_name)) =  (self.2.same_class_union, self.type_class_name(&v.ty)) {
+                        // TODO: improve, does not work for variants or unions since they don't have a default constructor
+                        // s.push_str(&format!("{docs}static const {} = {class_name}.new;", ty.as_var()));
+                        // don't regenerate classes for types that already have a class
+                        class_name
+                    } else {
+                        // TODO: should we use the docs from the union's inner type?
+                        let class_name = format!("{name}{inner_name}");
+                        cases_string.push_str(&docs);
+                        cases_string.push_str(&format!(
+                            "class {class_name} implements {name} {{ final {ty} value; {docs}const {class_name}(this.value);",
+                        ));
+                        add_docs(&mut cases_string, &v.docs);
+                        self.add_methods_trait(&mut cases_string, &class_name, &(i, v));
+                        cases_string.push_str("}");
+                        s.push_str(&format!("{docs}const factory {name}.{}({ty} value) = {class_name};", ty.as_var()));
+                        class_name
+                    };
+                });
+
+                s.push_str("@override Map<String, Object?> toJson();\n");
+                if self.2.same_class_union {
+                    s.push_str(self.method_comment(MethodComment::ToWasm));
+                    let switch = u
+                        .cases
                         .iter()
                         .enumerate()
                         .map(|(i, v)| {
-                            let ty = self.type_to_str(&v.ty);
-                            let inner_name = heck::AsPascalCase(&ty);
-                            format!(
-                                "({i}, final value) => {name}{inner_name}({}),",
-                                self.type_from_json("value", &v.ty),
-                            )
+                            if let Some(class_name) = self.type_class_name(&v.ty) {
+                                let to_wasm = self.type_to_wasm("value", &v.ty);
+                                format!("{class_name}() => ({i}, {to_wasm}),")
+                            } else {
+                                let ty = self.type_to_str(&v.ty);
+                                let class_name = format!("{name}{}", heck::AsPascalCase(&ty));
+                                format!("{class_name}() => value.toWasm(),")
+                            }
                         })
-                        .collect::<String>()
-                ));
-
-                let mut cases_string = String::new();
-                u.cases.iter().enumerate().for_each(|(i, v)| {
-                    add_docs(&mut cases_string, &v.docs);
-                    let ty = self.type_to_str(&v.ty);
-                    let inner_name = heck::AsPascalCase(&ty);
-                    let class_name = format!("{name}{inner_name}");
-                    cases_string.push_str(&format!(
-                        "class {class_name} implements {name} {{ final {ty} value; const {class_name}(this.value);
-                         @override\nMap<String, Object?> toJson() => {{'{i}': {}}};
-                         @override\nString toString() => '{class_name}($value)';
-                         @override\nbool operator ==(Object other) => other is {class_name} && comparator.areEqual(other.value, value);
-                         @override\nint get hashCode => comparator.hashValue(value);
-                        }}",
-                         self.type_to_json("value", &v.ty)
+                        .collect::<String>();
+                    s.push_str(&format!(
+                        "static (int, Object?) toWasm({name} value) => switch (value) {{{switch}}};\n"
                     ));
-                    s.push_str(&format!("const factory {name}.{}({ty} value) = {class_name};", ty.as_var()));
-                });
-
-                s.push_str("\n\nMap<String, Object?> toJson();\n");
+                } else {
+                    s.push_str(self.method_comment(MethodComment::ToWasm));
+                    s.push_str("(int, Object?) toWasm();\n");
+                }
 
                 s.push_str(&format!(
                     "// ignore: unused_field\nstatic const _spec = {};",
@@ -603,63 +1030,58 @@ impl Parsed<'_> {
                 s
             }
             TypeDefKind::Variant(a) => {
+                let from_json_comment = self.method_comment(MethodComment::FromJson);
                 let name = name.unwrap();
+                let switch_value =  a.cases
+                    .iter()
+                    .enumerate()
+                    .map(|(i, v)| {
+                        let inner_name = heck::AsPascalCase(&v.name);
+                        match v.ty {
+                            Some(ty) => format!(
+                                "({i}, final value) || [{i}, final value] => {name}{inner_name}({}),",
+                                self.type_from_json("value", &ty),
+                            ),
+                            None => format!("({i}, null) || [{i}, null] => const {name}{inner_name}(),",),
+                        }
+                    })
+                    .collect::<String>();
+                let implements = self.implements(&name);
                 s.push_str(&format!(
-                    "sealed class {name} {{ factory {name}.fromJson(Object? json_) {{
+                    "sealed class {name} {implements}{{ {from_json_comment}factory {name}.fromJson(Object? json_) {{
                     Object? json = json_;
                     if (json is Map) {{
-                        final k = json.keys.first;
+                        final MapEntry(:key, :value) = json.entries.firstWhere((e) => e.key != 'runtimeType');
                         json = (
-                          k is int ? k : _spec.cases.indexWhere((c) => c.label == k),
-                          json.values.first
+                          key is int ? key : _spec.cases.indexWhere((c) => c.label == key),
+                          value,
                         );
                     }}
-                    return switch (json) {{ {} _ => throw Exception('Invalid JSON $json_'), }};
+                    return switch (json) {{ {switch_value} _ => throw Exception('Invalid JSON $json_'), }};
                 }}",
-                    a.cases
-                        .iter()
-                        .enumerate()
-                        .map(|(i, v)| {
-                            let inner_name = heck::AsPascalCase(&v.name);
-                            match v.ty {
-                                Some(ty) => format!(
-                                    "({i}, final value) => {name}{inner_name}({}),",
-                                    self.type_from_json("value", &ty),
-                                ),
-                                None => format!("({i}, null) => const {name}{inner_name}(),",),
-                            }
-                        })
-                        .collect::<String>()
                 ));
                 let mut cases_string = String::new();
-                a.cases.iter().for_each(|v| {
-                    add_docs(&mut cases_string, &v.docs);
+                a.cases.iter().enumerate().for_each(|(i, v)| {
+                let docs = extract_dart_docs(&v.docs).unwrap_or("".to_string());
+                cases_string.push_str(&docs);
                     let inner_name =  heck::AsPascalCase(&v.name);
                     let class_name = format!("{name}{inner_name}");
                     if let Some(ty) = v.ty {
                         let ty_str =self.type_to_str(&ty);
                         cases_string.push_str(&format!(
-                            "class {class_name} implements {name} {{ final {ty_str} value; const {class_name}(this.value);
-                            @override\nMap<String, Object?> toJson() => {{'{}': {}}};
-                            @override\nString toString() => '{class_name}($value)';
-                            @override\nbool operator ==(Object other) => other is {class_name} && comparator.areEqual(other.value, value);
-                            @override\nint get hashCode => comparator.hashValue(value);
-                         }}", v.name, self.type_to_json("value", &ty)
-                        ));
+                            "class {class_name} implements {name} {{ final {ty_str} value; {docs}const {class_name}(this.value);"));
                         s.push_str(&format!("const factory {name}.{}({ty_str} value) = {class_name};", v.name.as_var()));
                     } else {
-                        cases_string.push_str(&format!(
-                            "class {class_name} implements {name} {{ const {class_name}();
-                            @override\nMap<String, Object?> toJson() => {{'{}': null}};
-                            @override\nString toString() => '{class_name}()';
-                            @override\nbool operator ==(Object other) => other is {class_name};
-                            @override\nint get hashCode => ({class_name}).hashCode;
-                        }}", v.name,
-                        ));
+                        cases_string.push_str(&format!("class {class_name} implements {name} {{ {docs}const {class_name}();" ));
                         s.push_str(&format!("const factory {name}.{}() = {class_name};", v.name.as_var()));
                     }
+                    self.add_methods_trait(&mut cases_string, &class_name,&(i, v));
+                    cases_string.push_str("}");
                 });
-                s.push_str("\n\nMap<String, Object?> toJson();\n");
+
+                s.push_str("@override Map<String, Object?> toJson();\n");
+                s.push_str(self.method_comment(MethodComment::ToWasm));
+                s.push_str("(int, Object?) toWasm();\n");
                 s.push_str(&format!(
                     "static const _spec = {};",
                     self.type_def_to_spec(&ty)
@@ -670,61 +1092,63 @@ impl Parsed<'_> {
             }
             TypeDefKind::Flags(f) => {
                 let name = name.unwrap();
-                let num_bytes = ((f.flags.len() + 32 - 1) / 32) * 4;
+                let num_flags = f.flags.len();
+                let from_bool = f
+                    .flags
+                    .iter()
+                    .map(|v| format!("bool {} = false", v.name.as_var()))
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                let from_bool_content = f
+                    .flags
+                    .iter()
+                    .map(|v| {
+                        format!(
+                            "if ({}) value_.{} = true;",
+                            v.name.as_var(),
+                            v.name.as_var()
+                        )
+                    })
+                    .collect::<String>();
+                let implements = self.implements(&name);
                 s.push_str(&format!(
-                    "class {name} {{ final ByteData flagBits; const {name}(this.flagBits);
-                    {name}.none(): flagBits = ByteData({num_bytes});
-                    {name}.all(): flagBits = flagBitsFromJson(
-                        Map.fromIterables(
-                          _spec.labels,
-                          List.filled(_spec.labels.length, true),
-                        ),
-                        _spec,
-                      );
+                    "class {name} {implements}{{ 
+                    /// The flags represented as a set of bits.
+                    final FlagsBits flagsBits; 
+                    /// Creates an instance where the flags are represented by [flagsBits].
+                    /// The number of flags must match the number of flags in the type ({num_flags}).
+                    {name}(this.flagsBits): assert(flagsBits.numFlags == {num_flags});
+                    /// An instance where all flags are set to `false`.
+                    {name}.none(): flagsBits = FlagsBits.none(numFlags: {num_flags});
+                    /// An instance where all flags are set to `true`.
+                    {name}.all(): flagsBits = FlagsBits.all(numFlags: {num_flags});
+                    /// Creates an instance with flags booleans passed as arguments.
                     factory {name}.fromBool({{{from_bool}}}) {{
-                        final _value = {name}.none();
+                        final value_ = {name}.none();
                         {from_bool_content}
-                        return _value;
-                    }}
-
-                    factory {name}.fromJson(Object? json) {{
-                        final flagBits = flagBitsFromJson(json, _spec);
-                        return {name}(flagBits);
-                    }}
-
-                    Object toJson() => Uint32List.sublistView(flagBits);
-                    @override\nString toString() => '{name}(${{[{to_string_content}].join(', ')}})';
-                    @override\nbool operator ==(Object other) => other is {name} 
-                        && comparator.areEqual(Uint32List.sublistView(flagBits), Uint32List.sublistView(other.flagBits));
-                    @override\nint get hashCode => comparator.hashValue(Uint32List.sublistView(flagBits));
-                    
-                    int _index(int i) => flagBits.getUint32(i, Endian.little);
-                    void _setIndex(int i, int flag, bool enable) {{
-                        final currentValue = _index(i);
-                        flagBits.setUint32(
-                            i,
-                            enable ? (flag | currentValue) : ((~flag) & currentValue),
-                            Endian.little,
-                        );
-                    }}
-                    ",
-                    from_bool = f.flags.iter().map(|v| format!("bool {} = false", v.name.as_var())).collect::<Vec<_>>().join(", "),
-                    from_bool_content = f.flags.iter().map(|v| format!("if ({}) _value.{} = true;", v.name.as_var(), v.name.as_var())).collect::<String>(),
-                    to_string_content = f.flags.iter().map(|v| format!("if ({}) '{}',", v.name.as_var(), v.name.as_var())).collect::<String>(),
+                        return value_;
+                    }}"
                 ));
+                self.add_methods_trait(&mut s, &name, f);
+
+                s.push_str(&format!(
+                    "
+/// Returns the bitwise AND of the flags in this and [other].
+{name} operator &({name} other) => {name}(flagsBits & other.flagsBits);
+/// Returns the bitwise OR of the flags in this and [other].
+{name} operator |({name} other) => {name}(flagsBits | other.flagsBits);
+/// Returns the bitwise XOR of the flags in this and [other].
+{name} operator ^({name} other) => {name}(flagsBits ^ other.flagsBits);
+/// Returns the flags inverted (negated).
+{name} operator ~() => {name}(~flagsBits);"
+                ));
+
                 f.flags.iter().enumerate().for_each(|(i, v)| {
                     let property = v.name.as_var();
-                    let index = (i / 32) * 4;
-                    let flag = 2_u32.pow(i.try_into().unwrap());
-                    let getter = format!("_index({index})");
-                    // s.push_str(&format!(
-                    //     "\n\nstatic const {property}IndexAndFlag = (index:{index}, flag:{flag});"
-                    // ));
-
                     add_docs(&mut s, &v.docs);
-                    s.push_str(&format!("bool get {property} => ({getter} & {flag}) != 0;"));
                     s.push_str(&format!(
-                        "set {property}(bool enable) => _setIndex({index}, {flag}, enable);",
+                        "bool get {property} => flagsBits[{i}];
+                         set {property}(bool enable) => flagsBits[{i}] = enable;"
                     ));
                 });
                 s.push_str(&format!(
@@ -734,13 +1158,85 @@ impl Parsed<'_> {
                 s.push_str("}");
                 s
             }
+            TypeDefKind::Resource => {
+                let name = name.unwrap();
+                let implements = self.implements(&name);
+                let world_name = heck::AsPascalCase(format!(
+                    "{}World",
+                    self.0.worlds.iter().last().unwrap().1.name
+                ));
+                let name_var = name.as_var();
+
+                s.push_str(&format!(
+                    "class {name} {implements}{{
+                    final int _rep;
+                    final {world_name} _world;
+
+                    {name}._(this._rep, this._world) {{
+                        _world._{name_var}Finalizer.attach(this, _rep);
+                    }}
+
+                    factory {name}.fromJson(Object? json) {{
+                        return {name}._(json! as int, {world_name}.currentZoneWorld()!);
+                    }}
+                    
+                    @override
+                    Object? toJson() => _rep;
+
+                    int toWasm() => _rep;"
+                ));
+                match ty.owner {
+                    TypeOwner::Interface(ii) => {
+                        self.0.interfaces[ii]
+                            .functions
+                            .iter()
+                            .for_each(|(_f_name, f)| {
+                                if let Some(res) = function_resource(&f.kind) {
+                                    if res == id_ty {
+                                        self.add_function(
+                                            &mut s,
+                                            f,
+                                            FuncKind::Resource(ty.owner),
+                                            false,
+                                        );
+                                    }
+                                };
+                            })
+                    }
+                    TypeOwner::World(ii) => {
+                        self.0.worlds[ii].exports.iter().for_each(|(_f_name, f)| {
+                            if let WorldItem::Function(f) = f {
+                                if let Some(res) = function_resource(&f.kind) {
+                                    if res == id_ty {
+                                        self.add_function(
+                                            &mut s,
+                                            f,
+                                            FuncKind::Resource(ty.owner),
+                                            false,
+                                        );
+                                    }
+                                };
+                            }
+                        })
+                    }
+                    TypeOwner::None => {}
+                };
+
+                s.push_str(&format!(
+                    "static const _spec = ResourceType('{}');",
+                    self.type_handle_id(ty)
+                ));
+                s.push_str("}"); // close  class
+                s
+            }
             TypeDefKind::Type(ty) => self.type_to_dart_definition(ty),
             TypeDefKind::List(_)
             | TypeDefKind::Tuple(_)
             | TypeDefKind::Option(_)
             | TypeDefKind::Result(_)
             | TypeDefKind::Future(_)
-            | TypeDefKind::Stream(_) => {
+            | TypeDefKind::Stream(_)
+            | TypeDefKind::Handle(_) => {
                 if let Some(name) = name {
                     s.push_str(&format!(
                         "typedef {name} = {};",
@@ -751,5 +1247,14 @@ impl Parsed<'_> {
             }
             TypeDefKind::Unknown => todo!(),
         }
+    }
+}
+
+pub fn function_resource(kind: &FunctionKind) -> Option<&TypeId> {
+    match kind {
+        FunctionKind::Constructor(res) | FunctionKind::Method(res) | FunctionKind::Static(res) => {
+            Some(res)
+        }
+        _ => None,
     }
 }

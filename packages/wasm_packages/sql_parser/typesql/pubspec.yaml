@@ -1,0 +1,22 @@
+name: typesql
+description: A starting point for Dart libraries or applications.
+version: 0.0.1
+publish_to: none
+# repository: https://github.com/my_org/my_repo
+
+environment:
+  sdk: ^3.0.0
+
+# Add regular dependencies here.
+dependencies:
+  sql_parser:
+    path: ../
+  meta: ^1.9.1
+  sqlite3: ^2.0.0
+  recase: ^4.1.0
+  wasm_wit_component: ^0.0.1
+  # path: ^1.8.0
+
+dev_dependencies:
+  lints: ^2.0.0
+  test: ^1.21.0
