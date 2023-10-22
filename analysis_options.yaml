@@ -33,6 +33,7 @@ analyzer:
     use_super_parameters: warning
     unawaited_futures: warning
     prefer_final_locals: warning
+    unnecessary_brace_in_string_interps: warning
 
 # You can customize the lint rules set to your own liking. A list of all rules
 # can be found at https://dart-lang.github.io/linter/lints/options/options.html
@@ -41,7 +42,6 @@ linter:
     avoid_redundant_argument_values: false
     omit_local_variable_types: false
     sort_constructors_first: false
-    unnecessary_brace_in_string_interps: false
     cascade_invocations: false
     join_return_with_assignment: false
 

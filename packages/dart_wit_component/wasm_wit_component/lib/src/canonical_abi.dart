@@ -1597,7 +1597,7 @@ void store_variant(Context cx, VariantValue v, int ptr, List<Case> cases) {
     final case_index = find_case(label, cases);
     if (case_index != -1) return (case_index, value);
   }
-  throw Exception('no case matches ${v} ${cases}');
+  throw Exception('no case matches $v $cases');
 }
 // #
 

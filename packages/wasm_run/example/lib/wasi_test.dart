@@ -184,8 +184,8 @@ void wasiTest({TestArgs? testArgs}) {
       ),
     );
     print(
-      'allow directory: ${directoryToAllow}'
-      ' wasmGuestFilePath: ${wasmGuestFilePath}',
+      'allow directory: $directoryToAllow'
+      ' wasmGuestFilePath: $wasmGuestFilePath',
     );
     builder1.addImport(
       'example_imports',
@@ -254,7 +254,7 @@ void wasiTest({TestArgs? testArgs}) {
 
     final readFileSize = instance1.getFunction('read_file_size')!;
     {
-      print('Wasm file ${wasmGuestFilePath}');
+      print('Wasm file $wasmGuestFilePath');
       // final bb = utf8.encode(File(wasmFile).absolute.path);
       final bb = utf8.encode(wasmGuestFilePath);
 
