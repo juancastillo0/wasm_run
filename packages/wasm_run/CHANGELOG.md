@@ -1,3 +1,7 @@
+## 0.0.1+3
+
+ - Expose `wasm_run:setup` CLI
+
 ## 0.0.1+2
 
  - Restrict flutter_rust_bridge: ">=1.72.2 <1.80.0" due to breaking change
