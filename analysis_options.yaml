@@ -116,7 +116,6 @@ linter:
     avoid_redundant_argument_values: false
     omit_local_variable_types: false
     sort_constructors_first: false
-    unnecessary_brace_in_string_interps: false
     cascade_invocations: false
     join_return_with_assignment: false
 

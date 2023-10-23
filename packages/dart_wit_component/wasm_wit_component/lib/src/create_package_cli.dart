@@ -223,7 +223,7 @@ class CreatePackageArgs {
         },
         if (asyncWorker) '${dartName}_worker.dart': libDartWorkerFile(),
         // TODO: wasm file
-        '${dartName}.dart': libDartFile(),
+        '$dartName.dart': libDartFile(),
       },
       rustName: {
         'wit': {
@@ -309,7 +309,7 @@ analyzer:
 
   # You might want to exclude generated files from dart analysis
   exclude:
-    # - "lib/src/${dartWitGen}"
+    # - "lib/src/$dartWitGen"
 ''';
   }
 
@@ -331,7 +331,7 @@ cp target/wasm32-unknown-unknown/release/$rustName.wasm ../lib/assets/$rustName.
 ### Generate Wit Dart async bindings
 
 ```sh
-dart run wasm_wit_component:generate ${rustName}/wit/${witPackageName}.wit lib/src/${dartWitWorkerGen} --async-worker
+dart run wasm_wit_component:generate $rustName/wit/$witPackageName.wit lib/src/$dartWitWorkerGen --async-worker
 ```
 ''';
     }
@@ -349,9 +349,9 @@ cp target/wasm32-wasi/release/$rustName.wasm ../lib/assets/
 ## Generate Wit Dart bindings
 
 ```sh
-dart run wasm_wit_component:generate ${rustName}/wit/${witPackageName}.wit lib/src/${dartWitGen}
+dart run wasm_wit_component:generate $rustName/wit/$witPackageName.wit lib/src/$dartWitGen
 ```
-${asyncWorkerSection}''';
+$asyncWorkerSection''';
   }
 
   String exampleDartFile() {
@@ -362,7 +362,7 @@ import 'package:$dartName/$dartName.dart';
 import 'package:wasm_wit_component/wasm_wit_component.dart';
 
 Future<void> main() async {
-  final world = await create${packageNameType}(
+  final world = await create$packageNameType(
     wasiConfig: WasiConfig(preopenedDirs: [], webBrowserFileSystem: {}),
     imports: ${packageNameType}WorldImports(
       mapInteger: ({required value}) => value * 2,
@@ -391,7 +391,7 @@ void main() {
   group('$dartName api', () {
     test('run', () async {
       final List<int> integers = [];
-      final world = await create${packageNameType}(
+      final world = await create$packageNameType(
         wasiConfig: WasiConfig(preopenedDirs: [], webBrowserFileSystem: {}),
         imports: ${packageNameType}WorldImports(
           mapInteger: ({required value}) {
@@ -426,22 +426,22 @@ void main() {
         return '''
 import 'package:wasm_run/load_module.dart';
 import 'package:wasm_run/wasm_run.dart';
-import 'package:${dartName}/src/${dartWitGen}';
+import 'package:$dartName/src/$dartWitGen';
 
-export 'package:${dartName}/src/${dartWitGen}';
+export 'package:$dartName/src/$dartWitGen';
 
 /// Creates a [${packageNameType}World] with the given [wasiConfig].
 /// It setsUp the dynamic library for wasm_run in native platforms and
-/// loads the ${dartName} WASM module from the file system or
-/// from the url pointing to 'lib/${rustName}.wasm'.
+/// loads the $dartName WASM module from the file system or
+/// from the url pointing to 'lib/$rustName.wasm'.
 ///
 /// If [loadModule] is provided, it will be used to load the WASM module.
 /// This can be useful if you want to provide a different configuration
 /// or implementation, or you are loading it from Flutter assets or
 /// from a different HTTP endpoint. By default, it will load the WASM module
-/// from the file system in `lib/${rustName}.wasm` either reading it directly
+/// from the file system in `lib/$rustName.wasm` either reading it directly
 /// in native platforms or with a GET request for Dart web.
-Future<${packageNameType}World> create${packageNameType}({
+Future<${packageNameType}World> create$packageNameType({
   required WasiConfig wasiConfig,
   required ${packageNameType}WorldImports imports,
   Future<WasmModule> Function()? loadModule,
@@ -454,8 +454,8 @@ Future<${packageNameType}World> create${packageNameType}({
     module = await loadModule();
   } else {
     final uri = await WasmFileUris.uriForPackage(
-      package: '${dartName}',
-      libPath: 'assets/${rustName}.wasm',
+      package: '$dartName',
+      libPath: 'assets/$rustName.wasm',
       envVariable: '${ReCase(dartName).constantCase}_WASM_PATH',
     );
     final uris = WasmFileUris(uri: uri);
@@ -482,20 +482,20 @@ import 'dart:io';
 
 import 'package:wasm_run/load_module.dart';
 import 'package:wasm_run/wasm_run.dart';
-import 'package:${dartName}/src/${dartWitGen}';
+import 'package:$dartName/src/$dartWitGen';
 
-export 'package:${dartName}/src/${dartWitGen}';
+export 'package:$dartName/src/$dartWitGen';
 
 /// Creates a [${packageNameType}World] with the given [imports].
 /// It setsUp the dynamic library for wasm_run in native platforms and
-/// loads the ${dartName} WASM module from the file system or
-/// from the url pointing to 'lib/${rustName}.wasm'.
+/// loads the $dartName WASM module from the file system or
+/// from the url pointing to 'lib/$rustName.wasm'.
 ///
 /// If [loadModule] is provided, it will be used to load the WASM module.
 /// This can be useful if you want to provide a different configuration
 /// or implementation, or you are loading it from Flutter assets or
 /// from a different HTTP endpoint. By default, it will load the WASM module
-/// from the file system in `lib/${rustName}.wasm` either reading it directly
+/// from the file system in `lib/$rustName.wasm` either reading it directly
 /// in native platforms or with a GET request for Dart web.
 ///
 /// This version of the function is used to create a world that supports
@@ -514,8 +514,8 @@ Future<${packageNameType}World> create${packageNameType}Worker({
     module = await loadModule();
   } else {
     final uri = await WasmFileUris.uriForPackage(
-      package: '${dartName}',
-      libPath: 'assets/${rustName}.threads.wasm',
+      package: '$dartName',
+      libPath: 'assets/$rustName.threads.wasm',
       envVariable: '${ReCase(dartName).constantCase}_WASM_THREADS_PATH',
     );
     final uris = WasmFileUris(uri: uri);
@@ -546,8 +546,8 @@ Future<${packageNameType}World> create${packageNameType}Worker({
 wit_bindgen::generate!("$witPackageName");
 
 // Comment out the following lines to include other generated wit interfaces
-// use exports::${dartName}_namespace::${dartName}::*;
-// use ${dartName}_namespace::${dartName}::interface_name;
+// use exports::${dartName}_namespace::$dartName::*;
+// use ${dartName}_namespace::$dartName::interface_name;
 
 // Define a custom type and implement the generated trait for it which represents
 // implementing all the necessary exported interfaces for this component.
@@ -577,7 +577,7 @@ impl $packageNameType for WitImplementation {
         return '''
 package $witPackageName-namespace:$witPackageName
 
-world ${witPackageName} {
+world $witPackageName {
     /// A record is a class with named fields
     /// There are enum, list, variant, option, result, tuple and union types
     record model {

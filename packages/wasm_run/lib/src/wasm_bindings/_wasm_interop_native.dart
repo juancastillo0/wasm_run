@@ -288,8 +288,8 @@ class _References {
     final results = function.results!;
     if (results.length != output.length) {
       throw Exception(
-        'Invalid number of results: expected ${results}'
-        ' got ${output}. Function: $function.',
+        'Invalid number of results: expected $results'
+        ' got $output. Function: $function.',
       );
     }
     if (output.isEmpty) {

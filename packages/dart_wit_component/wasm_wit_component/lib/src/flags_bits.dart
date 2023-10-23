@@ -57,7 +57,7 @@ class FlagsBits implements ToJsonSerializable {
       return FlagsBits.fromBooleans(json_.cast<bool>());
     }
     if (json_ is! List || numFlags == null) {
-      throw Exception('Invalid JSON ${json_} for FlagsBits(keys:${flagsKeys})');
+      throw Exception('Invalid JSON $json_ for FlagsBits(keys:$flagsKeys)');
     }
     final u32List = json_.cast<int>();
     final flagBits = ByteData(u32List.length * 4);
@@ -160,7 +160,7 @@ class FlagsBits implements ToJsonSerializable {
       _bitsAsUint32List.length,
       (i) => _index(i).toRadixString(2),
     ).join(',');
-    return 'FlagsBits(numFlags: $numFlags, ${bits})';
+    return 'FlagsBits(numFlags: $numFlags, $bits)';
   }
 
   @override
