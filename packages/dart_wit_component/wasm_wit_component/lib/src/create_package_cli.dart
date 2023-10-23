@@ -288,7 +288,7 @@ flutter:
     - lib/assets/
 
 dependencies:
-  wasm_run: ^0.0.1
+  wasm_run: ^0.1.0
   wasm_wit_component: ^0.0.1
 
 dev_dependencies:

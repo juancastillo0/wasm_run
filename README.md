@@ -301,14 +301,14 @@ When using Flutter:
 dependencies:
   flutter:
     sdk: flutter
-  wasm_run_flutter: 0.0.1
+  wasm_run_flutter: 0.1.0
 ```
 
 When using it in a pure Dart application:
 
 ```yaml
 dependencies:
-  wasm_run: 0.0.1
+  wasm_run: 0.1.0
 ```
 
 Fetch the dynamic libraries for your platform by running (or the function `WasmRunLibrary.setUp`): 
@@ -413,7 +413,7 @@ An usage example can be found in the wit component [generator function](packages
 
 The `WasmRunLibrary` static utility class allows you to configure the external and dynamic libraries used by `wasm_run`.
 
-- You can use the `String version` getter to retrieve the package version ("0.0.1").
+- You can use the `String version` getter to retrieve the package version ("0.1.0").
 - Set the dynamic library with the `set` static method.
 - Set up the library using `setUp`. 
   - Flutter: This will do nothing in Flutter since the libraries are already configured for you. 
