@@ -21,7 +21,7 @@ and the Flutter guide for
 
 A Web Assembly executor for the Dart programming language.
 
-Currently it uses the [`wasmtime 9.0`](https://github.com/bytecodealliance/wasmtime) or [`wasmi 0.30`](https://github.com/paritytech/wasmi) Rust crates for parsing and executing WASM modules. Bindings are created using [`package:flutter_rust_bridge`](https://github.com/fzyzcjy/flutter_rust_bridge).
+Currently it uses the [`wasmtime 14.0`](https://github.com/bytecodealliance/wasmtime) or [`wasmi 0.31`](https://github.com/paritytech/wasmi) Rust crates for parsing and executing WASM modules. Bindings are created using [`package:flutter_rust_bridge`](https://github.com/fzyzcjy/flutter_rust_bridge).
 
 | Pub                                                                                                            | Source                                                                  | Description                                                                                                                                       |
 | -------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -83,7 +83,7 @@ Currently it uses the [`wasmtime 9.0`](https://github.com/bytecodealliance/wasmt
 
 ## Supported Wasm Features
 
-| Feature\Runtime               | Wasmtime 9.0    | Wasmi 0.30 | Chrome<sup>[1]</sup> |
+| Feature\Runtime               | Wasmtime 14.0    | Wasmi 0.31 | Chrome<sup>[1]</sup> |
 | ----------------------------- | --------------- | ---------- | -------------------- |
 | multi_value                   | ✅               | ✅          | ✅                    |
 | bulk_memory                   | ✅               | ✅          | ✅                    |
@@ -124,15 +124,15 @@ We provide [`package:wasm_run_flutter`](./packages/wasm_run_flutter/) to bundle 
 
 | Platform | Architecture               | Runtime<sup>[1]</sup> |
 | -------- | -------------------------- | --------------------- |
-| Linux    | aarch64 x86_64             | Wasmtime 9.0          |
-| MacOS    | aarch64 x86_64             | Wasmtime 9.0          |
-| Windows  | aarch64 x86_64             | Wasmtime 9.0          |
-| iOS      | aarch64 x86_64 aarch64-sim | Wasmi 0.30            |
-| Android  | armeabi-v7a x86 x86_64     | Wasmi 0.30            |
-| Android  | arm64-v8a                  | Wasmtime 9.0          |
-| Web      | N/A                        | Browser/Wasmi 0.30    |
+| Linux    | aarch64 x86_64             | Wasmtime 14.0          |
+| MacOS    | aarch64 x86_64             | Wasmtime 14.0          |
+| Windows  | aarch64 x86_64             | Wasmtime 14.0          |
+| iOS      | aarch64 x86_64 aarch64-sim | Wasmi 0.31            |
+| Android  | armeabi-v7a x86 x86_64     | Wasmi 0.31            |
+| Android  | arm64-v8a                  | Wasmtime 14.0          |
+| Web      | N/A                        | Browser/Wasmi 0.31    |
 
-- [1]: Wasmi 0.30 supports any platform that Rust could be compiled to.
+- [1]: Wasmi 0.31 supports any platform that Rust could be compiled to.
 
 ### Pure Dart (CLI/Backend/Web)
 
@@ -201,7 +201,7 @@ You may also configure the WASM imports are by using the `mapWorkerWasmImports` 
 
 ## Web Assembly System Interface (WASI)
 
-We support [WASI](https://github.com/WebAssembly/WASI) [wasi_snapshot_preview1](https://github.com/WebAssembly/WASI/blob/main/legacy/preview1/docs.md) through the [wasmtime_wasi](https://docs.rs/wasmtime-wasi/9.0.2/wasmtime_wasi/) or [wasmi_wasi](https://docs.rs/wasmi_wasi/0.30.0/wasmi_wasi) Rust crates, [chosen depending on the target platform](#runtime-for-platform). 
+We support [WASI](https://github.com/WebAssembly/WASI) [wasi_snapshot_preview1](https://github.com/WebAssembly/WASI/blob/main/legacy/preview1/docs.md) through the [wasmtime_wasi](https://docs.rs/wasmtime-wasi/14.0.1/wasmtime_wasi/) or [wasmi_wasi](https://docs.rs/wasmi_wasi/0.31.0/wasmi_wasi) Rust crates, [chosen depending on the target platform](#runtime-for-platform). 
 
 In the web platform we support WASI modules by using [bjorn3/browser_wasi_shim](https://github.com/bjorn3/browser_wasi_shim). The file system directories exported by the host are in-memory Maps where the files are represented as `Uint8List` buffers. Other APIs, such as time and random are implemented using the JavaScript browser APIs.
 

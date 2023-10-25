@@ -116,11 +116,11 @@ void testAll({TestArgs? testArgs}) {
     expect(runtime.name, isIn(['wasmi', 'wasmtime', 'browser']));
     switch (runtime.name) {
       case 'wasmi':
-        expect(runtime.version, '0.30.0');
+        expect(runtime.version, '0.31.0');
         expect(runtime.isBrowser, false);
         break;
       case 'wasmtime':
-        expect(runtime.version, '9.0.2');
+        expect(runtime.version, '14.0.1');
         expect(runtime.isBrowser, false);
         break;
       case 'browser':

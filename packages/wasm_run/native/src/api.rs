@@ -35,7 +35,7 @@ fn default_val(ty: &ValueType) -> Value {
         ValueType::I64 => Value::I64(0),
         ValueType::F32 => Value::F32(0),
         ValueType::F64 => Value::F64(0),
-        ValueType::V128 => Value::V128(0),
+        ValueType::V128 => Value::V128(0.into()),
         ValueType::ExternRef => Value::ExternRef(None),
         ValueType::FuncRef => Value::FuncRef(None),
     }
@@ -90,7 +90,10 @@ fn make_wasi_ctx(
                 let file = fs::File::open(value)?;
                 let wasm_file =
                     wasmtime_wasi::file::File::from_cap_std(cap_std::fs::File::from_std(file));
-                wasi.push_file(Box::new(wasm_file))?;
+                wasi.push_file(
+                    Box::new(wasm_file),
+                    wasi_common::file::FileAccessMode::all(),
+                )?;
             }
         }
 
@@ -365,7 +368,7 @@ impl WasmRunModuleId {
         thread_index: usize,
         new_context: StoreContextMut<'_, StoreState>,
     ) -> RustOpaque<WFunc> {
-        let raw_id = unsafe { func.to_raw(&mut m.store) };
+        let raw_id = unsafe { std::mem::transmute(func.to_raw(&mut m.store)) };
         let hf = m.store.data().functions.get(&raw_id).unwrap();
         let ff = Self::_create_function(
             new_context,
@@ -751,7 +754,7 @@ impl WasmRunModuleId {
                 Ok(())
             },
         );
-        let raw_id = unsafe { func.to_raw(&mut store) };
+        let raw_id = unsafe { std::mem::transmute(func.to_raw(&mut store)) };
         store.data_mut().functions.insert(raw_id, hf);
         Ok(SyncReturn(RustOpaque::new(func.into())))
     }

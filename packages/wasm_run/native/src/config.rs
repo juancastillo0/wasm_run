@@ -42,7 +42,10 @@ impl WasiConfigNative {
         use wasmtime_wasi::{ambient_authority, WasiCtxBuilder};
 
         // add wasi to linker
+        #[cfg(not(feature = "wasmtime"))]
         let mut wasi_builder = WasiCtxBuilder::new();
+        #[cfg(feature = "wasmtime")]
+        let mut wasi_builder = &mut WasiCtxBuilder::new();
         if self.inherit_args {
             wasi_builder = wasi_builder.inherit_args()?;
         }
@@ -107,7 +110,7 @@ pub struct WasmRuntimeFeatures {
     /// For example, "wasmi" or "wasmtime".
     pub name: String,
     /// The version of the runtime.
-    /// For example, "0.30.0" or "9.0.2".
+    /// For example, "0.31.0" or "14.0.1".
     pub version: String,
     /// Is `true` if the runtime is the one provided by the browser.
     pub is_browser: bool,
@@ -125,7 +128,7 @@ impl Default for WasmRuntimeFeatures {
     fn default() -> Self {
         WasmRuntimeFeatures {
             name: "wasmi".to_string(),
-            version: "0.30.0".to_string(),
+            version: "0.31.0".to_string(),
             is_browser: false,
             supported_features: WasmFeatures::supported(),
             default_features: WasmFeatures::default(),
@@ -136,7 +139,7 @@ impl Default for WasmRuntimeFeatures {
     fn default() -> Self {
         WasmRuntimeFeatures {
             name: "wasmtime".to_string(),
-            version: "9.0.2".to_string(),
+            version: "14.0.1".to_string(),
             is_browser: false,
             supported_features: WasmFeatures::supported(),
             default_features: WasmFeatures::default(),
@@ -340,7 +343,7 @@ pub struct WasmFeatures {
     /// The WebAssembly Relaxed SIMD proposal
     pub relaxed_simd: bool,
     /// The WebAssembly threads proposal, shared memory and atomics
-    /// https://docs.rs/wasmtime/9.0.2/wasmtime/struct.Config.html#method.wasm_threads
+    /// https://docs.rs/wasmtime/14.0.1/wasmtime/struct.Config.html#method.wasm_threads
     pub threads: bool,
     /// The WebAssembly tail-call proposal
     pub tail_call: bool,

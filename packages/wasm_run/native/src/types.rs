@@ -68,7 +68,7 @@ impl WasmVal {
             WasmVal::i64(i) => wasmtime::Val::I64(i),
             WasmVal::f32(i) => wasmtime::Val::F32(i.to_bits()),
             WasmVal::f64(i) => wasmtime::Val::F64(i.to_bits()),
-            WasmVal::v128(i) => wasmtime::Val::V128(u128::from_ne_bytes(i)),
+            WasmVal::v128(i) => wasmtime::Val::V128(wasmtime::V128::from(u128::from_ne_bytes(i))),
             WasmVal::funcRef(i) => wasmtime::Val::FuncRef(i.map(|f| f.func_wasmtime)),
             WasmVal::externRef(i) => wasmtime::Val::ExternRef(i.map(wasmtime::ExternRef::new)),
         }
@@ -79,7 +79,7 @@ impl WasmVal {
         match val {
             wasmtime::Val::I32(i) => WasmVal::i32(i),
             wasmtime::Val::I64(i) => WasmVal::i64(i),
-            wasmtime::Val::V128(i) => WasmVal::v128(i.to_ne_bytes()),
+            wasmtime::Val::V128(i) => WasmVal::v128(i.as_u128().to_ne_bytes()),
             wasmtime::Val::F32(i) => WasmVal::f32(f32::from_bits(i)),
             wasmtime::Val::F64(i) => WasmVal::f64(f64::from_bits(i)),
             wasmtime::Val::FuncRef(i) => WasmVal::funcRef(i.map(|f| RustOpaque::new(f.into()))),
@@ -112,7 +112,7 @@ impl From<&GlobalType> for GlobalTy {
 impl From<&wasmtime::GlobalType> for GlobalTy {
     fn from(value: &wasmtime::GlobalType) -> Self {
         GlobalTy {
-            value: (*value.content()).into(),
+            value: value.content().into(),
             mutable: value.mutability() == wasmtime::Mutability::Var,
         }
     }
@@ -145,7 +145,7 @@ impl From<&TableType> for TableTy {
 impl From<&wasmtime::TableType> for TableTy {
     fn from(value: &wasmtime::TableType) -> Self {
         TableTy {
-            element: value.element().into(),
+            element: (&value.element()).into(),
             minimum: value.minimum(),
             maximum: value.maximum(),
         }
@@ -186,8 +186,8 @@ impl From<&ValueType> for ValueTy {
 }
 
 #[cfg(feature = "wasmtime")]
-impl From<wasmtime::ValType> for ValueTy {
-    fn from(value: wasmtime::ValType) -> Self {
+impl From<&wasmtime::ValType> for ValueTy {
+    fn from(value: &wasmtime::ValType) -> Self {
         match value {
             wasmtime::ValType::I32 => ValueTy::i32,
             wasmtime::ValType::I64 => ValueTy::i64,
@@ -325,8 +325,8 @@ impl From<&FuncType> for FuncTy {
 impl From<&wasmtime::FuncType> for FuncTy {
     fn from(func: &wasmtime::FuncType) -> Self {
         FuncTy {
-            parameters: func.params().map(ValueTy::from).collect(),
-            results: func.results().map(ValueTy::from).collect(),
+            parameters: func.params().map(|a| ValueTy::from(&a)).collect(),
+            results: func.results().map(|a| ValueTy::from(&a)).collect(),
         }
     }
 }
