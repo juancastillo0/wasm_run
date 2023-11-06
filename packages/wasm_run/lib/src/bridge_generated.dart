@@ -1359,7 +1359,7 @@ class WasmFeatures {
   final bool relaxedSimd;
 
   /// The WebAssembly threads proposal, shared memory and atomics
-  /// https://docs.rs/wasmtime/14.0.1/wasmtime/struct.Config.html#method.wasm_threads
+  /// https://docs.rs/wasmtime/14.0.4/wasmtime/struct.Config.html#method.wasm_threads
   final bool threads;
 
   /// The WebAssembly tail-call proposal
@@ -1829,7 +1829,7 @@ class WasmRuntimeFeatures {
   final String name;
 
   /// The version of the runtime.
-  /// For example, "0.31.0" or "14.0.1".
+  /// For example, "0.31.0" or "14.0.4".
   final String version;
 
   /// Is `true` if the runtime is the one provided by the browser.
