@@ -110,7 +110,7 @@ pub struct WasmRuntimeFeatures {
     /// For example, "wasmi" or "wasmtime".
     pub name: String,
     /// The version of the runtime.
-    /// For example, "0.31.0" or "14.0.1".
+    /// For example, "0.31.0" or "14.0.4".
     pub version: String,
     /// Is `true` if the runtime is the one provided by the browser.
     pub is_browser: bool,
@@ -139,7 +139,7 @@ impl Default for WasmRuntimeFeatures {
     fn default() -> Self {
         WasmRuntimeFeatures {
             name: "wasmtime".to_string(),
-            version: "14.0.1".to_string(),
+            version: "14.0.4".to_string(),
             is_browser: false,
             supported_features: WasmFeatures::supported(),
             default_features: WasmFeatures::default(),
@@ -343,7 +343,7 @@ pub struct WasmFeatures {
     /// The WebAssembly Relaxed SIMD proposal
     pub relaxed_simd: bool,
     /// The WebAssembly threads proposal, shared memory and atomics
-    /// https://docs.rs/wasmtime/14.0.1/wasmtime/struct.Config.html#method.wasm_threads
+    /// https://docs.rs/wasmtime/14.0.4/wasmtime/struct.Config.html#method.wasm_threads
     pub threads: bool,
     /// The WebAssembly tail-call proposal
     pub tail_call: bool,
