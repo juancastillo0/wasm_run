@@ -9,5 +9,6 @@ edition = "2021"
 crate-type = ['cdylib']
 
 [dependencies]
-wit-bindgen = { git = "https://github.com/bytecodealliance/wit-bindgen", version = "0.7.0", rev = "131746313de2f90d2688afbbc40c4a7ca309fe0d" }
+# wit-bindgen = { git = "https://github.com/bytecodealliance/wit-bindgen", version = "0.7.0", rev = "131746313de2f90d2688afbbc40c4a7ca309fe0d" }
+wit-bindgen = { git = "https://github.com/juancastillo0/wit-bindgen", rev = "efca123130874d29634539c1b3def11dc1d4d488" }
 sqlparser = "0.35.0"

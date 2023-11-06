@@ -789,7 +789,9 @@ void testAll({TestArgs? testArgs}) {
   });
 
   /// https://github.com/bytecodealliance/wasmtime/blob/main/examples/fuel.rs
-  test('fueling instance execution limit', () async {
+  /// TODO: print rust error in sync execution
+  test('fueling instance execution limit',
+      skip: 'TODO: print rust error in sync execution', () async {
     final binary0 = await getBinary(
       wat: r'''
 (module

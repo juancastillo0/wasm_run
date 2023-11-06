@@ -54,8 +54,14 @@ scripts:
     description: Run all Dart & Flutter tests in this project.
 
   test:dart:
-    run: cd packages/wasm_run && dart test test
+    run: melos exec -c 1 -- "dart test test"
     description: Run Dart tests for a specific package in this project.
+    packageFilters:
+      flutter: false
+      dir-exists: test
+      ignore:
+        - wasm_run_example
+        - wasm_wit_component_example
 
   test:flutter:
     run: melos exec -c 1 --fail-fast -- "flutter test test"
