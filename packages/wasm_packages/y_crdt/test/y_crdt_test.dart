@@ -46,9 +46,10 @@ void main() {
       );
 
       final doc = world.yDocMethods.yDocNew();
-      final docFinalizer =
-          Finalizer<YDoc>((p0) => world.yDocMethods.yDocDispose(ref: p0));
-      docFinalizer.attach(doc, doc);
+      final docFinalizer = Finalizer<int>(
+        (p0) => world.yDocMethods.yDocDispose(ref: YDoc.fromJson(p0)),
+      );
+      docFinalizer.attach(doc, doc.ref);
 
       final text = world.yDocMethods.yDocText(ref: doc, name: 'name');
 
