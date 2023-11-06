@@ -1,4 +1,4 @@
-release_tag_name = 'wasm_run-v0.0.1' # generated; do not edit
+release_tag_name = 'wasm_run-v0.1.0' # generated; do not edit
 
 # We cannot distribute the XCFramework alongside the library directly,
 # so we have to fetch the correct version here.
