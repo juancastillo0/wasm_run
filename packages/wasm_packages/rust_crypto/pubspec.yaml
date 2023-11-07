@@ -1,7 +1,13 @@
 name: rust_crypto
-description: A starting point for Dart libraries or applications.
-version: 0.1.0
+description: Hashes, Hmacs, Argon2 Passwords and AES-GCM-SIV encryption. Digests for sha1, sha2, md5, blake3, crc32
+version: 0.0.1
 repository: https://github.com/juancastillo0/wasm_run
+topics:
+  - wasm
+  - wit
+  - crypto
+  - password
+  - encryption
 
 environment:
   sdk: ^3.0.0
@@ -13,7 +19,6 @@ flutter:
 dependencies:
   wasm_run: ^0.1.0
   wasm_wit_component: ^0.0.1
-
 
 dev_dependencies:
   cryptography: ^2.5.0

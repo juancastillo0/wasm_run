@@ -1,21 +1,19 @@
 name: typesql
-description: A starting point for Dart libraries or applications.
+description: SQL type utilities and helpers for Dart model code generator and query execution
 version: 0.0.1
-publish_to: none
-# repository: https://github.com/my_org/my_repo
+repository: https://github.com/juancastillo0/wasm_run
+topics:
+  - sql
 
 environment:
   sdk: ^3.0.0
 
-# Add regular dependencies here.
 dependencies:
-  sql_parser:
-    path: ../
+  sql_parser: ^0.0.1
   meta: ^1.9.1
   sqlite3: ^2.0.0
   recase: ^4.1.0
   wasm_wit_component: ^0.0.1
-  # path: ^1.8.0
 
 dev_dependencies:
   lints: ^2.0.0

@@ -1,11 +1,13 @@
 name: y_crdt
-description: A starting point for Dart libraries or applications.
-version: 0.1.0
-# repository:
-# homepage:
+description: y.js (https://github.com/yjs/yjs) Dart port, a CRDT implementation. CRDTs allow for local, offline editing and synchronization of shared data.
+version: 0.0.1
+repository: https://github.com/juancastillo0/wasm_run
 topics:
   - wasm
   - wit
+  - crdt
+  - offline
+  - peer-to-peer
 
 environment:
   sdk: ^3.0.0

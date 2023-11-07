@@ -1,11 +1,13 @@
 name: sql_parser
-description: A starting point for Dart libraries or applications.
-version: 0.1.0
-# repository:
-# homepage:
+description: SQL parser, AST and visitors
+version: 0.0.1
+repository: https://github.com/juancastillo0/wasm_run
 topics:
   - wasm
   - wit
+  - sql
+  - parser
+  - ast
 
 environment:
   sdk: ^3.0.0

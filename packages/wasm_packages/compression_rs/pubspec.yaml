@@ -1,12 +1,12 @@
 name: compression_rs
-description: A starting point for Dart libraries or applications.
-version: 0.1.0
-# repository:
-# homepage:
+description: Compression, decompression, zip and tar achieves (brotli, lz4, zstd, gzip, zlib, ...)
+version: 0.0.1
+repository: https://github.com/juancastillo0/wasm_run
 topics:
   - wasm
   - wit
   - compression
+  - codec
 
 environment:
   sdk: ^3.0.0
@@ -16,12 +16,12 @@ flutter:
     - lib/assets/
 
 dependencies:
-  archive: ^3.3.7
-  # es_compression: ^2.0.0
-  brotli: ^0.6.0
   wasm_run: ^0.1.0
   wasm_wit_component: ^0.0.1
 
 dev_dependencies:
   lints: ^2.0.0
   test: ^1.21.0
+  archive: ^3.3.7
+  # es_compression: ^2.0.0
+  brotli: ^0.6.0

@@ -1,7 +1,12 @@
 name: image_rs
-description: A starting point for Dart libraries or applications.
-version: 0.1.0
+description: Enconding, deconding, transformations and operations over multiple image formats (png, jpeg, ico, gif, bmp, tiff, webp, avif, tga, farbfeld, ...)
+version: 0.0.1
 repository: https://github.com/juancastillo0/wasm_run
+topics:
+  - wasm
+  - wit
+  - image
+  - codec
 
 environment:
   sdk: ^3.0.0

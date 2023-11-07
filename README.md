@@ -23,15 +23,19 @@ A Web Assembly executor for the Dart programming language.
 
 Currently it uses the [`wasmtime 14.0`](https://github.com/bytecodealliance/wasmtime) or [`wasmi 0.31`](https://github.com/paritytech/wasmi) Rust crates for parsing and executing WASM modules. Bindings are created using [`package:flutter_rust_bridge`](https://github.com/fzyzcjy/flutter_rust_bridge).
 
-| Pub                                                                                                            | Source                                                                  | Description                                                                                                                                       |
-| -------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [![version](https://img.shields.io/pub/v/wasm_run.svg)](https://pub.dev/packages/wasm_run)                     | [wasm_run](./packages/wasm_run/)                                        | Wasm executor and utilities                                                                                                                       |
-| [![version](https://img.shields.io/pub/v/wasm_run_flutter.svg)](https://pub.dev/packages/wasm_run_flutter)     | [wasm_run_flutter](./packages/wasm_run_flutter/)                        | Native libraries to use `package:wasm_run` in Flutter projects                                                                                    |
-| [![version](https://img.shields.io/pub/v/wasm_wit_component.svg)](https://pub.dev/packages/wasm_wit_component) | [wasm_wit_component](./packages/dart_wit_component/wasm_wit_component/) | Wit bindings and code generator for Wasm components                                                                                               |
-| [![version](https://img.shields.io/pub/v/compression_rs.svg)](https://pub.dev/packages/compression_rs)         | [compression_rs](./packages/wasm_packages/compression_rs/)              | Compression, decompression, zip and tar achieves (brotli, lz4, zstd, gzip, zlib, ...)                                                             |
-| [![version](https://img.shields.io/pub/v/image_rs.svg)](https://pub.dev/packages/image_rs)                     | [image_rs](./packages/wasm_packages/image_rs/)                          | Enconding, deconding, transformations and operations over multiple image formats (png, jpeg, ico, gif, bmp, tiff, webp, avif, tga, farbfeld, ...) |
-| [![version](https://img.shields.io/pub/v/rust_crypto.svg)](https://pub.dev/packages/rust_crypto)               | [rust_crypto](./packages/wasm_packages/rust_crypto/)                    | Hashes, Hmacs, Argon2 Passwords and AES-GCM-SIV encryption. Digests for sha1, sha2, md5, blake3, crc32                                            |
-| [![version](https://img.shields.io/pub/v/wasm_parser.svg)](https://pub.dev/packages/wasm_parser)               | [wasm_parser](./packages/wasm_packages/wasm_parser/)                    | Wasm, Wat and Wit parser, validator, printer and Wasm component tools                                                                             |
+| Pub                                                                                                            | Source                                                                      | Description                                                                                                                                       |
+| -------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [![version](https://img.shields.io/pub/v/wasm_run.svg)](https://pub.dev/packages/wasm_run)                     | [wasm_run](./packages/wasm_run/)                                            | Wasm executor and utilities                                                                                                                       |
+| [![version](https://img.shields.io/pub/v/wasm_run_flutter.svg)](https://pub.dev/packages/wasm_run_flutter)     | [wasm_run_flutter](./packages/wasm_run_flutter/)                            | Native libraries to use `package:wasm_run` in Flutter projects                                                                                    |
+| [![version](https://img.shields.io/pub/v/wasm_wit_component.svg)](https://pub.dev/packages/wasm_wit_component) | [wasm_wit_component](./packages/dart_wit_component/wasm_wit_component/)     | Wit bindings and code generator for Wasm components                                                                                               |
+| [![version](https://img.shields.io/pub/v/compression_rs.svg)](https://pub.dev/packages/compression_rs)         | [compression_rs](./packages/wasm_packages/compression_rs/)                  | Compression, decompression, zip and tar achieves (brotli, lz4, zstd, gzip, zlib, ...)                                                             |
+| [![version](https://img.shields.io/pub/v/image_rs.svg)](https://pub.dev/packages/image_rs)                     | [image_rs](./packages/wasm_packages/image_rs/)                              | Enconding, deconding, transformations and operations over multiple image formats (png, jpeg, ico, gif, bmp, tiff, webp, avif, tga, farbfeld, ...) |
+| [![version](https://img.shields.io/pub/v/rust_crypto.svg)](https://pub.dev/packages/rust_crypto)               | [rust_crypto](./packages/wasm_packages/rust_crypto/)                        | Hashes, Hmacs, Argon2 Passwords and AES-GCM-SIV encryption. Digests for sha1, sha2, md5, blake3, crc32                                            |
+| [![version](https://img.shields.io/pub/v/wasm_parser.svg)](https://pub.dev/packages/wasm_parser)               | [wasm_parser](./packages/wasm_packages/wasm_parser/)                        | Wasm, Wat and Wit parser, validator, printer and Wasm component tools                                                                             |
+| [![version](https://img.shields.io/pub/v/y_crdt.svg)](https://pub.dev/packages/y_crdt)                         | [y_crdt](./packages/wasm_packages/y_crdt/)                                  | y.js (https://github.com/yjs/yjs) Dart port, a CRDT implementation. CRDTs allow for local, offline editing and synchronization of shared data.    |
+| [![version](https://img.shields.io/pub/v/sql_parser.svg)](https://pub.dev/packages/sql_parser)                 | [sql_parser](./packages/wasm_packages/sql_parser/)                          | SQL parser, AST and visitors                                                                                                                      |
+| [![version](https://img.shields.io/pub/v/typesql.svg)](https://pub.dev/packages/typesql)                       | [typesql](./packages/wasm_packages/sql_parser/typesql/)                     | SQL type utilities and helpers for Dart model code generator and query execution                                                                  |
+| [![version](https://img.shields.io/pub/v/typesql_generator.svg)](https://pub.dev/packages/typesql_generator)   | [typesql_generator](./packages/wasm_packages/sql_parser/typesql_generator/) | SQL types code generator from .sql files to Dart queries and models                                                                               |
 
 
 - [Dart Wasm Run](#dart-wasm-run)
@@ -83,7 +87,7 @@ Currently it uses the [`wasmtime 14.0`](https://github.com/bytecodealliance/wasm
 
 ## Supported Wasm Features
 
-| Feature\Runtime               | Wasmtime 14.0    | Wasmi 0.31 | Chrome<sup>[1]</sup> |
+| Feature\Runtime               | Wasmtime 14.0   | Wasmi 0.31 | Chrome<sup>[1]</sup> |
 | ----------------------------- | --------------- | ---------- | -------------------- |
 | multi_value                   | ✅               | ✅          | ✅                    |
 | bulk_memory                   | ✅               | ✅          | ✅                    |
@@ -124,12 +128,12 @@ We provide [`package:wasm_run_flutter`](./packages/wasm_run_flutter/) to bundle 
 
 | Platform | Architecture               | Runtime<sup>[1]</sup> |
 | -------- | -------------------------- | --------------------- |
-| Linux    | aarch64 x86_64             | Wasmtime 14.0          |
-| MacOS    | aarch64 x86_64             | Wasmtime 14.0          |
-| Windows  | aarch64 x86_64             | Wasmtime 14.0          |
+| Linux    | aarch64 x86_64             | Wasmtime 14.0         |
+| MacOS    | aarch64 x86_64             | Wasmtime 14.0         |
+| Windows  | aarch64 x86_64             | Wasmtime 14.0         |
 | iOS      | aarch64 x86_64 aarch64-sim | Wasmi 0.31            |
 | Android  | armeabi-v7a x86 x86_64     | Wasmi 0.31            |
-| Android  | arm64-v8a                  | Wasmtime 14.0          |
+| Android  | arm64-v8a                  | Wasmtime 14.0         |
 | Web      | N/A                        | Browser/Wasmi 0.31    |
 
 - [1]: Wasmi 0.31 supports any platform that Rust could be compiled to.
@@ -201,7 +205,7 @@ You may also configure the WASM imports are by using the `mapWorkerWasmImports` 
 
 ## Web Assembly System Interface (WASI)
 
-We support [WASI](https://github.com/WebAssembly/WASI) [wasi_snapshot_preview1](https://github.com/WebAssembly/WASI/blob/main/legacy/preview1/docs.md) through the [wasmtime_wasi](https://docs.rs/wasmtime-wasi/14.0.1/wasmtime_wasi/) or [wasmi_wasi](https://docs.rs/wasmi_wasi/0.31.0/wasmi_wasi) Rust crates, [chosen depending on the target platform](#runtime-for-platform). 
+We support [WASI](https://github.com/WebAssembly/WASI) [wasi_snapshot_preview1](https://github.com/WebAssembly/WASI/blob/main/legacy/preview1/docs.md) through the [wasmtime_wasi](https://docs.rs/wasmtime-wasi/14.0.4/wasmtime_wasi/) or [wasmi_wasi](https://docs.rs/wasmi_wasi/0.31.0/wasmi_wasi) Rust crates, [chosen depending on the target platform](#runtime-for-platform). 
 
 In the web platform we support WASI modules by using [bjorn3/browser_wasi_shim](https://github.com/bjorn3/browser_wasi_shim). The file system directories exported by the host are in-memory Maps where the files are represented as `Uint8List` buffers. Other APIs, such as time and random are implemented using the JavaScript browser APIs.
 
