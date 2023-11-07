@@ -368,7 +368,7 @@ impl WasmRunModuleId {
         thread_index: usize,
         new_context: StoreContextMut<'_, StoreState>,
     ) -> RustOpaque<WFunc> {
-        let raw_id = unsafe { std::mem::transmute(func.to_raw(&mut m.store)) };
+        let raw_id = unsafe { func.to_raw(&mut m.store) as usize };
         let hf = m.store.data().functions.get(&raw_id).unwrap();
         let ff = Self::_create_function(
             new_context,
@@ -754,7 +754,7 @@ impl WasmRunModuleId {
                 Ok(())
             },
         );
-        let raw_id = unsafe { std::mem::transmute(func.to_raw(&mut store)) };
+        let raw_id = unsafe { func.to_raw(&mut store) as usize };
         store.data_mut().functions.insert(raw_id, hf);
         Ok(SyncReturn(RustOpaque::new(func.into())))
     }
@@ -1326,8 +1326,7 @@ impl Atomics {
                         success,
                         failure,
                     )
-                    .try_into()
-                    .unwrap(),
+                    .into(),
                 AtomicKind::I8 => Ati8(self.0)
                     .compare_exchange(
                         offset,

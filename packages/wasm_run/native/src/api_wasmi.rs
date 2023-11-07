@@ -14,7 +14,7 @@ use std::{collections::HashMap, sync::Arc};
 #[cfg(feature = "wasi")]
 use wasi_common::pipe::WritePipe;
 use wasmi::core::Trap;
-pub use wasmi::{core::Pages, Func, Global, GlobalType, Memory, Module, Table};
+pub use wasmi::{core::Pages, Func, Global, Memory, Module, Table};
 use wasmi::{core::ValueType, *};
 
 static ARRAY: Lazy<RwLock<GlobalState>> = Lazy::new(|| RwLock::new(Default::default()));

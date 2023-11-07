@@ -88,7 +88,10 @@ void main() {
       }
     });
 
-    Future<void> validateWat(WatModuleValid valid) async {
+    Future<void> validateWat(
+      WatModuleValid valid, {
+      bool multiMemory = false,
+    }) async {
       final world = await createWasmParser(
         wasiConfig: WasiConfig(preopenedDirs: [], webBrowserFileSystem: {}),
         imports: const WasmParserWorldImports(),
@@ -107,6 +110,10 @@ void main() {
       expect(moduleType.imports, valid.imports);
       expect(moduleType.exports, valid.exports);
 
+      final features = await wasmRuntimeFeatures();
+      if (multiMemory && !features.supportedFeatures.multiMemory) {
+        return;
+      }
       final module = await compileWasmModule(
         wasmBytes,
         config: const ModuleConfig(
@@ -115,7 +122,6 @@ void main() {
           ),
         ),
       );
-      final features = await wasmRuntimeFeatures();
       if (features.supportedFeatures.typeReflection) {
         expect(moduleType, moduleToType(module));
       }
@@ -261,6 +267,7 @@ void main() {
         // TODO: multi memory is not supported on web
         skip: isWeb,
         () => validateWat(
+          multiMemory: true,
           WatModuleValid(
             r'''
 (module

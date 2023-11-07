@@ -1326,8 +1326,7 @@ impl Atomics {
                         success,
                         failure,
                     )
-                    .try_into()
-                    .unwrap(),
+                    .into(),
                 AtomicKind::I8 => Ati8(self.0)
                     .compare_exchange(
                         offset,

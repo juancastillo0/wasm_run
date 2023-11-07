@@ -5,9 +5,9 @@ use flutter_rust_bridge::RustOpaque;
 
 use crate::external::*;
 #[cfg(not(feature = "wasmtime"))]
-pub use wasmi::{Func, Global, GlobalType, Memory, Mutability, Table};
-#[cfg(not(feature = "wasmtime"))]
 use wasmi::{core::ValueType, *};
+#[cfg(not(feature = "wasmtime"))]
+pub use wasmi::{Func, Global, GlobalType, Memory, Mutability, Table};
 
 #[allow(non_camel_case_types)]
 #[derive(Debug)]
