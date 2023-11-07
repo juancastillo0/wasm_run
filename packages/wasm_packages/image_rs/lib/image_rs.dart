@@ -1,8 +1,5 @@
-/// Support for doing something awesome.
-///
-/// More dartdocs go here.
+/// Enconding, deconding, transformations and operations over multiple image formats
+/// (png, jpeg, ico, gif, bmp, tiff, webp, avif, tga, farbfeld, ...)
 library;
 
 export 'src/image_rs_base.dart';
-
-// TODO: Export any libraries intended for clients of this package.

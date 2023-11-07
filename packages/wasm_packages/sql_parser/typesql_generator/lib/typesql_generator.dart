@@ -1,6 +1,4 @@
-/// Support for doing something awesome.
-///
-/// More dartdocs go here.
+/// SQL types code generator from .sql files to Dart queries and models
 library;
 
 import 'package:build/build.dart';
