@@ -17,7 +17,7 @@ zig_build() {
     local PLATFORM_NAME="$2"
     local LIBNAME="$3"
     rustup target add "$TARGET"
-    cargo zigbuild --target "$TARGET" --profile $BUILD_PROFILE
+    CARGO_BUILD_TARGET=$TARGET cargo zigbuild --target "$TARGET" --profile $BUILD_PROFILE
     mkdir "$PLATFORM_NAME"
     cp "../target/$TARGET/$BUILD_PROFILE_PATH/$LIBNAME" "$PLATFORM_NAME/"
 }
@@ -27,7 +27,7 @@ win_build() {
     local PLATFORM_NAME="$2"
     local LIBNAME="$3"
     rustup target add "$TARGET"
-    cargo xwin build --target "$TARGET" --profile $BUILD_PROFILE
+    CARGO_BUILD_TARGET=$TARGET cargo xwin build --target "$TARGET" --profile $BUILD_PROFILE
     mkdir "$PLATFORM_NAME"
     cp "../target/$TARGET/$BUILD_PROFILE_PATH/$LIBNAME" "$PLATFORM_NAME/"
 }
