@@ -1,6 +1,5 @@
 import 'dart:typed_data';
 
-import 'package:y_crdt/src/api.dart';
 import 'package:y_crdt/wit_world.dart';
 import 'package:y_crdt/y_crdt.dart';
 import 'package:test/test.dart';
