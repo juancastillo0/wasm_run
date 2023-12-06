@@ -5,7 +5,17 @@ import 'package:typesql/typesql.dart';
 
 import 'example.sql.dart';
 
-void main() async {
+Future<void> main() async {
+  return test();
+}
+
+void defaultExpect(Object? a, Object? b) {
+  if (a != b) throw Exception('$a != $b');
+}
+
+Future<void> test({
+  void Function(Object? a, Object? b) expect = defaultExpect,
+}) async {
   final sqlite = await loadSqlite();
   final db = sqlite.openInMemory();
   final executor = SqliteExecutor(db);
@@ -14,13 +24,13 @@ void main() async {
   await example.defineDatabaseObjects();
   // await example.createTableUsers();
   final execution = await example.insertUsers1(InsertUsers1Args(c: 'name'));
-  assert(execution.updaterRows == 2);
-  assert(execution.lastInsertId == '2');
+  expect(execution.updaterRows, 2);
+  expect(execution.lastInsertId, '2');
 
   final users = await example.querySelectUsers1();
-  assert(users.length == 2);
-  assert(users[0] == QuerySelectUsers1(usersId: 1, usersName: 'name1'));
-  assert(users[1] == QuerySelectUsers1(usersId: 2, usersName: 'name'));
+  expect(users.length, 2);
+  expect(users[0], QuerySelectUsers1(usersId: 1, usersName: 'name1'));
+  expect(users[1], QuerySelectUsers1(usersId: 2, usersName: 'name'));
 
   {
     final toInsert = [
@@ -29,25 +39,25 @@ void main() async {
     ];
     final usersQueries = example.usersController;
     final inserted = await usersQueries.insertManyReturning(toInsert);
-    assert(jsonEncode(toInsert) == jsonEncode(inserted));
+    expect(jsonEncode(toInsert), jsonEncode(inserted));
 
     final deleted = await usersQueries.deleteManyReturning([UsersKeyId(id: 3)]);
-    assert(jsonEncode([toInsert.first]) == jsonEncode(deleted));
+    expect(jsonEncode([toInsert.first]), jsonEncode(deleted));
 
     final updated3 = await usersQueries.updateReturning(
       UsersKeyId(id: 3),
       UsersUpdate(name: 'nameUpdated3'),
     );
-    assert(updated3 == null);
+    expect(updated3, null);
 
     final updated4 = await usersQueries.updateReturning(
       UsersKeyId(id: 4),
       UsersUpdate(name: 'nameUpdated4'),
     );
-    assert(updated4 == Users(id: 4, name: 'nameUpdated4'));
+    expect(updated4, Users(id: 4, name: 'nameUpdated4'));
 
     final selected4 = await usersQueries.selectUnique(UsersKeyId(id: 4));
-    assert(selected4 == updated4);
+    expect(selected4, updated4);
   }
 
   {
@@ -64,56 +74,53 @@ void main() async {
     ];
     final postsQueries = example.postsController;
     final inserted = await postsQueries.insertManyReturning(toInsert);
-    assert(
+    expect(
       jsonEncode([
-            PostsInsert(
-              id: 3,
-              userId: 4,
-              title: 'title',
-              body: 'body',
-              createdAt: inserted.first.createdAt,
-            ),
-            toInsert.last,
-          ]) ==
-          jsonEncode(inserted),
+        PostsInsert(
+          id: 3,
+          userId: 4,
+          title: 'title',
+          body: 'body',
+          createdAt: inserted.first.createdAt,
+        ),
+        toInsert.last,
+      ]),
+      jsonEncode(inserted),
     );
 
     final deleted = await postsQueries.deleteManyReturning([PostsKeyId(id: 3)]);
-    assert(jsonEncode([inserted.first]) == jsonEncode(deleted));
+    expect(jsonEncode([inserted.first]), jsonEncode(deleted));
 
     final updated3 = await postsQueries.updateReturning(
       PostsKeyId(id: 3),
       PostsUpdate(subtitle: Some('subtitleUpdated')),
     );
-    assert(updated3 == null);
+    expect(updated3, null);
 
     final updated4 = await postsQueries.updateReturning(
       PostsKeyId(id: 4),
       PostsUpdate(subtitle: Some('subtitleUpdated')),
     );
-    assert(
-      updated4 ==
-          Posts(
-            id: 4,
-            userId: 4,
-            title: 'title4',
-            body: 'body4',
-            subtitle: 'subtitleUpdated',
-            createdAt: DateTime(2024),
-          ),
+    expect(
+      updated4,
+      Posts(
+        id: 4,
+        userId: 4,
+        title: 'title4',
+        body: 'body4',
+        subtitle: 'subtitleUpdated',
+        createdAt: DateTime(2024),
+      ),
     );
 
     final selected4 = await postsQueries.selectUnique(PostsKeyId(id: 4));
-    assert(selected4 == updated4);
+    expect(selected4, updated4);
   }
 
   // final values =
   //     await example.typedExecutor.selectMany(FilterEq(UsersUpdate()));
 
   // final d = await example.typedExecutor.selectUnique(UsersKeyId(id: 3));
-
-  final awesome = sql('''SELECT * FROM foo WHERE bar = 10''');
-  print('awesome: ${awesome}');
 }
 
 class SqliteExecutor extends SqlExecutor {
