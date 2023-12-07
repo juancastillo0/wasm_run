@@ -759,6 +759,8 @@ class SqlTypeFinder {
           ColumnOptionCheck() => null,
           ColumnOptionComment() => null,
           ColumnOptionGenerated() => generated = true,
+          ColumnOptionDialectSpecific(:final value) => generated = generated ||
+              const ['AUTOINCREMENT', 'AUTO_INCREMENT'].contains(value),
           _ => null,
         });
       }

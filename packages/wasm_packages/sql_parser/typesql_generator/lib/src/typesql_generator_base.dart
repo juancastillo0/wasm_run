@@ -128,7 +128,7 @@ class ${ReCase(fileName).pascalCase}Queries {
     );
     final fields = t.value.fields
         .map((e) =>
-            "(name: '${e.name}', type: ${e.type.instantiation}, hasDefault: ${e.defaultValue != null})")
+            "(name: '${e.name}', type: ${e.type.instantiation}, hasDefault: ${e.optional || e.defaultValue != null})")
         .join(',');
 
     final generics = '<${className}, ${addedUpdate ?? className}>';
