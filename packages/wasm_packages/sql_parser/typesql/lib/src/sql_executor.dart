@@ -104,15 +104,11 @@ class SqlExec<T> {
     }
   }
 
-  static SqlExec<SqlExecution> insert(SqlInsertModel model) {
-    final fields = model.dataClassProps.fields;
-    final args = SqlExecArgs(
-      "INSERT INTO ${model.table}('${fields.keys.join("','")}')"
-      " VALUES (${Iterable.generate(fields.length, (i) => '?').join(',')})",
-      fields.values.map(toSqlValue).toList(growable: false),
-    );
-    return SqlExec(args, args.execute);
-  }
+  static SqlExec<SqlExecution> insert<T extends SqlReturnModel>(
+    SqlTypeData<T, dynamic> ty,
+    SqlInsertModel model,
+  ) =>
+      insertMany(ty, List.filled(1, model), useDefault: false);
 
   static SqlExec<SqlExecution>
       update<T extends SqlReturnModel, U extends SqlUpdateModel<T>>(
@@ -124,7 +120,7 @@ class SqlExec<T> {
         model.dataClassProps.fields.entries.where((e) => e.value != null);
     final set = fields.map((v) => '${v.key} = ?').join(",");
     final args = SqlExecArgs(
-      "UPDATE ${model.table} SET $set WHERE ${items.where}",
+      "UPDATE ${model.table} SET $set ${_makeWhere([items.where])}",
       [...fields.map((e) => e.value).map(toSqlValue), ...items.params],
     );
     return SqlExec(args, args.execute);
@@ -133,7 +129,7 @@ class SqlExec<T> {
   static SqlExec<SqlExecution> delete(SqlUniqueKeyModel<dynamic, dynamic> key) {
     final items = sqlItemsKey(key);
     final args = SqlExecArgs(
-      "DELETE FROM ${key.table} WHERE ${items.where}",
+      "DELETE FROM ${key.table} ${_makeWhere([items.where])}",
       items.params,
     );
     return SqlExec(args, args.execute);
@@ -145,7 +141,7 @@ class SqlExec<T> {
   ) {
     final items = mergeSqlItems(keys.map(sqlItemsKey));
     final args = SqlExecArgs(
-      "DELETE FROM ${keys.first.table} WHERE (${items.where.join(") OR (")})",
+      "DELETE FROM ${keys.first.table} ${_makeWhere(items.where)}",
       items.params,
     );
     return SqlExec(args, args.execute);
@@ -153,14 +149,21 @@ class SqlExec<T> {
 
   static SqlExec<SqlExecution> insertMany<T extends SqlReturnModel>(
     SqlTypeData<T, dynamic> ty,
-    List<SqlInsertModel<T>> models,
-  ) {
+    List<SqlInsertModel<T>> models, {
+    bool useDefault = true,
+  }) {
     final table = models.first.table;
     final fields = models.map((e) => e.dataClassProps).toList();
     final keys = fields.expand((e) => e.fields.keys).toSet();
     bool isDefault(String k, Object? value) {
       final t = ty.fields.firstWhere((e) => e.name == k);
       return value == null && t.type is! BTypeNullable && t.hasDefault;
+    }
+
+    if (!useDefault) {
+      for (final f in fields) {
+        keys.removeWhere((k) => isDefault(k, f.fields[k]));
+      }
     }
 
     final values = fields
@@ -196,8 +199,8 @@ abstract class SqlExecutor {
 
   Future<T?> transaction<T>(Future<T> Function() transact);
 
-  Future<SqlExecution> insert(SqlInsertModel model) =>
-      SqlExec.insert(model).run(this);
+  // Future<SqlExecution> insert(SqlInsertModel model) =>
+  //     SqlExec.insert(model).run(this);
 
   Future<SqlExecution>
       update<T extends SqlReturnModel, U extends SqlUpdateModel<T>>(
@@ -224,7 +227,7 @@ abstract class SqlExecutor {
   ) async {
     final items = sqlItemsKey(key);
     final rows = await query(
-      "SELECT * FROM ${key.table} WHERE ${items.where}",
+      "SELECT * FROM ${key.table} ${_makeWhere([items.where])}",
       items.params,
     );
     return rows.firstOrNull;
@@ -236,7 +239,7 @@ abstract class SqlExecutor {
     if (keys.isEmpty) return [];
     final items = mergeSqlItems(keys.map(sqlItemsKey));
     final rows = await query(
-      "SELECT * FROM ${keys.first.table} WHERE (${items.where.join(") OR (")})",
+      "SELECT * FROM ${keys.first.table} ${_makeWhere(items.where)})",
       items.params,
     );
     return rows;
@@ -247,11 +250,16 @@ abstract class SqlExecutor {
   ) async {
     final items = filter.sqlItems();
     final rows = await query(
-      "SELECT * FROM ${filter.table} WHERE ${items.where}",
+      "SELECT * FROM ${filter.table} ${_makeWhere([items.where])}",
       items.params,
     );
     return rows;
   }
+}
+
+String _makeWhere(List<String> where) {
+  final conditions = where.where((a) => a.trim().isNotEmpty).join(') OR (');
+  return conditions.isEmpty ? '' : 'WHERE ($conditions)';
 }
 
 typedef SqlTypeDataField = ({String name, BaseType type, bool hasDefault});
@@ -312,10 +320,11 @@ class SqlTypedController<T extends SqlReturnModel,
   Future<List<T>> selectMany(SqlModelFilter<T, U> filter) =>
       executor.selectMany(filter);
 
-  Future<T> insertReturning(SqlInsertModel<T> model) => SqlExec.insert(model)
-      .addReturning(type)
-      .run(executor.executor)
-      .then(extractFirst);
+  Future<T> insertReturning(SqlInsertModel<T> model) =>
+      SqlExec.insert(type, model)
+          .addReturning(type)
+          .run(executor.executor)
+          .then(extractFirst);
 
   Future<SqlExecution> insertMany(List<SqlInsertModel<T>> models) =>
       SqlExec.insertMany(type, models).run(executor.executor);
