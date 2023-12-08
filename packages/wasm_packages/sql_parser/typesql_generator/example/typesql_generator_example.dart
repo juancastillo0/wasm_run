@@ -135,7 +135,7 @@ class SqliteExecutor extends SqlExecutor {
   Future<T?> transaction<T>(Future<T> Function() transact) async {
     bool started = false;
     try {
-      db.execute('START TRANSACTION');
+      db.execute('BEGIN TRANSACTION');
       started = true;
       final result = await transact();
       db.execute('COMMIT');

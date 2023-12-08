@@ -329,10 +329,20 @@ class SqlTypedController<T extends SqlReturnModel,
   Future<SqlExecution> insertMany(List<SqlInsertModel<T>> models) =>
       SqlExec.insertMany(type, models).run(executor.executor);
 
-  Future<List<T>> insertManyReturning(List<SqlInsertModel<T>> models) =>
-      SqlExec.insertMany(type, models)
+  Future<List<T>> insertManyReturning(List<SqlInsertModel<T>> models) async {
+    if (models.isEmpty) {
+      return [];
+    } else if (models.length == 1) {
+      return SqlExec.insertMany(type, models, useDefault: false)
           .addReturning(type)
           .run(executor.executor);
+    } else {
+      final result = await executor.executor.transaction(() {
+        return Future.wait(models.map(insertReturning));
+      });
+      return result!;
+    }
+  }
 
   Future<T?> updateReturning(SqlUniqueKeyModel<T, U> key, U model) =>
       SqlExec.update(key, model)

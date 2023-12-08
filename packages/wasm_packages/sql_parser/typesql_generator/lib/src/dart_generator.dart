@@ -33,6 +33,11 @@ class GenModel {
       tableName: tableName ?? this.tableName,
     );
   }
+
+  @override
+  String toString() {
+    return 'GenModel(useOptional: $useOptional, interfaces: $interfaces, allNullable: $allNullable, tableName: $tableName)';
+  }
 }
 
 void addModelClass(
@@ -225,8 +230,7 @@ String? addModelClassInsert(
   GenModel model = const GenModel(),
 }) {
   final name = '${className}Insert';
-  final didGenerate =
-      t.fields.any((e) => e.defaultValue != null && !e.nullable);
+  final didGenerate = t.fields.any((e) => e.defaultValue != null || e.optional);
   if (didGenerate) {
     addModelClass(
       buf,
