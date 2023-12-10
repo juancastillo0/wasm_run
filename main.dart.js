@@ -131867,7 +131867,9 @@ A.wp.prototype={
 a7r(a,b){var s=this,r=b==null?s.a:b,q=a==null?s.c:a
 return new A.wp(r,s.b,q,s.d)},
 aCS(a){return this.a7r(null,a)},
-aCr(a){return this.a7r(a,null)}}
+aCr(a){return this.a7r(a,null)},
+j(a){var s=this
+return"GenModel(useOptional: "+s.a+", interfaces: "+A.i(s.b)+", allNullable: "+s.c+", tableName: "+A.i(s.d)+")"}}
 A.be3.prototype={
 $1(a){var s=a.b
 return A.rl(a.a,s,null,t.UG.b(s),null)},
@@ -131908,7 +131910,7 @@ A.be2.prototype={
 $1(a){return!a.c},
 $S:110}
 A.be1.prototype={
-$1(a){return a.e!=null&&!a.c},
+$1(a){return a.e!=null||a.d},
 $S:110}
 A.beD.prototype={
 $1(a){var s=a.b.gfc(),r=a.d||a.e!=null
