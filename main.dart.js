@@ -44152,7 +44152,7 @@ A.bcv.prototype={
 $1(a){var s=A.jw().b
 if(s==null)s=null
 else{s=s.canvasKitBaseUrl
-if(s==null)s=null}return(s==null?"https://www.gstatic.com/flutter-canvaskit/69f0e5550702bb81458a1987f3054085aeb8353d/":s)+a},
+if(s==null)s=null}return(s==null?"https://www.gstatic.com/flutter-canvaskit/39c6dc9bdd3ba2bc387e6e14b72fce5f46abfcae/":s)+a},
 $S:68}
 A.bcK.prototype={
 $1(a){this.a.remove()
