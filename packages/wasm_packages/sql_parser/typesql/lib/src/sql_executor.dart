@@ -357,6 +357,54 @@ class SqlTypedController<T extends SqlReturnModel,
 
   Future<List<T>> deleteManyReturning(List<SqlUniqueKeyModel<T, U>> keys) =>
       SqlExec.deleteMany(keys).addReturning(type).run(executor.executor);
+
+  Future<T> upsertReturning<I extends SqlInsertModel<T>>({
+    required I insert,
+    required U update,
+    required SqlUniqueKeyModel<T, U>? Function(I) getKey,
+  }) async {
+    final key = getKey(insert);
+    if (key == null) {
+      return insertReturning(insert);
+    } else {
+      final updated = await updateReturning(key, update);
+      if (updated != null) {
+        return updated;
+      } else {
+        return insertReturning(insert);
+      }
+    }
+  }
+
+  Future<List<T>> upsertManyReturning<I extends SqlInsertModel<T>>(
+    List<I> models, {
+    required U Function(I) getUpdate,
+    required SqlUniqueKeyModel<T, U>? Function(I) getKey,
+  }) async {
+    final toUpdate =
+        models.where((e) => getKey(e) != null).toList(growable: false);
+    final toInsert = models.where((e) => getKey(e) == null).toList();
+    final result = await executor.executor.transaction(() async {
+      final updated = await Future.wait(toUpdate.map(
+        (e) => updateReturning(getKey(e)!, getUpdate(e)),
+      ));
+      final notFound =
+          updated.indexed.where((e) => e.$2 == null).toList(growable: false);
+      if (notFound.isNotEmpty) {
+        updated.removeWhere((e) => e == null);
+        toInsert.addAll(notFound.map((e) => toUpdate[e.$1]));
+        // throw Exception(
+        //   'Failed to update options: ${notFound.map((e) => toUpdate[e.$1]).join(', ')}',
+        // );
+      }
+      final inserted = await insertManyReturning(toInsert);
+      return updated..addAll(inserted);
+    });
+    if (result == null) {
+      throw Exception('Failed to insert options');
+    }
+    return result.cast();
+  }
 }
 
 T extractFirst<T>(List<T> l) => l.first;
