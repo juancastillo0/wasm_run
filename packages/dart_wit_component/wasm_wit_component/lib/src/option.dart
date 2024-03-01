@@ -18,7 +18,7 @@ sealed class Option<T extends Object> implements ToJsonSerializable {
       null => None(),
       {'none': null} || (0, null) => None(),
       {'some': final o} || (1, final o) => Some(some(o)),
-      _ => throw Exception('Invalid JSON for Option: $json'),
+      final o => Some(some(o)),
     };
   }
 
