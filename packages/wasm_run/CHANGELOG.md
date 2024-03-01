@@ -1,3 +1,7 @@
+## 0.1.0+1
+
+ - Expose `wasm_run:setup` CLI
+
 ## 0.1.0
 
  - flutter_rust_bridge: ">=1.82.4"
@@ -5,6 +9,10 @@
  - `WasmRunLibrary`, `setUpDesktopDynamicLibrary`, `uriForPackage` and `getUriBodyBytes` utilities
  - [BREAKING] add `WasmInstanceBuilder.module` and `WasmInstanceBuilder.wasiOpenFile`
  - loadAssets with `rootBundle.load` from 'flutter/services.dart'
+
+## 0.0.1+3
+
+ - Expose `wasm_run:setup` CLI
 
 ## 0.0.1+2
 
