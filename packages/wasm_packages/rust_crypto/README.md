@@ -1,16 +1,14 @@
-<!-- 
-This README describes the package. If you publish this package to pub.dev,
-this README's contents appear on the landing page for your package.
+# rust_crypto
 
-For information about how to write a good package README, see the guide for
-[writing package pages](https://dart.dev/guides/libraries/writing-package-pages). 
+Hashes, Hmacs, Argon2 Passwords and AES-GCM-SIV encryption. Digests for sha1, sha2, md5, blake3, crc32
 
-For general information about developing packages, see the Dart guide for
-[creating packages](https://dart.dev/guides/libraries/create-library-packages)
-and the Flutter guide for
-[developing packages and plugins](https://flutter.dev/developing-packages). 
--->
+Uses https://github.com/juancastillo0/wasm_run for executing WASM.
 
+## Example
+
+You can find a deployed example in https://juancastillo0.github.io/wasm_run/ and the main file implementation in the [Github repository](https://github.com/juancastillo0/wasm_run/blob/main/packages/wasm_packages/flutter_example/lib/rust_crypto_page.dart).
+
+## Developing
 
 ```sh
 dart run ../../dart_wit_component/wasm_wit_component/bin/generate.dart rust_crypto_wasm/wit/rust-crypto.wit lib/src/rust_crypto_wit.gen.dart
@@ -19,30 +17,3 @@ dart run ../../dart_wit_component/wasm_wit_component/bin/generate.dart rust_cryp
 ```sh
 fvm dart run test/rust_crypto_test.dart  
 ```
-
-TODO: Put a short description of the package here that helps potential users
-know whether this package might be useful for them.
-
-## Features
-
-TODO: List what your package can do. Maybe include images, gifs, or videos.
-
-## Getting started
-
-TODO: List prerequisites and provide or point to information on how to
-start using the package.
-
-## Usage
-
-TODO: Include short and useful examples for package users. Add longer examples
-to `/example` folder. 
-
-```dart
-const like = 'sample';
-```
-
-## Additional information
-
-TODO: Tell users more about the package: where to find more information, how to 
-contribute to the package, how to file issues, what response they can expect 
-from the package authors, and more.

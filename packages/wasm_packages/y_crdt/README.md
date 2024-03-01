@@ -1,5 +1,9 @@
 # y_crdt
 
+y.js (https://github.com/yjs/yjs) Dart port, a CRDT implementation. CRDTs allow for local, offline editing and synchronization of shared data.
+
+Uses https://github.com/juancastillo0/wasm_run for executing WASM and https://github.com/y-crdt/y-crdt for the underlying implementation.
+
 ## Build Wasm Component from Rust
 
 ```sh

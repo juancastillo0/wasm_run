@@ -1,11 +1,12 @@
 name: wasm_parser
-description: A starting point for Dart libraries or applications.
-version: 0.1.0
-# repository:
-# homepage:
+description: Parses Web Assembly (WASM), WASM Text Format (WAT) and Web Assembly Interface Types (WIT) files
+version: 0.0.1
+repository: https://github.com/juancastillo0/wasm_run
 topics:
   - wasm
   - wit
+  - parser
+  - wat
 
 environment:
   sdk: ^3.0.0
