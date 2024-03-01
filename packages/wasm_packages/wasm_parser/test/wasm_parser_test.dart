@@ -239,7 +239,7 @@ void main() {
           WatModuleValid(
             r'''
 (module
-    (import "js" "tbl" (table 3 anyfunc))
+    (import "js" "tbl" (table 3 funcref))
     (func $f42 (result i32) i32.const 42)
     (func $f83 (result i32) i32.const 83)
     (func $f64p9 (param i64) (result i64) (i64.add (local.get 0) (i64.const 9)))
