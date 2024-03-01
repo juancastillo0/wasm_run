@@ -241,20 +241,3 @@ class WasmFileUrisException implements Exception {
   @override
   String toString() => 'WasmFileUrisException($uris, ${errors.join('\n')})';
 }
-
-class WasmFileIOOutput {
-  final String environmentVariable;
-  final String? dartDefineConstant;
-  final String defaultPath;
-  final String? overridePath;
-  // final String packageName;
-  // final String pathFromPackageLib;
-
-  ///
-  WasmFileIOOutput({
-    required this.environmentVariable,
-    required this.defaultPath,
-    this.dartDefineConstant,
-    this.overridePath,
-  });
-}
