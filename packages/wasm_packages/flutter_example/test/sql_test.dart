@@ -1,23 +1,23 @@
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter/widgets.dart';
-import 'package:flutter_example/sql_parser_state.dart';
+import 'package:flutter_example/typesql_parser_state.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:typesql/sqlite.dart';
 import 'package:typesql/typesql.dart';
 // ignore: depend_on_referenced_packages
 import 'package:wasm_run/wasm_run.dart';
 
-Future<SqlParserState> parserState() async {
+Future<TypesqlParserState> parserState() async {
   WidgetsFlutterBinding.ensureInitialized();
   await WasmRunLibrary.setUp(
     override: false,
     isFlutter: true,
     loadAsset: rootBundle.load,
   );
-  final parserFut = createSqlParser();
+  final parserFut = createTypesqlParser();
   final parser = await parserFut;
   final db = await loadSqlite();
-  return SqlParserState(parser, db);
+  return TypesqlParserState(parser, db);
 }
 
 void main() {

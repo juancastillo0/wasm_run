@@ -3,11 +3,11 @@ import 'package:compression_rs/compression_rs_in_mem_worker.dart'
     as compression_rs;
 import 'package:flutter/foundation.dart' show ChangeNotifier, ValueNotifier;
 import 'package:flutter_example/image_rs_state.dart';
-import 'package:flutter_example/sql_parser_state.dart';
+import 'package:flutter_example/typesql_parser_state.dart';
 import 'package:flutter_example/wasm_parser_state.dart';
 import 'package:image_rs/image_rs.dart';
 import 'package:rust_crypto/rust_crypto.dart';
-import 'package:sql_parser/sql_parser.dart';
+import 'package:typesql_parser/typesql_parser.dart';
 import 'package:typesql/sqlite.dart';
 import 'package:wasm_parser/wasm_parser.dart';
 
@@ -45,10 +45,10 @@ class GlobalState extends ChangeNotifier {
   );
   late final sqlParser = FutureLoader(
     () async {
-      final parserFut = createSqlParser();
+      final parserFut = createTypesqlParser();
       final parser = await parserFut;
       final db = await loadSqlite();
-      return SqlParserState(parser, db);
+      return TypesqlParserState(parser, db);
     },
   );
 

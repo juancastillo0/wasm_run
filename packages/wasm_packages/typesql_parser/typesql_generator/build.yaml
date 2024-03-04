@@ -1,0 +1,18 @@
+targets:
+  $default:
+    builders:
+      typesql_generator|sql_generator:
+        enabled: true
+
+builders:
+  sql_generator:
+    # library URI containing the builder - maps to `lib/member_count_library_generator.dart`
+    import: "package:typesql_generator/typesql_generator.dart"
+    # Name of the function in the above library to call.
+    builder_factories: ["sqlGenerator"]
+    # The mapping from the source extension to the generated file extension
+    build_extensions: { ".sql": [".sql.dart"] }
+    # Will automatically run on any package that depends on it
+    auto_apply: dependents
+    # Generate the output directly into the package, not to a hidden cache dir
+    build_to: source

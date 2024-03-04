@@ -3,7 +3,7 @@ import 'package:flutter_example/compression_rs_page.dart';
 import 'package:flutter_example/flutter_utils.dart';
 import 'package:flutter_example/image_rs_page.dart';
 import 'package:flutter_example/rust_crypto_page.dart';
-import 'package:flutter_example/sql_parser_page.dart';
+import 'package:flutter_example/typesql_parser_page.dart';
 import 'package:flutter_example/state.dart';
 import 'package:flutter_example/wasm_parser_page.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -81,7 +81,7 @@ enum AppTab {
         ),
       AppTab.sqlParser => LoaderWidget(
           loader: state.sqlParser,
-          child: const SqlParserPage(),
+          child: const TypesqlParserPage(),
         ),
     };
   }
