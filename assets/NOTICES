@@ -4763,11 +4763,11 @@ fake_async
    limitations under the License.
 --------------------------------------------------------------------------------
 compression_rs
-image_rs
+image_ops
 rust_crypto
-sql_parser
 typesql
 typesql_generator
+typesql_parser
 wasm_parser
 
 MIT License
