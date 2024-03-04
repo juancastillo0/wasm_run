@@ -326,7 +326,7 @@ class WasmTypeView extends StatelessWidget {
                 'packages/compression_rs/lib/assets/compression_rs_wasm.wasm',
                 'packages/compression_rs/lib/assets/compression_rs_wasm.threads.wasm',
                 'packages/rust_crypto/lib/assets/rust_crypto_wasm.wasm',
-                'packages/image_rs/lib/assets/image_rs_wasm.wasm',
+                'packages/image_ops/lib/assets/image_ops_wasm.wasm',
               ]
                   .map(
                     (e) => DropdownMenuItem(

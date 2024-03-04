@@ -17,5 +17,5 @@ cp compression_rs/compression_rs_wasm/wit/compression-rs.wit release_files/
 cp rust_crypto/lib/assets/rust_crypto_wasm.wasm release_files/
 cp rust_crypto/rust_crypto_wasm/wit/rust-crypto.wit release_files/
 
-cp image_rs/lib/assets/image_rs_wasm.wasm release_files/
-cp image_rs/image_rs_wasm/wit/image-rs.wit release_files/
+cp image_ops/lib/assets/image_ops_wasm.wasm release_files/
+cp image_ops/image_ops_wasm/wit/image-ops.wit release_files/

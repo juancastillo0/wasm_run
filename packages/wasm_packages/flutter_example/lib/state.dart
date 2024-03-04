@@ -2,10 +2,10 @@ import 'package:compression_rs/compression_rs.dart';
 import 'package:compression_rs/compression_rs_in_mem_worker.dart'
     as compression_rs;
 import 'package:flutter/foundation.dart' show ChangeNotifier, ValueNotifier;
-import 'package:flutter_example/image_rs_state.dart';
+import 'package:flutter_example/image_ops_state.dart';
 import 'package:flutter_example/typesql_parser_state.dart';
 import 'package:flutter_example/wasm_parser_state.dart';
-import 'package:image_rs/image_rs.dart';
+import 'package:image_ops/image_ops.dart';
 import 'package:rust_crypto/rust_crypto.dart';
 import 'package:typesql_parser/typesql_parser.dart';
 import 'package:typesql/sqlite.dart';
@@ -31,8 +31,8 @@ class GlobalState extends ChangeNotifier {
       imports: const CompressionRsWorldImports(),
     ).then(CompressionRsState.new),
   );
-  late final imageRs = FutureLoader(
-    () => createImageRs(wasiConfig: wasiConfig).then(ImageRsState.new),
+  late final imageOps = FutureLoader(
+    () => createImageOps(wasiConfig: wasiConfig).then(ImageOpsState.new),
   );
   late final rustCrypto = FutureLoader(
     () => rustCryptoInstance(wasiConfig: wasiConfig).then(RustCryptoState.new),
@@ -61,7 +61,7 @@ class GlobalState extends ChangeNotifier {
 
   @override
   void dispose() {
-    // TODO: imageRs?.disposeImage();
+    // TODO: imageOps?.disposeImage();
     super.dispose();
   }
 }

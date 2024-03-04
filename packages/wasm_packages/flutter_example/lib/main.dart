@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_example/compression_rs_page.dart';
 import 'package:flutter_example/flutter_utils.dart';
-import 'package:flutter_example/image_rs_page.dart';
+import 'package:flutter_example/image_ops_page.dart';
 import 'package:flutter_example/rust_crypto_page.dart';
 import 'package:flutter_example/typesql_parser_page.dart';
 import 'package:flutter_example/state.dart';
@@ -55,7 +55,7 @@ class MyHomePage extends StatefulWidget {
 enum AppTab {
   wasmParser,
   compressionRs,
-  imageRs,
+  imageOps,
   rustCrypto,
   sqlParser;
 
@@ -71,9 +71,9 @@ enum AppTab {
           loader: state.compressionRs,
           child: const CompressionRsPage(),
         ),
-      AppTab.imageRs => LoaderWidget(
-          loader: state.imageRs,
-          child: const ImageRsPage(),
+      AppTab.imageOps => LoaderWidget(
+          loader: state.imageOps,
+          child: const ImageOpsPage(),
         ),
       AppTab.rustCrypto => LoaderWidget(
           loader: state.rustCrypto,

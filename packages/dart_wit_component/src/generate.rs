@@ -478,13 +478,13 @@ default world host {
     }
 
     #[test]
-    pub fn generate_image_rs() {
+    pub fn generate_image_ops() {
         let path = format!(
-            "{}/../wasm_packages/image_rs/image_rs_wasm/wit/image-rs.wit",
+            "{}/../wasm_packages/image_ops/image_ops_wasm/wit/image-ops.wit",
             PACKAGE_DIR
         );
         let output_path = format!(
-            "{}/../wasm_packages/image_rs/lib/src/image_rs_wit.gen.dart",
+            "{}/../wasm_packages/image_ops/lib/src/image_ops_wit.gen.dart",
             PACKAGE_DIR
         );
         parse_and_write_generation(
@@ -611,7 +611,7 @@ default world host {
         parse_generator();
         parse_wit_types();
         parse_wit_types_big_int();
-        generate_image_rs();
+        generate_image_ops();
         generate_compression_rs();
         generate_compression_rs_worker();
         generate_rust_crypto();

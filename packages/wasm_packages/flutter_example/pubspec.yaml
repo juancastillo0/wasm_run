@@ -42,8 +42,8 @@ dependencies:
     path: ../../dart_wit_component/wasm_wit_component
   compression_rs:
     path: ../compression_rs
-  image_rs:
-    path: ../image_rs
+  image_ops:
+    path: ../image_ops
   rust_crypto:
     path: ../rust_crypto
   wasm_parser:
@@ -84,8 +84,8 @@ dependency_overrides:
     path: ../../dart_wit_component/wasm_wit_component
   compression_rs:
     path: ../compression_rs
-  image_rs:
-    path: ../image_rs
+  image_ops:
+    path: ../image_ops
   rust_crypto:
     path: ../rust_crypto
   wasm_parser:

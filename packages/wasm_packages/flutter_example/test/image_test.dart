@@ -2,23 +2,23 @@ import 'dart:typed_data';
 
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter/widgets.dart';
-import 'package:flutter_example/image_rs_state.dart';
+import 'package:flutter_example/image_ops_state.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:image_rs/image_rs.dart';
+import 'package:image_ops/image_ops.dart';
 // ignore: depend_on_referenced_packages
 import 'package:wasm_run/wasm_run.dart';
 
-Future<ImageRsState> imageState() async {
+Future<ImageOpsState> imageState() async {
   WidgetsFlutterBinding.ensureInitialized();
   await WasmRunLibrary.setUp(
     override: false,
     isFlutter: true,
     loadAsset: rootBundle.load,
   );
-  final parser = await createImageRs(
+  final parser = await createImageOps(
     wasiConfig: const WasiConfig(preopenedDirs: [], webBrowserFileSystem: {}),
   );
-  return ImageRsState(parser);
+  return ImageOpsState(parser);
 }
 
 void main() {
@@ -75,7 +75,7 @@ void main() {
 
       ///
       state.op(
-        (ref) => state.imageRs.operations.flipHorizontal(imageRef: ref),
+        (ref) => state.imageOps.operations.flipHorizontal(imageRef: ref),
       );
       final flipHRef = state.ref!;
       validateState(buffer: flipH.buffer.asUint8List());
@@ -87,7 +87,7 @@ void main() {
 
       ///
       state.op(
-        (ref) => state.imageRs.operations.grayscale(imageRef: ref),
+        (ref) => state.imageOps.operations.grayscale(imageRef: ref),
       );
       validateState(
         buffer: grayscale.buffer.asUint8List(),
@@ -97,7 +97,7 @@ void main() {
 
       /// grayrot90
       state.op(
-        (ref) => state.imageRs.operations.rotate90(imageRef: ref),
+        (ref) => state.imageOps.operations.rotate90(imageRef: ref),
       );
       validateState(
         previousRef: grayscaleRef,
@@ -119,7 +119,7 @@ void main() {
 
       ///
       state.op(
-        (ref) => state.imageRs.operations.adjustContrast(c: 20, imageRef: ref),
+        (ref) => state.imageOps.operations.adjustContrast(c: 20, imageRef: ref),
       );
       validateState(buffer: contrast20.buffer.asUint8List());
       final contrastRef = state.ref;
@@ -136,7 +136,7 @@ void main() {
 
       ///
       state.op(
-        (ref) => state.imageRs.operations.crop(
+        (ref) => state.imageOps.operations.crop(
           imageCrop: const ImageCrop(x: 0, y: 0, width: 100, height: 52),
           imageRef: ref,
         ),
@@ -150,7 +150,7 @@ void main() {
 
       ///
       state.op(
-        (ref) => state.imageRs.operations.resizeExact(
+        (ref) => state.imageOps.operations.resizeExact(
           size: const ImageSize(width: 102, height: 50),
           filter: FilterType.nearest,
           imageRef: ref,
@@ -166,7 +166,7 @@ void main() {
 
       ///
       state.op(
-        (ref) => state.imageRs.operations.resize(
+        (ref) => state.imageOps.operations.resize(
           size: const ImageSize(width: 102, height: 50),
           filter: FilterType.nearest,
           imageRef: ref,
@@ -216,7 +216,7 @@ void main() {
 
       ///
       state.op(
-        (ref) => state.imageRs.operations.blur(value: 2, imageRef: ref),
+        (ref) => state.imageOps.operations.blur(value: 2, imageRef: ref),
       );
       validateState(
         filename: 'webp-example.webp',

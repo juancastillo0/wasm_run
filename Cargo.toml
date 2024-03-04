@@ -6,7 +6,7 @@ exclude = [
     "packages/rust_threads_example",
     "packages/dart_wit_component/wasm_wit_component/example/rust_wit_component_example/Cargo.toml",
     "packages/wasm_packages/rust_crypto/rust_crypto_wasm/Cargo.toml",
-    "packages/wasm_packages/image_rs/image_rs_wasm/Cargo.toml",
+    "packages/wasm_packages/image_ops/image_ops_wasm/Cargo.toml",
     "packages/wasm_packages/compression_rs/compression_rs_wasm/Cargo.toml",
     "packages/wasm_packages/wasm_parser/wasm_parser_wasm/Cargo.toml",
     "packages/wasm_packages/typesql_parser/typesql_parser_wasm/Cargo.toml",
