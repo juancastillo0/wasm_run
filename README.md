@@ -150,14 +150,14 @@ We use [package:wasm_interop](https://pub.dev/packages/wasm_interop) to implemen
 
 However, in web browsers there is no support for the [WAT](https://developer.mozilla.org/en-US/docs/WebAssembly/Understanding_the_text_format) format and other queries that you may perform over the WASM modules on native platforms. For example, WASM [function type definitions](https://github.com/WebAssembly/js-types/blob/main/proposals/js-types/Overview.md) of arguments and results are not provided in most browsers. If you need these features, you may use the compiled WASM module (TODO: Not implemented yet).
 
-We use the [wasm-feature-detect JavaScript library](https://github.com/GoogleChromeLabs/wasm-feature-detect) for feature detection in the browser. To use this functionality in Dart web applications you will need to add the following script to your html:
+We use the [wasm-feature-detect JavaScript library](https://github.com/GoogleChromeLabs/wasm-feature-detect) for feature detection in the browser. To use this functionality in Dart web applications you will need to add the following script to your HTML:
 
 ```html
 <script src="./packages/wasm_run/assets/wasm-feature-detect.js"></script>
 <script type="module" src="./packages/wasm_run/assets/browser_wasi_shim.js"></script>
 ```
 
-This is can be required also in Flutter, in `web/index.html` when your code call any function or need any object implemented in browser_wasi_shim.
+This is also required in Flutter, in `web/index.html`, if your code calls any function, or needs any object implemented in `browser_wasi_shim`:
 ```html
 <head>
 <script src="/assets/packages/wasm_run/lib/assets/wasm-feature-detect.js" defer></script>
