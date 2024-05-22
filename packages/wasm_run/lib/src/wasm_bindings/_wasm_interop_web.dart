@@ -821,7 +821,9 @@ GlobalTy? _getGlobalType(Object value) {
 TableTy? _getTableType(Object value) {
   final t = _getType(value);
   if (t == null) return null;
-  final ty = ValueTy.values.byName(t['element']! as String);
+  final ty = ValueTy.values.firstWhere((value) =>
+      value.toString().split('.').last.toLowerCase() ==
+      (t['element']! as String).toLowerCase());
   return TableTy(
     element: ty,
     minimum: t['minimum']! as int,
