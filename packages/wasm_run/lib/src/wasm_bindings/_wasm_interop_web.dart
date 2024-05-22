@@ -822,8 +822,7 @@ TableTy? _getTableType(Object value) {
   final t = _getType(value);
   if (t == null) return null;
   final ty = ValueTy.values.firstWhere((value) =>
-      value.toString().split('.').last.toLowerCase() ==
-      (t['element']! as String).toLowerCase());
+      value.name.toLowerCase() == (t['element']! as String).toLowerCase());
   return TableTy(
     element: ty,
     minimum: t['minimum']! as int,
