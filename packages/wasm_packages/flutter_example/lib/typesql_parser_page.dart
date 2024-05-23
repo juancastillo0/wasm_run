@@ -2,8 +2,8 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_example/flutter_utils.dart';
-import 'package:flutter_example/typesql_parser_state.dart';
 import 'package:flutter_example/state.dart';
+import 'package:flutter_example/typesql_parser_state.dart';
 import 'package:flutter_example/widgets/code_text_field.dart';
 import 'package:typesql/typesql.dart';
 

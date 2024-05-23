@@ -28,7 +28,7 @@ Future<TypesqlParserWorld> createTypesqlParser({
     final uri = await WasmFileUris.uriForPackage(
       package: 'typesql_parser',
       libPath: 'assets/typesql_parser_wasm.wasm',
-      envVariable: 'SQL_PARSER_WASM_PATH',
+      envVariable: 'TYPESQL_PARSER_WASM_PATH',
     );
     final uris = WasmFileUris(uri: uri);
     module = await uris.loadModule();
@@ -37,7 +37,10 @@ Future<TypesqlParserWorld> createTypesqlParser({
     workersConfig: workersConfig,
   );
 
-  return TypesqlParserWorld.init(builder, imports: const TypesqlParserWorldImports());
+  return TypesqlParserWorld.init(
+    builder,
+    imports: const TypesqlParserWorldImports(),
+  );
 }
 
 extension SqlAstRefValue on SqlAstRef {

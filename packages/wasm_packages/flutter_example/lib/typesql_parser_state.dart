@@ -6,7 +6,8 @@ import 'package:typesql_generator/typesql_generator.dart';
 
 class TypesqlParserState extends ChangeNotifier with ErrorNotifier {
   ///
-  TypesqlParserState(this.sqlParser, this.sqlite3) : db = sqlite3.openInMemory() {
+  TypesqlParserState(this.sqlParser, this.sqlite3)
+      : db = sqlite3.openInMemory() {
     sqlController.addListener(_update);
     sqlController.text = '''
 CREATE TABLE users (

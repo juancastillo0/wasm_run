@@ -205,7 +205,9 @@ class ImageOpsPage extends StatelessWidget {
                             value: state.format,
                             onChanged: (f) => state.setFormat(f!),
                             items: image_ops.ImageFormat.values
-                                .where((e) => e != image_ops.ImageFormat.unknown)
+                                .where(
+                                  (e) => e != image_ops.ImageFormat.unknown,
+                                )
                                 .map(
                                   (e) => DropdownMenuItem(
                                     value: e,
@@ -376,7 +378,8 @@ List<ImgOp> imageOps(ImageOpsState state) {
     // ),
     ImgOp(
       'blur',
-      (ref) => state.imageOps.operations.blur(imageRef: ref, value: values.blur),
+      (ref) =>
+          state.imageOps.operations.blur(imageRef: ref, value: values.blur),
       fields: DoubleInput(onChanged: values.setBlur),
     ),
     ImgOp(
@@ -419,7 +422,8 @@ List<ImgOp> imageOps(ImageOpsState state) {
     ImgOp(
       'thumbnail',
       (ref) => values.keepAspectRatio
-          ? state.imageOps.operations.thumbnail(imageRef: ref, size: values.size)
+          ? state.imageOps.operations
+              .thumbnail(imageRef: ref, size: values.size)
           : state.imageOps.operations
               .thumbnailExact(imageRef: ref, size: values.size),
     ),
