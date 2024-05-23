@@ -48192,7 +48192,7 @@ var $async$WD=A.a3(function(a,b){if(a===1)return A.a_(b,r)
 while(true)switch(s){case 0:s=3
 return A.U(A.CZ(null,null,!1),$async$WD)
 case 3:s=4
-return A.U(A.Iq("SQL_PARSER_WASM_PATH","assets/typesql_parser_wasm.wasm","typesql_parser"),$async$WD)
+return A.U(A.Iq("TYPESQL_PARSER_WASM_PATH","assets/typesql_parser_wasm.wasm","typesql_parser"),$async$WD)
 case 4:p=b
 o=A
 s=5
