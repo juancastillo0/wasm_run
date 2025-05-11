@@ -1,3 +1,7 @@
+## 0.1.0+2
+
+ - [FIX] Use lowercase String comparison for Safari WASM functions. [PR](https://github.com/juancastillo0/wasm_run/pull/57) thanks to [michelerenzullo](https://github.com/michelerenzullo)
+ 
 ## 0.1.0+1
 
  - Expose `wasm_run:setup` CLI
