@@ -20,6 +20,7 @@ pub struct WasiConfigNative {
     /// Custom Environment variables to pass to the WASM module
     pub env: Vec<EnvVariable>,
     /// Custom preopened files to pass to the WASM module
+    #[allow(dead_code)]
     pub preopened_files: Vec<String>,
     /// Custom preopened directories to pass to the WASM module
     /// The module will be able to access and edit these directories

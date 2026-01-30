@@ -72,7 +72,7 @@ fn make_wasi_ctx(
 ) -> Result<Option<wasmi_wasi::WasiCtx>> {
     let mut wasi_ctx = None;
     if let Some(wasi_config) = wasi_config {
-        let mut wasi = wasi_config.to_wasi_ctx()?;
+        let wasi = wasi_config.to_wasi_ctx()?;
 
         if wasi_config.capture_stdout {
             let stdout_handler = ModuleIOWriter {

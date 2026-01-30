@@ -42,7 +42,11 @@ default = ["wasmtime-runtime", "wasi"]
 wasmtime-runtime = ["wasmtime", "wasmtime-wasi"]
 
 # Use wasmi interpreter (no threads/GC, but works on more platforms)
-wasmi-runtime = ["wasmi", "wasmi_wasi"]
+# Enable simd feature for SIMD support in wasmi
+wasmi-runtime = ["wasmi", "wasmi_wasi", "simd"]
 
 # Enable WASI support
 wasi = []
+
+# Enable SIMD support for wasmi (opt-in due to code size)
+simd = ["wasmi/simd"]

@@ -27,11 +27,13 @@ use wasmtime_wasi::{WasiCtx, WasiCtxBuilder, WasiCtxView, WasiView};
 /// State for WASI Preview2 (used with components)
 /// This implements the WasiView trait required by wasmtime_wasi::p2
 /// Note: Not exposed to Dart FFI - internal use only
+#[allow(dead_code)]
 struct WasiP2State {
     ctx: WasiCtx,
     table: ResourceTable,
 }
 
+#[allow(dead_code)]
 impl WasiP2State {
     fn new(ctx: WasiCtx, table: ResourceTable) -> WasiP2State {
         WasiP2State { ctx, table }
@@ -189,6 +191,7 @@ fn make_wasi_p1_ctx(
 }
 
 /// Create WASI Preview2 context (for components)
+#[allow(dead_code)]
 fn make_wasi_p2_ctx(
     _id: &WasmRunModuleId,
     wasi_config: &Option<WasiConfigNative>,
@@ -298,6 +301,7 @@ pub fn module_builder(
     Ok(SyncReturn(module_id))
 }
 
+#[allow(dead_code)]
 struct ModuleIOWriter {
     id: WasmRunModuleId,
     is_stdout: bool,

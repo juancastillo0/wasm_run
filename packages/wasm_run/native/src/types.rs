@@ -147,6 +147,7 @@ impl WasmVal {
     /// Only works for simple types (i32, i64, f32, f64, v128, funcRef).
     /// For externRef and GC types, use `from_val` with a store context.
     #[cfg(feature = "wasmtime")]
+    #[allow(dead_code)]
     pub fn from_val_simple(val: wasmtime::Val) -> Result<Self> {
         Ok(match val {
             wasmtime::Val::I32(i) => WasmVal::i32(i),
