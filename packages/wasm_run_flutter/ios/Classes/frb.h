@@ -76,6 +76,10 @@ typedef struct wire_ModuleConfigWasmi {
   bool *tail_call;
   bool *extended_const;
   bool *floats;
+  bool *simd;
+  bool *relaxed_simd;
+  bool *multi_memory;
+  bool *memory64;
 } wire_ModuleConfigWasmi;
 
 typedef struct wire_ModuleConfigWasmtime {
@@ -89,6 +93,11 @@ typedef struct wire_ModuleConfigWasmtime {
   bool *relaxed_simd_deterministic;
   bool *wasm_multi_memory;
   bool *wasm_memory64;
+  bool *wasm_tail_call;
+  bool *wasm_gc;
+  bool *wasm_function_references;
+  bool *wasm_exceptions;
+  bool *wasm_component_model;
   uint64_t *static_memory_maximum_size;
   bool *static_memory_forced;
   uint64_t *static_memory_guard_size;
@@ -214,6 +223,22 @@ typedef struct wire_WasmVal_externRef {
   uint32_t *field0;
 } wire_WasmVal_externRef;
 
+typedef struct wire_WAnyRef {
+  const void *ptr;
+} wire_WAnyRef;
+
+typedef struct wire_WasmVal_anyRef {
+  struct wire_WAnyRef *field0;
+} wire_WasmVal_anyRef;
+
+typedef struct wire_WExnRef {
+  const void *ptr;
+} wire_WExnRef;
+
+typedef struct wire_WasmVal_exnRef {
+  struct wire_WExnRef *field0;
+} wire_WasmVal_exnRef;
+
 typedef union WasmValKind {
   struct wire_WasmVal_i32 *i32;
   struct wire_WasmVal_i64 *i64;
@@ -222,6 +247,8 @@ typedef union WasmValKind {
   struct wire_WasmVal_v128 *v128;
   struct wire_WasmVal_funcRef *funcRef;
   struct wire_WasmVal_externRef *externRef;
+  struct wire_WasmVal_anyRef *anyRef;
+  struct wire_WasmVal_exnRef *exnRef;
 } WasmValKind;
 
 typedef struct wire_WasmVal {
@@ -250,6 +277,14 @@ typedef struct wire_TableArgs {
   uint32_t *maximum;
 } wire_TableArgs;
 
+typedef struct wire_ArcStdSyncMutexComponent {
+  const void *ptr;
+} wire_ArcStdSyncMutexComponent;
+
+typedef struct wire_CompiledComponent {
+  struct wire_ArcStdSyncMutexComponent field0;
+} wire_CompiledComponent;
+
 typedef struct wire_Atomics {
   uintptr_t field0;
 } wire_Atomics;
@@ -276,6 +311,15 @@ void wire_compile_wasm(int64_t port_,
 
 WireSyncReturn wire_compile_wasm_sync(struct wire_uint_8_list *module_wasm,
                                       struct wire_ModuleConfig *config);
+
+WireSyncReturn wire_detect_wasm_kind(struct wire_uint_8_list *wasm_bytes);
+
+void wire_compile_component(int64_t port_,
+                            struct wire_uint_8_list *component_wasm,
+                            struct wire_ModuleConfig *config);
+
+WireSyncReturn wire_compile_component_sync(struct wire_uint_8_list *component_wasm,
+                                           struct wire_ModuleConfig *config);
 
 WireSyncReturn wire_wasm_features_for_config(struct wire_ModuleConfig *config);
 
@@ -415,6 +459,10 @@ WireSyncReturn wire_get_module_imports__method__CompiledModule(struct wire_Compi
 
 WireSyncReturn wire_get_module_exports__method__CompiledModule(struct wire_CompiledModule *that);
 
+WireSyncReturn wire_get_component_imports__method__CompiledComponent(struct wire_CompiledComponent *that);
+
+WireSyncReturn wire_get_component_exports__method__CompiledComponent(struct wire_CompiledComponent *that);
+
 WireSyncReturn wire_ty__method__WasmRunSharedMemory(struct wire_WasmRunSharedMemory *that);
 
 WireSyncReturn wire_size__method__WasmRunSharedMemory(struct wire_WasmRunSharedMemory *that);
@@ -507,6 +555,8 @@ void wire_xor__method__Atomics(int64_t port_,
 
 struct wire_ArcRwLockSharedMemory new_ArcRwLockSharedMemory(void);
 
+struct wire_ArcStdSyncMutexComponent new_ArcStdSyncMutexComponent(void);
+
 struct wire_ArcStdSyncMutexModule new_ArcStdSyncMutexModule(void);
 
 struct wire_CallStack new_CallStack(void);
@@ -519,13 +569,23 @@ struct wire_StringList *new_StringList_0(int32_t len);
 
 struct wire_Table new_Table(void);
 
+struct wire_WAnyRef new_WAnyRef(void);
+
+struct wire_WExnRef new_WExnRef(void);
+
 struct wire_WFunc new_WFunc(void);
+
+struct wire_WAnyRef *new_box_autoadd_WAnyRef_0(void);
+
+struct wire_WExnRef *new_box_autoadd_WExnRef_0(void);
 
 struct wire_WFunc *new_box_autoadd_WFunc_0(void);
 
 struct wire_Atomics *new_box_autoadd_atomics_0(void);
 
 bool *new_box_autoadd_bool_0(bool value);
+
+struct wire_CompiledComponent *new_box_autoadd_compiled_component_0(void);
 
 struct wire_CompiledModule *new_box_autoadd_compiled_module_0(void);
 
@@ -573,6 +633,10 @@ void drop_opaque_ArcRwLockSharedMemory(const void *ptr);
 
 const void *share_opaque_ArcRwLockSharedMemory(const void *ptr);
 
+void drop_opaque_ArcStdSyncMutexComponent(const void *ptr);
+
+const void *share_opaque_ArcStdSyncMutexComponent(const void *ptr);
+
 void drop_opaque_ArcStdSyncMutexModule(const void *ptr);
 
 const void *share_opaque_ArcStdSyncMutexModule(const void *ptr);
@@ -592,6 +656,14 @@ const void *share_opaque_Memory(const void *ptr);
 void drop_opaque_Table(const void *ptr);
 
 const void *share_opaque_Table(const void *ptr);
+
+void drop_opaque_WAnyRef(const void *ptr);
+
+const void *share_opaque_WAnyRef(const void *ptr);
+
+void drop_opaque_WExnRef(const void *ptr);
+
+const void *share_opaque_WExnRef(const void *ptr);
 
 void drop_opaque_WFunc(const void *ptr);
 
@@ -621,6 +693,10 @@ union WasmValKind *inflate_WasmVal_funcRef(void);
 
 union WasmValKind *inflate_WasmVal_externRef(void);
 
+union WasmValKind *inflate_WasmVal_anyRef(void);
+
+union WasmValKind *inflate_WasmVal_exnRef(void);
+
 void free_WireSyncReturn(WireSyncReturn ptr);
 
 static int64_t dummy_method_to_enforce_bundling(void) {
@@ -629,6 +705,9 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) wire_parse_wat_format);
     dummy_var ^= ((int64_t) (void*) wire_compile_wasm);
     dummy_var ^= ((int64_t) (void*) wire_compile_wasm_sync);
+    dummy_var ^= ((int64_t) (void*) wire_detect_wasm_kind);
+    dummy_var ^= ((int64_t) (void*) wire_compile_component);
+    dummy_var ^= ((int64_t) (void*) wire_compile_component_sync);
     dummy_var ^= ((int64_t) (void*) wire_wasm_features_for_config);
     dummy_var ^= ((int64_t) (void*) wire_wasm_runtime_features);
     dummy_var ^= ((int64_t) (void*) wire_exports__method__WasmRunInstanceId);
@@ -669,6 +748,8 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) wire_create_shared_memory__method__CompiledModule);
     dummy_var ^= ((int64_t) (void*) wire_get_module_imports__method__CompiledModule);
     dummy_var ^= ((int64_t) (void*) wire_get_module_exports__method__CompiledModule);
+    dummy_var ^= ((int64_t) (void*) wire_get_component_imports__method__CompiledComponent);
+    dummy_var ^= ((int64_t) (void*) wire_get_component_exports__method__CompiledComponent);
     dummy_var ^= ((int64_t) (void*) wire_ty__method__WasmRunSharedMemory);
     dummy_var ^= ((int64_t) (void*) wire_size__method__WasmRunSharedMemory);
     dummy_var ^= ((int64_t) (void*) wire_data_size__method__WasmRunSharedMemory);
@@ -688,16 +769,22 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) wire_or__method__Atomics);
     dummy_var ^= ((int64_t) (void*) wire_xor__method__Atomics);
     dummy_var ^= ((int64_t) (void*) new_ArcRwLockSharedMemory);
+    dummy_var ^= ((int64_t) (void*) new_ArcStdSyncMutexComponent);
     dummy_var ^= ((int64_t) (void*) new_ArcStdSyncMutexModule);
     dummy_var ^= ((int64_t) (void*) new_CallStack);
     dummy_var ^= ((int64_t) (void*) new_Global);
     dummy_var ^= ((int64_t) (void*) new_Memory);
     dummy_var ^= ((int64_t) (void*) new_StringList_0);
     dummy_var ^= ((int64_t) (void*) new_Table);
+    dummy_var ^= ((int64_t) (void*) new_WAnyRef);
+    dummy_var ^= ((int64_t) (void*) new_WExnRef);
     dummy_var ^= ((int64_t) (void*) new_WFunc);
+    dummy_var ^= ((int64_t) (void*) new_box_autoadd_WAnyRef_0);
+    dummy_var ^= ((int64_t) (void*) new_box_autoadd_WExnRef_0);
     dummy_var ^= ((int64_t) (void*) new_box_autoadd_WFunc_0);
     dummy_var ^= ((int64_t) (void*) new_box_autoadd_atomics_0);
     dummy_var ^= ((int64_t) (void*) new_box_autoadd_bool_0);
+    dummy_var ^= ((int64_t) (void*) new_box_autoadd_compiled_component_0);
     dummy_var ^= ((int64_t) (void*) new_box_autoadd_compiled_module_0);
     dummy_var ^= ((int64_t) (void*) new_box_autoadd_memory_ty_0);
     dummy_var ^= ((int64_t) (void*) new_box_autoadd_module_config_0);
@@ -721,6 +808,8 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) new_uint_8_list_0);
     dummy_var ^= ((int64_t) (void*) drop_opaque_ArcRwLockSharedMemory);
     dummy_var ^= ((int64_t) (void*) share_opaque_ArcRwLockSharedMemory);
+    dummy_var ^= ((int64_t) (void*) drop_opaque_ArcStdSyncMutexComponent);
+    dummy_var ^= ((int64_t) (void*) share_opaque_ArcStdSyncMutexComponent);
     dummy_var ^= ((int64_t) (void*) drop_opaque_ArcStdSyncMutexModule);
     dummy_var ^= ((int64_t) (void*) share_opaque_ArcStdSyncMutexModule);
     dummy_var ^= ((int64_t) (void*) drop_opaque_CallStack);
@@ -731,6 +820,10 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) share_opaque_Memory);
     dummy_var ^= ((int64_t) (void*) drop_opaque_Table);
     dummy_var ^= ((int64_t) (void*) share_opaque_Table);
+    dummy_var ^= ((int64_t) (void*) drop_opaque_WAnyRef);
+    dummy_var ^= ((int64_t) (void*) share_opaque_WAnyRef);
+    dummy_var ^= ((int64_t) (void*) drop_opaque_WExnRef);
+    dummy_var ^= ((int64_t) (void*) share_opaque_WExnRef);
     dummy_var ^= ((int64_t) (void*) drop_opaque_WFunc);
     dummy_var ^= ((int64_t) (void*) share_opaque_WFunc);
     dummy_var ^= ((int64_t) (void*) inflate_ExternalValue_Func);
@@ -745,6 +838,8 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) inflate_WasmVal_v128);
     dummy_var ^= ((int64_t) (void*) inflate_WasmVal_funcRef);
     dummy_var ^= ((int64_t) (void*) inflate_WasmVal_externRef);
+    dummy_var ^= ((int64_t) (void*) inflate_WasmVal_anyRef);
+    dummy_var ^= ((int64_t) (void*) inflate_WasmVal_exnRef);
     dummy_var ^= ((int64_t) (void*) free_WireSyncReturn);
     dummy_var ^= ((int64_t) (void*) store_dart_post_cobject);
     dummy_var ^= ((int64_t) (void*) get_dart_object);

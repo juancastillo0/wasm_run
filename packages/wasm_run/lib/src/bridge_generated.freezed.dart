@@ -12,7 +12,7 @@ part of 'bridge_generated.dart';
 T _$identity<T>(T value) => value;
 
 final _privateConstructorUsedError = UnsupportedError(
-    'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#custom-getters-and-methods');
+    'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models');
 
 /// @nodoc
 mixin _$ExternalType {
@@ -132,7 +132,7 @@ class _$ExternalType_FuncImpl implements ExternalType_Func {
   }
 
   @override
-  bool operator ==(dynamic other) {
+  bool operator ==(Object other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$ExternalType_FuncImpl &&
@@ -280,7 +280,7 @@ class _$ExternalType_GlobalImpl implements ExternalType_Global {
   }
 
   @override
-  bool operator ==(dynamic other) {
+  bool operator ==(Object other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$ExternalType_GlobalImpl &&
@@ -428,7 +428,7 @@ class _$ExternalType_TableImpl implements ExternalType_Table {
   }
 
   @override
-  bool operator ==(dynamic other) {
+  bool operator ==(Object other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$ExternalType_TableImpl &&
@@ -576,7 +576,7 @@ class _$ExternalType_MemoryImpl implements ExternalType_Memory {
   }
 
   @override
-  bool operator ==(dynamic other) {
+  bool operator ==(Object other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$ExternalType_MemoryImpl &&
@@ -803,7 +803,7 @@ class _$ExternalValue_FuncImpl implements ExternalValue_Func {
   }
 
   @override
-  bool operator ==(dynamic other) {
+  bool operator ==(Object other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$ExternalValue_FuncImpl &&
@@ -957,7 +957,7 @@ class _$ExternalValue_GlobalImpl implements ExternalValue_Global {
   }
 
   @override
-  bool operator ==(dynamic other) {
+  bool operator ==(Object other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$ExternalValue_GlobalImpl &&
@@ -1112,7 +1112,7 @@ class _$ExternalValue_TableImpl implements ExternalValue_Table {
   }
 
   @override
-  bool operator ==(dynamic other) {
+  bool operator ==(Object other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$ExternalValue_TableImpl &&
@@ -1266,7 +1266,7 @@ class _$ExternalValue_MemoryImpl implements ExternalValue_Memory {
   }
 
   @override
-  bool operator ==(dynamic other) {
+  bool operator ==(Object other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$ExternalValue_MemoryImpl &&
@@ -1423,7 +1423,7 @@ class _$ExternalValue_SharedMemoryImpl implements ExternalValue_SharedMemory {
   }
 
   @override
-  bool operator ==(dynamic other) {
+  bool operator ==(Object other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$ExternalValue_SharedMemoryImpl &&
@@ -1649,7 +1649,7 @@ class _$ParallelExec_OkImpl implements ParallelExec_Ok {
   }
 
   @override
-  bool operator ==(dynamic other) {
+  bool operator ==(Object other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$ParallelExec_OkImpl &&
@@ -1792,7 +1792,7 @@ class _$ParallelExec_ErrImpl implements ParallelExec_Err {
   }
 
   @override
-  bool operator ==(dynamic other) {
+  bool operator ==(Object other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$ParallelExec_ErrImpl &&
@@ -1933,7 +1933,7 @@ class _$ParallelExec_CallImpl implements ParallelExec_Call {
   }
 
   @override
-  bool operator ==(dynamic other) {
+  bool operator ==(Object other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$ParallelExec_CallImpl &&
@@ -2042,6 +2042,8 @@ mixin _$WasmVal {
     required TResult Function(U8Array16 field0) v128,
     required TResult Function(WFunc? field0) funcRef,
     required TResult Function(int? field0) externRef,
+    required TResult Function(WAnyRef? field0) anyRef,
+    required TResult Function(WExnRef? field0) exnRef,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
@@ -2053,6 +2055,8 @@ mixin _$WasmVal {
     TResult? Function(U8Array16 field0)? v128,
     TResult? Function(WFunc? field0)? funcRef,
     TResult? Function(int? field0)? externRef,
+    TResult? Function(WAnyRef? field0)? anyRef,
+    TResult? Function(WExnRef? field0)? exnRef,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
@@ -2064,6 +2068,8 @@ mixin _$WasmVal {
     TResult Function(U8Array16 field0)? v128,
     TResult Function(WFunc? field0)? funcRef,
     TResult Function(int? field0)? externRef,
+    TResult Function(WAnyRef? field0)? anyRef,
+    TResult Function(WExnRef? field0)? exnRef,
     required TResult orElse(),
   }) =>
       throw _privateConstructorUsedError;
@@ -2076,6 +2082,8 @@ mixin _$WasmVal {
     required TResult Function(WasmVal_v128 value) v128,
     required TResult Function(WasmVal_funcRef value) funcRef,
     required TResult Function(WasmVal_externRef value) externRef,
+    required TResult Function(WasmVal_anyRef value) anyRef,
+    required TResult Function(WasmVal_exnRef value) exnRef,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
@@ -2087,6 +2095,8 @@ mixin _$WasmVal {
     TResult? Function(WasmVal_v128 value)? v128,
     TResult? Function(WasmVal_funcRef value)? funcRef,
     TResult? Function(WasmVal_externRef value)? externRef,
+    TResult? Function(WasmVal_anyRef value)? anyRef,
+    TResult? Function(WasmVal_exnRef value)? exnRef,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
@@ -2098,6 +2108,8 @@ mixin _$WasmVal {
     TResult Function(WasmVal_v128 value)? v128,
     TResult Function(WasmVal_funcRef value)? funcRef,
     TResult Function(WasmVal_externRef value)? externRef,
+    TResult Function(WasmVal_anyRef value)? anyRef,
+    TResult Function(WasmVal_exnRef value)? exnRef,
     required TResult orElse(),
   }) =>
       throw _privateConstructorUsedError;
@@ -2165,7 +2177,7 @@ class _$WasmVal_i32Impl implements WasmVal_i32 {
   }
 
   @override
-  bool operator ==(dynamic other) {
+  bool operator ==(Object other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$WasmVal_i32Impl &&
@@ -2191,6 +2203,8 @@ class _$WasmVal_i32Impl implements WasmVal_i32 {
     required TResult Function(U8Array16 field0) v128,
     required TResult Function(WFunc? field0) funcRef,
     required TResult Function(int? field0) externRef,
+    required TResult Function(WAnyRef? field0) anyRef,
+    required TResult Function(WExnRef? field0) exnRef,
   }) {
     return i32(field0);
   }
@@ -2205,6 +2219,8 @@ class _$WasmVal_i32Impl implements WasmVal_i32 {
     TResult? Function(U8Array16 field0)? v128,
     TResult? Function(WFunc? field0)? funcRef,
     TResult? Function(int? field0)? externRef,
+    TResult? Function(WAnyRef? field0)? anyRef,
+    TResult? Function(WExnRef? field0)? exnRef,
   }) {
     return i32?.call(field0);
   }
@@ -2219,6 +2235,8 @@ class _$WasmVal_i32Impl implements WasmVal_i32 {
     TResult Function(U8Array16 field0)? v128,
     TResult Function(WFunc? field0)? funcRef,
     TResult Function(int? field0)? externRef,
+    TResult Function(WAnyRef? field0)? anyRef,
+    TResult Function(WExnRef? field0)? exnRef,
     required TResult orElse(),
   }) {
     if (i32 != null) {
@@ -2237,6 +2255,8 @@ class _$WasmVal_i32Impl implements WasmVal_i32 {
     required TResult Function(WasmVal_v128 value) v128,
     required TResult Function(WasmVal_funcRef value) funcRef,
     required TResult Function(WasmVal_externRef value) externRef,
+    required TResult Function(WasmVal_anyRef value) anyRef,
+    required TResult Function(WasmVal_exnRef value) exnRef,
   }) {
     return i32(this);
   }
@@ -2251,6 +2271,8 @@ class _$WasmVal_i32Impl implements WasmVal_i32 {
     TResult? Function(WasmVal_v128 value)? v128,
     TResult? Function(WasmVal_funcRef value)? funcRef,
     TResult? Function(WasmVal_externRef value)? externRef,
+    TResult? Function(WasmVal_anyRef value)? anyRef,
+    TResult? Function(WasmVal_exnRef value)? exnRef,
   }) {
     return i32?.call(this);
   }
@@ -2265,6 +2287,8 @@ class _$WasmVal_i32Impl implements WasmVal_i32 {
     TResult Function(WasmVal_v128 value)? v128,
     TResult Function(WasmVal_funcRef value)? funcRef,
     TResult Function(WasmVal_externRef value)? externRef,
+    TResult Function(WasmVal_anyRef value)? anyRef,
+    TResult Function(WasmVal_exnRef value)? exnRef,
     required TResult orElse(),
   }) {
     if (i32 != null) {
@@ -2329,7 +2353,7 @@ class _$WasmVal_i64Impl implements WasmVal_i64 {
   }
 
   @override
-  bool operator ==(dynamic other) {
+  bool operator ==(Object other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$WasmVal_i64Impl &&
@@ -2355,6 +2379,8 @@ class _$WasmVal_i64Impl implements WasmVal_i64 {
     required TResult Function(U8Array16 field0) v128,
     required TResult Function(WFunc? field0) funcRef,
     required TResult Function(int? field0) externRef,
+    required TResult Function(WAnyRef? field0) anyRef,
+    required TResult Function(WExnRef? field0) exnRef,
   }) {
     return i64(field0);
   }
@@ -2369,6 +2395,8 @@ class _$WasmVal_i64Impl implements WasmVal_i64 {
     TResult? Function(U8Array16 field0)? v128,
     TResult? Function(WFunc? field0)? funcRef,
     TResult? Function(int? field0)? externRef,
+    TResult? Function(WAnyRef? field0)? anyRef,
+    TResult? Function(WExnRef? field0)? exnRef,
   }) {
     return i64?.call(field0);
   }
@@ -2383,6 +2411,8 @@ class _$WasmVal_i64Impl implements WasmVal_i64 {
     TResult Function(U8Array16 field0)? v128,
     TResult Function(WFunc? field0)? funcRef,
     TResult Function(int? field0)? externRef,
+    TResult Function(WAnyRef? field0)? anyRef,
+    TResult Function(WExnRef? field0)? exnRef,
     required TResult orElse(),
   }) {
     if (i64 != null) {
@@ -2401,6 +2431,8 @@ class _$WasmVal_i64Impl implements WasmVal_i64 {
     required TResult Function(WasmVal_v128 value) v128,
     required TResult Function(WasmVal_funcRef value) funcRef,
     required TResult Function(WasmVal_externRef value) externRef,
+    required TResult Function(WasmVal_anyRef value) anyRef,
+    required TResult Function(WasmVal_exnRef value) exnRef,
   }) {
     return i64(this);
   }
@@ -2415,6 +2447,8 @@ class _$WasmVal_i64Impl implements WasmVal_i64 {
     TResult? Function(WasmVal_v128 value)? v128,
     TResult? Function(WasmVal_funcRef value)? funcRef,
     TResult? Function(WasmVal_externRef value)? externRef,
+    TResult? Function(WasmVal_anyRef value)? anyRef,
+    TResult? Function(WasmVal_exnRef value)? exnRef,
   }) {
     return i64?.call(this);
   }
@@ -2429,6 +2463,8 @@ class _$WasmVal_i64Impl implements WasmVal_i64 {
     TResult Function(WasmVal_v128 value)? v128,
     TResult Function(WasmVal_funcRef value)? funcRef,
     TResult Function(WasmVal_externRef value)? externRef,
+    TResult Function(WasmVal_anyRef value)? anyRef,
+    TResult Function(WasmVal_exnRef value)? exnRef,
     required TResult orElse(),
   }) {
     if (i64 != null) {
@@ -2493,7 +2529,7 @@ class _$WasmVal_f32Impl implements WasmVal_f32 {
   }
 
   @override
-  bool operator ==(dynamic other) {
+  bool operator ==(Object other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$WasmVal_f32Impl &&
@@ -2519,6 +2555,8 @@ class _$WasmVal_f32Impl implements WasmVal_f32 {
     required TResult Function(U8Array16 field0) v128,
     required TResult Function(WFunc? field0) funcRef,
     required TResult Function(int? field0) externRef,
+    required TResult Function(WAnyRef? field0) anyRef,
+    required TResult Function(WExnRef? field0) exnRef,
   }) {
     return f32(field0);
   }
@@ -2533,6 +2571,8 @@ class _$WasmVal_f32Impl implements WasmVal_f32 {
     TResult? Function(U8Array16 field0)? v128,
     TResult? Function(WFunc? field0)? funcRef,
     TResult? Function(int? field0)? externRef,
+    TResult? Function(WAnyRef? field0)? anyRef,
+    TResult? Function(WExnRef? field0)? exnRef,
   }) {
     return f32?.call(field0);
   }
@@ -2547,6 +2587,8 @@ class _$WasmVal_f32Impl implements WasmVal_f32 {
     TResult Function(U8Array16 field0)? v128,
     TResult Function(WFunc? field0)? funcRef,
     TResult Function(int? field0)? externRef,
+    TResult Function(WAnyRef? field0)? anyRef,
+    TResult Function(WExnRef? field0)? exnRef,
     required TResult orElse(),
   }) {
     if (f32 != null) {
@@ -2565,6 +2607,8 @@ class _$WasmVal_f32Impl implements WasmVal_f32 {
     required TResult Function(WasmVal_v128 value) v128,
     required TResult Function(WasmVal_funcRef value) funcRef,
     required TResult Function(WasmVal_externRef value) externRef,
+    required TResult Function(WasmVal_anyRef value) anyRef,
+    required TResult Function(WasmVal_exnRef value) exnRef,
   }) {
     return f32(this);
   }
@@ -2579,6 +2623,8 @@ class _$WasmVal_f32Impl implements WasmVal_f32 {
     TResult? Function(WasmVal_v128 value)? v128,
     TResult? Function(WasmVal_funcRef value)? funcRef,
     TResult? Function(WasmVal_externRef value)? externRef,
+    TResult? Function(WasmVal_anyRef value)? anyRef,
+    TResult? Function(WasmVal_exnRef value)? exnRef,
   }) {
     return f32?.call(this);
   }
@@ -2593,6 +2639,8 @@ class _$WasmVal_f32Impl implements WasmVal_f32 {
     TResult Function(WasmVal_v128 value)? v128,
     TResult Function(WasmVal_funcRef value)? funcRef,
     TResult Function(WasmVal_externRef value)? externRef,
+    TResult Function(WasmVal_anyRef value)? anyRef,
+    TResult Function(WasmVal_exnRef value)? exnRef,
     required TResult orElse(),
   }) {
     if (f32 != null) {
@@ -2657,7 +2705,7 @@ class _$WasmVal_f64Impl implements WasmVal_f64 {
   }
 
   @override
-  bool operator ==(dynamic other) {
+  bool operator ==(Object other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$WasmVal_f64Impl &&
@@ -2683,6 +2731,8 @@ class _$WasmVal_f64Impl implements WasmVal_f64 {
     required TResult Function(U8Array16 field0) v128,
     required TResult Function(WFunc? field0) funcRef,
     required TResult Function(int? field0) externRef,
+    required TResult Function(WAnyRef? field0) anyRef,
+    required TResult Function(WExnRef? field0) exnRef,
   }) {
     return f64(field0);
   }
@@ -2697,6 +2747,8 @@ class _$WasmVal_f64Impl implements WasmVal_f64 {
     TResult? Function(U8Array16 field0)? v128,
     TResult? Function(WFunc? field0)? funcRef,
     TResult? Function(int? field0)? externRef,
+    TResult? Function(WAnyRef? field0)? anyRef,
+    TResult? Function(WExnRef? field0)? exnRef,
   }) {
     return f64?.call(field0);
   }
@@ -2711,6 +2763,8 @@ class _$WasmVal_f64Impl implements WasmVal_f64 {
     TResult Function(U8Array16 field0)? v128,
     TResult Function(WFunc? field0)? funcRef,
     TResult Function(int? field0)? externRef,
+    TResult Function(WAnyRef? field0)? anyRef,
+    TResult Function(WExnRef? field0)? exnRef,
     required TResult orElse(),
   }) {
     if (f64 != null) {
@@ -2729,6 +2783,8 @@ class _$WasmVal_f64Impl implements WasmVal_f64 {
     required TResult Function(WasmVal_v128 value) v128,
     required TResult Function(WasmVal_funcRef value) funcRef,
     required TResult Function(WasmVal_externRef value) externRef,
+    required TResult Function(WasmVal_anyRef value) anyRef,
+    required TResult Function(WasmVal_exnRef value) exnRef,
   }) {
     return f64(this);
   }
@@ -2743,6 +2799,8 @@ class _$WasmVal_f64Impl implements WasmVal_f64 {
     TResult? Function(WasmVal_v128 value)? v128,
     TResult? Function(WasmVal_funcRef value)? funcRef,
     TResult? Function(WasmVal_externRef value)? externRef,
+    TResult? Function(WasmVal_anyRef value)? anyRef,
+    TResult? Function(WasmVal_exnRef value)? exnRef,
   }) {
     return f64?.call(this);
   }
@@ -2757,6 +2815,8 @@ class _$WasmVal_f64Impl implements WasmVal_f64 {
     TResult Function(WasmVal_v128 value)? v128,
     TResult Function(WasmVal_funcRef value)? funcRef,
     TResult Function(WasmVal_externRef value)? externRef,
+    TResult Function(WasmVal_anyRef value)? anyRef,
+    TResult Function(WasmVal_exnRef value)? exnRef,
     required TResult orElse(),
   }) {
     if (f64 != null) {
@@ -2821,7 +2881,7 @@ class _$WasmVal_v128Impl implements WasmVal_v128 {
   }
 
   @override
-  bool operator ==(dynamic other) {
+  bool operator ==(Object other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$WasmVal_v128Impl &&
@@ -2848,6 +2908,8 @@ class _$WasmVal_v128Impl implements WasmVal_v128 {
     required TResult Function(U8Array16 field0) v128,
     required TResult Function(WFunc? field0) funcRef,
     required TResult Function(int? field0) externRef,
+    required TResult Function(WAnyRef? field0) anyRef,
+    required TResult Function(WExnRef? field0) exnRef,
   }) {
     return v128(field0);
   }
@@ -2862,6 +2924,8 @@ class _$WasmVal_v128Impl implements WasmVal_v128 {
     TResult? Function(U8Array16 field0)? v128,
     TResult? Function(WFunc? field0)? funcRef,
     TResult? Function(int? field0)? externRef,
+    TResult? Function(WAnyRef? field0)? anyRef,
+    TResult? Function(WExnRef? field0)? exnRef,
   }) {
     return v128?.call(field0);
   }
@@ -2876,6 +2940,8 @@ class _$WasmVal_v128Impl implements WasmVal_v128 {
     TResult Function(U8Array16 field0)? v128,
     TResult Function(WFunc? field0)? funcRef,
     TResult Function(int? field0)? externRef,
+    TResult Function(WAnyRef? field0)? anyRef,
+    TResult Function(WExnRef? field0)? exnRef,
     required TResult orElse(),
   }) {
     if (v128 != null) {
@@ -2894,6 +2960,8 @@ class _$WasmVal_v128Impl implements WasmVal_v128 {
     required TResult Function(WasmVal_v128 value) v128,
     required TResult Function(WasmVal_funcRef value) funcRef,
     required TResult Function(WasmVal_externRef value) externRef,
+    required TResult Function(WasmVal_anyRef value) anyRef,
+    required TResult Function(WasmVal_exnRef value) exnRef,
   }) {
     return v128(this);
   }
@@ -2908,6 +2976,8 @@ class _$WasmVal_v128Impl implements WasmVal_v128 {
     TResult? Function(WasmVal_v128 value)? v128,
     TResult? Function(WasmVal_funcRef value)? funcRef,
     TResult? Function(WasmVal_externRef value)? externRef,
+    TResult? Function(WasmVal_anyRef value)? anyRef,
+    TResult? Function(WasmVal_exnRef value)? exnRef,
   }) {
     return v128?.call(this);
   }
@@ -2922,6 +2992,8 @@ class _$WasmVal_v128Impl implements WasmVal_v128 {
     TResult Function(WasmVal_v128 value)? v128,
     TResult Function(WasmVal_funcRef value)? funcRef,
     TResult Function(WasmVal_externRef value)? externRef,
+    TResult Function(WasmVal_anyRef value)? anyRef,
+    TResult Function(WasmVal_exnRef value)? exnRef,
     required TResult orElse(),
   }) {
     if (v128 != null) {
@@ -2986,7 +3058,7 @@ class _$WasmVal_funcRefImpl implements WasmVal_funcRef {
   }
 
   @override
-  bool operator ==(dynamic other) {
+  bool operator ==(Object other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$WasmVal_funcRefImpl &&
@@ -3013,6 +3085,8 @@ class _$WasmVal_funcRefImpl implements WasmVal_funcRef {
     required TResult Function(U8Array16 field0) v128,
     required TResult Function(WFunc? field0) funcRef,
     required TResult Function(int? field0) externRef,
+    required TResult Function(WAnyRef? field0) anyRef,
+    required TResult Function(WExnRef? field0) exnRef,
   }) {
     return funcRef(field0);
   }
@@ -3027,6 +3101,8 @@ class _$WasmVal_funcRefImpl implements WasmVal_funcRef {
     TResult? Function(U8Array16 field0)? v128,
     TResult? Function(WFunc? field0)? funcRef,
     TResult? Function(int? field0)? externRef,
+    TResult? Function(WAnyRef? field0)? anyRef,
+    TResult? Function(WExnRef? field0)? exnRef,
   }) {
     return funcRef?.call(field0);
   }
@@ -3041,6 +3117,8 @@ class _$WasmVal_funcRefImpl implements WasmVal_funcRef {
     TResult Function(U8Array16 field0)? v128,
     TResult Function(WFunc? field0)? funcRef,
     TResult Function(int? field0)? externRef,
+    TResult Function(WAnyRef? field0)? anyRef,
+    TResult Function(WExnRef? field0)? exnRef,
     required TResult orElse(),
   }) {
     if (funcRef != null) {
@@ -3059,6 +3137,8 @@ class _$WasmVal_funcRefImpl implements WasmVal_funcRef {
     required TResult Function(WasmVal_v128 value) v128,
     required TResult Function(WasmVal_funcRef value) funcRef,
     required TResult Function(WasmVal_externRef value) externRef,
+    required TResult Function(WasmVal_anyRef value) anyRef,
+    required TResult Function(WasmVal_exnRef value) exnRef,
   }) {
     return funcRef(this);
   }
@@ -3073,6 +3153,8 @@ class _$WasmVal_funcRefImpl implements WasmVal_funcRef {
     TResult? Function(WasmVal_v128 value)? v128,
     TResult? Function(WasmVal_funcRef value)? funcRef,
     TResult? Function(WasmVal_externRef value)? externRef,
+    TResult? Function(WasmVal_anyRef value)? anyRef,
+    TResult? Function(WasmVal_exnRef value)? exnRef,
   }) {
     return funcRef?.call(this);
   }
@@ -3087,6 +3169,8 @@ class _$WasmVal_funcRefImpl implements WasmVal_funcRef {
     TResult Function(WasmVal_v128 value)? v128,
     TResult Function(WasmVal_funcRef value)? funcRef,
     TResult Function(WasmVal_externRef value)? externRef,
+    TResult Function(WasmVal_anyRef value)? anyRef,
+    TResult Function(WasmVal_exnRef value)? exnRef,
     required TResult orElse(),
   }) {
     if (funcRef != null) {
@@ -3151,7 +3235,7 @@ class _$WasmVal_externRefImpl implements WasmVal_externRef {
   }
 
   @override
-  bool operator ==(dynamic other) {
+  bool operator ==(Object other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$WasmVal_externRefImpl &&
@@ -3178,6 +3262,8 @@ class _$WasmVal_externRefImpl implements WasmVal_externRef {
     required TResult Function(U8Array16 field0) v128,
     required TResult Function(WFunc? field0) funcRef,
     required TResult Function(int? field0) externRef,
+    required TResult Function(WAnyRef? field0) anyRef,
+    required TResult Function(WExnRef? field0) exnRef,
   }) {
     return externRef(field0);
   }
@@ -3192,6 +3278,8 @@ class _$WasmVal_externRefImpl implements WasmVal_externRef {
     TResult? Function(U8Array16 field0)? v128,
     TResult? Function(WFunc? field0)? funcRef,
     TResult? Function(int? field0)? externRef,
+    TResult? Function(WAnyRef? field0)? anyRef,
+    TResult? Function(WExnRef? field0)? exnRef,
   }) {
     return externRef?.call(field0);
   }
@@ -3206,6 +3294,8 @@ class _$WasmVal_externRefImpl implements WasmVal_externRef {
     TResult Function(U8Array16 field0)? v128,
     TResult Function(WFunc? field0)? funcRef,
     TResult Function(int? field0)? externRef,
+    TResult Function(WAnyRef? field0)? anyRef,
+    TResult Function(WExnRef? field0)? exnRef,
     required TResult orElse(),
   }) {
     if (externRef != null) {
@@ -3224,6 +3314,8 @@ class _$WasmVal_externRefImpl implements WasmVal_externRef {
     required TResult Function(WasmVal_v128 value) v128,
     required TResult Function(WasmVal_funcRef value) funcRef,
     required TResult Function(WasmVal_externRef value) externRef,
+    required TResult Function(WasmVal_anyRef value) anyRef,
+    required TResult Function(WasmVal_exnRef value) exnRef,
   }) {
     return externRef(this);
   }
@@ -3238,6 +3330,8 @@ class _$WasmVal_externRefImpl implements WasmVal_externRef {
     TResult? Function(WasmVal_v128 value)? v128,
     TResult? Function(WasmVal_funcRef value)? funcRef,
     TResult? Function(WasmVal_externRef value)? externRef,
+    TResult? Function(WasmVal_anyRef value)? anyRef,
+    TResult? Function(WasmVal_exnRef value)? exnRef,
   }) {
     return externRef?.call(this);
   }
@@ -3252,6 +3346,8 @@ class _$WasmVal_externRefImpl implements WasmVal_externRef {
     TResult Function(WasmVal_v128 value)? v128,
     TResult Function(WasmVal_funcRef value)? funcRef,
     TResult Function(WasmVal_externRef value)? externRef,
+    TResult Function(WasmVal_anyRef value)? anyRef,
+    TResult Function(WasmVal_exnRef value)? exnRef,
     required TResult orElse(),
   }) {
     if (externRef != null) {
@@ -3269,5 +3365,359 @@ abstract class WasmVal_externRef implements WasmVal {
   int? get field0;
   @JsonKey(ignore: true)
   _$$WasmVal_externRefImplCopyWith<_$WasmVal_externRefImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class _$$WasmVal_anyRefImplCopyWith<$Res> {
+  factory _$$WasmVal_anyRefImplCopyWith(_$WasmVal_anyRefImpl value,
+          $Res Function(_$WasmVal_anyRefImpl) then) =
+      __$$WasmVal_anyRefImplCopyWithImpl<$Res>;
+  @useResult
+  $Res call({WAnyRef? field0});
+}
+
+/// @nodoc
+class __$$WasmVal_anyRefImplCopyWithImpl<$Res>
+    extends _$WasmValCopyWithImpl<$Res, _$WasmVal_anyRefImpl>
+    implements _$$WasmVal_anyRefImplCopyWith<$Res> {
+  __$$WasmVal_anyRefImplCopyWithImpl(
+      _$WasmVal_anyRefImpl _value, $Res Function(_$WasmVal_anyRefImpl) _then)
+      : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? field0 = freezed,
+  }) {
+    return _then(_$WasmVal_anyRefImpl(
+      freezed == field0
+          ? _value.field0
+          : field0 // ignore: cast_nullable_to_non_nullable
+              as WAnyRef?,
+    ));
+  }
+}
+
+/// @nodoc
+
+class _$WasmVal_anyRefImpl implements WasmVal_anyRef {
+  const _$WasmVal_anyRefImpl([this.field0]);
+
+  @override
+  final WAnyRef? field0;
+
+  @override
+  String toString() {
+    return 'WasmVal.anyRef(field0: $field0)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$WasmVal_anyRefImpl &&
+            (identical(other.field0, field0) || other.field0 == field0));
+  }
+
+  @override
+  int get hashCode => Object.hash(runtimeType, field0);
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$WasmVal_anyRefImplCopyWith<_$WasmVal_anyRefImpl> get copyWith =>
+      __$$WasmVal_anyRefImplCopyWithImpl<_$WasmVal_anyRefImpl>(
+          this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function(int field0) i32,
+    required TResult Function(int field0) i64,
+    required TResult Function(double field0) f32,
+    required TResult Function(double field0) f64,
+    required TResult Function(U8Array16 field0) v128,
+    required TResult Function(WFunc? field0) funcRef,
+    required TResult Function(int? field0) externRef,
+    required TResult Function(WAnyRef? field0) anyRef,
+    required TResult Function(WExnRef? field0) exnRef,
+  }) {
+    return anyRef(field0);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function(int field0)? i32,
+    TResult? Function(int field0)? i64,
+    TResult? Function(double field0)? f32,
+    TResult? Function(double field0)? f64,
+    TResult? Function(U8Array16 field0)? v128,
+    TResult? Function(WFunc? field0)? funcRef,
+    TResult? Function(int? field0)? externRef,
+    TResult? Function(WAnyRef? field0)? anyRef,
+    TResult? Function(WExnRef? field0)? exnRef,
+  }) {
+    return anyRef?.call(field0);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function(int field0)? i32,
+    TResult Function(int field0)? i64,
+    TResult Function(double field0)? f32,
+    TResult Function(double field0)? f64,
+    TResult Function(U8Array16 field0)? v128,
+    TResult Function(WFunc? field0)? funcRef,
+    TResult Function(int? field0)? externRef,
+    TResult Function(WAnyRef? field0)? anyRef,
+    TResult Function(WExnRef? field0)? exnRef,
+    required TResult orElse(),
+  }) {
+    if (anyRef != null) {
+      return anyRef(field0);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(WasmVal_i32 value) i32,
+    required TResult Function(WasmVal_i64 value) i64,
+    required TResult Function(WasmVal_f32 value) f32,
+    required TResult Function(WasmVal_f64 value) f64,
+    required TResult Function(WasmVal_v128 value) v128,
+    required TResult Function(WasmVal_funcRef value) funcRef,
+    required TResult Function(WasmVal_externRef value) externRef,
+    required TResult Function(WasmVal_anyRef value) anyRef,
+    required TResult Function(WasmVal_exnRef value) exnRef,
+  }) {
+    return anyRef(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(WasmVal_i32 value)? i32,
+    TResult? Function(WasmVal_i64 value)? i64,
+    TResult? Function(WasmVal_f32 value)? f32,
+    TResult? Function(WasmVal_f64 value)? f64,
+    TResult? Function(WasmVal_v128 value)? v128,
+    TResult? Function(WasmVal_funcRef value)? funcRef,
+    TResult? Function(WasmVal_externRef value)? externRef,
+    TResult? Function(WasmVal_anyRef value)? anyRef,
+    TResult? Function(WasmVal_exnRef value)? exnRef,
+  }) {
+    return anyRef?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(WasmVal_i32 value)? i32,
+    TResult Function(WasmVal_i64 value)? i64,
+    TResult Function(WasmVal_f32 value)? f32,
+    TResult Function(WasmVal_f64 value)? f64,
+    TResult Function(WasmVal_v128 value)? v128,
+    TResult Function(WasmVal_funcRef value)? funcRef,
+    TResult Function(WasmVal_externRef value)? externRef,
+    TResult Function(WasmVal_anyRef value)? anyRef,
+    TResult Function(WasmVal_exnRef value)? exnRef,
+    required TResult orElse(),
+  }) {
+    if (anyRef != null) {
+      return anyRef(this);
+    }
+    return orElse();
+  }
+}
+
+abstract class WasmVal_anyRef implements WasmVal {
+  const factory WasmVal_anyRef([final WAnyRef? field0]) = _$WasmVal_anyRefImpl;
+
+  @override
+  WAnyRef? get field0;
+  @JsonKey(ignore: true)
+  _$$WasmVal_anyRefImplCopyWith<_$WasmVal_anyRefImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class _$$WasmVal_exnRefImplCopyWith<$Res> {
+  factory _$$WasmVal_exnRefImplCopyWith(_$WasmVal_exnRefImpl value,
+          $Res Function(_$WasmVal_exnRefImpl) then) =
+      __$$WasmVal_exnRefImplCopyWithImpl<$Res>;
+  @useResult
+  $Res call({WExnRef? field0});
+}
+
+/// @nodoc
+class __$$WasmVal_exnRefImplCopyWithImpl<$Res>
+    extends _$WasmValCopyWithImpl<$Res, _$WasmVal_exnRefImpl>
+    implements _$$WasmVal_exnRefImplCopyWith<$Res> {
+  __$$WasmVal_exnRefImplCopyWithImpl(
+      _$WasmVal_exnRefImpl _value, $Res Function(_$WasmVal_exnRefImpl) _then)
+      : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? field0 = freezed,
+  }) {
+    return _then(_$WasmVal_exnRefImpl(
+      freezed == field0
+          ? _value.field0
+          : field0 // ignore: cast_nullable_to_non_nullable
+              as WExnRef?,
+    ));
+  }
+}
+
+/// @nodoc
+
+class _$WasmVal_exnRefImpl implements WasmVal_exnRef {
+  const _$WasmVal_exnRefImpl([this.field0]);
+
+  @override
+  final WExnRef? field0;
+
+  @override
+  String toString() {
+    return 'WasmVal.exnRef(field0: $field0)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$WasmVal_exnRefImpl &&
+            (identical(other.field0, field0) || other.field0 == field0));
+  }
+
+  @override
+  int get hashCode => Object.hash(runtimeType, field0);
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$WasmVal_exnRefImplCopyWith<_$WasmVal_exnRefImpl> get copyWith =>
+      __$$WasmVal_exnRefImplCopyWithImpl<_$WasmVal_exnRefImpl>(
+          this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function(int field0) i32,
+    required TResult Function(int field0) i64,
+    required TResult Function(double field0) f32,
+    required TResult Function(double field0) f64,
+    required TResult Function(U8Array16 field0) v128,
+    required TResult Function(WFunc? field0) funcRef,
+    required TResult Function(int? field0) externRef,
+    required TResult Function(WAnyRef? field0) anyRef,
+    required TResult Function(WExnRef? field0) exnRef,
+  }) {
+    return exnRef(field0);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function(int field0)? i32,
+    TResult? Function(int field0)? i64,
+    TResult? Function(double field0)? f32,
+    TResult? Function(double field0)? f64,
+    TResult? Function(U8Array16 field0)? v128,
+    TResult? Function(WFunc? field0)? funcRef,
+    TResult? Function(int? field0)? externRef,
+    TResult? Function(WAnyRef? field0)? anyRef,
+    TResult? Function(WExnRef? field0)? exnRef,
+  }) {
+    return exnRef?.call(field0);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function(int field0)? i32,
+    TResult Function(int field0)? i64,
+    TResult Function(double field0)? f32,
+    TResult Function(double field0)? f64,
+    TResult Function(U8Array16 field0)? v128,
+    TResult Function(WFunc? field0)? funcRef,
+    TResult Function(int? field0)? externRef,
+    TResult Function(WAnyRef? field0)? anyRef,
+    TResult Function(WExnRef? field0)? exnRef,
+    required TResult orElse(),
+  }) {
+    if (exnRef != null) {
+      return exnRef(field0);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(WasmVal_i32 value) i32,
+    required TResult Function(WasmVal_i64 value) i64,
+    required TResult Function(WasmVal_f32 value) f32,
+    required TResult Function(WasmVal_f64 value) f64,
+    required TResult Function(WasmVal_v128 value) v128,
+    required TResult Function(WasmVal_funcRef value) funcRef,
+    required TResult Function(WasmVal_externRef value) externRef,
+    required TResult Function(WasmVal_anyRef value) anyRef,
+    required TResult Function(WasmVal_exnRef value) exnRef,
+  }) {
+    return exnRef(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(WasmVal_i32 value)? i32,
+    TResult? Function(WasmVal_i64 value)? i64,
+    TResult? Function(WasmVal_f32 value)? f32,
+    TResult? Function(WasmVal_f64 value)? f64,
+    TResult? Function(WasmVal_v128 value)? v128,
+    TResult? Function(WasmVal_funcRef value)? funcRef,
+    TResult? Function(WasmVal_externRef value)? externRef,
+    TResult? Function(WasmVal_anyRef value)? anyRef,
+    TResult? Function(WasmVal_exnRef value)? exnRef,
+  }) {
+    return exnRef?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(WasmVal_i32 value)? i32,
+    TResult Function(WasmVal_i64 value)? i64,
+    TResult Function(WasmVal_f32 value)? f32,
+    TResult Function(WasmVal_f64 value)? f64,
+    TResult Function(WasmVal_v128 value)? v128,
+    TResult Function(WasmVal_funcRef value)? funcRef,
+    TResult Function(WasmVal_externRef value)? externRef,
+    TResult Function(WasmVal_anyRef value)? anyRef,
+    TResult Function(WasmVal_exnRef value)? exnRef,
+    required TResult orElse(),
+  }) {
+    if (exnRef != null) {
+      return exnRef(this);
+    }
+    return orElse();
+  }
+}
+
+abstract class WasmVal_exnRef implements WasmVal {
+  const factory WasmVal_exnRef([final WExnRef? field0]) = _$WasmVal_exnRefImpl;
+
+  @override
+  WExnRef? get field0;
+  @JsonKey(ignore: true)
+  _$$WasmVal_exnRefImplCopyWith<_$WasmVal_exnRefImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

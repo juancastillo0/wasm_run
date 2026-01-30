@@ -147,3 +147,74 @@ impl From<WTable> for wasmi::Table {
         *func.0.downcast::<wasmi::Table>().unwrap()
     }
 }
+
+// GC Reference wrappers for wasmtime GC support
+
+/// Wrapper for wasmtime's Rooted<AnyRef> (GC internal reference).
+/// Represents anyref, eqref, structref, arrayref, and i31ref types.
+#[cfg(feature = "wasmtime")]
+#[derive(Debug)]
+pub struct WAnyRef {
+    pub inner: wasmtime::Rooted<wasmtime::AnyRef>,
+}
+
+#[cfg(feature = "wasmtime")]
+impl UnwindSafe for WAnyRef {}
+#[cfg(feature = "wasmtime")]
+impl RefUnwindSafe for WAnyRef {}
+
+#[cfg(feature = "wasmtime")]
+impl Clone for WAnyRef {
+    fn clone(&self) -> Self {
+        Self {
+            inner: self.inner.clone(),
+        }
+    }
+}
+
+/// Wrapper for wasmtime's Rooted<ExnRef> (exception reference).
+#[cfg(feature = "wasmtime")]
+#[derive(Debug)]
+pub struct WExnRef {
+    pub inner: wasmtime::Rooted<wasmtime::ExnRef>,
+}
+
+#[cfg(feature = "wasmtime")]
+impl UnwindSafe for WExnRef {}
+#[cfg(feature = "wasmtime")]
+impl RefUnwindSafe for WExnRef {}
+
+#[cfg(feature = "wasmtime")]
+impl Clone for WExnRef {
+    fn clone(&self) -> Self {
+        Self {
+            inner: self.inner.clone(),
+        }
+    }
+}
+
+// wasmi stubs for GC types (not supported in wasmi)
+
+/// Stub for WAnyRef in wasmi (GC not supported)
+#[cfg(not(feature = "wasmtime"))]
+#[derive(Debug, Clone)]
+pub struct WAnyRef {
+    _private: (),
+}
+
+#[cfg(not(feature = "wasmtime"))]
+impl UnwindSafe for WAnyRef {}
+#[cfg(not(feature = "wasmtime"))]
+impl RefUnwindSafe for WAnyRef {}
+
+/// Stub for WExnRef in wasmi (exception handling not supported)
+#[cfg(not(feature = "wasmtime"))]
+#[derive(Debug, Clone)]
+pub struct WExnRef {
+    _private: (),
+}
+
+#[cfg(not(feature = "wasmtime"))]
+impl UnwindSafe for WExnRef {}
+#[cfg(not(feature = "wasmtime"))]
+impl RefUnwindSafe for WExnRef {}
