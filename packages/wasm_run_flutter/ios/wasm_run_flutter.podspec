@@ -1,43 +1,26 @@
-release_tag_name = 'wasm_run-v0.1.0' # generated; do not edit
-
-# We cannot distribute the XCFramework alongside the library directly,
-# so we have to fetch the correct version here.
-framework_name = 'WasmRun.xcframework'
-remote_zip_name = "#{framework_name}.zip"
-url = "https://github.com/juancastillo0/wasm_run/releases/download/#{release_tag_name}/#{remote_zip_name}"
-local_zip_name = "#{release_tag_name}.zip"
-`
-cd Frameworks
-
-if [ ! -f #{local_zip_name} ]
-then
-  rm -rf #{framework_name}
-  curl -L #{url} -o #{local_zip_name}
-  unzip #{local_zip_name}
-  truncate -s 0 #{local_zip_name}
-  rm -rf #{framework_name}/macos-*
-fi
-
-cd -
-`
+# wasm_run_flutter iOS podspec
+#
+# The native library is now built by wasm_run_native via Cargokit.
+# This podspec is kept minimal as Flutter's FFI plugin mechanism will
+# automatically link the native library from wasm_run_native.
 
 Pod::Spec.new do |s|
   s.name          = 'wasm_run_flutter'
-  s.version       = '0.0.1'
-  s.summary       = 'iOS/macOS Flutter bindings for wasm_run'
+  s.version       = '0.1.0'
+  s.summary       = 'Flutter bindings for wasm_run'
+  s.description   = <<-DESC
+Flutter plugin that provides native bindings for wasm_run.
+The native library is built from source by wasm_run_native.
+                    DESC
   s.license       = { :file => '../LICENSE' }
   s.homepage      = 'https://github.com/juancastillo0/wasm_run'
   s.authors       = { 'Juan Manuel Castillo' => '42351046+juancastillo0@users.noreply.github.com' }
 
-  # This will ensure the source files in Classes/ are included in the native
-  # builds of apps using this FFI plugin. Podspec does not support relative
-  # paths, so Classes contains a forwarder C file that relatively imports
-  # `../src/*` so that the C sources can be shared among all target platforms.
-  s.source              = { :path => '.' }
-  s.source_files        = 'Classes/**/*'
-  s.public_header_files = 'Classes/**/*.h'
-  s.vendored_frameworks = "Frameworks/#{framework_name}"
+  s.source        = { :path => '.' }
+  s.source_files  = 'Classes/**/*'
 
-  s.ios.deployment_target = '11.0'
-  s.osx.deployment_target = '10.13'
+  s.ios.deployment_target = '12.0'
+
+  # Native library is provided by wasm_run_native dependency
+  s.dependency 'wasm_run_native'
 end

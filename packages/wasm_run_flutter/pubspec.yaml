@@ -22,7 +22,11 @@ dependencies:
   plugin_platform_interface: ^2.0.2
   flutter_web_plugins:
     sdk: flutter
-  wasm_run: ^0.1.0
+  wasm_run:
+    path: ../wasm_run
+  # Native library built from source via Cargokit
+  wasm_run_native:
+    path: ../wasm_run_native
 
 dev_dependencies:
   ffi: ^2.0.1

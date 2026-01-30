@@ -1,4 +1,8 @@
-// The Android Gradle Plugin builds the native code with the Android NDK.
+// wasm_run_flutter Android build.gradle
+//
+// The native library is now built by wasm_run_native via Cargokit.
+// This file is kept minimal as Flutter's FFI plugin mechanism will
+// automatically link the native library from wasm_run_native.
 
 group 'com.example.wasm_run_flutter'
 version '1.0'
@@ -10,8 +14,7 @@ buildscript {
     }
 
     dependencies {
-        // The Android Gradle Plugin knows how to build native code with the NDK.
-        classpath 'com.android.tools.build:gradle:7.2.0'
+        classpath 'com.android.tools.build:gradle:7.3.0'
     }
 }
 
@@ -25,28 +28,7 @@ rootProject.allprojects {
 apply plugin: 'com.android.library'
 
 android {
-    // Bumping the plugin compileSdkVersion requires all clients of this plugin
-    // to bump the version in their app.
-    compileSdkVersion 31
-
-    // Bumping the plugin ndkVersion requires all clients of this plugin to bump
-    // the version in their app and to download a newer version of the NDK.
-    ndkVersion "21.4.7075529"
-
-    // Invoke the shared CMake build with the Android Gradle Plugin.
-    externalNativeBuild {
-        cmake {
-            path "CMakeLists.txt"
-
-            // The default CMake version for the Android Gradle Plugin is 3.10.2.
-            // https://developer.android.com/studio/projects/install-ndk#vanilla_cmake
-            //
-            // The Flutter tooling requires that developers have CMake 3.10 or later
-            // installed. You should not increase this version, as doing so will cause
-            // the plugin to fail to compile for some customers of the plugin.
-            // version "3.10.2"
-        }
-    }
+    compileSdk 34
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
@@ -54,6 +36,8 @@ android {
     }
 
     defaultConfig {
-        minSdkVersion 16
+        minSdk 21
     }
+
+    // No externalNativeBuild needed - wasm_run_native handles it
 }

@@ -1,0 +1,48 @@
+[package]
+name = "wasm_run_native"
+version = "0.1.0"
+edition = "2021"
+description = "Native WebAssembly runtime using wasmtime or wasmi. Provides Dart/Flutter FFI bindings via flutter_rust_bridge."
+license = "MIT"
+repository = "https://github.com/juancastillo0/wasm_run"
+keywords = ["wasm", "webassembly", "wasmtime", "wasmi", "wasi"]
+categories = ["wasm", "api-bindings"]
+
+[lib]
+crate-type = ["staticlib", "cdylib"]
+
+[build-dependencies]
+flutter_rust_bridge_codegen = "1.82.4"
+
+[dependencies]
+flutter_rust_bridge = "1.82.4"
+anyhow = "1.0.75"
+once_cell = "1.18.0"
+wat = "1.227"
+
+rayon = "1.8.0"
+cap-std = "2.0.0"
+
+# Wasmtime runtime (default) - supports all features including GC, threads, SIMD
+# Enable component-model for WIT and Component Model support
+wasmtime = { version = "41.0.1", optional = true, features = ["component-model"] }
+wasmtime-wasi = { version = "41.0.1", optional = true }
+
+# Wasmi runtime (interpreter) - supports SIMD, no threads/GC
+wasmi = { version = "1.0.7", optional = true }
+wasmi_wasi = { version = "1.0.8", optional = true }
+
+[features]
+# Default to wasmtime as it supports more features (GC, threads, etc.)
+default = ["wasmtime-runtime", "wasi"]
+
+# Use wasmtime runtime (recommended - supports all features)
+# Note: Using dependency names directly (not dep:) so that implicit features are enabled
+# This allows cfg(feature = "wasmtime") checks in code to work
+wasmtime-runtime = ["wasmtime", "wasmtime-wasi"]
+
+# Use wasmi interpreter (no threads/GC, but works on more platforms)
+wasmi-runtime = ["wasmi", "wasmi_wasi"]
+
+# Enable WASI support
+wasi = []
