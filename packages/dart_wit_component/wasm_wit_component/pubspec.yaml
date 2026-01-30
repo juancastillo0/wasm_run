@@ -15,15 +15,16 @@ flutter:
     - lib/dart_wit_component.wasm
 
 environment:
-  sdk: ">=3.0.0 <4.0.0"
+  sdk: ">=3.3.0 <4.0.0"
 
 dependencies:
-  wasm_run: ^0.1.0
-  args: ^2.4.0
+  wasm_run:
+    path: ../../wasm_run
+  args: ^2.7.0
   recase: ^4.1.0
 
 dev_dependencies:
-  very_good_analysis: ^5.0.0
-  test: ^1.21.0
+  very_good_analysis: ^6.0.0
+  test: ^1.26.0
   wasm_wit_component_example:
     path: example
