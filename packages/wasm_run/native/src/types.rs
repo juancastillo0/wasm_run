@@ -64,6 +64,13 @@ impl WasmVal {
                     None => wasmi::Val::ExternRef(Ref::Null),
                 }
             }
+            // GC types are not supported in wasmi
+            WasmVal::anyRef(_) | WasmVal::exnRef(_) => {
+                panic!(
+                    "GC reference types (anyRef, exnRef) are not supported in the wasmi runtime. \
+                     For GC support, use the wasmtime runtime by enabling the 'wasmtime' feature."
+                )
+            }
         }
     }
 
