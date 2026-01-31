@@ -46,6 +46,12 @@ do_clean() {
         rm -rf "$SCRIPT_DIR/target"
     fi
 
+    # Clean cross-rs target directory (separate from main target to avoid GLIBC issues)
+    if [[ -d "$SCRIPT_DIR/target-cross" ]]; then
+        log_info "Removing cross-rs target directory"
+        rm -rf "$SCRIPT_DIR/target-cross"
+    fi
+
     # Clean native library builds
     local native_script="$SCRIPT_DIR/packages/wasm_run/native/scripts/cross-build.sh"
     if [[ -x "$native_script" ]]; then

@@ -100,17 +100,57 @@ check_disk_space() {
     return 0
 }
 
-# Fix ownership of target directory after Docker builds
-# Docker runs as root, so files are owned by root - this fixes them
+# Build custom osxcross Docker image with Rust 1.93+
+# Returns image tag via stdout, logs go to stderr
+ensure_osxcross_image() {
+    local image_tag="${DARWIN_BUILDER_CUSTOM}"
+
+    # Check if custom image already exists
+    if docker image inspect "$image_tag" &>/dev/null; then
+        log_info "Using existing custom osxcross image: $image_tag" >&2
+        echo "$image_tag"
+        return 0
+    fi
+
+    log_info "Building custom osxcross image..." >&2
+
+    docker build \
+        -t "$image_tag" \
+        -f "$DOCKER_DIR/osxcross-user.dockerfile" \
+        "$DOCKER_DIR" >&2
+
+    if [[ $? -eq 0 ]]; then
+        log_success "Custom osxcross image built: $image_tag" >&2
+        echo "$image_tag"
+        return 0
+    else
+        log_error "Failed to build custom osxcross image" >&2
+        return 1
+    fi
+}
+
+# Fix ownership of target directory after Docker build
+# Uses Docker to chown files to current user (avoids needing sudo)
 fix_target_ownership() {
-    local target_dir="$WORKSPACE_ROOT/target"
-    if [[ -d "$target_dir" ]]; then
-        # Check if any files are owned by root
-        if find "$target_dir" -user root -print -quit 2>/dev/null | grep -q .; then
-            log_info "Fixing ownership of build artifacts..."
-            sudo chown -R "$(id -u):$(id -g)" "$target_dir" 2>/dev/null || \
-                log_warn "Could not fix ownership (may need sudo)"
-        fi
+    local user_id=$(id -u)
+    local group_id=$(id -g)
+
+    log_info "Fixing ownership of build artifacts..."
+
+    # Fix ownership of main target directory
+    if [[ -d "$WORKSPACE_ROOT/target" ]]; then
+        docker run --rm \
+            -v "$WORKSPACE_ROOT/target:/target" \
+            alpine:latest \
+            chown -R "$user_id:$group_id" /target 2>/dev/null || true
+    fi
+
+    # Fix ownership of cross target directory
+    if [[ -d "$WORKSPACE_ROOT/target-cross" ]]; then
+        docker run --rm \
+            -v "$WORKSPACE_ROOT/target-cross:/target" \
+            alpine:latest \
+            chown -R "$user_id:$group_id" /target 2>/dev/null || true
     fi
 }
 
@@ -288,16 +328,19 @@ build_with_cross() {
     check_disk_space 10 || true
 
     # Run cross from workspace root so that CROSS_REMOTE mounts everything correctly
-    # and outputs go to $WORKSPACE_ROOT/target/$target/release/
     cd "$WORKSPACE_ROOT"
 
     # Export user IDs for custom Dockerfile (ensures files are owned by host user)
     export CROSS_USER_ID=$(id -u)
     export CROSS_GROUP_ID=$(id -g)
 
-    # Use CROSS_REMOTE=1 to build entirely in container (avoids glibc mismatch on newer hosts)
+    # Use a separate target directory for cross-rs builds to avoid GLIBC mismatch
+    # Host-built build scripts are incompatible with cross-rs containers that have older GLIBC
+    local cross_target_dir="$WORKSPACE_ROOT/target-cross"
+
+    # Use CROSS_REMOTE=1 to build entirely in container
     # Build only the wasm_run_native package
-    CROSS_REMOTE=1 "$cross_cmd" build --release --target="$target" -p wasm_run_native
+    CARGO_TARGET_DIR="$cross_target_dir" CROSS_REMOTE=1 "$cross_cmd" build --release --target="$target" -p wasm_run_native
     local result=$?
 
     # Determine extension
@@ -308,11 +351,25 @@ build_with_cross() {
     esac
 
     if [[ $result -eq 0 ]]; then
-        # Copy output from workspace target directory
-        # Windows DLLs don't have "lib" prefix, so check both naming conventions
-        if ! copy_output "$target" "$ext"; then
+        # Copy output from cross-specific target directory
+        local src="$cross_target_dir/$target/release"
+        local dst="$OUTPUT_DIR/$target"
+        mkdir -p "$dst"
+
+        local lib_name
+        if [[ -f "$src/libwasm_run_native.$ext" ]]; then
+            lib_name="libwasm_run_native.$ext"
+        elif [[ -f "$src/wasm_run_native.$ext" ]]; then
+            lib_name="wasm_run_native.$ext"
+        else
             log_error "Could not find build output for $target"
             result=1
+        fi
+
+        if [[ -n "$lib_name" ]]; then
+            cp "$src/$lib_name" "$dst/"
+            local size=$(du -h "$dst/$lib_name" | cut -f1)
+            log_success "$target: $lib_name ($size)"
         fi
     fi
 
@@ -331,6 +388,18 @@ build_macos_with_docker() {
     # Check disk space before pulling large image
     check_disk_space 15 || true
 
+    # Build or get custom osxcross image with non-root user
+    local custom_image
+    custom_image=$(ensure_osxcross_image)
+    if [[ $? -ne 0 ]]; then
+        log_error "Failed to prepare osxcross Docker image"
+        return 1
+    fi
+
+    # Create cargo cache directory on host (avoids container overlay disk space issues)
+    local cargo_cache="$WORKSPACE_ROOT/target/.cargo-cache"
+    mkdir -p "$cargo_cache/registry" "$cargo_cache/git"
+
     # Run from workspace root and build only wasm_run_native package
     # Install required Rust version and set CC/CXX/linker to osxcross clang
     local linker_var="CARGO_TARGET_X86_64_APPLE_DARWIN_LINKER"
@@ -343,20 +412,19 @@ build_macos_with_docker() {
 
     docker run --rm \
         -v "$WORKSPACE_ROOT:/app" \
+        -v "$cargo_cache:/cargo-cache" \
+        -e "CARGO_HOME=/cargo-cache" \
         -e "CC=$cc_val" \
         -e "CXX=${cc_val}++" \
         -e "$linker_var=$cc_val" \
         -w "/app" \
-        "$DARWIN_BUILDER_BASE" \
-        sh -c "rustup default 1.93.0 && rustup target add $target && cargo build --release --target=$target -p wasm_run_native"
+        "$custom_image" \
+        sh -c "rustup target add $target 2>/dev/null || true && cargo build --release --target=$target -p wasm_run_native"
 
     local result=$?
 
     # Fix ownership of build artifacts (Docker runs as root)
     fix_target_ownership
-
-    # Cleanup Docker image after build
-    cleanup_docker_image "$DARWIN_BUILDER_BASE"
 
     if [[ $result -eq 0 ]]; then
         copy_output "$target" "dylib"
@@ -455,6 +523,18 @@ build_ios_with_docker() {
     # Check disk space before pulling image
     check_disk_space 15 || true
 
+    # Build or get custom osxcross image
+    local custom_image
+    custom_image=$(ensure_osxcross_image)
+    if [[ $? -ne 0 ]]; then
+        log_error "Failed to prepare osxcross Docker image"
+        return 1
+    fi
+
+    # Create cargo cache directory on host (avoids container overlay disk space issues)
+    local cargo_cache="$WORKSPACE_ROOT/target/.cargo-cache"
+    mkdir -p "$cargo_cache/registry" "$cargo_cache/git"
+
     local arch="arm64"
     local min_ios_version="12.0"
     if [[ "$target" == "x86_64-apple-ios" ]]; then
@@ -469,7 +549,9 @@ build_ios_with_docker() {
     local osxcross_bin="/usr/local/osxcross/target/bin"
     docker run --rm \
         -v "$WORKSPACE_ROOT:/app" \
+        -v "$cargo_cache:/cargo-cache" \
         -v "$IOS_SDK_PATH:/ios-sdk:ro" \
+        -e "CARGO_HOME=/cargo-cache" \
         -e "SDKROOT=/ios-sdk" \
         -e "CC=clang" \
         -e "CXX=clang++" \
@@ -478,16 +560,13 @@ build_ios_with_docker() {
         -e "CARGO_TARGET_AARCH64_APPLE_IOS_LINKER=$osxcross_bin/aarch64-apple-darwin22.4-clang" \
         -e "RUSTFLAGS=-C link-arg=-target -C link-arg=$ios_target -C link-arg=-isysroot -C link-arg=/ios-sdk -C link-arg=-fuse-ld=$osxcross_bin/aarch64-apple-darwin22.4-ld" \
         -w "/app" \
-        "$DARWIN_BUILDER_BASE" \
-        sh -c "export PATH=$osxcross_bin:\$PATH && rustup default 1.93.0 && rustup target add $target && cargo build --release --target=$target -p wasm_run_native"
+        "$custom_image" \
+        sh -c "export PATH=$osxcross_bin:\$PATH && rustup target add $target 2>/dev/null || true && cargo build --release --target=$target -p wasm_run_native"
 
     local result=$?
 
     # Fix ownership of build artifacts (Docker runs as root)
     fix_target_ownership
-
-    # Cleanup Docker image after build
-    cleanup_docker_image "$DARWIN_BUILDER_BASE"
 
     if [[ $result -eq 0 ]]; then
         # iOS can use either .a (static) or .dylib (dynamic) - try both
@@ -652,6 +731,12 @@ do_clean() {
     if [[ -d "$WORKSPACE_ROOT/target" ]]; then
         log_info "Removing Rust target directory: $WORKSPACE_ROOT/target"
         rm -rf "$WORKSPACE_ROOT/target"
+    fi
+
+    # Clean cross target directory (used for cross-rs builds)
+    if [[ -d "$WORKSPACE_ROOT/target-cross" ]]; then
+        log_info "Removing cross target directory: $WORKSPACE_ROOT/target-cross"
+        rm -rf "$WORKSPACE_ROOT/target-cross"
     fi
 
     # Clean temp directory

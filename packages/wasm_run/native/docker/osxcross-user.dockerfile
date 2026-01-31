@@ -1,23 +1,14 @@
-# Custom osxcross image that runs as non-root user
-# This ensures build artifacts are owned by the host user, not root
+# Custom osxcross image with Rust 1.93+ for wasmtime compatibility
+# Runs as root but output ownership is fixed by the build script
 #
 # Based on joseluisq/rust-linux-darwin-builder
 
 FROM joseluisq/rust-linux-darwin-builder:latest
 
-ARG USER_ID=1000
-ARG GROUP_ID=1000
+ARG RUST_VERSION=1.93.0
 
-# Create non-root user and make root's rustup/cargo accessible (not copied)
-# This avoids doubling disk usage during build
-RUN groupadd -g $GROUP_ID builder 2>/dev/null || true && \
-    useradd -m -u $USER_ID -g $GROUP_ID -s /bin/bash builder 2>/dev/null || true && \
-    chmod -R a+rX /root/.cargo /root/.rustup && \
-    mkdir -p /home/builder/.cargo && \
-    chown -R $USER_ID:$GROUP_ID /home/builder
-
-USER builder
-ENV HOME=/home/builder
-ENV CARGO_HOME=/home/builder/.cargo
-ENV RUSTUP_HOME=/root/.rustup
-ENV PATH="/root/.cargo/bin:/usr/local/osxcross/target/bin:${PATH}"
+# Install required Rust version and cross-compilation targets
+# The base image has Rust 1.87.0 but wasmtime requires 1.90+
+RUN rustup install $RUST_VERSION && \
+    rustup default $RUST_VERSION && \
+    rustup target add x86_64-apple-darwin aarch64-apple-darwin aarch64-apple-ios

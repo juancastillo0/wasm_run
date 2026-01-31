@@ -74,6 +74,8 @@ Use `detect_wasm_kind()` to determine if a binary is a core module or component.
 
 ## Building
 
+### Native Build
+
 ```bash
 # Build with wasmtime (default)
 cargo build --features wasmtime-runtime,wasi
@@ -84,6 +86,90 @@ cargo build --features wasmi-runtime,wasi --no-default-features
 # Check both configurations
 cargo check --features wasmtime-runtime,wasi
 cargo check --features wasmi-runtime,wasi --no-default-features
+```
+
+### Cross-Compilation
+
+The `scripts/cross-build.sh` script builds native libraries for all supported platforms using Docker-based cross-compilation.
+
+#### Requirements
+
+- Docker (running)
+- Rust 1.85+
+- [cross-rs](https://github.com/cross-rs/cross) (installed automatically)
+
+#### Supported Targets
+
+| Platform | Target Triple | Build Method |
+|----------|--------------|--------------|
+| Linux x64 | x86_64-unknown-linux-gnu | Native or cross-rs |
+| Linux ARM64 | aarch64-unknown-linux-gnu | cross-rs |
+| macOS x64 | x86_64-apple-darwin | osxcross Docker |
+| macOS ARM64 | aarch64-apple-darwin | osxcross Docker |
+| iOS ARM64 | aarch64-apple-ios | osxcross + iOS SDK |
+| Android ARM64 | aarch64-linux-android | cross-rs |
+| Android ARM32 | armv7-linux-androideabi | cross-rs |
+| Android x64 | x86_64-linux-android | cross-rs |
+| Android x86 | i686-linux-android | cross-rs |
+| Windows x64 | x86_64-pc-windows-gnu | cross-rs |
+
+#### Usage
+
+```bash
+# Check tools
+./scripts/cross-build.sh --check
+
+# Build all targets (parallel)
+./scripts/cross-build.sh --all --parallel
+
+# Build specific platform groups
+./scripts/cross-build.sh --linux
+./scripts/cross-build.sh --android
+./scripts/cross-build.sh --macos
+./scripts/cross-build.sh --ios
+./scripts/cross-build.sh --windows
+
+# Build single target
+./scripts/cross-build.sh aarch64-linux-android
+
+# Keep Docker images for faster rebuilds
+./scripts/cross-build.sh --all --keep-images
+
+# Clean built libraries
+./scripts/cross-build.sh --clean
+```
+
+#### Output
+
+Built libraries are placed in `lib/<target>/`:
+
+```
+lib/
+├── aarch64-apple-darwin/libwasm_run_native.dylib
+├── aarch64-apple-ios/libwasm_run_native.dylib
+├── aarch64-linux-android/libwasm_run_native.so
+├── aarch64-unknown-linux-gnu/libwasm_run_native.so
+├── armv7-linux-androideabi/libwasm_run_native.so
+├── i686-linux-android/libwasm_run_native.so
+├── x86_64-apple-darwin/libwasm_run_native.dylib
+├── x86_64-linux-android/libwasm_run_native.so
+├── x86_64-pc-windows-gnu/wasm_run_native.dll
+└── x86_64-unknown-linux-gnu/libwasm_run_native.so
+```
+
+#### Top-Level Build Script
+
+From the workspace root, you can also use:
+
+```bash
+# Build all native libraries
+./build.sh native
+
+# Build with specific options
+./build.sh native --android --parallel
+
+# Clean everything
+./build.sh clean
 ```
 
 ## Architecture
