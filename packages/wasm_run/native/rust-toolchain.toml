@@ -6,7 +6,21 @@
 # wasmtime 41+ requires Rust 1.86+
 channel = "1.93.0"
 
-# Native target only - add others as needed for cross-compilation
+# Cross-compilation targets for all supported platforms
 targets = [
+  # Linux
   "x86_64-unknown-linux-gnu",
+  "aarch64-unknown-linux-gnu",
+  # macOS
+  "x86_64-apple-darwin",
+  "aarch64-apple-darwin",
+  # Windows
+  "x86_64-pc-windows-msvc",
+  # Android
+  "aarch64-linux-android",
+  "armv7-linux-androideabi",
+  "x86_64-linux-android",
+  "i686-linux-android",
+  # iOS
+  "aarch64-apple-ios",
 ]

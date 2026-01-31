@@ -23,7 +23,22 @@ cap-std = "4.0.0"
 
 # Wasmtime runtime (default) - supports all features including GC, threads, SIMD
 # Enable component-model for WIT and Component Model support
-wasmtime = { version = "41.0.1", optional = true, features = ["component-model"] }
+# Disable profiling (ittapi) for Windows cross-compilation compatibility
+wasmtime = { version = "41.0.1", optional = true, default-features = false, features = [
+    "component-model",
+    "async",
+    "cache",
+    "gc",
+    "threads",
+    "demangle",
+    "addr2line",
+    "coredump",
+    "runtime",
+    "cranelift",
+    "winch",
+    "std",
+    "parallel-compilation",
+] }
 wasmtime-wasi = { version = "41.0.1", optional = true }
 
 # Wasmi runtime (interpreter) - supports SIMD, no threads/GC
