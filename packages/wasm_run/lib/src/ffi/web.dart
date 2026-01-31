@@ -1,21 +1,17 @@
-import 'dart:html' as html;
-import 'dart:js_util' as js_util;
+import 'dart:async';
+import 'dart:js_interop';
+import 'dart:js_interop_unsafe';
 import 'dart:typed_data';
 
-import 'package:flutter_rust_bridge/flutter_rust_bridge.dart' as frb;
-import 'package:wasm_run/src/bridge_generated.dart';
+import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
+import 'package:web/web.dart' as web;
 import 'package:wasm_run/src/ffi.dart';
-
-typedef ExternalLibrary = frb.WasmModule;
-
-WasmRunNative createWrapperImpl(ExternalLibrary module) =>
-    WasmRunNativeImpl.wasm(module);
 
 ExternalLibrary localTestingLibraryImpl() => throw UnimplementedError();
 
 ExternalLibrary createLibraryImpl() {
-  // TODO add web support. See:
-  // https://github.com/fzyzcjy/flutter_rust_bridge/blob/master/frb_example/with_flutter/lib/ffi.web.dart
+  // TODO: add web support. See:
+  // https://github.com/nickmass/wasm-bridge
   throw UnsupportedError('Web support is not provided yet.');
 }
 
@@ -30,7 +26,7 @@ Future<void>? _setUpFeatureDetectFuture;
 Future<void>? _setUpBrowserWasiShimFuture;
 
 Future<void> _setUpWasmFeatureDetect() {
-  if (js_util.hasProperty(js_util.globalThis, 'wasmFeatureDetect')) {
+  if (globalContext.has('wasmFeatureDetect')) {
     return Future.value();
   }
   return _setUpFeatureDetectFuture ??= _injectSrcScript(
@@ -41,7 +37,7 @@ Future<void> _setUpWasmFeatureDetect() {
 }
 
 Future<void> _setUpBrowserWasiShim() {
-  if (js_util.hasProperty(js_util.globalThis, 'browser_wasi_shim')) {
+  if (globalContext.has('browser_wasi_shim')) {
     return Future.value();
   }
   return _setUpBrowserWasiShimFuture ??= _injectSrcScript(
@@ -58,24 +54,43 @@ Future<void> _injectSrcScript(
   String src, {
   String type = 'application/javascript',
 }) {
-  final script = html.ScriptElement();
+  final script = web.document.createElement('script') as web.HTMLScriptElement;
   script.type = type;
   script.src = src;
   script.defer = true;
-  // script.async = true;
-  assert(html.document.head != null, 'html.document.head is null');
-  html.document.head!.append(script);
-  return script.onLoad.first;
+  final head = web.document.head;
+  if (head == null) {
+    throw StateError('document.head is null');
+  }
+  head.appendChild(script);
+
+  // Wait for script to load
+  final completer = Completer<void>();
+  script.onload = ((web.Event e) { completer.complete(); }).toJS;
+  script.onerror = ((web.Event e) {
+    completer.completeError(Exception('Failed to load script: $src'));
+  }).toJS;
+  return completer.future;
 }
 
 Future<Uint8List> getUriBodyBytesImpl(Uri uri) async {
-  final req = await html.HttpRequest.request(
-    uri.toString(),
-    responseType: 'arraybuffer',
-  );
-  final response = req.response;
-  if (response is! ByteBuffer) {
-    throw Exception('Failed to fetch $uri: ${req.status}');
-  }
-  return response.asUint8List();
+  final request = web.XMLHttpRequest();
+  request.open('GET', uri.toString());
+  request.responseType = 'arraybuffer';
+
+  final completer = Completer<Uint8List>();
+  request.onload = ((web.Event e) {
+    final response = request.response;
+    if (response is! JSArrayBuffer) {
+      completer.completeError(Exception('Failed to fetch $uri: ${request.status}'));
+      return;
+    }
+    completer.complete(response.toDart.asUint8List());
+  }).toJS;
+  request.onerror = ((web.Event e) {
+    completer.completeError(Exception('Failed to fetch $uri: ${request.status}'));
+  }).toJS;
+  request.send();
+
+  return completer.future;
 }

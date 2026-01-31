@@ -59,6 +59,7 @@ pub struct SharedMemory;
 #[derive(Clone)]
 pub struct WasmRunModuleId(pub u32, pub RustOpaque<CallStack>);
 
+#[frb(ignore)]
 #[derive(Clone, Default)]
 pub struct CallStack(Arc<RwLock<Vec<RwLock<StoreContextMut<'static, StoreState>>>>>);
 

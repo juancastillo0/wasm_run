@@ -1,9 +1,10 @@
 import 'dart:collection' show Queue, UnmodifiableMapView;
 import 'dart:convert' show utf8;
-import 'dart:js_util' as js_util;
+import 'dart:js_interop';
+import 'dart:js_interop_unsafe';
 import 'dart:typed_data' show Uint8List;
 
-import 'package:wasm_interop/wasm_interop.dart';
+import 'package:wasm_run/src/wasm_bindings/_wasm_interop.dart';
 import 'package:wasm_run/src/ffi.dart' show WasmRunLibrary;
 import 'package:wasm_run/src/logger.dart';
 import 'package:wasm_run/src/wasm_bindings/_atomics_web.dart';
@@ -25,33 +26,32 @@ bool isVoidReturn(dynamic value) {
 Future<WasmRuntimeFeatures> _calculateFeatures() async {
   final wfd = wasmFeatureDetect;
   final features = await Future.wait([
-    js_util.promiseToFuture<bool>(wfd.bigInt()), // 0 TODO: left
-    js_util.promiseToFuture<bool>(wfd.bulkMemory()), // 1
-    js_util.promiseToFuture<bool>(wfd.exceptions()), // 2
-    js_util.promiseToFuture<bool>(wfd.extendedConst()), // 3
-    js_util.promiseToFuture<bool>(wfd.gc()), // 4
-    // TODO:  js_util.promiseToFuture<bool>(wfd.jspi()), // 5 left
+    wfd.bigInt().toDart.then((v) => v.toDart), // 0 TODO: left
+    wfd.bulkMemory().toDart.then((v) => v.toDart), // 1
+    wfd.exceptions().toDart.then((v) => v.toDart), // 2
+    wfd.extendedConst().toDart.then((v) => v.toDart), // 3
+    wfd.gc().toDart.then((v) => v.toDart), // 4
+    // TODO:  wfd.jspi().toDart.then((v) => v.toDart), // 5 left
     Future.value(false),
-    js_util.promiseToFuture<bool>(wfd.memory64()), // 6
-    js_util.promiseToFuture<bool>(wfd.multiValue()), // 7
-    js_util.promiseToFuture<bool>(wfd.mutableGlobals()), // 8
-    js_util.promiseToFuture<bool>(wfd.referenceTypes()), // 9
-    js_util.promiseToFuture<bool>(wfd.relaxedSimd()), // 10
-    js_util.promiseToFuture<bool>(wfd.saturatedFloatToInt()), // 11
-    js_util.promiseToFuture<bool>(wfd.signExtensions()), // 12
-    js_util.promiseToFuture<bool>(wfd.simd()), // 13
-    js_util.promiseToFuture<bool>(wfd.streamingCompilation()), // 14
-    js_util.promiseToFuture<bool>(wfd.tailCall()), // 15
-    js_util.promiseToFuture<bool>(wfd.threads()), // 16
+    wfd.memory64().toDart.then((v) => v.toDart), // 6
+    wfd.multiValue().toDart.then((v) => v.toDart), // 7
+    wfd.mutableGlobals().toDart.then((v) => v.toDart), // 8
+    wfd.referenceTypes().toDart.then((v) => v.toDart), // 9
+    wfd.relaxedSimd().toDart.then((v) => v.toDart), // 10
+    wfd.saturatedFloatToInt().toDart.then((v) => v.toDart), // 11
+    wfd.signExtensions().toDart.then((v) => v.toDart), // 12
+    wfd.simd().toDart.then((v) => v.toDart), // 13
+    wfd.streamingCompilation().toDart.then((v) => v.toDart), // 14
+    wfd.tailCall().toDart.then((v) => v.toDart), // 15
+    wfd.threads().toDart.then((v) => v.toDart), // 16
   ]);
 
   bool typeReflection;
   try {
     final type = _getGlobalType(Global.i32(value: 0, mutable: true).jsObject);
-    final hasFunctionProperty = js_util.hasProperty(
-      js_util.getProperty(js_util.globalThis, 'WebAssembly'),
-      'Function',
-    );
+    final webAssembly = globalContext.getProperty('WebAssembly'.toJS);
+    final hasFunctionProperty =
+        webAssembly != null && (webAssembly as JSObject).has('Function');
     typeReflection = (type?.mutable ?? false) &&
         type?.value == ValueTy.i32 &&
         hasFunctionProperty;
@@ -125,10 +125,10 @@ Map<String, Object> _mapWasiFiles(Map<String, WasiFd> items) {
   return items.map(
     (key, value) {
       if (value is WasiFile) {
-        return MapEntry(key, WasiWebFile(value.content));
+        return MapEntry(key, createWasiWebFile(value.content));
       } else {
         final items = _mapWasiFiles((value as WasiDirectory).items);
-        return MapEntry(key, WasiWebDirectory(items));
+        return MapEntry(key, createWasiWebDirectory(items));
       }
     },
   );
@@ -173,19 +173,19 @@ class _WasmModule extends WasmModule {
       final stdout = wasiConfig.captureStdout ? WasiStdio() : null;
       final stderr = wasiConfig.captureStderr ? WasiStdio() : null;
 
-      final wasiWeb = WASI(
+      final wasiWeb = createWASI(
         wasiConfig.args,
         wasiConfig.env
             .map((e) => '${e.name}=${e.value}')
             .toList(growable: false),
         [
-          OpenFile(WasiWebFile(Uint8List(0))), // TODO: stdin
-          stdout?.fd ?? OpenFile(WasiWebFile(Uint8List(0))),
-          stderr?.fd ?? OpenFile(WasiWebFile(Uint8List(0))),
+          createOpenFile(createWasiWebFile(Uint8List(0))), // TODO: stdin
+          stdout?.fd ?? createOpenFile(createWasiWebFile(Uint8List(0))),
+          stderr?.fd ?? createOpenFile(createWasiWebFile(Uint8List(0))),
           ...wasiConfig.webBrowserFileSystem.entries.map(
-            (e) => PreopenDirectory(
+            (e) => createPreopenDirectory(
               e.key,
-              js_util.jsify(_mapWasiFiles(e.value.items)) as Object,
+              _mapWasiFiles(e.value.items).jsify()! as JSObject,
             ),
           ),
         ],
@@ -278,25 +278,19 @@ class _Builder extends WasmInstanceBuilder {
     switch (value.type) {
       case ValueTy.i32:
         inner = Global.i32(value: val! as int, mutable: mutable);
-        break;
       case ValueTy.i64:
         inner = Global.i64(value: i64.toBigInt(val!), mutable: mutable);
-        break;
       case ValueTy.f32:
         inner = Global.f32(value: val! as double, mutable: mutable);
-        break;
       case ValueTy.f64:
         inner = Global.f64(value: val! as double, mutable: mutable);
-        break;
       case ValueTy.v128:
         throw UnsupportedError('v128 external values are not supported on web');
       case ValueTy.externRef:
         inner = Global.externref(value: val, mutable: mutable);
-        break;
       case ValueTy.funcRef:
         // TODO(web): Implement funcRef "anyfunc"
         inner = Global.externref(value: val, mutable: mutable);
-        break;
       case ValueTy.anyRef:
       case ValueTy.eqRef:
       case ValueTy.i31Ref:
@@ -367,7 +361,7 @@ class _Builder extends WasmInstanceBuilder {
       ),
     );
     if (wasi != null) {
-      final wasiImports = js_util.dartify(wasi!.inner.wasiImport)!;
+      final wasiImports = wasi!.inner.wasiImport.dartify()!;
       final previous = mappedImports['wasi_snapshot_preview1'] ?? {};
       mappedImports['wasi_snapshot_preview1'] = (wasiImports as Map).cast()
         ..addAll(previous);
@@ -431,7 +425,7 @@ class _Builder extends WasmInstanceBuilder {
       ),
     );
     if (wasi != null) {
-      final wasiImports = js_util.dartify(wasi!.inner.wasiImport)!;
+      final wasiImports = wasi!.inner.wasiImport.dartify()!;
       final previous = mappedImports['wasi_snapshot_preview1'] ?? {};
       // TODO: implement wasi in workers
       mappedImports['wasi_snapshot_preview1'] = (wasiImports as Map).cast()
@@ -485,8 +479,10 @@ class _Instance extends WasmInstance {
             .followedBy(
           instance.memories.entries.map((e) {
             final c =
-                js_util.getProperty<Object>(e.value.buffer, 'constructor');
-            if (js_util.getProperty<Object>(c, 'name') == 'SharedArrayBuffer') {
+                (e.value.buffer as JSObject).getProperty('constructor'.toJS);
+            if (c != null &&
+                (c as JSObject).getProperty('name'.toJS)?.dartify() ==
+                    'SharedArrayBuffer') {
               return MapEntry(e.key, _SharedMemory(e.value, null));
             }
             return MapEntry(e.key, _Memory(e.value, null));
@@ -499,12 +495,13 @@ class _Instance extends WasmInstance {
     );
     final wasi = builder.wasi?.inner;
     if (wasi != null) {
+      final instanceJs = instance.jsObject;
       if (getFunction('_start')?.params.isEmpty ?? false) {
-        wasi.start(instance.jsObject);
+        wasi.start(instanceJs);
       } else if (getFunction('_initialize')?.params.isEmpty ?? false) {
-        wasi.initialize(instance.jsObject);
+        wasi.initialize(instanceJs);
       } else {
-        js_util.setProperty(wasi, 'inst', instance.jsObject);
+        (wasi as JSObject).setProperty('inst'.toJS, instanceJs);
         logWasiNoStartOrInitialize();
       }
     }
@@ -560,28 +557,29 @@ class _Instance extends WasmInstance {
     bool exclusive = false,
   }) async {
     if (builder.wasi == null) return null;
+    final fds = builder.wasi!.inner.fds.toDart;
     final directories =
-        builder.wasi!.inner.fds.sublist(3).cast<PreopenDirectory>();
+        fds.sublist(3).cast<PreopenDirectory>();
     final oflags = (create ? oflagsCREAT : 0) |
         (truncate ? oflagsTRUNC : 0) |
         // (directory ? oflagsDIRECTORY : 0) |
         (exclusive ? oflagsEXCL : 0);
     for (final dir in directories) {
-      final dirName = utf8.decode(dir.prestat_name);
+      final dirName = utf8.decode(dir.prestat_name.toDart);
       if (!path.startsWith(dirName)) {
         continue;
       }
       final value = dir.path_open(
-        0,
+        0.toJS,
         path.substring(dirName.length),
         oflags,
-        i64.fromInt(0),
-        i64.fromInt(0),
-        0,
+        0.toJS, // fs_rights_base
+        0.toJS, // fs_rights_inheriting
+        0.toJS, // fdflags
       );
       if (value.fd_obj != null) {
         final file = (value.fd_obj! as OpenFile).file;
-        return WasiFile(file.data);
+        return WasiFile(file.data.toDart);
       }
     }
     // TODO: throw Exception('No preopened dir for $path');
@@ -629,9 +627,10 @@ class _Instance extends WasmInstance {
 
 WasmExternal _makeWasmFunction(Function value, String? name) {
   final ty = _getFuncType(value);
+  final jsValue = value as JSObject;
   final params = ty?.parameters.cast<ValueTy?>() ??
       List.filled(
-        js_util.getProperty(value, 'length') as int,
+        (jsValue.getProperty('length'.toJS) as JSNumber).toDartInt,
         null,
       );
 
@@ -640,11 +639,17 @@ WasmExternal _makeWasmFunction(Function value, String? name) {
     name: name,
     params: params,
     call: ([args]) {
-      final result = js_util.callMethod<Object?>(value, 'apply', [null, args]);
-      if (result is List) return result;
-      if (js_util.typeofEquals<dynamic>(result, 'undefined') ||
-          isVoidReturn(result)) return const [];
-      return List.filled(1, result);
+      final result = jsValue.callMethod<JSAny?>(
+        'apply'.toJS,
+        [null, args].jsify() as JSArray,
+      );
+      // Convert JSAny result to Dart
+      final dartResult = result?.dartify();
+      if (dartResult is List) return dartResult;
+      if (result == null || result.typeofEquals('undefined') || isVoidReturn(dartResult)) {
+        return const [];
+      }
+      return List.filled(1, dartResult);
     },
     // results is not supported on web https://github.com/WebAssembly/js-types/blob/main/proposals/js-types/Overview.md
     results: ty?.results,
@@ -718,7 +723,7 @@ class _Global extends WasmGlobal {
 
   @override
   void set(WasmValue value) {
-    global.jsObject.value = value.value;
+    global.jsObject.value = value.value?.jsify();
   }
 }
 
@@ -735,21 +740,22 @@ class _Table extends WasmTable {
   void set(int index, WasmValue value) {
     if (value.type == ValueTy.funcRef && value.value is WasmFunction) {
       final v = value.value! as WasmFunction;
-      table.jsObject.set(index, v.inner);
+      table.jsObject.set(index, (v.inner as JSObject?)?.jsify());
     } else {
-      table.jsObject.set(index, value.value);
+      table.jsObject.set(index, value.value?.jsify());
     }
   }
 
   @override
   Object? get(int index) {
     final v = table.jsObject.get(index);
-    if (v is Function &&
-        v is! WasmFunction &&
-        js_util.hasProperty(v, 'length')) {
-      return _makeWasmFunction(v, null);
+    if (v != null && v.typeofEquals('function')) {
+      final jsFunc = v as JSObject;
+      if (jsFunc.has('length')) {
+        return _makeWasmFunction(v.dartify()! as Function, null);
+      }
     }
-    return v;
+    return v?.dartify();
   }
 
   @override
@@ -866,7 +872,8 @@ FuncTy? _getFuncType(Function value) {
 }
 
 Map<String, Object?>? _getType(Object value) {
-  if (!js_util.hasProperty(value, 'type')) return null;
-  final type = js_util.callMethod<Object?>(value, 'type', const []);
-  return (js_util.dartify(type)! as Map).cast();
+  final jsValue = value as JSObject;
+  if (!jsValue.has('type')) return null;
+  final type = jsValue.callMethod<JSAny?>('type'.toJS, <JSAny>[].toJS);
+  return (type?.dartify()! as Map).cast();
 }

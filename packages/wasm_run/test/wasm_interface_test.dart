@@ -14,8 +14,8 @@ void main() {
           'AGFzbQEAAAABBwFgAn9/AX8DAgEABwcBA2FkZAAACgkBBwAgACABagsAEARuYW1lAgkBAAIAAWEBAWI=',
         );
       } else {
-        final w = defaultInstance();
-        binary = await w.parseWatFormat(
+        final w = api();
+        binary = await w.crateApiWasmtimeParseWatFormat(
           wat: r'''
 (module
     (func (export "add") (param $a i32) (param $b i32) (result i32)

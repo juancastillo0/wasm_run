@@ -1,15 +1,6 @@
 import 'dart:typed_data';
 
-import 'package:wasm_run/src/bridge_generated.dart';
-
-/// Represents the external library for wasm_run
-///
-/// Will be a DynamicLibrary for dart:io or WasmModule for dart:html
-typedef ExternalLibrary = Object;
-
-/// Creates a wrapper with the native bindings for the external library
-WasmRunNative createWrapperImpl(ExternalLibrary lib) =>
-    throw UnimplementedError();
+import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 /// Returns a library for testing purposes
 ExternalLibrary localTestingLibraryImpl() => throw UnimplementedError();

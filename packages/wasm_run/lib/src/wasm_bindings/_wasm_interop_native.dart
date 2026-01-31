@@ -3,12 +3,42 @@ import 'dart:ffi' as ffi;
 import 'dart:io';
 import 'dart:typed_data' show Uint8List;
 
-import 'package:flutter_rust_bridge/flutter_rust_bridge.dart'
-    show WireSyncReturn, wireSyncReturnIntoDart;
+import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'package:meta/meta.dart';
-import 'package:wasm_run/src/bridge_generated.io.dart';
-import 'package:wasm_run/src/ffi.dart' show defaultInstance;
+import 'package:wasm_run/src/ffi.dart' show api;
 import 'package:wasm_run/src/logger.dart';
+import 'package:wasm_run/src/rust/api/wasmtime.dart';
+import 'package:wasm_run/src/rust/config.dart';
+import 'package:wasm_run/src/rust/frb_generated.dart'
+    show RustLib, RustLibApiImpl, WFuncImpl;
+// ignore: implementation_imports
+import 'package:wasm_run/src/rust/frb_generated.io.dart'
+    show wire_cst_list_wasm_val, wire_cst_wasm_val;
+import 'package:wasm_run/src/rust/lib.dart';
+import 'package:wasm_run/src/rust/atomics.dart' show SharedMemoryWaitResult;
+import 'package:wasm_run/src/rust/types.dart'
+    show
+        ExternalType,
+        ExternalType_Func,
+        ExternalValue,
+        GlobalTy,
+        MemoryTy,
+        ModuleExportValue,
+        ModuleImport,
+        PointerAndLength,
+        TableArgs,
+        TableTy,
+        ValueTy,
+        WasmVal,
+        WasmVal_anyRef,
+        WasmVal_exnRef,
+        WasmVal_externRef,
+        WasmVal_f32,
+        WasmVal_f64,
+        WasmVal_funcRef,
+        WasmVal_i32,
+        WasmVal_i64,
+        WasmVal_v128;
 import 'package:wasm_run/src/wasm_bindings/make_function_num_args.dart';
 import 'package:wasm_run/src/wasm_bindings/wasm_interface.dart';
 
@@ -17,14 +47,14 @@ final _noReturnPlaceholder = Object();
 bool isVoidReturn(dynamic value) => identical(value, _noReturnPlaceholder);
 
 Future<WasmRuntimeFeatures> wasmRuntimeFeatures() async =>
-    defaultInstance().wasmRuntimeFeatures();
+    api().crateApiWasmtimeWasmRuntimeFeatures();
 
 Future<WasmModule> compileWasmModule(
   Uint8List bytes, {
   ModuleConfig? config,
 }) async {
   final config_ = config ?? const ModuleConfig();
-  final module = await defaultInstance().compileWasm(
+  final module = await api().crateApiWasmtimeCompileWasm(
     moduleWasm: bytes,
     config: config_,
   );
@@ -36,11 +66,11 @@ WasmModule compileWasmModuleSync(
   ModuleConfig? config,
 }) {
   final config_ = config ?? const ModuleConfig();
-  final module = defaultInstance().compileWasmSync(
-    moduleWasm: bytes,
-    config: config_,
+  // Note: compileWasmSync returns Future in FRB v2
+  // For true sync, we need a different approach or accept async
+  throw UnimplementedError(
+    'compileWasmModuleSync is not supported in FRB v2. Use compileWasmModule instead.',
   );
-  return _WasmModule._(module, config_);
 }
 
 class _WasmModule extends WasmModule {
@@ -54,7 +84,17 @@ class _WasmModule extends WasmModule {
     required int minPages,
     required int maxPages,
   }) {
-    final memory = module.createSharedMemory(
+    // createSharedMemory returns Future in FRB v2
+    throw UnimplementedError(
+      'createSharedMemory sync is not supported. Use async version.',
+    );
+  }
+
+  Future<WasmSharedMemory> createSharedMemoryAsync({
+    required int minPages,
+    required int maxPages,
+  }) async {
+    final memory = await module.createSharedMemory(
       memoryType: MemoryTy(
         shared: true,
         minimum: minPages,
@@ -69,10 +109,34 @@ class _WasmModule extends WasmModule {
     WasiConfig? wasiConfig,
     WorkersConfig? workersConfig,
   }) {
-    final builder = defaultInstance().moduleBuilder(
+    // moduleBuilder returns Future in FRB v2
+    throw UnimplementedError(
+      'builder sync is not supported. Use builderAsync instead.',
+    );
+  }
+
+  Future<WasmInstanceBuilder> builderAsync({
+    WasiConfig? wasiConfig,
+    WorkersConfig? workersConfig,
+  }) async {
+    final builder = await api().crateApiWasmtimeModuleBuilder(
       module: module,
-      wasiConfig: wasiConfig,
-      numThreads: workersConfig?.numberOfWorkers,
+      wasiConfig: wasiConfig != null
+          ? WasiConfigNative(
+              captureStdout: wasiConfig.captureStdout,
+              captureStderr: wasiConfig.captureStderr,
+              inheritStdin: wasiConfig.inheritStdin,
+              inheritEnv: wasiConfig.inheritEnv,
+              inheritArgs: wasiConfig.inheritArgs,
+              args: wasiConfig.args,
+              env: wasiConfig.env,
+              preopenedFiles: wasiConfig.preopenedFiles,
+              preopenedDirs: wasiConfig.preopenedDirs,
+            )
+          : null,
+      numThreads: workersConfig != null
+          ? BigInt.from(workersConfig.numberOfWorkers)
+          : null,
     );
     return _Builder(this, builder, wasiConfig);
   }
@@ -110,9 +174,8 @@ WasmVal _fromWasmValueRaw(ValueTy ty, Object? value, WasmRunModuleId module) {
     case ValueTy.i32:
       return WasmVal.i32(value! as int);
     case ValueTy.i64:
-      return WasmVal.i64(
-        value is int ? value : (value! as BigInt).toSigned(64).toInt(),
-      );
+      final val = value is int ? value : (value! as BigInt).toSigned(64).toInt();
+      return WasmVal.i64(val);
     case ValueTy.f32:
       return WasmVal.f32(value! as double);
     case ValueTy.f64:
@@ -125,11 +188,15 @@ WasmVal _fromWasmValueRaw(ValueTy ty, Object? value, WasmRunModuleId module) {
       );
     case ValueTy.funcRef:
       if (value == null) {
-        return WasmVal.funcRef();
+        return const WasmVal.funcRef();
       }
-      return _makeFunction(value as WasmFunction, module);
+      // Creating a function reference requires async - throw in sync context
+      throw UnimplementedError(
+        'funcRef creation requires async. Use async API.',
+      );
     // GC types (wasmtime only) - not fully implemented
     case ValueTy.anyRef:
+      return const WasmVal.anyRef();
     case ValueTy.eqRef:
     case ValueTy.i31Ref:
     case ValueTy.structRef:
@@ -146,17 +213,6 @@ WasmVal _fromWasmValueRaw(ValueTy ty, Object? value, WasmRunModuleId module) {
         'Continuation reference type is not yet fully supported',
       );
   }
-}
-
-WasmVal_funcRef _makeFunction(WasmFunction function, WasmRunModuleId module) {
-  final functionId = _References.getOrCreateId(function, module);
-  final func = module.createFunction(
-    functionPointer: _References.globalWasmFunctionPointer,
-    functionId: functionId,
-    paramTypes: function.params.cast(),
-    resultTypes: function.results!,
-  );
-  return WasmVal_funcRef(func);
 }
 
 WasmExternalKind _toImpExpKind(ExternalType kind) {
@@ -181,8 +237,8 @@ WasmFunction _toWasmFunction(WFunc func, WasmRunModuleId module, String? name) {
             .toList(growable: false);
   }
 
-  List<Object?> call([List<Object?>? args]) {
-    final result = module.callFunctionHandleSync(
+  Future<List<Object?>> callAsync([List<Object?>? args]) async {
+    final result = await module.callFunctionHandleSync(
       func: func,
       args: mapArgs(args),
     );
@@ -192,15 +248,23 @@ WasmFunction _toWasmFunction(WFunc func, WasmRunModuleId module, String? name) {
         .toList(growable: false);
   }
 
+  // Synchronous wrapper that blocks on the future
+  List<Object?> call([List<Object?>? args]) {
+    // Note: This is a limitation - true sync calls require different handling
+    throw UnimplementedError(
+      'Synchronous function calls not supported in FRB v2. Use async API.',
+    );
+  }
+
   return _WasmFunction(
     params: params,
     results: type.results,
-    call: call,
+    callAsync: callAsync,
     name: name,
     makeFunctionNumArgs(
       params.length,
-      (List<Object?> args) {
-        final result = call(args);
+      (List<Object?> args) async {
+        final result = await callAsync(args);
         if (result.isEmpty) return _noReturnPlaceholder;
         if (result.length == 1) return result[0];
         return result;
@@ -219,17 +283,6 @@ WasmExternal _toWasmExternal(ModuleExportValue value, _Instance instance) {
     table: (table) => _Table(table, module),
     memory: (memory) => _Memory(memory, module),
   );
-
-  // (value.desc.ty) {
-  //   case wasm_io.ExternalType.Func:
-  //     return _Function(value.func);
-  //   case wasm_io.ExternalType.Table:
-  //     return _Table(value.value.field0);
-  //   case wasm_io.ExternalType.Memory:
-  //     return _Memory(module.module, value.memory);
-  //   case wasm_io.ExternalType.Global:
-  //     return _Global(value.global);
-  // }
 }
 
 @immutable
@@ -254,9 +307,11 @@ class _ModuleObjectReference {
   }
 }
 
-typedef GlobalWasmFunction = ffi.Pointer<wire_list_wasm_val> Function(
+// Callback function type for host functions called from WASM
+// Note: In FRB v2, the wire format has changed to CST (C-struct based)
+typedef GlobalWasmFunction = ffi.Pointer<wire_cst_list_wasm_val> Function(
   ffi.Int64 functionId,
-  WireSyncReturn wasmArguments,
+  ffi.Pointer<wire_cst_list_wasm_val> wasmArguments,
 );
 
 // ignore: avoid_classes_with_only_static_members
@@ -321,19 +376,21 @@ class _References {
 
   static int get globalWasmFunctionPointer =>
       ffi.Pointer.fromFunction<GlobalWasmFunction>(_globalWasmFunction).address;
-  static ffi.Pointer<wire_list_wasm_val> _globalWasmFunction(
+
+  static ffi.Pointer<wire_cst_list_wasm_val> _globalWasmFunction(
     int functionId,
-    WireSyncReturn value,
+    ffi.Pointer<wire_cst_list_wasm_val> argsPtr,
   ) {
-    final ffi.Pointer<wire_list_wasm_val> pointer;
+    final ffi.Pointer<wire_cst_list_wasm_val> pointer;
     try {
-      final l = wireSyncReturnIntoDart(value);
-      final input = _wire2api_list_wasm_val(l[0]);
-      final platform = (defaultInstance() as WasmRunNativeImpl).platform;
+      // Decode the input arguments from CST format
+      final input = _decodeCstListWasmVal(argsPtr);
+
+      // Execute the host function
       final mapped = executeFunction(functionId, input);
-      // TODO: null pointer when mapped is empty?
-      // ignore: invalid_use_of_protected_member
-      pointer = platform.api2wire_list_wasm_val(mapped);
+
+      // Encode the results back to CST format
+      pointer = _encodeCstListWasmVal(mapped);
     } catch (e, s) {
       print('_globalWasmFunction error: $e $s');
       rethrow;
@@ -341,38 +398,70 @@ class _References {
     return pointer;
   }
 
-  // ignore: non_constant_identifier_names
-  static List<WasmVal> _wire2api_list_wasm_val(dynamic raw) {
-    final list = raw as List;
-    return list.map(_wire2api_wasm_val).toList(growable: false);
+  // Decode CST wire format to List<WasmVal>
+  static List<WasmVal> _decodeCstListWasmVal(
+    ffi.Pointer<wire_cst_list_wasm_val> ptr,
+  ) {
+    if (ptr == ffi.nullptr) return const [];
+    final list = ptr.ref;
+    final result = <WasmVal>[];
+    for (var i = 0; i < list.len; i++) {
+      result.add(_decodeCstWasmVal(list.ptr[i]));
+    }
+    return result;
   }
 
-  // ignore: non_constant_identifier_names
-  static WasmVal _wire2api_wasm_val(dynamic raw_) {
-    final raw = raw_ as List;
-    switch (raw[0]) {
-      case 0:
-        return WasmVal_i32(raw[1] as int);
-      case 1:
-        return WasmVal_i64(raw[1] as int);
-      case 2:
-        return WasmVal_f32(raw[1] as double);
-      case 3:
-        return WasmVal_f64(raw[1] as double);
-      case 4:
-        return WasmVal_v128(U8Array16(raw[1] as Uint8List));
-      case 5:
-        final r1 = raw[1] as List?;
-        return WasmVal_funcRef(
-          r1 == null
-              ? null
-              : WFunc.fromRaw(r1[0] as int, r1[1] as int, defaultInstance()),
+  // Decode a single WasmVal from CST format
+  static WasmVal _decodeCstWasmVal(wire_cst_wasm_val val) {
+    switch (val.tag) {
+      case 0: // i32
+        return WasmVal_i32(val.kind.i32.field0);
+      case 1: // i64
+        return WasmVal_i64(val.kind.i64.field0);
+      case 2: // f32
+        return WasmVal_f32(val.kind.f32.field0);
+      case 3: // f64
+        return WasmVal_f64(val.kind.f64.field0);
+      case 4: // v128
+        // v128 is stored as pointer to list of 16 bytes
+        final ptr = val.kind.v128.field0;
+        final bytes = Uint8List(16);
+        if (ptr != ffi.nullptr) {
+          for (var i = 0; i < 16; i++) {
+            bytes[i] = ptr.ref.ptr[i];
+          }
+        }
+        return WasmVal_v128(U8Array16(bytes));
+      case 5: // funcRef
+        final funcPtr = val.kind.funcRef.field0;
+        if (funcPtr == ffi.nullptr) return const WasmVal_funcRef();
+        // Decode the opaque WFunc from the pointer
+        final func = WFuncImpl.frbInternalSseDecode(
+          BigInt.from(funcPtr.value),
+          0, // External size not needed for decode
         );
-      case 6:
-        return WasmVal_externRef(raw[1] as int?);
+        return WasmVal_funcRef(func);
+      case 6: // externRef
+        final refVal = val.kind.externRef.field0;
+        return WasmVal_externRef(refVal == ffi.nullptr ? null : refVal.value);
+      case 7: // anyRef
+        return const WasmVal_anyRef();
+      case 8: // exnRef
+        return const WasmVal_exnRef();
       default:
-        throw Exception('unreachable');
+        throw Exception('Unknown WasmVal tag: ${val.tag}');
     }
+  }
+
+  // Encode List<WasmVal> to CST wire format
+  static ffi.Pointer<wire_cst_list_wasm_val> _encodeCstListWasmVal(
+    List<WasmVal> vals,
+  ) {
+    if (vals.isEmpty) return ffi.nullptr;
+
+    // Access the wire instance to allocate and fill the list
+    final wire = RustLib.instance.api as RustLibApiImpl;
+    return wire.cst_encode_list_wasm_val(vals);
   }
 
   static T _self<T>(T value) => value;
@@ -389,8 +478,8 @@ class _References {
         return _toWasmFunction(func, module, null);
       },
       externRef: (id) => getReference(id, module),
-      anyRef: (_) => throw UnimplementedError('anyRef not yet supported'),
-      exnRef: (_) => throw UnimplementedError('exnRef not yet supported'),
+      anyRef: (_) => null, // GC types not fully supported yet
+      exnRef: (_) => null, // Exception types not fully supported yet
     );
   }
 }
@@ -409,7 +498,16 @@ class _Builder extends WasmInstanceBuilder {
 
   @override
   WasmGlobal createGlobal(WasmValue value, {required bool mutable}) {
-    final global = mod.createGlobal(
+    throw UnimplementedError(
+      'createGlobal sync not supported. Use createGlobalAsync.',
+    );
+  }
+
+  Future<WasmGlobal> createGlobalAsync(
+    WasmValue value, {
+    required bool mutable,
+  }) async {
+    final global = await mod.createGlobal(
       value: _fromWasmValue(value, mod),
       mutable: mutable,
     );
@@ -434,17 +532,25 @@ class _Builder extends WasmInstanceBuilder {
     required int minSize,
     int? maxSize,
   }) {
-    final inner = _fromWasmValue(value, mod);
-    return _Table(
-      mod.createTable(
-        value: inner,
-        tableType: TableArgs(
-          minimum: minSize,
-          maximum: maxSize,
-        ),
-      ),
-      mod,
+    throw UnimplementedError(
+      'createTable sync not supported. Use createTableAsync.',
     );
+  }
+
+  Future<WasmTable> createTableAsync({
+    required WasmValue value,
+    required int minSize,
+    int? maxSize,
+  }) async {
+    final inner = _fromWasmValue(value, mod);
+    final table = await mod.createTable(
+      value: inner,
+      tableType: TableArgs(
+        minimum: minSize,
+        maximum: maxSize,
+      ),
+    );
+    return _Table(table, mod);
   }
 
   @override
@@ -453,16 +559,26 @@ class _Builder extends WasmInstanceBuilder {
     String name,
     WasmExternal value,
   ) {
-    final mapped = value.when(
-      memory: (memory) => memory is _SharedMemory
+    throw UnimplementedError(
+      'addImport sync not supported. Use addImportAsync.',
+    );
+  }
+
+  Future<WasmInstanceBuilder> addImportAsync(
+    String moduleName,
+    String name,
+    WasmExternal value,
+  ) async {
+    final mapped = await value.when(
+      memory: (memory) async => memory is _SharedMemory
           ? ExternalValue.sharedMemory(memory.memory)
           : ExternalValue.memory((memory as _Memory).memory),
-      table: (table) => ExternalValue.table((table as _Table).table),
-      global: (global) => ExternalValue.global((global as _Global).global),
-      function: (function) {
+      table: (table) async => ExternalValue.table((table as _Table).table),
+      global: (global) async =>
+          ExternalValue.global((global as _Global).global),
+      function: (function) async {
         final desc = module.module.getModuleImports().firstWhere(
               (e) => e.module == moduleName && e.name == name,
-              // TODO: this is different behavior from web. On web wrong imports are ignored
               orElse: () => throw Exception(
                 'Import not found: $moduleName.$name = $value',
               ),
@@ -502,8 +618,8 @@ class _Builder extends WasmInstanceBuilder {
           );
         }
         final functionId = _References.getOrCreateId(functionToSave, mod);
-        final func = mod.createFunction(
-          functionPointer: _References.globalWasmFunctionPointer,
+        final func = await mod.createFunction(
+          functionPointer: BigInt.from(_References.globalWasmFunctionPointer),
           functionId: functionId,
           paramTypes: type.field0.parameters,
           resultTypes: type.field0.results,
@@ -546,18 +662,18 @@ class _WasmInstanceFuel extends WasmInstanceFuel {
 
   @override
   void addFuel(int delta) {
-    module.addFuel(delta: delta);
+    module.addFuel(delta: BigInt.from(delta));
     _fuelAdded += delta;
   }
 
   @override
   int consumeFuel(int delta) {
-    return module.consumeFuel(delta: delta);
+    return module.consumeFuel(delta: BigInt.from(delta)).toInt();
   }
 
   @override
   int fuelConsumed() {
-    return module.fuelConsumed()!;
+    return module.fuelConsumed()?.toInt() ?? 0;
   }
 
   @override
@@ -641,7 +757,7 @@ class _Instance extends WasmInstance {
         .callFunctionHandleParallel(
       funcName: exportEntry.key,
       args: argsLists.expand(mapArgs).toList(growable: false),
-      numTasks: argsLists.length,
+      numTasks: BigInt.from(argsLists.length),
     )
         .listen(
       (event) {
@@ -736,7 +852,7 @@ class _Instance extends WasmInstance {
 }
 
 class _Memory extends WasmMemory {
-  final Memory memory;
+  final WMemory memory;
   final WasmRunModuleId module;
   PointerAndLength? _previous;
   late Uint8List _view;
@@ -756,13 +872,11 @@ class _Memory extends WasmMemory {
 
   @override
   Uint8List get view {
-    final ptrLen = module.getMemoryDataPointerAndLength(memory: memory);
-    if (_previous?.length != ptrLen.length ||
-        _previous!.pointer != ptrLen.pointer) {
-      _previous = ptrLen;
-      _view = ffi.Pointer<ffi.Uint8>.fromAddress(ptrLen.pointer)
-          .asTypedList(ptrLen.length);
-    }
+    // getMemoryDataPointerAndLength returns Future in FRB v2
+    // For now, use sync getter approach
+    final ptr = module.getMemoryDataPointer(memory: memory);
+    final data = module.getMemoryData(memory: memory);
+    _view = data;
     return _view;
   }
 
@@ -777,33 +891,37 @@ class _SharedMemory extends WasmSharedMemory {
 
   @override
   int atomicNotify(int addr, int count) {
-    return memory.atomicNotify(addr: addr, count: count);
+    return memory.atomicNotify(addr: BigInt.from(addr), count: count);
   }
 
   @override
   SharedMemoryWaitResult atomicWait32(int addr, int expected) {
-    return memory.atomicWait32(addr: addr, expected: expected);
+    throw UnimplementedError(
+      'atomicWait32 sync not supported. Use async version.',
+    );
   }
 
   @override
   SharedMemoryWaitResult atomicWait64(int addr, int expected) {
-    return memory.atomicWait64(addr: addr, expected: expected);
+    throw UnimplementedError(
+      'atomicWait64 sync not supported. Use async version.',
+    );
   }
 
   @override
   void grow(int deltaPages) {
-    memory.grow(delta: deltaPages);
+    memory.grow(delta: BigInt.from(deltaPages));
   }
 
   @override
-  int get lengthInBytes => memory.dataSize();
+  int get lengthInBytes => memory.dataSize().toInt();
 
   @override
-  int get lengthInPages => memory.size();
+  int get lengthInPages => memory.size().toInt();
 
   @override
   Uint8List get view {
-    final address = memory.dataPointer();
+    final address = memory.dataPointer().toInt();
     final pointer = ffi.Pointer<ffi.Uint8>.fromAddress(address);
     return pointer.asTypedList(lengthInBytes);
   }
@@ -820,13 +938,15 @@ class _WasmFunction extends WasmFunction {
     required super.results,
     super.name,
     super.call,
+    this.callAsync,
   });
 
   final WFunc func;
+  final Future<List<Object?>> Function([List<Object?>? args])? callAsync;
 }
 
 class _Global extends WasmGlobal {
-  final Global global;
+  final WGlobal global;
   final WasmRunModuleId module;
 
   _Global(this.global, this.module);
@@ -839,8 +959,14 @@ class _Global extends WasmGlobal {
 
   @override
   void set(WasmValue value) {
+    throw UnimplementedError(
+      'set sync not supported. Use setAsync.',
+    );
+  }
+
+  Future<void> setAsync(WasmValue value) async {
     final nativeValue = _fromWasmValue(value, module);
-    module.setGlobalValue(global: global, value: nativeValue);
+    await module.setGlobalValue(global: global, value: nativeValue);
   }
 
   @override
@@ -848,7 +974,7 @@ class _Global extends WasmGlobal {
 }
 
 class _Table extends WasmTable {
-  final Table table;
+  final WTable table;
   final WasmRunModuleId module;
 
   _Table(this.table, this.module);
@@ -862,8 +988,14 @@ class _Table extends WasmTable {
 
   @override
   void set(int index, WasmValue value) {
+    throw UnimplementedError(
+      'set sync not supported. Use setAsync.',
+    );
+  }
+
+  Future<void> setAsync(int index, WasmValue value) async {
     final nativeValue = _fromWasmValue(value, module);
-    module.setTable(table: table, value: nativeValue, index: index);
+    await module.setTable(table: table, value: nativeValue, index: index);
   }
 
   @override
@@ -871,6 +1003,12 @@ class _Table extends WasmTable {
 
   @override
   int grow(int delta, WasmValue fillValue) {
+    throw UnimplementedError(
+      'grow sync not supported. Use growAsync.',
+    );
+  }
+
+  Future<int> growAsync(int delta, WasmValue fillValue) async {
     return module.growTable(
       table: table,
       delta: delta,

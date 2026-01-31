@@ -3,7 +3,7 @@
 // ignore_for_file: type=lint
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
-part of 'bridge_generated.dart';
+part of 'types.dart';
 
 // **************************************************************************
 // FreezedGenerator
@@ -120,8 +120,8 @@ class __$$ExternalType_FuncImplCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$ExternalType_FuncImpl implements ExternalType_Func {
-  const _$ExternalType_FuncImpl(this.field0);
+class _$ExternalType_FuncImpl extends ExternalType_Func {
+  const _$ExternalType_FuncImpl(this.field0) : super._();
 
   @override
   final FuncTy field0;
@@ -224,9 +224,10 @@ class _$ExternalType_FuncImpl implements ExternalType_Func {
   }
 }
 
-abstract class ExternalType_Func implements ExternalType {
+abstract class ExternalType_Func extends ExternalType {
   const factory ExternalType_Func(final FuncTy field0) =
       _$ExternalType_FuncImpl;
+  const ExternalType_Func._() : super._();
 
   @override
   FuncTy get field0;
@@ -268,8 +269,8 @@ class __$$ExternalType_GlobalImplCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$ExternalType_GlobalImpl implements ExternalType_Global {
-  const _$ExternalType_GlobalImpl(this.field0);
+class _$ExternalType_GlobalImpl extends ExternalType_Global {
+  const _$ExternalType_GlobalImpl(this.field0) : super._();
 
   @override
   final GlobalTy field0;
@@ -372,9 +373,10 @@ class _$ExternalType_GlobalImpl implements ExternalType_Global {
   }
 }
 
-abstract class ExternalType_Global implements ExternalType {
+abstract class ExternalType_Global extends ExternalType {
   const factory ExternalType_Global(final GlobalTy field0) =
       _$ExternalType_GlobalImpl;
+  const ExternalType_Global._() : super._();
 
   @override
   GlobalTy get field0;
@@ -416,8 +418,8 @@ class __$$ExternalType_TableImplCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$ExternalType_TableImpl implements ExternalType_Table {
-  const _$ExternalType_TableImpl(this.field0);
+class _$ExternalType_TableImpl extends ExternalType_Table {
+  const _$ExternalType_TableImpl(this.field0) : super._();
 
   @override
   final TableTy field0;
@@ -520,9 +522,10 @@ class _$ExternalType_TableImpl implements ExternalType_Table {
   }
 }
 
-abstract class ExternalType_Table implements ExternalType {
+abstract class ExternalType_Table extends ExternalType {
   const factory ExternalType_Table(final TableTy field0) =
       _$ExternalType_TableImpl;
+  const ExternalType_Table._() : super._();
 
   @override
   TableTy get field0;
@@ -564,8 +567,8 @@ class __$$ExternalType_MemoryImplCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$ExternalType_MemoryImpl implements ExternalType_Memory {
-  const _$ExternalType_MemoryImpl(this.field0);
+class _$ExternalType_MemoryImpl extends ExternalType_Memory {
+  const _$ExternalType_MemoryImpl(this.field0) : super._();
 
   @override
   final MemoryTy field0;
@@ -668,9 +671,10 @@ class _$ExternalType_MemoryImpl implements ExternalType_Memory {
   }
 }
 
-abstract class ExternalType_Memory implements ExternalType {
+abstract class ExternalType_Memory extends ExternalType {
   const factory ExternalType_Memory(final MemoryTy field0) =
       _$ExternalType_MemoryImpl;
+  const ExternalType_Memory._() : super._();
 
   @override
   MemoryTy get field0;
@@ -685,27 +689,27 @@ mixin _$ExternalValue {
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
     required TResult Function(WFunc field0) func,
-    required TResult Function(Global field0) global,
-    required TResult Function(Table field0) table,
-    required TResult Function(Memory field0) memory,
+    required TResult Function(WGlobal field0) global,
+    required TResult Function(WTable field0) table,
+    required TResult Function(WMemory field0) memory,
     required TResult Function(WasmRunSharedMemory field0) sharedMemory,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function(WFunc field0)? func,
-    TResult? Function(Global field0)? global,
-    TResult? Function(Table field0)? table,
-    TResult? Function(Memory field0)? memory,
+    TResult? Function(WGlobal field0)? global,
+    TResult? Function(WTable field0)? table,
+    TResult? Function(WMemory field0)? memory,
     TResult? Function(WasmRunSharedMemory field0)? sharedMemory,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function(WFunc field0)? func,
-    TResult Function(Global field0)? global,
-    TResult Function(Table field0)? table,
-    TResult Function(Memory field0)? memory,
+    TResult Function(WGlobal field0)? global,
+    TResult Function(WTable field0)? table,
+    TResult Function(WMemory field0)? memory,
     TResult Function(WasmRunSharedMemory field0)? sharedMemory,
     required TResult orElse(),
   }) =>
@@ -791,8 +795,8 @@ class __$$ExternalValue_FuncImplCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$ExternalValue_FuncImpl implements ExternalValue_Func {
-  const _$ExternalValue_FuncImpl(this.field0);
+class _$ExternalValue_FuncImpl extends ExternalValue_Func {
+  const _$ExternalValue_FuncImpl(this.field0) : super._();
 
   @override
   final WFunc field0;
@@ -824,9 +828,9 @@ class _$ExternalValue_FuncImpl implements ExternalValue_Func {
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
     required TResult Function(WFunc field0) func,
-    required TResult Function(Global field0) global,
-    required TResult Function(Table field0) table,
-    required TResult Function(Memory field0) memory,
+    required TResult Function(WGlobal field0) global,
+    required TResult Function(WTable field0) table,
+    required TResult Function(WMemory field0) memory,
     required TResult Function(WasmRunSharedMemory field0) sharedMemory,
   }) {
     return func(field0);
@@ -836,9 +840,9 @@ class _$ExternalValue_FuncImpl implements ExternalValue_Func {
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function(WFunc field0)? func,
-    TResult? Function(Global field0)? global,
-    TResult? Function(Table field0)? table,
-    TResult? Function(Memory field0)? memory,
+    TResult? Function(WGlobal field0)? global,
+    TResult? Function(WTable field0)? table,
+    TResult? Function(WMemory field0)? memory,
     TResult? Function(WasmRunSharedMemory field0)? sharedMemory,
   }) {
     return func?.call(field0);
@@ -848,9 +852,9 @@ class _$ExternalValue_FuncImpl implements ExternalValue_Func {
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function(WFunc field0)? func,
-    TResult Function(Global field0)? global,
-    TResult Function(Table field0)? table,
-    TResult Function(Memory field0)? memory,
+    TResult Function(WGlobal field0)? global,
+    TResult Function(WTable field0)? table,
+    TResult Function(WMemory field0)? memory,
     TResult Function(WasmRunSharedMemory field0)? sharedMemory,
     required TResult orElse(),
   }) {
@@ -901,9 +905,10 @@ class _$ExternalValue_FuncImpl implements ExternalValue_Func {
   }
 }
 
-abstract class ExternalValue_Func implements ExternalValue {
+abstract class ExternalValue_Func extends ExternalValue {
   const factory ExternalValue_Func(final WFunc field0) =
       _$ExternalValue_FuncImpl;
+  const ExternalValue_Func._() : super._();
 
   @override
   WFunc get field0;
@@ -918,7 +923,7 @@ abstract class _$$ExternalValue_GlobalImplCopyWith<$Res> {
           $Res Function(_$ExternalValue_GlobalImpl) then) =
       __$$ExternalValue_GlobalImplCopyWithImpl<$Res>;
   @useResult
-  $Res call({Global field0});
+  $Res call({WGlobal field0});
 }
 
 /// @nodoc
@@ -938,18 +943,18 @@ class __$$ExternalValue_GlobalImplCopyWithImpl<$Res>
       null == field0
           ? _value.field0
           : field0 // ignore: cast_nullable_to_non_nullable
-              as Global,
+              as WGlobal,
     ));
   }
 }
 
 /// @nodoc
 
-class _$ExternalValue_GlobalImpl implements ExternalValue_Global {
-  const _$ExternalValue_GlobalImpl(this.field0);
+class _$ExternalValue_GlobalImpl extends ExternalValue_Global {
+  const _$ExternalValue_GlobalImpl(this.field0) : super._();
 
   @override
-  final Global field0;
+  final WGlobal field0;
 
   @override
   String toString() {
@@ -979,9 +984,9 @@ class _$ExternalValue_GlobalImpl implements ExternalValue_Global {
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
     required TResult Function(WFunc field0) func,
-    required TResult Function(Global field0) global,
-    required TResult Function(Table field0) table,
-    required TResult Function(Memory field0) memory,
+    required TResult Function(WGlobal field0) global,
+    required TResult Function(WTable field0) table,
+    required TResult Function(WMemory field0) memory,
     required TResult Function(WasmRunSharedMemory field0) sharedMemory,
   }) {
     return global(field0);
@@ -991,9 +996,9 @@ class _$ExternalValue_GlobalImpl implements ExternalValue_Global {
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function(WFunc field0)? func,
-    TResult? Function(Global field0)? global,
-    TResult? Function(Table field0)? table,
-    TResult? Function(Memory field0)? memory,
+    TResult? Function(WGlobal field0)? global,
+    TResult? Function(WTable field0)? table,
+    TResult? Function(WMemory field0)? memory,
     TResult? Function(WasmRunSharedMemory field0)? sharedMemory,
   }) {
     return global?.call(field0);
@@ -1003,9 +1008,9 @@ class _$ExternalValue_GlobalImpl implements ExternalValue_Global {
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function(WFunc field0)? func,
-    TResult Function(Global field0)? global,
-    TResult Function(Table field0)? table,
-    TResult Function(Memory field0)? memory,
+    TResult Function(WGlobal field0)? global,
+    TResult Function(WTable field0)? table,
+    TResult Function(WMemory field0)? memory,
     TResult Function(WasmRunSharedMemory field0)? sharedMemory,
     required TResult orElse(),
   }) {
@@ -1056,12 +1061,13 @@ class _$ExternalValue_GlobalImpl implements ExternalValue_Global {
   }
 }
 
-abstract class ExternalValue_Global implements ExternalValue {
-  const factory ExternalValue_Global(final Global field0) =
+abstract class ExternalValue_Global extends ExternalValue {
+  const factory ExternalValue_Global(final WGlobal field0) =
       _$ExternalValue_GlobalImpl;
+  const ExternalValue_Global._() : super._();
 
   @override
-  Global get field0;
+  WGlobal get field0;
   @JsonKey(ignore: true)
   _$$ExternalValue_GlobalImplCopyWith<_$ExternalValue_GlobalImpl>
       get copyWith => throw _privateConstructorUsedError;
@@ -1073,7 +1079,7 @@ abstract class _$$ExternalValue_TableImplCopyWith<$Res> {
           $Res Function(_$ExternalValue_TableImpl) then) =
       __$$ExternalValue_TableImplCopyWithImpl<$Res>;
   @useResult
-  $Res call({Table field0});
+  $Res call({WTable field0});
 }
 
 /// @nodoc
@@ -1093,18 +1099,18 @@ class __$$ExternalValue_TableImplCopyWithImpl<$Res>
       null == field0
           ? _value.field0
           : field0 // ignore: cast_nullable_to_non_nullable
-              as Table,
+              as WTable,
     ));
   }
 }
 
 /// @nodoc
 
-class _$ExternalValue_TableImpl implements ExternalValue_Table {
-  const _$ExternalValue_TableImpl(this.field0);
+class _$ExternalValue_TableImpl extends ExternalValue_Table {
+  const _$ExternalValue_TableImpl(this.field0) : super._();
 
   @override
-  final Table field0;
+  final WTable field0;
 
   @override
   String toString() {
@@ -1133,9 +1139,9 @@ class _$ExternalValue_TableImpl implements ExternalValue_Table {
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
     required TResult Function(WFunc field0) func,
-    required TResult Function(Global field0) global,
-    required TResult Function(Table field0) table,
-    required TResult Function(Memory field0) memory,
+    required TResult Function(WGlobal field0) global,
+    required TResult Function(WTable field0) table,
+    required TResult Function(WMemory field0) memory,
     required TResult Function(WasmRunSharedMemory field0) sharedMemory,
   }) {
     return table(field0);
@@ -1145,9 +1151,9 @@ class _$ExternalValue_TableImpl implements ExternalValue_Table {
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function(WFunc field0)? func,
-    TResult? Function(Global field0)? global,
-    TResult? Function(Table field0)? table,
-    TResult? Function(Memory field0)? memory,
+    TResult? Function(WGlobal field0)? global,
+    TResult? Function(WTable field0)? table,
+    TResult? Function(WMemory field0)? memory,
     TResult? Function(WasmRunSharedMemory field0)? sharedMemory,
   }) {
     return table?.call(field0);
@@ -1157,9 +1163,9 @@ class _$ExternalValue_TableImpl implements ExternalValue_Table {
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function(WFunc field0)? func,
-    TResult Function(Global field0)? global,
-    TResult Function(Table field0)? table,
-    TResult Function(Memory field0)? memory,
+    TResult Function(WGlobal field0)? global,
+    TResult Function(WTable field0)? table,
+    TResult Function(WMemory field0)? memory,
     TResult Function(WasmRunSharedMemory field0)? sharedMemory,
     required TResult orElse(),
   }) {
@@ -1210,12 +1216,13 @@ class _$ExternalValue_TableImpl implements ExternalValue_Table {
   }
 }
 
-abstract class ExternalValue_Table implements ExternalValue {
-  const factory ExternalValue_Table(final Table field0) =
+abstract class ExternalValue_Table extends ExternalValue {
+  const factory ExternalValue_Table(final WTable field0) =
       _$ExternalValue_TableImpl;
+  const ExternalValue_Table._() : super._();
 
   @override
-  Table get field0;
+  WTable get field0;
   @JsonKey(ignore: true)
   _$$ExternalValue_TableImplCopyWith<_$ExternalValue_TableImpl> get copyWith =>
       throw _privateConstructorUsedError;
@@ -1227,7 +1234,7 @@ abstract class _$$ExternalValue_MemoryImplCopyWith<$Res> {
           $Res Function(_$ExternalValue_MemoryImpl) then) =
       __$$ExternalValue_MemoryImplCopyWithImpl<$Res>;
   @useResult
-  $Res call({Memory field0});
+  $Res call({WMemory field0});
 }
 
 /// @nodoc
@@ -1247,18 +1254,18 @@ class __$$ExternalValue_MemoryImplCopyWithImpl<$Res>
       null == field0
           ? _value.field0
           : field0 // ignore: cast_nullable_to_non_nullable
-              as Memory,
+              as WMemory,
     ));
   }
 }
 
 /// @nodoc
 
-class _$ExternalValue_MemoryImpl implements ExternalValue_Memory {
-  const _$ExternalValue_MemoryImpl(this.field0);
+class _$ExternalValue_MemoryImpl extends ExternalValue_Memory {
+  const _$ExternalValue_MemoryImpl(this.field0) : super._();
 
   @override
-  final Memory field0;
+  final WMemory field0;
 
   @override
   String toString() {
@@ -1288,9 +1295,9 @@ class _$ExternalValue_MemoryImpl implements ExternalValue_Memory {
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
     required TResult Function(WFunc field0) func,
-    required TResult Function(Global field0) global,
-    required TResult Function(Table field0) table,
-    required TResult Function(Memory field0) memory,
+    required TResult Function(WGlobal field0) global,
+    required TResult Function(WTable field0) table,
+    required TResult Function(WMemory field0) memory,
     required TResult Function(WasmRunSharedMemory field0) sharedMemory,
   }) {
     return memory(field0);
@@ -1300,9 +1307,9 @@ class _$ExternalValue_MemoryImpl implements ExternalValue_Memory {
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function(WFunc field0)? func,
-    TResult? Function(Global field0)? global,
-    TResult? Function(Table field0)? table,
-    TResult? Function(Memory field0)? memory,
+    TResult? Function(WGlobal field0)? global,
+    TResult? Function(WTable field0)? table,
+    TResult? Function(WMemory field0)? memory,
     TResult? Function(WasmRunSharedMemory field0)? sharedMemory,
   }) {
     return memory?.call(field0);
@@ -1312,9 +1319,9 @@ class _$ExternalValue_MemoryImpl implements ExternalValue_Memory {
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function(WFunc field0)? func,
-    TResult Function(Global field0)? global,
-    TResult Function(Table field0)? table,
-    TResult Function(Memory field0)? memory,
+    TResult Function(WGlobal field0)? global,
+    TResult Function(WTable field0)? table,
+    TResult Function(WMemory field0)? memory,
     TResult Function(WasmRunSharedMemory field0)? sharedMemory,
     required TResult orElse(),
   }) {
@@ -1365,12 +1372,13 @@ class _$ExternalValue_MemoryImpl implements ExternalValue_Memory {
   }
 }
 
-abstract class ExternalValue_Memory implements ExternalValue {
-  const factory ExternalValue_Memory(final Memory field0) =
+abstract class ExternalValue_Memory extends ExternalValue {
+  const factory ExternalValue_Memory(final WMemory field0) =
       _$ExternalValue_MemoryImpl;
+  const ExternalValue_Memory._() : super._();
 
   @override
-  Memory get field0;
+  WMemory get field0;
   @JsonKey(ignore: true)
   _$$ExternalValue_MemoryImplCopyWith<_$ExternalValue_MemoryImpl>
       get copyWith => throw _privateConstructorUsedError;
@@ -1411,8 +1419,8 @@ class __$$ExternalValue_SharedMemoryImplCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$ExternalValue_SharedMemoryImpl implements ExternalValue_SharedMemory {
-  const _$ExternalValue_SharedMemoryImpl(this.field0);
+class _$ExternalValue_SharedMemoryImpl extends ExternalValue_SharedMemory {
+  const _$ExternalValue_SharedMemoryImpl(this.field0) : super._();
 
   @override
   final WasmRunSharedMemory field0;
@@ -1444,9 +1452,9 @@ class _$ExternalValue_SharedMemoryImpl implements ExternalValue_SharedMemory {
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
     required TResult Function(WFunc field0) func,
-    required TResult Function(Global field0) global,
-    required TResult Function(Table field0) table,
-    required TResult Function(Memory field0) memory,
+    required TResult Function(WGlobal field0) global,
+    required TResult Function(WTable field0) table,
+    required TResult Function(WMemory field0) memory,
     required TResult Function(WasmRunSharedMemory field0) sharedMemory,
   }) {
     return sharedMemory(field0);
@@ -1456,9 +1464,9 @@ class _$ExternalValue_SharedMemoryImpl implements ExternalValue_SharedMemory {
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function(WFunc field0)? func,
-    TResult? Function(Global field0)? global,
-    TResult? Function(Table field0)? table,
-    TResult? Function(Memory field0)? memory,
+    TResult? Function(WGlobal field0)? global,
+    TResult? Function(WTable field0)? table,
+    TResult? Function(WMemory field0)? memory,
     TResult? Function(WasmRunSharedMemory field0)? sharedMemory,
   }) {
     return sharedMemory?.call(field0);
@@ -1468,9 +1476,9 @@ class _$ExternalValue_SharedMemoryImpl implements ExternalValue_SharedMemory {
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function(WFunc field0)? func,
-    TResult Function(Global field0)? global,
-    TResult Function(Table field0)? table,
-    TResult Function(Memory field0)? memory,
+    TResult Function(WGlobal field0)? global,
+    TResult Function(WTable field0)? table,
+    TResult Function(WMemory field0)? memory,
     TResult Function(WasmRunSharedMemory field0)? sharedMemory,
     required TResult orElse(),
   }) {
@@ -1521,9 +1529,10 @@ class _$ExternalValue_SharedMemoryImpl implements ExternalValue_SharedMemory {
   }
 }
 
-abstract class ExternalValue_SharedMemory implements ExternalValue {
+abstract class ExternalValue_SharedMemory extends ExternalValue {
   const factory ExternalValue_SharedMemory(final WasmRunSharedMemory field0) =
       _$ExternalValue_SharedMemoryImpl;
+  const ExternalValue_SharedMemory._() : super._();
 
   @override
   WasmRunSharedMemory get field0;
@@ -1632,8 +1641,10 @@ class __$$ParallelExec_OkImplCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$ParallelExec_OkImpl implements ParallelExec_Ok {
-  const _$ParallelExec_OkImpl(final List<WasmVal> field0) : _field0 = field0;
+class _$ParallelExec_OkImpl extends ParallelExec_Ok {
+  const _$ParallelExec_OkImpl(final List<WasmVal> field0)
+      : _field0 = field0,
+        super._();
 
   final List<WasmVal> _field0;
   @override
@@ -1736,9 +1747,10 @@ class _$ParallelExec_OkImpl implements ParallelExec_Ok {
   }
 }
 
-abstract class ParallelExec_Ok implements ParallelExec {
+abstract class ParallelExec_Ok extends ParallelExec {
   const factory ParallelExec_Ok(final List<WasmVal> field0) =
       _$ParallelExec_OkImpl;
+  const ParallelExec_Ok._() : super._();
 
   @override
   List<WasmVal> get field0;
@@ -1780,8 +1792,8 @@ class __$$ParallelExec_ErrImplCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$ParallelExec_ErrImpl implements ParallelExec_Err {
-  const _$ParallelExec_ErrImpl(this.field0);
+class _$ParallelExec_ErrImpl extends ParallelExec_Err {
+  const _$ParallelExec_ErrImpl(this.field0) : super._();
 
   @override
   final String field0;
@@ -1878,8 +1890,9 @@ class _$ParallelExec_ErrImpl implements ParallelExec_Err {
   }
 }
 
-abstract class ParallelExec_Err implements ParallelExec {
+abstract class ParallelExec_Err extends ParallelExec {
   const factory ParallelExec_Err(final String field0) = _$ParallelExec_ErrImpl;
+  const ParallelExec_Err._() : super._();
 
   @override
   String get field0;
@@ -1921,8 +1934,8 @@ class __$$ParallelExec_CallImplCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$ParallelExec_CallImpl implements ParallelExec_Call {
-  const _$ParallelExec_CallImpl(this.field0);
+class _$ParallelExec_CallImpl extends ParallelExec_Call {
+  const _$ParallelExec_CallImpl(this.field0) : super._();
 
   @override
   final FunctionCall field0;
@@ -2019,9 +2032,10 @@ class _$ParallelExec_CallImpl implements ParallelExec_Call {
   }
 }
 
-abstract class ParallelExec_Call implements ParallelExec {
+abstract class ParallelExec_Call extends ParallelExec {
   const factory ParallelExec_Call(final FunctionCall field0) =
       _$ParallelExec_CallImpl;
+  const ParallelExec_Call._() : super._();
 
   @override
   FunctionCall get field0;
@@ -2165,8 +2179,8 @@ class __$$WasmVal_i32ImplCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$WasmVal_i32Impl implements WasmVal_i32 {
-  const _$WasmVal_i32Impl(this.field0);
+class _$WasmVal_i32Impl extends WasmVal_i32 {
+  const _$WasmVal_i32Impl(this.field0) : super._();
 
   @override
   final int field0;
@@ -2298,8 +2312,9 @@ class _$WasmVal_i32Impl implements WasmVal_i32 {
   }
 }
 
-abstract class WasmVal_i32 implements WasmVal {
+abstract class WasmVal_i32 extends WasmVal {
   const factory WasmVal_i32(final int field0) = _$WasmVal_i32Impl;
+  const WasmVal_i32._() : super._();
 
   @override
   int get field0;
@@ -2341,8 +2356,8 @@ class __$$WasmVal_i64ImplCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$WasmVal_i64Impl implements WasmVal_i64 {
-  const _$WasmVal_i64Impl(this.field0);
+class _$WasmVal_i64Impl extends WasmVal_i64 {
+  const _$WasmVal_i64Impl(this.field0) : super._();
 
   @override
   final int field0;
@@ -2474,8 +2489,9 @@ class _$WasmVal_i64Impl implements WasmVal_i64 {
   }
 }
 
-abstract class WasmVal_i64 implements WasmVal {
+abstract class WasmVal_i64 extends WasmVal {
   const factory WasmVal_i64(final int field0) = _$WasmVal_i64Impl;
+  const WasmVal_i64._() : super._();
 
   @override
   int get field0;
@@ -2517,8 +2533,8 @@ class __$$WasmVal_f32ImplCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$WasmVal_f32Impl implements WasmVal_f32 {
-  const _$WasmVal_f32Impl(this.field0);
+class _$WasmVal_f32Impl extends WasmVal_f32 {
+  const _$WasmVal_f32Impl(this.field0) : super._();
 
   @override
   final double field0;
@@ -2650,8 +2666,9 @@ class _$WasmVal_f32Impl implements WasmVal_f32 {
   }
 }
 
-abstract class WasmVal_f32 implements WasmVal {
+abstract class WasmVal_f32 extends WasmVal {
   const factory WasmVal_f32(final double field0) = _$WasmVal_f32Impl;
+  const WasmVal_f32._() : super._();
 
   @override
   double get field0;
@@ -2693,8 +2710,8 @@ class __$$WasmVal_f64ImplCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$WasmVal_f64Impl implements WasmVal_f64 {
-  const _$WasmVal_f64Impl(this.field0);
+class _$WasmVal_f64Impl extends WasmVal_f64 {
+  const _$WasmVal_f64Impl(this.field0) : super._();
 
   @override
   final double field0;
@@ -2826,8 +2843,9 @@ class _$WasmVal_f64Impl implements WasmVal_f64 {
   }
 }
 
-abstract class WasmVal_f64 implements WasmVal {
+abstract class WasmVal_f64 extends WasmVal {
   const factory WasmVal_f64(final double field0) = _$WasmVal_f64Impl;
+  const WasmVal_f64._() : super._();
 
   @override
   double get field0;
@@ -2869,8 +2887,8 @@ class __$$WasmVal_v128ImplCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$WasmVal_v128Impl implements WasmVal_v128 {
-  const _$WasmVal_v128Impl(this.field0);
+class _$WasmVal_v128Impl extends WasmVal_v128 {
+  const _$WasmVal_v128Impl(this.field0) : super._();
 
   @override
   final U8Array16 field0;
@@ -3003,8 +3021,9 @@ class _$WasmVal_v128Impl implements WasmVal_v128 {
   }
 }
 
-abstract class WasmVal_v128 implements WasmVal {
+abstract class WasmVal_v128 extends WasmVal {
   const factory WasmVal_v128(final U8Array16 field0) = _$WasmVal_v128Impl;
+  const WasmVal_v128._() : super._();
 
   @override
   U8Array16 get field0;
@@ -3046,8 +3065,8 @@ class __$$WasmVal_funcRefImplCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$WasmVal_funcRefImpl implements WasmVal_funcRef {
-  const _$WasmVal_funcRefImpl([this.field0]);
+class _$WasmVal_funcRefImpl extends WasmVal_funcRef {
+  const _$WasmVal_funcRefImpl([this.field0]) : super._();
 
   @override
   final WFunc? field0;
@@ -3180,8 +3199,9 @@ class _$WasmVal_funcRefImpl implements WasmVal_funcRef {
   }
 }
 
-abstract class WasmVal_funcRef implements WasmVal {
+abstract class WasmVal_funcRef extends WasmVal {
   const factory WasmVal_funcRef([final WFunc? field0]) = _$WasmVal_funcRefImpl;
+  const WasmVal_funcRef._() : super._();
 
   @override
   WFunc? get field0;
@@ -3223,8 +3243,8 @@ class __$$WasmVal_externRefImplCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$WasmVal_externRefImpl implements WasmVal_externRef {
-  const _$WasmVal_externRefImpl([this.field0]);
+class _$WasmVal_externRefImpl extends WasmVal_externRef {
+  const _$WasmVal_externRefImpl([this.field0]) : super._();
 
   @override
   final int? field0;
@@ -3357,9 +3377,10 @@ class _$WasmVal_externRefImpl implements WasmVal_externRef {
   }
 }
 
-abstract class WasmVal_externRef implements WasmVal {
+abstract class WasmVal_externRef extends WasmVal {
   const factory WasmVal_externRef([final int? field0]) =
       _$WasmVal_externRefImpl;
+  const WasmVal_externRef._() : super._();
 
   @override
   int? get field0;
@@ -3401,8 +3422,8 @@ class __$$WasmVal_anyRefImplCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$WasmVal_anyRefImpl implements WasmVal_anyRef {
-  const _$WasmVal_anyRefImpl([this.field0]);
+class _$WasmVal_anyRefImpl extends WasmVal_anyRef {
+  const _$WasmVal_anyRefImpl([this.field0]) : super._();
 
   @override
   final WAnyRef? field0;
@@ -3535,8 +3556,9 @@ class _$WasmVal_anyRefImpl implements WasmVal_anyRef {
   }
 }
 
-abstract class WasmVal_anyRef implements WasmVal {
+abstract class WasmVal_anyRef extends WasmVal {
   const factory WasmVal_anyRef([final WAnyRef? field0]) = _$WasmVal_anyRefImpl;
+  const WasmVal_anyRef._() : super._();
 
   @override
   WAnyRef? get field0;
@@ -3578,8 +3600,8 @@ class __$$WasmVal_exnRefImplCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$WasmVal_exnRefImpl implements WasmVal_exnRef {
-  const _$WasmVal_exnRefImpl([this.field0]);
+class _$WasmVal_exnRefImpl extends WasmVal_exnRef {
+  const _$WasmVal_exnRefImpl([this.field0]) : super._();
 
   @override
   final WExnRef? field0;
@@ -3712,8 +3734,9 @@ class _$WasmVal_exnRefImpl implements WasmVal_exnRef {
   }
 }
 
-abstract class WasmVal_exnRef implements WasmVal {
+abstract class WasmVal_exnRef extends WasmVal {
   const factory WasmVal_exnRef([final WExnRef? field0]) = _$WasmVal_exnRefImpl;
+  const WasmVal_exnRef._() : super._();
 
   @override
   WExnRef? get field0;

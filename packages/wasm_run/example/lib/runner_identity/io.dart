@@ -1,11 +1,12 @@
-import 'dart:ffi' as ffi;
 import 'dart:io' show Platform;
+
+import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 String getRunnerIdentityImpl() {
   return '${Platform.operatingSystem}: ${Platform.operatingSystemVersion}';
 }
 
-typedef OpenDynamicLibraryResultImpl = ffi.DynamicLibrary;
+typedef OpenDynamicLibraryResultImpl = ExternalLibrary;
 
 OpenDynamicLibraryResultImpl openDynamicLibraryImpl(String library) =>
-    ffi.DynamicLibrary.open(library);
+    ExternalLibrary.open(library);

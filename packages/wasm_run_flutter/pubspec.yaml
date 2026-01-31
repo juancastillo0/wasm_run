@@ -27,9 +27,9 @@ dependencies:
     path: ../wasm_run
 
 dev_dependencies:
-  ffi: ^2.1.3
+  ffi: ^2.1.5
   ffigen: ^15.0.0
-  very_good_analysis: ^6.0.0
+  very_good_analysis: ^10.0.0
 
 # Flutter plugin configuration
 # Native assets are bundled automatically via native_toolchain_rust build hooks in wasm_run

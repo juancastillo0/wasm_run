@@ -6,9 +6,8 @@ import 'dart:typed_data';
 
 import 'package:test/test.dart';
 import 'package:wasm_run/load_module.dart';
-// TODO(wat): implement wat in main api
 // ignore: implementation_imports
-import 'package:wasm_run/src/ffi.dart' show defaultInstance;
+import 'package:wasm_run/src/ffi.dart' show api;
 // ignore: implementation_imports
 import 'package:wasm_run/src/ffi/setup_dynamic_library.dart'
     show setUpDesktopDynamicLibrary;
@@ -35,8 +34,8 @@ Future<Uint8List> getBinary({
 }) async {
   Uint8List binary;
   try {
-    final w = defaultInstance();
-    binary = await w.parseWatFormat(wat: wat);
+    final w = api();
+    binary = await w.crateApiWasmtimeParseWatFormat(wat: wat);
     // ignore: avoid_catching_errors
   } catch (_) {
     if (isWeb) {
