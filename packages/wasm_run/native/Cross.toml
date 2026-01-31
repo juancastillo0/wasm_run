@@ -22,12 +22,23 @@
 [build]
 pre-build = []
 
+# Use custom Dockerfile that runs as non-root user
+# This ensures build artifacts are owned by host user, not root
+[build.dockerfile]
+file = "./docker/cross-user.dockerfile"
+context = "./docker"
+
+[build.dockerfile.build-args]
+USER_ID = { env = "CROSS_USER_ID", default = "1000" }
+GROUP_ID = { env = "CROSS_GROUP_ID", default = "1000" }
+
 [build.env]
 passthrough = [
     "RUST_BACKTRACE",
     "RUST_LOG",
+    "CROSS_USER_ID",
+    "CROSS_GROUP_ID",
 ]
-volumes = ["CARGO_HOME", "CARGO_TARGET_DIR"]
 
 # Linux ARM64 - TESTED ✅
 [target.aarch64-unknown-linux-gnu]

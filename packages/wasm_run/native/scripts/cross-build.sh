@@ -55,7 +55,11 @@ IOS_TARGETS=(
 MIN_RUST_VERSION="1.85.0"
 
 # Docker images
-DARWIN_BUILDER_IMAGE="joseluisq/rust-linux-darwin-builder:latest"
+DARWIN_BUILDER_BASE="joseluisq/rust-linux-darwin-builder:latest"
+DARWIN_BUILDER_CUSTOM="wasm-run-osxcross:user"
+
+# Custom Docker image directory
+DOCKER_DIR="$NATIVE_DIR/docker"
 
 # iOS cross-compilation from Linux
 # cctools/ld64 is provided by the osxcross Docker image
@@ -94,6 +98,20 @@ check_disk_space() {
     fi
     log_success "Disk space: ${avail_gb}GB available"
     return 0
+}
+
+# Fix ownership of target directory after Docker builds
+# Docker runs as root, so files are owned by root - this fixes them
+fix_target_ownership() {
+    local target_dir="$WORKSPACE_ROOT/target"
+    if [[ -d "$target_dir" ]]; then
+        # Check if any files are owned by root
+        if find "$target_dir" -user root -print -quit 2>/dev/null | grep -q .; then
+            log_info "Fixing ownership of build artifacts..."
+            sudo chown -R "$(id -u):$(id -g)" "$target_dir" 2>/dev/null || \
+                log_warn "Could not fix ownership (may need sudo)"
+        fi
+    fi
 }
 
 cleanup_docker_image() {
@@ -273,6 +291,10 @@ build_with_cross() {
     # and outputs go to $WORKSPACE_ROOT/target/$target/release/
     cd "$WORKSPACE_ROOT"
 
+    # Export user IDs for custom Dockerfile (ensures files are owned by host user)
+    export CROSS_USER_ID=$(id -u)
+    export CROSS_GROUP_ID=$(id -g)
+
     # Use CROSS_REMOTE=1 to build entirely in container (avoids glibc mismatch on newer hosts)
     # Build only the wasm_run_native package
     CROSS_REMOTE=1 "$cross_cmd" build --release --target="$target" -p wasm_run_native
@@ -309,14 +331,8 @@ build_macos_with_docker() {
     # Check disk space before pulling large image
     check_disk_space 15 || true
 
-    # Create temp dir for cargo cache
-    local cargo_tmp=$(mktemp -d)
-    trap "rm -rf '$cargo_tmp'" EXIT
-
     # Run from workspace root and build only wasm_run_native package
-    # Use CARGO_HOME in temp dir to avoid filling up container storage
     # Install required Rust version and set CC/CXX/linker to osxcross clang
-    local cc_var="CC"
     local linker_var="CARGO_TARGET_X86_64_APPLE_DARWIN_LINKER"
     local cc_val="o64-clang"
 
@@ -327,24 +343,20 @@ build_macos_with_docker() {
 
     docker run --rm \
         -v "$WORKSPACE_ROOT:/app" \
-        -v "$cargo_tmp:/cargo" \
-        -e "CARGO_HOME=/cargo" \
-        -e "RUSTUP_HOME=/cargo/rustup" \
         -e "CC=$cc_val" \
         -e "CXX=${cc_val}++" \
         -e "$linker_var=$cc_val" \
         -w "/app" \
-        "$DARWIN_BUILDER_IMAGE" \
+        "$DARWIN_BUILDER_BASE" \
         sh -c "rustup default 1.93.0 && rustup target add $target && cargo build --release --target=$target -p wasm_run_native"
 
     local result=$?
 
-    # Cleanup temp cargo dir
-    rm -rf "$cargo_tmp" 2>/dev/null || true
-    trap - EXIT
+    # Fix ownership of build artifacts (Docker runs as root)
+    fix_target_ownership
 
     # Cleanup Docker image after build
-    cleanup_docker_image "$DARWIN_BUILDER_IMAGE"
+    cleanup_docker_image "$DARWIN_BUILDER_BASE"
 
     if [[ $result -eq 0 ]]; then
         copy_output "$target" "dylib"
@@ -443,10 +455,6 @@ build_ios_with_docker() {
     # Check disk space before pulling image
     check_disk_space 15 || true
 
-    # Create temp dir for cargo cache
-    local cargo_tmp=$(mktemp -d)
-    trap "rm -rf '$cargo_tmp'" EXIT
-
     local arch="arm64"
     local min_ios_version="12.0"
     if [[ "$target" == "x86_64-apple-ios" ]]; then
@@ -461,10 +469,7 @@ build_ios_with_docker() {
     local osxcross_bin="/usr/local/osxcross/target/bin"
     docker run --rm \
         -v "$WORKSPACE_ROOT:/app" \
-        -v "$cargo_tmp:/cargo" \
         -v "$IOS_SDK_PATH:/ios-sdk:ro" \
-        -e "CARGO_HOME=/cargo" \
-        -e "RUSTUP_HOME=/cargo/rustup" \
         -e "SDKROOT=/ios-sdk" \
         -e "CC=clang" \
         -e "CXX=clang++" \
@@ -473,17 +478,16 @@ build_ios_with_docker() {
         -e "CARGO_TARGET_AARCH64_APPLE_IOS_LINKER=$osxcross_bin/aarch64-apple-darwin22.4-clang" \
         -e "RUSTFLAGS=-C link-arg=-target -C link-arg=$ios_target -C link-arg=-isysroot -C link-arg=/ios-sdk -C link-arg=-fuse-ld=$osxcross_bin/aarch64-apple-darwin22.4-ld" \
         -w "/app" \
-        "$DARWIN_BUILDER_IMAGE" \
+        "$DARWIN_BUILDER_BASE" \
         sh -c "export PATH=$osxcross_bin:\$PATH && rustup default 1.93.0 && rustup target add $target && cargo build --release --target=$target -p wasm_run_native"
 
     local result=$?
 
-    # Cleanup temp cargo dir
-    rm -rf "$cargo_tmp" 2>/dev/null || true
-    trap - EXIT
+    # Fix ownership of build artifacts (Docker runs as root)
+    fix_target_ownership
 
     # Cleanup Docker image after build
-    cleanup_docker_image "$DARWIN_BUILDER_IMAGE"
+    cleanup_docker_image "$DARWIN_BUILDER_BASE"
 
     if [[ $result -eq 0 ]]; then
         # iOS can use either .a (static) or .dylib (dynamic) - try both
