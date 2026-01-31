@@ -175,6 +175,22 @@ class WasmWorker {
             case ValueTy.funcRef:
               // TODO: implement refs
               throw UnimplementedError();
+            case ValueTy.anyRef:
+            case ValueTy.eqRef:
+            case ValueTy.i31Ref:
+            case ValueTy.structRef:
+            case ValueTy.arrayRef:
+              throw UnsupportedError(
+                'GC reference type $type is not supported in workers',
+              );
+            case ValueTy.exnRef:
+              throw UnsupportedError(
+                'Exception reference type is not supported in workers',
+              );
+            case ValueTy.contRef:
+              throw UnsupportedError(
+                'Continuation reference type is not supported in workers',
+              );
           }
         }
         atomics.notify(Int32List.sublistView(bytes), 0, 1);

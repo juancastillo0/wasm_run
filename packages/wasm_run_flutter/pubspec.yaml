@@ -4,6 +4,7 @@ description: |
   Uses Rust's wasmtime optimizing runtime or wasmi interpreter.
 version: 0.1.0
 homepage: https://github.com/juancastillo0/wasm_run
+publish_to: none
 
 topics:
   - wasm
@@ -19,9 +20,9 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  plugin_platform_interface: ^2.1.8
   flutter_web_plugins:
     sdk: flutter
+  plugin_platform_interface: ^2.1.8
   wasm_run:
     path: ../wasm_run
 

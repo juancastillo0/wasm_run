@@ -297,6 +297,22 @@ class _Builder extends WasmInstanceBuilder {
         // TODO(web): Implement funcRef "anyfunc"
         inner = Global.externref(value: val, mutable: mutable);
         break;
+      case ValueTy.anyRef:
+      case ValueTy.eqRef:
+      case ValueTy.i31Ref:
+      case ValueTy.structRef:
+      case ValueTy.arrayRef:
+        throw UnsupportedError(
+          'GC reference type ${value.type} is not supported on web',
+        );
+      case ValueTy.exnRef:
+        throw UnsupportedError(
+          'Exception reference type is not supported on web',
+        );
+      case ValueTy.contRef:
+        throw UnsupportedError(
+          'Continuation reference type is not supported on web',
+        );
     }
     return _Global(inner, type, value);
   }

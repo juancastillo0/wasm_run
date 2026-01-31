@@ -167,7 +167,7 @@ impl RefUnwindSafe for WAnyRef {}
 impl Clone for WAnyRef {
     fn clone(&self) -> Self {
         Self {
-            inner: self.inner.clone(),
+            inner: self.inner,
         }
     }
 }
@@ -188,7 +188,7 @@ impl RefUnwindSafe for WExnRef {}
 impl Clone for WExnRef {
     fn clone(&self) -> Self {
         Self {
-            inner: self.inner.clone(),
+            inner: self.inner,
         }
     }
 }

@@ -55,7 +55,7 @@ type ValueType = wasmtime::ValType;
 // Use Mutex instead of RwLock because WasiP1Ctx is not Sync (only Send)
 static ARRAY: Lazy<Mutex<GlobalState>> = Lazy::new(|| Mutex::new(Default::default()));
 
-thread_local!(static STORE: RefCell<Option<WasmiModuleImpl>> = RefCell::new(None));
+thread_local!(static STORE: RefCell<Option<WasmiModuleImpl>> = const { RefCell::new(None) });
 
 #[derive(Default)]
 struct GlobalState {
@@ -549,7 +549,7 @@ impl WasmRunModuleId {
                                 None
                             };
                             // Get the null ref for the element type as default
-                            let v = fill_value.unwrap_or_else(|| Ref::Func(None));
+                            let v = fill_value.unwrap_or(Ref::Func(None));
                             let table = Table::new(&mut thread.store, ty, v)?;
                             ExternalValue::Table(RustOpaque::new(table))
                         }
@@ -644,7 +644,7 @@ impl WasmRunModuleId {
                 .unwrap();
             let num_params = func.ty(&module.store).params().count();
             if (num_params == 0 && !args.is_empty())
-                || (num_params != 0 && args.len() % num_params != 0)
+                || (num_params != 0 && !args.len().is_multiple_of(num_params))
                 || num_params * num_tasks != args.len()
             {
                 function_stream.add(ParallelExec::Err(format!(
@@ -795,6 +795,7 @@ impl WasmRunModuleId {
 
         let mut ctx = value.store.as_context_mut();
         {
+            #[allow(clippy::missing_transmute_annotations)]
             let v = RwLock::new(unsafe { std::mem::transmute(ctx.as_context_mut()) });
             self.1 .0.write().unwrap().push(v);
         }
@@ -857,7 +858,7 @@ impl WasmRunModuleId {
             move |mut caller, params, results| {
                 let mapped: Vec<WasmVal> = params
                     .iter()
-                    .map(|a| WasmVal::from_val(a.clone(), &caller))
+                    .map(|a| WasmVal::from_val(*a, &caller))
                     .collect::<Result<Vec<_>>>()?;
                 if let Some(worker_channel) = worker_channel.clone() {
                     let guard = worker_channel.lock().unwrap();
@@ -902,6 +903,7 @@ impl WasmRunModuleId {
         let inputs = vec![mapped].into_dart();
         let stack = {
             let stack = caller.data().stack.clone();
+            #[allow(clippy::missing_transmute_annotations)]
             let v = RwLock::new(unsafe { std::mem::transmute(caller) });
             stack.0.write().unwrap().push(v);
             stack
@@ -1298,7 +1300,7 @@ impl CompiledComponent {
         let component = self.0.lock().unwrap();
         let imports: Vec<String> = component
             .component_type()
-            .imports(&component.engine())
+            .imports(component.engine())
             .map(|(name, _)| name.to_string())
             .collect();
         SyncReturn(imports)
@@ -1309,7 +1311,7 @@ impl CompiledComponent {
         let component = self.0.lock().unwrap();
         let exports: Vec<String> = component
             .component_type()
-            .exports(&component.engine())
+            .exports(component.engine())
             .map(|(name, _)| name.to_string())
             .collect();
         SyncReturn(exports)

@@ -109,8 +109,8 @@ impl WasmVal {
                 }
                 None => wasmtime::Val::ExternRef(None),
             },
-            WasmVal::anyRef(i) => wasmtime::Val::AnyRef(i.map(|r| r.inner.clone())),
-            WasmVal::exnRef(i) => wasmtime::Val::ExnRef(i.map(|r| r.inner.clone())),
+            WasmVal::anyRef(i) => wasmtime::Val::AnyRef(i.map(|r| r.inner)),
+            WasmVal::exnRef(i) => wasmtime::Val::ExnRef(i.map(|r| r.inner)),
         })
     }
 
