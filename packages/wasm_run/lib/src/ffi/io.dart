@@ -11,9 +11,9 @@ typedef ExternalLibrary = DynamicLibrary;
 Future<void> setUpLibraryImpl({required bool features, required bool wasi}) =>
     setUpDesktopDynamicLibrary();
 
-WasmRunDart createWrapperImpl(ExternalLibrary dylib) {
+WasmRunNative createWrapperImpl(ExternalLibrary dylib) {
   final validated = _validateLibrary(dylib);
-  return WasmRunDartImpl(validated);
+  return WasmRunNativeImpl(validated);
 }
 
 ExternalLibrary localTestingLibraryImpl() {

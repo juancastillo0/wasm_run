@@ -6,18 +6,18 @@ import 'package:wasm_run/src/ffi/stub.dart'
     if (dart.library.io) 'ffi/io.dart'
     if (dart.library.html) 'ffi/web.dart';
 
-WasmRunDart? _wrapper;
+WasmRunNative? _wrapper;
 
 final _alreadyInitialized =
     Exception('WasmRun bindings were already configured');
 
-WasmRunDart _createWrapper(ExternalLibrary lib) {
+WasmRunNative _createWrapper(ExternalLibrary lib) {
   if (_wrapper != null) throw _alreadyInitialized;
   _wrapper = createWrapperImpl(lib);
   return _wrapper!;
 }
 
-WasmRunDart _createLib() => _createWrapper(createLibraryImpl());
+WasmRunNative _createLib() => _createWrapper(createLibraryImpl());
 
 /// Executes a GET request to the [uri] and returns the body bytes.
 Future<Uint8List> getUriBodyBytes(Uri uri) => getUriBodyBytesImpl(uri);
@@ -97,7 +97,7 @@ class WasmRunLibrary {
   }
 }
 
-WasmRunDart defaultInstance() {
+WasmRunNative defaultInstance() {
   if (_wrapper != null) {
     return _wrapper!;
   }

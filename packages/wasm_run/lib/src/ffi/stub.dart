@@ -8,7 +8,7 @@ import 'package:wasm_run/src/bridge_generated.dart';
 typedef ExternalLibrary = Object;
 
 /// Creates a wrapper with the native bindings for the external library
-WasmRunDart createWrapperImpl(ExternalLibrary lib) =>
+WasmRunNative createWrapperImpl(ExternalLibrary lib) =>
     throw UnimplementedError();
 
 /// Returns a library for testing purposes

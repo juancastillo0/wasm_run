@@ -8,8 +8,8 @@ import 'package:wasm_run/src/ffi.dart';
 
 typedef ExternalLibrary = frb.WasmModule;
 
-WasmRunDart createWrapperImpl(ExternalLibrary module) =>
-    WasmRunDartImpl.wasm(module);
+WasmRunNative createWrapperImpl(ExternalLibrary module) =>
+    WasmRunNativeImpl.wasm(module);
 
 ExternalLibrary localTestingLibraryImpl() => throw UnimplementedError();
 

@@ -128,6 +128,23 @@ WasmVal _fromWasmValueRaw(ValueTy ty, Object? value, WasmRunModuleId module) {
         return WasmVal.funcRef();
       }
       return _makeFunction(value as WasmFunction, module);
+    // GC types (wasmtime only) - not fully implemented
+    case ValueTy.anyRef:
+    case ValueTy.eqRef:
+    case ValueTy.i31Ref:
+    case ValueTy.structRef:
+    case ValueTy.arrayRef:
+      throw UnimplementedError(
+        'GC reference type $ty is not yet fully supported',
+      );
+    case ValueTy.exnRef:
+      throw UnimplementedError(
+        'Exception reference type is not yet fully supported',
+      );
+    case ValueTy.contRef:
+      throw UnimplementedError(
+        'Continuation reference type is not yet fully supported',
+      );
   }
 }
 
@@ -312,7 +329,7 @@ class _References {
     try {
       final l = wireSyncReturnIntoDart(value);
       final input = _wire2api_list_wasm_val(l[0]);
-      final platform = (defaultInstance() as WasmRunDartImpl).platform;
+      final platform = (defaultInstance() as WasmRunNativeImpl).platform;
       final mapped = executeFunction(functionId, input);
       // TODO: null pointer when mapped is empty?
       // ignore: invalid_use_of_protected_member
@@ -372,6 +389,8 @@ class _References {
         return _toWasmFunction(func, module, null);
       },
       externRef: (id) => getReference(id, module),
+      anyRef: (_) => throw UnimplementedError('anyRef not yet supported'),
+      exnRef: (_) => throw UnimplementedError('exnRef not yet supported'),
     );
   }
 }

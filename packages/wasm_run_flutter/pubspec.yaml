@@ -24,9 +24,6 @@ dependencies:
     sdk: flutter
   wasm_run:
     path: ../wasm_run
-  # Native library built from source via Cargokit
-  wasm_run_native:
-    path: ../wasm_run_native
 
 dev_dependencies:
   ffi: ^2.1.3

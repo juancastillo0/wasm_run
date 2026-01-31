@@ -10,12 +10,21 @@ import 'package:uuid/uuid.dart';
 import 'bridge_generated.dart';
 export 'bridge_generated.dart';
 import 'dart:ffi' as ffi;
+import 'package:ffi/ffi.dart' as ffi_pkg;
+
+// DartPostCObject typedef for store_dart_post_cobject
+typedef DartPostCObject = ffi.Pointer<
+    ffi.NativeFunction<ffi.Bool Function(ffi.Int64, ffi.Pointer<ffi.Void>)>>;
 
 class WasmRunNativePlatform extends FlutterRustBridgeBase<WasmRunNativeWire> {
   WasmRunNativePlatform(ffi.DynamicLibrary dylib)
       : super(WasmRunNativeWire(dylib));
 
 // Section: api2wire
+
+  // Helper function to convert Dart bool to FFI-compatible bool
+  @protected
+  bool api2wire_bool(bool raw) => raw;
 
   @protected
   wire_ArcRwLockSharedMemory api2wire_ArcRwLockSharedMemory(
@@ -134,7 +143,10 @@ class WasmRunNativePlatform extends FlutterRustBridgeBase<WasmRunNativeWire> {
 
   @protected
   ffi.Pointer<ffi.Bool> api2wire_box_autoadd_bool(bool raw) {
-    return inner.new_box_autoadd_bool_0(api2wire_bool(raw));
+    // Allocate and set the boolean value directly
+    final ptr = ffi_pkg.calloc<ffi.Bool>();
+    ptr.value = raw;
+    return ptr;
   }
 
   @protected
@@ -846,8 +858,9 @@ class WasmRunNativeWire implements FlutterRustBridgeWireBase {
     ffi.Pointer<T> Function<T extends ffi.NativeType>(String symbolName) lookup,
   ) : _lookup = lookup;
 
-  void store_dart_post_cobject(int ptr) {
-    return _store_dart_post_cobject(ptr);
+  @override
+  void store_dart_post_cobject(DartPostCObject ptr) {
+    return _store_dart_post_cobject(ptr.address);
   }
 
   late final _store_dart_post_cobjectPtr =
@@ -1351,7 +1364,7 @@ class WasmRunNativeWire implements FlutterRustBridgeWireBase {
   WireSyncReturn wire_create_global__method__WasmRunModuleId(
     ffi.Pointer<wire_WasmRunModuleId> that,
     ffi.Pointer<wire_WasmVal> value,
-    ffi.Pointer<bool> mutable_,
+    ffi.Pointer<ffi.Bool> mutable_,
   ) {
     return _wire_create_global__method__WasmRunModuleId(that, value, mutable_);
   }
@@ -1361,14 +1374,14 @@ class WasmRunNativeWire implements FlutterRustBridgeWireBase {
           WireSyncReturn Function(
             ffi.Pointer<wire_WasmRunModuleId>,
             ffi.Pointer<wire_WasmVal>,
-            ffi.Pointer<bool>,
+            ffi.Pointer<ffi.Bool>,
           )>>('wire_create_global__method__WasmRunModuleId');
   late final _wire_create_global__method__WasmRunModuleId =
       _wire_create_global__method__WasmRunModuleIdPtr.asFunction<
           WireSyncReturn Function(
             ffi.Pointer<wire_WasmRunModuleId>,
             ffi.Pointer<wire_WasmVal>,
-            ffi.Pointer<bool>,
+            ffi.Pointer<ffi.Bool>,
           )>();
 
   WireSyncReturn wire_create_table__method__WasmRunModuleId(
@@ -2483,15 +2496,15 @@ class WasmRunNativeWire implements FlutterRustBridgeWireBase {
   late final _new_box_autoadd_atomics_0 = _new_box_autoadd_atomics_0Ptr
       .asFunction<ffi.Pointer<wire_Atomics> Function()>();
 
-  ffi.Pointer<bool> new_box_autoadd_bool_0(ffi.Pointer<bool> value) {
+  ffi.Pointer<ffi.Bool> new_box_autoadd_bool_0(ffi.Pointer<ffi.Bool> value) {
     return _new_box_autoadd_bool_0(value);
   }
 
   late final _new_box_autoadd_bool_0Ptr = _lookup<
-          ffi.NativeFunction<ffi.Pointer<bool> Function(ffi.Pointer<bool>)>>(
+          ffi.NativeFunction<ffi.Pointer<ffi.Bool> Function(ffi.Pointer<ffi.Bool>)>>(
       'new_box_autoadd_bool_0');
   late final _new_box_autoadd_bool_0 = _new_box_autoadd_bool_0Ptr
-      .asFunction<ffi.Pointer<bool> Function(ffi.Pointer<bool>)>();
+      .asFunction<ffi.Pointer<ffi.Bool> Function(ffi.Pointer<ffi.Bool>)>();
 
   ffi.Pointer<wire_CompiledComponent> new_box_autoadd_compiled_component_0() {
     return _new_box_autoadd_compiled_component_0();
@@ -3191,14 +3204,19 @@ final class wire_list_preopened_dir extends ffi.Struct {
 }
 
 final class wire_WasiConfigNative extends ffi.Struct {
+  @ffi.Bool()
   external bool capture_stdout;
 
+  @ffi.Bool()
   external bool capture_stderr;
 
+  @ffi.Bool()
   external bool inherit_stdin;
 
+  @ffi.Bool()
   external bool inherit_env;
 
+  @ffi.Bool()
   external bool inherit_args;
 
   external ffi.Pointer<wire_StringList> args;
@@ -3210,7 +3228,9 @@ final class wire_WasiConfigNative extends ffi.Struct {
   external ffi.Pointer<wire_list_preopened_dir> preopened_dirs;
 }
 
-typedef bool = ffi.NativeFunction<ffi.Int Function(ffi.Pointer<ffi.Int>)>;
+// Removed broken typedef that shadowed Dart's core bool type
+// Original: typedef bool = ffi.NativeFunction<ffi.Int Function(ffi.Pointer<ffi.Int>)>;
+// Now using ffi.Bool directly for FFI boolean types
 
 final class wire_WasiStackLimits extends ffi.Struct {
   @ffi.UintPtr()
@@ -3228,77 +3248,77 @@ final class wire_ModuleConfigWasmi extends ffi.Struct {
 
   external ffi.Pointer<ffi.UintPtr> cached_stacks;
 
-  external ffi.Pointer<bool> mutable_global;
+  external ffi.Pointer<ffi.Bool> mutable_global;
 
-  external ffi.Pointer<bool> sign_extension;
+  external ffi.Pointer<ffi.Bool> sign_extension;
 
-  external ffi.Pointer<bool> saturating_float_to_int;
+  external ffi.Pointer<ffi.Bool> saturating_float_to_int;
 
-  external ffi.Pointer<bool> tail_call;
+  external ffi.Pointer<ffi.Bool> tail_call;
 
-  external ffi.Pointer<bool> extended_const;
+  external ffi.Pointer<ffi.Bool> extended_const;
 
-  external ffi.Pointer<bool> floats;
+  external ffi.Pointer<ffi.Bool> floats;
 
-  external ffi.Pointer<bool> simd;
+  external ffi.Pointer<ffi.Bool> simd;
 
-  external ffi.Pointer<bool> relaxed_simd;
+  external ffi.Pointer<ffi.Bool> relaxed_simd;
 
-  external ffi.Pointer<bool> multi_memory;
+  external ffi.Pointer<ffi.Bool> multi_memory;
 
-  external ffi.Pointer<bool> memory64;
+  external ffi.Pointer<ffi.Bool> memory64;
 }
 
 final class wire_ModuleConfigWasmtime extends ffi.Struct {
-  external ffi.Pointer<bool> debug_info;
+  external ffi.Pointer<ffi.Bool> debug_info;
 
-  external ffi.Pointer<bool> wasm_backtrace;
+  external ffi.Pointer<ffi.Bool> wasm_backtrace;
 
-  external ffi.Pointer<bool> native_unwind_info;
+  external ffi.Pointer<ffi.Bool> native_unwind_info;
 
   external ffi.Pointer<ffi.UintPtr> max_wasm_stack;
 
-  external ffi.Pointer<bool> wasm_threads;
+  external ffi.Pointer<ffi.Bool> wasm_threads;
 
-  external ffi.Pointer<bool> wasm_simd;
+  external ffi.Pointer<ffi.Bool> wasm_simd;
 
-  external ffi.Pointer<bool> wasm_relaxed_simd;
+  external ffi.Pointer<ffi.Bool> wasm_relaxed_simd;
 
-  external ffi.Pointer<bool> relaxed_simd_deterministic;
+  external ffi.Pointer<ffi.Bool> relaxed_simd_deterministic;
 
-  external ffi.Pointer<bool> wasm_multi_memory;
+  external ffi.Pointer<ffi.Bool> wasm_multi_memory;
 
-  external ffi.Pointer<bool> wasm_memory64;
+  external ffi.Pointer<ffi.Bool> wasm_memory64;
 
-  external ffi.Pointer<bool> wasm_tail_call;
+  external ffi.Pointer<ffi.Bool> wasm_tail_call;
 
-  external ffi.Pointer<bool> wasm_gc;
+  external ffi.Pointer<ffi.Bool> wasm_gc;
 
-  external ffi.Pointer<bool> wasm_function_references;
+  external ffi.Pointer<ffi.Bool> wasm_function_references;
 
-  external ffi.Pointer<bool> wasm_exceptions;
+  external ffi.Pointer<ffi.Bool> wasm_exceptions;
 
-  external ffi.Pointer<bool> wasm_component_model;
+  external ffi.Pointer<ffi.Bool> wasm_component_model;
 
   external ffi.Pointer<ffi.Uint64> static_memory_maximum_size;
 
-  external ffi.Pointer<bool> static_memory_forced;
+  external ffi.Pointer<ffi.Bool> static_memory_forced;
 
   external ffi.Pointer<ffi.Uint64> static_memory_guard_size;
 
-  external ffi.Pointer<bool> parallel_compilation;
+  external ffi.Pointer<ffi.Bool> parallel_compilation;
 
-  external ffi.Pointer<bool> generate_address_map;
+  external ffi.Pointer<ffi.Bool> generate_address_map;
 }
 
 final class wire_ModuleConfig extends ffi.Struct {
-  external ffi.Pointer<bool> multi_value;
+  external ffi.Pointer<ffi.Bool> multi_value;
 
-  external ffi.Pointer<bool> bulk_memory;
+  external ffi.Pointer<ffi.Bool> bulk_memory;
 
-  external ffi.Pointer<bool> reference_types;
+  external ffi.Pointer<ffi.Bool> reference_types;
 
-  external ffi.Pointer<bool> consume_fuel;
+  external ffi.Pointer<ffi.Bool> consume_fuel;
 
   external ffi.Pointer<wire_ModuleConfigWasmi> wasmi;
 
@@ -3489,6 +3509,7 @@ final class wire_list_value_ty extends ffi.Struct {
 }
 
 final class wire_MemoryTy extends ffi.Struct {
+  @ffi.Bool()
   external bool shared;
 
   @ffi.Uint32()
