@@ -2,19 +2,12 @@ import 'dart:ffi';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:wasm_run/src/bridge_generated.dart';
+import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'package:wasm_run/src/ffi/library_locator.dart';
 import 'package:wasm_run/src/ffi/setup_dynamic_library.dart';
 
-typedef ExternalLibrary = DynamicLibrary;
-
 Future<void> setUpLibraryImpl({required bool features, required bool wasi}) =>
     setUpDesktopDynamicLibrary();
-
-WasmRunDart createWrapperImpl(ExternalLibrary dylib) {
-  final validated = _validateLibrary(dylib);
-  return WasmRunDartImpl(validated);
-}
 
 ExternalLibrary localTestingLibraryImpl() {
   final filename = getDesktopLibName();
@@ -36,8 +29,10 @@ ExternalLibrary localTestingLibraryImpl() {
     if (!isRelease) '../../../../target/release/$filename',
   ]) {
     if (!File(dir).existsSync()) continue;
-    print('Using localTestingLibrary: ${File(dir).absolute.uri.toFilePath()}');
-    return _validateLibrary(DynamicLibrary.open(dir));
+    final absolutePath = File(dir).absolute.uri.toFilePath();
+    print('Using localTestingLibrary: $absolutePath');
+    _validateLibrary(DynamicLibrary.open(dir));
+    return ExternalLibrary.open(absolutePath);
   }
   throw Exception('Could not find $filename in debug or release');
 }
@@ -45,28 +40,31 @@ ExternalLibrary localTestingLibraryImpl() {
 ExternalLibrary createLibraryImpl() {
   final envPath = Platform.environment[dynamicLibraryEnvVariable];
   if (envPath != null) {
-    return _validateLibrary(DynamicLibrary.open(envPath));
+    _validateLibrary(DynamicLibrary.open(envPath));
+    return ExternalLibrary.open(envPath);
   }
   try {
-    final DynamicLibrary library;
     if (Platform.isIOS || Platform.isMacOS) {
       try {
-        return _validateLibrary(DynamicLibrary.executable());
+        _validateLibrary(DynamicLibrary.executable());
+        return ExternalLibrary.process(iKnowHowToUseIt: true);
       } catch (_) {}
-      library = DynamicLibrary.open(appleLib);
+      _validateLibrary(DynamicLibrary.open(appleLib));
+      return ExternalLibrary.open(appleLib);
     } else if (Platform.isWindows) {
-      library = DynamicLibrary.open(windowsLib);
+      _validateLibrary(DynamicLibrary.open(windowsLib));
+      return ExternalLibrary.open(windowsLib);
     } else {
-      library = DynamicLibrary.open(linuxLib);
+      _validateLibrary(DynamicLibrary.open(linuxLib));
+      return ExternalLibrary.open(linuxLib);
     }
-
-    return _validateLibrary(library);
   } catch (_) {
     try {
       final nativeDir = libBuildOutDir();
       final libName = getDesktopLibName();
-      final lib = DynamicLibrary.open(nativeDir.resolve(libName).toFilePath());
-      return _validateLibrary(lib);
+      final libPath = nativeDir.resolve(libName).toFilePath();
+      _validateLibrary(DynamicLibrary.open(libPath));
+      return ExternalLibrary.open(libPath);
     } catch (_) {}
     try {
       return localTestingLibraryImpl();
@@ -78,9 +76,13 @@ ExternalLibrary createLibraryImpl() {
   }
 }
 
-DynamicLibrary _validateLibrary(DynamicLibrary library) {
+void _validateLibrary(DynamicLibrary library) {
+  if (library.providesSymbol('frbgen_wasm_run_wire__crate__api__wasmtime__compile_wasm')) {
+    return;
+  }
+  // Try the old symbol name for compatibility
   if (library.providesSymbol('wire_compile_wasm')) {
-    return library;
+    return;
   }
   throw Exception('Invalid library $library');
 }

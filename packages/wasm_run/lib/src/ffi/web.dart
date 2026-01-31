@@ -2,20 +2,14 @@ import 'dart:html' as html;
 import 'dart:js_util' as js_util;
 import 'dart:typed_data';
 
-import 'package:flutter_rust_bridge/flutter_rust_bridge.dart' as frb;
-import 'package:wasm_run/src/bridge_generated.dart';
+import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'package:wasm_run/src/ffi.dart';
-
-typedef ExternalLibrary = frb.WasmModule;
-
-WasmRunDart createWrapperImpl(ExternalLibrary module) =>
-    WasmRunDartImpl.wasm(module);
 
 ExternalLibrary localTestingLibraryImpl() => throw UnimplementedError();
 
 ExternalLibrary createLibraryImpl() {
-  // TODO add web support. See:
-  // https://github.com/fzyzcjy/flutter_rust_bridge/blob/master/frb_example/with_flutter/lib/ffi.web.dart
+  // TODO: add web support. See:
+  // https://github.com/nickmass/wasm-bridge
   throw UnsupportedError('Web support is not provided yet.');
 }
 

@@ -1,0 +1,20 @@
+# Flutter Rust Bridge v2 configuration
+# See https://cjycode.com/flutter_rust_bridge/manual/integrate/configuration
+
+# Rust crate location
+rust_root: native
+
+# Rust input - the src/api directory for API functions
+rust_input: crate::api
+
+# Dart output directory - generates into wasm_run package
+dart_output: ../wasm_run/lib/src/rust
+
+# Include full dependency analysis
+full_dep: true
+
+# Enable web support
+web: true
+
+# Dart formatting
+dart_format_line_length: 80

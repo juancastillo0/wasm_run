@@ -1,14 +1,12 @@
 use std::fmt::Display;
 
 use anyhow::Result;
-use flutter_rust_bridge::RustOpaque;
+use crate::frb_generated::RustOpaque;
 
-use crate::external::*;
+use crate::external::{WFunc, WGlobal, WTable, WMemory, WAnyRef, WExnRef, WModule, WSharedMemory};
 // wasmi 1.0: ValType is now directly exported (not from core module)
 #[cfg(not(feature = "wasmtime"))]
 use wasmi::{ValType as ValueType, *};
-#[cfg(not(feature = "wasmtime"))]
-pub use wasmi::{Func, Global, GlobalType, Memory, Mutability, Table};
 
 #[allow(non_camel_case_types)]
 #[derive(Debug)]
@@ -598,23 +596,12 @@ impl ModuleExportValue {
     }
 }
 
-#[cfg(feature = "wasmtime")]
 #[derive(Debug)]
 pub enum ExternalValue {
     Func(RustOpaque<WFunc>),
-    Global(RustOpaque<wasmtime::Global>),
-    Table(RustOpaque<wasmtime::Table>),
-    Memory(RustOpaque<wasmtime::Memory>),
-    SharedMemory(crate::api::WasmRunSharedMemory),
-}
-
-#[cfg(not(feature = "wasmtime"))]
-#[derive(Debug)]
-pub enum ExternalValue {
-    Func(RustOpaque<WFunc>),
-    Global(RustOpaque<Global>),
-    Table(RustOpaque<Table>),
-    Memory(RustOpaque<Memory>),
+    Global(RustOpaque<WGlobal>),
+    Table(RustOpaque<WTable>),
+    Memory(RustOpaque<WMemory>),
     SharedMemory(crate::api::WasmRunSharedMemory),
 }
 
@@ -623,9 +610,9 @@ impl From<Extern> for ExternalValue {
     fn from(extern_: Extern) -> Self {
         match extern_ {
             Extern::Func(f) => ExternalValue::Func(RustOpaque::new(f.into())),
-            Extern::Global(g) => ExternalValue::Global(RustOpaque::new(g)),
-            Extern::Table(t) => ExternalValue::Table(RustOpaque::new(t)),
-            Extern::Memory(m) => ExternalValue::Memory(RustOpaque::new(m)),
+            Extern::Global(g) => ExternalValue::Global(RustOpaque::new(g.into())),
+            Extern::Table(t) => ExternalValue::Table(RustOpaque::new(t.into())),
+            Extern::Memory(m) => ExternalValue::Memory(RustOpaque::new(m.into())),
         }
     }
 }
@@ -635,9 +622,9 @@ impl From<wasmtime::Extern> for ExternalValue {
     fn from(extern_: wasmtime::Extern) -> Self {
         match extern_ {
             wasmtime::Extern::Func(f) => ExternalValue::Func(RustOpaque::new(f.into())),
-            wasmtime::Extern::Global(g) => ExternalValue::Global(RustOpaque::new(g)),
-            wasmtime::Extern::Table(t) => ExternalValue::Table(RustOpaque::new(t)),
-            wasmtime::Extern::Memory(m) => ExternalValue::Memory(RustOpaque::new(m)),
+            wasmtime::Extern::Global(g) => ExternalValue::Global(RustOpaque::new(g.into())),
+            wasmtime::Extern::Table(t) => ExternalValue::Table(RustOpaque::new(t.into())),
+            wasmtime::Extern::Memory(m) => ExternalValue::Memory(RustOpaque::new(m.into())),
             wasmtime::Extern::SharedMemory(m) => ExternalValue::SharedMemory(m.into()),
             // Tag type is for exception handling - not yet supported
             wasmtime::Extern::Tag(_) => {
@@ -652,41 +639,12 @@ impl From<&ExternalValue> for Extern {
     fn from(e: &ExternalValue) -> Extern {
         match e {
             ExternalValue::Func(f) => Extern::Func(f.func_wasmi),
-            ExternalValue::Global(g) => Extern::Global(**g),
-            ExternalValue::Table(t) => Extern::Table(**t),
-            ExternalValue::Memory(m) => Extern::Memory(**m),
+            ExternalValue::Global(g) => Extern::Global(g.inner),
+            ExternalValue::Table(t) => Extern::Table(t.inner),
+            ExternalValue::Memory(m) => Extern::Memory(m.inner),
             ExternalValue::SharedMemory(_) => unreachable!(),
         }
     }
-    // fn to_extern<T>(&self, store: &mut Store<T>) -> Result<Extern> {
-    //     match self {
-    //         ExternalValue::Global { value, mutability } => {
-    //             let mapped = value.to_value(store);
-    //             let global = Global::new(store, mapped, *mutability);
-    //             Ok(Extern::Global(global))
-    //         }
-    //         ExternalValue::Table { value, ty } => {
-    //             let mapped_value = value.to_value(store);
-    //             let table = Table::new(
-    //                 store,
-    //                 TableType::new(mapped_value.ty(), ty.min, ty.max),
-    //                 mapped_value,
-    //             )
-    //             .map_err(to_anyhow)?;
-    //             Ok(Extern::Table(table))
-    //         }
-    //         ExternalValue::Memory { ty } => {
-    //             let memory = Memory::new(store, ty.to_memory_type()?).map_err(to_anyhow)?;
-    //             Ok(Extern::Memory(memory))
-    //         }
-    //         ExternalValue::Func { pointer } => {
-    //             let f: wasm_func = unsafe { std::mem::transmute(*pointer) };
-    //             // TODO: let func = Func::wrap(store, f);
-    //             let func = Func::wrap(store, || {});
-    //             Ok(Extern::Func(func))
-    //         }
-    //     }
-    // }
 }
 
 #[cfg(feature = "wasmtime")]
@@ -694,11 +652,11 @@ impl From<&ExternalValue> for wasmtime::Extern {
     fn from(e: &ExternalValue) -> wasmtime::Extern {
         match e {
             ExternalValue::Func(f) => wasmtime::Extern::Func(f.func_wasmtime),
-            ExternalValue::Global(g) => wasmtime::Extern::Global(**g),
-            ExternalValue::Table(t) => wasmtime::Extern::Table(**t),
-            ExternalValue::Memory(m) => wasmtime::Extern::Memory(**m),
+            ExternalValue::Global(g) => wasmtime::Extern::Global(g.inner),
+            ExternalValue::Table(t) => wasmtime::Extern::Table(t.inner),
+            ExternalValue::Memory(m) => wasmtime::Extern::Memory(m.inner),
             ExternalValue::SharedMemory(m) => {
-                wasmtime::Extern::SharedMemory(m.0.read().unwrap().clone())
+                wasmtime::Extern::SharedMemory(m.0.read().unwrap().inner.clone())
             }
         }
     }
