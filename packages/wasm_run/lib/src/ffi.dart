@@ -115,6 +115,7 @@ RustLibApi api() {
       'WasmRunLibrary not initialized. Call WasmRunLibrary.init() or WasmRunLibrary.setUp() first.',
     );
   }
+  // ignore: invalid_use_of_internal_member
   return RustLib.instance.api;
 }
 

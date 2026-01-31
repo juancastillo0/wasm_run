@@ -2,26 +2,11 @@
 # Used by native_toolchain_rust for reproducible builds
 
 [toolchain]
-# Use a pinned version for reproducible builds (not just "stable")
-channel = "1.85.0"
+# Exact version required by native_toolchain_rust for reproducible builds
+# wasmtime 41+ requires Rust 1.86+
+channel = "1.93.0"
 
-# All target platforms supported by wasm_run
+# Native target only - add others as needed for cross-compilation
 targets = [
-  # Android
-  "armv7-linux-androideabi",
-  "aarch64-linux-android",
-  "x86_64-linux-android",
-  # iOS
-  "aarch64-apple-ios",
-  "aarch64-apple-ios-sim",
-  "x86_64-apple-ios",
-  # Windows
-  "aarch64-pc-windows-msvc",
-  "x86_64-pc-windows-msvc",
-  # Linux
-  "aarch64-unknown-linux-gnu",
   "x86_64-unknown-linux-gnu",
-  # macOS
-  "aarch64-apple-darwin",
-  "x86_64-apple-darwin",
 ]

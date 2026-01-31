@@ -658,7 +658,7 @@ impl WasmRunModuleId {
                 || (num_params != 0 && args.len() % num_params != 0)
                 || num_params * num_tasks != args.len()
             {
-                function_stream.add(ParallelExec::Err(format!(
+                let _ = function_stream.add(ParallelExec::Err(format!(
                     "Number of arguments must be a multiple of {num_params}"
                 )));
                 return;
@@ -683,7 +683,7 @@ impl WasmRunModuleId {
             {
                 std::result::Result::Ok(a) => a,
                 Err(e) => {
-                    function_stream.add(ParallelExec::Err(e.to_string()));
+                    let _ = function_stream.add(ParallelExec::Err(e.to_string()));
                     return;
                 }
             };
@@ -744,10 +744,10 @@ impl WasmRunModuleId {
             loop {
                 let req = main_recv_c.recv().unwrap();
                 if req.function_pointer == 0 {
-                    function_stream.add(ParallelExec::Ok(req.args));
+                    let _ = function_stream.add(ParallelExec::Ok(req.args));
                     return;
                 }
-                function_stream.add(ParallelExec::Call(req));
+                let _ = function_stream.add(ParallelExec::Call(req));
                 // TODO: try this code with sync function
                 // let worker = &c.workers_out[req.worker_index];
 
@@ -764,7 +764,7 @@ impl WasmRunModuleId {
                 // worker.send(results).unwrap();
             }
         } else {
-            function_stream.add(ParallelExec::Err(
+            let _ = function_stream.add(ParallelExec::Err(
                 "Instance has no thread pool configured".to_string(),
             ));
         }

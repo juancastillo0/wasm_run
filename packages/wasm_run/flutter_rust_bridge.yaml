@@ -1,0 +1,11 @@
+rust_input: crate::api
+rust_root: native/
+dart_output: lib/src/rust/
+c_output: ios/Classes/frb_generated.h
+rust_output: native/src/frb_generated.rs
+llvm_path:
+  - /usr/lib/llvm-14
+  - /usr/lib/llvm-15
+  - /usr/lib/llvm-16
+  - /usr/lib/llvm-17
+  - /usr/lib/llvm-18

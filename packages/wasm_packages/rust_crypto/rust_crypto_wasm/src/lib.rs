@@ -1,3 +1,6 @@
+// Allow unsafe_op_in_unsafe_fn for WIT-generated bindings (Rust 2024 compatibility)
+#![allow(unsafe_op_in_unsafe_fn)]
+
 // Use a procedural macro to generate bindings for the world we specified in
 // `with/dart-wit-generator.wit`
 wit_bindgen::generate!("rust-crypto");

@@ -9,11 +9,9 @@ import 'package:wasm_run/src/ffi.dart' show api;
 import 'package:wasm_run/src/logger.dart';
 import 'package:wasm_run/src/rust/api/wasmtime.dart';
 import 'package:wasm_run/src/rust/config.dart';
-import 'package:wasm_run/src/rust/frb_generated.dart'
-    show RustLib, RustLibApiImpl, WFuncImpl;
-// ignore: implementation_imports
-import 'package:wasm_run/src/rust/frb_generated.io.dart'
-    show wire_cst_list_wasm_val, wire_cst_wasm_val;
+// WFuncImpl used for type checking at compile time
+// ignore: unused_import
+import 'package:wasm_run/src/rust/frb_generated.dart' show WFuncImpl;
 import 'package:wasm_run/src/rust/lib.dart';
 import 'package:wasm_run/src/rust/atomics.dart' show SharedMemoryWaitResult;
 import 'package:wasm_run/src/rust/types.dart'
@@ -29,16 +27,7 @@ import 'package:wasm_run/src/rust/types.dart'
         TableArgs,
         TableTy,
         ValueTy,
-        WasmVal,
-        WasmVal_anyRef,
-        WasmVal_exnRef,
-        WasmVal_externRef,
-        WasmVal_f32,
-        WasmVal_f64,
-        WasmVal_funcRef,
-        WasmVal_i32,
-        WasmVal_i64,
-        WasmVal_v128;
+        WasmVal;
 import 'package:wasm_run/src/wasm_bindings/make_function_num_args.dart';
 import 'package:wasm_run/src/wasm_bindings/wasm_interface.dart';
 
@@ -65,6 +54,7 @@ WasmModule compileWasmModuleSync(
   Uint8List bytes, {
   ModuleConfig? config,
 }) {
+  // ignore: unused_local_variable
   final config_ = config ?? const ModuleConfig();
   // Note: compileWasmSync returns Future in FRB v2
   // For true sync, we need a different approach or accept async
@@ -249,6 +239,7 @@ WasmFunction _toWasmFunction(WFunc func, WasmRunModuleId module, String? name) {
   }
 
   // Synchronous wrapper that blocks on the future
+  // ignore: unused_element
   List<Object?> call([List<Object?>? args]) {
     // Note: This is a limitation - true sync calls require different handling
     throw UnimplementedError(
@@ -308,10 +299,11 @@ class _ModuleObjectReference {
 }
 
 // Callback function type for host functions called from WASM
-// Note: In FRB v2, the wire format has changed to CST (C-struct based)
-typedef GlobalWasmFunction = ffi.Pointer<wire_cst_list_wasm_val> Function(
+// Note: In FRB v2, direct CST callbacks are not supported.
+// TODO: Implement using FRB v2's SSE-based callback mechanism.
+typedef GlobalWasmFunction = ffi.Pointer<ffi.Void> Function(
   ffi.Int64 functionId,
-  ffi.Pointer<wire_cst_list_wasm_val> wasmArguments,
+  ffi.Pointer<ffi.Void> wasmArguments,
 );
 
 // ignore: avoid_classes_with_only_static_members
@@ -374,94 +366,14 @@ class _References {
     return mapped;
   }
 
-  static int get globalWasmFunctionPointer =>
-      ffi.Pointer.fromFunction<GlobalWasmFunction>(_globalWasmFunction).address;
-
-  static ffi.Pointer<wire_cst_list_wasm_val> _globalWasmFunction(
-    int functionId,
-    ffi.Pointer<wire_cst_list_wasm_val> argsPtr,
-  ) {
-    final ffi.Pointer<wire_cst_list_wasm_val> pointer;
-    try {
-      // Decode the input arguments from CST format
-      final input = _decodeCstListWasmVal(argsPtr);
-
-      // Execute the host function
-      final mapped = executeFunction(functionId, input);
-
-      // Encode the results back to CST format
-      pointer = _encodeCstListWasmVal(mapped);
-    } catch (e, s) {
-      print('_globalWasmFunction error: $e $s');
-      rethrow;
-    }
-    return pointer;
-  }
-
-  // Decode CST wire format to List<WasmVal>
-  static List<WasmVal> _decodeCstListWasmVal(
-    ffi.Pointer<wire_cst_list_wasm_val> ptr,
-  ) {
-    if (ptr == ffi.nullptr) return const [];
-    final list = ptr.ref;
-    final result = <WasmVal>[];
-    for (var i = 0; i < list.len; i++) {
-      result.add(_decodeCstWasmVal(list.ptr[i]));
-    }
-    return result;
-  }
-
-  // Decode a single WasmVal from CST format
-  static WasmVal _decodeCstWasmVal(wire_cst_wasm_val val) {
-    switch (val.tag) {
-      case 0: // i32
-        return WasmVal_i32(val.kind.i32.field0);
-      case 1: // i64
-        return WasmVal_i64(val.kind.i64.field0);
-      case 2: // f32
-        return WasmVal_f32(val.kind.f32.field0);
-      case 3: // f64
-        return WasmVal_f64(val.kind.f64.field0);
-      case 4: // v128
-        // v128 is stored as pointer to list of 16 bytes
-        final ptr = val.kind.v128.field0;
-        final bytes = Uint8List(16);
-        if (ptr != ffi.nullptr) {
-          for (var i = 0; i < 16; i++) {
-            bytes[i] = ptr.ref.ptr[i];
-          }
-        }
-        return WasmVal_v128(U8Array16(bytes));
-      case 5: // funcRef
-        final funcPtr = val.kind.funcRef.field0;
-        if (funcPtr == ffi.nullptr) return const WasmVal_funcRef();
-        // Decode the opaque WFunc from the pointer
-        final func = WFuncImpl.frbInternalSseDecode(
-          BigInt.from(funcPtr.value),
-          0, // External size not needed for decode
-        );
-        return WasmVal_funcRef(func);
-      case 6: // externRef
-        final refVal = val.kind.externRef.field0;
-        return WasmVal_externRef(refVal == ffi.nullptr ? null : refVal.value);
-      case 7: // anyRef
-        return const WasmVal_anyRef();
-      case 8: // exnRef
-        return const WasmVal_exnRef();
-      default:
-        throw Exception('Unknown WasmVal tag: ${val.tag}');
-    }
-  }
-
-  // Encode List<WasmVal> to CST wire format
-  static ffi.Pointer<wire_cst_list_wasm_val> _encodeCstListWasmVal(
-    List<WasmVal> vals,
-  ) {
-    if (vals.isEmpty) return ffi.nullptr;
-
-    // Access the wire instance to allocate and fill the list
-    final wire = RustLib.instance.api as RustLibApiImpl;
-    return wire.cst_encode_list_wasm_val(vals);
+  // TODO: Implement host function callbacks for FRB v2
+  // The CST wire format from FRB v1 is no longer available.
+  // Need to implement using FRB v2's SSE-based encoding or alternative approach.
+  static int get globalWasmFunctionPointer {
+    throw UnimplementedError(
+      'Host function callbacks are not yet implemented for FRB v2. '
+      'The CST wire format from FRB v1 is no longer available.',
+    );
   }
 
   static T _self<T>(T value) => value;
@@ -854,6 +766,7 @@ class _Instance extends WasmInstance {
 class _Memory extends WasmMemory {
   final WMemory memory;
   final WasmRunModuleId module;
+  // ignore: unused_field
   PointerAndLength? _previous;
   late Uint8List _view;
 
@@ -874,6 +787,7 @@ class _Memory extends WasmMemory {
   Uint8List get view {
     // getMemoryDataPointerAndLength returns Future in FRB v2
     // For now, use sync getter approach
+    // ignore: unused_local_variable
     final ptr = module.getMemoryDataPointer(memory: memory);
     final data = module.getMemoryData(memory: memory);
     _view = data;
@@ -937,7 +851,6 @@ class _WasmFunction extends WasmFunction {
     required super.params,
     required super.results,
     super.name,
-    super.call,
     this.callAsync,
   });
 

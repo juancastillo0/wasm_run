@@ -66,13 +66,17 @@ macro_rules! create_atomic {
     ($integer_struct:ty, $integer:ty, $integer_atomic:ty) => {
         impl $integer_struct {
             pub unsafe fn load(&self, offset: usize, order: AtomicOrdering) -> $integer {
-                let r = &(self.0 as *const UnsafeCell<u8>).add(offset);
-                { &*(r as *const _ as *const $integer_atomic) }.load(order.into())
+                unsafe {
+                    let r = &(self.0 as *const UnsafeCell<u8>).add(offset);
+                    { &*(r as *const _ as *const $integer_atomic) }.load(order.into())
+                }
             }
 
             pub unsafe fn store(&self, offset: usize, val: $integer, order: AtomicOrdering) {
-                let r = &(self.0 as *const UnsafeCell<u8>).add(offset);
-                { &*(r as *const _ as *const $integer_atomic) }.store(val, order.into())
+                unsafe {
+                    let r = &(self.0 as *const UnsafeCell<u8>).add(offset);
+                    { &*(r as *const _ as *const $integer_atomic) }.store(val, order.into())
+                }
             }
 
             pub unsafe fn swap(
@@ -81,8 +85,10 @@ macro_rules! create_atomic {
                 val: $integer,
                 order: AtomicOrdering,
             ) -> $integer {
-                let r = &(self.0 as *const UnsafeCell<u8>).add(offset);
-                { &*(r as *const _ as *const $integer_atomic) }.swap(val, order.into())
+                unsafe {
+                    let r = &(self.0 as *const UnsafeCell<u8>).add(offset);
+                    { &*(r as *const _ as *const $integer_atomic) }.swap(val, order.into())
+                }
             }
 
             pub unsafe fn compare_exchange(
@@ -93,13 +99,15 @@ macro_rules! create_atomic {
                 success: AtomicOrdering,
                 failure: AtomicOrdering,
             ) -> Result<$integer, $integer> {
-                let r = &(self.0 as *const UnsafeCell<u8>).add(offset);
-                { &*(r as *const _ as *const $integer_atomic) }.compare_exchange(
-                    current,
-                    new,
-                    success.into(),
-                    failure.into(),
-                )
+                unsafe {
+                    let r = &(self.0 as *const UnsafeCell<u8>).add(offset);
+                    { &*(r as *const _ as *const $integer_atomic) }.compare_exchange(
+                        current,
+                        new,
+                        success.into(),
+                        failure.into(),
+                    )
+                }
             }
 
             pub unsafe fn add(
@@ -108,8 +116,10 @@ macro_rules! create_atomic {
                 val: $integer,
                 order: AtomicOrdering,
             ) -> $integer {
-                let r = &(self.0 as *const UnsafeCell<u8>).add(offset);
-                { &*(r as *const _ as *const $integer_atomic) }.fetch_add(val, order.into())
+                unsafe {
+                    let r = &(self.0 as *const UnsafeCell<u8>).add(offset);
+                    { &*(r as *const _ as *const $integer_atomic) }.fetch_add(val, order.into())
+                }
             }
 
             pub unsafe fn sub(
@@ -118,8 +128,10 @@ macro_rules! create_atomic {
                 val: $integer,
                 order: AtomicOrdering,
             ) -> $integer {
-                let r = &(self.0 as *const UnsafeCell<u8>).add(offset);
-                { &*(r as *const _ as *const $integer_atomic) }.fetch_sub(val, order.into())
+                unsafe {
+                    let r = &(self.0 as *const UnsafeCell<u8>).add(offset);
+                    { &*(r as *const _ as *const $integer_atomic) }.fetch_sub(val, order.into())
+                }
             }
 
             pub unsafe fn and(
@@ -128,8 +140,10 @@ macro_rules! create_atomic {
                 val: $integer,
                 order: AtomicOrdering,
             ) -> $integer {
-                let r = &(self.0 as *const UnsafeCell<u8>).add(offset);
-                { &*(r as *const _ as *const $integer_atomic) }.fetch_and(val, order.into())
+                unsafe {
+                    let r = &(self.0 as *const UnsafeCell<u8>).add(offset);
+                    { &*(r as *const _ as *const $integer_atomic) }.fetch_and(val, order.into())
+                }
             }
 
             pub unsafe fn or(
@@ -138,8 +152,10 @@ macro_rules! create_atomic {
                 val: $integer,
                 order: AtomicOrdering,
             ) -> $integer {
-                let r = &(self.0 as *const UnsafeCell<u8>).add(offset);
-                { &*(r as *const _ as *const $integer_atomic) }.fetch_or(val, order.into())
+                unsafe {
+                    let r = &(self.0 as *const UnsafeCell<u8>).add(offset);
+                    { &*(r as *const _ as *const $integer_atomic) }.fetch_or(val, order.into())
+                }
             }
 
             pub unsafe fn xor(
@@ -148,8 +164,10 @@ macro_rules! create_atomic {
                 val: $integer,
                 order: AtomicOrdering,
             ) -> $integer {
-                let r = &(self.0 as *const UnsafeCell<u8>).add(offset);
-                { &*(r as *const _ as *const $integer_atomic) }.fetch_xor(val, order.into())
+                unsafe {
+                    let r = &(self.0 as *const UnsafeCell<u8>).add(offset);
+                    { &*(r as *const _ as *const $integer_atomic) }.fetch_xor(val, order.into())
+                }
             }
         }
     };

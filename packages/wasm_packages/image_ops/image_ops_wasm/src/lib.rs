@@ -1,3 +1,6 @@
+// Allow unsafe_op_in_unsafe_fn for WIT-generated bindings (Rust 2024 compatibility)
+#![allow(unsafe_op_in_unsafe_fn)]
+
 use std::io::Cursor;
 use std::{collections::HashMap, sync::RwLock};
 

@@ -3,7 +3,7 @@ use std::fmt::Display;
 use anyhow::Result;
 use crate::frb_generated::RustOpaque;
 
-use crate::external::{WFunc, WGlobal, WTable, WMemory, WAnyRef, WExnRef, WModule, WSharedMemory};
+use crate::external::{WFunc, WGlobal, WTable, WMemory, WAnyRef, WExnRef};
 // wasmi 1.0: ValType is now directly exported (not from core module)
 #[cfg(not(feature = "wasmtime"))]
 use wasmi::{ValType as ValueType, *};

@@ -33,9 +33,9 @@ use flutter_rust_bridge::{Handler, IntoIntoDart};
 // Section: boilerplate
 
 flutter_rust_bridge::frb_generated_boilerplate!(
-    default_stream_sink_codec = DcoCodec,
-    default_rust_opaque = RustOpaqueNom,
-    default_rust_auto_opaque = RustAutoOpaqueNom,
+    default_stream_sink_codec = SseCodec,
+    default_rust_opaque = RustOpaqueMoi,
+    default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.11.1";
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -1643436608;
@@ -48,26 +48,34 @@ flutter_rust_bridge::frb_generated_default_handler!();
 
 fn wire__crate__atomics__atomics_add_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
-    that: impl CstDecode<crate::atomics::Atomics>,
-    offset: impl CstDecode<usize>,
-    kind: impl CstDecode<crate::atomics::AtomicKind>,
-    val: impl CstDecode<i64>,
-    order: impl CstDecode<crate::atomics::AtomicOrdering>,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
 ) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
             debug_name: "atomics_add",
             port: Some(port_),
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
         },
         move || {
-            let api_that = that.cst_decode();
-            let api_offset = offset.cst_decode();
-            let api_kind = kind.cst_decode();
-            let api_val = val.cst_decode();
-            let api_order = order.cst_decode();
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <crate::atomics::Atomics>::sse_decode(&mut deserializer);
+            let api_offset = <usize>::sse_decode(&mut deserializer);
+            let api_kind = <crate::atomics::AtomicKind>::sse_decode(&mut deserializer);
+            let api_val = <i64>::sse_decode(&mut deserializer);
+            let api_order = <crate::atomics::AtomicOrdering>::sse_decode(&mut deserializer);
+            deserializer.end();
             move |context| {
-                transform_result_dco::<_, _, ()>((move || {
+                transform_result_sse::<_, ()>((move || {
                     let output_ok = Result::<_, ()>::Ok(crate::atomics::Atomics::add(
                         &api_that, api_offset, api_kind, api_val, api_order,
                     ))?;
@@ -79,26 +87,34 @@ fn wire__crate__atomics__atomics_add_impl(
 }
 fn wire__crate__atomics__atomics_and_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
-    that: impl CstDecode<crate::atomics::Atomics>,
-    offset: impl CstDecode<usize>,
-    kind: impl CstDecode<crate::atomics::AtomicKind>,
-    val: impl CstDecode<i64>,
-    order: impl CstDecode<crate::atomics::AtomicOrdering>,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
 ) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
             debug_name: "atomics_and",
             port: Some(port_),
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
         },
         move || {
-            let api_that = that.cst_decode();
-            let api_offset = offset.cst_decode();
-            let api_kind = kind.cst_decode();
-            let api_val = val.cst_decode();
-            let api_order = order.cst_decode();
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <crate::atomics::Atomics>::sse_decode(&mut deserializer);
+            let api_offset = <usize>::sse_decode(&mut deserializer);
+            let api_kind = <crate::atomics::AtomicKind>::sse_decode(&mut deserializer);
+            let api_val = <i64>::sse_decode(&mut deserializer);
+            let api_order = <crate::atomics::AtomicOrdering>::sse_decode(&mut deserializer);
+            deserializer.end();
             move |context| {
-                transform_result_dco::<_, _, ()>((move || {
+                transform_result_sse::<_, ()>((move || {
                     let output_ok = Result::<_, ()>::Ok(crate::atomics::Atomics::and(
                         &api_that, api_offset, api_kind, api_val, api_order,
                     ))?;
@@ -110,30 +126,36 @@ fn wire__crate__atomics__atomics_and_impl(
 }
 fn wire__crate__atomics__atomics_compare_exchange_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
-    that: impl CstDecode<crate::atomics::Atomics>,
-    offset: impl CstDecode<usize>,
-    kind: impl CstDecode<crate::atomics::AtomicKind>,
-    current: impl CstDecode<i64>,
-    new_value: impl CstDecode<i64>,
-    success: impl CstDecode<crate::atomics::AtomicOrdering>,
-    failure: impl CstDecode<crate::atomics::AtomicOrdering>,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
 ) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
             debug_name: "atomics_compare_exchange",
             port: Some(port_),
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
         },
         move || {
-            let api_that = that.cst_decode();
-            let api_offset = offset.cst_decode();
-            let api_kind = kind.cst_decode();
-            let api_current = current.cst_decode();
-            let api_new_value = new_value.cst_decode();
-            let api_success = success.cst_decode();
-            let api_failure = failure.cst_decode();
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <crate::atomics::Atomics>::sse_decode(&mut deserializer);
+            let api_offset = <usize>::sse_decode(&mut deserializer);
+            let api_kind = <crate::atomics::AtomicKind>::sse_decode(&mut deserializer);
+            let api_current = <i64>::sse_decode(&mut deserializer);
+            let api_new_value = <i64>::sse_decode(&mut deserializer);
+            let api_success = <crate::atomics::AtomicOrdering>::sse_decode(&mut deserializer);
+            let api_failure = <crate::atomics::AtomicOrdering>::sse_decode(&mut deserializer);
+            deserializer.end();
             move |context| {
-                transform_result_dco::<_, _, ()>((move || {
+                transform_result_sse::<_, ()>((move || {
                     let output_ok =
                         Result::<_, ()>::Ok(crate::atomics::Atomics::compare_exchange(
                             &api_that,
@@ -152,24 +174,33 @@ fn wire__crate__atomics__atomics_compare_exchange_impl(
 }
 fn wire__crate__atomics__atomics_load_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
-    that: impl CstDecode<crate::atomics::Atomics>,
-    offset: impl CstDecode<usize>,
-    kind: impl CstDecode<crate::atomics::AtomicKind>,
-    order: impl CstDecode<crate::atomics::AtomicOrdering>,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
 ) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
             debug_name: "atomics_load",
             port: Some(port_),
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
         },
         move || {
-            let api_that = that.cst_decode();
-            let api_offset = offset.cst_decode();
-            let api_kind = kind.cst_decode();
-            let api_order = order.cst_decode();
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <crate::atomics::Atomics>::sse_decode(&mut deserializer);
+            let api_offset = <usize>::sse_decode(&mut deserializer);
+            let api_kind = <crate::atomics::AtomicKind>::sse_decode(&mut deserializer);
+            let api_order = <crate::atomics::AtomicOrdering>::sse_decode(&mut deserializer);
+            deserializer.end();
             move |context| {
-                transform_result_dco::<_, _, ()>((move || {
+                transform_result_sse::<_, ()>((move || {
                     let output_ok = Result::<_, ()>::Ok(crate::atomics::Atomics::load(
                         &api_that, api_offset, api_kind, api_order,
                     ))?;
@@ -181,26 +212,34 @@ fn wire__crate__atomics__atomics_load_impl(
 }
 fn wire__crate__atomics__atomics_or_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
-    that: impl CstDecode<crate::atomics::Atomics>,
-    offset: impl CstDecode<usize>,
-    kind: impl CstDecode<crate::atomics::AtomicKind>,
-    val: impl CstDecode<i64>,
-    order: impl CstDecode<crate::atomics::AtomicOrdering>,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
 ) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
             debug_name: "atomics_or",
             port: Some(port_),
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
         },
         move || {
-            let api_that = that.cst_decode();
-            let api_offset = offset.cst_decode();
-            let api_kind = kind.cst_decode();
-            let api_val = val.cst_decode();
-            let api_order = order.cst_decode();
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <crate::atomics::Atomics>::sse_decode(&mut deserializer);
+            let api_offset = <usize>::sse_decode(&mut deserializer);
+            let api_kind = <crate::atomics::AtomicKind>::sse_decode(&mut deserializer);
+            let api_val = <i64>::sse_decode(&mut deserializer);
+            let api_order = <crate::atomics::AtomicOrdering>::sse_decode(&mut deserializer);
+            deserializer.end();
             move |context| {
-                transform_result_dco::<_, _, ()>((move || {
+                transform_result_sse::<_, ()>((move || {
                     let output_ok = Result::<_, ()>::Ok(crate::atomics::Atomics::or(
                         &api_that, api_offset, api_kind, api_val, api_order,
                     ))?;
@@ -212,26 +251,34 @@ fn wire__crate__atomics__atomics_or_impl(
 }
 fn wire__crate__atomics__atomics_store_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
-    that: impl CstDecode<crate::atomics::Atomics>,
-    offset: impl CstDecode<usize>,
-    kind: impl CstDecode<crate::atomics::AtomicKind>,
-    val: impl CstDecode<i64>,
-    order: impl CstDecode<crate::atomics::AtomicOrdering>,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
 ) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
             debug_name: "atomics_store",
             port: Some(port_),
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
         },
         move || {
-            let api_that = that.cst_decode();
-            let api_offset = offset.cst_decode();
-            let api_kind = kind.cst_decode();
-            let api_val = val.cst_decode();
-            let api_order = order.cst_decode();
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <crate::atomics::Atomics>::sse_decode(&mut deserializer);
+            let api_offset = <usize>::sse_decode(&mut deserializer);
+            let api_kind = <crate::atomics::AtomicKind>::sse_decode(&mut deserializer);
+            let api_val = <i64>::sse_decode(&mut deserializer);
+            let api_order = <crate::atomics::AtomicOrdering>::sse_decode(&mut deserializer);
+            deserializer.end();
             move |context| {
-                transform_result_dco::<_, _, ()>((move || {
+                transform_result_sse::<_, ()>((move || {
                     let output_ok = Result::<_, ()>::Ok({
                         crate::atomics::Atomics::store(
                             &api_that, api_offset, api_kind, api_val, api_order,
@@ -245,26 +292,34 @@ fn wire__crate__atomics__atomics_store_impl(
 }
 fn wire__crate__atomics__atomics_sub_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
-    that: impl CstDecode<crate::atomics::Atomics>,
-    offset: impl CstDecode<usize>,
-    kind: impl CstDecode<crate::atomics::AtomicKind>,
-    val: impl CstDecode<i64>,
-    order: impl CstDecode<crate::atomics::AtomicOrdering>,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
 ) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
             debug_name: "atomics_sub",
             port: Some(port_),
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
         },
         move || {
-            let api_that = that.cst_decode();
-            let api_offset = offset.cst_decode();
-            let api_kind = kind.cst_decode();
-            let api_val = val.cst_decode();
-            let api_order = order.cst_decode();
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <crate::atomics::Atomics>::sse_decode(&mut deserializer);
+            let api_offset = <usize>::sse_decode(&mut deserializer);
+            let api_kind = <crate::atomics::AtomicKind>::sse_decode(&mut deserializer);
+            let api_val = <i64>::sse_decode(&mut deserializer);
+            let api_order = <crate::atomics::AtomicOrdering>::sse_decode(&mut deserializer);
+            deserializer.end();
             move |context| {
-                transform_result_dco::<_, _, ()>((move || {
+                transform_result_sse::<_, ()>((move || {
                     let output_ok = Result::<_, ()>::Ok(crate::atomics::Atomics::sub(
                         &api_that, api_offset, api_kind, api_val, api_order,
                     ))?;
@@ -276,26 +331,34 @@ fn wire__crate__atomics__atomics_sub_impl(
 }
 fn wire__crate__atomics__atomics_swap_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
-    that: impl CstDecode<crate::atomics::Atomics>,
-    offset: impl CstDecode<usize>,
-    kind: impl CstDecode<crate::atomics::AtomicKind>,
-    val: impl CstDecode<i64>,
-    order: impl CstDecode<crate::atomics::AtomicOrdering>,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
 ) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
             debug_name: "atomics_swap",
             port: Some(port_),
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
         },
         move || {
-            let api_that = that.cst_decode();
-            let api_offset = offset.cst_decode();
-            let api_kind = kind.cst_decode();
-            let api_val = val.cst_decode();
-            let api_order = order.cst_decode();
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <crate::atomics::Atomics>::sse_decode(&mut deserializer);
+            let api_offset = <usize>::sse_decode(&mut deserializer);
+            let api_kind = <crate::atomics::AtomicKind>::sse_decode(&mut deserializer);
+            let api_val = <i64>::sse_decode(&mut deserializer);
+            let api_order = <crate::atomics::AtomicOrdering>::sse_decode(&mut deserializer);
+            deserializer.end();
             move |context| {
-                transform_result_dco::<_, _, ()>((move || {
+                transform_result_sse::<_, ()>((move || {
                     let output_ok = Result::<_, ()>::Ok(crate::atomics::Atomics::swap(
                         &api_that, api_offset, api_kind, api_val, api_order,
                     ))?;
@@ -307,26 +370,34 @@ fn wire__crate__atomics__atomics_swap_impl(
 }
 fn wire__crate__atomics__atomics_xor_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
-    that: impl CstDecode<crate::atomics::Atomics>,
-    offset: impl CstDecode<usize>,
-    kind: impl CstDecode<crate::atomics::AtomicKind>,
-    val: impl CstDecode<i64>,
-    order: impl CstDecode<crate::atomics::AtomicOrdering>,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
 ) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
             debug_name: "atomics_xor",
             port: Some(port_),
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
         },
         move || {
-            let api_that = that.cst_decode();
-            let api_offset = offset.cst_decode();
-            let api_kind = kind.cst_decode();
-            let api_val = val.cst_decode();
-            let api_order = order.cst_decode();
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <crate::atomics::Atomics>::sse_decode(&mut deserializer);
+            let api_offset = <usize>::sse_decode(&mut deserializer);
+            let api_kind = <crate::atomics::AtomicKind>::sse_decode(&mut deserializer);
+            let api_val = <i64>::sse_decode(&mut deserializer);
+            let api_order = <crate::atomics::AtomicOrdering>::sse_decode(&mut deserializer);
+            deserializer.end();
             move |context| {
-                transform_result_dco::<_, _, ()>((move || {
+                transform_result_sse::<_, ()>((move || {
                     let output_ok = Result::<_, ()>::Ok(crate::atomics::Atomics::xor(
                         &api_that, api_offset, api_kind, api_val, api_order,
                     ))?;
@@ -338,20 +409,31 @@ fn wire__crate__atomics__atomics_xor_impl(
 }
 fn wire__crate__api__wasmtime__compile_component_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
-    component_wasm: impl CstDecode<Vec<u8>>,
-    config: impl CstDecode<crate::config::ModuleConfig>,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
 ) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
             debug_name: "compile_component",
             port: Some(port_),
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
         },
         move || {
-            let api_component_wasm = component_wasm.cst_decode();
-            let api_config = config.cst_decode();
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_component_wasm = <Vec<u8>>::sse_decode(&mut deserializer);
+            let api_config = <crate::config::ModuleConfig>::sse_decode(&mut deserializer);
+            deserializer.end();
             move |context| {
-                transform_result_dco::<_, _, flutter_rust_bridge::for_generated::anyhow::Error>(
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
                     (move || {
                         let output_ok = crate::api::wasmtime::compile_component(
                             api_component_wasm,
@@ -366,20 +448,31 @@ fn wire__crate__api__wasmtime__compile_component_impl(
 }
 fn wire__crate__api__wasmtime__compile_component_sync_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
-    component_wasm: impl CstDecode<Vec<u8>>,
-    config: impl CstDecode<crate::config::ModuleConfig>,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
 ) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
             debug_name: "compile_component_sync",
             port: Some(port_),
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
         },
         move || {
-            let api_component_wasm = component_wasm.cst_decode();
-            let api_config = config.cst_decode();
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_component_wasm = <Vec<u8>>::sse_decode(&mut deserializer);
+            let api_config = <crate::config::ModuleConfig>::sse_decode(&mut deserializer);
+            deserializer.end();
             move |context| {
-                transform_result_dco::<_, _, flutter_rust_bridge::for_generated::anyhow::Error>(
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
                     (move || {
                         let output_ok = crate::api::wasmtime::compile_component_sync(
                             api_component_wasm,
@@ -394,20 +487,31 @@ fn wire__crate__api__wasmtime__compile_component_sync_impl(
 }
 fn wire__crate__api__wasmtime__compile_wasm_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
-    module_wasm: impl CstDecode<Vec<u8>>,
-    config: impl CstDecode<crate::config::ModuleConfig>,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
 ) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
             debug_name: "compile_wasm",
             port: Some(port_),
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
         },
         move || {
-            let api_module_wasm = module_wasm.cst_decode();
-            let api_config = config.cst_decode();
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_module_wasm = <Vec<u8>>::sse_decode(&mut deserializer);
+            let api_config = <crate::config::ModuleConfig>::sse_decode(&mut deserializer);
+            deserializer.end();
             move |context| {
-                transform_result_dco::<_, _, flutter_rust_bridge::for_generated::anyhow::Error>(
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
                     (move || {
                         let output_ok =
                             crate::api::wasmtime::compile_wasm(api_module_wasm, api_config)?;
@@ -420,20 +524,31 @@ fn wire__crate__api__wasmtime__compile_wasm_impl(
 }
 fn wire__crate__api__wasmtime__compile_wasm_sync_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
-    module_wasm: impl CstDecode<Vec<u8>>,
-    config: impl CstDecode<crate::config::ModuleConfig>,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
 ) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
             debug_name: "compile_wasm_sync",
             port: Some(port_),
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
         },
         move || {
-            let api_module_wasm = module_wasm.cst_decode();
-            let api_config = config.cst_decode();
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_module_wasm = <Vec<u8>>::sse_decode(&mut deserializer);
+            let api_config = <crate::config::ModuleConfig>::sse_decode(&mut deserializer);
+            deserializer.end();
             move |context| {
-                transform_result_dco::<_, _, flutter_rust_bridge::for_generated::anyhow::Error>(
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
                     (move || {
                         let output_ok =
                             crate::api::wasmtime::compile_wasm_sync(api_module_wasm, api_config)?;
@@ -445,17 +560,29 @@ fn wire__crate__api__wasmtime__compile_wasm_sync_impl(
     )
 }
 fn wire__crate__api__wasmtime__compiled_component_get_component_exports_impl(
-    that: impl CstDecode<crate::api::wasmtime::CompiledComponent>,
-) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::DcoCodec, _>(
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
             debug_name: "compiled_component_get_component_exports",
             port: None,
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
         },
         move || {
-            let api_that = that.cst_decode();
-            transform_result_dco::<_, _, ()>((move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <crate::api::wasmtime::CompiledComponent>::sse_decode(&mut deserializer);
+            deserializer.end();
+            transform_result_sse::<_, ()>((move || {
                 let output_ok = Result::<_, ()>::Ok(
                     crate::api::wasmtime::CompiledComponent::get_component_exports(&api_that),
                 )?;
@@ -465,17 +592,29 @@ fn wire__crate__api__wasmtime__compiled_component_get_component_exports_impl(
     )
 }
 fn wire__crate__api__wasmtime__compiled_component_get_component_imports_impl(
-    that: impl CstDecode<crate::api::wasmtime::CompiledComponent>,
-) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::DcoCodec, _>(
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
             debug_name: "compiled_component_get_component_imports",
             port: None,
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
         },
         move || {
-            let api_that = that.cst_decode();
-            transform_result_dco::<_, _, ()>((move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <crate::api::wasmtime::CompiledComponent>::sse_decode(&mut deserializer);
+            deserializer.end();
+            transform_result_sse::<_, ()>((move || {
                 let output_ok = Result::<_, ()>::Ok(
                     crate::api::wasmtime::CompiledComponent::get_component_imports(&api_that),
                 )?;
@@ -486,20 +625,31 @@ fn wire__crate__api__wasmtime__compiled_component_get_component_imports_impl(
 }
 fn wire__crate__api__wasmtime__compiled_module_create_shared_memory_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
-    that: impl CstDecode<crate::api::wasmtime::CompiledModule>,
-    memory_type: impl CstDecode<crate::types::MemoryTy>,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
 ) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
             debug_name: "compiled_module_create_shared_memory",
             port: Some(port_),
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
         },
         move || {
-            let api_that = that.cst_decode();
-            let api_memory_type = memory_type.cst_decode();
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <crate::api::wasmtime::CompiledModule>::sse_decode(&mut deserializer);
+            let api_memory_type = <crate::types::MemoryTy>::sse_decode(&mut deserializer);
+            deserializer.end();
             move |context| {
-                transform_result_dco::<_, _, flutter_rust_bridge::for_generated::anyhow::Error>(
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
                     (move || {
                         let output_ok = crate::api::wasmtime::CompiledModule::create_shared_memory(
                             &api_that,
@@ -513,17 +663,29 @@ fn wire__crate__api__wasmtime__compiled_module_create_shared_memory_impl(
     )
 }
 fn wire__crate__api__wasmtime__compiled_module_get_module_exports_impl(
-    that: impl CstDecode<crate::api::wasmtime::CompiledModule>,
-) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::DcoCodec, _>(
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
             debug_name: "compiled_module_get_module_exports",
             port: None,
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
         },
         move || {
-            let api_that = that.cst_decode();
-            transform_result_dco::<_, _, ()>((move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <crate::api::wasmtime::CompiledModule>::sse_decode(&mut deserializer);
+            deserializer.end();
+            transform_result_sse::<_, ()>((move || {
                 let output_ok = Result::<_, ()>::Ok(
                     crate::api::wasmtime::CompiledModule::get_module_exports(&api_that),
                 )?;
@@ -533,17 +695,29 @@ fn wire__crate__api__wasmtime__compiled_module_get_module_exports_impl(
     )
 }
 fn wire__crate__api__wasmtime__compiled_module_get_module_imports_impl(
-    that: impl CstDecode<crate::api::wasmtime::CompiledModule>,
-) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::DcoCodec, _>(
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
             debug_name: "compiled_module_get_module_imports",
             port: None,
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
         },
         move || {
-            let api_that = that.cst_decode();
-            transform_result_dco::<_, _, ()>((move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <crate::api::wasmtime::CompiledModule>::sse_decode(&mut deserializer);
+            deserializer.end();
+            transform_result_sse::<_, ()>((move || {
                 let output_ok = Result::<_, ()>::Ok(
                     crate::api::wasmtime::CompiledModule::get_module_imports(&api_that),
                 )?;
@@ -553,17 +727,29 @@ fn wire__crate__api__wasmtime__compiled_module_get_module_imports_impl(
     )
 }
 fn wire__crate__api__wasmtime__detect_wasm_kind_impl(
-    wasm_bytes: impl CstDecode<Vec<u8>>,
-) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::DcoCodec, _>(
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
             debug_name: "detect_wasm_kind",
             port: None,
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
         },
         move || {
-            let api_wasm_bytes = wasm_bytes.cst_decode();
-            transform_result_dco::<_, _, ()>((move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_wasm_bytes = <Vec<u8>>::sse_decode(&mut deserializer);
+            deserializer.end();
+            transform_result_sse::<_, ()>((move || {
                 let output_ok =
                     Result::<_, ()>::Ok(crate::api::wasmtime::detect_wasm_kind(api_wasm_bytes))?;
                 Ok(output_ok)
@@ -573,22 +759,33 @@ fn wire__crate__api__wasmtime__detect_wasm_kind_impl(
 }
 fn wire__crate__api__wasmtime__module_builder_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
-    module: impl CstDecode<crate::api::wasmtime::CompiledModule>,
-    num_threads: impl CstDecode<Option<usize>>,
-    wasi_config: impl CstDecode<Option<crate::config::WasiConfigNative>>,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
 ) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
             debug_name: "module_builder",
             port: Some(port_),
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
         },
         move || {
-            let api_module = module.cst_decode();
-            let api_num_threads = num_threads.cst_decode();
-            let api_wasi_config = wasi_config.cst_decode();
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_module = <crate::api::wasmtime::CompiledModule>::sse_decode(&mut deserializer);
+            let api_num_threads = <Option<usize>>::sse_decode(&mut deserializer);
+            let api_wasi_config =
+                <Option<crate::config::WasiConfigNative>>::sse_decode(&mut deserializer);
+            deserializer.end();
             move |context| {
-                transform_result_dco::<_, _, flutter_rust_bridge::for_generated::anyhow::Error>(
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
                     (move || {
                         let output_ok = crate::api::wasmtime::module_builder(
                             api_module,
@@ -604,18 +801,30 @@ fn wire__crate__api__wasmtime__module_builder_impl(
 }
 fn wire__crate__api__wasmtime__parse_wat_format_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
-    wat: impl CstDecode<String>,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
 ) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
             debug_name: "parse_wat_format",
             port: Some(port_),
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
         },
         move || {
-            let api_wat = wat.cst_decode();
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_wat = <String>::sse_decode(&mut deserializer);
+            deserializer.end();
             move |context| {
-                transform_result_dco::<_, _, flutter_rust_bridge::for_generated::anyhow::Error>(
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
                     (move || {
                         let output_ok = crate::api::wasmtime::parse_wat_format(api_wat)?;
                         Ok(output_ok)
@@ -626,17 +835,29 @@ fn wire__crate__api__wasmtime__parse_wat_format_impl(
     )
 }
 fn wire__crate__api__wasmtime__wasm_features_for_config_impl(
-    config: impl CstDecode<crate::config::ModuleConfig>,
-) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::DcoCodec, _>(
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
             debug_name: "wasm_features_for_config",
             port: None,
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
         },
         move || {
-            let api_config = config.cst_decode();
-            transform_result_dco::<_, _, ()>((move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_config = <crate::config::ModuleConfig>::sse_decode(&mut deserializer);
+            deserializer.end();
+            transform_result_sse::<_, ()>((move || {
                 let output_ok = Result::<_, ()>::Ok(
                     crate::api::wasmtime::wasm_features_for_config(api_config),
                 )?;
@@ -646,17 +867,29 @@ fn wire__crate__api__wasmtime__wasm_features_for_config_impl(
     )
 }
 fn wire__crate__api__wasmtime__wasm_run_instance_id_exports_impl(
-    that: impl CstDecode<crate::api::wasmtime::WasmRunInstanceId>,
-) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::DcoCodec, _>(
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
             debug_name: "wasm_run_instance_id_exports",
             port: None,
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
         },
         move || {
-            let api_that = that.cst_decode();
-            transform_result_dco::<_, _, ()>((move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <crate::api::wasmtime::WasmRunInstanceId>::sse_decode(&mut deserializer);
+            deserializer.end();
+            transform_result_sse::<_, ()>((move || {
                 let output_ok = Result::<_, ()>::Ok(
                     crate::api::wasmtime::WasmRunInstanceId::exports(&api_that),
                 )?;
@@ -666,19 +899,30 @@ fn wire__crate__api__wasmtime__wasm_run_instance_id_exports_impl(
     )
 }
 fn wire__crate__api__wasmtime__wasm_run_module_id_add_fuel_impl(
-    that: impl CstDecode<crate::api::wasmtime::WasmRunModuleId>,
-    delta: impl CstDecode<u64>,
-) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::DcoCodec, _>(
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
             debug_name: "wasm_run_module_id_add_fuel",
             port: None,
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
         },
         move || {
-            let api_that = that.cst_decode();
-            let api_delta = delta.cst_decode();
-            transform_result_dco::<_, _, flutter_rust_bridge::for_generated::anyhow::Error>(
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <crate::api::wasmtime::WasmRunModuleId>::sse_decode(&mut deserializer);
+            let api_delta = <u64>::sse_decode(&mut deserializer);
+            deserializer.end();
+            transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
                 (move || {
                     let output_ok =
                         crate::api::wasmtime::WasmRunModuleId::add_fuel(&api_that, api_delta)?;
@@ -690,22 +934,32 @@ fn wire__crate__api__wasmtime__wasm_run_module_id_add_fuel_impl(
 }
 fn wire__crate__api__wasmtime__wasm_run_module_id_call_function_handle_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
-    that: impl CstDecode<crate::api::wasmtime::WasmRunModuleId>,
-    func: impl CstDecode<RustOpaqueNom<WFunc>>,
-    args: impl CstDecode<Vec<crate::types::WasmVal>>,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
 ) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
             debug_name: "wasm_run_module_id_call_function_handle",
             port: Some(port_),
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
         },
         move || {
-            let api_that = that.cst_decode();
-            let api_func = func.cst_decode();
-            let api_args = args.cst_decode();
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <crate::api::wasmtime::WasmRunModuleId>::sse_decode(&mut deserializer);
+            let api_func = <RustOpaqueMoi<WFunc>>::sse_decode(&mut deserializer);
+            let api_args = <Vec<crate::types::WasmVal>>::sse_decode(&mut deserializer);
+            deserializer.end();
             move |context| {
-                transform_result_dco::<_, _, flutter_rust_bridge::for_generated::anyhow::Error>(
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
                     (move || {
                         let output_ok =
                             crate::api::wasmtime::WasmRunModuleId::call_function_handle(
@@ -720,28 +974,37 @@ fn wire__crate__api__wasmtime__wasm_run_module_id_call_function_handle_impl(
 }
 fn wire__crate__api__wasmtime__wasm_run_module_id_call_function_handle_parallel_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
-    that: impl CstDecode<crate::api::wasmtime::WasmRunModuleId>,
-    func_name: impl CstDecode<String>,
-    args: impl CstDecode<Vec<crate::types::WasmVal>>,
-    num_tasks: impl CstDecode<usize>,
-    function_stream: impl CstDecode<
-        StreamSink<crate::types::ParallelExec, flutter_rust_bridge::for_generated::DcoCodec>,
-    >,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
 ) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
             debug_name: "wasm_run_module_id_call_function_handle_parallel",
             port: Some(port_),
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
         },
         move || {
-            let api_that = that.cst_decode();
-            let api_func_name = func_name.cst_decode();
-            let api_args = args.cst_decode();
-            let api_num_tasks = num_tasks.cst_decode();
-            let api_function_stream = function_stream.cst_decode();
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <crate::api::wasmtime::WasmRunModuleId>::sse_decode(&mut deserializer);
+            let api_func_name = <String>::sse_decode(&mut deserializer);
+            let api_args = <Vec<crate::types::WasmVal>>::sse_decode(&mut deserializer);
+            let api_num_tasks = <usize>::sse_decode(&mut deserializer);
+            let api_function_stream = <StreamSink<
+                crate::types::ParallelExec,
+                flutter_rust_bridge::for_generated::SseCodec,
+            >>::sse_decode(&mut deserializer);
+            deserializer.end();
             move |context| {
-                transform_result_dco::<_, _, ()>((move || {
+                transform_result_sse::<_, ()>((move || {
                     let output_ok = Result::<_, ()>::Ok({
                         crate::api::wasmtime::WasmRunModuleId::call_function_handle_parallel(
                             &api_that,
@@ -759,22 +1022,32 @@ fn wire__crate__api__wasmtime__wasm_run_module_id_call_function_handle_parallel_
 }
 fn wire__crate__api__wasmtime__wasm_run_module_id_call_function_handle_sync_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
-    that: impl CstDecode<crate::api::wasmtime::WasmRunModuleId>,
-    func: impl CstDecode<RustOpaqueNom<WFunc>>,
-    args: impl CstDecode<Vec<crate::types::WasmVal>>,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
 ) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
             debug_name: "wasm_run_module_id_call_function_handle_sync",
             port: Some(port_),
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
         },
         move || {
-            let api_that = that.cst_decode();
-            let api_func = func.cst_decode();
-            let api_args = args.cst_decode();
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <crate::api::wasmtime::WasmRunModuleId>::sse_decode(&mut deserializer);
+            let api_func = <RustOpaqueMoi<WFunc>>::sse_decode(&mut deserializer);
+            let api_args = <Vec<crate::types::WasmVal>>::sse_decode(&mut deserializer);
+            deserializer.end();
             move |context| {
-                transform_result_dco::<_, _, flutter_rust_bridge::for_generated::anyhow::Error>(
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
                     (move || {
                         let output_ok =
                             crate::api::wasmtime::WasmRunModuleId::call_function_handle_sync(
@@ -788,19 +1061,30 @@ fn wire__crate__api__wasmtime__wasm_run_module_id_call_function_handle_sync_impl
     )
 }
 fn wire__crate__api__wasmtime__wasm_run_module_id_consume_fuel_impl(
-    that: impl CstDecode<crate::api::wasmtime::WasmRunModuleId>,
-    delta: impl CstDecode<u64>,
-) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::DcoCodec, _>(
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
             debug_name: "wasm_run_module_id_consume_fuel",
             port: None,
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
         },
         move || {
-            let api_that = that.cst_decode();
-            let api_delta = delta.cst_decode();
-            transform_result_dco::<_, _, flutter_rust_bridge::for_generated::anyhow::Error>(
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <crate::api::wasmtime::WasmRunModuleId>::sse_decode(&mut deserializer);
+            let api_delta = <u64>::sse_decode(&mut deserializer);
+            deserializer.end();
+            transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
                 (move || {
                     let output_ok =
                         crate::api::wasmtime::WasmRunModuleId::consume_fuel(&api_that, api_delta)?;
@@ -812,26 +1096,34 @@ fn wire__crate__api__wasmtime__wasm_run_module_id_consume_fuel_impl(
 }
 fn wire__crate__api__wasmtime__wasm_run_module_id_create_function_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
-    that: impl CstDecode<crate::api::wasmtime::WasmRunModuleId>,
-    function_pointer: impl CstDecode<usize>,
-    function_id: impl CstDecode<u32>,
-    param_types: impl CstDecode<Vec<crate::types::ValueTy>>,
-    result_types: impl CstDecode<Vec<crate::types::ValueTy>>,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
 ) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
             debug_name: "wasm_run_module_id_create_function",
             port: Some(port_),
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
         },
         move || {
-            let api_that = that.cst_decode();
-            let api_function_pointer = function_pointer.cst_decode();
-            let api_function_id = function_id.cst_decode();
-            let api_param_types = param_types.cst_decode();
-            let api_result_types = result_types.cst_decode();
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <crate::api::wasmtime::WasmRunModuleId>::sse_decode(&mut deserializer);
+            let api_function_pointer = <usize>::sse_decode(&mut deserializer);
+            let api_function_id = <u32>::sse_decode(&mut deserializer);
+            let api_param_types = <Vec<crate::types::ValueTy>>::sse_decode(&mut deserializer);
+            let api_result_types = <Vec<crate::types::ValueTy>>::sse_decode(&mut deserializer);
+            deserializer.end();
             move |context| {
-                transform_result_dco::<_, _, flutter_rust_bridge::for_generated::anyhow::Error>(
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
                     (move || {
                         let output_ok = crate::api::wasmtime::WasmRunModuleId::create_function(
                             &api_that,
@@ -849,22 +1141,32 @@ fn wire__crate__api__wasmtime__wasm_run_module_id_create_function_impl(
 }
 fn wire__crate__api__wasmtime__wasm_run_module_id_create_global_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
-    that: impl CstDecode<crate::api::wasmtime::WasmRunModuleId>,
-    value: impl CstDecode<crate::types::WasmVal>,
-    mutable: impl CstDecode<bool>,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
 ) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
             debug_name: "wasm_run_module_id_create_global",
             port: Some(port_),
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
         },
         move || {
-            let api_that = that.cst_decode();
-            let api_value = value.cst_decode();
-            let api_mutable = mutable.cst_decode();
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <crate::api::wasmtime::WasmRunModuleId>::sse_decode(&mut deserializer);
+            let api_value = <crate::types::WasmVal>::sse_decode(&mut deserializer);
+            let api_mutable = <bool>::sse_decode(&mut deserializer);
+            deserializer.end();
             move |context| {
-                transform_result_dco::<_, _, flutter_rust_bridge::for_generated::anyhow::Error>(
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
                     (move || {
                         let output_ok = crate::api::wasmtime::WasmRunModuleId::create_global(
                             &api_that,
@@ -879,19 +1181,30 @@ fn wire__crate__api__wasmtime__wasm_run_module_id_create_global_impl(
     )
 }
 fn wire__crate__api__wasmtime__wasm_run_module_id_create_memory_impl(
-    that: impl CstDecode<crate::api::wasmtime::WasmRunModuleId>,
-    memory_type: impl CstDecode<crate::types::MemoryTy>,
-) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::DcoCodec, _>(
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
             debug_name: "wasm_run_module_id_create_memory",
             port: None,
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
         },
         move || {
-            let api_that = that.cst_decode();
-            let api_memory_type = memory_type.cst_decode();
-            transform_result_dco::<_, _, flutter_rust_bridge::for_generated::anyhow::Error>(
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <crate::api::wasmtime::WasmRunModuleId>::sse_decode(&mut deserializer);
+            let api_memory_type = <crate::types::MemoryTy>::sse_decode(&mut deserializer);
+            deserializer.end();
+            transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
                 (move || {
                     let output_ok = crate::api::wasmtime::WasmRunModuleId::create_memory(
                         &api_that,
@@ -905,22 +1218,32 @@ fn wire__crate__api__wasmtime__wasm_run_module_id_create_memory_impl(
 }
 fn wire__crate__api__wasmtime__wasm_run_module_id_create_table_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
-    that: impl CstDecode<crate::api::wasmtime::WasmRunModuleId>,
-    value: impl CstDecode<crate::types::WasmVal>,
-    table_type: impl CstDecode<crate::types::TableArgs>,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
 ) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
             debug_name: "wasm_run_module_id_create_table",
             port: Some(port_),
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
         },
         move || {
-            let api_that = that.cst_decode();
-            let api_value = value.cst_decode();
-            let api_table_type = table_type.cst_decode();
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <crate::api::wasmtime::WasmRunModuleId>::sse_decode(&mut deserializer);
+            let api_value = <crate::types::WasmVal>::sse_decode(&mut deserializer);
+            let api_table_type = <crate::types::TableArgs>::sse_decode(&mut deserializer);
+            deserializer.end();
             move |context| {
-                transform_result_dco::<_, _, flutter_rust_bridge::for_generated::anyhow::Error>(
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
                     (move || {
                         let output_ok = crate::api::wasmtime::WasmRunModuleId::create_table(
                             &api_that,
@@ -936,18 +1259,30 @@ fn wire__crate__api__wasmtime__wasm_run_module_id_create_table_impl(
 }
 fn wire__crate__api__wasmtime__wasm_run_module_id_dispose_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
-    that: impl CstDecode<crate::api::wasmtime::WasmRunModuleId>,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
 ) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
             debug_name: "wasm_run_module_id_dispose",
             port: Some(port_),
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
         },
         move || {
-            let api_that = that.cst_decode();
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <crate::api::wasmtime::WasmRunModuleId>::sse_decode(&mut deserializer);
+            deserializer.end();
             move |context| {
-                transform_result_dco::<_, _, flutter_rust_bridge::for_generated::anyhow::Error>(
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
                     (move || {
                         let output_ok = crate::api::wasmtime::WasmRunModuleId::dispose(&api_that)?;
                         Ok(output_ok)
@@ -959,26 +1294,34 @@ fn wire__crate__api__wasmtime__wasm_run_module_id_dispose_impl(
 }
 fn wire__crate__api__wasmtime__wasm_run_module_id_fill_table_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
-    that: impl CstDecode<crate::api::wasmtime::WasmRunModuleId>,
-    table: impl CstDecode<RustOpaqueNom<WTable>>,
-    index: impl CstDecode<u32>,
-    value: impl CstDecode<crate::types::WasmVal>,
-    len: impl CstDecode<u32>,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
 ) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
             debug_name: "wasm_run_module_id_fill_table",
             port: Some(port_),
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
         },
         move || {
-            let api_that = that.cst_decode();
-            let api_table = table.cst_decode();
-            let api_index = index.cst_decode();
-            let api_value = value.cst_decode();
-            let api_len = len.cst_decode();
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <crate::api::wasmtime::WasmRunModuleId>::sse_decode(&mut deserializer);
+            let api_table = <RustOpaqueMoi<WTable>>::sse_decode(&mut deserializer);
+            let api_index = <u32>::sse_decode(&mut deserializer);
+            let api_value = <crate::types::WasmVal>::sse_decode(&mut deserializer);
+            let api_len = <u32>::sse_decode(&mut deserializer);
+            deserializer.end();
             move |context| {
-                transform_result_dco::<_, _, flutter_rust_bridge::for_generated::anyhow::Error>(
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
                     (move || {
                         let output_ok = crate::api::wasmtime::WasmRunModuleId::fill_table(
                             &api_that, api_table, api_index, api_value, api_len,
@@ -991,17 +1334,29 @@ fn wire__crate__api__wasmtime__wasm_run_module_id_fill_table_impl(
     )
 }
 fn wire__crate__api__wasmtime__wasm_run_module_id_fuel_consumed_impl(
-    that: impl CstDecode<crate::api::wasmtime::WasmRunModuleId>,
-) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::DcoCodec, _>(
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
             debug_name: "wasm_run_module_id_fuel_consumed",
             port: None,
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
         },
         move || {
-            let api_that = that.cst_decode();
-            transform_result_dco::<_, _, ()>((move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <crate::api::wasmtime::WasmRunModuleId>::sse_decode(&mut deserializer);
+            deserializer.end();
+            transform_result_sse::<_, ()>((move || {
                 let output_ok = Result::<_, ()>::Ok(
                     crate::api::wasmtime::WasmRunModuleId::fuel_consumed(&api_that),
                 )?;
@@ -1011,19 +1366,30 @@ fn wire__crate__api__wasmtime__wasm_run_module_id_fuel_consumed_impl(
     )
 }
 fn wire__crate__api__wasmtime__wasm_run_module_id_get_function_type_impl(
-    that: impl CstDecode<crate::api::wasmtime::WasmRunModuleId>,
-    func: impl CstDecode<RustOpaqueNom<WFunc>>,
-) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::DcoCodec, _>(
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
             debug_name: "wasm_run_module_id_get_function_type",
             port: None,
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
         },
         move || {
-            let api_that = that.cst_decode();
-            let api_func = func.cst_decode();
-            transform_result_dco::<_, _, ()>((move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <crate::api::wasmtime::WasmRunModuleId>::sse_decode(&mut deserializer);
+            let api_func = <RustOpaqueMoi<WFunc>>::sse_decode(&mut deserializer);
+            deserializer.end();
+            transform_result_sse::<_, ()>((move || {
                 let output_ok = Result::<_, ()>::Ok(
                     crate::api::wasmtime::WasmRunModuleId::get_function_type(&api_that, api_func),
                 )?;
@@ -1033,19 +1399,30 @@ fn wire__crate__api__wasmtime__wasm_run_module_id_get_function_type_impl(
     )
 }
 fn wire__crate__api__wasmtime__wasm_run_module_id_get_global_type_impl(
-    that: impl CstDecode<crate::api::wasmtime::WasmRunModuleId>,
-    global: impl CstDecode<RustOpaqueNom<WGlobal>>,
-) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::DcoCodec, _>(
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
             debug_name: "wasm_run_module_id_get_global_type",
             port: None,
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
         },
         move || {
-            let api_that = that.cst_decode();
-            let api_global = global.cst_decode();
-            transform_result_dco::<_, _, ()>((move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <crate::api::wasmtime::WasmRunModuleId>::sse_decode(&mut deserializer);
+            let api_global = <RustOpaqueMoi<WGlobal>>::sse_decode(&mut deserializer);
+            deserializer.end();
+            transform_result_sse::<_, ()>((move || {
                 let output_ok = Result::<_, ()>::Ok(
                     crate::api::wasmtime::WasmRunModuleId::get_global_type(&api_that, api_global),
                 )?;
@@ -1055,19 +1432,30 @@ fn wire__crate__api__wasmtime__wasm_run_module_id_get_global_type_impl(
     )
 }
 fn wire__crate__api__wasmtime__wasm_run_module_id_get_global_value_impl(
-    that: impl CstDecode<crate::api::wasmtime::WasmRunModuleId>,
-    global: impl CstDecode<RustOpaqueNom<WGlobal>>,
-) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::DcoCodec, _>(
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
             debug_name: "wasm_run_module_id_get_global_value",
             port: None,
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
         },
         move || {
-            let api_that = that.cst_decode();
-            let api_global = global.cst_decode();
-            transform_result_dco::<_, _, flutter_rust_bridge::for_generated::anyhow::Error>(
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <crate::api::wasmtime::WasmRunModuleId>::sse_decode(&mut deserializer);
+            let api_global = <RustOpaqueMoi<WGlobal>>::sse_decode(&mut deserializer);
+            deserializer.end();
+            transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
                 (move || {
                     let output_ok = crate::api::wasmtime::WasmRunModuleId::get_global_value(
                         &api_that, api_global,
@@ -1079,19 +1467,30 @@ fn wire__crate__api__wasmtime__wasm_run_module_id_get_global_value_impl(
     )
 }
 fn wire__crate__api__wasmtime__wasm_run_module_id_get_memory_data_impl(
-    that: impl CstDecode<crate::api::wasmtime::WasmRunModuleId>,
-    memory: impl CstDecode<RustOpaqueNom<WMemory>>,
-) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::DcoCodec, _>(
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
             debug_name: "wasm_run_module_id_get_memory_data",
             port: None,
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
         },
         move || {
-            let api_that = that.cst_decode();
-            let api_memory = memory.cst_decode();
-            transform_result_dco::<_, _, ()>((move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <crate::api::wasmtime::WasmRunModuleId>::sse_decode(&mut deserializer);
+            let api_memory = <RustOpaqueMoi<WMemory>>::sse_decode(&mut deserializer);
+            deserializer.end();
+            transform_result_sse::<_, ()>((move || {
                 let output_ok = Result::<_, ()>::Ok(
                     crate::api::wasmtime::WasmRunModuleId::get_memory_data(&api_that, api_memory),
                 )?;
@@ -1101,19 +1500,30 @@ fn wire__crate__api__wasmtime__wasm_run_module_id_get_memory_data_impl(
     )
 }
 fn wire__crate__api__wasmtime__wasm_run_module_id_get_memory_data_pointer_impl(
-    that: impl CstDecode<crate::api::wasmtime::WasmRunModuleId>,
-    memory: impl CstDecode<RustOpaqueNom<WMemory>>,
-) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::DcoCodec, _>(
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
             debug_name: "wasm_run_module_id_get_memory_data_pointer",
             port: None,
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
         },
         move || {
-            let api_that = that.cst_decode();
-            let api_memory = memory.cst_decode();
-            transform_result_dco::<_, _, ()>((move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <crate::api::wasmtime::WasmRunModuleId>::sse_decode(&mut deserializer);
+            let api_memory = <RustOpaqueMoi<WMemory>>::sse_decode(&mut deserializer);
+            deserializer.end();
+            transform_result_sse::<_, ()>((move || {
                 let output_ok = Result::<_, ()>::Ok(
                     crate::api::wasmtime::WasmRunModuleId::get_memory_data_pointer(
                         &api_that, api_memory,
@@ -1126,20 +1536,31 @@ fn wire__crate__api__wasmtime__wasm_run_module_id_get_memory_data_pointer_impl(
 }
 fn wire__crate__api__wasmtime__wasm_run_module_id_get_memory_data_pointer_and_length_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
-    that: impl CstDecode<crate::api::wasmtime::WasmRunModuleId>,
-    memory: impl CstDecode<RustOpaqueNom<WMemory>>,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
 ) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
             debug_name: "wasm_run_module_id_get_memory_data_pointer_and_length",
             port: Some(port_),
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
         },
         move || {
-            let api_that = that.cst_decode();
-            let api_memory = memory.cst_decode();
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <crate::api::wasmtime::WasmRunModuleId>::sse_decode(&mut deserializer);
+            let api_memory = <RustOpaqueMoi<WMemory>>::sse_decode(&mut deserializer);
+            deserializer.end();
             move |context| {
-                transform_result_dco::<_, _, ()>((move || {
+                transform_result_sse::<_, ()>((move || {
                     let output_ok = Result::<_, ()>::Ok(
                         crate::api::wasmtime::WasmRunModuleId::get_memory_data_pointer_and_length(
                             &api_that, api_memory,
@@ -1152,19 +1573,30 @@ fn wire__crate__api__wasmtime__wasm_run_module_id_get_memory_data_pointer_and_le
     )
 }
 fn wire__crate__api__wasmtime__wasm_run_module_id_get_memory_pages_impl(
-    that: impl CstDecode<crate::api::wasmtime::WasmRunModuleId>,
-    memory: impl CstDecode<RustOpaqueNom<WMemory>>,
-) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::DcoCodec, _>(
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
             debug_name: "wasm_run_module_id_get_memory_pages",
             port: None,
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
         },
         move || {
-            let api_that = that.cst_decode();
-            let api_memory = memory.cst_decode();
-            transform_result_dco::<_, _, ()>((move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <crate::api::wasmtime::WasmRunModuleId>::sse_decode(&mut deserializer);
+            let api_memory = <RustOpaqueMoi<WMemory>>::sse_decode(&mut deserializer);
+            deserializer.end();
+            transform_result_sse::<_, ()>((move || {
                 let output_ok = Result::<_, ()>::Ok(
                     crate::api::wasmtime::WasmRunModuleId::get_memory_pages(&api_that, api_memory),
                 )?;
@@ -1174,19 +1606,30 @@ fn wire__crate__api__wasmtime__wasm_run_module_id_get_memory_pages_impl(
     )
 }
 fn wire__crate__api__wasmtime__wasm_run_module_id_get_memory_type_impl(
-    that: impl CstDecode<crate::api::wasmtime::WasmRunModuleId>,
-    memory: impl CstDecode<RustOpaqueNom<WMemory>>,
-) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::DcoCodec, _>(
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
             debug_name: "wasm_run_module_id_get_memory_type",
             port: None,
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
         },
         move || {
-            let api_that = that.cst_decode();
-            let api_memory = memory.cst_decode();
-            transform_result_dco::<_, _, ()>((move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <crate::api::wasmtime::WasmRunModuleId>::sse_decode(&mut deserializer);
+            let api_memory = <RustOpaqueMoi<WMemory>>::sse_decode(&mut deserializer);
+            deserializer.end();
+            transform_result_sse::<_, ()>((move || {
                 let output_ok = Result::<_, ()>::Ok(
                     crate::api::wasmtime::WasmRunModuleId::get_memory_type(&api_that, api_memory),
                 )?;
@@ -1196,21 +1639,31 @@ fn wire__crate__api__wasmtime__wasm_run_module_id_get_memory_type_impl(
     )
 }
 fn wire__crate__api__wasmtime__wasm_run_module_id_get_table_impl(
-    that: impl CstDecode<crate::api::wasmtime::WasmRunModuleId>,
-    table: impl CstDecode<RustOpaqueNom<WTable>>,
-    index: impl CstDecode<u32>,
-) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::DcoCodec, _>(
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
             debug_name: "wasm_run_module_id_get_table",
             port: None,
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
         },
         move || {
-            let api_that = that.cst_decode();
-            let api_table = table.cst_decode();
-            let api_index = index.cst_decode();
-            transform_result_dco::<_, _, flutter_rust_bridge::for_generated::anyhow::Error>(
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <crate::api::wasmtime::WasmRunModuleId>::sse_decode(&mut deserializer);
+            let api_table = <RustOpaqueMoi<WTable>>::sse_decode(&mut deserializer);
+            let api_index = <u32>::sse_decode(&mut deserializer);
+            deserializer.end();
+            transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
                 (move || {
                     let output_ok = crate::api::wasmtime::WasmRunModuleId::get_table(
                         &api_that, api_table, api_index,
@@ -1222,19 +1675,30 @@ fn wire__crate__api__wasmtime__wasm_run_module_id_get_table_impl(
     )
 }
 fn wire__crate__api__wasmtime__wasm_run_module_id_get_table_size_impl(
-    that: impl CstDecode<crate::api::wasmtime::WasmRunModuleId>,
-    table: impl CstDecode<RustOpaqueNom<WTable>>,
-) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::DcoCodec, _>(
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
             debug_name: "wasm_run_module_id_get_table_size",
             port: None,
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
         },
         move || {
-            let api_that = that.cst_decode();
-            let api_table = table.cst_decode();
-            transform_result_dco::<_, _, ()>((move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <crate::api::wasmtime::WasmRunModuleId>::sse_decode(&mut deserializer);
+            let api_table = <RustOpaqueMoi<WTable>>::sse_decode(&mut deserializer);
+            deserializer.end();
+            transform_result_sse::<_, ()>((move || {
                 let output_ok = Result::<_, ()>::Ok(
                     crate::api::wasmtime::WasmRunModuleId::get_table_size(&api_that, api_table),
                 )?;
@@ -1244,19 +1708,30 @@ fn wire__crate__api__wasmtime__wasm_run_module_id_get_table_size_impl(
     )
 }
 fn wire__crate__api__wasmtime__wasm_run_module_id_get_table_type_impl(
-    that: impl CstDecode<crate::api::wasmtime::WasmRunModuleId>,
-    table: impl CstDecode<RustOpaqueNom<WTable>>,
-) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::DcoCodec, _>(
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
             debug_name: "wasm_run_module_id_get_table_type",
             port: None,
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
         },
         move || {
-            let api_that = that.cst_decode();
-            let api_table = table.cst_decode();
-            transform_result_dco::<_, _, ()>((move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <crate::api::wasmtime::WasmRunModuleId>::sse_decode(&mut deserializer);
+            let api_table = <RustOpaqueMoi<WTable>>::sse_decode(&mut deserializer);
+            deserializer.end();
+            transform_result_sse::<_, ()>((move || {
                 let output_ok = Result::<_, ()>::Ok(
                     crate::api::wasmtime::WasmRunModuleId::get_table_type(&api_that, api_table),
                 )?;
@@ -1266,21 +1741,31 @@ fn wire__crate__api__wasmtime__wasm_run_module_id_get_table_type_impl(
     )
 }
 fn wire__crate__api__wasmtime__wasm_run_module_id_grow_memory_impl(
-    that: impl CstDecode<crate::api::wasmtime::WasmRunModuleId>,
-    memory: impl CstDecode<RustOpaqueNom<WMemory>>,
-    pages: impl CstDecode<u32>,
-) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::DcoCodec, _>(
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
             debug_name: "wasm_run_module_id_grow_memory",
             port: None,
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
         },
         move || {
-            let api_that = that.cst_decode();
-            let api_memory = memory.cst_decode();
-            let api_pages = pages.cst_decode();
-            transform_result_dco::<_, _, flutter_rust_bridge::for_generated::anyhow::Error>(
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <crate::api::wasmtime::WasmRunModuleId>::sse_decode(&mut deserializer);
+            let api_memory = <RustOpaqueMoi<WMemory>>::sse_decode(&mut deserializer);
+            let api_pages = <u32>::sse_decode(&mut deserializer);
+            deserializer.end();
+            transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
                 (move || {
                     let output_ok = crate::api::wasmtime::WasmRunModuleId::grow_memory(
                         &api_that, api_memory, api_pages,
@@ -1293,24 +1778,33 @@ fn wire__crate__api__wasmtime__wasm_run_module_id_grow_memory_impl(
 }
 fn wire__crate__api__wasmtime__wasm_run_module_id_grow_table_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
-    that: impl CstDecode<crate::api::wasmtime::WasmRunModuleId>,
-    table: impl CstDecode<RustOpaqueNom<WTable>>,
-    delta: impl CstDecode<u32>,
-    value: impl CstDecode<crate::types::WasmVal>,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
 ) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
             debug_name: "wasm_run_module_id_grow_table",
             port: Some(port_),
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
         },
         move || {
-            let api_that = that.cst_decode();
-            let api_table = table.cst_decode();
-            let api_delta = delta.cst_decode();
-            let api_value = value.cst_decode();
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <crate::api::wasmtime::WasmRunModuleId>::sse_decode(&mut deserializer);
+            let api_table = <RustOpaqueMoi<WTable>>::sse_decode(&mut deserializer);
+            let api_delta = <u32>::sse_decode(&mut deserializer);
+            let api_value = <crate::types::WasmVal>::sse_decode(&mut deserializer);
+            deserializer.end();
             move |context| {
-                transform_result_dco::<_, _, flutter_rust_bridge::for_generated::anyhow::Error>(
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
                     (move || {
                         let output_ok = crate::api::wasmtime::WasmRunModuleId::grow_table(
                             &api_that, api_table, api_delta, api_value,
@@ -1324,18 +1818,30 @@ fn wire__crate__api__wasmtime__wasm_run_module_id_grow_table_impl(
 }
 fn wire__crate__api__wasmtime__wasm_run_module_id_instantiate_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
-    that: impl CstDecode<crate::api::wasmtime::WasmRunModuleId>,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
 ) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
             debug_name: "wasm_run_module_id_instantiate",
             port: Some(port_),
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
         },
         move || {
-            let api_that = that.cst_decode();
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <crate::api::wasmtime::WasmRunModuleId>::sse_decode(&mut deserializer);
+            deserializer.end();
             move |context| {
-                transform_result_dco::<_, _, flutter_rust_bridge::for_generated::anyhow::Error>(
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
                     (move || {
                         let output_ok =
                             crate::api::wasmtime::WasmRunModuleId::instantiate(&api_that)?;
@@ -1347,17 +1853,29 @@ fn wire__crate__api__wasmtime__wasm_run_module_id_instantiate_impl(
     )
 }
 fn wire__crate__api__wasmtime__wasm_run_module_id_instantiate_sync_impl(
-    that: impl CstDecode<crate::api::wasmtime::WasmRunModuleId>,
-) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::DcoCodec, _>(
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
             debug_name: "wasm_run_module_id_instantiate_sync",
             port: None,
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
         },
         move || {
-            let api_that = that.cst_decode();
-            transform_result_dco::<_, _, flutter_rust_bridge::for_generated::anyhow::Error>(
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <crate::api::wasmtime::WasmRunModuleId>::sse_decode(&mut deserializer);
+            deserializer.end();
+            transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
                 (move || {
                     let output_ok =
                         crate::api::wasmtime::WasmRunModuleId::instantiate_sync(&api_that)?;
@@ -1368,19 +1886,30 @@ fn wire__crate__api__wasmtime__wasm_run_module_id_instantiate_sync_impl(
     )
 }
 fn wire__crate__api__wasmtime__wasm_run_module_id_link_imports_impl(
-    that: impl CstDecode<crate::api::wasmtime::WasmRunModuleId>,
-    imports: impl CstDecode<Vec<crate::types::ModuleImport>>,
-) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::DcoCodec, _>(
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
             debug_name: "wasm_run_module_id_link_imports",
             port: None,
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
         },
         move || {
-            let api_that = that.cst_decode();
-            let api_imports = imports.cst_decode();
-            transform_result_dco::<_, _, flutter_rust_bridge::for_generated::anyhow::Error>(
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <crate::api::wasmtime::WasmRunModuleId>::sse_decode(&mut deserializer);
+            let api_imports = <Vec<crate::types::ModuleImport>>::sse_decode(&mut deserializer);
+            deserializer.end();
+            transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
                 (move || {
                     let output_ok = crate::api::wasmtime::WasmRunModuleId::link_imports(
                         &api_that,
@@ -1394,24 +1923,33 @@ fn wire__crate__api__wasmtime__wasm_run_module_id_link_imports_impl(
 }
 fn wire__crate__api__wasmtime__wasm_run_module_id_read_memory_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
-    that: impl CstDecode<crate::api::wasmtime::WasmRunModuleId>,
-    memory: impl CstDecode<RustOpaqueNom<WMemory>>,
-    offset: impl CstDecode<usize>,
-    bytes: impl CstDecode<usize>,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
 ) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
             debug_name: "wasm_run_module_id_read_memory",
             port: Some(port_),
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
         },
         move || {
-            let api_that = that.cst_decode();
-            let api_memory = memory.cst_decode();
-            let api_offset = offset.cst_decode();
-            let api_bytes = bytes.cst_decode();
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <crate::api::wasmtime::WasmRunModuleId>::sse_decode(&mut deserializer);
+            let api_memory = <RustOpaqueMoi<WMemory>>::sse_decode(&mut deserializer);
+            let api_offset = <usize>::sse_decode(&mut deserializer);
+            let api_bytes = <usize>::sse_decode(&mut deserializer);
+            deserializer.end();
             move |context| {
-                transform_result_dco::<_, _, flutter_rust_bridge::for_generated::anyhow::Error>(
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
                     (move || {
                         let output_ok = crate::api::wasmtime::WasmRunModuleId::read_memory(
                             &api_that, api_memory, api_offset, api_bytes,
@@ -1425,22 +1963,32 @@ fn wire__crate__api__wasmtime__wasm_run_module_id_read_memory_impl(
 }
 fn wire__crate__api__wasmtime__wasm_run_module_id_set_global_value_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
-    that: impl CstDecode<crate::api::wasmtime::WasmRunModuleId>,
-    global: impl CstDecode<RustOpaqueNom<WGlobal>>,
-    value: impl CstDecode<crate::types::WasmVal>,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
 ) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
             debug_name: "wasm_run_module_id_set_global_value",
             port: Some(port_),
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
         },
         move || {
-            let api_that = that.cst_decode();
-            let api_global = global.cst_decode();
-            let api_value = value.cst_decode();
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <crate::api::wasmtime::WasmRunModuleId>::sse_decode(&mut deserializer);
+            let api_global = <RustOpaqueMoi<WGlobal>>::sse_decode(&mut deserializer);
+            let api_value = <crate::types::WasmVal>::sse_decode(&mut deserializer);
+            deserializer.end();
             move |context| {
-                transform_result_dco::<_, _, flutter_rust_bridge::for_generated::anyhow::Error>(
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
                     (move || {
                         let output_ok = crate::api::wasmtime::WasmRunModuleId::set_global_value(
                             &api_that, api_global, api_value,
@@ -1454,24 +2002,33 @@ fn wire__crate__api__wasmtime__wasm_run_module_id_set_global_value_impl(
 }
 fn wire__crate__api__wasmtime__wasm_run_module_id_set_table_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
-    that: impl CstDecode<crate::api::wasmtime::WasmRunModuleId>,
-    table: impl CstDecode<RustOpaqueNom<WTable>>,
-    index: impl CstDecode<u32>,
-    value: impl CstDecode<crate::types::WasmVal>,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
 ) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
             debug_name: "wasm_run_module_id_set_table",
             port: Some(port_),
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
         },
         move || {
-            let api_that = that.cst_decode();
-            let api_table = table.cst_decode();
-            let api_index = index.cst_decode();
-            let api_value = value.cst_decode();
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <crate::api::wasmtime::WasmRunModuleId>::sse_decode(&mut deserializer);
+            let api_table = <RustOpaqueMoi<WTable>>::sse_decode(&mut deserializer);
+            let api_index = <u32>::sse_decode(&mut deserializer);
+            let api_value = <crate::types::WasmVal>::sse_decode(&mut deserializer);
+            deserializer.end();
             move |context| {
-                transform_result_dco::<_, _, flutter_rust_bridge::for_generated::anyhow::Error>(
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
                     (move || {
                         let output_ok = crate::api::wasmtime::WasmRunModuleId::set_table(
                             &api_that, api_table, api_index, api_value,
@@ -1485,22 +2042,35 @@ fn wire__crate__api__wasmtime__wasm_run_module_id_set_table_impl(
 }
 fn wire__crate__api__wasmtime__wasm_run_module_id_stdio_stream_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
-    that: impl CstDecode<crate::api::wasmtime::WasmRunModuleId>,
-    sink: impl CstDecode<StreamSink<Vec<u8>, flutter_rust_bridge::for_generated::DcoCodec>>,
-    kind: impl CstDecode<crate::config::StdIOKind>,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
 ) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
             debug_name: "wasm_run_module_id_stdio_stream",
             port: Some(port_),
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
         },
         move || {
-            let api_that = that.cst_decode();
-            let api_sink = sink.cst_decode();
-            let api_kind = kind.cst_decode();
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <crate::api::wasmtime::WasmRunModuleId>::sse_decode(&mut deserializer);
+            let api_sink =
+                <StreamSink<Vec<u8>, flutter_rust_bridge::for_generated::SseCodec>>::sse_decode(
+                    &mut deserializer,
+                );
+            let api_kind = <crate::config::StdIOKind>::sse_decode(&mut deserializer);
+            deserializer.end();
             move |context| {
-                transform_result_dco::<_, _, flutter_rust_bridge::for_generated::anyhow::Error>(
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
                     (move || {
                         let output_ok = crate::api::wasmtime::WasmRunModuleId::stdio_stream(
                             &api_that, api_sink, api_kind,
@@ -1514,22 +2084,32 @@ fn wire__crate__api__wasmtime__wasm_run_module_id_stdio_stream_impl(
 }
 fn wire__crate__api__wasmtime__wasm_run_module_id_worker_execution_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
-    that: impl CstDecode<crate::api::wasmtime::WasmRunModuleId>,
-    worker_index: impl CstDecode<usize>,
-    results: impl CstDecode<Vec<crate::types::WasmVal>>,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
 ) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
             debug_name: "wasm_run_module_id_worker_execution",
             port: Some(port_),
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
         },
         move || {
-            let api_that = that.cst_decode();
-            let api_worker_index = worker_index.cst_decode();
-            let api_results = results.cst_decode();
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <crate::api::wasmtime::WasmRunModuleId>::sse_decode(&mut deserializer);
+            let api_worker_index = <usize>::sse_decode(&mut deserializer);
+            let api_results = <Vec<crate::types::WasmVal>>::sse_decode(&mut deserializer);
+            deserializer.end();
             move |context| {
-                transform_result_dco::<_, _, flutter_rust_bridge::for_generated::anyhow::Error>(
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
                     (move || {
                         let output_ok = crate::api::wasmtime::WasmRunModuleId::worker_execution(
                             &api_that,
@@ -1545,24 +2125,33 @@ fn wire__crate__api__wasmtime__wasm_run_module_id_worker_execution_impl(
 }
 fn wire__crate__api__wasmtime__wasm_run_module_id_write_memory_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
-    that: impl CstDecode<crate::api::wasmtime::WasmRunModuleId>,
-    memory: impl CstDecode<RustOpaqueNom<WMemory>>,
-    offset: impl CstDecode<usize>,
-    buffer: impl CstDecode<Vec<u8>>,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
 ) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
             debug_name: "wasm_run_module_id_write_memory",
             port: Some(port_),
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
         },
         move || {
-            let api_that = that.cst_decode();
-            let api_memory = memory.cst_decode();
-            let api_offset = offset.cst_decode();
-            let api_buffer = buffer.cst_decode();
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <crate::api::wasmtime::WasmRunModuleId>::sse_decode(&mut deserializer);
+            let api_memory = <RustOpaqueMoi<WMemory>>::sse_decode(&mut deserializer);
+            let api_offset = <usize>::sse_decode(&mut deserializer);
+            let api_buffer = <Vec<u8>>::sse_decode(&mut deserializer);
+            deserializer.end();
             move |context| {
-                transform_result_dco::<_, _, flutter_rust_bridge::for_generated::anyhow::Error>(
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
                     (move || {
                         let output_ok = crate::api::wasmtime::WasmRunModuleId::write_memory(
                             &api_that, api_memory, api_offset, api_buffer,
@@ -1575,21 +2164,32 @@ fn wire__crate__api__wasmtime__wasm_run_module_id_write_memory_impl(
     )
 }
 fn wire__crate__api__wasmtime__wasm_run_shared_memory_atomic_notify_impl(
-    that: impl CstDecode<crate::api::wasmtime::WasmRunSharedMemory>,
-    addr: impl CstDecode<u64>,
-    count: impl CstDecode<u32>,
-) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::DcoCodec, _>(
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
             debug_name: "wasm_run_shared_memory_atomic_notify",
             port: None,
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
         },
         move || {
-            let api_that = that.cst_decode();
-            let api_addr = addr.cst_decode();
-            let api_count = count.cst_decode();
-            transform_result_dco::<_, _, flutter_rust_bridge::for_generated::anyhow::Error>(
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that =
+                <crate::api::wasmtime::WasmRunSharedMemory>::sse_decode(&mut deserializer);
+            let api_addr = <u64>::sse_decode(&mut deserializer);
+            let api_count = <u32>::sse_decode(&mut deserializer);
+            deserializer.end();
+            transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
                 (move || {
                     let output_ok = crate::api::wasmtime::WasmRunSharedMemory::atomic_notify(
                         &api_that, api_addr, api_count,
@@ -1602,22 +2202,33 @@ fn wire__crate__api__wasmtime__wasm_run_shared_memory_atomic_notify_impl(
 }
 fn wire__crate__api__wasmtime__wasm_run_shared_memory_atomic_wait32_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
-    that: impl CstDecode<crate::api::wasmtime::WasmRunSharedMemory>,
-    addr: impl CstDecode<u64>,
-    expected: impl CstDecode<u32>,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
 ) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
             debug_name: "wasm_run_shared_memory_atomic_wait32",
             port: Some(port_),
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
         },
         move || {
-            let api_that = that.cst_decode();
-            let api_addr = addr.cst_decode();
-            let api_expected = expected.cst_decode();
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that =
+                <crate::api::wasmtime::WasmRunSharedMemory>::sse_decode(&mut deserializer);
+            let api_addr = <u64>::sse_decode(&mut deserializer);
+            let api_expected = <u32>::sse_decode(&mut deserializer);
+            deserializer.end();
             move |context| {
-                transform_result_dco::<_, _, flutter_rust_bridge::for_generated::anyhow::Error>(
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
                     (move || {
                         let output_ok = crate::api::wasmtime::WasmRunSharedMemory::atomic_wait32(
                             &api_that,
@@ -1633,22 +2244,33 @@ fn wire__crate__api__wasmtime__wasm_run_shared_memory_atomic_wait32_impl(
 }
 fn wire__crate__api__wasmtime__wasm_run_shared_memory_atomic_wait64_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
-    that: impl CstDecode<crate::api::wasmtime::WasmRunSharedMemory>,
-    addr: impl CstDecode<u64>,
-    expected: impl CstDecode<u64>,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
 ) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
             debug_name: "wasm_run_shared_memory_atomic_wait64",
             port: Some(port_),
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
         },
         move || {
-            let api_that = that.cst_decode();
-            let api_addr = addr.cst_decode();
-            let api_expected = expected.cst_decode();
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that =
+                <crate::api::wasmtime::WasmRunSharedMemory>::sse_decode(&mut deserializer);
+            let api_addr = <u64>::sse_decode(&mut deserializer);
+            let api_expected = <u64>::sse_decode(&mut deserializer);
+            deserializer.end();
             move |context| {
-                transform_result_dco::<_, _, flutter_rust_bridge::for_generated::anyhow::Error>(
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
                     (move || {
                         let output_ok = crate::api::wasmtime::WasmRunSharedMemory::atomic_wait64(
                             &api_that,
@@ -1664,18 +2286,31 @@ fn wire__crate__api__wasmtime__wasm_run_shared_memory_atomic_wait64_impl(
 }
 fn wire__crate__api__wasmtime__wasm_run_shared_memory_atomics_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
-    that: impl CstDecode<crate::api::wasmtime::WasmRunSharedMemory>,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
 ) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
             debug_name: "wasm_run_shared_memory_atomics",
             port: Some(port_),
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
         },
         move || {
-            let api_that = that.cst_decode();
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that =
+                <crate::api::wasmtime::WasmRunSharedMemory>::sse_decode(&mut deserializer);
+            deserializer.end();
             move |context| {
-                transform_result_dco::<_, _, ()>((move || {
+                transform_result_sse::<_, ()>((move || {
                     let output_ok = Result::<_, ()>::Ok(
                         crate::api::wasmtime::WasmRunSharedMemory::atomics(&api_that),
                     )?;
@@ -1686,17 +2321,30 @@ fn wire__crate__api__wasmtime__wasm_run_shared_memory_atomics_impl(
     )
 }
 fn wire__crate__api__wasmtime__wasm_run_shared_memory_data_pointer_impl(
-    that: impl CstDecode<crate::api::wasmtime::WasmRunSharedMemory>,
-) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::DcoCodec, _>(
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
             debug_name: "wasm_run_shared_memory_data_pointer",
             port: None,
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
         },
         move || {
-            let api_that = that.cst_decode();
-            transform_result_dco::<_, _, ()>((move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that =
+                <crate::api::wasmtime::WasmRunSharedMemory>::sse_decode(&mut deserializer);
+            deserializer.end();
+            transform_result_sse::<_, ()>((move || {
                 let output_ok = Result::<_, ()>::Ok(
                     crate::api::wasmtime::WasmRunSharedMemory::data_pointer(&api_that),
                 )?;
@@ -1706,17 +2354,30 @@ fn wire__crate__api__wasmtime__wasm_run_shared_memory_data_pointer_impl(
     )
 }
 fn wire__crate__api__wasmtime__wasm_run_shared_memory_data_size_impl(
-    that: impl CstDecode<crate::api::wasmtime::WasmRunSharedMemory>,
-) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::DcoCodec, _>(
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
             debug_name: "wasm_run_shared_memory_data_size",
             port: None,
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
         },
         move || {
-            let api_that = that.cst_decode();
-            transform_result_dco::<_, _, ()>((move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that =
+                <crate::api::wasmtime::WasmRunSharedMemory>::sse_decode(&mut deserializer);
+            deserializer.end();
+            transform_result_sse::<_, ()>((move || {
                 let output_ok = Result::<_, ()>::Ok(
                     crate::api::wasmtime::WasmRunSharedMemory::data_size(&api_that),
                 )?;
@@ -1726,19 +2387,31 @@ fn wire__crate__api__wasmtime__wasm_run_shared_memory_data_size_impl(
     )
 }
 fn wire__crate__api__wasmtime__wasm_run_shared_memory_grow_impl(
-    that: impl CstDecode<crate::api::wasmtime::WasmRunSharedMemory>,
-    delta: impl CstDecode<u64>,
-) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::DcoCodec, _>(
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
             debug_name: "wasm_run_shared_memory_grow",
             port: None,
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
         },
         move || {
-            let api_that = that.cst_decode();
-            let api_delta = delta.cst_decode();
-            transform_result_dco::<_, _, flutter_rust_bridge::for_generated::anyhow::Error>(
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that =
+                <crate::api::wasmtime::WasmRunSharedMemory>::sse_decode(&mut deserializer);
+            let api_delta = <u64>::sse_decode(&mut deserializer);
+            deserializer.end();
+            transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
                 (move || {
                     let output_ok =
                         crate::api::wasmtime::WasmRunSharedMemory::grow(&api_that, api_delta)?;
@@ -1749,17 +2422,30 @@ fn wire__crate__api__wasmtime__wasm_run_shared_memory_grow_impl(
     )
 }
 fn wire__crate__api__wasmtime__wasm_run_shared_memory_size_impl(
-    that: impl CstDecode<crate::api::wasmtime::WasmRunSharedMemory>,
-) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::DcoCodec, _>(
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
             debug_name: "wasm_run_shared_memory_size",
             port: None,
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
         },
         move || {
-            let api_that = that.cst_decode();
-            transform_result_dco::<_, _, ()>((move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that =
+                <crate::api::wasmtime::WasmRunSharedMemory>::sse_decode(&mut deserializer);
+            deserializer.end();
+            transform_result_sse::<_, ()>((move || {
                 let output_ok = Result::<_, ()>::Ok(
                     crate::api::wasmtime::WasmRunSharedMemory::size(&api_that),
                 )?;
@@ -1769,17 +2455,30 @@ fn wire__crate__api__wasmtime__wasm_run_shared_memory_size_impl(
     )
 }
 fn wire__crate__api__wasmtime__wasm_run_shared_memory_ty_impl(
-    that: impl CstDecode<crate::api::wasmtime::WasmRunSharedMemory>,
-) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::DcoCodec, _>(
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
             debug_name: "wasm_run_shared_memory_ty",
             port: None,
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
         },
         move || {
-            let api_that = that.cst_decode();
-            transform_result_dco::<_, _, ()>((move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that =
+                <crate::api::wasmtime::WasmRunSharedMemory>::sse_decode(&mut deserializer);
+            deserializer.end();
+            transform_result_sse::<_, ()>((move || {
                 let output_ok =
                     Result::<_, ()>::Ok(crate::api::wasmtime::WasmRunSharedMemory::ty(&api_that))?;
                 Ok(output_ok)
@@ -1788,15 +2487,28 @@ fn wire__crate__api__wasmtime__wasm_run_shared_memory_ty_impl(
     )
 }
 fn wire__crate__api__wasmtime__wasm_runtime_features_impl(
-) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::DcoCodec, _>(
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
             debug_name: "wasm_runtime_features",
             port: None,
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
         },
         move || {
-            transform_result_dco::<_, _, ()>((move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            deserializer.end();
+            transform_result_sse::<_, ()>((move || {
                 let output_ok = Result::<_, ()>::Ok(crate::api::wasmtime::wasm_runtime_features())?;
                 Ok(output_ok)
             })())
@@ -1804,144 +2516,21 @@ fn wire__crate__api__wasmtime__wasm_runtime_features_impl(
     )
 }
 
+// Section: related_funcs
+
+flutter_rust_bridge::frb_generated_moi_arc_impl_value!(Arc<RwLock<WSharedMemory>>);
+flutter_rust_bridge::frb_generated_moi_arc_impl_value!(Arc<std::sync::Mutex<Component>>);
+flutter_rust_bridge::frb_generated_moi_arc_impl_value!(Arc<std::sync::Mutex<WModule>>);
+flutter_rust_bridge::frb_generated_moi_arc_impl_value!(CallStack);
+flutter_rust_bridge::frb_generated_moi_arc_impl_value!(WAnyRef);
+flutter_rust_bridge::frb_generated_moi_arc_impl_value!(WExnRef);
+flutter_rust_bridge::frb_generated_moi_arc_impl_value!(WFunc);
+flutter_rust_bridge::frb_generated_moi_arc_impl_value!(WGlobal);
+flutter_rust_bridge::frb_generated_moi_arc_impl_value!(WMemory);
+flutter_rust_bridge::frb_generated_moi_arc_impl_value!(WTable);
+
 // Section: dart2rust
 
-impl CstDecode<crate::atomics::AtomicKind> for i32 {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    fn cst_decode(self) -> crate::atomics::AtomicKind {
-        match self {
-            0 => crate::atomics::AtomicKind::I8,
-            1 => crate::atomics::AtomicKind::I16,
-            2 => crate::atomics::AtomicKind::I32,
-            3 => crate::atomics::AtomicKind::I64,
-            4 => crate::atomics::AtomicKind::U8,
-            5 => crate::atomics::AtomicKind::U16,
-            6 => crate::atomics::AtomicKind::U32,
-            7 => crate::atomics::AtomicKind::U64,
-            _ => unreachable!("Invalid variant for AtomicKind: {}", self),
-        }
-    }
-}
-impl CstDecode<crate::atomics::AtomicOrdering> for i32 {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    fn cst_decode(self) -> crate::atomics::AtomicOrdering {
-        match self {
-            0 => crate::atomics::AtomicOrdering::Relaxed,
-            1 => crate::atomics::AtomicOrdering::Release,
-            2 => crate::atomics::AtomicOrdering::Acquire,
-            3 => crate::atomics::AtomicOrdering::AcqRel,
-            4 => crate::atomics::AtomicOrdering::SeqCst,
-            _ => unreachable!("Invalid variant for AtomicOrdering: {}", self),
-        }
-    }
-}
-impl CstDecode<bool> for bool {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    fn cst_decode(self) -> bool {
-        self
-    }
-}
-impl CstDecode<f32> for f32 {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    fn cst_decode(self) -> f32 {
-        self
-    }
-}
-impl CstDecode<f64> for f64 {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    fn cst_decode(self) -> f64 {
-        self
-    }
-}
-impl CstDecode<i32> for i32 {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    fn cst_decode(self) -> i32 {
-        self
-    }
-}
-impl CstDecode<i64> for i64 {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    fn cst_decode(self) -> i64 {
-        self
-    }
-}
-impl CstDecode<crate::atomics::SharedMemoryWaitResult> for i32 {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    fn cst_decode(self) -> crate::atomics::SharedMemoryWaitResult {
-        match self {
-            0 => crate::atomics::SharedMemoryWaitResult::ok,
-            1 => crate::atomics::SharedMemoryWaitResult::mismatch,
-            2 => crate::atomics::SharedMemoryWaitResult::timedOut,
-            _ => unreachable!("Invalid variant for SharedMemoryWaitResult: {}", self),
-        }
-    }
-}
-impl CstDecode<crate::config::StdIOKind> for i32 {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    fn cst_decode(self) -> crate::config::StdIOKind {
-        match self {
-            0 => crate::config::StdIOKind::stdout,
-            1 => crate::config::StdIOKind::stderr,
-            _ => unreachable!("Invalid variant for StdIOKind: {}", self),
-        }
-    }
-}
-impl CstDecode<u32> for u32 {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    fn cst_decode(self) -> u32 {
-        self
-    }
-}
-impl CstDecode<u64> for u64 {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    fn cst_decode(self) -> u64 {
-        self
-    }
-}
-impl CstDecode<u8> for u8 {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    fn cst_decode(self) -> u8 {
-        self
-    }
-}
-impl CstDecode<usize> for usize {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    fn cst_decode(self) -> usize {
-        self
-    }
-}
-impl CstDecode<crate::types::ValueTy> for i32 {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    fn cst_decode(self) -> crate::types::ValueTy {
-        match self {
-            0 => crate::types::ValueTy::i32,
-            1 => crate::types::ValueTy::i64,
-            2 => crate::types::ValueTy::f32,
-            3 => crate::types::ValueTy::f64,
-            4 => crate::types::ValueTy::v128,
-            5 => crate::types::ValueTy::funcRef,
-            6 => crate::types::ValueTy::externRef,
-            7 => crate::types::ValueTy::anyRef,
-            8 => crate::types::ValueTy::eqRef,
-            9 => crate::types::ValueTy::i31Ref,
-            10 => crate::types::ValueTy::structRef,
-            11 => crate::types::ValueTy::arrayRef,
-            12 => crate::types::ValueTy::exnRef,
-            13 => crate::types::ValueTy::contRef,
-            _ => unreachable!("Invalid variant for ValueTy: {}", self),
-        }
-    }
-}
-impl CstDecode<crate::api::wasmtime::WasmBinaryKind> for i32 {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    fn cst_decode(self) -> crate::api::wasmtime::WasmBinaryKind {
-        match self {
-            0 => crate::api::wasmtime::WasmBinaryKind::Module,
-            1 => crate::api::wasmtime::WasmBinaryKind::Component,
-            _ => unreachable!("Invalid variant for WasmBinaryKind: {}", self),
-        }
-    }
-}
 impl SseDecode for flutter_rust_bridge::for_generated::anyhow::Error {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -1950,87 +2539,87 @@ impl SseDecode for flutter_rust_bridge::for_generated::anyhow::Error {
     }
 }
 
-impl SseDecode for RustOpaqueNom<Arc<RwLock<WSharedMemory>>> {
+impl SseDecode for RustOpaqueMoi<Arc<RwLock<WSharedMemory>>> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut inner = <usize>::sse_decode(deserializer);
-        return unsafe { decode_rust_opaque_nom(inner) };
+        return decode_rust_opaque_moi(inner);
     }
 }
 
-impl SseDecode for RustOpaqueNom<Arc<std::sync::Mutex<Component>>> {
+impl SseDecode for RustOpaqueMoi<Arc<std::sync::Mutex<Component>>> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut inner = <usize>::sse_decode(deserializer);
-        return unsafe { decode_rust_opaque_nom(inner) };
+        return decode_rust_opaque_moi(inner);
     }
 }
 
-impl SseDecode for RustOpaqueNom<Arc<std::sync::Mutex<WModule>>> {
+impl SseDecode for RustOpaqueMoi<Arc<std::sync::Mutex<WModule>>> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut inner = <usize>::sse_decode(deserializer);
-        return unsafe { decode_rust_opaque_nom(inner) };
+        return decode_rust_opaque_moi(inner);
     }
 }
 
-impl SseDecode for RustOpaqueNom<CallStack> {
+impl SseDecode for RustOpaqueMoi<CallStack> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut inner = <usize>::sse_decode(deserializer);
-        return unsafe { decode_rust_opaque_nom(inner) };
+        return decode_rust_opaque_moi(inner);
     }
 }
 
-impl SseDecode for RustOpaqueNom<WAnyRef> {
+impl SseDecode for RustOpaqueMoi<WAnyRef> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut inner = <usize>::sse_decode(deserializer);
-        return unsafe { decode_rust_opaque_nom(inner) };
+        return decode_rust_opaque_moi(inner);
     }
 }
 
-impl SseDecode for RustOpaqueNom<WExnRef> {
+impl SseDecode for RustOpaqueMoi<WExnRef> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut inner = <usize>::sse_decode(deserializer);
-        return unsafe { decode_rust_opaque_nom(inner) };
+        return decode_rust_opaque_moi(inner);
     }
 }
 
-impl SseDecode for RustOpaqueNom<WFunc> {
+impl SseDecode for RustOpaqueMoi<WFunc> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut inner = <usize>::sse_decode(deserializer);
-        return unsafe { decode_rust_opaque_nom(inner) };
+        return decode_rust_opaque_moi(inner);
     }
 }
 
-impl SseDecode for RustOpaqueNom<WGlobal> {
+impl SseDecode for RustOpaqueMoi<WGlobal> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut inner = <usize>::sse_decode(deserializer);
-        return unsafe { decode_rust_opaque_nom(inner) };
+        return decode_rust_opaque_moi(inner);
     }
 }
 
-impl SseDecode for RustOpaqueNom<WMemory> {
+impl SseDecode for RustOpaqueMoi<WMemory> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut inner = <usize>::sse_decode(deserializer);
-        return unsafe { decode_rust_opaque_nom(inner) };
+        return decode_rust_opaque_moi(inner);
     }
 }
 
-impl SseDecode for RustOpaqueNom<WTable> {
+impl SseDecode for RustOpaqueMoi<WTable> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut inner = <usize>::sse_decode(deserializer);
-        return unsafe { decode_rust_opaque_nom(inner) };
+        return decode_rust_opaque_moi(inner);
     }
 }
 
-impl SseDecode for StreamSink<Vec<u8>, flutter_rust_bridge::for_generated::DcoCodec> {
+impl SseDecode for StreamSink<Vec<u8>, flutter_rust_bridge::for_generated::SseCodec> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut inner = <String>::sse_decode(deserializer);
@@ -2039,7 +2628,7 @@ impl SseDecode for StreamSink<Vec<u8>, flutter_rust_bridge::for_generated::DcoCo
 }
 
 impl SseDecode
-    for StreamSink<crate::types::ParallelExec, flutter_rust_bridge::for_generated::DcoCodec>
+    for StreamSink<crate::types::ParallelExec, flutter_rust_bridge::for_generated::SseCodec>
 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -2120,7 +2709,7 @@ impl SseDecode for crate::api::wasmtime::CompiledComponent {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_field0 =
-            <RustOpaqueNom<Arc<std::sync::Mutex<Component>>>>::sse_decode(deserializer);
+            <RustOpaqueMoi<Arc<std::sync::Mutex<Component>>>>::sse_decode(deserializer);
         return crate::api::wasmtime::CompiledComponent(var_field0);
     }
 }
@@ -2129,7 +2718,7 @@ impl SseDecode for crate::api::wasmtime::CompiledModule {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_field0 =
-            <RustOpaqueNom<Arc<std::sync::Mutex<WModule>>>>::sse_decode(deserializer);
+            <RustOpaqueMoi<Arc<std::sync::Mutex<WModule>>>>::sse_decode(deserializer);
         return crate::api::wasmtime::CompiledModule(var_field0);
     }
 }
@@ -2180,19 +2769,19 @@ impl SseDecode for crate::types::ExternalValue {
         let mut tag_ = <i32>::sse_decode(deserializer);
         match tag_ {
             0 => {
-                let mut var_field0 = <RustOpaqueNom<WFunc>>::sse_decode(deserializer);
+                let mut var_field0 = <RustOpaqueMoi<WFunc>>::sse_decode(deserializer);
                 return crate::types::ExternalValue::Func(var_field0);
             }
             1 => {
-                let mut var_field0 = <RustOpaqueNom<WGlobal>>::sse_decode(deserializer);
+                let mut var_field0 = <RustOpaqueMoi<WGlobal>>::sse_decode(deserializer);
                 return crate::types::ExternalValue::Global(var_field0);
             }
             2 => {
-                let mut var_field0 = <RustOpaqueNom<WTable>>::sse_decode(deserializer);
+                let mut var_field0 = <RustOpaqueMoi<WTable>>::sse_decode(deserializer);
                 return crate::types::ExternalValue::Table(var_field0);
             }
             3 => {
-                let mut var_field0 = <RustOpaqueNom<WMemory>>::sse_decode(deserializer);
+                let mut var_field0 = <RustOpaqueMoi<WMemory>>::sse_decode(deserializer);
                 return crate::types::ExternalValue::Memory(var_field0);
             }
             4 => {
@@ -2565,33 +3154,33 @@ impl SseDecode for crate::types::ModuleImportDesc {
     }
 }
 
-impl SseDecode for Option<RustOpaqueNom<WAnyRef>> {
+impl SseDecode for Option<RustOpaqueMoi<WAnyRef>> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         if (<bool>::sse_decode(deserializer)) {
-            return Some(<RustOpaqueNom<WAnyRef>>::sse_decode(deserializer));
+            return Some(<RustOpaqueMoi<WAnyRef>>::sse_decode(deserializer));
         } else {
             return None;
         }
     }
 }
 
-impl SseDecode for Option<RustOpaqueNom<WExnRef>> {
+impl SseDecode for Option<RustOpaqueMoi<WExnRef>> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         if (<bool>::sse_decode(deserializer)) {
-            return Some(<RustOpaqueNom<WExnRef>>::sse_decode(deserializer));
+            return Some(<RustOpaqueMoi<WExnRef>>::sse_decode(deserializer));
         } else {
             return None;
         }
     }
 }
 
-impl SseDecode for Option<RustOpaqueNom<WFunc>> {
+impl SseDecode for Option<RustOpaqueMoi<WFunc>> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         if (<bool>::sse_decode(deserializer)) {
-            return Some(<RustOpaqueNom<WFunc>>::sse_decode(deserializer));
+            return Some(<RustOpaqueMoi<WFunc>>::sse_decode(deserializer));
         } else {
             return None;
         }
@@ -3000,7 +3589,7 @@ impl SseDecode for crate::api::wasmtime::WasmRunModuleId {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_field0 = <u32>::sse_decode(deserializer);
-        let mut var_field1 = <RustOpaqueNom<CallStack>>::sse_decode(deserializer);
+        let mut var_field1 = <RustOpaqueMoi<CallStack>>::sse_decode(deserializer);
         return crate::api::wasmtime::WasmRunModuleId(var_field0, var_field1);
     }
 }
@@ -3008,7 +3597,7 @@ impl SseDecode for crate::api::wasmtime::WasmRunModuleId {
 impl SseDecode for crate::api::wasmtime::WasmRunSharedMemory {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut var_field0 = <RustOpaqueNom<Arc<RwLock<WSharedMemory>>>>::sse_decode(deserializer);
+        let mut var_field0 = <RustOpaqueMoi<Arc<RwLock<WSharedMemory>>>>::sse_decode(deserializer);
         return crate::api::wasmtime::WasmRunSharedMemory(var_field0);
     }
 }
@@ -3057,7 +3646,7 @@ impl SseDecode for crate::types::WasmVal {
                 return crate::types::WasmVal::v128(var_field0);
             }
             5 => {
-                let mut var_field0 = <Option<RustOpaqueNom<WFunc>>>::sse_decode(deserializer);
+                let mut var_field0 = <Option<RustOpaqueMoi<WFunc>>>::sse_decode(deserializer);
                 return crate::types::WasmVal::funcRef(var_field0);
             }
             6 => {
@@ -3065,11 +3654,11 @@ impl SseDecode for crate::types::WasmVal {
                 return crate::types::WasmVal::externRef(var_field0);
             }
             7 => {
-                let mut var_field0 = <Option<RustOpaqueNom<WAnyRef>>>::sse_decode(deserializer);
+                let mut var_field0 = <Option<RustOpaqueMoi<WAnyRef>>>::sse_decode(deserializer);
                 return crate::types::WasmVal::anyRef(var_field0);
             }
             8 => {
-                let mut var_field0 = <Option<RustOpaqueNom<WExnRef>>>::sse_decode(deserializer);
+                let mut var_field0 = <Option<RustOpaqueMoi<WExnRef>>>::sse_decode(deserializer);
                 return crate::types::WasmVal::exnRef(var_field0);
             }
             _ => {
@@ -3112,6 +3701,154 @@ fn pde_ffi_dispatcher_primary_impl(
 ) {
     // Codec=Pde (Serialization + dispatch), see doc to use other codecs
     match func_id {
+        2 => wire__crate__atomics__atomics_add_impl(port, ptr, rust_vec_len, data_len),
+        3 => wire__crate__atomics__atomics_and_impl(port, ptr, rust_vec_len, data_len),
+        4 => wire__crate__atomics__atomics_compare_exchange_impl(port, ptr, rust_vec_len, data_len),
+        5 => wire__crate__atomics__atomics_load_impl(port, ptr, rust_vec_len, data_len),
+        6 => wire__crate__atomics__atomics_or_impl(port, ptr, rust_vec_len, data_len),
+        7 => wire__crate__atomics__atomics_store_impl(port, ptr, rust_vec_len, data_len),
+        8 => wire__crate__atomics__atomics_sub_impl(port, ptr, rust_vec_len, data_len),
+        9 => wire__crate__atomics__atomics_swap_impl(port, ptr, rust_vec_len, data_len),
+        10 => wire__crate__atomics__atomics_xor_impl(port, ptr, rust_vec_len, data_len),
+        11 => wire__crate__api__wasmtime__compile_component_impl(port, ptr, rust_vec_len, data_len),
+        12 => wire__crate__api__wasmtime__compile_component_sync_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        13 => wire__crate__api__wasmtime__compile_wasm_impl(port, ptr, rust_vec_len, data_len),
+        14 => wire__crate__api__wasmtime__compile_wasm_sync_impl(port, ptr, rust_vec_len, data_len),
+        17 => wire__crate__api__wasmtime__compiled_module_create_shared_memory_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        21 => wire__crate__api__wasmtime__module_builder_impl(port, ptr, rust_vec_len, data_len),
+        22 => wire__crate__api__wasmtime__parse_wat_format_impl(port, ptr, rust_vec_len, data_len),
+        26 => wire__crate__api__wasmtime__wasm_run_module_id_call_function_handle_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        27 => wire__crate__api__wasmtime__wasm_run_module_id_call_function_handle_parallel_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        28 => wire__crate__api__wasmtime__wasm_run_module_id_call_function_handle_sync_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        30 => wire__crate__api__wasmtime__wasm_run_module_id_create_function_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        31 => wire__crate__api__wasmtime__wasm_run_module_id_create_global_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        33 => wire__crate__api__wasmtime__wasm_run_module_id_create_table_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        34 => wire__crate__api__wasmtime__wasm_run_module_id_dispose_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        35 => wire__crate__api__wasmtime__wasm_run_module_id_fill_table_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        42 => {
+            wire__crate__api__wasmtime__wasm_run_module_id_get_memory_data_pointer_and_length_impl(
+                port,
+                ptr,
+                rust_vec_len,
+                data_len,
+            )
+        }
+        49 => wire__crate__api__wasmtime__wasm_run_module_id_grow_table_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        50 => wire__crate__api__wasmtime__wasm_run_module_id_instantiate_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        53 => wire__crate__api__wasmtime__wasm_run_module_id_read_memory_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        54 => wire__crate__api__wasmtime__wasm_run_module_id_set_global_value_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        55 => wire__crate__api__wasmtime__wasm_run_module_id_set_table_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        56 => wire__crate__api__wasmtime__wasm_run_module_id_stdio_stream_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        57 => wire__crate__api__wasmtime__wasm_run_module_id_worker_execution_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        58 => wire__crate__api__wasmtime__wasm_run_module_id_write_memory_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        60 => wire__crate__api__wasmtime__wasm_run_shared_memory_atomic_wait32_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        61 => wire__crate__api__wasmtime__wasm_run_shared_memory_atomic_wait64_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        62 => wire__crate__api__wasmtime__wasm_run_shared_memory_atomics_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
         _ => unreachable!(),
     }
 }
@@ -3124,6 +3861,149 @@ fn pde_ffi_dispatcher_sync_impl(
 ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
     // Codec=Pde (Serialization + dispatch), see doc to use other codecs
     match func_id {
+        15 => wire__crate__api__wasmtime__compiled_component_get_component_exports_impl(
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        16 => wire__crate__api__wasmtime__compiled_component_get_component_imports_impl(
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        18 => wire__crate__api__wasmtime__compiled_module_get_module_exports_impl(
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        19 => wire__crate__api__wasmtime__compiled_module_get_module_imports_impl(
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        20 => wire__crate__api__wasmtime__detect_wasm_kind_impl(ptr, rust_vec_len, data_len),
+        23 => {
+            wire__crate__api__wasmtime__wasm_features_for_config_impl(ptr, rust_vec_len, data_len)
+        }
+        24 => wire__crate__api__wasmtime__wasm_run_instance_id_exports_impl(
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        25 => wire__crate__api__wasmtime__wasm_run_module_id_add_fuel_impl(
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        29 => wire__crate__api__wasmtime__wasm_run_module_id_consume_fuel_impl(
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        32 => wire__crate__api__wasmtime__wasm_run_module_id_create_memory_impl(
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        36 => wire__crate__api__wasmtime__wasm_run_module_id_fuel_consumed_impl(
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        37 => wire__crate__api__wasmtime__wasm_run_module_id_get_function_type_impl(
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        38 => wire__crate__api__wasmtime__wasm_run_module_id_get_global_type_impl(
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        39 => wire__crate__api__wasmtime__wasm_run_module_id_get_global_value_impl(
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        40 => wire__crate__api__wasmtime__wasm_run_module_id_get_memory_data_impl(
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        41 => wire__crate__api__wasmtime__wasm_run_module_id_get_memory_data_pointer_impl(
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        43 => wire__crate__api__wasmtime__wasm_run_module_id_get_memory_pages_impl(
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        44 => wire__crate__api__wasmtime__wasm_run_module_id_get_memory_type_impl(
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        45 => wire__crate__api__wasmtime__wasm_run_module_id_get_table_impl(
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        46 => wire__crate__api__wasmtime__wasm_run_module_id_get_table_size_impl(
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        47 => wire__crate__api__wasmtime__wasm_run_module_id_get_table_type_impl(
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        48 => wire__crate__api__wasmtime__wasm_run_module_id_grow_memory_impl(
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        51 => wire__crate__api__wasmtime__wasm_run_module_id_instantiate_sync_impl(
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        52 => wire__crate__api__wasmtime__wasm_run_module_id_link_imports_impl(
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        59 => wire__crate__api__wasmtime__wasm_run_shared_memory_atomic_notify_impl(
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        63 => wire__crate__api__wasmtime__wasm_run_shared_memory_data_pointer_impl(
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        64 => wire__crate__api__wasmtime__wasm_run_shared_memory_data_size_impl(
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        65 => wire__crate__api__wasmtime__wasm_run_shared_memory_grow_impl(
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        66 => wire__crate__api__wasmtime__wasm_run_shared_memory_size_impl(
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        67 => {
+            wire__crate__api__wasmtime__wasm_run_shared_memory_ty_impl(ptr, rust_vec_len, data_len)
+        }
+        68 => wire__crate__api__wasmtime__wasm_runtime_features_impl(ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }
@@ -3988,7 +4868,7 @@ impl SseEncode for flutter_rust_bridge::for_generated::anyhow::Error {
     }
 }
 
-impl SseEncode for RustOpaqueNom<Arc<RwLock<WSharedMemory>>> {
+impl SseEncode for RustOpaqueMoi<Arc<RwLock<WSharedMemory>>> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         let (ptr, size) = self.sse_encode_raw();
@@ -3997,7 +4877,7 @@ impl SseEncode for RustOpaqueNom<Arc<RwLock<WSharedMemory>>> {
     }
 }
 
-impl SseEncode for RustOpaqueNom<Arc<std::sync::Mutex<Component>>> {
+impl SseEncode for RustOpaqueMoi<Arc<std::sync::Mutex<Component>>> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         let (ptr, size) = self.sse_encode_raw();
@@ -4006,7 +4886,7 @@ impl SseEncode for RustOpaqueNom<Arc<std::sync::Mutex<Component>>> {
     }
 }
 
-impl SseEncode for RustOpaqueNom<Arc<std::sync::Mutex<WModule>>> {
+impl SseEncode for RustOpaqueMoi<Arc<std::sync::Mutex<WModule>>> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         let (ptr, size) = self.sse_encode_raw();
@@ -4015,7 +4895,7 @@ impl SseEncode for RustOpaqueNom<Arc<std::sync::Mutex<WModule>>> {
     }
 }
 
-impl SseEncode for RustOpaqueNom<CallStack> {
+impl SseEncode for RustOpaqueMoi<CallStack> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         let (ptr, size) = self.sse_encode_raw();
@@ -4024,7 +4904,7 @@ impl SseEncode for RustOpaqueNom<CallStack> {
     }
 }
 
-impl SseEncode for RustOpaqueNom<WAnyRef> {
+impl SseEncode for RustOpaqueMoi<WAnyRef> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         let (ptr, size) = self.sse_encode_raw();
@@ -4033,7 +4913,7 @@ impl SseEncode for RustOpaqueNom<WAnyRef> {
     }
 }
 
-impl SseEncode for RustOpaqueNom<WExnRef> {
+impl SseEncode for RustOpaqueMoi<WExnRef> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         let (ptr, size) = self.sse_encode_raw();
@@ -4042,7 +4922,7 @@ impl SseEncode for RustOpaqueNom<WExnRef> {
     }
 }
 
-impl SseEncode for RustOpaqueNom<WFunc> {
+impl SseEncode for RustOpaqueMoi<WFunc> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         let (ptr, size) = self.sse_encode_raw();
@@ -4051,7 +4931,7 @@ impl SseEncode for RustOpaqueNom<WFunc> {
     }
 }
 
-impl SseEncode for RustOpaqueNom<WGlobal> {
+impl SseEncode for RustOpaqueMoi<WGlobal> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         let (ptr, size) = self.sse_encode_raw();
@@ -4060,7 +4940,7 @@ impl SseEncode for RustOpaqueNom<WGlobal> {
     }
 }
 
-impl SseEncode for RustOpaqueNom<WMemory> {
+impl SseEncode for RustOpaqueMoi<WMemory> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         let (ptr, size) = self.sse_encode_raw();
@@ -4069,7 +4949,7 @@ impl SseEncode for RustOpaqueNom<WMemory> {
     }
 }
 
-impl SseEncode for RustOpaqueNom<WTable> {
+impl SseEncode for RustOpaqueMoi<WTable> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         let (ptr, size) = self.sse_encode_raw();
@@ -4078,7 +4958,7 @@ impl SseEncode for RustOpaqueNom<WTable> {
     }
 }
 
-impl SseEncode for StreamSink<Vec<u8>, flutter_rust_bridge::for_generated::DcoCodec> {
+impl SseEncode for StreamSink<Vec<u8>, flutter_rust_bridge::for_generated::SseCodec> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         unimplemented!("")
@@ -4086,7 +4966,7 @@ impl SseEncode for StreamSink<Vec<u8>, flutter_rust_bridge::for_generated::DcoCo
 }
 
 impl SseEncode
-    for StreamSink<crate::types::ParallelExec, flutter_rust_bridge::for_generated::DcoCodec>
+    for StreamSink<crate::types::ParallelExec, flutter_rust_bridge::for_generated::SseCodec>
 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -4167,14 +5047,14 @@ impl SseEncode for crate::atomics::CompareExchangeResult {
 impl SseEncode for crate::api::wasmtime::CompiledComponent {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <RustOpaqueNom<Arc<std::sync::Mutex<Component>>>>::sse_encode(self.0, serializer);
+        <RustOpaqueMoi<Arc<std::sync::Mutex<Component>>>>::sse_encode(self.0, serializer);
     }
 }
 
 impl SseEncode for crate::api::wasmtime::CompiledModule {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <RustOpaqueNom<Arc<std::sync::Mutex<WModule>>>>::sse_encode(self.0, serializer);
+        <RustOpaqueMoi<Arc<std::sync::Mutex<WModule>>>>::sse_encode(self.0, serializer);
     }
 }
 
@@ -4219,19 +5099,19 @@ impl SseEncode for crate::types::ExternalValue {
         match self {
             crate::types::ExternalValue::Func(field0) => {
                 <i32>::sse_encode(0, serializer);
-                <RustOpaqueNom<WFunc>>::sse_encode(field0, serializer);
+                <RustOpaqueMoi<WFunc>>::sse_encode(field0, serializer);
             }
             crate::types::ExternalValue::Global(field0) => {
                 <i32>::sse_encode(1, serializer);
-                <RustOpaqueNom<WGlobal>>::sse_encode(field0, serializer);
+                <RustOpaqueMoi<WGlobal>>::sse_encode(field0, serializer);
             }
             crate::types::ExternalValue::Table(field0) => {
                 <i32>::sse_encode(2, serializer);
-                <RustOpaqueNom<WTable>>::sse_encode(field0, serializer);
+                <RustOpaqueMoi<WTable>>::sse_encode(field0, serializer);
             }
             crate::types::ExternalValue::Memory(field0) => {
                 <i32>::sse_encode(3, serializer);
-                <RustOpaqueNom<WMemory>>::sse_encode(field0, serializer);
+                <RustOpaqueMoi<WMemory>>::sse_encode(field0, serializer);
             }
             crate::types::ExternalValue::SharedMemory(field0) => {
                 <i32>::sse_encode(4, serializer);
@@ -4498,32 +5378,32 @@ impl SseEncode for crate::types::ModuleImportDesc {
     }
 }
 
-impl SseEncode for Option<RustOpaqueNom<WAnyRef>> {
+impl SseEncode for Option<RustOpaqueMoi<WAnyRef>> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <bool>::sse_encode(self.is_some(), serializer);
         if let Some(value) = self {
-            <RustOpaqueNom<WAnyRef>>::sse_encode(value, serializer);
+            <RustOpaqueMoi<WAnyRef>>::sse_encode(value, serializer);
         }
     }
 }
 
-impl SseEncode for Option<RustOpaqueNom<WExnRef>> {
+impl SseEncode for Option<RustOpaqueMoi<WExnRef>> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <bool>::sse_encode(self.is_some(), serializer);
         if let Some(value) = self {
-            <RustOpaqueNom<WExnRef>>::sse_encode(value, serializer);
+            <RustOpaqueMoi<WExnRef>>::sse_encode(value, serializer);
         }
     }
 }
 
-impl SseEncode for Option<RustOpaqueNom<WFunc>> {
+impl SseEncode for Option<RustOpaqueMoi<WFunc>> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <bool>::sse_encode(self.is_some(), serializer);
         if let Some(value) = self {
-            <RustOpaqueNom<WFunc>>::sse_encode(value, serializer);
+            <RustOpaqueMoi<WFunc>>::sse_encode(value, serializer);
         }
     }
 }
@@ -4881,14 +5761,14 @@ impl SseEncode for crate::api::wasmtime::WasmRunModuleId {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <u32>::sse_encode(self.0, serializer);
-        <RustOpaqueNom<CallStack>>::sse_encode(self.1, serializer);
+        <RustOpaqueMoi<CallStack>>::sse_encode(self.1, serializer);
     }
 }
 
 impl SseEncode for crate::api::wasmtime::WasmRunSharedMemory {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <RustOpaqueNom<Arc<RwLock<WSharedMemory>>>>::sse_encode(self.0, serializer);
+        <RustOpaqueMoi<Arc<RwLock<WSharedMemory>>>>::sse_encode(self.0, serializer);
     }
 }
 
@@ -4929,7 +5809,7 @@ impl SseEncode for crate::types::WasmVal {
             }
             crate::types::WasmVal::funcRef(field0) => {
                 <i32>::sse_encode(5, serializer);
-                <Option<RustOpaqueNom<WFunc>>>::sse_encode(field0, serializer);
+                <Option<RustOpaqueMoi<WFunc>>>::sse_encode(field0, serializer);
             }
             crate::types::WasmVal::externRef(field0) => {
                 <i32>::sse_encode(6, serializer);
@@ -4937,11 +5817,11 @@ impl SseEncode for crate::types::WasmVal {
             }
             crate::types::WasmVal::anyRef(field0) => {
                 <i32>::sse_encode(7, serializer);
-                <Option<RustOpaqueNom<WAnyRef>>>::sse_encode(field0, serializer);
+                <Option<RustOpaqueMoi<WAnyRef>>>::sse_encode(field0, serializer);
             }
             crate::types::WasmVal::exnRef(field0) => {
                 <i32>::sse_encode(8, serializer);
-                <Option<RustOpaqueNom<WExnRef>>>::sse_encode(field0, serializer);
+                <Option<RustOpaqueMoi<WExnRef>>>::sse_encode(field0, serializer);
             }
             _ => {
                 unimplemented!("");
@@ -4983,2955 +5863,144 @@ mod io {
 
     flutter_rust_bridge::frb_generated_boilerplate_io!();
 
-    // Section: dart2rust
-
-    impl CstDecode<flutter_rust_bridge::for_generated::anyhow::Error>
-        for *mut wire_cst_list_prim_u_8_strict
-    {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> flutter_rust_bridge::for_generated::anyhow::Error {
-            unimplemented!()
-        }
-    }
-    impl CstDecode<RustOpaqueNom<Arc<RwLock<WSharedMemory>>>> for usize {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> RustOpaqueNom<Arc<RwLock<WSharedMemory>>> {
-            unsafe { decode_rust_opaque_nom(self as _) }
-        }
-    }
-    impl CstDecode<RustOpaqueNom<Arc<std::sync::Mutex<Component>>>> for usize {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> RustOpaqueNom<Arc<std::sync::Mutex<Component>>> {
-            unsafe { decode_rust_opaque_nom(self as _) }
-        }
-    }
-    impl CstDecode<RustOpaqueNom<Arc<std::sync::Mutex<WModule>>>> for usize {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> RustOpaqueNom<Arc<std::sync::Mutex<WModule>>> {
-            unsafe { decode_rust_opaque_nom(self as _) }
-        }
-    }
-    impl CstDecode<RustOpaqueNom<CallStack>> for usize {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> RustOpaqueNom<CallStack> {
-            unsafe { decode_rust_opaque_nom(self as _) }
-        }
-    }
-    impl CstDecode<RustOpaqueNom<WAnyRef>> for usize {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> RustOpaqueNom<WAnyRef> {
-            unsafe { decode_rust_opaque_nom(self as _) }
-        }
-    }
-    impl CstDecode<RustOpaqueNom<WExnRef>> for usize {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> RustOpaqueNom<WExnRef> {
-            unsafe { decode_rust_opaque_nom(self as _) }
-        }
-    }
-    impl CstDecode<RustOpaqueNom<WFunc>> for usize {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> RustOpaqueNom<WFunc> {
-            unsafe { decode_rust_opaque_nom(self as _) }
-        }
-    }
-    impl CstDecode<RustOpaqueNom<WGlobal>> for usize {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> RustOpaqueNom<WGlobal> {
-            unsafe { decode_rust_opaque_nom(self as _) }
-        }
-    }
-    impl CstDecode<RustOpaqueNom<WMemory>> for usize {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> RustOpaqueNom<WMemory> {
-            unsafe { decode_rust_opaque_nom(self as _) }
-        }
-    }
-    impl CstDecode<RustOpaqueNom<WTable>> for usize {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> RustOpaqueNom<WTable> {
-            unsafe { decode_rust_opaque_nom(self as _) }
-        }
-    }
-    impl CstDecode<StreamSink<Vec<u8>, flutter_rust_bridge::for_generated::DcoCodec>>
-        for *mut wire_cst_list_prim_u_8_strict
-    {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> StreamSink<Vec<u8>, flutter_rust_bridge::for_generated::DcoCodec> {
-            let raw: String = self.cst_decode();
-            StreamSink::deserialize(raw)
-        }
-    }
-    impl
-        CstDecode<
-            StreamSink<crate::types::ParallelExec, flutter_rust_bridge::for_generated::DcoCodec>,
-        > for *mut wire_cst_list_prim_u_8_strict
-    {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(
-            self,
-        ) -> StreamSink<crate::types::ParallelExec, flutter_rust_bridge::for_generated::DcoCodec>
-        {
-            let raw: String = self.cst_decode();
-            StreamSink::deserialize(raw)
-        }
-    }
-    impl CstDecode<String> for *mut wire_cst_list_prim_u_8_strict {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> String {
-            let vec: Vec<u8> = self.cst_decode();
-            String::from_utf8(vec).unwrap()
-        }
-    }
-    impl CstDecode<crate::atomics::Atomics> for wire_cst_atomics {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::atomics::Atomics {
-            crate::atomics::Atomics(self.field0.cst_decode())
-        }
-    }
-    impl CstDecode<RustOpaqueNom<WAnyRef>> for *mut usize {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> RustOpaqueNom<WAnyRef> {
-            let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
-            CstDecode::<RustOpaqueNom<WAnyRef>>::cst_decode(*wrap).into()
-        }
-    }
-    impl CstDecode<RustOpaqueNom<WExnRef>> for *mut usize {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> RustOpaqueNom<WExnRef> {
-            let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
-            CstDecode::<RustOpaqueNom<WExnRef>>::cst_decode(*wrap).into()
-        }
-    }
-    impl CstDecode<RustOpaqueNom<WFunc>> for *mut usize {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> RustOpaqueNom<WFunc> {
-            let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
-            CstDecode::<RustOpaqueNom<WFunc>>::cst_decode(*wrap).into()
-        }
-    }
-    impl CstDecode<crate::atomics::Atomics> for *mut wire_cst_atomics {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::atomics::Atomics {
-            let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
-            CstDecode::<crate::atomics::Atomics>::cst_decode(*wrap).into()
-        }
-    }
-    impl CstDecode<bool> for *mut bool {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> bool {
-            unsafe { *flutter_rust_bridge::for_generated::box_from_leak_ptr(self) }
-        }
-    }
-    impl CstDecode<crate::api::wasmtime::CompiledComponent> for *mut wire_cst_compiled_component {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::api::wasmtime::CompiledComponent {
-            let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
-            CstDecode::<crate::api::wasmtime::CompiledComponent>::cst_decode(*wrap).into()
-        }
-    }
-    impl CstDecode<crate::api::wasmtime::CompiledModule> for *mut wire_cst_compiled_module {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::api::wasmtime::CompiledModule {
-            let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
-            CstDecode::<crate::api::wasmtime::CompiledModule>::cst_decode(*wrap).into()
-        }
-    }
-    impl CstDecode<crate::types::FuncTy> for *mut wire_cst_func_ty {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::types::FuncTy {
-            let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
-            CstDecode::<crate::types::FuncTy>::cst_decode(*wrap).into()
-        }
-    }
-    impl CstDecode<crate::types::FunctionCall> for *mut wire_cst_function_call {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::types::FunctionCall {
-            let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
-            CstDecode::<crate::types::FunctionCall>::cst_decode(*wrap).into()
-        }
-    }
-    impl CstDecode<crate::types::GlobalTy> for *mut wire_cst_global_ty {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::types::GlobalTy {
-            let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
-            CstDecode::<crate::types::GlobalTy>::cst_decode(*wrap).into()
-        }
-    }
-    impl CstDecode<crate::types::MemoryTy> for *mut wire_cst_memory_ty {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::types::MemoryTy {
-            let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
-            CstDecode::<crate::types::MemoryTy>::cst_decode(*wrap).into()
-        }
-    }
-    impl CstDecode<crate::config::ModuleConfig> for *mut wire_cst_module_config {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::config::ModuleConfig {
-            let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
-            CstDecode::<crate::config::ModuleConfig>::cst_decode(*wrap).into()
-        }
-    }
-    impl CstDecode<crate::config::ModuleConfigWasmi> for *mut wire_cst_module_config_wasmi {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::config::ModuleConfigWasmi {
-            let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
-            CstDecode::<crate::config::ModuleConfigWasmi>::cst_decode(*wrap).into()
-        }
-    }
-    impl CstDecode<crate::config::ModuleConfigWasmtime> for *mut wire_cst_module_config_wasmtime {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::config::ModuleConfigWasmtime {
-            let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
-            CstDecode::<crate::config::ModuleConfigWasmtime>::cst_decode(*wrap).into()
-        }
-    }
-    impl CstDecode<crate::types::TableArgs> for *mut wire_cst_table_args {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::types::TableArgs {
-            let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
-            CstDecode::<crate::types::TableArgs>::cst_decode(*wrap).into()
-        }
-    }
-    impl CstDecode<crate::types::TableTy> for *mut wire_cst_table_ty {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::types::TableTy {
-            let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
-            CstDecode::<crate::types::TableTy>::cst_decode(*wrap).into()
-        }
-    }
-    impl CstDecode<u32> for *mut u32 {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> u32 {
-            unsafe { *flutter_rust_bridge::for_generated::box_from_leak_ptr(self) }
-        }
-    }
-    impl CstDecode<u64> for *mut u64 {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> u64 {
-            unsafe { *flutter_rust_bridge::for_generated::box_from_leak_ptr(self) }
-        }
-    }
-    impl CstDecode<usize> for *mut usize {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> usize {
-            unsafe { *flutter_rust_bridge::for_generated::box_from_leak_ptr(self) }
-        }
-    }
-    impl CstDecode<crate::config::WasiConfigNative> for *mut wire_cst_wasi_config_native {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::config::WasiConfigNative {
-            let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
-            CstDecode::<crate::config::WasiConfigNative>::cst_decode(*wrap).into()
-        }
-    }
-    impl CstDecode<crate::config::WasiStackLimits> for *mut wire_cst_wasi_stack_limits {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::config::WasiStackLimits {
-            let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
-            CstDecode::<crate::config::WasiStackLimits>::cst_decode(*wrap).into()
-        }
-    }
-    impl CstDecode<crate::api::wasmtime::WasmBinaryKind> for *mut i32 {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::api::wasmtime::WasmBinaryKind {
-            let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
-            CstDecode::<crate::api::wasmtime::WasmBinaryKind>::cst_decode(*wrap).into()
-        }
-    }
-    impl CstDecode<crate::api::wasmtime::WasmRunInstanceId> for *mut wire_cst_wasm_run_instance_id {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::api::wasmtime::WasmRunInstanceId {
-            let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
-            CstDecode::<crate::api::wasmtime::WasmRunInstanceId>::cst_decode(*wrap).into()
-        }
-    }
-    impl CstDecode<crate::api::wasmtime::WasmRunModuleId> for *mut wire_cst_wasm_run_module_id {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::api::wasmtime::WasmRunModuleId {
-            let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
-            CstDecode::<crate::api::wasmtime::WasmRunModuleId>::cst_decode(*wrap).into()
-        }
-    }
-    impl CstDecode<crate::api::wasmtime::WasmRunSharedMemory> for *mut wire_cst_wasm_run_shared_memory {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::api::wasmtime::WasmRunSharedMemory {
-            let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
-            CstDecode::<crate::api::wasmtime::WasmRunSharedMemory>::cst_decode(*wrap).into()
-        }
-    }
-    impl CstDecode<crate::types::WasmVal> for *mut wire_cst_wasm_val {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::types::WasmVal {
-            let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
-            CstDecode::<crate::types::WasmVal>::cst_decode(*wrap).into()
-        }
-    }
-    impl CstDecode<crate::config::WasmWasiFeatures> for *mut wire_cst_wasm_wasi_features {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::config::WasmWasiFeatures {
-            let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
-            CstDecode::<crate::config::WasmWasiFeatures>::cst_decode(*wrap).into()
-        }
-    }
-    impl CstDecode<crate::atomics::CompareExchangeResult> for wire_cst_compare_exchange_result {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::atomics::CompareExchangeResult {
-            crate::atomics::CompareExchangeResult {
-                success: self.success.cst_decode(),
-                value: self.value.cst_decode(),
-            }
-        }
-    }
-    impl CstDecode<crate::api::wasmtime::CompiledComponent> for wire_cst_compiled_component {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::api::wasmtime::CompiledComponent {
-            crate::api::wasmtime::CompiledComponent(self.field0.cst_decode())
-        }
-    }
-    impl CstDecode<crate::api::wasmtime::CompiledModule> for wire_cst_compiled_module {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::api::wasmtime::CompiledModule {
-            crate::api::wasmtime::CompiledModule(self.field0.cst_decode())
-        }
-    }
-    impl CstDecode<crate::config::EnvVariable> for wire_cst_env_variable {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::config::EnvVariable {
-            crate::config::EnvVariable {
-                name: self.name.cst_decode(),
-                value: self.value.cst_decode(),
-            }
-        }
-    }
-    impl CstDecode<crate::types::ExternalType> for wire_cst_external_type {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::types::ExternalType {
-            match self.tag {
-                0 => {
-                    let ans = unsafe { self.kind.Func };
-                    crate::types::ExternalType::Func(ans.field0.cst_decode())
-                }
-                1 => {
-                    let ans = unsafe { self.kind.Global };
-                    crate::types::ExternalType::Global(ans.field0.cst_decode())
-                }
-                2 => {
-                    let ans = unsafe { self.kind.Table };
-                    crate::types::ExternalType::Table(ans.field0.cst_decode())
-                }
-                3 => {
-                    let ans = unsafe { self.kind.Memory };
-                    crate::types::ExternalType::Memory(ans.field0.cst_decode())
-                }
-                _ => unreachable!(),
-            }
-        }
-    }
-    impl CstDecode<crate::types::ExternalValue> for wire_cst_external_value {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::types::ExternalValue {
-            match self.tag {
-                0 => {
-                    let ans = unsafe { self.kind.Func };
-                    crate::types::ExternalValue::Func(ans.field0.cst_decode())
-                }
-                1 => {
-                    let ans = unsafe { self.kind.Global };
-                    crate::types::ExternalValue::Global(ans.field0.cst_decode())
-                }
-                2 => {
-                    let ans = unsafe { self.kind.Table };
-                    crate::types::ExternalValue::Table(ans.field0.cst_decode())
-                }
-                3 => {
-                    let ans = unsafe { self.kind.Memory };
-                    crate::types::ExternalValue::Memory(ans.field0.cst_decode())
-                }
-                4 => {
-                    let ans = unsafe { self.kind.SharedMemory };
-                    crate::types::ExternalValue::SharedMemory(ans.field0.cst_decode())
-                }
-                _ => unreachable!(),
-            }
-        }
-    }
-    impl CstDecode<crate::types::FuncTy> for wire_cst_func_ty {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::types::FuncTy {
-            crate::types::FuncTy {
-                parameters: self.parameters.cst_decode(),
-                results: self.results.cst_decode(),
-            }
-        }
-    }
-    impl CstDecode<crate::types::FunctionCall> for wire_cst_function_call {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::types::FunctionCall {
-            crate::types::FunctionCall {
-                args: self.args.cst_decode(),
-                function_id: self.function_id.cst_decode(),
-                function_pointer: self.function_pointer.cst_decode(),
-                num_results: self.num_results.cst_decode(),
-                worker_index: self.worker_index.cst_decode(),
-            }
-        }
-    }
-    impl CstDecode<crate::types::GlobalTy> for wire_cst_global_ty {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::types::GlobalTy {
-            crate::types::GlobalTy {
-                value: self.value.cst_decode(),
-                mutable: self.mutable.cst_decode(),
-            }
-        }
-    }
-    impl CstDecode<Vec<String>> for *mut wire_cst_list_String {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> Vec<String> {
-            let vec = unsafe {
-                let wrap = flutter_rust_bridge::for_generated::box_from_leak_ptr(self);
-                flutter_rust_bridge::for_generated::vec_from_leak_ptr(wrap.ptr, wrap.len)
-            };
-            vec.into_iter().map(CstDecode::cst_decode).collect()
-        }
-    }
-    impl CstDecode<Vec<crate::config::EnvVariable>> for *mut wire_cst_list_env_variable {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> Vec<crate::config::EnvVariable> {
-            let vec = unsafe {
-                let wrap = flutter_rust_bridge::for_generated::box_from_leak_ptr(self);
-                flutter_rust_bridge::for_generated::vec_from_leak_ptr(wrap.ptr, wrap.len)
-            };
-            vec.into_iter().map(CstDecode::cst_decode).collect()
-        }
-    }
-    impl CstDecode<Vec<crate::types::ModuleExportDesc>> for *mut wire_cst_list_module_export_desc {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> Vec<crate::types::ModuleExportDesc> {
-            let vec = unsafe {
-                let wrap = flutter_rust_bridge::for_generated::box_from_leak_ptr(self);
-                flutter_rust_bridge::for_generated::vec_from_leak_ptr(wrap.ptr, wrap.len)
-            };
-            vec.into_iter().map(CstDecode::cst_decode).collect()
-        }
-    }
-    impl CstDecode<Vec<crate::types::ModuleExportValue>> for *mut wire_cst_list_module_export_value {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> Vec<crate::types::ModuleExportValue> {
-            let vec = unsafe {
-                let wrap = flutter_rust_bridge::for_generated::box_from_leak_ptr(self);
-                flutter_rust_bridge::for_generated::vec_from_leak_ptr(wrap.ptr, wrap.len)
-            };
-            vec.into_iter().map(CstDecode::cst_decode).collect()
-        }
-    }
-    impl CstDecode<Vec<crate::types::ModuleImport>> for *mut wire_cst_list_module_import {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> Vec<crate::types::ModuleImport> {
-            let vec = unsafe {
-                let wrap = flutter_rust_bridge::for_generated::box_from_leak_ptr(self);
-                flutter_rust_bridge::for_generated::vec_from_leak_ptr(wrap.ptr, wrap.len)
-            };
-            vec.into_iter().map(CstDecode::cst_decode).collect()
-        }
-    }
-    impl CstDecode<Vec<crate::types::ModuleImportDesc>> for *mut wire_cst_list_module_import_desc {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> Vec<crate::types::ModuleImportDesc> {
-            let vec = unsafe {
-                let wrap = flutter_rust_bridge::for_generated::box_from_leak_ptr(self);
-                flutter_rust_bridge::for_generated::vec_from_leak_ptr(wrap.ptr, wrap.len)
-            };
-            vec.into_iter().map(CstDecode::cst_decode).collect()
-        }
-    }
-    impl CstDecode<Vec<crate::config::PreopenedDir>> for *mut wire_cst_list_preopened_dir {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> Vec<crate::config::PreopenedDir> {
-            let vec = unsafe {
-                let wrap = flutter_rust_bridge::for_generated::box_from_leak_ptr(self);
-                flutter_rust_bridge::for_generated::vec_from_leak_ptr(wrap.ptr, wrap.len)
-            };
-            vec.into_iter().map(CstDecode::cst_decode).collect()
-        }
-    }
-    impl CstDecode<Vec<u8>> for *mut wire_cst_list_prim_u_8_loose {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> Vec<u8> {
-            unsafe {
-                let wrap = flutter_rust_bridge::for_generated::box_from_leak_ptr(self);
-                flutter_rust_bridge::for_generated::vec_from_leak_ptr(wrap.ptr, wrap.len)
-            }
-        }
-    }
-    impl CstDecode<Vec<u8>> for *mut wire_cst_list_prim_u_8_strict {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> Vec<u8> {
-            unsafe {
-                let wrap = flutter_rust_bridge::for_generated::box_from_leak_ptr(self);
-                flutter_rust_bridge::for_generated::vec_from_leak_ptr(wrap.ptr, wrap.len)
-            }
-        }
-    }
-    impl CstDecode<Vec<crate::types::ValueTy>> for *mut wire_cst_list_value_ty {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> Vec<crate::types::ValueTy> {
-            let vec = unsafe {
-                let wrap = flutter_rust_bridge::for_generated::box_from_leak_ptr(self);
-                flutter_rust_bridge::for_generated::vec_from_leak_ptr(wrap.ptr, wrap.len)
-            };
-            vec.into_iter().map(CstDecode::cst_decode).collect()
-        }
-    }
-    impl CstDecode<Vec<crate::types::WasmVal>> for *mut wire_cst_list_wasm_val {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> Vec<crate::types::WasmVal> {
-            let vec = unsafe {
-                let wrap = flutter_rust_bridge::for_generated::box_from_leak_ptr(self);
-                flutter_rust_bridge::for_generated::vec_from_leak_ptr(wrap.ptr, wrap.len)
-            };
-            vec.into_iter().map(CstDecode::cst_decode).collect()
-        }
-    }
-    impl CstDecode<crate::types::MemoryTy> for wire_cst_memory_ty {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::types::MemoryTy {
-            crate::types::MemoryTy {
-                shared: self.shared.cst_decode(),
-                minimum: self.minimum.cst_decode(),
-                maximum: self.maximum.cst_decode(),
-            }
-        }
-    }
-    impl CstDecode<crate::config::ModuleConfig> for wire_cst_module_config {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::config::ModuleConfig {
-            crate::config::ModuleConfig {
-                multi_value: self.multi_value.cst_decode(),
-                bulk_memory: self.bulk_memory.cst_decode(),
-                reference_types: self.reference_types.cst_decode(),
-                consume_fuel: self.consume_fuel.cst_decode(),
-                wasmi: self.wasmi.cst_decode(),
-                wasmtime: self.wasmtime.cst_decode(),
-            }
-        }
-    }
-    impl CstDecode<crate::config::ModuleConfigWasmi> for wire_cst_module_config_wasmi {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::config::ModuleConfigWasmi {
-            crate::config::ModuleConfigWasmi {
-                stack_limits: self.stack_limits.cst_decode(),
-                cached_stacks: self.cached_stacks.cst_decode(),
-                mutable_global: self.mutable_global.cst_decode(),
-                sign_extension: self.sign_extension.cst_decode(),
-                saturating_float_to_int: self.saturating_float_to_int.cst_decode(),
-                tail_call: self.tail_call.cst_decode(),
-                extended_const: self.extended_const.cst_decode(),
-                floats: self.floats.cst_decode(),
-                simd: self.simd.cst_decode(),
-                relaxed_simd: self.relaxed_simd.cst_decode(),
-                multi_memory: self.multi_memory.cst_decode(),
-                memory64: self.memory64.cst_decode(),
-            }
-        }
-    }
-    impl CstDecode<crate::config::ModuleConfigWasmtime> for wire_cst_module_config_wasmtime {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::config::ModuleConfigWasmtime {
-            crate::config::ModuleConfigWasmtime {
-                debug_info: self.debug_info.cst_decode(),
-                wasm_backtrace: self.wasm_backtrace.cst_decode(),
-                native_unwind_info: self.native_unwind_info.cst_decode(),
-                max_wasm_stack: self.max_wasm_stack.cst_decode(),
-                wasm_threads: self.wasm_threads.cst_decode(),
-                wasm_simd: self.wasm_simd.cst_decode(),
-                wasm_relaxed_simd: self.wasm_relaxed_simd.cst_decode(),
-                relaxed_simd_deterministic: self.relaxed_simd_deterministic.cst_decode(),
-                wasm_multi_memory: self.wasm_multi_memory.cst_decode(),
-                wasm_memory64: self.wasm_memory64.cst_decode(),
-                wasm_tail_call: self.wasm_tail_call.cst_decode(),
-                wasm_gc: self.wasm_gc.cst_decode(),
-                wasm_function_references: self.wasm_function_references.cst_decode(),
-                wasm_exceptions: self.wasm_exceptions.cst_decode(),
-                wasm_component_model: self.wasm_component_model.cst_decode(),
-                static_memory_maximum_size: self.static_memory_maximum_size.cst_decode(),
-                static_memory_forced: self.static_memory_forced.cst_decode(),
-                static_memory_guard_size: self.static_memory_guard_size.cst_decode(),
-                parallel_compilation: self.parallel_compilation.cst_decode(),
-                generate_address_map: self.generate_address_map.cst_decode(),
-            }
-        }
-    }
-    impl CstDecode<crate::types::ModuleExportDesc> for wire_cst_module_export_desc {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::types::ModuleExportDesc {
-            crate::types::ModuleExportDesc {
-                name: self.name.cst_decode(),
-                ty: self.ty.cst_decode(),
-            }
-        }
-    }
-    impl CstDecode<crate::types::ModuleExportValue> for wire_cst_module_export_value {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::types::ModuleExportValue {
-            crate::types::ModuleExportValue {
-                desc: self.desc.cst_decode(),
-                value: self.value.cst_decode(),
-            }
-        }
-    }
-    impl CstDecode<crate::types::ModuleImport> for wire_cst_module_import {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::types::ModuleImport {
-            crate::types::ModuleImport {
-                module: self.module.cst_decode(),
-                name: self.name.cst_decode(),
-                value: self.value.cst_decode(),
-            }
-        }
-    }
-    impl CstDecode<crate::types::ModuleImportDesc> for wire_cst_module_import_desc {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::types::ModuleImportDesc {
-            crate::types::ModuleImportDesc {
-                module: self.module.cst_decode(),
-                name: self.name.cst_decode(),
-                ty: self.ty.cst_decode(),
-            }
-        }
-    }
-    impl CstDecode<crate::types::ParallelExec> for wire_cst_parallel_exec {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::types::ParallelExec {
-            match self.tag {
-                0 => {
-                    let ans = unsafe { self.kind.Ok };
-                    crate::types::ParallelExec::Ok(ans.field0.cst_decode())
-                }
-                1 => {
-                    let ans = unsafe { self.kind.Err };
-                    crate::types::ParallelExec::Err(ans.field0.cst_decode())
-                }
-                2 => {
-                    let ans = unsafe { self.kind.Call };
-                    crate::types::ParallelExec::Call(ans.field0.cst_decode())
-                }
-                _ => unreachable!(),
-            }
-        }
-    }
-    impl CstDecode<crate::types::PointerAndLength> for wire_cst_pointer_and_length {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::types::PointerAndLength {
-            crate::types::PointerAndLength {
-                pointer: self.pointer.cst_decode(),
-                length: self.length.cst_decode(),
-            }
-        }
-    }
-    impl CstDecode<crate::config::PreopenedDir> for wire_cst_preopened_dir {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::config::PreopenedDir {
-            crate::config::PreopenedDir {
-                wasm_guest_path: self.wasm_guest_path.cst_decode(),
-                host_path: self.host_path.cst_decode(),
-            }
-        }
-    }
-    impl CstDecode<crate::types::TableArgs> for wire_cst_table_args {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::types::TableArgs {
-            crate::types::TableArgs {
-                minimum: self.minimum.cst_decode(),
-                maximum: self.maximum.cst_decode(),
-            }
-        }
-    }
-    impl CstDecode<crate::types::TableTy> for wire_cst_table_ty {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::types::TableTy {
-            crate::types::TableTy {
-                element: self.element.cst_decode(),
-                minimum: self.minimum.cst_decode(),
-                maximum: self.maximum.cst_decode(),
-            }
-        }
-    }
-    impl CstDecode<[u8; 16]> for *mut wire_cst_list_prim_u_8_strict {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> [u8; 16] {
-            let vec: Vec<u8> = self.cst_decode();
-            flutter_rust_bridge::for_generated::from_vec_to_array(vec)
-        }
-    }
-    impl CstDecode<crate::config::WasiConfigNative> for wire_cst_wasi_config_native {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::config::WasiConfigNative {
-            crate::config::WasiConfigNative {
-                capture_stdout: self.capture_stdout.cst_decode(),
-                capture_stderr: self.capture_stderr.cst_decode(),
-                inherit_stdin: self.inherit_stdin.cst_decode(),
-                inherit_env: self.inherit_env.cst_decode(),
-                inherit_args: self.inherit_args.cst_decode(),
-                args: self.args.cst_decode(),
-                env: self.env.cst_decode(),
-                preopened_files: self.preopened_files.cst_decode(),
-                preopened_dirs: self.preopened_dirs.cst_decode(),
-            }
-        }
-    }
-    impl CstDecode<crate::config::WasiStackLimits> for wire_cst_wasi_stack_limits {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::config::WasiStackLimits {
-            crate::config::WasiStackLimits {
-                initial_value_stack_height: self.initial_value_stack_height.cst_decode(),
-                maximum_value_stack_height: self.maximum_value_stack_height.cst_decode(),
-                maximum_recursion_depth: self.maximum_recursion_depth.cst_decode(),
-            }
-        }
-    }
-    impl CstDecode<crate::config::WasmFeatures> for wire_cst_wasm_features {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::config::WasmFeatures {
-            crate::config::WasmFeatures {
-                mutable_global: self.mutable_global.cst_decode(),
-                saturating_float_to_int: self.saturating_float_to_int.cst_decode(),
-                sign_extension: self.sign_extension.cst_decode(),
-                reference_types: self.reference_types.cst_decode(),
-                multi_value: self.multi_value.cst_decode(),
-                bulk_memory: self.bulk_memory.cst_decode(),
-                simd: self.simd.cst_decode(),
-                relaxed_simd: self.relaxed_simd.cst_decode(),
-                threads: self.threads.cst_decode(),
-                tail_call: self.tail_call.cst_decode(),
-                floats: self.floats.cst_decode(),
-                multi_memory: self.multi_memory.cst_decode(),
-                exceptions: self.exceptions.cst_decode(),
-                memory64: self.memory64.cst_decode(),
-                extended_const: self.extended_const.cst_decode(),
-                component_model: self.component_model.cst_decode(),
-                memory_control: self.memory_control.cst_decode(),
-                garbage_collection: self.garbage_collection.cst_decode(),
-                type_reflection: self.type_reflection.cst_decode(),
-                wasi_features: self.wasi_features.cst_decode(),
-            }
-        }
-    }
-    impl CstDecode<crate::api::wasmtime::WasmRunInstanceId> for wire_cst_wasm_run_instance_id {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::api::wasmtime::WasmRunInstanceId {
-            crate::api::wasmtime::WasmRunInstanceId(self.field0.cst_decode())
-        }
-    }
-    impl CstDecode<crate::api::wasmtime::WasmRunModuleId> for wire_cst_wasm_run_module_id {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::api::wasmtime::WasmRunModuleId {
-            crate::api::wasmtime::WasmRunModuleId(
-                self.field0.cst_decode(),
-                self.field1.cst_decode(),
-            )
-        }
-    }
-    impl CstDecode<crate::api::wasmtime::WasmRunSharedMemory> for wire_cst_wasm_run_shared_memory {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::api::wasmtime::WasmRunSharedMemory {
-            crate::api::wasmtime::WasmRunSharedMemory(self.field0.cst_decode())
-        }
-    }
-    impl CstDecode<crate::config::WasmRuntimeFeatures> for wire_cst_wasm_runtime_features {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::config::WasmRuntimeFeatures {
-            crate::config::WasmRuntimeFeatures {
-                name: self.name.cst_decode(),
-                version: self.version.cst_decode(),
-                is_browser: self.is_browser.cst_decode(),
-                supported_features: self.supported_features.cst_decode(),
-                default_features: self.default_features.cst_decode(),
-            }
-        }
-    }
-    impl CstDecode<crate::types::WasmVal> for wire_cst_wasm_val {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::types::WasmVal {
-            match self.tag {
-                0 => {
-                    let ans = unsafe { self.kind.i32 };
-                    crate::types::WasmVal::i32(ans.field0.cst_decode())
-                }
-                1 => {
-                    let ans = unsafe { self.kind.i64 };
-                    crate::types::WasmVal::i64(ans.field0.cst_decode())
-                }
-                2 => {
-                    let ans = unsafe { self.kind.f32 };
-                    crate::types::WasmVal::f32(ans.field0.cst_decode())
-                }
-                3 => {
-                    let ans = unsafe { self.kind.f64 };
-                    crate::types::WasmVal::f64(ans.field0.cst_decode())
-                }
-                4 => {
-                    let ans = unsafe { self.kind.v128 };
-                    crate::types::WasmVal::v128(ans.field0.cst_decode())
-                }
-                5 => {
-                    let ans = unsafe { self.kind.funcRef };
-                    crate::types::WasmVal::funcRef(ans.field0.cst_decode())
-                }
-                6 => {
-                    let ans = unsafe { self.kind.externRef };
-                    crate::types::WasmVal::externRef(ans.field0.cst_decode())
-                }
-                7 => {
-                    let ans = unsafe { self.kind.anyRef };
-                    crate::types::WasmVal::anyRef(ans.field0.cst_decode())
-                }
-                8 => {
-                    let ans = unsafe { self.kind.exnRef };
-                    crate::types::WasmVal::exnRef(ans.field0.cst_decode())
-                }
-                _ => unreachable!(),
-            }
-        }
-    }
-    impl CstDecode<crate::config::WasmWasiFeatures> for wire_cst_wasm_wasi_features {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::config::WasmWasiFeatures {
-            crate::config::WasmWasiFeatures {
-                io: self.io.cst_decode(),
-                filesystem: self.filesystem.cst_decode(),
-                clocks: self.clocks.cst_decode(),
-                random: self.random.cst_decode(),
-                poll: self.poll.cst_decode(),
-                machine_learning: self.machine_learning.cst_decode(),
-                crypto: self.crypto.cst_decode(),
-                threads: self.threads.cst_decode(),
-            }
-        }
-    }
-    impl NewWithNullPtr for wire_cst_atomics {
-        fn new_with_null_ptr() -> Self {
-            Self {
-                field0: Default::default(),
-            }
-        }
-    }
-    impl Default for wire_cst_atomics {
-        fn default() -> Self {
-            Self::new_with_null_ptr()
-        }
-    }
-    impl NewWithNullPtr for wire_cst_compare_exchange_result {
-        fn new_with_null_ptr() -> Self {
-            Self {
-                success: Default::default(),
-                value: Default::default(),
-            }
-        }
-    }
-    impl Default for wire_cst_compare_exchange_result {
-        fn default() -> Self {
-            Self::new_with_null_ptr()
-        }
-    }
-    impl NewWithNullPtr for wire_cst_compiled_component {
-        fn new_with_null_ptr() -> Self {
-            Self {
-                field0: Default::default(),
-            }
-        }
-    }
-    impl Default for wire_cst_compiled_component {
-        fn default() -> Self {
-            Self::new_with_null_ptr()
-        }
-    }
-    impl NewWithNullPtr for wire_cst_compiled_module {
-        fn new_with_null_ptr() -> Self {
-            Self {
-                field0: Default::default(),
-            }
-        }
-    }
-    impl Default for wire_cst_compiled_module {
-        fn default() -> Self {
-            Self::new_with_null_ptr()
-        }
-    }
-    impl NewWithNullPtr for wire_cst_env_variable {
-        fn new_with_null_ptr() -> Self {
-            Self {
-                name: core::ptr::null_mut(),
-                value: core::ptr::null_mut(),
-            }
-        }
-    }
-    impl Default for wire_cst_env_variable {
-        fn default() -> Self {
-            Self::new_with_null_ptr()
-        }
-    }
-    impl NewWithNullPtr for wire_cst_external_type {
-        fn new_with_null_ptr() -> Self {
-            Self {
-                tag: -1,
-                kind: ExternalTypeKind { nil__: () },
-            }
-        }
-    }
-    impl Default for wire_cst_external_type {
-        fn default() -> Self {
-            Self::new_with_null_ptr()
-        }
-    }
-    impl NewWithNullPtr for wire_cst_external_value {
-        fn new_with_null_ptr() -> Self {
-            Self {
-                tag: -1,
-                kind: ExternalValueKind { nil__: () },
-            }
-        }
-    }
-    impl Default for wire_cst_external_value {
-        fn default() -> Self {
-            Self::new_with_null_ptr()
-        }
-    }
-    impl NewWithNullPtr for wire_cst_func_ty {
-        fn new_with_null_ptr() -> Self {
-            Self {
-                parameters: core::ptr::null_mut(),
-                results: core::ptr::null_mut(),
-            }
-        }
-    }
-    impl Default for wire_cst_func_ty {
-        fn default() -> Self {
-            Self::new_with_null_ptr()
-        }
-    }
-    impl NewWithNullPtr for wire_cst_function_call {
-        fn new_with_null_ptr() -> Self {
-            Self {
-                args: core::ptr::null_mut(),
-                function_id: Default::default(),
-                function_pointer: Default::default(),
-                num_results: Default::default(),
-                worker_index: Default::default(),
-            }
-        }
-    }
-    impl Default for wire_cst_function_call {
-        fn default() -> Self {
-            Self::new_with_null_ptr()
-        }
-    }
-    impl NewWithNullPtr for wire_cst_global_ty {
-        fn new_with_null_ptr() -> Self {
-            Self {
-                value: Default::default(),
-                mutable: Default::default(),
-            }
-        }
-    }
-    impl Default for wire_cst_global_ty {
-        fn default() -> Self {
-            Self::new_with_null_ptr()
-        }
-    }
-    impl NewWithNullPtr for wire_cst_memory_ty {
-        fn new_with_null_ptr() -> Self {
-            Self {
-                shared: Default::default(),
-                minimum: Default::default(),
-                maximum: core::ptr::null_mut(),
-            }
-        }
-    }
-    impl Default for wire_cst_memory_ty {
-        fn default() -> Self {
-            Self::new_with_null_ptr()
-        }
-    }
-    impl NewWithNullPtr for wire_cst_module_config {
-        fn new_with_null_ptr() -> Self {
-            Self {
-                multi_value: core::ptr::null_mut(),
-                bulk_memory: core::ptr::null_mut(),
-                reference_types: core::ptr::null_mut(),
-                consume_fuel: core::ptr::null_mut(),
-                wasmi: core::ptr::null_mut(),
-                wasmtime: core::ptr::null_mut(),
-            }
-        }
-    }
-    impl Default for wire_cst_module_config {
-        fn default() -> Self {
-            Self::new_with_null_ptr()
-        }
-    }
-    impl NewWithNullPtr for wire_cst_module_config_wasmi {
-        fn new_with_null_ptr() -> Self {
-            Self {
-                stack_limits: core::ptr::null_mut(),
-                cached_stacks: core::ptr::null_mut(),
-                mutable_global: core::ptr::null_mut(),
-                sign_extension: core::ptr::null_mut(),
-                saturating_float_to_int: core::ptr::null_mut(),
-                tail_call: core::ptr::null_mut(),
-                extended_const: core::ptr::null_mut(),
-                floats: core::ptr::null_mut(),
-                simd: core::ptr::null_mut(),
-                relaxed_simd: core::ptr::null_mut(),
-                multi_memory: core::ptr::null_mut(),
-                memory64: core::ptr::null_mut(),
-            }
-        }
-    }
-    impl Default for wire_cst_module_config_wasmi {
-        fn default() -> Self {
-            Self::new_with_null_ptr()
-        }
-    }
-    impl NewWithNullPtr for wire_cst_module_config_wasmtime {
-        fn new_with_null_ptr() -> Self {
-            Self {
-                debug_info: core::ptr::null_mut(),
-                wasm_backtrace: core::ptr::null_mut(),
-                native_unwind_info: core::ptr::null_mut(),
-                max_wasm_stack: core::ptr::null_mut(),
-                wasm_threads: core::ptr::null_mut(),
-                wasm_simd: core::ptr::null_mut(),
-                wasm_relaxed_simd: core::ptr::null_mut(),
-                relaxed_simd_deterministic: core::ptr::null_mut(),
-                wasm_multi_memory: core::ptr::null_mut(),
-                wasm_memory64: core::ptr::null_mut(),
-                wasm_tail_call: core::ptr::null_mut(),
-                wasm_gc: core::ptr::null_mut(),
-                wasm_function_references: core::ptr::null_mut(),
-                wasm_exceptions: core::ptr::null_mut(),
-                wasm_component_model: core::ptr::null_mut(),
-                static_memory_maximum_size: core::ptr::null_mut(),
-                static_memory_forced: core::ptr::null_mut(),
-                static_memory_guard_size: core::ptr::null_mut(),
-                parallel_compilation: core::ptr::null_mut(),
-                generate_address_map: core::ptr::null_mut(),
-            }
-        }
-    }
-    impl Default for wire_cst_module_config_wasmtime {
-        fn default() -> Self {
-            Self::new_with_null_ptr()
-        }
-    }
-    impl NewWithNullPtr for wire_cst_module_export_desc {
-        fn new_with_null_ptr() -> Self {
-            Self {
-                name: core::ptr::null_mut(),
-                ty: Default::default(),
-            }
-        }
-    }
-    impl Default for wire_cst_module_export_desc {
-        fn default() -> Self {
-            Self::new_with_null_ptr()
-        }
-    }
-    impl NewWithNullPtr for wire_cst_module_export_value {
-        fn new_with_null_ptr() -> Self {
-            Self {
-                desc: Default::default(),
-                value: Default::default(),
-            }
-        }
-    }
-    impl Default for wire_cst_module_export_value {
-        fn default() -> Self {
-            Self::new_with_null_ptr()
-        }
-    }
-    impl NewWithNullPtr for wire_cst_module_import {
-        fn new_with_null_ptr() -> Self {
-            Self {
-                module: core::ptr::null_mut(),
-                name: core::ptr::null_mut(),
-                value: Default::default(),
-            }
-        }
-    }
-    impl Default for wire_cst_module_import {
-        fn default() -> Self {
-            Self::new_with_null_ptr()
-        }
-    }
-    impl NewWithNullPtr for wire_cst_module_import_desc {
-        fn new_with_null_ptr() -> Self {
-            Self {
-                module: core::ptr::null_mut(),
-                name: core::ptr::null_mut(),
-                ty: Default::default(),
-            }
-        }
-    }
-    impl Default for wire_cst_module_import_desc {
-        fn default() -> Self {
-            Self::new_with_null_ptr()
-        }
-    }
-    impl NewWithNullPtr for wire_cst_parallel_exec {
-        fn new_with_null_ptr() -> Self {
-            Self {
-                tag: -1,
-                kind: ParallelExecKind { nil__: () },
-            }
-        }
-    }
-    impl Default for wire_cst_parallel_exec {
-        fn default() -> Self {
-            Self::new_with_null_ptr()
-        }
-    }
-    impl NewWithNullPtr for wire_cst_pointer_and_length {
-        fn new_with_null_ptr() -> Self {
-            Self {
-                pointer: Default::default(),
-                length: Default::default(),
-            }
-        }
-    }
-    impl Default for wire_cst_pointer_and_length {
-        fn default() -> Self {
-            Self::new_with_null_ptr()
-        }
-    }
-    impl NewWithNullPtr for wire_cst_preopened_dir {
-        fn new_with_null_ptr() -> Self {
-            Self {
-                wasm_guest_path: core::ptr::null_mut(),
-                host_path: core::ptr::null_mut(),
-            }
-        }
-    }
-    impl Default for wire_cst_preopened_dir {
-        fn default() -> Self {
-            Self::new_with_null_ptr()
-        }
-    }
-    impl NewWithNullPtr for wire_cst_table_args {
-        fn new_with_null_ptr() -> Self {
-            Self {
-                minimum: Default::default(),
-                maximum: core::ptr::null_mut(),
-            }
-        }
-    }
-    impl Default for wire_cst_table_args {
-        fn default() -> Self {
-            Self::new_with_null_ptr()
-        }
-    }
-    impl NewWithNullPtr for wire_cst_table_ty {
-        fn new_with_null_ptr() -> Self {
-            Self {
-                element: Default::default(),
-                minimum: Default::default(),
-                maximum: core::ptr::null_mut(),
-            }
-        }
-    }
-    impl Default for wire_cst_table_ty {
-        fn default() -> Self {
-            Self::new_with_null_ptr()
-        }
-    }
-    impl NewWithNullPtr for wire_cst_wasi_config_native {
-        fn new_with_null_ptr() -> Self {
-            Self {
-                capture_stdout: Default::default(),
-                capture_stderr: Default::default(),
-                inherit_stdin: Default::default(),
-                inherit_env: Default::default(),
-                inherit_args: Default::default(),
-                args: core::ptr::null_mut(),
-                env: core::ptr::null_mut(),
-                preopened_files: core::ptr::null_mut(),
-                preopened_dirs: core::ptr::null_mut(),
-            }
-        }
-    }
-    impl Default for wire_cst_wasi_config_native {
-        fn default() -> Self {
-            Self::new_with_null_ptr()
-        }
-    }
-    impl NewWithNullPtr for wire_cst_wasi_stack_limits {
-        fn new_with_null_ptr() -> Self {
-            Self {
-                initial_value_stack_height: Default::default(),
-                maximum_value_stack_height: Default::default(),
-                maximum_recursion_depth: Default::default(),
-            }
-        }
-    }
-    impl Default for wire_cst_wasi_stack_limits {
-        fn default() -> Self {
-            Self::new_with_null_ptr()
-        }
-    }
-    impl NewWithNullPtr for wire_cst_wasm_features {
-        fn new_with_null_ptr() -> Self {
-            Self {
-                mutable_global: Default::default(),
-                saturating_float_to_int: Default::default(),
-                sign_extension: Default::default(),
-                reference_types: Default::default(),
-                multi_value: Default::default(),
-                bulk_memory: Default::default(),
-                simd: Default::default(),
-                relaxed_simd: Default::default(),
-                threads: Default::default(),
-                tail_call: Default::default(),
-                floats: Default::default(),
-                multi_memory: Default::default(),
-                exceptions: Default::default(),
-                memory64: Default::default(),
-                extended_const: Default::default(),
-                component_model: Default::default(),
-                memory_control: Default::default(),
-                garbage_collection: Default::default(),
-                type_reflection: Default::default(),
-                wasi_features: core::ptr::null_mut(),
-            }
-        }
-    }
-    impl Default for wire_cst_wasm_features {
-        fn default() -> Self {
-            Self::new_with_null_ptr()
-        }
-    }
-    impl NewWithNullPtr for wire_cst_wasm_run_instance_id {
-        fn new_with_null_ptr() -> Self {
-            Self {
-                field0: Default::default(),
-            }
-        }
-    }
-    impl Default for wire_cst_wasm_run_instance_id {
-        fn default() -> Self {
-            Self::new_with_null_ptr()
-        }
-    }
-    impl NewWithNullPtr for wire_cst_wasm_run_module_id {
-        fn new_with_null_ptr() -> Self {
-            Self {
-                field0: Default::default(),
-                field1: Default::default(),
-            }
-        }
-    }
-    impl Default for wire_cst_wasm_run_module_id {
-        fn default() -> Self {
-            Self::new_with_null_ptr()
-        }
-    }
-    impl NewWithNullPtr for wire_cst_wasm_run_shared_memory {
-        fn new_with_null_ptr() -> Self {
-            Self {
-                field0: Default::default(),
-            }
-        }
-    }
-    impl Default for wire_cst_wasm_run_shared_memory {
-        fn default() -> Self {
-            Self::new_with_null_ptr()
-        }
-    }
-    impl NewWithNullPtr for wire_cst_wasm_runtime_features {
-        fn new_with_null_ptr() -> Self {
-            Self {
-                name: core::ptr::null_mut(),
-                version: core::ptr::null_mut(),
-                is_browser: Default::default(),
-                supported_features: Default::default(),
-                default_features: Default::default(),
-            }
-        }
-    }
-    impl Default for wire_cst_wasm_runtime_features {
-        fn default() -> Self {
-            Self::new_with_null_ptr()
-        }
-    }
-    impl NewWithNullPtr for wire_cst_wasm_val {
-        fn new_with_null_ptr() -> Self {
-            Self {
-                tag: -1,
-                kind: WasmValKind { nil__: () },
-            }
-        }
-    }
-    impl Default for wire_cst_wasm_val {
-        fn default() -> Self {
-            Self::new_with_null_ptr()
-        }
-    }
-    impl NewWithNullPtr for wire_cst_wasm_wasi_features {
-        fn new_with_null_ptr() -> Self {
-            Self {
-                io: Default::default(),
-                filesystem: Default::default(),
-                clocks: Default::default(),
-                random: Default::default(),
-                poll: Default::default(),
-                machine_learning: Default::default(),
-                crypto: Default::default(),
-                threads: Default::default(),
-            }
-        }
-    }
-    impl Default for wire_cst_wasm_wasi_features {
-        fn default() -> Self {
-            Self::new_with_null_ptr()
-        }
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_wire__crate__atomics__atomics_add(
-        port_: i64,
-        that: *mut wire_cst_atomics,
-        offset: usize,
-        kind: i32,
-        val: i64,
-        order: i32,
-    ) {
-        wire__crate__atomics__atomics_add_impl(port_, that, offset, kind, val, order)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_wire__crate__atomics__atomics_and(
-        port_: i64,
-        that: *mut wire_cst_atomics,
-        offset: usize,
-        kind: i32,
-        val: i64,
-        order: i32,
-    ) {
-        wire__crate__atomics__atomics_and_impl(port_, that, offset, kind, val, order)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_wire__crate__atomics__atomics_compare_exchange(
-        port_: i64,
-        that: *mut wire_cst_atomics,
-        offset: usize,
-        kind: i32,
-        current: i64,
-        new_value: i64,
-        success: i32,
-        failure: i32,
-    ) {
-        wire__crate__atomics__atomics_compare_exchange_impl(
-            port_, that, offset, kind, current, new_value, success, failure,
-        )
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_wire__crate__atomics__atomics_load(
-        port_: i64,
-        that: *mut wire_cst_atomics,
-        offset: usize,
-        kind: i32,
-        order: i32,
-    ) {
-        wire__crate__atomics__atomics_load_impl(port_, that, offset, kind, order)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_wire__crate__atomics__atomics_or(
-        port_: i64,
-        that: *mut wire_cst_atomics,
-        offset: usize,
-        kind: i32,
-        val: i64,
-        order: i32,
-    ) {
-        wire__crate__atomics__atomics_or_impl(port_, that, offset, kind, val, order)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_wire__crate__atomics__atomics_store(
-        port_: i64,
-        that: *mut wire_cst_atomics,
-        offset: usize,
-        kind: i32,
-        val: i64,
-        order: i32,
-    ) {
-        wire__crate__atomics__atomics_store_impl(port_, that, offset, kind, val, order)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_wire__crate__atomics__atomics_sub(
-        port_: i64,
-        that: *mut wire_cst_atomics,
-        offset: usize,
-        kind: i32,
-        val: i64,
-        order: i32,
-    ) {
-        wire__crate__atomics__atomics_sub_impl(port_, that, offset, kind, val, order)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_wire__crate__atomics__atomics_swap(
-        port_: i64,
-        that: *mut wire_cst_atomics,
-        offset: usize,
-        kind: i32,
-        val: i64,
-        order: i32,
-    ) {
-        wire__crate__atomics__atomics_swap_impl(port_, that, offset, kind, val, order)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_wire__crate__atomics__atomics_xor(
-        port_: i64,
-        that: *mut wire_cst_atomics,
-        offset: usize,
-        kind: i32,
-        val: i64,
-        order: i32,
-    ) {
-        wire__crate__atomics__atomics_xor_impl(port_, that, offset, kind, val, order)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_wire__crate__api__wasmtime__compile_component(
-        port_: i64,
-        component_wasm: *mut wire_cst_list_prim_u_8_loose,
-        config: *mut wire_cst_module_config,
-    ) {
-        wire__crate__api__wasmtime__compile_component_impl(port_, component_wasm, config)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_wire__crate__api__wasmtime__compile_component_sync(
-        port_: i64,
-        component_wasm: *mut wire_cst_list_prim_u_8_loose,
-        config: *mut wire_cst_module_config,
-    ) {
-        wire__crate__api__wasmtime__compile_component_sync_impl(port_, component_wasm, config)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_wire__crate__api__wasmtime__compile_wasm(
-        port_: i64,
-        module_wasm: *mut wire_cst_list_prim_u_8_loose,
-        config: *mut wire_cst_module_config,
-    ) {
-        wire__crate__api__wasmtime__compile_wasm_impl(port_, module_wasm, config)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_wire__crate__api__wasmtime__compile_wasm_sync(
-        port_: i64,
-        module_wasm: *mut wire_cst_list_prim_u_8_loose,
-        config: *mut wire_cst_module_config,
-    ) {
-        wire__crate__api__wasmtime__compile_wasm_sync_impl(port_, module_wasm, config)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_wire__crate__api__wasmtime__compiled_component_get_component_exports(
-        that: *mut wire_cst_compiled_component,
-    ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-        wire__crate__api__wasmtime__compiled_component_get_component_exports_impl(that)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_wire__crate__api__wasmtime__compiled_component_get_component_imports(
-        that: *mut wire_cst_compiled_component,
-    ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-        wire__crate__api__wasmtime__compiled_component_get_component_imports_impl(that)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_wire__crate__api__wasmtime__compiled_module_create_shared_memory(
-        port_: i64,
-        that: *mut wire_cst_compiled_module,
-        memory_type: *mut wire_cst_memory_ty,
-    ) {
-        wire__crate__api__wasmtime__compiled_module_create_shared_memory_impl(
-            port_,
-            that,
-            memory_type,
-        )
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_wire__crate__api__wasmtime__compiled_module_get_module_exports(
-        that: *mut wire_cst_compiled_module,
-    ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-        wire__crate__api__wasmtime__compiled_module_get_module_exports_impl(that)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_wire__crate__api__wasmtime__compiled_module_get_module_imports(
-        that: *mut wire_cst_compiled_module,
-    ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-        wire__crate__api__wasmtime__compiled_module_get_module_imports_impl(that)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_wire__crate__api__wasmtime__detect_wasm_kind(
-        wasm_bytes: *mut wire_cst_list_prim_u_8_loose,
-    ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-        wire__crate__api__wasmtime__detect_wasm_kind_impl(wasm_bytes)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_wire__crate__api__wasmtime__module_builder(
-        port_: i64,
-        module: *mut wire_cst_compiled_module,
-        num_threads: *mut usize,
-        wasi_config: *mut wire_cst_wasi_config_native,
-    ) {
-        wire__crate__api__wasmtime__module_builder_impl(port_, module, num_threads, wasi_config)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_wire__crate__api__wasmtime__parse_wat_format(
-        port_: i64,
-        wat: *mut wire_cst_list_prim_u_8_strict,
-    ) {
-        wire__crate__api__wasmtime__parse_wat_format_impl(port_, wat)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_wire__crate__api__wasmtime__wasm_features_for_config(
-        config: *mut wire_cst_module_config,
-    ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-        wire__crate__api__wasmtime__wasm_features_for_config_impl(config)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_wire__crate__api__wasmtime__wasm_run_instance_id_exports(
-        that: *mut wire_cst_wasm_run_instance_id,
-    ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-        wire__crate__api__wasmtime__wasm_run_instance_id_exports_impl(that)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_wire__crate__api__wasmtime__wasm_run_module_id_add_fuel(
-        that: *mut wire_cst_wasm_run_module_id,
-        delta: u64,
-    ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-        wire__crate__api__wasmtime__wasm_run_module_id_add_fuel_impl(that, delta)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_wire__crate__api__wasmtime__wasm_run_module_id_call_function_handle(
-        port_: i64,
-        that: *mut wire_cst_wasm_run_module_id,
-        func: usize,
-        args: *mut wire_cst_list_wasm_val,
-    ) {
-        wire__crate__api__wasmtime__wasm_run_module_id_call_function_handle_impl(
-            port_, that, func, args,
-        )
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_wire__crate__api__wasmtime__wasm_run_module_id_call_function_handle_parallel(
-        port_: i64,
-        that: *mut wire_cst_wasm_run_module_id,
-        func_name: *mut wire_cst_list_prim_u_8_strict,
-        args: *mut wire_cst_list_wasm_val,
-        num_tasks: usize,
-        function_stream: *mut wire_cst_list_prim_u_8_strict,
-    ) {
-        wire__crate__api__wasmtime__wasm_run_module_id_call_function_handle_parallel_impl(
-            port_,
-            that,
-            func_name,
-            args,
-            num_tasks,
-            function_stream,
-        )
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_wire__crate__api__wasmtime__wasm_run_module_id_call_function_handle_sync(
-        port_: i64,
-        that: *mut wire_cst_wasm_run_module_id,
-        func: usize,
-        args: *mut wire_cst_list_wasm_val,
-    ) {
-        wire__crate__api__wasmtime__wasm_run_module_id_call_function_handle_sync_impl(
-            port_, that, func, args,
-        )
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_wire__crate__api__wasmtime__wasm_run_module_id_consume_fuel(
-        that: *mut wire_cst_wasm_run_module_id,
-        delta: u64,
-    ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-        wire__crate__api__wasmtime__wasm_run_module_id_consume_fuel_impl(that, delta)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_wire__crate__api__wasmtime__wasm_run_module_id_create_function(
-        port_: i64,
-        that: *mut wire_cst_wasm_run_module_id,
-        function_pointer: usize,
-        function_id: u32,
-        param_types: *mut wire_cst_list_value_ty,
-        result_types: *mut wire_cst_list_value_ty,
-    ) {
-        wire__crate__api__wasmtime__wasm_run_module_id_create_function_impl(
-            port_,
-            that,
-            function_pointer,
-            function_id,
-            param_types,
-            result_types,
-        )
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_wire__crate__api__wasmtime__wasm_run_module_id_create_global(
-        port_: i64,
-        that: *mut wire_cst_wasm_run_module_id,
-        value: *mut wire_cst_wasm_val,
-        mutable: bool,
-    ) {
-        wire__crate__api__wasmtime__wasm_run_module_id_create_global_impl(
-            port_, that, value, mutable,
-        )
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_wire__crate__api__wasmtime__wasm_run_module_id_create_memory(
-        that: *mut wire_cst_wasm_run_module_id,
-        memory_type: *mut wire_cst_memory_ty,
-    ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-        wire__crate__api__wasmtime__wasm_run_module_id_create_memory_impl(that, memory_type)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_wire__crate__api__wasmtime__wasm_run_module_id_create_table(
-        port_: i64,
-        that: *mut wire_cst_wasm_run_module_id,
-        value: *mut wire_cst_wasm_val,
-        table_type: *mut wire_cst_table_args,
-    ) {
-        wire__crate__api__wasmtime__wasm_run_module_id_create_table_impl(
-            port_, that, value, table_type,
-        )
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_wire__crate__api__wasmtime__wasm_run_module_id_dispose(
-        port_: i64,
-        that: *mut wire_cst_wasm_run_module_id,
-    ) {
-        wire__crate__api__wasmtime__wasm_run_module_id_dispose_impl(port_, that)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_wire__crate__api__wasmtime__wasm_run_module_id_fill_table(
-        port_: i64,
-        that: *mut wire_cst_wasm_run_module_id,
-        table: usize,
-        index: u32,
-        value: *mut wire_cst_wasm_val,
-        len: u32,
-    ) {
-        wire__crate__api__wasmtime__wasm_run_module_id_fill_table_impl(
-            port_, that, table, index, value, len,
-        )
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_wire__crate__api__wasmtime__wasm_run_module_id_fuel_consumed(
-        that: *mut wire_cst_wasm_run_module_id,
-    ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-        wire__crate__api__wasmtime__wasm_run_module_id_fuel_consumed_impl(that)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_wire__crate__api__wasmtime__wasm_run_module_id_get_function_type(
-        that: *mut wire_cst_wasm_run_module_id,
-        func: usize,
-    ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-        wire__crate__api__wasmtime__wasm_run_module_id_get_function_type_impl(that, func)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_wire__crate__api__wasmtime__wasm_run_module_id_get_global_type(
-        that: *mut wire_cst_wasm_run_module_id,
-        global: usize,
-    ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-        wire__crate__api__wasmtime__wasm_run_module_id_get_global_type_impl(that, global)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_wire__crate__api__wasmtime__wasm_run_module_id_get_global_value(
-        that: *mut wire_cst_wasm_run_module_id,
-        global: usize,
-    ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-        wire__crate__api__wasmtime__wasm_run_module_id_get_global_value_impl(that, global)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_wire__crate__api__wasmtime__wasm_run_module_id_get_memory_data(
-        that: *mut wire_cst_wasm_run_module_id,
-        memory: usize,
-    ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-        wire__crate__api__wasmtime__wasm_run_module_id_get_memory_data_impl(that, memory)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_wire__crate__api__wasmtime__wasm_run_module_id_get_memory_data_pointer(
-        that: *mut wire_cst_wasm_run_module_id,
-        memory: usize,
-    ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-        wire__crate__api__wasmtime__wasm_run_module_id_get_memory_data_pointer_impl(that, memory)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_wire__crate__api__wasmtime__wasm_run_module_id_get_memory_data_pointer_and_length(
-        port_: i64,
-        that: *mut wire_cst_wasm_run_module_id,
-        memory: usize,
-    ) {
-        wire__crate__api__wasmtime__wasm_run_module_id_get_memory_data_pointer_and_length_impl(
-            port_, that, memory,
-        )
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_wire__crate__api__wasmtime__wasm_run_module_id_get_memory_pages(
-        that: *mut wire_cst_wasm_run_module_id,
-        memory: usize,
-    ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-        wire__crate__api__wasmtime__wasm_run_module_id_get_memory_pages_impl(that, memory)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_wire__crate__api__wasmtime__wasm_run_module_id_get_memory_type(
-        that: *mut wire_cst_wasm_run_module_id,
-        memory: usize,
-    ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-        wire__crate__api__wasmtime__wasm_run_module_id_get_memory_type_impl(that, memory)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_wire__crate__api__wasmtime__wasm_run_module_id_get_table(
-        that: *mut wire_cst_wasm_run_module_id,
-        table: usize,
-        index: u32,
-    ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-        wire__crate__api__wasmtime__wasm_run_module_id_get_table_impl(that, table, index)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_wire__crate__api__wasmtime__wasm_run_module_id_get_table_size(
-        that: *mut wire_cst_wasm_run_module_id,
-        table: usize,
-    ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-        wire__crate__api__wasmtime__wasm_run_module_id_get_table_size_impl(that, table)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_wire__crate__api__wasmtime__wasm_run_module_id_get_table_type(
-        that: *mut wire_cst_wasm_run_module_id,
-        table: usize,
-    ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-        wire__crate__api__wasmtime__wasm_run_module_id_get_table_type_impl(that, table)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_wire__crate__api__wasmtime__wasm_run_module_id_grow_memory(
-        that: *mut wire_cst_wasm_run_module_id,
-        memory: usize,
-        pages: u32,
-    ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-        wire__crate__api__wasmtime__wasm_run_module_id_grow_memory_impl(that, memory, pages)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_wire__crate__api__wasmtime__wasm_run_module_id_grow_table(
-        port_: i64,
-        that: *mut wire_cst_wasm_run_module_id,
-        table: usize,
-        delta: u32,
-        value: *mut wire_cst_wasm_val,
-    ) {
-        wire__crate__api__wasmtime__wasm_run_module_id_grow_table_impl(
-            port_, that, table, delta, value,
-        )
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_wire__crate__api__wasmtime__wasm_run_module_id_instantiate(
-        port_: i64,
-        that: *mut wire_cst_wasm_run_module_id,
-    ) {
-        wire__crate__api__wasmtime__wasm_run_module_id_instantiate_impl(port_, that)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_wire__crate__api__wasmtime__wasm_run_module_id_instantiate_sync(
-        that: *mut wire_cst_wasm_run_module_id,
-    ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-        wire__crate__api__wasmtime__wasm_run_module_id_instantiate_sync_impl(that)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_wire__crate__api__wasmtime__wasm_run_module_id_link_imports(
-        that: *mut wire_cst_wasm_run_module_id,
-        imports: *mut wire_cst_list_module_import,
-    ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-        wire__crate__api__wasmtime__wasm_run_module_id_link_imports_impl(that, imports)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_wire__crate__api__wasmtime__wasm_run_module_id_read_memory(
-        port_: i64,
-        that: *mut wire_cst_wasm_run_module_id,
-        memory: usize,
-        offset: usize,
-        bytes: usize,
-    ) {
-        wire__crate__api__wasmtime__wasm_run_module_id_read_memory_impl(
-            port_, that, memory, offset, bytes,
-        )
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_wire__crate__api__wasmtime__wasm_run_module_id_set_global_value(
-        port_: i64,
-        that: *mut wire_cst_wasm_run_module_id,
-        global: usize,
-        value: *mut wire_cst_wasm_val,
-    ) {
-        wire__crate__api__wasmtime__wasm_run_module_id_set_global_value_impl(
-            port_, that, global, value,
-        )
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_wire__crate__api__wasmtime__wasm_run_module_id_set_table(
-        port_: i64,
-        that: *mut wire_cst_wasm_run_module_id,
-        table: usize,
-        index: u32,
-        value: *mut wire_cst_wasm_val,
-    ) {
-        wire__crate__api__wasmtime__wasm_run_module_id_set_table_impl(
-            port_, that, table, index, value,
-        )
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_wire__crate__api__wasmtime__wasm_run_module_id_stdio_stream(
-        port_: i64,
-        that: *mut wire_cst_wasm_run_module_id,
-        sink: *mut wire_cst_list_prim_u_8_strict,
-        kind: i32,
-    ) {
-        wire__crate__api__wasmtime__wasm_run_module_id_stdio_stream_impl(port_, that, sink, kind)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_wire__crate__api__wasmtime__wasm_run_module_id_worker_execution(
-        port_: i64,
-        that: *mut wire_cst_wasm_run_module_id,
-        worker_index: usize,
-        results: *mut wire_cst_list_wasm_val,
-    ) {
-        wire__crate__api__wasmtime__wasm_run_module_id_worker_execution_impl(
-            port_,
-            that,
-            worker_index,
-            results,
-        )
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_wire__crate__api__wasmtime__wasm_run_module_id_write_memory(
-        port_: i64,
-        that: *mut wire_cst_wasm_run_module_id,
-        memory: usize,
-        offset: usize,
-        buffer: *mut wire_cst_list_prim_u_8_loose,
-    ) {
-        wire__crate__api__wasmtime__wasm_run_module_id_write_memory_impl(
-            port_, that, memory, offset, buffer,
-        )
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_wire__crate__api__wasmtime__wasm_run_shared_memory_atomic_notify(
-        that: *mut wire_cst_wasm_run_shared_memory,
-        addr: u64,
-        count: u32,
-    ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-        wire__crate__api__wasmtime__wasm_run_shared_memory_atomic_notify_impl(that, addr, count)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_wire__crate__api__wasmtime__wasm_run_shared_memory_atomic_wait32(
-        port_: i64,
-        that: *mut wire_cst_wasm_run_shared_memory,
-        addr: u64,
-        expected: u32,
-    ) {
-        wire__crate__api__wasmtime__wasm_run_shared_memory_atomic_wait32_impl(
-            port_, that, addr, expected,
-        )
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_wire__crate__api__wasmtime__wasm_run_shared_memory_atomic_wait64(
-        port_: i64,
-        that: *mut wire_cst_wasm_run_shared_memory,
-        addr: u64,
-        expected: u64,
-    ) {
-        wire__crate__api__wasmtime__wasm_run_shared_memory_atomic_wait64_impl(
-            port_, that, addr, expected,
-        )
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_wire__crate__api__wasmtime__wasm_run_shared_memory_atomics(
-        port_: i64,
-        that: *mut wire_cst_wasm_run_shared_memory,
-    ) {
-        wire__crate__api__wasmtime__wasm_run_shared_memory_atomics_impl(port_, that)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_wire__crate__api__wasmtime__wasm_run_shared_memory_data_pointer(
-        that: *mut wire_cst_wasm_run_shared_memory,
-    ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-        wire__crate__api__wasmtime__wasm_run_shared_memory_data_pointer_impl(that)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_wire__crate__api__wasmtime__wasm_run_shared_memory_data_size(
-        that: *mut wire_cst_wasm_run_shared_memory,
-    ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-        wire__crate__api__wasmtime__wasm_run_shared_memory_data_size_impl(that)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_wire__crate__api__wasmtime__wasm_run_shared_memory_grow(
-        that: *mut wire_cst_wasm_run_shared_memory,
-        delta: u64,
-    ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-        wire__crate__api__wasmtime__wasm_run_shared_memory_grow_impl(that, delta)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_wire__crate__api__wasmtime__wasm_run_shared_memory_size(
-        that: *mut wire_cst_wasm_run_shared_memory,
-    ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-        wire__crate__api__wasmtime__wasm_run_shared_memory_size_impl(that)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_wire__crate__api__wasmtime__wasm_run_shared_memory_ty(
-        that: *mut wire_cst_wasm_run_shared_memory,
-    ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-        wire__crate__api__wasmtime__wasm_run_shared_memory_ty_impl(that)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_wire__crate__api__wasmtime__wasm_runtime_features(
-    ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-        wire__crate__api__wasmtime__wasm_runtime_features_impl()
-    }
-
     #[unsafe(no_mangle)]
     pub extern "C" fn frbgen_wasm_run_rust_arc_increment_strong_count_RustOpaque_ArcRwLockWSharedMemory(
         ptr: *const std::ffi::c_void,
     ) {
-        unsafe {
-            StdArc::<Arc<RwLock<WSharedMemory>>>::increment_strong_count(ptr as _);
-        }
+        MoiArc::<Arc<RwLock<WSharedMemory>>>::increment_strong_count(ptr as _);
     }
 
     #[unsafe(no_mangle)]
     pub extern "C" fn frbgen_wasm_run_rust_arc_decrement_strong_count_RustOpaque_ArcRwLockWSharedMemory(
         ptr: *const std::ffi::c_void,
     ) {
-        unsafe {
-            StdArc::<Arc<RwLock<WSharedMemory>>>::decrement_strong_count(ptr as _);
-        }
+        MoiArc::<Arc<RwLock<WSharedMemory>>>::decrement_strong_count(ptr as _);
     }
 
     #[unsafe(no_mangle)]
     pub extern "C" fn frbgen_wasm_run_rust_arc_increment_strong_count_RustOpaque_ArcstdsyncMutexComponent(
         ptr: *const std::ffi::c_void,
     ) {
-        unsafe {
-            StdArc::<Arc<std::sync::Mutex<Component>>>::increment_strong_count(ptr as _);
-        }
+        MoiArc::<Arc<std::sync::Mutex<Component>>>::increment_strong_count(ptr as _);
     }
 
     #[unsafe(no_mangle)]
     pub extern "C" fn frbgen_wasm_run_rust_arc_decrement_strong_count_RustOpaque_ArcstdsyncMutexComponent(
         ptr: *const std::ffi::c_void,
     ) {
-        unsafe {
-            StdArc::<Arc<std::sync::Mutex<Component>>>::decrement_strong_count(ptr as _);
-        }
+        MoiArc::<Arc<std::sync::Mutex<Component>>>::decrement_strong_count(ptr as _);
     }
 
     #[unsafe(no_mangle)]
     pub extern "C" fn frbgen_wasm_run_rust_arc_increment_strong_count_RustOpaque_ArcstdsyncMutexWModule(
         ptr: *const std::ffi::c_void,
     ) {
-        unsafe {
-            StdArc::<Arc<std::sync::Mutex<WModule>>>::increment_strong_count(ptr as _);
-        }
+        MoiArc::<Arc<std::sync::Mutex<WModule>>>::increment_strong_count(ptr as _);
     }
 
     #[unsafe(no_mangle)]
     pub extern "C" fn frbgen_wasm_run_rust_arc_decrement_strong_count_RustOpaque_ArcstdsyncMutexWModule(
         ptr: *const std::ffi::c_void,
     ) {
-        unsafe {
-            StdArc::<Arc<std::sync::Mutex<WModule>>>::decrement_strong_count(ptr as _);
-        }
+        MoiArc::<Arc<std::sync::Mutex<WModule>>>::decrement_strong_count(ptr as _);
     }
 
     #[unsafe(no_mangle)]
     pub extern "C" fn frbgen_wasm_run_rust_arc_increment_strong_count_RustOpaque_CallStack(
         ptr: *const std::ffi::c_void,
     ) {
-        unsafe {
-            StdArc::<CallStack>::increment_strong_count(ptr as _);
-        }
+        MoiArc::<CallStack>::increment_strong_count(ptr as _);
     }
 
     #[unsafe(no_mangle)]
     pub extern "C" fn frbgen_wasm_run_rust_arc_decrement_strong_count_RustOpaque_CallStack(
         ptr: *const std::ffi::c_void,
     ) {
-        unsafe {
-            StdArc::<CallStack>::decrement_strong_count(ptr as _);
-        }
+        MoiArc::<CallStack>::decrement_strong_count(ptr as _);
     }
 
     #[unsafe(no_mangle)]
     pub extern "C" fn frbgen_wasm_run_rust_arc_increment_strong_count_RustOpaque_WAnyRef(
         ptr: *const std::ffi::c_void,
     ) {
-        unsafe {
-            StdArc::<WAnyRef>::increment_strong_count(ptr as _);
-        }
+        MoiArc::<WAnyRef>::increment_strong_count(ptr as _);
     }
 
     #[unsafe(no_mangle)]
     pub extern "C" fn frbgen_wasm_run_rust_arc_decrement_strong_count_RustOpaque_WAnyRef(
         ptr: *const std::ffi::c_void,
     ) {
-        unsafe {
-            StdArc::<WAnyRef>::decrement_strong_count(ptr as _);
-        }
+        MoiArc::<WAnyRef>::decrement_strong_count(ptr as _);
     }
 
     #[unsafe(no_mangle)]
     pub extern "C" fn frbgen_wasm_run_rust_arc_increment_strong_count_RustOpaque_WExnRef(
         ptr: *const std::ffi::c_void,
     ) {
-        unsafe {
-            StdArc::<WExnRef>::increment_strong_count(ptr as _);
-        }
+        MoiArc::<WExnRef>::increment_strong_count(ptr as _);
     }
 
     #[unsafe(no_mangle)]
     pub extern "C" fn frbgen_wasm_run_rust_arc_decrement_strong_count_RustOpaque_WExnRef(
         ptr: *const std::ffi::c_void,
     ) {
-        unsafe {
-            StdArc::<WExnRef>::decrement_strong_count(ptr as _);
-        }
+        MoiArc::<WExnRef>::decrement_strong_count(ptr as _);
     }
 
     #[unsafe(no_mangle)]
     pub extern "C" fn frbgen_wasm_run_rust_arc_increment_strong_count_RustOpaque_WFunc(
         ptr: *const std::ffi::c_void,
     ) {
-        unsafe {
-            StdArc::<WFunc>::increment_strong_count(ptr as _);
-        }
+        MoiArc::<WFunc>::increment_strong_count(ptr as _);
     }
 
     #[unsafe(no_mangle)]
     pub extern "C" fn frbgen_wasm_run_rust_arc_decrement_strong_count_RustOpaque_WFunc(
         ptr: *const std::ffi::c_void,
     ) {
-        unsafe {
-            StdArc::<WFunc>::decrement_strong_count(ptr as _);
-        }
+        MoiArc::<WFunc>::decrement_strong_count(ptr as _);
     }
 
     #[unsafe(no_mangle)]
     pub extern "C" fn frbgen_wasm_run_rust_arc_increment_strong_count_RustOpaque_WGlobal(
         ptr: *const std::ffi::c_void,
     ) {
-        unsafe {
-            StdArc::<WGlobal>::increment_strong_count(ptr as _);
-        }
+        MoiArc::<WGlobal>::increment_strong_count(ptr as _);
     }
 
     #[unsafe(no_mangle)]
     pub extern "C" fn frbgen_wasm_run_rust_arc_decrement_strong_count_RustOpaque_WGlobal(
         ptr: *const std::ffi::c_void,
     ) {
-        unsafe {
-            StdArc::<WGlobal>::decrement_strong_count(ptr as _);
-        }
+        MoiArc::<WGlobal>::decrement_strong_count(ptr as _);
     }
 
     #[unsafe(no_mangle)]
     pub extern "C" fn frbgen_wasm_run_rust_arc_increment_strong_count_RustOpaque_WMemory(
         ptr: *const std::ffi::c_void,
     ) {
-        unsafe {
-            StdArc::<WMemory>::increment_strong_count(ptr as _);
-        }
+        MoiArc::<WMemory>::increment_strong_count(ptr as _);
     }
 
     #[unsafe(no_mangle)]
     pub extern "C" fn frbgen_wasm_run_rust_arc_decrement_strong_count_RustOpaque_WMemory(
         ptr: *const std::ffi::c_void,
     ) {
-        unsafe {
-            StdArc::<WMemory>::decrement_strong_count(ptr as _);
-        }
+        MoiArc::<WMemory>::decrement_strong_count(ptr as _);
     }
 
     #[unsafe(no_mangle)]
     pub extern "C" fn frbgen_wasm_run_rust_arc_increment_strong_count_RustOpaque_WTable(
         ptr: *const std::ffi::c_void,
     ) {
-        unsafe {
-            StdArc::<WTable>::increment_strong_count(ptr as _);
-        }
+        MoiArc::<WTable>::increment_strong_count(ptr as _);
     }
 
     #[unsafe(no_mangle)]
     pub extern "C" fn frbgen_wasm_run_rust_arc_decrement_strong_count_RustOpaque_WTable(
         ptr: *const std::ffi::c_void,
     ) {
-        unsafe {
-            StdArc::<WTable>::decrement_strong_count(ptr as _);
-        }
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_cst_new_box_autoadd_RustOpaque_WAnyRef(
-        value: usize,
-    ) -> *mut usize {
-        flutter_rust_bridge::for_generated::new_leak_box_ptr(value)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_cst_new_box_autoadd_RustOpaque_WExnRef(
-        value: usize,
-    ) -> *mut usize {
-        flutter_rust_bridge::for_generated::new_leak_box_ptr(value)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_cst_new_box_autoadd_RustOpaque_WFunc(
-        value: usize,
-    ) -> *mut usize {
-        flutter_rust_bridge::for_generated::new_leak_box_ptr(value)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_cst_new_box_autoadd_atomics() -> *mut wire_cst_atomics {
-        flutter_rust_bridge::for_generated::new_leak_box_ptr(wire_cst_atomics::new_with_null_ptr())
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_cst_new_box_autoadd_bool(value: bool) -> *mut bool {
-        flutter_rust_bridge::for_generated::new_leak_box_ptr(value)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_cst_new_box_autoadd_compiled_component(
-    ) -> *mut wire_cst_compiled_component {
-        flutter_rust_bridge::for_generated::new_leak_box_ptr(
-            wire_cst_compiled_component::new_with_null_ptr(),
-        )
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_cst_new_box_autoadd_compiled_module(
-    ) -> *mut wire_cst_compiled_module {
-        flutter_rust_bridge::for_generated::new_leak_box_ptr(
-            wire_cst_compiled_module::new_with_null_ptr(),
-        )
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_cst_new_box_autoadd_func_ty() -> *mut wire_cst_func_ty {
-        flutter_rust_bridge::for_generated::new_leak_box_ptr(wire_cst_func_ty::new_with_null_ptr())
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_cst_new_box_autoadd_function_call(
-    ) -> *mut wire_cst_function_call {
-        flutter_rust_bridge::for_generated::new_leak_box_ptr(
-            wire_cst_function_call::new_with_null_ptr(),
-        )
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_cst_new_box_autoadd_global_ty() -> *mut wire_cst_global_ty {
-        flutter_rust_bridge::for_generated::new_leak_box_ptr(wire_cst_global_ty::new_with_null_ptr())
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_cst_new_box_autoadd_memory_ty() -> *mut wire_cst_memory_ty {
-        flutter_rust_bridge::for_generated::new_leak_box_ptr(wire_cst_memory_ty::new_with_null_ptr())
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_cst_new_box_autoadd_module_config(
-    ) -> *mut wire_cst_module_config {
-        flutter_rust_bridge::for_generated::new_leak_box_ptr(
-            wire_cst_module_config::new_with_null_ptr(),
-        )
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_cst_new_box_autoadd_module_config_wasmi(
-    ) -> *mut wire_cst_module_config_wasmi {
-        flutter_rust_bridge::for_generated::new_leak_box_ptr(
-            wire_cst_module_config_wasmi::new_with_null_ptr(),
-        )
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_cst_new_box_autoadd_module_config_wasmtime(
-    ) -> *mut wire_cst_module_config_wasmtime {
-        flutter_rust_bridge::for_generated::new_leak_box_ptr(
-            wire_cst_module_config_wasmtime::new_with_null_ptr(),
-        )
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_cst_new_box_autoadd_table_args() -> *mut wire_cst_table_args {
-        flutter_rust_bridge::for_generated::new_leak_box_ptr(
-            wire_cst_table_args::new_with_null_ptr(),
-        )
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_cst_new_box_autoadd_table_ty() -> *mut wire_cst_table_ty {
-        flutter_rust_bridge::for_generated::new_leak_box_ptr(wire_cst_table_ty::new_with_null_ptr())
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_cst_new_box_autoadd_u_32(value: u32) -> *mut u32 {
-        flutter_rust_bridge::for_generated::new_leak_box_ptr(value)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_cst_new_box_autoadd_u_64(value: u64) -> *mut u64 {
-        flutter_rust_bridge::for_generated::new_leak_box_ptr(value)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_cst_new_box_autoadd_usize(value: usize) -> *mut usize {
-        flutter_rust_bridge::for_generated::new_leak_box_ptr(value)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_cst_new_box_autoadd_wasi_config_native(
-    ) -> *mut wire_cst_wasi_config_native {
-        flutter_rust_bridge::for_generated::new_leak_box_ptr(
-            wire_cst_wasi_config_native::new_with_null_ptr(),
-        )
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_cst_new_box_autoadd_wasi_stack_limits(
-    ) -> *mut wire_cst_wasi_stack_limits {
-        flutter_rust_bridge::for_generated::new_leak_box_ptr(
-            wire_cst_wasi_stack_limits::new_with_null_ptr(),
-        )
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_cst_new_box_autoadd_wasm_binary_kind(value: i32) -> *mut i32 {
-        flutter_rust_bridge::for_generated::new_leak_box_ptr(value)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_cst_new_box_autoadd_wasm_run_instance_id(
-    ) -> *mut wire_cst_wasm_run_instance_id {
-        flutter_rust_bridge::for_generated::new_leak_box_ptr(
-            wire_cst_wasm_run_instance_id::new_with_null_ptr(),
-        )
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_cst_new_box_autoadd_wasm_run_module_id(
-    ) -> *mut wire_cst_wasm_run_module_id {
-        flutter_rust_bridge::for_generated::new_leak_box_ptr(
-            wire_cst_wasm_run_module_id::new_with_null_ptr(),
-        )
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_cst_new_box_autoadd_wasm_run_shared_memory(
-    ) -> *mut wire_cst_wasm_run_shared_memory {
-        flutter_rust_bridge::for_generated::new_leak_box_ptr(
-            wire_cst_wasm_run_shared_memory::new_with_null_ptr(),
-        )
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_cst_new_box_autoadd_wasm_val() -> *mut wire_cst_wasm_val {
-        flutter_rust_bridge::for_generated::new_leak_box_ptr(wire_cst_wasm_val::new_with_null_ptr())
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_cst_new_box_autoadd_wasm_wasi_features(
-    ) -> *mut wire_cst_wasm_wasi_features {
-        flutter_rust_bridge::for_generated::new_leak_box_ptr(
-            wire_cst_wasm_wasi_features::new_with_null_ptr(),
-        )
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_cst_new_list_String(len: i32) -> *mut wire_cst_list_String {
-        let wrap = wire_cst_list_String {
-            ptr: flutter_rust_bridge::for_generated::new_leak_vec_ptr(
-                <*mut wire_cst_list_prim_u_8_strict>::new_with_null_ptr(),
-                len,
-            ),
-            len,
-        };
-        flutter_rust_bridge::for_generated::new_leak_box_ptr(wrap)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_cst_new_list_env_variable(
-        len: i32,
-    ) -> *mut wire_cst_list_env_variable {
-        let wrap = wire_cst_list_env_variable {
-            ptr: flutter_rust_bridge::for_generated::new_leak_vec_ptr(
-                <wire_cst_env_variable>::new_with_null_ptr(),
-                len,
-            ),
-            len,
-        };
-        flutter_rust_bridge::for_generated::new_leak_box_ptr(wrap)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_cst_new_list_module_export_desc(
-        len: i32,
-    ) -> *mut wire_cst_list_module_export_desc {
-        let wrap = wire_cst_list_module_export_desc {
-            ptr: flutter_rust_bridge::for_generated::new_leak_vec_ptr(
-                <wire_cst_module_export_desc>::new_with_null_ptr(),
-                len,
-            ),
-            len,
-        };
-        flutter_rust_bridge::for_generated::new_leak_box_ptr(wrap)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_cst_new_list_module_export_value(
-        len: i32,
-    ) -> *mut wire_cst_list_module_export_value {
-        let wrap = wire_cst_list_module_export_value {
-            ptr: flutter_rust_bridge::for_generated::new_leak_vec_ptr(
-                <wire_cst_module_export_value>::new_with_null_ptr(),
-                len,
-            ),
-            len,
-        };
-        flutter_rust_bridge::for_generated::new_leak_box_ptr(wrap)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_cst_new_list_module_import(
-        len: i32,
-    ) -> *mut wire_cst_list_module_import {
-        let wrap = wire_cst_list_module_import {
-            ptr: flutter_rust_bridge::for_generated::new_leak_vec_ptr(
-                <wire_cst_module_import>::new_with_null_ptr(),
-                len,
-            ),
-            len,
-        };
-        flutter_rust_bridge::for_generated::new_leak_box_ptr(wrap)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_cst_new_list_module_import_desc(
-        len: i32,
-    ) -> *mut wire_cst_list_module_import_desc {
-        let wrap = wire_cst_list_module_import_desc {
-            ptr: flutter_rust_bridge::for_generated::new_leak_vec_ptr(
-                <wire_cst_module_import_desc>::new_with_null_ptr(),
-                len,
-            ),
-            len,
-        };
-        flutter_rust_bridge::for_generated::new_leak_box_ptr(wrap)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_cst_new_list_preopened_dir(
-        len: i32,
-    ) -> *mut wire_cst_list_preopened_dir {
-        let wrap = wire_cst_list_preopened_dir {
-            ptr: flutter_rust_bridge::for_generated::new_leak_vec_ptr(
-                <wire_cst_preopened_dir>::new_with_null_ptr(),
-                len,
-            ),
-            len,
-        };
-        flutter_rust_bridge::for_generated::new_leak_box_ptr(wrap)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_cst_new_list_prim_u_8_loose(
-        len: i32,
-    ) -> *mut wire_cst_list_prim_u_8_loose {
-        let ans = wire_cst_list_prim_u_8_loose {
-            ptr: flutter_rust_bridge::for_generated::new_leak_vec_ptr(Default::default(), len),
-            len,
-        };
-        flutter_rust_bridge::for_generated::new_leak_box_ptr(ans)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_cst_new_list_prim_u_8_strict(
-        len: i32,
-    ) -> *mut wire_cst_list_prim_u_8_strict {
-        let ans = wire_cst_list_prim_u_8_strict {
-            ptr: flutter_rust_bridge::for_generated::new_leak_vec_ptr(Default::default(), len),
-            len,
-        };
-        flutter_rust_bridge::for_generated::new_leak_box_ptr(ans)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_cst_new_list_value_ty(
-        len: i32,
-    ) -> *mut wire_cst_list_value_ty {
-        let wrap = wire_cst_list_value_ty {
-            ptr: flutter_rust_bridge::for_generated::new_leak_vec_ptr(Default::default(), len),
-            len,
-        };
-        flutter_rust_bridge::for_generated::new_leak_box_ptr(wrap)
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_wasm_run_cst_new_list_wasm_val(
-        len: i32,
-    ) -> *mut wire_cst_list_wasm_val {
-        let wrap = wire_cst_list_wasm_val {
-            ptr: flutter_rust_bridge::for_generated::new_leak_vec_ptr(
-                <wire_cst_wasm_val>::new_with_null_ptr(),
-                len,
-            ),
-            len,
-        };
-        flutter_rust_bridge::for_generated::new_leak_box_ptr(wrap)
-    }
-
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_atomics {
-        field0: usize,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_compare_exchange_result {
-        success: bool,
-        value: i64,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_compiled_component {
-        field0: usize,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_compiled_module {
-        field0: usize,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_env_variable {
-        name: *mut wire_cst_list_prim_u_8_strict,
-        value: *mut wire_cst_list_prim_u_8_strict,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_external_type {
-        tag: i32,
-        kind: ExternalTypeKind,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub union ExternalTypeKind {
-        Func: wire_cst_ExternalType_Func,
-        Global: wire_cst_ExternalType_Global,
-        Table: wire_cst_ExternalType_Table,
-        Memory: wire_cst_ExternalType_Memory,
-        nil__: (),
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_ExternalType_Func {
-        field0: *mut wire_cst_func_ty,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_ExternalType_Global {
-        field0: *mut wire_cst_global_ty,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_ExternalType_Table {
-        field0: *mut wire_cst_table_ty,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_ExternalType_Memory {
-        field0: *mut wire_cst_memory_ty,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_external_value {
-        tag: i32,
-        kind: ExternalValueKind,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub union ExternalValueKind {
-        Func: wire_cst_ExternalValue_Func,
-        Global: wire_cst_ExternalValue_Global,
-        Table: wire_cst_ExternalValue_Table,
-        Memory: wire_cst_ExternalValue_Memory,
-        SharedMemory: wire_cst_ExternalValue_SharedMemory,
-        nil__: (),
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_ExternalValue_Func {
-        field0: usize,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_ExternalValue_Global {
-        field0: usize,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_ExternalValue_Table {
-        field0: usize,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_ExternalValue_Memory {
-        field0: usize,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_ExternalValue_SharedMemory {
-        field0: *mut wire_cst_wasm_run_shared_memory,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_func_ty {
-        parameters: *mut wire_cst_list_value_ty,
-        results: *mut wire_cst_list_value_ty,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_function_call {
-        args: *mut wire_cst_list_wasm_val,
-        function_id: u32,
-        function_pointer: usize,
-        num_results: usize,
-        worker_index: usize,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_global_ty {
-        value: i32,
-        mutable: bool,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_list_String {
-        ptr: *mut *mut wire_cst_list_prim_u_8_strict,
-        len: i32,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_list_env_variable {
-        ptr: *mut wire_cst_env_variable,
-        len: i32,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_list_module_export_desc {
-        ptr: *mut wire_cst_module_export_desc,
-        len: i32,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_list_module_export_value {
-        ptr: *mut wire_cst_module_export_value,
-        len: i32,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_list_module_import {
-        ptr: *mut wire_cst_module_import,
-        len: i32,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_list_module_import_desc {
-        ptr: *mut wire_cst_module_import_desc,
-        len: i32,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_list_preopened_dir {
-        ptr: *mut wire_cst_preopened_dir,
-        len: i32,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_list_prim_u_8_loose {
-        ptr: *mut u8,
-        len: i32,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_list_prim_u_8_strict {
-        ptr: *mut u8,
-        len: i32,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_list_value_ty {
-        ptr: *mut i32,
-        len: i32,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_list_wasm_val {
-        ptr: *mut wire_cst_wasm_val,
-        len: i32,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_memory_ty {
-        shared: bool,
-        minimum: u32,
-        maximum: *mut u32,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_module_config {
-        multi_value: *mut bool,
-        bulk_memory: *mut bool,
-        reference_types: *mut bool,
-        consume_fuel: *mut bool,
-        wasmi: *mut wire_cst_module_config_wasmi,
-        wasmtime: *mut wire_cst_module_config_wasmtime,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_module_config_wasmi {
-        stack_limits: *mut wire_cst_wasi_stack_limits,
-        cached_stacks: *mut usize,
-        mutable_global: *mut bool,
-        sign_extension: *mut bool,
-        saturating_float_to_int: *mut bool,
-        tail_call: *mut bool,
-        extended_const: *mut bool,
-        floats: *mut bool,
-        simd: *mut bool,
-        relaxed_simd: *mut bool,
-        multi_memory: *mut bool,
-        memory64: *mut bool,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_module_config_wasmtime {
-        debug_info: *mut bool,
-        wasm_backtrace: *mut bool,
-        native_unwind_info: *mut bool,
-        max_wasm_stack: *mut usize,
-        wasm_threads: *mut bool,
-        wasm_simd: *mut bool,
-        wasm_relaxed_simd: *mut bool,
-        relaxed_simd_deterministic: *mut bool,
-        wasm_multi_memory: *mut bool,
-        wasm_memory64: *mut bool,
-        wasm_tail_call: *mut bool,
-        wasm_gc: *mut bool,
-        wasm_function_references: *mut bool,
-        wasm_exceptions: *mut bool,
-        wasm_component_model: *mut bool,
-        static_memory_maximum_size: *mut u64,
-        static_memory_forced: *mut bool,
-        static_memory_guard_size: *mut u64,
-        parallel_compilation: *mut bool,
-        generate_address_map: *mut bool,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_module_export_desc {
-        name: *mut wire_cst_list_prim_u_8_strict,
-        ty: wire_cst_external_type,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_module_export_value {
-        desc: wire_cst_module_export_desc,
-        value: wire_cst_external_value,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_module_import {
-        module: *mut wire_cst_list_prim_u_8_strict,
-        name: *mut wire_cst_list_prim_u_8_strict,
-        value: wire_cst_external_value,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_module_import_desc {
-        module: *mut wire_cst_list_prim_u_8_strict,
-        name: *mut wire_cst_list_prim_u_8_strict,
-        ty: wire_cst_external_type,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_parallel_exec {
-        tag: i32,
-        kind: ParallelExecKind,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub union ParallelExecKind {
-        Ok: wire_cst_ParallelExec_Ok,
-        Err: wire_cst_ParallelExec_Err,
-        Call: wire_cst_ParallelExec_Call,
-        nil__: (),
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_ParallelExec_Ok {
-        field0: *mut wire_cst_list_wasm_val,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_ParallelExec_Err {
-        field0: *mut wire_cst_list_prim_u_8_strict,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_ParallelExec_Call {
-        field0: *mut wire_cst_function_call,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_pointer_and_length {
-        pointer: usize,
-        length: usize,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_preopened_dir {
-        wasm_guest_path: *mut wire_cst_list_prim_u_8_strict,
-        host_path: *mut wire_cst_list_prim_u_8_strict,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_table_args {
-        minimum: u32,
-        maximum: *mut u32,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_table_ty {
-        element: i32,
-        minimum: u32,
-        maximum: *mut u32,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_wasi_config_native {
-        capture_stdout: bool,
-        capture_stderr: bool,
-        inherit_stdin: bool,
-        inherit_env: bool,
-        inherit_args: bool,
-        args: *mut wire_cst_list_String,
-        env: *mut wire_cst_list_env_variable,
-        preopened_files: *mut wire_cst_list_String,
-        preopened_dirs: *mut wire_cst_list_preopened_dir,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_wasi_stack_limits {
-        initial_value_stack_height: usize,
-        maximum_value_stack_height: usize,
-        maximum_recursion_depth: usize,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_wasm_features {
-        mutable_global: bool,
-        saturating_float_to_int: bool,
-        sign_extension: bool,
-        reference_types: bool,
-        multi_value: bool,
-        bulk_memory: bool,
-        simd: bool,
-        relaxed_simd: bool,
-        threads: bool,
-        tail_call: bool,
-        floats: bool,
-        multi_memory: bool,
-        exceptions: bool,
-        memory64: bool,
-        extended_const: bool,
-        component_model: bool,
-        memory_control: bool,
-        garbage_collection: bool,
-        type_reflection: bool,
-        wasi_features: *mut wire_cst_wasm_wasi_features,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_wasm_run_instance_id {
-        field0: u32,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_wasm_run_module_id {
-        field0: u32,
-        field1: usize,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_wasm_run_shared_memory {
-        field0: usize,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_wasm_runtime_features {
-        name: *mut wire_cst_list_prim_u_8_strict,
-        version: *mut wire_cst_list_prim_u_8_strict,
-        is_browser: bool,
-        supported_features: wire_cst_wasm_features,
-        default_features: wire_cst_wasm_features,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_wasm_val {
-        tag: i32,
-        kind: WasmValKind,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub union WasmValKind {
-        i32: wire_cst_WasmVal_i32,
-        i64: wire_cst_WasmVal_i64,
-        f32: wire_cst_WasmVal_f32,
-        f64: wire_cst_WasmVal_f64,
-        v128: wire_cst_WasmVal_v128,
-        funcRef: wire_cst_WasmVal_funcRef,
-        externRef: wire_cst_WasmVal_externRef,
-        anyRef: wire_cst_WasmVal_anyRef,
-        exnRef: wire_cst_WasmVal_exnRef,
-        nil__: (),
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_WasmVal_i32 {
-        field0: i32,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_WasmVal_i64 {
-        field0: i64,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_WasmVal_f32 {
-        field0: f32,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_WasmVal_f64 {
-        field0: f64,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_WasmVal_v128 {
-        field0: *mut wire_cst_list_prim_u_8_strict,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_WasmVal_funcRef {
-        field0: *mut usize,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_WasmVal_externRef {
-        field0: *mut u32,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_WasmVal_anyRef {
-        field0: *mut usize,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_WasmVal_exnRef {
-        field0: *mut usize,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_wasm_wasi_features {
-        io: bool,
-        filesystem: bool,
-        clocks: bool,
-        random: bool,
-        poll: bool,
-        machine_learning: bool,
-        crypto: bool,
-        threads: bool,
+        MoiArc::<WTable>::decrement_strong_count(ptr as _);
     }
 }
 #[cfg(not(target_family = "wasm"))]
@@ -7959,1923 +6028,116 @@ mod web {
 
     flutter_rust_bridge::frb_generated_boilerplate_web!();
 
-    // Section: dart2rust
-
-    impl CstDecode<flutter_rust_bridge::for_generated::anyhow::Error> for String {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> flutter_rust_bridge::for_generated::anyhow::Error {
-            unimplemented!()
-        }
-    }
-    impl CstDecode<StreamSink<Vec<u8>, flutter_rust_bridge::for_generated::DcoCodec>> for String {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> StreamSink<Vec<u8>, flutter_rust_bridge::for_generated::DcoCodec> {
-            StreamSink::deserialize(self)
-        }
-    }
-    impl
-        CstDecode<
-            StreamSink<crate::types::ParallelExec, flutter_rust_bridge::for_generated::DcoCodec>,
-        > for String
-    {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(
-            self,
-        ) -> StreamSink<crate::types::ParallelExec, flutter_rust_bridge::for_generated::DcoCodec>
-        {
-            StreamSink::deserialize(self)
-        }
-    }
-    impl CstDecode<String> for String {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> String {
-            self
-        }
-    }
-    impl CstDecode<crate::atomics::Atomics>
-        for flutter_rust_bridge::for_generated::wasm_bindgen::JsValue
-    {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::atomics::Atomics {
-            let self_ = self
-                .dyn_into::<flutter_rust_bridge::for_generated::js_sys::Array>()
-                .unwrap();
-            assert_eq!(
-                self_.length(),
-                1,
-                "Expected 1 elements, got {}",
-                self_.length()
-            );
-            crate::atomics::Atomics(self_.get(0).cst_decode())
-        }
-    }
-    impl CstDecode<crate::atomics::CompareExchangeResult>
-        for flutter_rust_bridge::for_generated::wasm_bindgen::JsValue
-    {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::atomics::CompareExchangeResult {
-            let self_ = self
-                .dyn_into::<flutter_rust_bridge::for_generated::js_sys::Array>()
-                .unwrap();
-            assert_eq!(
-                self_.length(),
-                2,
-                "Expected 2 elements, got {}",
-                self_.length()
-            );
-            crate::atomics::CompareExchangeResult {
-                success: self_.get(0).cst_decode(),
-                value: self_.get(1).cst_decode(),
-            }
-        }
-    }
-    impl CstDecode<crate::api::wasmtime::CompiledComponent>
-        for flutter_rust_bridge::for_generated::wasm_bindgen::JsValue
-    {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::api::wasmtime::CompiledComponent {
-            let self_ = self
-                .dyn_into::<flutter_rust_bridge::for_generated::js_sys::Array>()
-                .unwrap();
-            assert_eq!(
-                self_.length(),
-                1,
-                "Expected 1 elements, got {}",
-                self_.length()
-            );
-            crate::api::wasmtime::CompiledComponent(self_.get(0).cst_decode())
-        }
-    }
-    impl CstDecode<crate::api::wasmtime::CompiledModule>
-        for flutter_rust_bridge::for_generated::wasm_bindgen::JsValue
-    {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::api::wasmtime::CompiledModule {
-            let self_ = self
-                .dyn_into::<flutter_rust_bridge::for_generated::js_sys::Array>()
-                .unwrap();
-            assert_eq!(
-                self_.length(),
-                1,
-                "Expected 1 elements, got {}",
-                self_.length()
-            );
-            crate::api::wasmtime::CompiledModule(self_.get(0).cst_decode())
-        }
-    }
-    impl CstDecode<crate::config::EnvVariable>
-        for flutter_rust_bridge::for_generated::wasm_bindgen::JsValue
-    {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::config::EnvVariable {
-            let self_ = self
-                .dyn_into::<flutter_rust_bridge::for_generated::js_sys::Array>()
-                .unwrap();
-            assert_eq!(
-                self_.length(),
-                2,
-                "Expected 2 elements, got {}",
-                self_.length()
-            );
-            crate::config::EnvVariable {
-                name: self_.get(0).cst_decode(),
-                value: self_.get(1).cst_decode(),
-            }
-        }
-    }
-    impl CstDecode<crate::types::ExternalType>
-        for flutter_rust_bridge::for_generated::wasm_bindgen::JsValue
-    {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::types::ExternalType {
-            let self_ = self.unchecked_into::<flutter_rust_bridge::for_generated::js_sys::Array>();
-            match self_.get(0).unchecked_into_f64() as _ {
-                0 => crate::types::ExternalType::Func(self_.get(1).cst_decode()),
-                1 => crate::types::ExternalType::Global(self_.get(1).cst_decode()),
-                2 => crate::types::ExternalType::Table(self_.get(1).cst_decode()),
-                3 => crate::types::ExternalType::Memory(self_.get(1).cst_decode()),
-                _ => unreachable!(),
-            }
-        }
-    }
-    impl CstDecode<crate::types::ExternalValue>
-        for flutter_rust_bridge::for_generated::wasm_bindgen::JsValue
-    {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::types::ExternalValue {
-            let self_ = self.unchecked_into::<flutter_rust_bridge::for_generated::js_sys::Array>();
-            match self_.get(0).unchecked_into_f64() as _ {
-                0 => crate::types::ExternalValue::Func(self_.get(1).cst_decode()),
-                1 => crate::types::ExternalValue::Global(self_.get(1).cst_decode()),
-                2 => crate::types::ExternalValue::Table(self_.get(1).cst_decode()),
-                3 => crate::types::ExternalValue::Memory(self_.get(1).cst_decode()),
-                4 => crate::types::ExternalValue::SharedMemory(self_.get(1).cst_decode()),
-                _ => unreachable!(),
-            }
-        }
-    }
-    impl CstDecode<crate::types::FuncTy> for flutter_rust_bridge::for_generated::wasm_bindgen::JsValue {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::types::FuncTy {
-            let self_ = self
-                .dyn_into::<flutter_rust_bridge::for_generated::js_sys::Array>()
-                .unwrap();
-            assert_eq!(
-                self_.length(),
-                2,
-                "Expected 2 elements, got {}",
-                self_.length()
-            );
-            crate::types::FuncTy {
-                parameters: self_.get(0).cst_decode(),
-                results: self_.get(1).cst_decode(),
-            }
-        }
-    }
-    impl CstDecode<crate::types::FunctionCall>
-        for flutter_rust_bridge::for_generated::wasm_bindgen::JsValue
-    {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::types::FunctionCall {
-            let self_ = self
-                .dyn_into::<flutter_rust_bridge::for_generated::js_sys::Array>()
-                .unwrap();
-            assert_eq!(
-                self_.length(),
-                5,
-                "Expected 5 elements, got {}",
-                self_.length()
-            );
-            crate::types::FunctionCall {
-                args: self_.get(0).cst_decode(),
-                function_id: self_.get(1).cst_decode(),
-                function_pointer: self_.get(2).cst_decode(),
-                num_results: self_.get(3).cst_decode(),
-                worker_index: self_.get(4).cst_decode(),
-            }
-        }
-    }
-    impl CstDecode<crate::types::GlobalTy>
-        for flutter_rust_bridge::for_generated::wasm_bindgen::JsValue
-    {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::types::GlobalTy {
-            let self_ = self
-                .dyn_into::<flutter_rust_bridge::for_generated::js_sys::Array>()
-                .unwrap();
-            assert_eq!(
-                self_.length(),
-                2,
-                "Expected 2 elements, got {}",
-                self_.length()
-            );
-            crate::types::GlobalTy {
-                value: self_.get(0).cst_decode(),
-                mutable: self_.get(1).cst_decode(),
-            }
-        }
-    }
-    impl CstDecode<Vec<String>> for flutter_rust_bridge::for_generated::wasm_bindgen::JsValue {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> Vec<String> {
-            self.dyn_into::<flutter_rust_bridge::for_generated::js_sys::Array>()
-                .unwrap()
-                .iter()
-                .map(CstDecode::cst_decode)
-                .collect()
-        }
-    }
-    impl CstDecode<Vec<crate::config::EnvVariable>>
-        for flutter_rust_bridge::for_generated::wasm_bindgen::JsValue
-    {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> Vec<crate::config::EnvVariable> {
-            self.dyn_into::<flutter_rust_bridge::for_generated::js_sys::Array>()
-                .unwrap()
-                .iter()
-                .map(CstDecode::cst_decode)
-                .collect()
-        }
-    }
-    impl CstDecode<Vec<crate::types::ModuleExportDesc>>
-        for flutter_rust_bridge::for_generated::wasm_bindgen::JsValue
-    {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> Vec<crate::types::ModuleExportDesc> {
-            self.dyn_into::<flutter_rust_bridge::for_generated::js_sys::Array>()
-                .unwrap()
-                .iter()
-                .map(CstDecode::cst_decode)
-                .collect()
-        }
-    }
-    impl CstDecode<Vec<crate::types::ModuleExportValue>>
-        for flutter_rust_bridge::for_generated::wasm_bindgen::JsValue
-    {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> Vec<crate::types::ModuleExportValue> {
-            self.dyn_into::<flutter_rust_bridge::for_generated::js_sys::Array>()
-                .unwrap()
-                .iter()
-                .map(CstDecode::cst_decode)
-                .collect()
-        }
-    }
-    impl CstDecode<Vec<crate::types::ModuleImport>>
-        for flutter_rust_bridge::for_generated::wasm_bindgen::JsValue
-    {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> Vec<crate::types::ModuleImport> {
-            self.dyn_into::<flutter_rust_bridge::for_generated::js_sys::Array>()
-                .unwrap()
-                .iter()
-                .map(CstDecode::cst_decode)
-                .collect()
-        }
-    }
-    impl CstDecode<Vec<crate::types::ModuleImportDesc>>
-        for flutter_rust_bridge::for_generated::wasm_bindgen::JsValue
-    {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> Vec<crate::types::ModuleImportDesc> {
-            self.dyn_into::<flutter_rust_bridge::for_generated::js_sys::Array>()
-                .unwrap()
-                .iter()
-                .map(CstDecode::cst_decode)
-                .collect()
-        }
-    }
-    impl CstDecode<Vec<crate::config::PreopenedDir>>
-        for flutter_rust_bridge::for_generated::wasm_bindgen::JsValue
-    {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> Vec<crate::config::PreopenedDir> {
-            self.dyn_into::<flutter_rust_bridge::for_generated::js_sys::Array>()
-                .unwrap()
-                .iter()
-                .map(CstDecode::cst_decode)
-                .collect()
-        }
-    }
-    impl CstDecode<Vec<u8>> for Box<[u8]> {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> Vec<u8> {
-            self.into_vec()
-        }
-    }
-    impl CstDecode<Vec<crate::types::ValueTy>>
-        for flutter_rust_bridge::for_generated::wasm_bindgen::JsValue
-    {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> Vec<crate::types::ValueTy> {
-            self.dyn_into::<flutter_rust_bridge::for_generated::js_sys::Array>()
-                .unwrap()
-                .iter()
-                .map(CstDecode::cst_decode)
-                .collect()
-        }
-    }
-    impl CstDecode<Vec<crate::types::WasmVal>>
-        for flutter_rust_bridge::for_generated::wasm_bindgen::JsValue
-    {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> Vec<crate::types::WasmVal> {
-            self.dyn_into::<flutter_rust_bridge::for_generated::js_sys::Array>()
-                .unwrap()
-                .iter()
-                .map(CstDecode::cst_decode)
-                .collect()
-        }
-    }
-    impl CstDecode<crate::types::MemoryTy>
-        for flutter_rust_bridge::for_generated::wasm_bindgen::JsValue
-    {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::types::MemoryTy {
-            let self_ = self
-                .dyn_into::<flutter_rust_bridge::for_generated::js_sys::Array>()
-                .unwrap();
-            assert_eq!(
-                self_.length(),
-                3,
-                "Expected 3 elements, got {}",
-                self_.length()
-            );
-            crate::types::MemoryTy {
-                shared: self_.get(0).cst_decode(),
-                minimum: self_.get(1).cst_decode(),
-                maximum: self_.get(2).cst_decode(),
-            }
-        }
-    }
-    impl CstDecode<crate::config::ModuleConfig>
-        for flutter_rust_bridge::for_generated::wasm_bindgen::JsValue
-    {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::config::ModuleConfig {
-            let self_ = self
-                .dyn_into::<flutter_rust_bridge::for_generated::js_sys::Array>()
-                .unwrap();
-            assert_eq!(
-                self_.length(),
-                6,
-                "Expected 6 elements, got {}",
-                self_.length()
-            );
-            crate::config::ModuleConfig {
-                multi_value: self_.get(0).cst_decode(),
-                bulk_memory: self_.get(1).cst_decode(),
-                reference_types: self_.get(2).cst_decode(),
-                consume_fuel: self_.get(3).cst_decode(),
-                wasmi: self_.get(4).cst_decode(),
-                wasmtime: self_.get(5).cst_decode(),
-            }
-        }
-    }
-    impl CstDecode<crate::config::ModuleConfigWasmi>
-        for flutter_rust_bridge::for_generated::wasm_bindgen::JsValue
-    {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::config::ModuleConfigWasmi {
-            let self_ = self
-                .dyn_into::<flutter_rust_bridge::for_generated::js_sys::Array>()
-                .unwrap();
-            assert_eq!(
-                self_.length(),
-                12,
-                "Expected 12 elements, got {}",
-                self_.length()
-            );
-            crate::config::ModuleConfigWasmi {
-                stack_limits: self_.get(0).cst_decode(),
-                cached_stacks: self_.get(1).cst_decode(),
-                mutable_global: self_.get(2).cst_decode(),
-                sign_extension: self_.get(3).cst_decode(),
-                saturating_float_to_int: self_.get(4).cst_decode(),
-                tail_call: self_.get(5).cst_decode(),
-                extended_const: self_.get(6).cst_decode(),
-                floats: self_.get(7).cst_decode(),
-                simd: self_.get(8).cst_decode(),
-                relaxed_simd: self_.get(9).cst_decode(),
-                multi_memory: self_.get(10).cst_decode(),
-                memory64: self_.get(11).cst_decode(),
-            }
-        }
-    }
-    impl CstDecode<crate::config::ModuleConfigWasmtime>
-        for flutter_rust_bridge::for_generated::wasm_bindgen::JsValue
-    {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::config::ModuleConfigWasmtime {
-            let self_ = self
-                .dyn_into::<flutter_rust_bridge::for_generated::js_sys::Array>()
-                .unwrap();
-            assert_eq!(
-                self_.length(),
-                20,
-                "Expected 20 elements, got {}",
-                self_.length()
-            );
-            crate::config::ModuleConfigWasmtime {
-                debug_info: self_.get(0).cst_decode(),
-                wasm_backtrace: self_.get(1).cst_decode(),
-                native_unwind_info: self_.get(2).cst_decode(),
-                max_wasm_stack: self_.get(3).cst_decode(),
-                wasm_threads: self_.get(4).cst_decode(),
-                wasm_simd: self_.get(5).cst_decode(),
-                wasm_relaxed_simd: self_.get(6).cst_decode(),
-                relaxed_simd_deterministic: self_.get(7).cst_decode(),
-                wasm_multi_memory: self_.get(8).cst_decode(),
-                wasm_memory64: self_.get(9).cst_decode(),
-                wasm_tail_call: self_.get(10).cst_decode(),
-                wasm_gc: self_.get(11).cst_decode(),
-                wasm_function_references: self_.get(12).cst_decode(),
-                wasm_exceptions: self_.get(13).cst_decode(),
-                wasm_component_model: self_.get(14).cst_decode(),
-                static_memory_maximum_size: self_.get(15).cst_decode(),
-                static_memory_forced: self_.get(16).cst_decode(),
-                static_memory_guard_size: self_.get(17).cst_decode(),
-                parallel_compilation: self_.get(18).cst_decode(),
-                generate_address_map: self_.get(19).cst_decode(),
-            }
-        }
-    }
-    impl CstDecode<crate::types::ModuleExportDesc>
-        for flutter_rust_bridge::for_generated::wasm_bindgen::JsValue
-    {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::types::ModuleExportDesc {
-            let self_ = self
-                .dyn_into::<flutter_rust_bridge::for_generated::js_sys::Array>()
-                .unwrap();
-            assert_eq!(
-                self_.length(),
-                2,
-                "Expected 2 elements, got {}",
-                self_.length()
-            );
-            crate::types::ModuleExportDesc {
-                name: self_.get(0).cst_decode(),
-                ty: self_.get(1).cst_decode(),
-            }
-        }
-    }
-    impl CstDecode<crate::types::ModuleExportValue>
-        for flutter_rust_bridge::for_generated::wasm_bindgen::JsValue
-    {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::types::ModuleExportValue {
-            let self_ = self
-                .dyn_into::<flutter_rust_bridge::for_generated::js_sys::Array>()
-                .unwrap();
-            assert_eq!(
-                self_.length(),
-                2,
-                "Expected 2 elements, got {}",
-                self_.length()
-            );
-            crate::types::ModuleExportValue {
-                desc: self_.get(0).cst_decode(),
-                value: self_.get(1).cst_decode(),
-            }
-        }
-    }
-    impl CstDecode<crate::types::ModuleImport>
-        for flutter_rust_bridge::for_generated::wasm_bindgen::JsValue
-    {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::types::ModuleImport {
-            let self_ = self
-                .dyn_into::<flutter_rust_bridge::for_generated::js_sys::Array>()
-                .unwrap();
-            assert_eq!(
-                self_.length(),
-                3,
-                "Expected 3 elements, got {}",
-                self_.length()
-            );
-            crate::types::ModuleImport {
-                module: self_.get(0).cst_decode(),
-                name: self_.get(1).cst_decode(),
-                value: self_.get(2).cst_decode(),
-            }
-        }
-    }
-    impl CstDecode<crate::types::ModuleImportDesc>
-        for flutter_rust_bridge::for_generated::wasm_bindgen::JsValue
-    {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::types::ModuleImportDesc {
-            let self_ = self
-                .dyn_into::<flutter_rust_bridge::for_generated::js_sys::Array>()
-                .unwrap();
-            assert_eq!(
-                self_.length(),
-                3,
-                "Expected 3 elements, got {}",
-                self_.length()
-            );
-            crate::types::ModuleImportDesc {
-                module: self_.get(0).cst_decode(),
-                name: self_.get(1).cst_decode(),
-                ty: self_.get(2).cst_decode(),
-            }
-        }
-    }
-    impl CstDecode<crate::types::ParallelExec>
-        for flutter_rust_bridge::for_generated::wasm_bindgen::JsValue
-    {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::types::ParallelExec {
-            let self_ = self.unchecked_into::<flutter_rust_bridge::for_generated::js_sys::Array>();
-            match self_.get(0).unchecked_into_f64() as _ {
-                0 => crate::types::ParallelExec::Ok(self_.get(1).cst_decode()),
-                1 => crate::types::ParallelExec::Err(self_.get(1).cst_decode()),
-                2 => crate::types::ParallelExec::Call(self_.get(1).cst_decode()),
-                _ => unreachable!(),
-            }
-        }
-    }
-    impl CstDecode<crate::types::PointerAndLength>
-        for flutter_rust_bridge::for_generated::wasm_bindgen::JsValue
-    {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::types::PointerAndLength {
-            let self_ = self
-                .dyn_into::<flutter_rust_bridge::for_generated::js_sys::Array>()
-                .unwrap();
-            assert_eq!(
-                self_.length(),
-                2,
-                "Expected 2 elements, got {}",
-                self_.length()
-            );
-            crate::types::PointerAndLength {
-                pointer: self_.get(0).cst_decode(),
-                length: self_.get(1).cst_decode(),
-            }
-        }
-    }
-    impl CstDecode<crate::config::PreopenedDir>
-        for flutter_rust_bridge::for_generated::wasm_bindgen::JsValue
-    {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::config::PreopenedDir {
-            let self_ = self
-                .dyn_into::<flutter_rust_bridge::for_generated::js_sys::Array>()
-                .unwrap();
-            assert_eq!(
-                self_.length(),
-                2,
-                "Expected 2 elements, got {}",
-                self_.length()
-            );
-            crate::config::PreopenedDir {
-                wasm_guest_path: self_.get(0).cst_decode(),
-                host_path: self_.get(1).cst_decode(),
-            }
-        }
-    }
-    impl CstDecode<crate::types::TableArgs>
-        for flutter_rust_bridge::for_generated::wasm_bindgen::JsValue
-    {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::types::TableArgs {
-            let self_ = self
-                .dyn_into::<flutter_rust_bridge::for_generated::js_sys::Array>()
-                .unwrap();
-            assert_eq!(
-                self_.length(),
-                2,
-                "Expected 2 elements, got {}",
-                self_.length()
-            );
-            crate::types::TableArgs {
-                minimum: self_.get(0).cst_decode(),
-                maximum: self_.get(1).cst_decode(),
-            }
-        }
-    }
-    impl CstDecode<crate::types::TableTy>
-        for flutter_rust_bridge::for_generated::wasm_bindgen::JsValue
-    {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::types::TableTy {
-            let self_ = self
-                .dyn_into::<flutter_rust_bridge::for_generated::js_sys::Array>()
-                .unwrap();
-            assert_eq!(
-                self_.length(),
-                3,
-                "Expected 3 elements, got {}",
-                self_.length()
-            );
-            crate::types::TableTy {
-                element: self_.get(0).cst_decode(),
-                minimum: self_.get(1).cst_decode(),
-                maximum: self_.get(2).cst_decode(),
-            }
-        }
-    }
-    impl CstDecode<[u8; 16]> for Box<[u8]> {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> [u8; 16] {
-            let vec: Vec<u8> = self.cst_decode();
-            flutter_rust_bridge::for_generated::from_vec_to_array(vec)
-        }
-    }
-    impl CstDecode<crate::config::WasiConfigNative>
-        for flutter_rust_bridge::for_generated::wasm_bindgen::JsValue
-    {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::config::WasiConfigNative {
-            let self_ = self
-                .dyn_into::<flutter_rust_bridge::for_generated::js_sys::Array>()
-                .unwrap();
-            assert_eq!(
-                self_.length(),
-                9,
-                "Expected 9 elements, got {}",
-                self_.length()
-            );
-            crate::config::WasiConfigNative {
-                capture_stdout: self_.get(0).cst_decode(),
-                capture_stderr: self_.get(1).cst_decode(),
-                inherit_stdin: self_.get(2).cst_decode(),
-                inherit_env: self_.get(3).cst_decode(),
-                inherit_args: self_.get(4).cst_decode(),
-                args: self_.get(5).cst_decode(),
-                env: self_.get(6).cst_decode(),
-                preopened_files: self_.get(7).cst_decode(),
-                preopened_dirs: self_.get(8).cst_decode(),
-            }
-        }
-    }
-    impl CstDecode<crate::config::WasiStackLimits>
-        for flutter_rust_bridge::for_generated::wasm_bindgen::JsValue
-    {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::config::WasiStackLimits {
-            let self_ = self
-                .dyn_into::<flutter_rust_bridge::for_generated::js_sys::Array>()
-                .unwrap();
-            assert_eq!(
-                self_.length(),
-                3,
-                "Expected 3 elements, got {}",
-                self_.length()
-            );
-            crate::config::WasiStackLimits {
-                initial_value_stack_height: self_.get(0).cst_decode(),
-                maximum_value_stack_height: self_.get(1).cst_decode(),
-                maximum_recursion_depth: self_.get(2).cst_decode(),
-            }
-        }
-    }
-    impl CstDecode<crate::config::WasmFeatures>
-        for flutter_rust_bridge::for_generated::wasm_bindgen::JsValue
-    {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::config::WasmFeatures {
-            let self_ = self
-                .dyn_into::<flutter_rust_bridge::for_generated::js_sys::Array>()
-                .unwrap();
-            assert_eq!(
-                self_.length(),
-                20,
-                "Expected 20 elements, got {}",
-                self_.length()
-            );
-            crate::config::WasmFeatures {
-                mutable_global: self_.get(0).cst_decode(),
-                saturating_float_to_int: self_.get(1).cst_decode(),
-                sign_extension: self_.get(2).cst_decode(),
-                reference_types: self_.get(3).cst_decode(),
-                multi_value: self_.get(4).cst_decode(),
-                bulk_memory: self_.get(5).cst_decode(),
-                simd: self_.get(6).cst_decode(),
-                relaxed_simd: self_.get(7).cst_decode(),
-                threads: self_.get(8).cst_decode(),
-                tail_call: self_.get(9).cst_decode(),
-                floats: self_.get(10).cst_decode(),
-                multi_memory: self_.get(11).cst_decode(),
-                exceptions: self_.get(12).cst_decode(),
-                memory64: self_.get(13).cst_decode(),
-                extended_const: self_.get(14).cst_decode(),
-                component_model: self_.get(15).cst_decode(),
-                memory_control: self_.get(16).cst_decode(),
-                garbage_collection: self_.get(17).cst_decode(),
-                type_reflection: self_.get(18).cst_decode(),
-                wasi_features: self_.get(19).cst_decode(),
-            }
-        }
-    }
-    impl CstDecode<crate::api::wasmtime::WasmRunInstanceId>
-        for flutter_rust_bridge::for_generated::wasm_bindgen::JsValue
-    {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::api::wasmtime::WasmRunInstanceId {
-            let self_ = self
-                .dyn_into::<flutter_rust_bridge::for_generated::js_sys::Array>()
-                .unwrap();
-            assert_eq!(
-                self_.length(),
-                1,
-                "Expected 1 elements, got {}",
-                self_.length()
-            );
-            crate::api::wasmtime::WasmRunInstanceId(self_.get(0).cst_decode())
-        }
-    }
-    impl CstDecode<crate::api::wasmtime::WasmRunModuleId>
-        for flutter_rust_bridge::for_generated::wasm_bindgen::JsValue
-    {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::api::wasmtime::WasmRunModuleId {
-            let self_ = self
-                .dyn_into::<flutter_rust_bridge::for_generated::js_sys::Array>()
-                .unwrap();
-            assert_eq!(
-                self_.length(),
-                2,
-                "Expected 2 elements, got {}",
-                self_.length()
-            );
-            crate::api::wasmtime::WasmRunModuleId(
-                self_.get(0).cst_decode(),
-                self_.get(1).cst_decode(),
-            )
-        }
-    }
-    impl CstDecode<crate::api::wasmtime::WasmRunSharedMemory>
-        for flutter_rust_bridge::for_generated::wasm_bindgen::JsValue
-    {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::api::wasmtime::WasmRunSharedMemory {
-            let self_ = self
-                .dyn_into::<flutter_rust_bridge::for_generated::js_sys::Array>()
-                .unwrap();
-            assert_eq!(
-                self_.length(),
-                1,
-                "Expected 1 elements, got {}",
-                self_.length()
-            );
-            crate::api::wasmtime::WasmRunSharedMemory(self_.get(0).cst_decode())
-        }
-    }
-    impl CstDecode<crate::config::WasmRuntimeFeatures>
-        for flutter_rust_bridge::for_generated::wasm_bindgen::JsValue
-    {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::config::WasmRuntimeFeatures {
-            let self_ = self
-                .dyn_into::<flutter_rust_bridge::for_generated::js_sys::Array>()
-                .unwrap();
-            assert_eq!(
-                self_.length(),
-                5,
-                "Expected 5 elements, got {}",
-                self_.length()
-            );
-            crate::config::WasmRuntimeFeatures {
-                name: self_.get(0).cst_decode(),
-                version: self_.get(1).cst_decode(),
-                is_browser: self_.get(2).cst_decode(),
-                supported_features: self_.get(3).cst_decode(),
-                default_features: self_.get(4).cst_decode(),
-            }
-        }
-    }
-    impl CstDecode<crate::types::WasmVal>
-        for flutter_rust_bridge::for_generated::wasm_bindgen::JsValue
-    {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::types::WasmVal {
-            let self_ = self.unchecked_into::<flutter_rust_bridge::for_generated::js_sys::Array>();
-            match self_.get(0).unchecked_into_f64() as _ {
-                0 => crate::types::WasmVal::i32(self_.get(1).cst_decode()),
-                1 => crate::types::WasmVal::i64(self_.get(1).cst_decode()),
-                2 => crate::types::WasmVal::f32(self_.get(1).cst_decode()),
-                3 => crate::types::WasmVal::f64(self_.get(1).cst_decode()),
-                4 => crate::types::WasmVal::v128(self_.get(1).cst_decode()),
-                5 => crate::types::WasmVal::funcRef(self_.get(1).cst_decode()),
-                6 => crate::types::WasmVal::externRef(self_.get(1).cst_decode()),
-                7 => crate::types::WasmVal::anyRef(self_.get(1).cst_decode()),
-                8 => crate::types::WasmVal::exnRef(self_.get(1).cst_decode()),
-                _ => unreachable!(),
-            }
-        }
-    }
-    impl CstDecode<crate::config::WasmWasiFeatures>
-        for flutter_rust_bridge::for_generated::wasm_bindgen::JsValue
-    {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::config::WasmWasiFeatures {
-            let self_ = self
-                .dyn_into::<flutter_rust_bridge::for_generated::js_sys::Array>()
-                .unwrap();
-            assert_eq!(
-                self_.length(),
-                8,
-                "Expected 8 elements, got {}",
-                self_.length()
-            );
-            crate::config::WasmWasiFeatures {
-                io: self_.get(0).cst_decode(),
-                filesystem: self_.get(1).cst_decode(),
-                clocks: self_.get(2).cst_decode(),
-                random: self_.get(3).cst_decode(),
-                poll: self_.get(4).cst_decode(),
-                machine_learning: self_.get(5).cst_decode(),
-                crypto: self_.get(6).cst_decode(),
-                threads: self_.get(7).cst_decode(),
-            }
-        }
-    }
-    impl CstDecode<flutter_rust_bridge::for_generated::anyhow::Error>
-        for flutter_rust_bridge::for_generated::wasm_bindgen::JsValue
-    {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> flutter_rust_bridge::for_generated::anyhow::Error {
-            unimplemented!()
-        }
-    }
-    impl CstDecode<RustOpaqueNom<Arc<RwLock<WSharedMemory>>>>
-        for flutter_rust_bridge::for_generated::wasm_bindgen::JsValue
-    {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> RustOpaqueNom<Arc<RwLock<WSharedMemory>>> {
-            #[cfg(target_pointer_width = "64")]
-            {
-                compile_error!("64-bit pointers are not supported.");
-            }
-            unsafe { decode_rust_opaque_nom((self.as_f64().unwrap() as usize) as _) }
-        }
-    }
-    impl CstDecode<RustOpaqueNom<Arc<std::sync::Mutex<Component>>>>
-        for flutter_rust_bridge::for_generated::wasm_bindgen::JsValue
-    {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> RustOpaqueNom<Arc<std::sync::Mutex<Component>>> {
-            #[cfg(target_pointer_width = "64")]
-            {
-                compile_error!("64-bit pointers are not supported.");
-            }
-            unsafe { decode_rust_opaque_nom((self.as_f64().unwrap() as usize) as _) }
-        }
-    }
-    impl CstDecode<RustOpaqueNom<Arc<std::sync::Mutex<WModule>>>>
-        for flutter_rust_bridge::for_generated::wasm_bindgen::JsValue
-    {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> RustOpaqueNom<Arc<std::sync::Mutex<WModule>>> {
-            #[cfg(target_pointer_width = "64")]
-            {
-                compile_error!("64-bit pointers are not supported.");
-            }
-            unsafe { decode_rust_opaque_nom((self.as_f64().unwrap() as usize) as _) }
-        }
-    }
-    impl CstDecode<RustOpaqueNom<CallStack>>
-        for flutter_rust_bridge::for_generated::wasm_bindgen::JsValue
-    {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> RustOpaqueNom<CallStack> {
-            #[cfg(target_pointer_width = "64")]
-            {
-                compile_error!("64-bit pointers are not supported.");
-            }
-            unsafe { decode_rust_opaque_nom((self.as_f64().unwrap() as usize) as _) }
-        }
-    }
-    impl CstDecode<RustOpaqueNom<WAnyRef>>
-        for flutter_rust_bridge::for_generated::wasm_bindgen::JsValue
-    {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> RustOpaqueNom<WAnyRef> {
-            #[cfg(target_pointer_width = "64")]
-            {
-                compile_error!("64-bit pointers are not supported.");
-            }
-            unsafe { decode_rust_opaque_nom((self.as_f64().unwrap() as usize) as _) }
-        }
-    }
-    impl CstDecode<RustOpaqueNom<WExnRef>>
-        for flutter_rust_bridge::for_generated::wasm_bindgen::JsValue
-    {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> RustOpaqueNom<WExnRef> {
-            #[cfg(target_pointer_width = "64")]
-            {
-                compile_error!("64-bit pointers are not supported.");
-            }
-            unsafe { decode_rust_opaque_nom((self.as_f64().unwrap() as usize) as _) }
-        }
-    }
-    impl CstDecode<RustOpaqueNom<WFunc>> for flutter_rust_bridge::for_generated::wasm_bindgen::JsValue {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> RustOpaqueNom<WFunc> {
-            #[cfg(target_pointer_width = "64")]
-            {
-                compile_error!("64-bit pointers are not supported.");
-            }
-            unsafe { decode_rust_opaque_nom((self.as_f64().unwrap() as usize) as _) }
-        }
-    }
-    impl CstDecode<RustOpaqueNom<WGlobal>>
-        for flutter_rust_bridge::for_generated::wasm_bindgen::JsValue
-    {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> RustOpaqueNom<WGlobal> {
-            #[cfg(target_pointer_width = "64")]
-            {
-                compile_error!("64-bit pointers are not supported.");
-            }
-            unsafe { decode_rust_opaque_nom((self.as_f64().unwrap() as usize) as _) }
-        }
-    }
-    impl CstDecode<RustOpaqueNom<WMemory>>
-        for flutter_rust_bridge::for_generated::wasm_bindgen::JsValue
-    {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> RustOpaqueNom<WMemory> {
-            #[cfg(target_pointer_width = "64")]
-            {
-                compile_error!("64-bit pointers are not supported.");
-            }
-            unsafe { decode_rust_opaque_nom((self.as_f64().unwrap() as usize) as _) }
-        }
-    }
-    impl CstDecode<RustOpaqueNom<WTable>>
-        for flutter_rust_bridge::for_generated::wasm_bindgen::JsValue
-    {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> RustOpaqueNom<WTable> {
-            #[cfg(target_pointer_width = "64")]
-            {
-                compile_error!("64-bit pointers are not supported.");
-            }
-            unsafe { decode_rust_opaque_nom((self.as_f64().unwrap() as usize) as _) }
-        }
-    }
-    impl CstDecode<StreamSink<Vec<u8>, flutter_rust_bridge::for_generated::DcoCodec>>
-        for flutter_rust_bridge::for_generated::wasm_bindgen::JsValue
-    {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> StreamSink<Vec<u8>, flutter_rust_bridge::for_generated::DcoCodec> {
-            StreamSink::deserialize(self.as_string().expect("should be a string"))
-        }
-    }
-    impl
-        CstDecode<
-            StreamSink<crate::types::ParallelExec, flutter_rust_bridge::for_generated::DcoCodec>,
-        > for flutter_rust_bridge::for_generated::wasm_bindgen::JsValue
-    {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(
-            self,
-        ) -> StreamSink<crate::types::ParallelExec, flutter_rust_bridge::for_generated::DcoCodec>
-        {
-            StreamSink::deserialize(self.as_string().expect("should be a string"))
-        }
-    }
-    impl CstDecode<String> for flutter_rust_bridge::for_generated::wasm_bindgen::JsValue {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> String {
-            self.as_string().expect("non-UTF-8 string, or not a string")
-        }
-    }
-    impl CstDecode<crate::atomics::AtomicKind>
-        for flutter_rust_bridge::for_generated::wasm_bindgen::JsValue
-    {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::atomics::AtomicKind {
-            (self.unchecked_into_f64() as i32).cst_decode()
-        }
-    }
-    impl CstDecode<crate::atomics::AtomicOrdering>
-        for flutter_rust_bridge::for_generated::wasm_bindgen::JsValue
-    {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::atomics::AtomicOrdering {
-            (self.unchecked_into_f64() as i32).cst_decode()
-        }
-    }
-    impl CstDecode<bool> for flutter_rust_bridge::for_generated::wasm_bindgen::JsValue {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> bool {
-            self.is_truthy()
-        }
-    }
-    impl CstDecode<f32> for flutter_rust_bridge::for_generated::wasm_bindgen::JsValue {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> f32 {
-            self.unchecked_into_f64() as _
-        }
-    }
-    impl CstDecode<f64> for flutter_rust_bridge::for_generated::wasm_bindgen::JsValue {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> f64 {
-            self.unchecked_into_f64() as _
-        }
-    }
-    impl CstDecode<i32> for flutter_rust_bridge::for_generated::wasm_bindgen::JsValue {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> i32 {
-            self.unchecked_into_f64() as _
-        }
-    }
-    impl CstDecode<i64> for flutter_rust_bridge::for_generated::wasm_bindgen::JsValue {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> i64 {
-            ::std::convert::TryInto::<i64>::try_into(self).unwrap() as _
-        }
-    }
-    impl CstDecode<Vec<u8>> for flutter_rust_bridge::for_generated::wasm_bindgen::JsValue {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> Vec<u8> {
-            self.unchecked_into::<flutter_rust_bridge::for_generated::js_sys::Uint8Array>()
-                .to_vec()
-                .into()
-        }
-    }
-    impl CstDecode<crate::atomics::SharedMemoryWaitResult>
-        for flutter_rust_bridge::for_generated::wasm_bindgen::JsValue
-    {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::atomics::SharedMemoryWaitResult {
-            (self.unchecked_into_f64() as i32).cst_decode()
-        }
-    }
-    impl CstDecode<crate::config::StdIOKind>
-        for flutter_rust_bridge::for_generated::wasm_bindgen::JsValue
-    {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::config::StdIOKind {
-            (self.unchecked_into_f64() as i32).cst_decode()
-        }
-    }
-    impl CstDecode<u32> for flutter_rust_bridge::for_generated::wasm_bindgen::JsValue {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> u32 {
-            self.unchecked_into_f64() as _
-        }
-    }
-    impl CstDecode<u64> for flutter_rust_bridge::for_generated::wasm_bindgen::JsValue {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> u64 {
-            ::std::convert::TryInto::<u64>::try_into(self).unwrap() as _
-        }
-    }
-    impl CstDecode<u8> for flutter_rust_bridge::for_generated::wasm_bindgen::JsValue {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> u8 {
-            self.unchecked_into_f64() as _
-        }
-    }
-    impl CstDecode<[u8; 16]> for flutter_rust_bridge::for_generated::wasm_bindgen::JsValue {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> [u8; 16] {
-            let vec: Vec<u8> = self.cst_decode();
-            flutter_rust_bridge::for_generated::from_vec_to_array(vec)
-        }
-    }
-    impl CstDecode<usize> for flutter_rust_bridge::for_generated::wasm_bindgen::JsValue {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> usize {
-            ::std::convert::TryInto::<u64>::try_into(self).unwrap() as _
-        }
-    }
-    impl CstDecode<crate::types::ValueTy>
-        for flutter_rust_bridge::for_generated::wasm_bindgen::JsValue
-    {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::types::ValueTy {
-            (self.unchecked_into_f64() as i32).cst_decode()
-        }
-    }
-    impl CstDecode<crate::api::wasmtime::WasmBinaryKind>
-        for flutter_rust_bridge::for_generated::wasm_bindgen::JsValue
-    {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::api::wasmtime::WasmBinaryKind {
-            (self.unchecked_into_f64() as i32).cst_decode()
-        }
-    }
-
-    #[wasm_bindgen]
-    pub fn wire__crate__atomics__atomics_add(
-        port_: flutter_rust_bridge::for_generated::MessagePort,
-        that: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        offset: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        kind: i32,
-        val: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        order: i32,
-    ) {
-        wire__crate__atomics__atomics_add_impl(port_, that, offset, kind, val, order)
-    }
-
-    #[wasm_bindgen]
-    pub fn wire__crate__atomics__atomics_and(
-        port_: flutter_rust_bridge::for_generated::MessagePort,
-        that: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        offset: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        kind: i32,
-        val: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        order: i32,
-    ) {
-        wire__crate__atomics__atomics_and_impl(port_, that, offset, kind, val, order)
-    }
-
-    #[wasm_bindgen]
-    pub fn wire__crate__atomics__atomics_compare_exchange(
-        port_: flutter_rust_bridge::for_generated::MessagePort,
-        that: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        offset: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        kind: i32,
-        current: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        new_value: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        success: i32,
-        failure: i32,
-    ) {
-        wire__crate__atomics__atomics_compare_exchange_impl(
-            port_, that, offset, kind, current, new_value, success, failure,
-        )
-    }
-
-    #[wasm_bindgen]
-    pub fn wire__crate__atomics__atomics_load(
-        port_: flutter_rust_bridge::for_generated::MessagePort,
-        that: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        offset: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        kind: i32,
-        order: i32,
-    ) {
-        wire__crate__atomics__atomics_load_impl(port_, that, offset, kind, order)
-    }
-
-    #[wasm_bindgen]
-    pub fn wire__crate__atomics__atomics_or(
-        port_: flutter_rust_bridge::for_generated::MessagePort,
-        that: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        offset: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        kind: i32,
-        val: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        order: i32,
-    ) {
-        wire__crate__atomics__atomics_or_impl(port_, that, offset, kind, val, order)
-    }
-
-    #[wasm_bindgen]
-    pub fn wire__crate__atomics__atomics_store(
-        port_: flutter_rust_bridge::for_generated::MessagePort,
-        that: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        offset: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        kind: i32,
-        val: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        order: i32,
-    ) {
-        wire__crate__atomics__atomics_store_impl(port_, that, offset, kind, val, order)
-    }
-
-    #[wasm_bindgen]
-    pub fn wire__crate__atomics__atomics_sub(
-        port_: flutter_rust_bridge::for_generated::MessagePort,
-        that: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        offset: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        kind: i32,
-        val: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        order: i32,
-    ) {
-        wire__crate__atomics__atomics_sub_impl(port_, that, offset, kind, val, order)
-    }
-
-    #[wasm_bindgen]
-    pub fn wire__crate__atomics__atomics_swap(
-        port_: flutter_rust_bridge::for_generated::MessagePort,
-        that: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        offset: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        kind: i32,
-        val: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        order: i32,
-    ) {
-        wire__crate__atomics__atomics_swap_impl(port_, that, offset, kind, val, order)
-    }
-
-    #[wasm_bindgen]
-    pub fn wire__crate__atomics__atomics_xor(
-        port_: flutter_rust_bridge::for_generated::MessagePort,
-        that: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        offset: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        kind: i32,
-        val: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        order: i32,
-    ) {
-        wire__crate__atomics__atomics_xor_impl(port_, that, offset, kind, val, order)
-    }
-
-    #[wasm_bindgen]
-    pub fn wire__crate__api__wasmtime__compile_component(
-        port_: flutter_rust_bridge::for_generated::MessagePort,
-        component_wasm: Box<[u8]>,
-        config: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-    ) {
-        wire__crate__api__wasmtime__compile_component_impl(port_, component_wasm, config)
-    }
-
-    #[wasm_bindgen]
-    pub fn wire__crate__api__wasmtime__compile_component_sync(
-        port_: flutter_rust_bridge::for_generated::MessagePort,
-        component_wasm: Box<[u8]>,
-        config: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-    ) {
-        wire__crate__api__wasmtime__compile_component_sync_impl(port_, component_wasm, config)
-    }
-
-    #[wasm_bindgen]
-    pub fn wire__crate__api__wasmtime__compile_wasm(
-        port_: flutter_rust_bridge::for_generated::MessagePort,
-        module_wasm: Box<[u8]>,
-        config: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-    ) {
-        wire__crate__api__wasmtime__compile_wasm_impl(port_, module_wasm, config)
-    }
-
-    #[wasm_bindgen]
-    pub fn wire__crate__api__wasmtime__compile_wasm_sync(
-        port_: flutter_rust_bridge::for_generated::MessagePort,
-        module_wasm: Box<[u8]>,
-        config: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-    ) {
-        wire__crate__api__wasmtime__compile_wasm_sync_impl(port_, module_wasm, config)
-    }
-
-    #[wasm_bindgen]
-    pub fn wire__crate__api__wasmtime__compiled_component_get_component_exports(
-        that: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-    ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-        wire__crate__api__wasmtime__compiled_component_get_component_exports_impl(that)
-    }
-
-    #[wasm_bindgen]
-    pub fn wire__crate__api__wasmtime__compiled_component_get_component_imports(
-        that: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-    ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-        wire__crate__api__wasmtime__compiled_component_get_component_imports_impl(that)
-    }
-
-    #[wasm_bindgen]
-    pub fn wire__crate__api__wasmtime__compiled_module_create_shared_memory(
-        port_: flutter_rust_bridge::for_generated::MessagePort,
-        that: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        memory_type: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-    ) {
-        wire__crate__api__wasmtime__compiled_module_create_shared_memory_impl(
-            port_,
-            that,
-            memory_type,
-        )
-    }
-
-    #[wasm_bindgen]
-    pub fn wire__crate__api__wasmtime__compiled_module_get_module_exports(
-        that: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-    ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-        wire__crate__api__wasmtime__compiled_module_get_module_exports_impl(that)
-    }
-
-    #[wasm_bindgen]
-    pub fn wire__crate__api__wasmtime__compiled_module_get_module_imports(
-        that: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-    ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-        wire__crate__api__wasmtime__compiled_module_get_module_imports_impl(that)
-    }
-
-    #[wasm_bindgen]
-    pub fn wire__crate__api__wasmtime__detect_wasm_kind(
-        wasm_bytes: Box<[u8]>,
-    ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-        wire__crate__api__wasmtime__detect_wasm_kind_impl(wasm_bytes)
-    }
-
-    #[wasm_bindgen]
-    pub fn wire__crate__api__wasmtime__module_builder(
-        port_: flutter_rust_bridge::for_generated::MessagePort,
-        module: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        num_threads: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        wasi_config: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-    ) {
-        wire__crate__api__wasmtime__module_builder_impl(port_, module, num_threads, wasi_config)
-    }
-
-    #[wasm_bindgen]
-    pub fn wire__crate__api__wasmtime__parse_wat_format(
-        port_: flutter_rust_bridge::for_generated::MessagePort,
-        wat: String,
-    ) {
-        wire__crate__api__wasmtime__parse_wat_format_impl(port_, wat)
-    }
-
-    #[wasm_bindgen]
-    pub fn wire__crate__api__wasmtime__wasm_features_for_config(
-        config: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-    ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-        wire__crate__api__wasmtime__wasm_features_for_config_impl(config)
-    }
-
-    #[wasm_bindgen]
-    pub fn wire__crate__api__wasmtime__wasm_run_instance_id_exports(
-        that: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-    ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-        wire__crate__api__wasmtime__wasm_run_instance_id_exports_impl(that)
-    }
-
-    #[wasm_bindgen]
-    pub fn wire__crate__api__wasmtime__wasm_run_module_id_add_fuel(
-        that: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        delta: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-    ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-        wire__crate__api__wasmtime__wasm_run_module_id_add_fuel_impl(that, delta)
-    }
-
-    #[wasm_bindgen]
-    pub fn wire__crate__api__wasmtime__wasm_run_module_id_call_function_handle(
-        port_: flutter_rust_bridge::for_generated::MessagePort,
-        that: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        func: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        args: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-    ) {
-        wire__crate__api__wasmtime__wasm_run_module_id_call_function_handle_impl(
-            port_, that, func, args,
-        )
-    }
-
-    #[wasm_bindgen]
-    pub fn wire__crate__api__wasmtime__wasm_run_module_id_call_function_handle_parallel(
-        port_: flutter_rust_bridge::for_generated::MessagePort,
-        that: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        func_name: String,
-        args: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        num_tasks: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        function_stream: String,
-    ) {
-        wire__crate__api__wasmtime__wasm_run_module_id_call_function_handle_parallel_impl(
-            port_,
-            that,
-            func_name,
-            args,
-            num_tasks,
-            function_stream,
-        )
-    }
-
-    #[wasm_bindgen]
-    pub fn wire__crate__api__wasmtime__wasm_run_module_id_call_function_handle_sync(
-        port_: flutter_rust_bridge::for_generated::MessagePort,
-        that: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        func: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        args: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-    ) {
-        wire__crate__api__wasmtime__wasm_run_module_id_call_function_handle_sync_impl(
-            port_, that, func, args,
-        )
-    }
-
-    #[wasm_bindgen]
-    pub fn wire__crate__api__wasmtime__wasm_run_module_id_consume_fuel(
-        that: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        delta: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-    ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-        wire__crate__api__wasmtime__wasm_run_module_id_consume_fuel_impl(that, delta)
-    }
-
-    #[wasm_bindgen]
-    pub fn wire__crate__api__wasmtime__wasm_run_module_id_create_function(
-        port_: flutter_rust_bridge::for_generated::MessagePort,
-        that: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        function_pointer: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        function_id: u32,
-        param_types: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        result_types: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-    ) {
-        wire__crate__api__wasmtime__wasm_run_module_id_create_function_impl(
-            port_,
-            that,
-            function_pointer,
-            function_id,
-            param_types,
-            result_types,
-        )
-    }
-
-    #[wasm_bindgen]
-    pub fn wire__crate__api__wasmtime__wasm_run_module_id_create_global(
-        port_: flutter_rust_bridge::for_generated::MessagePort,
-        that: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        value: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        mutable: bool,
-    ) {
-        wire__crate__api__wasmtime__wasm_run_module_id_create_global_impl(
-            port_, that, value, mutable,
-        )
-    }
-
-    #[wasm_bindgen]
-    pub fn wire__crate__api__wasmtime__wasm_run_module_id_create_memory(
-        that: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        memory_type: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-    ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-        wire__crate__api__wasmtime__wasm_run_module_id_create_memory_impl(that, memory_type)
-    }
-
-    #[wasm_bindgen]
-    pub fn wire__crate__api__wasmtime__wasm_run_module_id_create_table(
-        port_: flutter_rust_bridge::for_generated::MessagePort,
-        that: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        value: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        table_type: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-    ) {
-        wire__crate__api__wasmtime__wasm_run_module_id_create_table_impl(
-            port_, that, value, table_type,
-        )
-    }
-
-    #[wasm_bindgen]
-    pub fn wire__crate__api__wasmtime__wasm_run_module_id_dispose(
-        port_: flutter_rust_bridge::for_generated::MessagePort,
-        that: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-    ) {
-        wire__crate__api__wasmtime__wasm_run_module_id_dispose_impl(port_, that)
-    }
-
-    #[wasm_bindgen]
-    pub fn wire__crate__api__wasmtime__wasm_run_module_id_fill_table(
-        port_: flutter_rust_bridge::for_generated::MessagePort,
-        that: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        table: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        index: u32,
-        value: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        len: u32,
-    ) {
-        wire__crate__api__wasmtime__wasm_run_module_id_fill_table_impl(
-            port_, that, table, index, value, len,
-        )
-    }
-
-    #[wasm_bindgen]
-    pub fn wire__crate__api__wasmtime__wasm_run_module_id_fuel_consumed(
-        that: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-    ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-        wire__crate__api__wasmtime__wasm_run_module_id_fuel_consumed_impl(that)
-    }
-
-    #[wasm_bindgen]
-    pub fn wire__crate__api__wasmtime__wasm_run_module_id_get_function_type(
-        that: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        func: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-    ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-        wire__crate__api__wasmtime__wasm_run_module_id_get_function_type_impl(that, func)
-    }
-
-    #[wasm_bindgen]
-    pub fn wire__crate__api__wasmtime__wasm_run_module_id_get_global_type(
-        that: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        global: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-    ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-        wire__crate__api__wasmtime__wasm_run_module_id_get_global_type_impl(that, global)
-    }
-
-    #[wasm_bindgen]
-    pub fn wire__crate__api__wasmtime__wasm_run_module_id_get_global_value(
-        that: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        global: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-    ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-        wire__crate__api__wasmtime__wasm_run_module_id_get_global_value_impl(that, global)
-    }
-
-    #[wasm_bindgen]
-    pub fn wire__crate__api__wasmtime__wasm_run_module_id_get_memory_data(
-        that: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        memory: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-    ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-        wire__crate__api__wasmtime__wasm_run_module_id_get_memory_data_impl(that, memory)
-    }
-
-    #[wasm_bindgen]
-    pub fn wire__crate__api__wasmtime__wasm_run_module_id_get_memory_data_pointer(
-        that: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        memory: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-    ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-        wire__crate__api__wasmtime__wasm_run_module_id_get_memory_data_pointer_impl(that, memory)
-    }
-
-    #[wasm_bindgen]
-    pub fn wire__crate__api__wasmtime__wasm_run_module_id_get_memory_data_pointer_and_length(
-        port_: flutter_rust_bridge::for_generated::MessagePort,
-        that: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        memory: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-    ) {
-        wire__crate__api__wasmtime__wasm_run_module_id_get_memory_data_pointer_and_length_impl(
-            port_, that, memory,
-        )
-    }
-
-    #[wasm_bindgen]
-    pub fn wire__crate__api__wasmtime__wasm_run_module_id_get_memory_pages(
-        that: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        memory: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-    ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-        wire__crate__api__wasmtime__wasm_run_module_id_get_memory_pages_impl(that, memory)
-    }
-
-    #[wasm_bindgen]
-    pub fn wire__crate__api__wasmtime__wasm_run_module_id_get_memory_type(
-        that: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        memory: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-    ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-        wire__crate__api__wasmtime__wasm_run_module_id_get_memory_type_impl(that, memory)
-    }
-
-    #[wasm_bindgen]
-    pub fn wire__crate__api__wasmtime__wasm_run_module_id_get_table(
-        that: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        table: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        index: u32,
-    ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-        wire__crate__api__wasmtime__wasm_run_module_id_get_table_impl(that, table, index)
-    }
-
-    #[wasm_bindgen]
-    pub fn wire__crate__api__wasmtime__wasm_run_module_id_get_table_size(
-        that: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        table: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-    ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-        wire__crate__api__wasmtime__wasm_run_module_id_get_table_size_impl(that, table)
-    }
-
-    #[wasm_bindgen]
-    pub fn wire__crate__api__wasmtime__wasm_run_module_id_get_table_type(
-        that: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        table: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-    ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-        wire__crate__api__wasmtime__wasm_run_module_id_get_table_type_impl(that, table)
-    }
-
-    #[wasm_bindgen]
-    pub fn wire__crate__api__wasmtime__wasm_run_module_id_grow_memory(
-        that: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        memory: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        pages: u32,
-    ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-        wire__crate__api__wasmtime__wasm_run_module_id_grow_memory_impl(that, memory, pages)
-    }
-
-    #[wasm_bindgen]
-    pub fn wire__crate__api__wasmtime__wasm_run_module_id_grow_table(
-        port_: flutter_rust_bridge::for_generated::MessagePort,
-        that: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        table: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        delta: u32,
-        value: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-    ) {
-        wire__crate__api__wasmtime__wasm_run_module_id_grow_table_impl(
-            port_, that, table, delta, value,
-        )
-    }
-
-    #[wasm_bindgen]
-    pub fn wire__crate__api__wasmtime__wasm_run_module_id_instantiate(
-        port_: flutter_rust_bridge::for_generated::MessagePort,
-        that: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-    ) {
-        wire__crate__api__wasmtime__wasm_run_module_id_instantiate_impl(port_, that)
-    }
-
-    #[wasm_bindgen]
-    pub fn wire__crate__api__wasmtime__wasm_run_module_id_instantiate_sync(
-        that: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-    ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-        wire__crate__api__wasmtime__wasm_run_module_id_instantiate_sync_impl(that)
-    }
-
-    #[wasm_bindgen]
-    pub fn wire__crate__api__wasmtime__wasm_run_module_id_link_imports(
-        that: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        imports: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-    ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-        wire__crate__api__wasmtime__wasm_run_module_id_link_imports_impl(that, imports)
-    }
-
-    #[wasm_bindgen]
-    pub fn wire__crate__api__wasmtime__wasm_run_module_id_read_memory(
-        port_: flutter_rust_bridge::for_generated::MessagePort,
-        that: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        memory: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        offset: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        bytes: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-    ) {
-        wire__crate__api__wasmtime__wasm_run_module_id_read_memory_impl(
-            port_, that, memory, offset, bytes,
-        )
-    }
-
-    #[wasm_bindgen]
-    pub fn wire__crate__api__wasmtime__wasm_run_module_id_set_global_value(
-        port_: flutter_rust_bridge::for_generated::MessagePort,
-        that: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        global: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        value: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-    ) {
-        wire__crate__api__wasmtime__wasm_run_module_id_set_global_value_impl(
-            port_, that, global, value,
-        )
-    }
-
-    #[wasm_bindgen]
-    pub fn wire__crate__api__wasmtime__wasm_run_module_id_set_table(
-        port_: flutter_rust_bridge::for_generated::MessagePort,
-        that: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        table: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        index: u32,
-        value: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-    ) {
-        wire__crate__api__wasmtime__wasm_run_module_id_set_table_impl(
-            port_, that, table, index, value,
-        )
-    }
-
-    #[wasm_bindgen]
-    pub fn wire__crate__api__wasmtime__wasm_run_module_id_stdio_stream(
-        port_: flutter_rust_bridge::for_generated::MessagePort,
-        that: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        sink: String,
-        kind: i32,
-    ) {
-        wire__crate__api__wasmtime__wasm_run_module_id_stdio_stream_impl(port_, that, sink, kind)
-    }
-
-    #[wasm_bindgen]
-    pub fn wire__crate__api__wasmtime__wasm_run_module_id_worker_execution(
-        port_: flutter_rust_bridge::for_generated::MessagePort,
-        that: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        worker_index: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        results: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-    ) {
-        wire__crate__api__wasmtime__wasm_run_module_id_worker_execution_impl(
-            port_,
-            that,
-            worker_index,
-            results,
-        )
-    }
-
-    #[wasm_bindgen]
-    pub fn wire__crate__api__wasmtime__wasm_run_module_id_write_memory(
-        port_: flutter_rust_bridge::for_generated::MessagePort,
-        that: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        memory: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        offset: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        buffer: Box<[u8]>,
-    ) {
-        wire__crate__api__wasmtime__wasm_run_module_id_write_memory_impl(
-            port_, that, memory, offset, buffer,
-        )
-    }
-
-    #[wasm_bindgen]
-    pub fn wire__crate__api__wasmtime__wasm_run_shared_memory_atomic_notify(
-        that: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        addr: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        count: u32,
-    ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-        wire__crate__api__wasmtime__wasm_run_shared_memory_atomic_notify_impl(that, addr, count)
-    }
-
-    #[wasm_bindgen]
-    pub fn wire__crate__api__wasmtime__wasm_run_shared_memory_atomic_wait32(
-        port_: flutter_rust_bridge::for_generated::MessagePort,
-        that: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        addr: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        expected: u32,
-    ) {
-        wire__crate__api__wasmtime__wasm_run_shared_memory_atomic_wait32_impl(
-            port_, that, addr, expected,
-        )
-    }
-
-    #[wasm_bindgen]
-    pub fn wire__crate__api__wasmtime__wasm_run_shared_memory_atomic_wait64(
-        port_: flutter_rust_bridge::for_generated::MessagePort,
-        that: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        addr: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        expected: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-    ) {
-        wire__crate__api__wasmtime__wasm_run_shared_memory_atomic_wait64_impl(
-            port_, that, addr, expected,
-        )
-    }
-
-    #[wasm_bindgen]
-    pub fn wire__crate__api__wasmtime__wasm_run_shared_memory_atomics(
-        port_: flutter_rust_bridge::for_generated::MessagePort,
-        that: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-    ) {
-        wire__crate__api__wasmtime__wasm_run_shared_memory_atomics_impl(port_, that)
-    }
-
-    #[wasm_bindgen]
-    pub fn wire__crate__api__wasmtime__wasm_run_shared_memory_data_pointer(
-        that: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-    ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-        wire__crate__api__wasmtime__wasm_run_shared_memory_data_pointer_impl(that)
-    }
-
-    #[wasm_bindgen]
-    pub fn wire__crate__api__wasmtime__wasm_run_shared_memory_data_size(
-        that: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-    ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-        wire__crate__api__wasmtime__wasm_run_shared_memory_data_size_impl(that)
-    }
-
-    #[wasm_bindgen]
-    pub fn wire__crate__api__wasmtime__wasm_run_shared_memory_grow(
-        that: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-        delta: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-    ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-        wire__crate__api__wasmtime__wasm_run_shared_memory_grow_impl(that, delta)
-    }
-
-    #[wasm_bindgen]
-    pub fn wire__crate__api__wasmtime__wasm_run_shared_memory_size(
-        that: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-    ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-        wire__crate__api__wasmtime__wasm_run_shared_memory_size_impl(that)
-    }
-
-    #[wasm_bindgen]
-    pub fn wire__crate__api__wasmtime__wasm_run_shared_memory_ty(
-        that: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-    ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-        wire__crate__api__wasmtime__wasm_run_shared_memory_ty_impl(that)
-    }
-
-    #[wasm_bindgen]
-    pub fn wire__crate__api__wasmtime__wasm_runtime_features(
-    ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-        wire__crate__api__wasmtime__wasm_runtime_features_impl()
-    }
-
     #[wasm_bindgen]
     pub fn rust_arc_increment_strong_count_RustOpaque_ArcRwLockWSharedMemory(
         ptr: *const std::ffi::c_void,
     ) {
-        unsafe {
-            StdArc::<Arc<RwLock<WSharedMemory>>>::increment_strong_count(ptr as _);
-        }
+        MoiArc::<Arc<RwLock<WSharedMemory>>>::increment_strong_count(ptr as _);
     }
 
     #[wasm_bindgen]
     pub fn rust_arc_decrement_strong_count_RustOpaque_ArcRwLockWSharedMemory(
         ptr: *const std::ffi::c_void,
     ) {
-        unsafe {
-            StdArc::<Arc<RwLock<WSharedMemory>>>::decrement_strong_count(ptr as _);
-        }
+        MoiArc::<Arc<RwLock<WSharedMemory>>>::decrement_strong_count(ptr as _);
     }
 
     #[wasm_bindgen]
     pub fn rust_arc_increment_strong_count_RustOpaque_ArcstdsyncMutexComponent(
         ptr: *const std::ffi::c_void,
     ) {
-        unsafe {
-            StdArc::<Arc<std::sync::Mutex<Component>>>::increment_strong_count(ptr as _);
-        }
+        MoiArc::<Arc<std::sync::Mutex<Component>>>::increment_strong_count(ptr as _);
     }
 
     #[wasm_bindgen]
     pub fn rust_arc_decrement_strong_count_RustOpaque_ArcstdsyncMutexComponent(
         ptr: *const std::ffi::c_void,
     ) {
-        unsafe {
-            StdArc::<Arc<std::sync::Mutex<Component>>>::decrement_strong_count(ptr as _);
-        }
+        MoiArc::<Arc<std::sync::Mutex<Component>>>::decrement_strong_count(ptr as _);
     }
 
     #[wasm_bindgen]
     pub fn rust_arc_increment_strong_count_RustOpaque_ArcstdsyncMutexWModule(
         ptr: *const std::ffi::c_void,
     ) {
-        unsafe {
-            StdArc::<Arc<std::sync::Mutex<WModule>>>::increment_strong_count(ptr as _);
-        }
+        MoiArc::<Arc<std::sync::Mutex<WModule>>>::increment_strong_count(ptr as _);
     }
 
     #[wasm_bindgen]
     pub fn rust_arc_decrement_strong_count_RustOpaque_ArcstdsyncMutexWModule(
         ptr: *const std::ffi::c_void,
     ) {
-        unsafe {
-            StdArc::<Arc<std::sync::Mutex<WModule>>>::decrement_strong_count(ptr as _);
-        }
+        MoiArc::<Arc<std::sync::Mutex<WModule>>>::decrement_strong_count(ptr as _);
     }
 
     #[wasm_bindgen]
     pub fn rust_arc_increment_strong_count_RustOpaque_CallStack(ptr: *const std::ffi::c_void) {
-        unsafe {
-            StdArc::<CallStack>::increment_strong_count(ptr as _);
-        }
+        MoiArc::<CallStack>::increment_strong_count(ptr as _);
     }
 
     #[wasm_bindgen]
     pub fn rust_arc_decrement_strong_count_RustOpaque_CallStack(ptr: *const std::ffi::c_void) {
-        unsafe {
-            StdArc::<CallStack>::decrement_strong_count(ptr as _);
-        }
+        MoiArc::<CallStack>::decrement_strong_count(ptr as _);
     }
 
     #[wasm_bindgen]
     pub fn rust_arc_increment_strong_count_RustOpaque_WAnyRef(ptr: *const std::ffi::c_void) {
-        unsafe {
-            StdArc::<WAnyRef>::increment_strong_count(ptr as _);
-        }
+        MoiArc::<WAnyRef>::increment_strong_count(ptr as _);
     }
 
     #[wasm_bindgen]
     pub fn rust_arc_decrement_strong_count_RustOpaque_WAnyRef(ptr: *const std::ffi::c_void) {
-        unsafe {
-            StdArc::<WAnyRef>::decrement_strong_count(ptr as _);
-        }
+        MoiArc::<WAnyRef>::decrement_strong_count(ptr as _);
     }
 
     #[wasm_bindgen]
     pub fn rust_arc_increment_strong_count_RustOpaque_WExnRef(ptr: *const std::ffi::c_void) {
-        unsafe {
-            StdArc::<WExnRef>::increment_strong_count(ptr as _);
-        }
+        MoiArc::<WExnRef>::increment_strong_count(ptr as _);
     }
 
     #[wasm_bindgen]
     pub fn rust_arc_decrement_strong_count_RustOpaque_WExnRef(ptr: *const std::ffi::c_void) {
-        unsafe {
-            StdArc::<WExnRef>::decrement_strong_count(ptr as _);
-        }
+        MoiArc::<WExnRef>::decrement_strong_count(ptr as _);
     }
 
     #[wasm_bindgen]
     pub fn rust_arc_increment_strong_count_RustOpaque_WFunc(ptr: *const std::ffi::c_void) {
-        unsafe {
-            StdArc::<WFunc>::increment_strong_count(ptr as _);
-        }
+        MoiArc::<WFunc>::increment_strong_count(ptr as _);
     }
 
     #[wasm_bindgen]
     pub fn rust_arc_decrement_strong_count_RustOpaque_WFunc(ptr: *const std::ffi::c_void) {
-        unsafe {
-            StdArc::<WFunc>::decrement_strong_count(ptr as _);
-        }
+        MoiArc::<WFunc>::decrement_strong_count(ptr as _);
     }
 
     #[wasm_bindgen]
     pub fn rust_arc_increment_strong_count_RustOpaque_WGlobal(ptr: *const std::ffi::c_void) {
-        unsafe {
-            StdArc::<WGlobal>::increment_strong_count(ptr as _);
-        }
+        MoiArc::<WGlobal>::increment_strong_count(ptr as _);
     }
 
     #[wasm_bindgen]
     pub fn rust_arc_decrement_strong_count_RustOpaque_WGlobal(ptr: *const std::ffi::c_void) {
-        unsafe {
-            StdArc::<WGlobal>::decrement_strong_count(ptr as _);
-        }
+        MoiArc::<WGlobal>::decrement_strong_count(ptr as _);
     }
 
     #[wasm_bindgen]
     pub fn rust_arc_increment_strong_count_RustOpaque_WMemory(ptr: *const std::ffi::c_void) {
-        unsafe {
-            StdArc::<WMemory>::increment_strong_count(ptr as _);
-        }
+        MoiArc::<WMemory>::increment_strong_count(ptr as _);
     }
 
     #[wasm_bindgen]
     pub fn rust_arc_decrement_strong_count_RustOpaque_WMemory(ptr: *const std::ffi::c_void) {
-        unsafe {
-            StdArc::<WMemory>::decrement_strong_count(ptr as _);
-        }
+        MoiArc::<WMemory>::decrement_strong_count(ptr as _);
     }
 
     #[wasm_bindgen]
     pub fn rust_arc_increment_strong_count_RustOpaque_WTable(ptr: *const std::ffi::c_void) {
-        unsafe {
-            StdArc::<WTable>::increment_strong_count(ptr as _);
-        }
+        MoiArc::<WTable>::increment_strong_count(ptr as _);
     }
 
     #[wasm_bindgen]
     pub fn rust_arc_decrement_strong_count_RustOpaque_WTable(ptr: *const std::ffi::c_void) {
-        unsafe {
-            StdArc::<WTable>::decrement_strong_count(ptr as _);
-        }
+        MoiArc::<WTable>::decrement_strong_count(ptr as _);
     }
 }
 #[cfg(target_family = "wasm")]

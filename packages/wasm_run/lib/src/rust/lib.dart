@@ -7,34 +7,34 @@ import 'package:collection/collection.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'package:wasm_run/src/rust/frb_generated.dart';
 
-// Rust type: RustOpaqueNom<Arc < RwLock < WSharedMemory > >>
+// Rust type: RustOpaqueMoi<Arc < RwLock < WSharedMemory > >>
 abstract class ArcRwLockWSharedMemory implements RustOpaqueInterface {}
 
-// Rust type: RustOpaqueNom<Arc < std :: sync :: Mutex < Component > >>
+// Rust type: RustOpaqueMoi<Arc < std :: sync :: Mutex < Component > >>
 abstract class ArcMutexComponent implements RustOpaqueInterface {}
 
-// Rust type: RustOpaqueNom<Arc < std :: sync :: Mutex < WModule > >>
+// Rust type: RustOpaqueMoi<Arc < std :: sync :: Mutex < WModule > >>
 abstract class ArcMutexWModule implements RustOpaqueInterface {}
 
-// Rust type: RustOpaqueNom<CallStack>
+// Rust type: RustOpaqueMoi<CallStack>
 abstract class CallStack implements RustOpaqueInterface {}
 
-// Rust type: RustOpaqueNom<WAnyRef>
+// Rust type: RustOpaqueMoi<WAnyRef>
 abstract class WAnyRef implements RustOpaqueInterface {}
 
-// Rust type: RustOpaqueNom<WExnRef>
+// Rust type: RustOpaqueMoi<WExnRef>
 abstract class WExnRef implements RustOpaqueInterface {}
 
-// Rust type: RustOpaqueNom<WFunc>
+// Rust type: RustOpaqueMoi<WFunc>
 abstract class WFunc implements RustOpaqueInterface {}
 
-// Rust type: RustOpaqueNom<WGlobal>
+// Rust type: RustOpaqueMoi<WGlobal>
 abstract class WGlobal implements RustOpaqueInterface {}
 
-// Rust type: RustOpaqueNom<WMemory>
+// Rust type: RustOpaqueMoi<WMemory>
 abstract class WMemory implements RustOpaqueInterface {}
 
-// Rust type: RustOpaqueNom<WTable>
+// Rust type: RustOpaqueMoi<WTable>
 abstract class WTable implements RustOpaqueInterface {}
 
 class U8Array16 extends NonGrowableListView<int> {

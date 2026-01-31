@@ -480,7 +480,7 @@ class WasmFunction extends WasmExternal {
   /// Invokes [inner] with the given [args]
   /// and casts the result to a [List] of Dart values.
   List<Object?> call([List<Object?>? args]) {
-    if (_call != null) return _call!(args);
+    if (_call != null) return _call(args);
 
     // `?? const []` is required for dart2js
     final values = Function.apply(inner, args ?? const []);

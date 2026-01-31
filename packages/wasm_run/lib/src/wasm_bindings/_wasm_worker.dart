@@ -111,10 +111,10 @@ class WasmWorker {
       'args': <Object?>[],
       'functionExport': task.functionName,
       'taskId': _lastTaskId,
-    }.jsify() as JSObject;
+    }.jsify()! as JSObject;
 
     // TODO: we do this to support JsBigInts
-    final args = data.getProperty<JSArray>('args'.toJS)!;
+    final args = data.getProperty<JSArray>('args'.toJS);
     for (final arg in task.args) {
       args.callMethod('push'.toJS, arg.jsify());
     }
@@ -139,11 +139,11 @@ class WasmWorker {
   void _handleMessage(web.MessageEvent event) {
     final eventData = event.data;
     if (eventData.typeofEquals('string')) {
-      // ignore: avoid_print
+      // ignore: avoid_print, cast_nullable_to_non_nullable
       print((eventData as JSString).toDart);
       return;
     }
-    final data_ = (eventData.dartify()! as Map).cast<String, Object?>();
+    final data_ = (eventData.dartify() as Map?)!.cast<String, Object?>();
     switch (data_['cmd']) {
       case 'loaded':
         _onLoaded.complete(this);
@@ -241,6 +241,7 @@ extension type SharedArrayBufferConstructor(JSFunction _) implements JSFunction 
   external JSArrayBuffer call(JSNumber length);
 }
 
+// ignore: non_constant_identifier_names
 JSArrayBuffer SharedArrayBuffer(JSNumber length) =>
     _sharedArrayBufferConstructor.call(length);
 
@@ -251,6 +252,7 @@ extension type DataViewConstructorFn(JSFunction _) implements JSFunction {
   external ByteData call(JSArrayBuffer buffer);
 }
 
+// ignore: non_constant_identifier_names
 ByteData DataViewConstructor(JSArrayBuffer buffer) =>
     _dataViewConstructor.call(buffer);
 

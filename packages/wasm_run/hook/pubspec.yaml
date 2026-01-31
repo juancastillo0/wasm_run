@@ -1,0 +1,10 @@
+name: wasm_run_hook
+publish_to: none
+
+environment:
+  sdk: ">=3.6.0 <4.0.0"
+
+dependencies:
+  code_assets: ^1.0.0
+  hooks: ^1.0.0
+  native_toolchain_rust: ^1.0.3

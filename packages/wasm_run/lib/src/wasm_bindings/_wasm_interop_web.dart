@@ -630,7 +630,7 @@ WasmExternal _makeWasmFunction(Function value, String? name) {
   final jsValue = value as JSObject;
   final params = ty?.parameters.cast<ValueTy?>() ??
       List.filled(
-        (jsValue.getProperty('length'.toJS) as JSNumber).toDartInt,
+        (jsValue.getProperty('length'.toJS)! as JSNumber).toDartInt,
         null,
       );
 
@@ -641,7 +641,7 @@ WasmExternal _makeWasmFunction(Function value, String? name) {
     call: ([args]) {
       final result = jsValue.callMethod<JSAny?>(
         'apply'.toJS,
-        [null, args].jsify() as JSArray,
+        [null, args].jsify()! as JSArray,
       );
       // Convert JSAny result to Dart
       final dartResult = result?.dartify();
@@ -875,5 +875,6 @@ Map<String, Object?>? _getType(Object value) {
   final jsValue = value as JSObject;
   if (!jsValue.has('type')) return null;
   final type = jsValue.callMethod<JSAny?>('type'.toJS, <JSAny>[].toJS);
-  return (type?.dartify()! as Map).cast();
+  if (type == null) return null;
+  return (type.dartify() as Map?)?.cast();
 }

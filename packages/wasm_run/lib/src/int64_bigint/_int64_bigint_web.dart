@@ -26,17 +26,15 @@ BigInt toBigIntImpl(I64 value) {
 }
 
 I64 getInt64Bytes(ByteData array, int index, Endian endian) {
-  return (array.toJS as JSDataView)
-      .getBigInt64(index.toJS, (endian == Endian.little).toJS);
+  return array.toJS.getBigInt64(index.toJS, (endian == Endian.little).toJS);
 }
 
 I64 getUint64Bytes(ByteData array, int index, Endian endian) {
-  return (array.toJS as JSDataView)
-      .getBigUint64(index.toJS, (endian == Endian.little).toJS);
+  return array.toJS.getBigUint64(index.toJS, (endian == Endian.little).toJS);
 }
 
 void setInt64Bytes(ByteData array, int index, Object value, Endian endian) {
-  (array.toJS as JSDataView).setBigInt64(
+  array.toJS.setBigInt64(
     index.toJS,
     value as JSBigInt,
     (endian == Endian.little).toJS,
@@ -44,7 +42,7 @@ void setInt64Bytes(ByteData array, int index, Object value, Endian endian) {
 }
 
 void setUint64Bytes(ByteData array, int index, Object value, Endian endian) {
-  (array.toJS as JSDataView).setBigUint64(
+  array.toJS.setBigUint64(
     index.toJS,
     value as JSBigInt,
     (endian == Endian.little).toJS,

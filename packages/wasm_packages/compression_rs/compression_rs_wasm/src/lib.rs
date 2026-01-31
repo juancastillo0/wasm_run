@@ -1,3 +1,6 @@
+// Allow unsafe_op_in_unsafe_fn for WIT-generated bindings (Rust 2024 compatibility)
+#![allow(unsafe_op_in_unsafe_fn)]
+
 mod archive;
 
 pub use crate::archive::*;
