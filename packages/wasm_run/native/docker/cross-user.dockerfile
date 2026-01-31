@@ -9,24 +9,17 @@ FROM $CROSS_BASE_IMAGE
 ARG USER_ID=1000
 ARG GROUP_ID=1000
 
-# Create non-root user matching host user's UID/GID
+# Create non-root user and make root's rustup/cargo accessible (not copied)
+# This avoids doubling disk usage during build
 RUN groupadd -g $GROUP_ID builder 2>/dev/null || true && \
     useradd -m -u $USER_ID -g $GROUP_ID -s /bin/bash builder 2>/dev/null || true && \
-    mkdir -p /cargo /rust && \
-    chown -R $USER_ID:$GROUP_ID /cargo /rust 2>/dev/null || true
-
-# Ensure rustup/cargo directories are accessible
-RUN if [ -d /root/.rustup ]; then \
-        cp -r /root/.rustup /home/builder/.rustup && \
-        chown -R $USER_ID:$GROUP_ID /home/builder/.rustup; \
-    fi && \
-    if [ -d /root/.cargo ]; then \
-        cp -r /root/.cargo /home/builder/.cargo && \
-        chown -R $USER_ID:$GROUP_ID /home/builder/.cargo; \
-    fi
+    mkdir -p /cargo /rust /home/builder/.cargo && \
+    chown -R $USER_ID:$GROUP_ID /cargo /rust /home/builder 2>/dev/null || true && \
+    if [ -d /root/.rustup ]; then chmod -R a+rX /root/.rustup; fi && \
+    if [ -d /root/.cargo ]; then chmod -R a+rX /root/.cargo; fi
 
 USER builder
 ENV HOME=/home/builder
 ENV CARGO_HOME=/home/builder/.cargo
-ENV RUSTUP_HOME=/home/builder/.rustup
-ENV PATH="/home/builder/.cargo/bin:${PATH}"
+ENV RUSTUP_HOME=/root/.rustup
+ENV PATH="/root/.cargo/bin:${PATH}"
