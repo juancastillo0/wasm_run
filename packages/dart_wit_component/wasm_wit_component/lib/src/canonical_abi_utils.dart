@@ -17,8 +17,10 @@ void trap_if(bool condition) {
   if (condition) throw Trap('trap_if');
 }
 
-const LIST_GROWABLE =
-    bool.fromEnvironment('CANONICAL_ABI_LIST_GROWABLE', defaultValue: false);
+const LIST_GROWABLE = bool.fromEnvironment(
+  'CANONICAL_ABI_LIST_GROWABLE',
+  defaultValue: false,
+);
 
 List<T> singleList<T>(T value) => List.filled(1, value, growable: false);
 

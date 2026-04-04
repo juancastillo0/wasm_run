@@ -10,8 +10,9 @@ Future<void> main() async {
     imports: CompressionRsWorldImports(),
   );
   final bytes = const Utf8Encoder().convert('string');
-  final Result<Uint8List, String> result =
-      world.gzip.gzipCompress(input: Input.bytes(bytes));
+  final Result<Uint8List, String> result = world.gzip.gzipCompress(
+    input: Input.bytes(bytes),
+  );
   print(result);
   assert(result.isOk);
 }

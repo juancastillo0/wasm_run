@@ -20,8 +20,10 @@ void main() {
       final doc = world.yDocMethods.yDocNew();
       final text = world.yDocMethods.yDocText(ref: doc, name: 'name');
 
-      final txn = world.yDocMethods
-          .yDocWriteTransaction(ref: doc, origin: Uint8List(0));
+      final txn = world.yDocMethods.yDocWriteTransaction(
+        ref: doc,
+        origin: Uint8List(0),
+      );
       final length = world.yDocMethods.yTextLength(ref: text, txn: txn);
       expect(length, 0);
 

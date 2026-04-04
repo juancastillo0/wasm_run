@@ -26,8 +26,9 @@ void main() {
 
       switch (result) {
         case Ok(:final ok):
-          final decompress =
-              world.brotli.brotliDecompress(input: Input.bytes(ok)).unwrap();
+          final decompress = world.brotli
+              .brotliDecompress(input: Input.bytes(ok))
+              .unwrap();
           print(ok);
           print(decompress);
           expect(decompress, value);
@@ -45,16 +46,20 @@ void main() {
       final values = [
         const Utf8Codec().encoder.convert('hello world'),
         if (isWeb)
-          await wasm_run_ffi.getUriBodyBytes(Uri.parse(
-            // TODO: improve error message
-            './packages/compression_rs/src/compression_rs_wit.gen.dart',
-          ))
+          await wasm_run_ffi.getUriBodyBytes(
+            Uri.parse(
+              // TODO: improve error message
+              './packages/compression_rs/src/compression_rs_wit.gen.dart',
+            ),
+          )
         else
           File('lib/src/compression_rs_wit.gen.dart').readAsBytesSync(),
         if (isWeb)
-          await wasm_run_ffi.getUriBodyBytes(Uri.parse(
-            './packages/compression_rs/assets/compression_rs_wasm.wasm',
-          ))
+          await wasm_run_ffi.getUriBodyBytes(
+            Uri.parse(
+              './packages/compression_rs/assets/compression_rs_wasm.wasm',
+            ),
+          )
         else
           File('lib/assets/compression_rs_wasm.wasm').readAsBytesSync(),
       ];
@@ -68,28 +73,27 @@ void main() {
 
       await Future.wait(
         compressors.expand(
-          (compressor) => values.map(
-            (value) async {
-              final result = await compressor.compress(
-                  input: compress_worker.Input.bytes(value));
+          (compressor) => values.map((value) async {
+            final result = await compressor.compress(
+              input: compress_worker.Input.bytes(value),
+            );
 
-              switch (result) {
-                case Ok(ok: final compressed):
-                  final decompressResult = await compressor.decompress(
-                    input: compress_worker.Input.bytes(compressed),
-                  );
-                  final decompress = decompressResult.unwrap();
-                  final percent = (compressed.length / value.length * 100)
-                      .toStringAsFixed(1);
-                  print(
-                    'compress ${compressor.name}: ${value.length} -> ${compressed.length} ($percent%)',
-                  );
-                  expect(decompress, value);
-                case Err(:final error):
-                  throw Exception(error);
-              }
-            },
-          ),
+            switch (result) {
+              case Ok(ok: final compressed):
+                final decompressResult = await compressor.decompress(
+                  input: compress_worker.Input.bytes(compressed),
+                );
+                final decompress = decompressResult.unwrap();
+                final percent = (compressed.length / value.length * 100)
+                    .toStringAsFixed(1);
+                print(
+                  'compress ${compressor.name}: ${value.length} -> ${compressed.length} ($percent%)',
+                );
+                expect(decompress, value);
+              case Err(:final error):
+                throw Exception(error);
+            }
+          }),
         ),
       );
     });
@@ -102,16 +106,20 @@ void main() {
       final values = [
         const Utf8Codec().encoder.convert('hello world'),
         if (isWeb)
-          await wasm_run_ffi.getUriBodyBytes(Uri.parse(
-            // TODO: improve error message
-            './packages/compression_rs/src/compression_rs_wit.gen.dart',
-          ))
+          await wasm_run_ffi.getUriBodyBytes(
+            Uri.parse(
+              // TODO: improve error message
+              './packages/compression_rs/src/compression_rs_wit.gen.dart',
+            ),
+          )
         else
           File('lib/src/compression_rs_wit.gen.dart').readAsBytesSync(),
         if (isWeb)
-          await wasm_run_ffi.getUriBodyBytes(Uri.parse(
-            './packages/compression_rs/assets/compression_rs_wasm.wasm',
-          ))
+          await wasm_run_ffi.getUriBodyBytes(
+            Uri.parse(
+              './packages/compression_rs/assets/compression_rs_wasm.wasm',
+            ),
+          )
         else
           File('lib/assets/compression_rs_wasm.wasm').readAsBytesSync(),
       ];
@@ -225,8 +233,8 @@ void main() {
               final decompress = compressor
                   .decompress(input: Input.bytes(compressed))
                   .unwrap();
-              final percent =
-                  (compressed.length / value.length * 100).toStringAsFixed(1);
+              final percent = (compressed.length / value.length * 100)
+                  .toStringAsFixed(1);
               print(
                 'compress ${compressor.name}: ${value.length} -> ${compressed.length} ($percent%)',
               );

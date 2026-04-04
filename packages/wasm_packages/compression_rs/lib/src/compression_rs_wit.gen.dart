@@ -26,13 +26,21 @@ enum CompressorKind implements ToJsonSerializable {
     return ToJsonSerializable.enumFromJson(json, values, _spec);
   }
   @override
-  Map<String, Object?> toJson() =>
-      {'runtimeType': 'CompressorKind', _spec.labels[index]: null};
+  Map<String, Object?> toJson() => {
+    'runtimeType': 'CompressorKind',
+    _spec.labels[index]: null,
+  };
 
   /// Returns this as a WASM canonical abi value.
   int toWasm() => index;
-  static const _spec =
-      EnumType(['brotli', 'lz4', 'zstd', 'deflate', 'gzip', 'zlib']);
+  static const _spec = EnumType([
+    'brotli',
+    'lz4',
+    'zstd',
+    'deflate',
+    'gzip',
+    'zlib',
+  ]);
 }
 
 sealed class Input implements ToJsonSerializable {
@@ -41,20 +49,23 @@ sealed class Input implements ToJsonSerializable {
   factory Input.fromJson(Object? json_) {
     Object? json = json_;
     if (json is Map) {
-      final MapEntry(:key, :value) =
-          json.entries.firstWhere((e) => e.key != 'runtimeType');
+      final MapEntry(:key, :value) = json.entries.firstWhere(
+        (e) => e.key != 'runtimeType',
+      );
       json = (
         key is int ? key : _spec.cases.indexWhere((c) => c.label == key),
         value,
       );
     }
     return switch (json) {
-      (0, final value) || [0, final value] => InputBytes((value is Uint8List
-          ? value
-          : Uint8List.fromList((value! as List).cast()))),
-      (1, final value) ||
-      [1, final value] =>
-        InputFile(value is String ? value : (value! as ParsedString).value),
+      (0, final value) || [0, final value] => InputBytes(
+        (value is Uint8List
+            ? value
+            : Uint8List.fromList((value! as List).cast())),
+      ),
+      (1, final value) || [1, final value] => InputFile(
+        value is String ? value : (value! as ParsedString).value,
+      ),
       _ => throw Exception('Invalid JSON $json_'),
     };
   }
@@ -65,16 +76,20 @@ sealed class Input implements ToJsonSerializable {
 
   /// Returns this as a WASM canonical abi value.
   (int, Object?) toWasm();
-  static const _spec =
-      Variant([Case('bytes', ListType(U8())), Case('file', StringType())]);
+  static const _spec = Variant([
+    Case('bytes', ListType(U8())),
+    Case('file', StringType()),
+  ]);
 }
 
 class InputBytes implements Input {
   final Uint8List value;
   const InputBytes(this.value);
   @override
-  Map<String, Object?> toJson() =>
-      {'runtimeType': 'InputBytes', 'bytes': value.toList()};
+  Map<String, Object?> toJson() => {
+    'runtimeType': 'InputBytes',
+    'bytes': value.toList(),
+  };
 
   /// Returns this as a WASM canonical abi value.
   @override
@@ -111,10 +126,7 @@ class InputFile implements Input {
 class FilePath implements ItemInput, ToJsonSerializable {
   final String path;
   final String? name;
-  const FilePath({
-    required this.path,
-    this.name,
-  });
+  const FilePath({required this.path, this.name});
 
   /// Returns a new instance from a JSON value.
   /// May throw if the value does not have the expected structure.
@@ -124,40 +136,38 @@ class FilePath implements ItemInput, ToJsonSerializable {
         : json_;
     return switch (json) {
       [final path, final name] || (final path, final name) => FilePath(
-          path: path is String ? path : (path! as ParsedString).value,
-          name: Option.fromJson(
-              name,
-              (some) =>
-                  some is String ? some : (some! as ParsedString).value).value,
-        ),
-      _ => throw Exception('Invalid JSON $json_')
+        path: path is String ? path : (path! as ParsedString).value,
+        name: Option.fromJson(
+          name,
+          (some) => some is String ? some : (some! as ParsedString).value,
+        ).value,
+      ),
+      _ => throw Exception('Invalid JSON $json_'),
     };
   }
   @override
   Map<String, Object?> toJson() => {
-        'runtimeType': 'FilePath',
-        'path': path,
-        'name': (name == null
-            ? const None().toJson()
-            : Option.fromValue(name).toJson()),
-      };
+    'runtimeType': 'FilePath',
+    'path': path,
+    'name': (name == null
+        ? const None().toJson()
+        : Option.fromValue(name).toJson()),
+  };
 
   /// Returns this as a WASM canonical abi value.
   List<Object?> toWasm() => [
-        path,
-        (name == null ? const None().toWasm() : Option.fromValue(name).toWasm())
-      ];
+    path,
+    (name == null ? const None().toWasm() : Option.fromValue(name).toWasm()),
+  ];
   @override
   String toString() =>
       'FilePath${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
 
   /// Returns a new instance by overriding the values passed as arguments
-  FilePath copyWith({
-    String? path,
-    Option<String>? name,
-  }) =>
-      FilePath(
-          path: path ?? this.path, name: name != null ? name.value : this.name);
+  FilePath copyWith({String? path, Option<String>? name}) => FilePath(
+    path: path ?? this.path,
+    name: name != null ? name.value : this.name,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -170,7 +180,7 @@ class FilePath implements ItemInput, ToJsonSerializable {
   List<Object?> get _props => [path, name];
   static const _spec = RecordType([
     (label: 'path', t: StringType()),
-    (label: 'name', t: OptionType(StringType()))
+    (label: 'name', t: OptionType(StringType())),
   ]);
 }
 
@@ -178,11 +188,7 @@ class DirPath implements ItemInput, ToJsonSerializable {
   final String path;
   final String? name;
   final bool allRecursive;
-  const DirPath({
-    required this.path,
-    this.name,
-    required this.allRecursive,
-  });
+  const DirPath({required this.path, this.name, required this.allRecursive});
 
   /// Returns a new instance from a JSON value.
   /// May throw if the value does not have the expected structure.
@@ -192,50 +198,44 @@ class DirPath implements ItemInput, ToJsonSerializable {
         : json_;
     return switch (json) {
       [final path, final name, final allRecursive] ||
-      (final path, final name, final allRecursive) =>
-        DirPath(
-          path: path is String ? path : (path! as ParsedString).value,
-          name: Option.fromJson(
-              name,
-              (some) =>
-                  some is String ? some : (some! as ParsedString).value).value,
-          allRecursive: allRecursive! as bool,
-        ),
-      _ => throw Exception('Invalid JSON $json_')
+      (final path, final name, final allRecursive) => DirPath(
+        path: path is String ? path : (path! as ParsedString).value,
+        name: Option.fromJson(
+          name,
+          (some) => some is String ? some : (some! as ParsedString).value,
+        ).value,
+        allRecursive: allRecursive! as bool,
+      ),
+      _ => throw Exception('Invalid JSON $json_'),
     };
   }
   @override
   Map<String, Object?> toJson() => {
-        'runtimeType': 'DirPath',
-        'path': path,
-        'name': (name == null
-            ? const None().toJson()
-            : Option.fromValue(name).toJson()),
-        'all-recursive': allRecursive,
-      };
+    'runtimeType': 'DirPath',
+    'path': path,
+    'name': (name == null
+        ? const None().toJson()
+        : Option.fromValue(name).toJson()),
+    'all-recursive': allRecursive,
+  };
 
   /// Returns this as a WASM canonical abi value.
   List<Object?> toWasm() => [
-        path,
-        (name == null
-            ? const None().toWasm()
-            : Option.fromValue(name).toWasm()),
-        allRecursive
-      ];
+    path,
+    (name == null ? const None().toWasm() : Option.fromValue(name).toWasm()),
+    allRecursive,
+  ];
   @override
   String toString() =>
       'DirPath${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
 
   /// Returns a new instance by overriding the values passed as arguments
-  DirPath copyWith({
-    String? path,
-    Option<String>? name,
-    bool? allRecursive,
-  }) =>
+  DirPath copyWith({String? path, Option<String>? name, bool? allRecursive}) =>
       DirPath(
-          path: path ?? this.path,
-          name: name != null ? name.value : this.name,
-          allRecursive: allRecursive ?? this.allRecursive);
+        path: path ?? this.path,
+        name: name != null ? name.value : this.name,
+        allRecursive: allRecursive ?? this.allRecursive,
+      );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -249,17 +249,14 @@ class DirPath implements ItemInput, ToJsonSerializable {
   static const _spec = RecordType([
     (label: 'path', t: StringType()),
     (label: 'name', t: OptionType(StringType())),
-    (label: 'all-recursive', t: Bool())
+    (label: 'all-recursive', t: Bool()),
   ]);
 }
 
 class FileBytes implements ItemInput, ToJsonSerializable {
   final String path;
   final Uint8List bytes;
-  const FileBytes({
-    required this.path,
-    required this.bytes,
-  });
+  const FileBytes({required this.path, required this.bytes});
 
   /// Returns a new instance from a JSON value.
   /// May throw if the value does not have the expected structure.
@@ -269,20 +266,20 @@ class FileBytes implements ItemInput, ToJsonSerializable {
         : json_;
     return switch (json) {
       [final path, final bytes] || (final path, final bytes) => FileBytes(
-          path: path is String ? path : (path! as ParsedString).value,
-          bytes: (bytes is Uint8List
-              ? bytes
-              : Uint8List.fromList((bytes! as List).cast())),
-        ),
-      _ => throw Exception('Invalid JSON $json_')
+        path: path is String ? path : (path! as ParsedString).value,
+        bytes: (bytes is Uint8List
+            ? bytes
+            : Uint8List.fromList((bytes! as List).cast())),
+      ),
+      _ => throw Exception('Invalid JSON $json_'),
     };
   }
   @override
   Map<String, Object?> toJson() => {
-        'runtimeType': 'FileBytes',
-        'path': path,
-        'bytes': bytes.toList(),
-      };
+    'runtimeType': 'FileBytes',
+    'path': path,
+    'bytes': bytes.toList(),
+  };
 
   /// Returns this as a WASM canonical abi value.
   List<Object?> toWasm() => [path, bytes];
@@ -291,10 +288,7 @@ class FileBytes implements ItemInput, ToJsonSerializable {
       'FileBytes${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
 
   /// Returns a new instance by overriding the values passed as arguments
-  FileBytes copyWith({
-    String? path,
-    Uint8List? bytes,
-  }) =>
+  FileBytes copyWith({String? path, Uint8List? bytes}) =>
       FileBytes(path: path ?? this.path, bytes: bytes ?? this.bytes);
   @override
   bool operator ==(Object other) =>
@@ -306,8 +300,10 @@ class FileBytes implements ItemInput, ToJsonSerializable {
 
   // ignore: unused_field
   List<Object?> get _props => [path, bytes];
-  static const _spec = RecordType(
-      [(label: 'path', t: StringType()), (label: 'bytes', t: ListType(U8()))]);
+  static const _spec = RecordType([
+    (label: 'path', t: StringType()),
+    (label: 'bytes', t: ListType(U8())),
+  ]);
 }
 
 sealed class ItemInput implements ToJsonSerializable {
@@ -336,11 +332,11 @@ sealed class ItemInput implements ToJsonSerializable {
 
   /// Returns this as a WASM canonical abi value.
   static (int, Object?) toWasm(ItemInput value) => switch (value) {
-        FilePath() => (0, value.toWasm()),
-        DirPath() => (1, value.toWasm()),
-        FileBytes() => (2, value.toWasm()),
-      };
-// ignore: unused_field
+    FilePath() => (0, value.toWasm()),
+    DirPath() => (1, value.toWasm()),
+    FileBytes() => (2, value.toWasm()),
+  };
+  // ignore: unused_field
   static const _spec = Union([FilePath._spec, DirPath._spec, FileBytes._spec]);
 }
 
@@ -354,7 +350,7 @@ sealed class BytesOrUnicode implements ToJsonSerializable {
       if (rt is String) {
         json = (
           const ['BytesOrUnicodeString', 'BytesOrUnicodeUint8List'].indexOf(rt),
-          json
+          json,
         );
       } else {
         final MapEntry(:key, :value) = json.entries.first;
@@ -363,11 +359,13 @@ sealed class BytesOrUnicode implements ToJsonSerializable {
     }
     return switch (json) {
       (0, final value) || [0, final value] => BytesOrUnicodeString(
-          value is String ? value : (value! as ParsedString).value),
+        value is String ? value : (value! as ParsedString).value,
+      ),
       (1, final value) || [1, final value] => BytesOrUnicodeUint8List(
-          (value is Uint8List
-              ? value
-              : Uint8List.fromList((value! as List).cast()))),
+        (value is Uint8List
+            ? value
+            : Uint8List.fromList((value! as List).cast())),
+      ),
       _ => throw Exception('Invalid JSON $json_'),
     };
   }
@@ -379,10 +377,10 @@ sealed class BytesOrUnicode implements ToJsonSerializable {
 
   /// Returns this as a WASM canonical abi value.
   static (int, Object?) toWasm(BytesOrUnicode value) => switch (value) {
-        BytesOrUnicodeString() => value.toWasm(),
-        BytesOrUnicodeUint8List() => value.toWasm(),
-      };
-// ignore: unused_field
+    BytesOrUnicodeString() => value.toWasm(),
+    BytesOrUnicodeUint8List() => value.toWasm(),
+  };
+  // ignore: unused_field
   static const _spec = Union([StringType(), ListType(U8())]);
 }
 
@@ -390,8 +388,10 @@ class BytesOrUnicodeString implements BytesOrUnicode {
   final String value;
   const BytesOrUnicodeString(this.value);
   @override
-  Map<String, Object?> toJson() =>
-      {'runtimeType': 'BytesOrUnicodeString', '0': value};
+  Map<String, Object?> toJson() => {
+    'runtimeType': 'BytesOrUnicodeString',
+    '0': value,
+  };
 
   /// Returns this as a WASM canonical abi value.
   (int, Object?) toWasm() => (0, value);
@@ -409,8 +409,10 @@ class BytesOrUnicodeUint8List implements BytesOrUnicode {
   final Uint8List value;
   const BytesOrUnicodeUint8List(this.value);
   @override
-  Map<String, Object?> toJson() =>
-      {'runtimeType': 'BytesOrUnicodeUint8List', '1': value.toList()};
+  Map<String, Object?> toJson() => {
+    'runtimeType': 'BytesOrUnicodeUint8List',
+    '1': value.toList(),
+  };
 
   /// Returns this as a WASM canonical abi value.
   (int, Object?) toWasm() => (1, value);
@@ -437,8 +439,10 @@ enum ZipCompressionMethod implements ToJsonSerializable {
     return ToJsonSerializable.enumFromJson(json, values, _spec);
   }
   @override
-  Map<String, Object?> toJson() =>
-      {'runtimeType': 'ZipCompressionMethod', _spec.labels[index]: null};
+  Map<String, Object?> toJson() => {
+    'runtimeType': 'ZipCompressionMethod',
+    _spec.labels[index]: null,
+  };
 
   /// Returns this as a WASM canonical abi value.
   int toWasm() => index;
@@ -486,7 +490,7 @@ class ZipFile implements ToJsonSerializable {
         final compressedSize,
         final extraData,
         final isDir,
-        final enclosedName
+        final enclosedName,
       ] ||
       (
         final compressionMethod,
@@ -498,66 +502,63 @@ class ZipFile implements ToJsonSerializable {
         final compressedSize,
         final extraData,
         final isDir,
-        final enclosedName
-      ) =>
-        ZipFile(
-          compressionMethod: ZipCompressionMethod.fromJson(compressionMethod),
-          lastModifiedTime: bigIntFromJson(lastModifiedTime),
-          permissions:
-              Option.fromJson(permissions, (some) => some! as int).value,
-          comment:
-              comment is String ? comment : (comment! as ParsedString).value,
-          file: FileBytes.fromJson(file),
-          crc32: crc32! as int,
-          compressedSize: bigIntFromJson(compressedSize),
-          extraData: (extraData is Uint8List
-              ? extraData
-              : Uint8List.fromList((extraData! as List).cast())),
-          isDir: isDir! as bool,
-          enclosedName: Option.fromJson(
-              enclosedName,
-              (some) =>
-                  some is String ? some : (some! as ParsedString).value).value,
-        ),
-      _ => throw Exception('Invalid JSON $json_')
+        final enclosedName,
+      ) => ZipFile(
+        compressionMethod: ZipCompressionMethod.fromJson(compressionMethod),
+        lastModifiedTime: bigIntFromJson(lastModifiedTime),
+        permissions: Option.fromJson(permissions, (some) => some! as int).value,
+        comment: comment is String ? comment : (comment! as ParsedString).value,
+        file: FileBytes.fromJson(file),
+        crc32: crc32! as int,
+        compressedSize: bigIntFromJson(compressedSize),
+        extraData: (extraData is Uint8List
+            ? extraData
+            : Uint8List.fromList((extraData! as List).cast())),
+        isDir: isDir! as bool,
+        enclosedName: Option.fromJson(
+          enclosedName,
+          (some) => some is String ? some : (some! as ParsedString).value,
+        ).value,
+      ),
+      _ => throw Exception('Invalid JSON $json_'),
     };
   }
   @override
   Map<String, Object?> toJson() => {
-        'runtimeType': 'ZipFile',
-        'compression-method': compressionMethod.toJson(),
-        'last-modified-time': lastModifiedTime.toString(),
-        'permissions': (permissions == null
-            ? const None().toJson()
-            : Option.fromValue(permissions).toJson()),
-        'comment': comment,
-        'file': file.toJson(),
-        'crc32': crc32,
-        'compressed-size': compressedSize.toString(),
-        'extra-data': extraData.toList(),
-        'is-dir': isDir,
-        'enclosed-name': (enclosedName == null
-            ? const None().toJson()
-            : Option.fromValue(enclosedName).toJson()),
-      };
+    'runtimeType': 'ZipFile',
+    'compression-method': compressionMethod.toJson(),
+    'last-modified-time': lastModifiedTime.toString(),
+    'permissions': (permissions == null
+        ? const None().toJson()
+        : Option.fromValue(permissions).toJson()),
+    'comment': comment,
+    'file': file.toJson(),
+    'crc32': crc32,
+    'compressed-size': compressedSize.toString(),
+    'extra-data': extraData.toList(),
+    'is-dir': isDir,
+    'enclosed-name': (enclosedName == null
+        ? const None().toJson()
+        : Option.fromValue(enclosedName).toJson()),
+  };
 
   /// Returns this as a WASM canonical abi value.
   List<Object?> toWasm() => [
-        compressionMethod.toWasm(),
-        lastModifiedTime,
-        (permissions == null
-            ? const None().toWasm()
-            : Option.fromValue(permissions).toWasm()),
-        comment,
-        file.toWasm(),
-        crc32,
-        compressedSize,
-        extraData,
-        isDir,
-        (enclosedName == null
-            ? const None().toWasm()
-            : Option.fromValue(enclosedName).toWasm())
-      ];
+    compressionMethod.toWasm(),
+    lastModifiedTime,
+    (permissions == null
+        ? const None().toWasm()
+        : Option.fromValue(permissions).toWasm()),
+    comment,
+    file.toWasm(),
+    crc32,
+    compressedSize,
+    extraData,
+    isDir,
+    (enclosedName == null
+        ? const None().toWasm()
+        : Option.fromValue(enclosedName).toWasm()),
+  ];
   @override
   String toString() =>
       'ZipFile${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
@@ -566,7 +567,7 @@ class ZipFile implements ToJsonSerializable {
   ZipFile copyWith({
     ZipCompressionMethod? compressionMethod,
     BigInt /*S64*/ ? lastModifiedTime,
-    Option<int /*U32*/ >? permissions,
+    Option<int /*U32*/>? permissions,
     String? comment,
     FileBytes? file,
     int /*U32*/ ? crc32,
@@ -574,20 +575,18 @@ class ZipFile implements ToJsonSerializable {
     Uint8List? extraData,
     bool? isDir,
     Option<String>? enclosedName,
-  }) =>
-      ZipFile(
-          compressionMethod: compressionMethod ?? this.compressionMethod,
-          lastModifiedTime: lastModifiedTime ?? this.lastModifiedTime,
-          permissions:
-              permissions != null ? permissions.value : this.permissions,
-          comment: comment ?? this.comment,
-          file: file ?? this.file,
-          crc32: crc32 ?? this.crc32,
-          compressedSize: compressedSize ?? this.compressedSize,
-          extraData: extraData ?? this.extraData,
-          isDir: isDir ?? this.isDir,
-          enclosedName:
-              enclosedName != null ? enclosedName.value : this.enclosedName);
+  }) => ZipFile(
+    compressionMethod: compressionMethod ?? this.compressionMethod,
+    lastModifiedTime: lastModifiedTime ?? this.lastModifiedTime,
+    permissions: permissions != null ? permissions.value : this.permissions,
+    comment: comment ?? this.comment,
+    file: file ?? this.file,
+    crc32: crc32 ?? this.crc32,
+    compressedSize: compressedSize ?? this.compressedSize,
+    extraData: extraData ?? this.extraData,
+    isDir: isDir ?? this.isDir,
+    enclosedName: enclosedName != null ? enclosedName.value : this.enclosedName,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -598,17 +597,17 @@ class ZipFile implements ToJsonSerializable {
 
   // ignore: unused_field
   List<Object?> get _props => [
-        compressionMethod,
-        lastModifiedTime,
-        permissions,
-        comment,
-        file,
-        crc32,
-        compressedSize,
-        extraData,
-        isDir,
-        enclosedName
-      ];
+    compressionMethod,
+    lastModifiedTime,
+    permissions,
+    comment,
+    file,
+    crc32,
+    compressedSize,
+    extraData,
+    isDir,
+    enclosedName,
+  ];
   static const _spec = RecordType([
     (label: 'compression-method', t: ZipCompressionMethod._spec),
     (label: 'last-modified-time', t: S64()),
@@ -619,7 +618,7 @@ class ZipFile implements ToJsonSerializable {
     (label: 'compressed-size', t: U64()),
     (label: 'extra-data', t: ListType(U8())),
     (label: 'is-dir', t: Bool()),
-    (label: 'enclosed-name', t: OptionType(StringType()))
+    (label: 'enclosed-name', t: OptionType(StringType())),
   ]);
 }
 
@@ -651,66 +650,67 @@ class ZipOptions implements ToJsonSerializable {
         final compressionLevel,
         final lastModifiedTime,
         final permissions,
-        final comment
+        final comment,
       ] ||
       (
         final compressionMethod,
         final compressionLevel,
         final lastModifiedTime,
         final permissions,
-        final comment
-      ) =>
-        ZipOptions(
-          compressionMethod: ZipCompressionMethod.fromJson(compressionMethod),
-          compressionLevel:
-              Option.fromJson(compressionLevel, (some) => some! as int).value,
-          lastModifiedTime:
-              Option.fromJson(lastModifiedTime, (some) => bigIntFromJson(some))
-                  .value,
-          permissions:
-              Option.fromJson(permissions, (some) => some! as int).value,
-          comment:
-              Option.fromJson(comment, (some) => BytesOrUnicode.fromJson(some))
-                  .value,
-        ),
-      _ => throw Exception('Invalid JSON $json_')
+        final comment,
+      ) => ZipOptions(
+        compressionMethod: ZipCompressionMethod.fromJson(compressionMethod),
+        compressionLevel: Option.fromJson(
+          compressionLevel,
+          (some) => some! as int,
+        ).value,
+        lastModifiedTime: Option.fromJson(
+          lastModifiedTime,
+          (some) => bigIntFromJson(some),
+        ).value,
+        permissions: Option.fromJson(permissions, (some) => some! as int).value,
+        comment: Option.fromJson(
+          comment,
+          (some) => BytesOrUnicode.fromJson(some),
+        ).value,
+      ),
+      _ => throw Exception('Invalid JSON $json_'),
     };
   }
   @override
   Map<String, Object?> toJson() => {
-        'runtimeType': 'ZipOptions',
-        'compression-method': compressionMethod.toJson(),
-        'compression-level': (compressionLevel == null
-            ? const None().toJson()
-            : Option.fromValue(compressionLevel).toJson()),
-        'last-modified-time': (lastModifiedTime == null
-            ? const None().toJson()
-            : Option.fromValue(lastModifiedTime)
-                .toJson((some) => some.toString())),
-        'permissions': (permissions == null
-            ? const None().toJson()
-            : Option.fromValue(permissions).toJson()),
-        'comment': (comment == null
-            ? const None().toJson()
-            : Option.fromValue(comment).toJson((some) => some.toJson())),
-      };
+    'runtimeType': 'ZipOptions',
+    'compression-method': compressionMethod.toJson(),
+    'compression-level': (compressionLevel == null
+        ? const None().toJson()
+        : Option.fromValue(compressionLevel).toJson()),
+    'last-modified-time': (lastModifiedTime == null
+        ? const None().toJson()
+        : Option.fromValue(lastModifiedTime).toJson((some) => some.toString())),
+    'permissions': (permissions == null
+        ? const None().toJson()
+        : Option.fromValue(permissions).toJson()),
+    'comment': (comment == null
+        ? const None().toJson()
+        : Option.fromValue(comment).toJson((some) => some.toJson())),
+  };
 
   /// Returns this as a WASM canonical abi value.
   List<Object?> toWasm() => [
-        compressionMethod.toWasm(),
-        (compressionLevel == null
-            ? const None().toWasm()
-            : Option.fromValue(compressionLevel).toWasm()),
-        (lastModifiedTime == null
-            ? const None().toWasm()
-            : Option.fromValue(lastModifiedTime).toWasm()),
-        (permissions == null
-            ? const None().toWasm()
-            : Option.fromValue(permissions).toWasm()),
-        (comment == null
-            ? const None().toWasm()
-            : Option.fromValue(comment).toWasm(BytesOrUnicode.toWasm))
-      ];
+    compressionMethod.toWasm(),
+    (compressionLevel == null
+        ? const None().toWasm()
+        : Option.fromValue(compressionLevel).toWasm()),
+    (lastModifiedTime == null
+        ? const None().toWasm()
+        : Option.fromValue(lastModifiedTime).toWasm()),
+    (permissions == null
+        ? const None().toWasm()
+        : Option.fromValue(permissions).toWasm()),
+    (comment == null
+        ? const None().toWasm()
+        : Option.fromValue(comment).toWasm(BytesOrUnicode.toWasm)),
+  ];
   @override
   String toString() =>
       'ZipOptions${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
@@ -718,22 +718,21 @@ class ZipOptions implements ToJsonSerializable {
   /// Returns a new instance by overriding the values passed as arguments
   ZipOptions copyWith({
     ZipCompressionMethod? compressionMethod,
-    Option<int /*S32*/ >? compressionLevel,
-    Option<BigInt /*S64*/ >? lastModifiedTime,
-    Option<int /*U32*/ >? permissions,
+    Option<int /*S32*/>? compressionLevel,
+    Option<BigInt /*S64*/>? lastModifiedTime,
+    Option<int /*U32*/>? permissions,
     Option<BytesOrUnicode>? comment,
-  }) =>
-      ZipOptions(
-          compressionMethod: compressionMethod ?? this.compressionMethod,
-          compressionLevel: compressionLevel != null
-              ? compressionLevel.value
-              : this.compressionLevel,
-          lastModifiedTime: lastModifiedTime != null
-              ? lastModifiedTime.value
-              : this.lastModifiedTime,
-          permissions:
-              permissions != null ? permissions.value : this.permissions,
-          comment: comment != null ? comment.value : this.comment);
+  }) => ZipOptions(
+    compressionMethod: compressionMethod ?? this.compressionMethod,
+    compressionLevel: compressionLevel != null
+        ? compressionLevel.value
+        : this.compressionLevel,
+    lastModifiedTime: lastModifiedTime != null
+        ? lastModifiedTime.value
+        : this.lastModifiedTime,
+    permissions: permissions != null ? permissions.value : this.permissions,
+    comment: comment != null ? comment.value : this.comment,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -744,28 +743,25 @@ class ZipOptions implements ToJsonSerializable {
 
   // ignore: unused_field
   List<Object?> get _props => [
-        compressionMethod,
-        compressionLevel,
-        lastModifiedTime,
-        permissions,
-        comment
-      ];
+    compressionMethod,
+    compressionLevel,
+    lastModifiedTime,
+    permissions,
+    comment,
+  ];
   static const _spec = RecordType([
     (label: 'compression-method', t: ZipCompressionMethod._spec),
     (label: 'compression-level', t: OptionType(S32())),
     (label: 'last-modified-time', t: OptionType(S64())),
     (label: 'permissions', t: OptionType(U32())),
-    (label: 'comment', t: OptionType(BytesOrUnicode._spec))
+    (label: 'comment', t: OptionType(BytesOrUnicode._spec)),
   ]);
 }
 
 class ZipArchiveInput implements ToJsonSerializable {
   final ItemInput item;
   final ZipOptions? options;
-  const ZipArchiveInput({
-    required this.item,
-    this.options,
-  });
+  const ZipArchiveInput({required this.item, this.options});
 
   /// Returns a new instance from a JSON value.
   /// May throw if the value does not have the expected structure.
@@ -775,43 +771,42 @@ class ZipArchiveInput implements ToJsonSerializable {
         : json_;
     return switch (json) {
       [final item, final options] ||
-      (final item, final options) =>
-        ZipArchiveInput(
-          item: ItemInput.fromJson(item),
-          options: Option.fromJson(options, (some) => ZipOptions.fromJson(some))
-              .value,
-        ),
-      _ => throw Exception('Invalid JSON $json_')
+      (final item, final options) => ZipArchiveInput(
+        item: ItemInput.fromJson(item),
+        options: Option.fromJson(
+          options,
+          (some) => ZipOptions.fromJson(some),
+        ).value,
+      ),
+      _ => throw Exception('Invalid JSON $json_'),
     };
   }
   @override
   Map<String, Object?> toJson() => {
-        'runtimeType': 'ZipArchiveInput',
-        'item': item.toJson(),
-        'options': (options == null
-            ? const None().toJson()
-            : Option.fromValue(options).toJson((some) => some.toJson())),
-      };
+    'runtimeType': 'ZipArchiveInput',
+    'item': item.toJson(),
+    'options': (options == null
+        ? const None().toJson()
+        : Option.fromValue(options).toJson((some) => some.toJson())),
+  };
 
   /// Returns this as a WASM canonical abi value.
   List<Object?> toWasm() => [
-        ItemInput.toWasm(item),
-        (options == null
-            ? const None().toWasm()
-            : Option.fromValue(options).toWasm((some) => some.toWasm()))
-      ];
+    ItemInput.toWasm(item),
+    (options == null
+        ? const None().toWasm()
+        : Option.fromValue(options).toWasm((some) => some.toWasm())),
+  ];
   @override
   String toString() =>
       'ZipArchiveInput${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
 
   /// Returns a new instance by overriding the values passed as arguments
-  ZipArchiveInput copyWith({
-    ItemInput? item,
-    Option<ZipOptions>? options,
-  }) =>
+  ZipArchiveInput copyWith({ItemInput? item, Option<ZipOptions>? options}) =>
       ZipArchiveInput(
-          item: item ?? this.item,
-          options: options != null ? options.value : this.options);
+        item: item ?? this.item,
+        options: options != null ? options.value : this.options,
+      );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -824,7 +819,7 @@ class ZipArchiveInput implements ToJsonSerializable {
   List<Object?> get _props => [item, options];
   static const _spec = RecordType([
     (label: 'item', t: ItemInput._spec),
-    (label: 'options', t: OptionType(ZipOptions._spec))
+    (label: 'options', t: OptionType(ZipOptions._spec)),
   ]);
 }
 
@@ -863,7 +858,7 @@ class TarHeaderModel implements ToJsonSerializable {
         final username,
         final groupname,
         final deviceMajor,
-        final deviceMinor
+        final deviceMinor,
       ] ||
       (
         final mode,
@@ -873,107 +868,98 @@ class TarHeaderModel implements ToJsonSerializable {
         final username,
         final groupname,
         final deviceMajor,
-        final deviceMinor
-      ) =>
-        TarHeaderModel(
-          mode: Option.fromJson(mode, (some) => some! as int).value,
-          uid: Option.fromJson(uid, (some) => bigIntFromJson(some)).value,
-          gid: Option.fromJson(gid, (some) => bigIntFromJson(some)).value,
-          mtime: Option.fromJson(mtime, (some) => bigIntFromJson(some)).value,
-          username: Option.fromJson(
-              username,
-              (some) =>
-                  some is String ? some : (some! as ParsedString).value).value,
-          groupname: Option.fromJson(
-              groupname,
-              (some) =>
-                  some is String ? some : (some! as ParsedString).value).value,
-          deviceMajor:
-              Option.fromJson(deviceMajor, (some) => some! as int).value,
-          deviceMinor:
-              Option.fromJson(deviceMinor, (some) => some! as int).value,
-        ),
-      _ => throw Exception('Invalid JSON $json_')
+        final deviceMinor,
+      ) => TarHeaderModel(
+        mode: Option.fromJson(mode, (some) => some! as int).value,
+        uid: Option.fromJson(uid, (some) => bigIntFromJson(some)).value,
+        gid: Option.fromJson(gid, (some) => bigIntFromJson(some)).value,
+        mtime: Option.fromJson(mtime, (some) => bigIntFromJson(some)).value,
+        username: Option.fromJson(
+          username,
+          (some) => some is String ? some : (some! as ParsedString).value,
+        ).value,
+        groupname: Option.fromJson(
+          groupname,
+          (some) => some is String ? some : (some! as ParsedString).value,
+        ).value,
+        deviceMajor: Option.fromJson(deviceMajor, (some) => some! as int).value,
+        deviceMinor: Option.fromJson(deviceMinor, (some) => some! as int).value,
+      ),
+      _ => throw Exception('Invalid JSON $json_'),
     };
   }
   @override
   Map<String, Object?> toJson() => {
-        'runtimeType': 'TarHeaderModel',
-        'mode': (mode == null
-            ? const None().toJson()
-            : Option.fromValue(mode).toJson()),
-        'uid': (uid == null
-            ? const None().toJson()
-            : Option.fromValue(uid).toJson((some) => some.toString())),
-        'gid': (gid == null
-            ? const None().toJson()
-            : Option.fromValue(gid).toJson((some) => some.toString())),
-        'mtime': (mtime == null
-            ? const None().toJson()
-            : Option.fromValue(mtime).toJson((some) => some.toString())),
-        'username': (username == null
-            ? const None().toJson()
-            : Option.fromValue(username).toJson()),
-        'groupname': (groupname == null
-            ? const None().toJson()
-            : Option.fromValue(groupname).toJson()),
-        'device-major': (deviceMajor == null
-            ? const None().toJson()
-            : Option.fromValue(deviceMajor).toJson()),
-        'device-minor': (deviceMinor == null
-            ? const None().toJson()
-            : Option.fromValue(deviceMinor).toJson()),
-      };
+    'runtimeType': 'TarHeaderModel',
+    'mode': (mode == null
+        ? const None().toJson()
+        : Option.fromValue(mode).toJson()),
+    'uid': (uid == null
+        ? const None().toJson()
+        : Option.fromValue(uid).toJson((some) => some.toString())),
+    'gid': (gid == null
+        ? const None().toJson()
+        : Option.fromValue(gid).toJson((some) => some.toString())),
+    'mtime': (mtime == null
+        ? const None().toJson()
+        : Option.fromValue(mtime).toJson((some) => some.toString())),
+    'username': (username == null
+        ? const None().toJson()
+        : Option.fromValue(username).toJson()),
+    'groupname': (groupname == null
+        ? const None().toJson()
+        : Option.fromValue(groupname).toJson()),
+    'device-major': (deviceMajor == null
+        ? const None().toJson()
+        : Option.fromValue(deviceMajor).toJson()),
+    'device-minor': (deviceMinor == null
+        ? const None().toJson()
+        : Option.fromValue(deviceMinor).toJson()),
+  };
 
   /// Returns this as a WASM canonical abi value.
   List<Object?> toWasm() => [
-        (mode == null
-            ? const None().toWasm()
-            : Option.fromValue(mode).toWasm()),
-        (uid == null ? const None().toWasm() : Option.fromValue(uid).toWasm()),
-        (gid == null ? const None().toWasm() : Option.fromValue(gid).toWasm()),
-        (mtime == null
-            ? const None().toWasm()
-            : Option.fromValue(mtime).toWasm()),
-        (username == null
-            ? const None().toWasm()
-            : Option.fromValue(username).toWasm()),
-        (groupname == null
-            ? const None().toWasm()
-            : Option.fromValue(groupname).toWasm()),
-        (deviceMajor == null
-            ? const None().toWasm()
-            : Option.fromValue(deviceMajor).toWasm()),
-        (deviceMinor == null
-            ? const None().toWasm()
-            : Option.fromValue(deviceMinor).toWasm())
-      ];
+    (mode == null ? const None().toWasm() : Option.fromValue(mode).toWasm()),
+    (uid == null ? const None().toWasm() : Option.fromValue(uid).toWasm()),
+    (gid == null ? const None().toWasm() : Option.fromValue(gid).toWasm()),
+    (mtime == null ? const None().toWasm() : Option.fromValue(mtime).toWasm()),
+    (username == null
+        ? const None().toWasm()
+        : Option.fromValue(username).toWasm()),
+    (groupname == null
+        ? const None().toWasm()
+        : Option.fromValue(groupname).toWasm()),
+    (deviceMajor == null
+        ? const None().toWasm()
+        : Option.fromValue(deviceMajor).toWasm()),
+    (deviceMinor == null
+        ? const None().toWasm()
+        : Option.fromValue(deviceMinor).toWasm()),
+  ];
   @override
   String toString() =>
       'TarHeaderModel${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
 
   /// Returns a new instance by overriding the values passed as arguments
   TarHeaderModel copyWith({
-    Option<int /*U32*/ >? mode,
-    Option<BigInt /*U64*/ >? uid,
-    Option<BigInt /*U64*/ >? gid,
-    Option<BigInt /*U64*/ >? mtime,
+    Option<int /*U32*/>? mode,
+    Option<BigInt /*U64*/>? uid,
+    Option<BigInt /*U64*/>? gid,
+    Option<BigInt /*U64*/>? mtime,
     Option<String>? username,
     Option<String>? groupname,
-    Option<int /*U32*/ >? deviceMajor,
-    Option<int /*U32*/ >? deviceMinor,
-  }) =>
-      TarHeaderModel(
-          mode: mode != null ? mode.value : this.mode,
-          uid: uid != null ? uid.value : this.uid,
-          gid: gid != null ? gid.value : this.gid,
-          mtime: mtime != null ? mtime.value : this.mtime,
-          username: username != null ? username.value : this.username,
-          groupname: groupname != null ? groupname.value : this.groupname,
-          deviceMajor:
-              deviceMajor != null ? deviceMajor.value : this.deviceMajor,
-          deviceMinor:
-              deviceMinor != null ? deviceMinor.value : this.deviceMinor);
+    Option<int /*U32*/>? deviceMajor,
+    Option<int /*U32*/>? deviceMinor,
+  }) => TarHeaderModel(
+    mode: mode != null ? mode.value : this.mode,
+    uid: uid != null ? uid.value : this.uid,
+    gid: gid != null ? gid.value : this.gid,
+    mtime: mtime != null ? mtime.value : this.mtime,
+    username: username != null ? username.value : this.username,
+    groupname: groupname != null ? groupname.value : this.groupname,
+    deviceMajor: deviceMajor != null ? deviceMajor.value : this.deviceMajor,
+    deviceMinor: deviceMinor != null ? deviceMinor.value : this.deviceMinor,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -983,8 +969,16 @@ class TarHeaderModel implements ToJsonSerializable {
   int get hashCode => const ObjectComparator().hashProps(_props);
 
   // ignore: unused_field
-  List<Object?> get _props =>
-      [mode, uid, gid, mtime, username, groupname, deviceMajor, deviceMinor];
+  List<Object?> get _props => [
+    mode,
+    uid,
+    gid,
+    mtime,
+    username,
+    groupname,
+    deviceMajor,
+    deviceMinor,
+  ];
   static const _spec = RecordType([
     (label: 'mode', t: OptionType(U32())),
     (label: 'uid', t: OptionType(U64())),
@@ -993,7 +987,7 @@ class TarHeaderModel implements ToJsonSerializable {
     (label: 'username', t: OptionType(StringType())),
     (label: 'groupname', t: OptionType(StringType())),
     (label: 'device-major', t: OptionType(U32())),
-    (label: 'device-minor', t: OptionType(U32()))
+    (label: 'device-minor', t: OptionType(U32())),
   ]);
 }
 
@@ -1003,8 +997,9 @@ sealed class TarHeaderInput implements ToJsonSerializable {
   factory TarHeaderInput.fromJson(Object? json_) {
     Object? json = json_;
     if (json is Map) {
-      final MapEntry(:key, :value) =
-          json.entries.firstWhere((e) => e.key != 'runtimeType');
+      final MapEntry(:key, :value) = json.entries.firstWhere(
+        (e) => e.key != 'runtimeType',
+      );
       json = (
         key is int ? key : _spec.cases.indexWhere((c) => c.label == key),
         value,
@@ -1012,12 +1007,12 @@ sealed class TarHeaderInput implements ToJsonSerializable {
     }
     return switch (json) {
       (0, final value) || [0, final value] => TarHeaderInputBytes(
-          (value is Uint8List
-              ? value
-              : Uint8List.fromList((value! as List).cast()))),
+        (value is Uint8List
+            ? value
+            : Uint8List.fromList((value! as List).cast())),
+      ),
       (1, final value) ||
-      [1, final value] =>
-        TarHeaderInputModel(TarHeaderModel.fromJson(value)),
+      [1, final value] => TarHeaderInputModel(TarHeaderModel.fromJson(value)),
       _ => throw Exception('Invalid JSON $json_'),
     };
   }
@@ -1029,16 +1024,20 @@ sealed class TarHeaderInput implements ToJsonSerializable {
 
   /// Returns this as a WASM canonical abi value.
   (int, Object?) toWasm();
-  static const _spec = Variant(
-      [Case('bytes', ListType(U8())), Case('model', TarHeaderModel._spec)]);
+  static const _spec = Variant([
+    Case('bytes', ListType(U8())),
+    Case('model', TarHeaderModel._spec),
+  ]);
 }
 
 class TarHeaderInputBytes implements TarHeaderInput {
   final Uint8List value;
   const TarHeaderInputBytes(this.value);
   @override
-  Map<String, Object?> toJson() =>
-      {'runtimeType': 'TarHeaderInputBytes', 'bytes': value.toList()};
+  Map<String, Object?> toJson() => {
+    'runtimeType': 'TarHeaderInputBytes',
+    'bytes': value.toList(),
+  };
 
   /// Returns this as a WASM canonical abi value.
   @override
@@ -1057,8 +1056,10 @@ class TarHeaderInputModel implements TarHeaderInput {
   final TarHeaderModel value;
   const TarHeaderInputModel(this.value);
   @override
-  Map<String, Object?> toJson() =>
-      {'runtimeType': 'TarHeaderInputModel', 'model': value.toJson()};
+  Map<String, Object?> toJson() => {
+    'runtimeType': 'TarHeaderInputModel',
+    'model': value.toJson(),
+  };
 
   /// Returns this as a WASM canonical abi value.
   @override
@@ -1076,10 +1077,7 @@ class TarHeaderInputModel implements TarHeaderInput {
 class TarArchiveInput implements ToJsonSerializable {
   final ItemInput item;
   final TarHeaderInput? header;
-  const TarArchiveInput({
-    required this.item,
-    this.header,
-  });
+  const TarArchiveInput({required this.item, this.header});
 
   /// Returns a new instance from a JSON value.
   /// May throw if the value does not have the expected structure.
@@ -1089,44 +1087,42 @@ class TarArchiveInput implements ToJsonSerializable {
         : json_;
     return switch (json) {
       [final item, final header] ||
-      (final item, final header) =>
-        TarArchiveInput(
-          item: ItemInput.fromJson(item),
-          header:
-              Option.fromJson(header, (some) => TarHeaderInput.fromJson(some))
-                  .value,
-        ),
-      _ => throw Exception('Invalid JSON $json_')
+      (final item, final header) => TarArchiveInput(
+        item: ItemInput.fromJson(item),
+        header: Option.fromJson(
+          header,
+          (some) => TarHeaderInput.fromJson(some),
+        ).value,
+      ),
+      _ => throw Exception('Invalid JSON $json_'),
     };
   }
   @override
   Map<String, Object?> toJson() => {
-        'runtimeType': 'TarArchiveInput',
-        'item': item.toJson(),
-        'header': (header == null
-            ? const None().toJson()
-            : Option.fromValue(header).toJson((some) => some.toJson())),
-      };
+    'runtimeType': 'TarArchiveInput',
+    'item': item.toJson(),
+    'header': (header == null
+        ? const None().toJson()
+        : Option.fromValue(header).toJson((some) => some.toJson())),
+  };
 
   /// Returns this as a WASM canonical abi value.
   List<Object?> toWasm() => [
-        ItemInput.toWasm(item),
-        (header == null
-            ? const None().toWasm()
-            : Option.fromValue(header).toWasm((some) => some.toWasm()))
-      ];
+    ItemInput.toWasm(item),
+    (header == null
+        ? const None().toWasm()
+        : Option.fromValue(header).toWasm((some) => some.toWasm())),
+  ];
   @override
   String toString() =>
       'TarArchiveInput${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
 
   /// Returns a new instance by overriding the values passed as arguments
-  TarArchiveInput copyWith({
-    ItemInput? item,
-    Option<TarHeaderInput>? header,
-  }) =>
+  TarArchiveInput copyWith({ItemInput? item, Option<TarHeaderInput>? header}) =>
       TarArchiveInput(
-          item: item ?? this.item,
-          header: header != null ? header.value : this.header);
+        item: item ?? this.item,
+        header: header != null ? header.value : this.header,
+      );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1139,7 +1135,7 @@ class TarArchiveInput implements ToJsonSerializable {
   List<Object?> get _props => [item, header];
   static const _spec = RecordType([
     (label: 'item', t: ItemInput._spec),
-    (label: 'header', t: OptionType(TarHeaderInput._spec))
+    (label: 'header', t: OptionType(TarHeaderInput._spec)),
   ]);
 }
 
@@ -1149,8 +1145,9 @@ sealed class ArchiveInput implements ToJsonSerializable {
   factory ArchiveInput.fromJson(Object? json_) {
     Object? json = json_;
     if (json is Map) {
-      final MapEntry(:key, :value) =
-          json.entries.firstWhere((e) => e.key != 'runtimeType');
+      final MapEntry(:key, :value) = json.entries.firstWhere(
+        (e) => e.key != 'runtimeType',
+      );
       json = (
         key is int ? key : _spec.cases.indexWhere((c) => c.label == key),
         value,
@@ -1158,9 +1155,11 @@ sealed class ArchiveInput implements ToJsonSerializable {
     }
     return switch (json) {
       (0, final value) || [0, final value] => ArchiveInputZip(
-          (value! as Iterable).map(ZipArchiveInput.fromJson).toList()),
+        (value! as Iterable).map(ZipArchiveInput.fromJson).toList(),
+      ),
       (1, final value) || [1, final value] => ArchiveInputTar(
-          (value! as Iterable).map(TarArchiveInput.fromJson).toList()),
+        (value! as Iterable).map(TarArchiveInput.fromJson).toList(),
+      ),
       _ => throw Exception('Invalid JSON $json_'),
     };
   }
@@ -1173,7 +1172,7 @@ sealed class ArchiveInput implements ToJsonSerializable {
   (int, Object?) toWasm();
   static const _spec = Variant([
     Case('zip', ListType(ZipArchiveInput._spec)),
-    Case('tar', ListType(TarArchiveInput._spec))
+    Case('tar', ListType(TarArchiveInput._spec)),
   ]);
 }
 
@@ -1182,9 +1181,9 @@ class ArchiveInputZip implements ArchiveInput {
   const ArchiveInputZip(this.value);
   @override
   Map<String, Object?> toJson() => {
-        'runtimeType': 'ArchiveInputZip',
-        'zip': value.map((e) => e.toJson()).toList()
-      };
+    'runtimeType': 'ArchiveInputZip',
+    'zip': value.map((e) => e.toJson()).toList(),
+  };
 
   /// Returns this as a WASM canonical abi value.
   @override
@@ -1205,9 +1204,9 @@ class ArchiveInputTar implements ArchiveInput {
   const ArchiveInputTar(this.value);
   @override
   Map<String, Object?> toJson() => {
-        'runtimeType': 'ArchiveInputTar',
-        'tar': value.map((e) => e.toJson()).toList()
-      };
+    'runtimeType': 'ArchiveInputTar',
+    'tar': value.map((e) => e.toJson()).toList(),
+  };
 
   /// Returns this as a WASM canonical abi value.
   @override
@@ -1276,8 +1275,10 @@ enum TarEntryType implements ToJsonSerializable {
     return ToJsonSerializable.enumFromJson(json, values, _spec);
   }
   @override
-  Map<String, Object?> toJson() =>
-      {'runtimeType': 'TarEntryType', _spec.labels[index]: null};
+  Map<String, Object?> toJson() => {
+    'runtimeType': 'TarEntryType',
+    _spec.labels[index]: null,
+  };
 
   /// Returns this as a WASM canonical abi value.
   int toWasm() => index;
@@ -1295,7 +1296,7 @@ enum TarEntryType implements ToJsonSerializable {
     'gnu-sparse',
     'x-global-header',
     'x-header',
-    'unknown'
+    'unknown',
   ]);
 }
 
@@ -1364,7 +1365,7 @@ class TarHeader implements ToJsonSerializable {
         final deviceMajor,
         final deviceMinor,
         final cksum,
-        final formatErrors
+        final formatErrors,
       ] ||
       (
         final entryType,
@@ -1384,159 +1385,151 @@ class TarHeader implements ToJsonSerializable {
         final deviceMajor,
         final deviceMinor,
         final cksum,
-        final formatErrors
-      ) =>
-        TarHeader(
-          entryType: TarEntryType.fromJson(entryType),
-          bytes: (bytes is Uint8List
-              ? bytes
-              : Uint8List.fromList((bytes! as List).cast())),
-          pathBytes: (pathBytes is Uint8List
-              ? pathBytes
-              : Uint8List.fromList((pathBytes! as List).cast())),
-          path: Option.fromJson(
-              path,
-              (some) =>
-                  some is String ? some : (some! as ParsedString).value).value,
-          linkNameBytes: Option.fromJson(
-              linkNameBytes,
-              (some) => (some is Uint8List
-                  ? some
-                  : Uint8List.fromList((some! as List).cast()))).value,
-          linkName: Option.fromJson(
-              linkName,
-              (some) =>
-                  some is String ? some : (some! as ParsedString).value).value,
-          mode: Option.fromJson(mode, (some) => some! as int).value,
-          uid: Option.fromJson(uid, (some) => bigIntFromJson(some)).value,
-          gid: Option.fromJson(gid, (some) => bigIntFromJson(some)).value,
-          mtime: Option.fromJson(mtime, (some) => bigIntFromJson(some)).value,
-          usernameBytes: Option.fromJson(
-              usernameBytes,
-              (some) => (some is Uint8List
-                  ? some
-                  : Uint8List.fromList((some! as List).cast()))).value,
-          username: Option.fromJson(
-              username,
-              (some) =>
-                  some is String ? some : (some! as ParsedString).value).value,
-          groupnameBytes: Option.fromJson(
-              groupnameBytes,
-              (some) => (some is Uint8List
-                  ? some
-                  : Uint8List.fromList((some! as List).cast()))).value,
-          groupname: Option.fromJson(
-              groupname,
-              (some) =>
-                  some is String ? some : (some! as ParsedString).value).value,
-          deviceMajor:
-              Option.fromJson(deviceMajor, (some) => some! as int).value,
-          deviceMinor:
-              Option.fromJson(deviceMinor, (some) => some! as int).value,
-          cksum: Option.fromJson(cksum, (some) => some! as int).value,
-          formatErrors: (formatErrors! as Iterable)
-              .map((e) => e is String ? e : (e! as ParsedString).value)
-              .toList(),
-        ),
-      _ => throw Exception('Invalid JSON $json_')
+        final formatErrors,
+      ) => TarHeader(
+        entryType: TarEntryType.fromJson(entryType),
+        bytes: (bytes is Uint8List
+            ? bytes
+            : Uint8List.fromList((bytes! as List).cast())),
+        pathBytes: (pathBytes is Uint8List
+            ? pathBytes
+            : Uint8List.fromList((pathBytes! as List).cast())),
+        path: Option.fromJson(
+          path,
+          (some) => some is String ? some : (some! as ParsedString).value,
+        ).value,
+        linkNameBytes: Option.fromJson(
+          linkNameBytes,
+          (some) => (some is Uint8List
+              ? some
+              : Uint8List.fromList((some! as List).cast())),
+        ).value,
+        linkName: Option.fromJson(
+          linkName,
+          (some) => some is String ? some : (some! as ParsedString).value,
+        ).value,
+        mode: Option.fromJson(mode, (some) => some! as int).value,
+        uid: Option.fromJson(uid, (some) => bigIntFromJson(some)).value,
+        gid: Option.fromJson(gid, (some) => bigIntFromJson(some)).value,
+        mtime: Option.fromJson(mtime, (some) => bigIntFromJson(some)).value,
+        usernameBytes: Option.fromJson(
+          usernameBytes,
+          (some) => (some is Uint8List
+              ? some
+              : Uint8List.fromList((some! as List).cast())),
+        ).value,
+        username: Option.fromJson(
+          username,
+          (some) => some is String ? some : (some! as ParsedString).value,
+        ).value,
+        groupnameBytes: Option.fromJson(
+          groupnameBytes,
+          (some) => (some is Uint8List
+              ? some
+              : Uint8List.fromList((some! as List).cast())),
+        ).value,
+        groupname: Option.fromJson(
+          groupname,
+          (some) => some is String ? some : (some! as ParsedString).value,
+        ).value,
+        deviceMajor: Option.fromJson(deviceMajor, (some) => some! as int).value,
+        deviceMinor: Option.fromJson(deviceMinor, (some) => some! as int).value,
+        cksum: Option.fromJson(cksum, (some) => some! as int).value,
+        formatErrors: (formatErrors! as Iterable)
+            .map((e) => e is String ? e : (e! as ParsedString).value)
+            .toList(),
+      ),
+      _ => throw Exception('Invalid JSON $json_'),
     };
   }
   @override
   Map<String, Object?> toJson() => {
-        'runtimeType': 'TarHeader',
-        'entry-type': entryType.toJson(),
-        'bytes': bytes.toList(),
-        'path-bytes': pathBytes.toList(),
-        'path': (path == null
-            ? const None().toJson()
-            : Option.fromValue(path).toJson()),
-        'link-name-bytes': (linkNameBytes == null
-            ? const None().toJson()
-            : Option.fromValue(linkNameBytes).toJson((some) => some.toList())),
-        'link-name': (linkName == null
-            ? const None().toJson()
-            : Option.fromValue(linkName).toJson()),
-        'mode': (mode == null
-            ? const None().toJson()
-            : Option.fromValue(mode).toJson()),
-        'uid': (uid == null
-            ? const None().toJson()
-            : Option.fromValue(uid).toJson((some) => some.toString())),
-        'gid': (gid == null
-            ? const None().toJson()
-            : Option.fromValue(gid).toJson((some) => some.toString())),
-        'mtime': (mtime == null
-            ? const None().toJson()
-            : Option.fromValue(mtime).toJson((some) => some.toString())),
-        'username-bytes': (usernameBytes == null
-            ? const None().toJson()
-            : Option.fromValue(usernameBytes).toJson((some) => some.toList())),
-        'username': (username == null
-            ? const None().toJson()
-            : Option.fromValue(username).toJson()),
-        'groupname-bytes': (groupnameBytes == null
-            ? const None().toJson()
-            : Option.fromValue(groupnameBytes).toJson((some) => some.toList())),
-        'groupname': (groupname == null
-            ? const None().toJson()
-            : Option.fromValue(groupname).toJson()),
-        'device-major': (deviceMajor == null
-            ? const None().toJson()
-            : Option.fromValue(deviceMajor).toJson()),
-        'device-minor': (deviceMinor == null
-            ? const None().toJson()
-            : Option.fromValue(deviceMinor).toJson()),
-        'cksum': (cksum == null
-            ? const None().toJson()
-            : Option.fromValue(cksum).toJson()),
-        'format-errors': formatErrors.toList(),
-      };
+    'runtimeType': 'TarHeader',
+    'entry-type': entryType.toJson(),
+    'bytes': bytes.toList(),
+    'path-bytes': pathBytes.toList(),
+    'path': (path == null
+        ? const None().toJson()
+        : Option.fromValue(path).toJson()),
+    'link-name-bytes': (linkNameBytes == null
+        ? const None().toJson()
+        : Option.fromValue(linkNameBytes).toJson((some) => some.toList())),
+    'link-name': (linkName == null
+        ? const None().toJson()
+        : Option.fromValue(linkName).toJson()),
+    'mode': (mode == null
+        ? const None().toJson()
+        : Option.fromValue(mode).toJson()),
+    'uid': (uid == null
+        ? const None().toJson()
+        : Option.fromValue(uid).toJson((some) => some.toString())),
+    'gid': (gid == null
+        ? const None().toJson()
+        : Option.fromValue(gid).toJson((some) => some.toString())),
+    'mtime': (mtime == null
+        ? const None().toJson()
+        : Option.fromValue(mtime).toJson((some) => some.toString())),
+    'username-bytes': (usernameBytes == null
+        ? const None().toJson()
+        : Option.fromValue(usernameBytes).toJson((some) => some.toList())),
+    'username': (username == null
+        ? const None().toJson()
+        : Option.fromValue(username).toJson()),
+    'groupname-bytes': (groupnameBytes == null
+        ? const None().toJson()
+        : Option.fromValue(groupnameBytes).toJson((some) => some.toList())),
+    'groupname': (groupname == null
+        ? const None().toJson()
+        : Option.fromValue(groupname).toJson()),
+    'device-major': (deviceMajor == null
+        ? const None().toJson()
+        : Option.fromValue(deviceMajor).toJson()),
+    'device-minor': (deviceMinor == null
+        ? const None().toJson()
+        : Option.fromValue(deviceMinor).toJson()),
+    'cksum': (cksum == null
+        ? const None().toJson()
+        : Option.fromValue(cksum).toJson()),
+    'format-errors': formatErrors.toList(),
+  };
 
   /// Returns this as a WASM canonical abi value.
   List<Object?> toWasm() => [
-        entryType.toWasm(),
-        bytes,
-        pathBytes,
-        (path == null
-            ? const None().toWasm()
-            : Option.fromValue(path).toWasm()),
-        (linkNameBytes == null
-            ? const None().toWasm()
-            : Option.fromValue(linkNameBytes).toWasm()),
-        (linkName == null
-            ? const None().toWasm()
-            : Option.fromValue(linkName).toWasm()),
-        (mode == null
-            ? const None().toWasm()
-            : Option.fromValue(mode).toWasm()),
-        (uid == null ? const None().toWasm() : Option.fromValue(uid).toWasm()),
-        (gid == null ? const None().toWasm() : Option.fromValue(gid).toWasm()),
-        (mtime == null
-            ? const None().toWasm()
-            : Option.fromValue(mtime).toWasm()),
-        (usernameBytes == null
-            ? const None().toWasm()
-            : Option.fromValue(usernameBytes).toWasm()),
-        (username == null
-            ? const None().toWasm()
-            : Option.fromValue(username).toWasm()),
-        (groupnameBytes == null
-            ? const None().toWasm()
-            : Option.fromValue(groupnameBytes).toWasm()),
-        (groupname == null
-            ? const None().toWasm()
-            : Option.fromValue(groupname).toWasm()),
-        (deviceMajor == null
-            ? const None().toWasm()
-            : Option.fromValue(deviceMajor).toWasm()),
-        (deviceMinor == null
-            ? const None().toWasm()
-            : Option.fromValue(deviceMinor).toWasm()),
-        (cksum == null
-            ? const None().toWasm()
-            : Option.fromValue(cksum).toWasm()),
-        formatErrors
-      ];
+    entryType.toWasm(),
+    bytes,
+    pathBytes,
+    (path == null ? const None().toWasm() : Option.fromValue(path).toWasm()),
+    (linkNameBytes == null
+        ? const None().toWasm()
+        : Option.fromValue(linkNameBytes).toWasm()),
+    (linkName == null
+        ? const None().toWasm()
+        : Option.fromValue(linkName).toWasm()),
+    (mode == null ? const None().toWasm() : Option.fromValue(mode).toWasm()),
+    (uid == null ? const None().toWasm() : Option.fromValue(uid).toWasm()),
+    (gid == null ? const None().toWasm() : Option.fromValue(gid).toWasm()),
+    (mtime == null ? const None().toWasm() : Option.fromValue(mtime).toWasm()),
+    (usernameBytes == null
+        ? const None().toWasm()
+        : Option.fromValue(usernameBytes).toWasm()),
+    (username == null
+        ? const None().toWasm()
+        : Option.fromValue(username).toWasm()),
+    (groupnameBytes == null
+        ? const None().toWasm()
+        : Option.fromValue(groupnameBytes).toWasm()),
+    (groupname == null
+        ? const None().toWasm()
+        : Option.fromValue(groupname).toWasm()),
+    (deviceMajor == null
+        ? const None().toWasm()
+        : Option.fromValue(deviceMajor).toWasm()),
+    (deviceMinor == null
+        ? const None().toWasm()
+        : Option.fromValue(deviceMinor).toWasm()),
+    (cksum == null ? const None().toWasm() : Option.fromValue(cksum).toWasm()),
+    formatErrors,
+  ];
   @override
   String toString() =>
       'TarHeader${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
@@ -1549,44 +1542,44 @@ class TarHeader implements ToJsonSerializable {
     Option<String>? path,
     Option<Uint8List>? linkNameBytes,
     Option<String>? linkName,
-    Option<int /*U32*/ >? mode,
-    Option<BigInt /*U64*/ >? uid,
-    Option<BigInt /*U64*/ >? gid,
-    Option<BigInt /*U64*/ >? mtime,
+    Option<int /*U32*/>? mode,
+    Option<BigInt /*U64*/>? uid,
+    Option<BigInt /*U64*/>? gid,
+    Option<BigInt /*U64*/>? mtime,
     Option<Uint8List>? usernameBytes,
     Option<String>? username,
     Option<Uint8List>? groupnameBytes,
     Option<String>? groupname,
-    Option<int /*U32*/ >? deviceMajor,
-    Option<int /*U32*/ >? deviceMinor,
-    Option<int /*U32*/ >? cksum,
+    Option<int /*U32*/>? deviceMajor,
+    Option<int /*U32*/>? deviceMinor,
+    Option<int /*U32*/>? cksum,
     List<String>? formatErrors,
-  }) =>
-      TarHeader(
-          entryType: entryType ?? this.entryType,
-          bytes: bytes ?? this.bytes,
-          pathBytes: pathBytes ?? this.pathBytes,
-          path: path != null ? path.value : this.path,
-          linkNameBytes:
-              linkNameBytes != null ? linkNameBytes.value : this.linkNameBytes,
-          linkName: linkName != null ? linkName.value : this.linkName,
-          mode: mode != null ? mode.value : this.mode,
-          uid: uid != null ? uid.value : this.uid,
-          gid: gid != null ? gid.value : this.gid,
-          mtime: mtime != null ? mtime.value : this.mtime,
-          usernameBytes:
-              usernameBytes != null ? usernameBytes.value : this.usernameBytes,
-          username: username != null ? username.value : this.username,
-          groupnameBytes: groupnameBytes != null
-              ? groupnameBytes.value
-              : this.groupnameBytes,
-          groupname: groupname != null ? groupname.value : this.groupname,
-          deviceMajor:
-              deviceMajor != null ? deviceMajor.value : this.deviceMajor,
-          deviceMinor:
-              deviceMinor != null ? deviceMinor.value : this.deviceMinor,
-          cksum: cksum != null ? cksum.value : this.cksum,
-          formatErrors: formatErrors ?? this.formatErrors);
+  }) => TarHeader(
+    entryType: entryType ?? this.entryType,
+    bytes: bytes ?? this.bytes,
+    pathBytes: pathBytes ?? this.pathBytes,
+    path: path != null ? path.value : this.path,
+    linkNameBytes: linkNameBytes != null
+        ? linkNameBytes.value
+        : this.linkNameBytes,
+    linkName: linkName != null ? linkName.value : this.linkName,
+    mode: mode != null ? mode.value : this.mode,
+    uid: uid != null ? uid.value : this.uid,
+    gid: gid != null ? gid.value : this.gid,
+    mtime: mtime != null ? mtime.value : this.mtime,
+    usernameBytes: usernameBytes != null
+        ? usernameBytes.value
+        : this.usernameBytes,
+    username: username != null ? username.value : this.username,
+    groupnameBytes: groupnameBytes != null
+        ? groupnameBytes.value
+        : this.groupnameBytes,
+    groupname: groupname != null ? groupname.value : this.groupname,
+    deviceMajor: deviceMajor != null ? deviceMajor.value : this.deviceMajor,
+    deviceMinor: deviceMinor != null ? deviceMinor.value : this.deviceMinor,
+    cksum: cksum != null ? cksum.value : this.cksum,
+    formatErrors: formatErrors ?? this.formatErrors,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1597,25 +1590,25 @@ class TarHeader implements ToJsonSerializable {
 
   // ignore: unused_field
   List<Object?> get _props => [
-        entryType,
-        bytes,
-        pathBytes,
-        path,
-        linkNameBytes,
-        linkName,
-        mode,
-        uid,
-        gid,
-        mtime,
-        usernameBytes,
-        username,
-        groupnameBytes,
-        groupname,
-        deviceMajor,
-        deviceMinor,
-        cksum,
-        formatErrors
-      ];
+    entryType,
+    bytes,
+    pathBytes,
+    path,
+    linkNameBytes,
+    linkName,
+    mode,
+    uid,
+    gid,
+    mtime,
+    usernameBytes,
+    username,
+    groupnameBytes,
+    groupname,
+    deviceMajor,
+    deviceMinor,
+    cksum,
+    formatErrors,
+  ];
   static const _spec = RecordType([
     (label: 'entry-type', t: TarEntryType._spec),
     (label: 'bytes', t: ListType(U8())),
@@ -1634,17 +1627,14 @@ class TarHeader implements ToJsonSerializable {
     (label: 'device-major', t: OptionType(U32())),
     (label: 'device-minor', t: OptionType(U32())),
     (label: 'cksum', t: OptionType(U32())),
-    (label: 'format-errors', t: ListType(StringType()))
+    (label: 'format-errors', t: ListType(StringType())),
   ]);
 }
 
 class TarFile implements ToJsonSerializable {
   final TarHeader header;
   final FileBytes file;
-  const TarFile({
-    required this.header,
-    required this.file,
-  });
+  const TarFile({required this.header, required this.file});
 
   /// Returns a new instance from a JSON value.
   /// May throw if the value does not have the expected structure.
@@ -1654,18 +1644,18 @@ class TarFile implements ToJsonSerializable {
         : json_;
     return switch (json) {
       [final header, final file] || (final header, final file) => TarFile(
-          header: TarHeader.fromJson(header),
-          file: FileBytes.fromJson(file),
-        ),
-      _ => throw Exception('Invalid JSON $json_')
+        header: TarHeader.fromJson(header),
+        file: FileBytes.fromJson(file),
+      ),
+      _ => throw Exception('Invalid JSON $json_'),
     };
   }
   @override
   Map<String, Object?> toJson() => {
-        'runtimeType': 'TarFile',
-        'header': header.toJson(),
-        'file': file.toJson(),
-      };
+    'runtimeType': 'TarFile',
+    'header': header.toJson(),
+    'file': file.toJson(),
+  };
 
   /// Returns this as a WASM canonical abi value.
   List<Object?> toWasm() => [header.toWasm(), file.toWasm()];
@@ -1674,10 +1664,7 @@ class TarFile implements ToJsonSerializable {
       'TarFile${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
 
   /// Returns a new instance by overriding the values passed as arguments
-  TarFile copyWith({
-    TarHeader? header,
-    FileBytes? file,
-  }) =>
+  TarFile copyWith({TarHeader? header, FileBytes? file}) =>
       TarFile(header: header ?? this.header, file: file ?? this.file);
   @override
   bool operator ==(Object other) =>
@@ -1691,7 +1678,7 @@ class TarFile implements ToJsonSerializable {
   List<Object?> get _props => [header, file];
   static const _spec = RecordType([
     (label: 'header', t: TarHeader._spec),
-    (label: 'file', t: FileBytes._spec)
+    (label: 'file', t: FileBytes._spec),
   ]);
 }
 
@@ -1704,52 +1691,60 @@ class CompressionRsWorldImports {
 class Brotli {
   final CompressionRsWorld _world;
   Brotli(this._world)
-      : _brotliCompress = _world.library.getComponentFunction(
-          'compression-rs-namespace:compression-rs/brotli#brotli-compress',
-          const FuncType([('input', Input._spec)],
-              [('', ResultType(ListType(U8()), StringType()))]),
-        )!,
-        _brotliDecompress = _world.library.getComponentFunction(
-          'compression-rs-namespace:compression-rs/brotli#brotli-decompress',
-          const FuncType([('input', Input._spec)],
-              [('', ResultType(ListType(U8()), StringType()))]),
-        )!,
-        _brotliCompressFile = _world.library.getComponentFunction(
-          'compression-rs-namespace:compression-rs/brotli#brotli-compress-file',
-          const FuncType(
-              [('input', Input._spec), ('output-path', StringType())],
-              [('', ResultType(U64(), StringType()))]),
-        )!,
-        _brotliDecompressFile = _world.library.getComponentFunction(
-          'compression-rs-namespace:compression-rs/brotli#brotli-decompress-file',
-          const FuncType(
-              [('input', Input._spec), ('output-path', StringType())],
-              [('', ResultType(U64(), StringType()))]),
-        )!;
+    : _brotliCompress = _world.library.getComponentFunction(
+        'compression-rs-namespace:compression-rs/brotli#brotli-compress',
+        const FuncType(
+          [('input', Input._spec)],
+          [('', ResultType(ListType(U8()), StringType()))],
+        ),
+      )!,
+      _brotliDecompress = _world.library.getComponentFunction(
+        'compression-rs-namespace:compression-rs/brotli#brotli-decompress',
+        const FuncType(
+          [('input', Input._spec)],
+          [('', ResultType(ListType(U8()), StringType()))],
+        ),
+      )!,
+      _brotliCompressFile = _world.library.getComponentFunction(
+        'compression-rs-namespace:compression-rs/brotli#brotli-compress-file',
+        const FuncType(
+          [('input', Input._spec), ('output-path', StringType())],
+          [('', ResultType(U64(), StringType()))],
+        ),
+      )!,
+      _brotliDecompressFile = _world.library.getComponentFunction(
+        'compression-rs-namespace:compression-rs/brotli#brotli-decompress-file',
+        const FuncType(
+          [('input', Input._spec), ('output-path', StringType())],
+          [('', ResultType(U64(), StringType()))],
+        ),
+      )!;
   final ListValue Function(ListValue) _brotliCompress;
-  Result<Uint8List, IoError> brotliCompress({
-    required Input input,
-  }) {
+  Result<Uint8List, IoError> brotliCompress({required Input input}) {
     final results = _brotliCompress([input.toWasm()]);
     final result = results[0];
-    return _world.withContext(() => Result.fromJson(
+    return _world.withContext(
+      () => Result.fromJson(
         result,
         (ok) =>
             (ok is Uint8List ? ok : Uint8List.fromList((ok! as List).cast())),
-        (error) => error is String ? error : (error! as ParsedString).value));
+        (error) => error is String ? error : (error! as ParsedString).value,
+      ),
+    );
   }
 
   final ListValue Function(ListValue) _brotliDecompress;
-  Result<Uint8List, IoError> brotliDecompress({
-    required Input input,
-  }) {
+  Result<Uint8List, IoError> brotliDecompress({required Input input}) {
     final results = _brotliDecompress([input.toWasm()]);
     final result = results[0];
-    return _world.withContext(() => Result.fromJson(
+    return _world.withContext(
+      () => Result.fromJson(
         result,
         (ok) =>
             (ok is Uint8List ? ok : Uint8List.fromList((ok! as List).cast())),
-        (error) => error is String ? error : (error! as ParsedString).value));
+        (error) => error is String ? error : (error! as ParsedString).value,
+      ),
+    );
   }
 
   final ListValue Function(ListValue) _brotliCompressFile;
@@ -1759,10 +1754,13 @@ class Brotli {
   }) {
     final results = _brotliCompressFile([input.toWasm(), outputPath]);
     final result = results[0];
-    return _world.withContext(() => Result.fromJson(
+    return _world.withContext(
+      () => Result.fromJson(
         result,
         (ok) => bigIntFromJson(ok),
-        (error) => error is String ? error : (error! as ParsedString).value));
+        (error) => error is String ? error : (error! as ParsedString).value,
+      ),
+    );
   }
 
   final ListValue Function(ListValue) _brotliDecompressFile;
@@ -1772,62 +1770,73 @@ class Brotli {
   }) {
     final results = _brotliDecompressFile([input.toWasm(), outputPath]);
     final result = results[0];
-    return _world.withContext(() => Result.fromJson(
+    return _world.withContext(
+      () => Result.fromJson(
         result,
         (ok) => bigIntFromJson(ok),
-        (error) => error is String ? error : (error! as ParsedString).value));
+        (error) => error is String ? error : (error! as ParsedString).value,
+      ),
+    );
   }
 }
 
 class Lz4 {
   final CompressionRsWorld _world;
   Lz4(this._world)
-      : _lz4Compress = _world.library.getComponentFunction(
-          'compression-rs-namespace:compression-rs/lz4#lz4-compress',
-          const FuncType([('input', Input._spec)],
-              [('', ResultType(ListType(U8()), StringType()))]),
-        )!,
-        _lz4Decompress = _world.library.getComponentFunction(
-          'compression-rs-namespace:compression-rs/lz4#lz4-decompress',
-          const FuncType([('input', Input._spec)],
-              [('', ResultType(ListType(U8()), StringType()))]),
-        )!,
-        _lz4CompressFile = _world.library.getComponentFunction(
-          'compression-rs-namespace:compression-rs/lz4#lz4-compress-file',
-          const FuncType(
-              [('input', Input._spec), ('output-path', StringType())],
-              [('', ResultType(U64(), StringType()))]),
-        )!,
-        _lz4DecompressFile = _world.library.getComponentFunction(
-          'compression-rs-namespace:compression-rs/lz4#lz4-decompress-file',
-          const FuncType(
-              [('input', Input._spec), ('output-path', StringType())],
-              [('', ResultType(U64(), StringType()))]),
-        )!;
+    : _lz4Compress = _world.library.getComponentFunction(
+        'compression-rs-namespace:compression-rs/lz4#lz4-compress',
+        const FuncType(
+          [('input', Input._spec)],
+          [('', ResultType(ListType(U8()), StringType()))],
+        ),
+      )!,
+      _lz4Decompress = _world.library.getComponentFunction(
+        'compression-rs-namespace:compression-rs/lz4#lz4-decompress',
+        const FuncType(
+          [('input', Input._spec)],
+          [('', ResultType(ListType(U8()), StringType()))],
+        ),
+      )!,
+      _lz4CompressFile = _world.library.getComponentFunction(
+        'compression-rs-namespace:compression-rs/lz4#lz4-compress-file',
+        const FuncType(
+          [('input', Input._spec), ('output-path', StringType())],
+          [('', ResultType(U64(), StringType()))],
+        ),
+      )!,
+      _lz4DecompressFile = _world.library.getComponentFunction(
+        'compression-rs-namespace:compression-rs/lz4#lz4-decompress-file',
+        const FuncType(
+          [('input', Input._spec), ('output-path', StringType())],
+          [('', ResultType(U64(), StringType()))],
+        ),
+      )!;
   final ListValue Function(ListValue) _lz4Compress;
-  Result<Uint8List, IoError> lz4Compress({
-    required Input input,
-  }) {
+  Result<Uint8List, IoError> lz4Compress({required Input input}) {
     final results = _lz4Compress([input.toWasm()]);
     final result = results[0];
-    return _world.withContext(() => Result.fromJson(
+    return _world.withContext(
+      () => Result.fromJson(
         result,
         (ok) =>
             (ok is Uint8List ? ok : Uint8List.fromList((ok! as List).cast())),
-        (error) => error is String ? error : (error! as ParsedString).value));
+        (error) => error is String ? error : (error! as ParsedString).value,
+      ),
+    );
   }
 
   final ListValue Function(ListValue) _lz4Decompress;
-  Result<Uint8List, IoError> lz4Decompress({
-    required Input input,
-  }) {
+  Result<Uint8List, IoError> lz4Decompress({required Input input}) {
     final results = _lz4Decompress([input.toWasm()]);
     final result = results[0];
-    return _world.withContext(() => Result.fromJson(
+    return _world.withContext(
+      () => Result.fromJson(
         result,
         (ok) =>
             (ok is Uint8List ? ok : Uint8List.fromList((ok! as List).cast())),
-        (error) => error is String ? error : (error! as ParsedString).value));
+        (error) => error is String ? error : (error! as ParsedString).value,
+      ),
+    );
   }
 
   final ListValue Function(ListValue) _lz4CompressFile;
@@ -1837,10 +1846,13 @@ class Lz4 {
   }) {
     final results = _lz4CompressFile([input.toWasm(), outputPath]);
     final result = results[0];
-    return _world.withContext(() => Result.fromJson(
+    return _world.withContext(
+      () => Result.fromJson(
         result,
         (ok) => bigIntFromJson(ok),
-        (error) => error is String ? error : (error! as ParsedString).value));
+        (error) => error is String ? error : (error! as ParsedString).value,
+      ),
+    );
   }
 
   final ListValue Function(ListValue) _lz4DecompressFile;
@@ -1850,62 +1862,73 @@ class Lz4 {
   }) {
     final results = _lz4DecompressFile([input.toWasm(), outputPath]);
     final result = results[0];
-    return _world.withContext(() => Result.fromJson(
+    return _world.withContext(
+      () => Result.fromJson(
         result,
         (ok) => bigIntFromJson(ok),
-        (error) => error is String ? error : (error! as ParsedString).value));
+        (error) => error is String ? error : (error! as ParsedString).value,
+      ),
+    );
   }
 }
 
 class Zstd {
   final CompressionRsWorld _world;
   Zstd(this._world)
-      : _zstdCompress = _world.library.getComponentFunction(
-          'compression-rs-namespace:compression-rs/zstd#zstd-compress',
-          const FuncType([('input', Input._spec)],
-              [('', ResultType(ListType(U8()), StringType()))]),
-        )!,
-        _zstdDecompress = _world.library.getComponentFunction(
-          'compression-rs-namespace:compression-rs/zstd#zstd-decompress',
-          const FuncType([('input', Input._spec)],
-              [('', ResultType(ListType(U8()), StringType()))]),
-        )!,
-        _zstdCompressFile = _world.library.getComponentFunction(
-          'compression-rs-namespace:compression-rs/zstd#zstd-compress-file',
-          const FuncType(
-              [('input', Input._spec), ('output-path', StringType())],
-              [('', ResultType(U64(), StringType()))]),
-        )!,
-        _zstdDecompressFile = _world.library.getComponentFunction(
-          'compression-rs-namespace:compression-rs/zstd#zstd-decompress-file',
-          const FuncType(
-              [('input', Input._spec), ('output-path', StringType())],
-              [('', ResultType(U64(), StringType()))]),
-        )!;
+    : _zstdCompress = _world.library.getComponentFunction(
+        'compression-rs-namespace:compression-rs/zstd#zstd-compress',
+        const FuncType(
+          [('input', Input._spec)],
+          [('', ResultType(ListType(U8()), StringType()))],
+        ),
+      )!,
+      _zstdDecompress = _world.library.getComponentFunction(
+        'compression-rs-namespace:compression-rs/zstd#zstd-decompress',
+        const FuncType(
+          [('input', Input._spec)],
+          [('', ResultType(ListType(U8()), StringType()))],
+        ),
+      )!,
+      _zstdCompressFile = _world.library.getComponentFunction(
+        'compression-rs-namespace:compression-rs/zstd#zstd-compress-file',
+        const FuncType(
+          [('input', Input._spec), ('output-path', StringType())],
+          [('', ResultType(U64(), StringType()))],
+        ),
+      )!,
+      _zstdDecompressFile = _world.library.getComponentFunction(
+        'compression-rs-namespace:compression-rs/zstd#zstd-decompress-file',
+        const FuncType(
+          [('input', Input._spec), ('output-path', StringType())],
+          [('', ResultType(U64(), StringType()))],
+        ),
+      )!;
   final ListValue Function(ListValue) _zstdCompress;
-  Result<Uint8List, IoError> zstdCompress({
-    required Input input,
-  }) {
+  Result<Uint8List, IoError> zstdCompress({required Input input}) {
     final results = _zstdCompress([input.toWasm()]);
     final result = results[0];
-    return _world.withContext(() => Result.fromJson(
+    return _world.withContext(
+      () => Result.fromJson(
         result,
         (ok) =>
             (ok is Uint8List ? ok : Uint8List.fromList((ok! as List).cast())),
-        (error) => error is String ? error : (error! as ParsedString).value));
+        (error) => error is String ? error : (error! as ParsedString).value,
+      ),
+    );
   }
 
   final ListValue Function(ListValue) _zstdDecompress;
-  Result<Uint8List, IoError> zstdDecompress({
-    required Input input,
-  }) {
+  Result<Uint8List, IoError> zstdDecompress({required Input input}) {
     final results = _zstdDecompress([input.toWasm()]);
     final result = results[0];
-    return _world.withContext(() => Result.fromJson(
+    return _world.withContext(
+      () => Result.fromJson(
         result,
         (ok) =>
             (ok is Uint8List ? ok : Uint8List.fromList((ok! as List).cast())),
-        (error) => error is String ? error : (error! as ParsedString).value));
+        (error) => error is String ? error : (error! as ParsedString).value,
+      ),
+    );
   }
 
   final ListValue Function(ListValue) _zstdCompressFile;
@@ -1915,10 +1938,13 @@ class Zstd {
   }) {
     final results = _zstdCompressFile([input.toWasm(), outputPath]);
     final result = results[0];
-    return _world.withContext(() => Result.fromJson(
+    return _world.withContext(
+      () => Result.fromJson(
         result,
         (ok) => bigIntFromJson(ok),
-        (error) => error is String ? error : (error! as ParsedString).value));
+        (error) => error is String ? error : (error! as ParsedString).value,
+      ),
+    );
   }
 
   final ListValue Function(ListValue) _zstdDecompressFile;
@@ -1928,62 +1954,73 @@ class Zstd {
   }) {
     final results = _zstdDecompressFile([input.toWasm(), outputPath]);
     final result = results[0];
-    return _world.withContext(() => Result.fromJson(
+    return _world.withContext(
+      () => Result.fromJson(
         result,
         (ok) => bigIntFromJson(ok),
-        (error) => error is String ? error : (error! as ParsedString).value));
+        (error) => error is String ? error : (error! as ParsedString).value,
+      ),
+    );
   }
 }
 
 class Deflate {
   final CompressionRsWorld _world;
   Deflate(this._world)
-      : _deflateCompress = _world.library.getComponentFunction(
-          'compression-rs-namespace:compression-rs/deflate#deflate-compress',
-          const FuncType([('input', Input._spec)],
-              [('', ResultType(ListType(U8()), StringType()))]),
-        )!,
-        _deflateDecompress = _world.library.getComponentFunction(
-          'compression-rs-namespace:compression-rs/deflate#deflate-decompress',
-          const FuncType([('input', Input._spec)],
-              [('', ResultType(ListType(U8()), StringType()))]),
-        )!,
-        _deflateCompressFile = _world.library.getComponentFunction(
-          'compression-rs-namespace:compression-rs/deflate#deflate-compress-file',
-          const FuncType(
-              [('input', Input._spec), ('output-path', StringType())],
-              [('', ResultType(U64(), StringType()))]),
-        )!,
-        _deflateDecompressFile = _world.library.getComponentFunction(
-          'compression-rs-namespace:compression-rs/deflate#deflate-decompress-file',
-          const FuncType(
-              [('input', Input._spec), ('output-path', StringType())],
-              [('', ResultType(U64(), StringType()))]),
-        )!;
+    : _deflateCompress = _world.library.getComponentFunction(
+        'compression-rs-namespace:compression-rs/deflate#deflate-compress',
+        const FuncType(
+          [('input', Input._spec)],
+          [('', ResultType(ListType(U8()), StringType()))],
+        ),
+      )!,
+      _deflateDecompress = _world.library.getComponentFunction(
+        'compression-rs-namespace:compression-rs/deflate#deflate-decompress',
+        const FuncType(
+          [('input', Input._spec)],
+          [('', ResultType(ListType(U8()), StringType()))],
+        ),
+      )!,
+      _deflateCompressFile = _world.library.getComponentFunction(
+        'compression-rs-namespace:compression-rs/deflate#deflate-compress-file',
+        const FuncType(
+          [('input', Input._spec), ('output-path', StringType())],
+          [('', ResultType(U64(), StringType()))],
+        ),
+      )!,
+      _deflateDecompressFile = _world.library.getComponentFunction(
+        'compression-rs-namespace:compression-rs/deflate#deflate-decompress-file',
+        const FuncType(
+          [('input', Input._spec), ('output-path', StringType())],
+          [('', ResultType(U64(), StringType()))],
+        ),
+      )!;
   final ListValue Function(ListValue) _deflateCompress;
-  Result<Uint8List, IoError> deflateCompress({
-    required Input input,
-  }) {
+  Result<Uint8List, IoError> deflateCompress({required Input input}) {
     final results = _deflateCompress([input.toWasm()]);
     final result = results[0];
-    return _world.withContext(() => Result.fromJson(
+    return _world.withContext(
+      () => Result.fromJson(
         result,
         (ok) =>
             (ok is Uint8List ? ok : Uint8List.fromList((ok! as List).cast())),
-        (error) => error is String ? error : (error! as ParsedString).value));
+        (error) => error is String ? error : (error! as ParsedString).value,
+      ),
+    );
   }
 
   final ListValue Function(ListValue) _deflateDecompress;
-  Result<Uint8List, IoError> deflateDecompress({
-    required Input input,
-  }) {
+  Result<Uint8List, IoError> deflateDecompress({required Input input}) {
     final results = _deflateDecompress([input.toWasm()]);
     final result = results[0];
-    return _world.withContext(() => Result.fromJson(
+    return _world.withContext(
+      () => Result.fromJson(
         result,
         (ok) =>
             (ok is Uint8List ? ok : Uint8List.fromList((ok! as List).cast())),
-        (error) => error is String ? error : (error! as ParsedString).value));
+        (error) => error is String ? error : (error! as ParsedString).value,
+      ),
+    );
   }
 
   final ListValue Function(ListValue) _deflateCompressFile;
@@ -1993,10 +2030,13 @@ class Deflate {
   }) {
     final results = _deflateCompressFile([input.toWasm(), outputPath]);
     final result = results[0];
-    return _world.withContext(() => Result.fromJson(
+    return _world.withContext(
+      () => Result.fromJson(
         result,
         (ok) => bigIntFromJson(ok),
-        (error) => error is String ? error : (error! as ParsedString).value));
+        (error) => error is String ? error : (error! as ParsedString).value,
+      ),
+    );
   }
 
   final ListValue Function(ListValue) _deflateDecompressFile;
@@ -2006,62 +2046,73 @@ class Deflate {
   }) {
     final results = _deflateDecompressFile([input.toWasm(), outputPath]);
     final result = results[0];
-    return _world.withContext(() => Result.fromJson(
+    return _world.withContext(
+      () => Result.fromJson(
         result,
         (ok) => bigIntFromJson(ok),
-        (error) => error is String ? error : (error! as ParsedString).value));
+        (error) => error is String ? error : (error! as ParsedString).value,
+      ),
+    );
   }
 }
 
 class Gzip {
   final CompressionRsWorld _world;
   Gzip(this._world)
-      : _gzipCompress = _world.library.getComponentFunction(
-          'compression-rs-namespace:compression-rs/gzip#gzip-compress',
-          const FuncType([('input', Input._spec)],
-              [('', ResultType(ListType(U8()), StringType()))]),
-        )!,
-        _gzipDecompress = _world.library.getComponentFunction(
-          'compression-rs-namespace:compression-rs/gzip#gzip-decompress',
-          const FuncType([('input', Input._spec)],
-              [('', ResultType(ListType(U8()), StringType()))]),
-        )!,
-        _gzipCompressFile = _world.library.getComponentFunction(
-          'compression-rs-namespace:compression-rs/gzip#gzip-compress-file',
-          const FuncType(
-              [('input', Input._spec), ('output-path', StringType())],
-              [('', ResultType(U64(), StringType()))]),
-        )!,
-        _gzipDecompressFile = _world.library.getComponentFunction(
-          'compression-rs-namespace:compression-rs/gzip#gzip-decompress-file',
-          const FuncType(
-              [('input', Input._spec), ('output-path', StringType())],
-              [('', ResultType(U64(), StringType()))]),
-        )!;
+    : _gzipCompress = _world.library.getComponentFunction(
+        'compression-rs-namespace:compression-rs/gzip#gzip-compress',
+        const FuncType(
+          [('input', Input._spec)],
+          [('', ResultType(ListType(U8()), StringType()))],
+        ),
+      )!,
+      _gzipDecompress = _world.library.getComponentFunction(
+        'compression-rs-namespace:compression-rs/gzip#gzip-decompress',
+        const FuncType(
+          [('input', Input._spec)],
+          [('', ResultType(ListType(U8()), StringType()))],
+        ),
+      )!,
+      _gzipCompressFile = _world.library.getComponentFunction(
+        'compression-rs-namespace:compression-rs/gzip#gzip-compress-file',
+        const FuncType(
+          [('input', Input._spec), ('output-path', StringType())],
+          [('', ResultType(U64(), StringType()))],
+        ),
+      )!,
+      _gzipDecompressFile = _world.library.getComponentFunction(
+        'compression-rs-namespace:compression-rs/gzip#gzip-decompress-file',
+        const FuncType(
+          [('input', Input._spec), ('output-path', StringType())],
+          [('', ResultType(U64(), StringType()))],
+        ),
+      )!;
   final ListValue Function(ListValue) _gzipCompress;
-  Result<Uint8List, IoError> gzipCompress({
-    required Input input,
-  }) {
+  Result<Uint8List, IoError> gzipCompress({required Input input}) {
     final results = _gzipCompress([input.toWasm()]);
     final result = results[0];
-    return _world.withContext(() => Result.fromJson(
+    return _world.withContext(
+      () => Result.fromJson(
         result,
         (ok) =>
             (ok is Uint8List ? ok : Uint8List.fromList((ok! as List).cast())),
-        (error) => error is String ? error : (error! as ParsedString).value));
+        (error) => error is String ? error : (error! as ParsedString).value,
+      ),
+    );
   }
 
   final ListValue Function(ListValue) _gzipDecompress;
-  Result<Uint8List, IoError> gzipDecompress({
-    required Input input,
-  }) {
+  Result<Uint8List, IoError> gzipDecompress({required Input input}) {
     final results = _gzipDecompress([input.toWasm()]);
     final result = results[0];
-    return _world.withContext(() => Result.fromJson(
+    return _world.withContext(
+      () => Result.fromJson(
         result,
         (ok) =>
             (ok is Uint8List ? ok : Uint8List.fromList((ok! as List).cast())),
-        (error) => error is String ? error : (error! as ParsedString).value));
+        (error) => error is String ? error : (error! as ParsedString).value,
+      ),
+    );
   }
 
   final ListValue Function(ListValue) _gzipCompressFile;
@@ -2071,10 +2122,13 @@ class Gzip {
   }) {
     final results = _gzipCompressFile([input.toWasm(), outputPath]);
     final result = results[0];
-    return _world.withContext(() => Result.fromJson(
+    return _world.withContext(
+      () => Result.fromJson(
         result,
         (ok) => bigIntFromJson(ok),
-        (error) => error is String ? error : (error! as ParsedString).value));
+        (error) => error is String ? error : (error! as ParsedString).value,
+      ),
+    );
   }
 
   final ListValue Function(ListValue) _gzipDecompressFile;
@@ -2084,62 +2138,73 @@ class Gzip {
   }) {
     final results = _gzipDecompressFile([input.toWasm(), outputPath]);
     final result = results[0];
-    return _world.withContext(() => Result.fromJson(
+    return _world.withContext(
+      () => Result.fromJson(
         result,
         (ok) => bigIntFromJson(ok),
-        (error) => error is String ? error : (error! as ParsedString).value));
+        (error) => error is String ? error : (error! as ParsedString).value,
+      ),
+    );
   }
 }
 
 class Zlib {
   final CompressionRsWorld _world;
   Zlib(this._world)
-      : _zlibCompress = _world.library.getComponentFunction(
-          'compression-rs-namespace:compression-rs/zlib#zlib-compress',
-          const FuncType([('input', Input._spec)],
-              [('', ResultType(ListType(U8()), StringType()))]),
-        )!,
-        _zlibDecompress = _world.library.getComponentFunction(
-          'compression-rs-namespace:compression-rs/zlib#zlib-decompress',
-          const FuncType([('input', Input._spec)],
-              [('', ResultType(ListType(U8()), StringType()))]),
-        )!,
-        _zlibCompressFile = _world.library.getComponentFunction(
-          'compression-rs-namespace:compression-rs/zlib#zlib-compress-file',
-          const FuncType(
-              [('input', Input._spec), ('output-path', StringType())],
-              [('', ResultType(U64(), StringType()))]),
-        )!,
-        _zlibDecompressFile = _world.library.getComponentFunction(
-          'compression-rs-namespace:compression-rs/zlib#zlib-decompress-file',
-          const FuncType(
-              [('input', Input._spec), ('output-path', StringType())],
-              [('', ResultType(U64(), StringType()))]),
-        )!;
+    : _zlibCompress = _world.library.getComponentFunction(
+        'compression-rs-namespace:compression-rs/zlib#zlib-compress',
+        const FuncType(
+          [('input', Input._spec)],
+          [('', ResultType(ListType(U8()), StringType()))],
+        ),
+      )!,
+      _zlibDecompress = _world.library.getComponentFunction(
+        'compression-rs-namespace:compression-rs/zlib#zlib-decompress',
+        const FuncType(
+          [('input', Input._spec)],
+          [('', ResultType(ListType(U8()), StringType()))],
+        ),
+      )!,
+      _zlibCompressFile = _world.library.getComponentFunction(
+        'compression-rs-namespace:compression-rs/zlib#zlib-compress-file',
+        const FuncType(
+          [('input', Input._spec), ('output-path', StringType())],
+          [('', ResultType(U64(), StringType()))],
+        ),
+      )!,
+      _zlibDecompressFile = _world.library.getComponentFunction(
+        'compression-rs-namespace:compression-rs/zlib#zlib-decompress-file',
+        const FuncType(
+          [('input', Input._spec), ('output-path', StringType())],
+          [('', ResultType(U64(), StringType()))],
+        ),
+      )!;
   final ListValue Function(ListValue) _zlibCompress;
-  Result<Uint8List, IoError> zlibCompress({
-    required Input input,
-  }) {
+  Result<Uint8List, IoError> zlibCompress({required Input input}) {
     final results = _zlibCompress([input.toWasm()]);
     final result = results[0];
-    return _world.withContext(() => Result.fromJson(
+    return _world.withContext(
+      () => Result.fromJson(
         result,
         (ok) =>
             (ok is Uint8List ? ok : Uint8List.fromList((ok! as List).cast())),
-        (error) => error is String ? error : (error! as ParsedString).value));
+        (error) => error is String ? error : (error! as ParsedString).value,
+      ),
+    );
   }
 
   final ListValue Function(ListValue) _zlibDecompress;
-  Result<Uint8List, IoError> zlibDecompress({
-    required Input input,
-  }) {
+  Result<Uint8List, IoError> zlibDecompress({required Input input}) {
     final results = _zlibDecompress([input.toWasm()]);
     final result = results[0];
-    return _world.withContext(() => Result.fromJson(
+    return _world.withContext(
+      () => Result.fromJson(
         result,
         (ok) =>
             (ok is Uint8List ? ok : Uint8List.fromList((ok! as List).cast())),
-        (error) => error is String ? error : (error! as ParsedString).value));
+        (error) => error is String ? error : (error! as ParsedString).value,
+      ),
+    );
   }
 
   final ListValue Function(ListValue) _zlibCompressFile;
@@ -2149,10 +2214,13 @@ class Zlib {
   }) {
     final results = _zlibCompressFile([input.toWasm(), outputPath]);
     final result = results[0];
-    return _world.withContext(() => Result.fromJson(
+    return _world.withContext(
+      () => Result.fromJson(
         result,
         (ok) => bigIntFromJson(ok),
-        (error) => error is String ? error : (error! as ParsedString).value));
+        (error) => error is String ? error : (error! as ParsedString).value,
+      ),
+    );
   }
 
   final ListValue Function(ListValue) _zlibDecompressFile;
@@ -2162,57 +2230,75 @@ class Zlib {
   }) {
     final results = _zlibDecompressFile([input.toWasm(), outputPath]);
     final result = results[0];
-    return _world.withContext(() => Result.fromJson(
+    return _world.withContext(
+      () => Result.fromJson(
         result,
         (ok) => bigIntFromJson(ok),
-        (error) => error is String ? error : (error! as ParsedString).value));
+        (error) => error is String ? error : (error! as ParsedString).value,
+      ),
+    );
   }
 }
 
 class Archive {
   final CompressionRsWorld _world;
   Archive(this._world)
-      : _writeArchive = _world.library.getComponentFunction(
-          'compression-rs-namespace:compression-rs/archive#write-archive',
-          const FuncType(
-              [('input', ArchiveInput._spec), ('output-path', StringType())],
-              [('', ResultType(null, StringType()))]),
-        )!,
-        _createArchive = _world.library.getComponentFunction(
-          'compression-rs-namespace:compression-rs/archive#create-archive',
-          const FuncType([('input', ArchiveInput._spec)],
-              [('', ResultType(ListType(U8()), StringType()))]),
-        )!,
-        _readTar = _world.library.getComponentFunction(
-          'compression-rs-namespace:compression-rs/archive#read-tar',
-          const FuncType([('path', StringType())],
-              [('', ResultType(ListType(TarFile._spec), StringType()))]),
-        )!,
-        _viewTar = _world.library.getComponentFunction(
-          'compression-rs-namespace:compression-rs/archive#view-tar',
-          const FuncType([('tar-bytes', ListType(U8()))],
-              [('', ResultType(ListType(TarFile._spec), StringType()))]),
-        )!,
-        _readZip = _world.library.getComponentFunction(
-          'compression-rs-namespace:compression-rs/archive#read-zip',
-          const FuncType([('path', StringType())],
-              [('', ResultType(ListType(ZipFile._spec), StringType()))]),
-        )!,
-        _viewZip = _world.library.getComponentFunction(
-          'compression-rs-namespace:compression-rs/archive#view-zip',
-          const FuncType([('zip-bytes', ListType(U8()))],
-              [('', ResultType(ListType(ZipFile._spec), StringType()))]),
-        )!,
-        _extractZip = _world.library.getComponentFunction(
-          'compression-rs-namespace:compression-rs/archive#extract-zip',
-          const FuncType([('zip', Input._spec), ('path', StringType())],
-              [('', ResultType(null, StringType()))]),
-        )!,
-        _extractTar = _world.library.getComponentFunction(
-          'compression-rs-namespace:compression-rs/archive#extract-tar',
-          const FuncType([('tar', Input._spec), ('path', StringType())],
-              [('', ResultType(null, StringType()))]),
-        )!;
+    : _writeArchive = _world.library.getComponentFunction(
+        'compression-rs-namespace:compression-rs/archive#write-archive',
+        const FuncType(
+          [('input', ArchiveInput._spec), ('output-path', StringType())],
+          [('', ResultType(null, StringType()))],
+        ),
+      )!,
+      _createArchive = _world.library.getComponentFunction(
+        'compression-rs-namespace:compression-rs/archive#create-archive',
+        const FuncType(
+          [('input', ArchiveInput._spec)],
+          [('', ResultType(ListType(U8()), StringType()))],
+        ),
+      )!,
+      _readTar = _world.library.getComponentFunction(
+        'compression-rs-namespace:compression-rs/archive#read-tar',
+        const FuncType(
+          [('path', StringType())],
+          [('', ResultType(ListType(TarFile._spec), StringType()))],
+        ),
+      )!,
+      _viewTar = _world.library.getComponentFunction(
+        'compression-rs-namespace:compression-rs/archive#view-tar',
+        const FuncType(
+          [('tar-bytes', ListType(U8()))],
+          [('', ResultType(ListType(TarFile._spec), StringType()))],
+        ),
+      )!,
+      _readZip = _world.library.getComponentFunction(
+        'compression-rs-namespace:compression-rs/archive#read-zip',
+        const FuncType(
+          [('path', StringType())],
+          [('', ResultType(ListType(ZipFile._spec), StringType()))],
+        ),
+      )!,
+      _viewZip = _world.library.getComponentFunction(
+        'compression-rs-namespace:compression-rs/archive#view-zip',
+        const FuncType(
+          [('zip-bytes', ListType(U8()))],
+          [('', ResultType(ListType(ZipFile._spec), StringType()))],
+        ),
+      )!,
+      _extractZip = _world.library.getComponentFunction(
+        'compression-rs-namespace:compression-rs/archive#extract-zip',
+        const FuncType(
+          [('zip', Input._spec), ('path', StringType())],
+          [('', ResultType(null, StringType()))],
+        ),
+      )!,
+      _extractTar = _world.library.getComponentFunction(
+        'compression-rs-namespace:compression-rs/archive#extract-tar',
+        const FuncType(
+          [('tar', Input._spec), ('path', StringType())],
+          [('', ResultType(null, StringType()))],
+        ),
+      )!;
   final ListValue Function(ListValue) _writeArchive;
   Result<void, IoError> writeArchive({
     required ArchiveInput input,
@@ -2220,91 +2306,105 @@ class Archive {
   }) {
     final results = _writeArchive([input.toWasm(), outputPath]);
     final result = results[0];
-    return _world.withContext(() => Result.fromJson(result, (ok) => null,
-        (error) => error is String ? error : (error! as ParsedString).value));
+    return _world.withContext(
+      () => Result.fromJson(
+        result,
+        (ok) => null,
+        (error) => error is String ? error : (error! as ParsedString).value,
+      ),
+    );
   }
 
   final ListValue Function(ListValue) _createArchive;
-  Result<Uint8List, IoError> createArchive({
-    required ArchiveInput input,
-  }) {
+  Result<Uint8List, IoError> createArchive({required ArchiveInput input}) {
     final results = _createArchive([input.toWasm()]);
     final result = results[0];
-    return _world.withContext(() => Result.fromJson(
+    return _world.withContext(
+      () => Result.fromJson(
         result,
         (ok) =>
             (ok is Uint8List ? ok : Uint8List.fromList((ok! as List).cast())),
-        (error) => error is String ? error : (error! as ParsedString).value));
+        (error) => error is String ? error : (error! as ParsedString).value,
+      ),
+    );
   }
 
   final ListValue Function(ListValue) _readTar;
-  Result<TarFiles, IoError> readTar({
-    required String path,
-  }) {
+  Result<TarFiles, IoError> readTar({required String path}) {
     final results = _readTar([path]);
     final result = results[0];
-    return _world.withContext(() => Result.fromJson(
+    return _world.withContext(
+      () => Result.fromJson(
         result,
         (ok) => (ok! as Iterable).map(TarFile.fromJson).toList(),
-        (error) => error is String ? error : (error! as ParsedString).value));
+        (error) => error is String ? error : (error! as ParsedString).value,
+      ),
+    );
   }
 
   final ListValue Function(ListValue) _viewTar;
-  Result<TarFiles, IoError> viewTar({
-    required Uint8List tarBytes,
-  }) {
+  Result<TarFiles, IoError> viewTar({required Uint8List tarBytes}) {
     final results = _viewTar([tarBytes]);
     final result = results[0];
-    return _world.withContext(() => Result.fromJson(
+    return _world.withContext(
+      () => Result.fromJson(
         result,
         (ok) => (ok! as Iterable).map(TarFile.fromJson).toList(),
-        (error) => error is String ? error : (error! as ParsedString).value));
+        (error) => error is String ? error : (error! as ParsedString).value,
+      ),
+    );
   }
 
   final ListValue Function(ListValue) _readZip;
-  Result<ZipFiles, IoError> readZip({
-    required String path,
-  }) {
+  Result<ZipFiles, IoError> readZip({required String path}) {
     final results = _readZip([path]);
     final result = results[0];
-    return _world.withContext(() => Result.fromJson(
+    return _world.withContext(
+      () => Result.fromJson(
         result,
         (ok) => (ok! as Iterable).map(ZipFile.fromJson).toList(),
-        (error) => error is String ? error : (error! as ParsedString).value));
+        (error) => error is String ? error : (error! as ParsedString).value,
+      ),
+    );
   }
 
   final ListValue Function(ListValue) _viewZip;
-  Result<ZipFiles, IoError> viewZip({
-    required Uint8List zipBytes,
-  }) {
+  Result<ZipFiles, IoError> viewZip({required Uint8List zipBytes}) {
     final results = _viewZip([zipBytes]);
     final result = results[0];
-    return _world.withContext(() => Result.fromJson(
+    return _world.withContext(
+      () => Result.fromJson(
         result,
         (ok) => (ok! as Iterable).map(ZipFile.fromJson).toList(),
-        (error) => error is String ? error : (error! as ParsedString).value));
+        (error) => error is String ? error : (error! as ParsedString).value,
+      ),
+    );
   }
 
   final ListValue Function(ListValue) _extractZip;
-  Result<void, IoError> extractZip({
-    required Input zip,
-    required String path,
-  }) {
+  Result<void, IoError> extractZip({required Input zip, required String path}) {
     final results = _extractZip([zip.toWasm(), path]);
     final result = results[0];
-    return _world.withContext(() => Result.fromJson(result, (ok) => null,
-        (error) => error is String ? error : (error! as ParsedString).value));
+    return _world.withContext(
+      () => Result.fromJson(
+        result,
+        (ok) => null,
+        (error) => error is String ? error : (error! as ParsedString).value,
+      ),
+    );
   }
 
   final ListValue Function(ListValue) _extractTar;
-  Result<void, IoError> extractTar({
-    required Input tar,
-    required String path,
-  }) {
+  Result<void, IoError> extractTar({required Input tar, required String path}) {
     final results = _extractTar([tar.toWasm(), path]);
     final result = results[0];
-    return _world.withContext(() => Result.fromJson(result, (ok) => null,
-        (error) => error is String ? error : (error! as ParsedString).value));
+    return _world.withContext(
+      () => Result.fromJson(
+        result,
+        (ok) => null,
+        (error) => error is String ? error : (error! as ParsedString).value,
+      ),
+    );
   }
 }
 
@@ -2319,10 +2419,7 @@ class CompressionRsWorld {
   late final Zlib zlib;
   late final Archive archive;
 
-  CompressionRsWorld({
-    required this.imports,
-    required this.library,
-  }) {
+  CompressionRsWorld({required this.imports, required this.library}) {
     brotli = Brotli(this);
     lz4 = Lz4(this);
     zstd = Zstd(this);
@@ -2341,9 +2438,11 @@ class CompressionRsWorld {
 
     final instance = await builder.build();
 
-    library = WasmLibrary(instance,
-        componentId: 'compression-rs-namespace:compression-rs/compression-rs',
-        int64Type: Int64TypeConfig.bigInt);
+    library = WasmLibrary(
+      instance,
+      componentId: 'compression-rs-namespace:compression-rs/compression-rs',
+      int64Type: Int64TypeConfig.bigInt,
+    );
     return CompressionRsWorld(imports: imports, library: library);
   }
 

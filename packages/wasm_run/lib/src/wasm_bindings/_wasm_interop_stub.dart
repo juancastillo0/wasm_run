@@ -12,10 +12,7 @@ Future<WasmModule> compileWasmModule(
   throw UnimplementedError();
 }
 
-WasmModule compileWasmModuleSync(
-  Uint8List bytes, {
-  ModuleConfig? config,
-}) {
+WasmModule compileWasmModuleSync(Uint8List bytes, {ModuleConfig? config}) {
   throw UnimplementedError();
 }
 

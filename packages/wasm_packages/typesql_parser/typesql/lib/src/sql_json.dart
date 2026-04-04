@@ -16,15 +16,16 @@ class SqlJsonTypeFinder {
         isJsonType(value) ? value : BType.jsonDynamic;
 
     return switch ((name, argsTypes)) {
-// There are 15 scalar functions and operators:
-      ('json' || 'to_json' || 'to_jsonb', [final json]) =>
-        jsonTypeOrDynamic(json), // (json)
+      // There are 15 scalar functions and operators:
+      ('json' || 'to_json' || 'to_jsonb', [final json]) => jsonTypeOrDynamic(
+        json,
+      ), // (json)
       (
         'json_array' ||
             'JSON_ARRAY' ||
             'json_build_array' ||
             'jsonb_build_array',
-        final values
+        final values,
       ) =>
         BTypeJsonArray(
           values.every(isJsonType)
@@ -33,12 +34,12 @@ class SqlJsonTypeFinder {
         ), // (value1,value2,...)
       (
         'json_array_length' || 'JSON_LENGTH' || 'jsonb_array_length',
-        [final json, final path]
+        [final json, final path],
       ) =>
         BType.int, // (json,path)
       (
         'json_array_length' || 'JSON_LENGTH' || 'jsonb_array_length',
-        [final json]
+        [final json],
       ) =>
         BType.int, // (json)
       ('json_error_position', [final json]) => BType.int, // (json)
@@ -55,7 +56,7 @@ class SqlJsonTypeFinder {
             'JSON_ARRAY_APPEND' ||
             'JSON_INSERT' ||
             'JSON_ARRAY_INSERT',
-        [final json, final pathAndValues]
+        [final json, final pathAndValues],
       ) =>
         json, // (json,path,value,...)
       ('json_replace' || 'JSON_REPLACE', [final json, final pathAndValues]) =>
@@ -67,7 +68,7 @@ class SqlJsonTypeFinder {
             'JSON_MERGE' ||
             'JSON_MERGE_PATCH' ||
             'JSON_MERGE_PRESERVE',
-        [final BTypeJsonObject json1, final BTypeJsonObject json2]
+        [final BTypeJsonObject json1, final BTypeJsonObject json2],
       ) =>
         BTypeJsonObject({...json1.inner, ...json2.inner}), // (json1,json2)
       (
@@ -75,7 +76,7 @@ class SqlJsonTypeFinder {
             'JSON_MERGE' ||
             'JSON_MERGE_PATCH' ||
             'JSON_MERGE_PRESERVE',
-        [final json1, final json2]
+        [final json1, final json2],
       ) =>
         json1, // (json1,json2)
       ('json_remove' || 'JSON_REMOVE', [final json, ...final path]) =>
@@ -86,7 +87,7 @@ class SqlJsonTypeFinder {
             'json_build_object' ||
             'jsonb_build_object' ||
             'jsonb_object',
-        final labelsAndValues
+        final labelsAndValues,
       ) =>
         () {
           if ((name == 'json_object' || name == 'jsonb_object') &&
@@ -106,23 +107,22 @@ class SqlJsonTypeFinder {
         }(), // (label1,value1,...)
       (
         'json_type' || 'JSON_TYPE' || 'json_typeof' || 'jsonb_typeof',
-        [final json, final path]
+        [final json, final path],
       ) =>
         BType.string, // (json,path)
       (
         'json_type' || 'JSON_TYPE' || 'json_typeof' || 'jsonb_typeof',
-        [final json]
+        [final json],
       ) =>
         BType.string, // (json)
       ('json_valid' || 'JSON_VALID', [final json]) => BType.bool, // (json)
       ('json_quote' || 'JSON_QUOTE', [final value]) =>
         // TODO: BType.string is a json string
         value is BTypeNum ? value : BType.string, // (value)
-// There are two aggregate SQL functions:
-
+      // There are two aggregate SQL functions:
       (
         'json_group_array' || 'JSON_ARRAYAGG' || 'json_agg' || 'jsonb_agg',
-        [final value]
+        [final value],
       ) =>
         BTypeJsonArray(jsonTypeOrDynamic(value)), // (value)
       (
@@ -130,10 +130,10 @@ class SqlJsonTypeFinder {
             'JSON_OBJECTAGG' ||
             'json_object_agg' ||
             'jsonb_object_agg',
-        [final name, final value]
+        [final name, final value],
       ) =>
         BTypeJsonUnKeyedObject(jsonTypeOrDynamic(value)), // (name,value)
-// The two table-valued functions are:
+      // The two table-valued functions are:
 
       // TODO: value could be json_tree.value could be inferred from json
       ('json_each' || 'jsonb_each', [final json]) =>
@@ -144,17 +144,19 @@ class SqlJsonTypeFinder {
         dialect == SqlDialect.sqlite
             ? const BTypeTable(sqliteJsonTreeColumns)
             : const BTypeTable(postgresJsonEachColumns), // (json,path)
-      ('json_tree', [final json]) =>
-        const BTypeTable(sqliteJsonTreeColumns), // (json)
-      ('json_tree', [final json, final path]) =>
-        const BTypeTable(sqliteJsonTreeColumns), // (json,path)
-      ('json_each_text' || 'jsonb_each_text', [final json]) =>
-        const BTypeTable(postgresJsonEachTextColumns), // (json)
-
+      ('json_tree', [final json]) => const BTypeTable(
+        sqliteJsonTreeColumns,
+      ), // (json)
+      ('json_tree', [final json, final path]) => const BTypeTable(
+        sqliteJsonTreeColumns,
+      ), // (json,path)
+      ('json_each_text' || 'jsonb_each_text', [final json]) => const BTypeTable(
+        postgresJsonEachTextColumns,
+      ), // (json)
       /// MYSQL
       (
         'JSON_CONTAINS',
-        [final json, final candidate] || [final json, final candidate, final _]
+        [final json, final candidate] || [final json, final candidate, final _],
       ) =>
         BType.bool,
       ('JSON_CONTAINS_PATH', [final json, final oneOrAll, ...final path]) =>
@@ -163,7 +165,7 @@ class SqlJsonTypeFinder {
       (
         // TODO: POSTGRES set vs MYSQL array
         'JSON_KEYS' || 'json_object_keys' || 'jsonb_object_keys',
-        [final json] || [final json, final _]
+        [final json] || [final json, final _],
       ) =>
         const BTypeList(BType.string),
       ('JSON_PRETTY' || 'jsonb_pretty', [final json]) => BType.string,
@@ -173,8 +175,8 @@ class SqlJsonTypeFinder {
           final json,
           final oneOrAll,
           final searchString,
-          ...final escapeCharAndPath
-        ]
+          ...final escapeCharAndPath,
+        ],
       ) =>
         finder.exprValue(args[1]) == 'all'
             ? const BTypeList(BType.string)
@@ -188,13 +190,13 @@ class SqlJsonTypeFinder {
       /// https://www.postgresql.org/docs/current/functions-json.html
       (
         'json_extract_path' || 'jsonb_extract_path',
-        [final json, ...final pathElems]
+        [final json, ...final pathElems],
       ) =>
         // TODO: extract path
         BType.jsonDynamic,
       (
         'json_extract_path_text' || 'jsonb_extract_path_text',
-        [final json, ...final pathElems]
+        [final json, ...final pathElems],
       ) =>
         // TODO: extract path
         BType.string,
@@ -207,8 +209,8 @@ class SqlJsonTypeFinder {
               final path,
               final newValue,
               // create_missing boolean
-              final _
-            ]
+              final _,
+            ],
       ) =>
         // TODO: set path
         json,
@@ -220,8 +222,8 @@ class SqlJsonTypeFinder {
               final path,
               final newValue,
               // insert_after boolean
-              final _
-            ]
+              final _,
+            ],
       ) =>
         // TODO: set path
         json,
@@ -230,22 +232,22 @@ class SqlJsonTypeFinder {
             'jsonb_path_match' ||
             'jsonb_path_exists_tz' ||
             'jsonb_path_match_tz',
-        [final json, final path, ...final varsAndSilent]
+        [final json, final path, ...final varsAndSilent],
       ) =>
         BType.bool,
       (
         'jsonb_path_query' || 'jsonb_path_query_tz',
-        [final json, final path, ...final varsAndSilent]
+        [final json, final path, ...final varsAndSilent],
       ) =>
         const BTypeSqlList(BType.jsonDynamic),
       (
         'jsonb_path_query_array' || 'jsonb_path_query_array_tz',
-        [final json, final path, ...final varsAndSilent]
+        [final json, final path, ...final varsAndSilent],
       ) =>
         const BTypeJsonArray(BType.jsonDynamic),
       (
         'jsonb_path_query_first' || 'jsonb_path_query_first_tz',
-        [final json, final path, ...final varsAndSilent]
+        [final json, final path, ...final varsAndSilent],
       ) =>
         BType.jsonDynamic,
       ('json_array_elements' || 'jsonb_array_elements', [final json]) =>
@@ -254,7 +256,7 @@ class SqlJsonTypeFinder {
             : const BTypeSqlList(BType.jsonDynamic),
       (
         'json_array_elements_text' || 'jsonb_array_elements_text',
-        [final json]
+        [final json],
       ) =>
         const BTypeSqlList(BType.string),
       (
@@ -263,8 +265,8 @@ class SqlJsonTypeFinder {
             [
               final sqlArrayText,
               // addLineFeeds
-              final _
-            ]
+              final _,
+            ],
       ) =>
         const BTypeJsonArray(BType.jsonDynamic),
 
@@ -288,10 +290,8 @@ class SqlJsonTypeFinder {
     required Expr placeholder,
   }) {
     final argIndex = args.indexWhere(
-      (e) => identical(
-        e.unnest(finder.parsed),
-        placeholder.unnest(finder.parsed),
-      ),
+      (e) =>
+          identical(e.unnest(finder.parsed), placeholder.unnest(finder.parsed)),
     );
     if (argIndex == -1) return null;
 
@@ -300,7 +300,7 @@ class SqlJsonTypeFinder {
         .map((a) => a.$1 == argIndex ? BType.dynamic : finder.exprType(a.$2))
         .toList();
     return switch ((name, argsTypes)) {
-// There are 15 scalar functions and operators:
+      // There are 15 scalar functions and operators:
       ('json' || 'to_json' || 'to_jsonb', [final json]) =>
         BType.string, // (json)
       (
@@ -308,13 +308,13 @@ class SqlJsonTypeFinder {
             'JSON_ARRAY' ||
             'json_build_array' ||
             'jsonb_build_array',
-        final values
+        final values,
       ) =>
         // TODO: find functionExpr type
         BType.jsonDynamic, // (value1,value2,...)
       (
         'json_array_length' || 'JSON_LENGTH' || 'jsonb_array_length',
-        [final json, final _] || [final json]
+        [final json, final _] || [final json],
       ) =>
         jsonOrPath, // (json,path)
       ('json_error_position', [final json]) => BType.jsonDynamic, // (json)
@@ -328,7 +328,7 @@ class SqlJsonTypeFinder {
             'JSON_ARRAY_APPEND' ||
             'JSON_INSERT' ||
             'JSON_ARRAY_INSERT',
-        [final json, final pathAndValues]
+        [final json, final pathAndValues],
       ) ||
       ('json_replace' || 'JSON_REPLACE', [final json, final pathAndValues]) ||
       ('json_set' || 'JSON_SET', [final json, final pathAndValues]) =>
@@ -341,7 +341,7 @@ class SqlJsonTypeFinder {
             'JSON_MERGE' ||
             'JSON_MERGE_PATCH' ||
             'JSON_MERGE_PRESERVE',
-        [final json1, final json2]
+        [final json1, final json2],
       ) =>
         json1 is BTypeJsonUnKeyedObject || json2 is BTypeJsonUnKeyedObject
             ? const BTypeJsonUnKeyedObject(BType.jsonDynamic)
@@ -354,23 +354,22 @@ class SqlJsonTypeFinder {
             'json_build_object' ||
             'jsonb_build_object' ||
             'jsonb_object',
-        final labelsAndValues
+        final labelsAndValues,
       ) =>
         argIndex.isEven
             ? BType.string
             : BType.jsonDynamic, // (label1,value1,...)
       (
         'json_type' || 'JSON_TYPE' || 'json_typeof' || 'jsonb_typeof',
-        [final json]
+        [final json],
       ) =>
         BType.jsonDynamic,
       ('json_valid' || 'JSON_VALID', [final json]) => BType.jsonDynamic,
       ('json_quote' || 'JSON_QUOTE', [final value]) => BType.dynamic, // (value)
-// There are two aggregate SQL functions:
-
+      // There are two aggregate SQL functions:
       (
         'json_group_array' || 'JSON_ARRAYAGG' || 'json_agg' || 'jsonb_agg',
-        [final value]
+        [final value],
       ) =>
         BType.jsonDynamic, // (value)
       (
@@ -378,10 +377,10 @@ class SqlJsonTypeFinder {
             'JSON_OBJECTAGG' ||
             'json_object_agg' ||
             'jsonb_object_agg',
-        [final name, final value]
+        [final name, final value],
       ) =>
         argIndex.isEven ? BType.string : BType.jsonDynamic, // (name,value)
-// The two table-valued functions are:
+      // The two table-valued functions are:
 
       // TODO: value could be json_tree.value could be inferred from json
       ('json_each' || 'jsonb_each', [final json]) ||
@@ -390,15 +389,13 @@ class SqlJsonTypeFinder {
             ? jsonOrPath
             : const BTypeJsonUnKeyedObject(BType.jsonDynamic), // (json,path)
       ('json_tree', [final json]) ||
-      ('json_tree', [final json, final _]) =>
-        jsonOrPath, // (json,path)
+      ('json_tree', [final json, final _]) => jsonOrPath, // (json,path)
       ('json_each_text' || 'jsonb_each_text', [final json]) =>
         const BTypeJsonUnKeyedObject(BType.jsonDynamic), // (json)
-
       /// MYSQL
       (
         'JSON_CONTAINS',
-        [final json, final candidate] || [final json, final candidate, final _]
+        [final json, final candidate] || [final json, final candidate, final _],
       ) =>
         argIndex >= 2 ? BType.string : BType.jsonDynamic,
       ('JSON_CONTAINS_PATH', [final json, final oneOrAll, ...final path]) =>
@@ -406,7 +403,7 @@ class SqlJsonTypeFinder {
       ('JSON_DEPTH', [final json]) => BType.jsonDynamic,
       (
         'json_object_keys' || 'jsonb_object_keys',
-        [final json] || [final json, final _]
+        [final json] || [final json, final _],
       ) =>
         argIndex == 0
             ? const BTypeJsonUnKeyedObject(BType.jsonDynamic)
@@ -419,8 +416,8 @@ class SqlJsonTypeFinder {
           final json,
           final oneOrAll,
           final searchString,
-          ...final escapeCharAndPath
-        ]
+          ...final escapeCharAndPath,
+        ],
       ) =>
         argIndex == 0 ? BType.jsonDynamic : BType.string,
       ('JSON_STORAGE_SIZE', [final json]) => BType.jsonDynamic,
@@ -431,13 +428,12 @@ class SqlJsonTypeFinder {
       /// https://www.postgresql.org/docs/current/functions-json.html
       (
         'json_extract_path' || 'jsonb_extract_path',
-        [final json, ...final pathElems]
+        [final json, ...final pathElems],
       ) ||
       (
         'json_extract_path_text' || 'jsonb_extract_path_text',
-        [final json, ...final pathElems]
-      ) =>
-        jsonOrPath,
+        [final json, ...final pathElems],
+      ) => jsonOrPath,
       ('json_strip_nulls' || 'jsonb_strip_nulls', [final json]) =>
         BType.jsonDynamic,
       (
@@ -448,8 +444,8 @@ class SqlJsonTypeFinder {
               final path,
               final newValue,
               // create_missing boolean
-              final _
-            ]
+              final _,
+            ],
       ) ||
       (
         'jsonb_insert',
@@ -459,49 +455,51 @@ class SqlJsonTypeFinder {
               final path,
               final newValue,
               // insert_after boolean
-              final _
-            ]
+              final _,
+            ],
       ) =>
         argIndex == 3
             ? BType.bool
             : argIndex == 2
-                ? BType.jsonDynamic
-                : jsonOrPath,
+            ? BType.jsonDynamic
+            : jsonOrPath,
       (
         'jsonb_path_exists' ||
             'jsonb_path_match' ||
             'jsonb_path_exists_tz' ||
             'jsonb_path_match_tz',
-        [final json, final path, ...final varsAndSilent]
+        [final json, final path, ...final varsAndSilent],
       ) ||
       (
         'jsonb_path_query' || 'jsonb_path_query_tz',
-        [final json, final path, ...final varsAndSilent]
+        [final json, final path, ...final varsAndSilent],
       ) ||
       (
         'jsonb_path_query_array' || 'jsonb_path_query_array_tz',
-        [final json, final path, ...final varsAndSilent]
+        [final json, final path, ...final varsAndSilent],
       ) ||
       (
         'jsonb_path_query_first' || 'jsonb_path_query_first_tz',
-        [final json, final path, ...final varsAndSilent]
+        [final json, final path, ...final varsAndSilent],
       ) =>
         argIndex == 3
             ? BType.bool
             : argIndex == 2
-                ? BType.jsonDynamic
-                : jsonOrPath,
+            ? BType.jsonDynamic
+            : jsonOrPath,
       ('json_array_elements' || 'jsonb_array_elements_text', [final json]) ||
-      ('json_array_elements_text' || 'jsonb_array_elements', [final json]) =>
-        const BTypeJsonArray(BType.jsonDynamic),
+      (
+        'json_array_elements_text' || 'jsonb_array_elements',
+        [final json],
+      ) => const BTypeJsonArray(BType.jsonDynamic),
       (
         'array_to_json',
         [final sqlArrayText] ||
             [
               final sqlArrayText,
               // addLineFeeds
-              final _
-            ]
+              final _,
+            ],
       ) =>
         // TODO: SQLArray type?
         BType.string,

@@ -8,8 +8,9 @@ import 'package:wasm_run/src/ffi/stub.dart'
 
 WasmRunDart? _wrapper;
 
-final _alreadyInitialized =
-    Exception('WasmRun bindings were already configured');
+final _alreadyInitialized = Exception(
+  'WasmRun bindings were already configured',
+);
 
 WasmRunDart _createWrapper(ExternalLibrary lib) {
   if (_wrapper != null) throw _alreadyInitialized;

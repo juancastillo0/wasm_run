@@ -304,8 +304,9 @@ class SqlAstVisitor {
       MatchAgainst() => processMatchAgainst(node),
       ArrayExpr() => processArrayExpr(node),
       IntervalExpr() => processIntervalExpr(node),
-      AggregateExpressionWithFilter() =>
-        processAggregateExpressionWithFilter(node),
+      AggregateExpressionWithFilter() => processAggregateExpressionWithFilter(
+        node,
+      ),
     });
   }
 
@@ -370,8 +371,9 @@ class SqlAstVisitor {
       BinaryOperatorBitwiseXor() => processBinaryOperatorBitwiseXor(node),
       BinaryOperatorDuckIntegerDivide() =>
         processBinaryOperatorDuckIntegerDivide(node),
-      BinaryOperatorMyIntegerDivide() =>
-        processBinaryOperatorMyIntegerDivide(node),
+      BinaryOperatorMyIntegerDivide() => processBinaryOperatorMyIntegerDivide(
+        node,
+      ),
       BinaryOperatorCustom() => processBinaryOperatorCustom(node),
       BinaryOperatorPgBitwiseXor() => processBinaryOperatorPgBitwiseXor(node),
       BinaryOperatorPgBitwiseShiftLeft() =>
@@ -381,10 +383,12 @@ class SqlAstVisitor {
       BinaryOperatorPgExp() => processBinaryOperatorPgExp(node),
       BinaryOperatorPgRegexMatch() => processBinaryOperatorPgRegexMatch(node),
       BinaryOperatorPgRegexIMatch() => processBinaryOperatorPgRegexIMatch(node),
-      BinaryOperatorPgRegexNotMatch() =>
-        processBinaryOperatorPgRegexNotMatch(node),
-      BinaryOperatorPgRegexNotIMatch() =>
-        processBinaryOperatorPgRegexNotIMatch(node),
+      BinaryOperatorPgRegexNotMatch() => processBinaryOperatorPgRegexNotMatch(
+        node,
+      ),
+      BinaryOperatorPgRegexNotIMatch() => processBinaryOperatorPgRegexNotIMatch(
+        node,
+      ),
       BinaryOperatorPgCustomBinaryOperator() =>
         processBinaryOperatorPgCustomBinaryOperator(node),
     });
@@ -467,12 +471,14 @@ class SqlAstVisitor {
   }
 
   void processBinaryOperatorDuckIntegerDivide(
-      BinaryOperatorDuckIntegerDivide node) {
+    BinaryOperatorDuckIntegerDivide node,
+  ) {
     _process(node);
   }
 
   void processBinaryOperatorMyIntegerDivide(
-      BinaryOperatorMyIntegerDivide node) {
+    BinaryOperatorMyIntegerDivide node,
+  ) {
     _process(node);
   }
 
@@ -485,12 +491,14 @@ class SqlAstVisitor {
   }
 
   void processBinaryOperatorPgBitwiseShiftLeft(
-      BinaryOperatorPgBitwiseShiftLeft node) {
+    BinaryOperatorPgBitwiseShiftLeft node,
+  ) {
     _process(node);
   }
 
   void processBinaryOperatorPgBitwiseShiftRight(
-      BinaryOperatorPgBitwiseShiftRight node) {
+    BinaryOperatorPgBitwiseShiftRight node,
+  ) {
     _process(node);
   }
 
@@ -507,17 +515,20 @@ class SqlAstVisitor {
   }
 
   void processBinaryOperatorPgRegexNotMatch(
-      BinaryOperatorPgRegexNotMatch node) {
+    BinaryOperatorPgRegexNotMatch node,
+  ) {
     _process(node);
   }
 
   void processBinaryOperatorPgRegexNotIMatch(
-      BinaryOperatorPgRegexNotIMatch node) {
+    BinaryOperatorPgRegexNotIMatch node,
+  ) {
     _process(node);
   }
 
   void processBinaryOperatorPgCustomBinaryOperator(
-      BinaryOperatorPgCustomBinaryOperator node) {
+    BinaryOperatorPgCustomBinaryOperator node,
+  ) {
     _process(node);
   }
 
@@ -559,15 +570,17 @@ class SqlAstVisitor {
       SqlValueNumber() => processSqlValueNumber(node),
       SqlValueSingleQuotedString() => processSqlValueSingleQuotedString(node),
       SqlValueDollarQuotedString() => processSqlValueDollarQuotedString(node),
-      SqlValueEscapedStringLiteral() =>
-        processSqlValueEscapedStringLiteral(node),
+      SqlValueEscapedStringLiteral() => processSqlValueEscapedStringLiteral(
+        node,
+      ),
       SqlValueSingleQuotedByteStringLiteral() =>
         processSqlValueSingleQuotedByteStringLiteral(node),
       SqlValueDoubleQuotedByteStringLiteral() =>
         processSqlValueDoubleQuotedByteStringLiteral(node),
       SqlValueRawStringLiteral() => processSqlValueRawStringLiteral(node),
-      SqlValueNationalStringLiteral() =>
-        processSqlValueNationalStringLiteral(node),
+      SqlValueNationalStringLiteral() => processSqlValueNationalStringLiteral(
+        node,
+      ),
       SqlValueHexStringLiteral() => processSqlValueHexStringLiteral(node),
       SqlValueDoubleQuotedString() => processSqlValueDoubleQuotedString(node),
       SqlValueBoolean() => processSqlValueBoolean(node),
@@ -604,12 +617,14 @@ class SqlAstVisitor {
   }
 
   void processSqlValueSingleQuotedByteStringLiteral(
-      SqlValueSingleQuotedByteStringLiteral node) {
+    SqlValueSingleQuotedByteStringLiteral node,
+  ) {
     _process(node);
   }
 
   void processSqlValueDoubleQuotedByteStringLiteral(
-      SqlValueDoubleQuotedByteStringLiteral node) {
+    SqlValueDoubleQuotedByteStringLiteral node,
+  ) {
     _process(node);
   }
 
@@ -618,7 +633,8 @@ class SqlAstVisitor {
   }
 
   void processSqlValueNationalStringLiteral(
-      SqlValueNationalStringLiteral node) {
+    SqlValueNationalStringLiteral node,
+  ) {
     _process(node);
   }
 
@@ -961,7 +977,8 @@ class SqlAstVisitor {
   }
 
   void processAggregateExpressionWithFilter(
-      AggregateExpressionWithFilter node) {
+    AggregateExpressionWithFilter node,
+  ) {
     _process(node);
     processExprRef(node.expr);
     processExprRef(node.filter);
@@ -1198,7 +1215,8 @@ class SqlAstVisitor {
   }
 
   void processFunctionArgExprQualifiedWildcard(
-      FunctionArgExprQualifiedWildcard node) {
+    FunctionArgExprQualifiedWildcard node,
+  ) {
     _process(node);
     processObjectName(node.value);
   }
@@ -2020,36 +2038,42 @@ class SqlAstVisitor {
   void processAlterColumnOperation(AlterColumnOperation node) {
     _process(node);
     (switch (node) {
-      AlterColumnOperationSetNotNull() =>
-        processAlterColumnOperationSetNotNull(node),
+      AlterColumnOperationSetNotNull() => processAlterColumnOperationSetNotNull(
+        node,
+      ),
       AlterColumnOperationDropNotNull() =>
         processAlterColumnOperationDropNotNull(node),
       AlterColumnOperationDropDefault() =>
         processAlterColumnOperationDropDefault(node),
       AlterColumnOperationSetDataType() =>
         processAlterColumnOperationSetDataType(node),
-      AlterColumnOperationSetDefault() =>
-        processAlterColumnOperationSetDefault(node),
+      AlterColumnOperationSetDefault() => processAlterColumnOperationSetDefault(
+        node,
+      ),
     });
   }
 
   void processAlterColumnOperationSetNotNull(
-      AlterColumnOperationSetNotNull node) {
+    AlterColumnOperationSetNotNull node,
+  ) {
     _process(node);
   }
 
   void processAlterColumnOperationDropNotNull(
-      AlterColumnOperationDropNotNull node) {
+    AlterColumnOperationDropNotNull node,
+  ) {
     _process(node);
   }
 
   void processAlterColumnOperationDropDefault(
-      AlterColumnOperationDropDefault node) {
+    AlterColumnOperationDropDefault node,
+  ) {
     _process(node);
   }
 
   void processAlterColumnOperationSetDataType(
-      AlterColumnOperationSetDataType node) {
+    AlterColumnOperationSetDataType node,
+  ) {
     _process(node);
     processSetDataType(node.value);
   }
@@ -2061,7 +2085,8 @@ class SqlAstVisitor {
   }
 
   void processAlterColumnOperationSetDefault(
-      AlterColumnOperationSetDefault node) {
+    AlterColumnOperationSetDefault node,
+  ) {
     _process(node);
     processSetDefault(node.value);
   }
@@ -2128,8 +2153,9 @@ class SqlAstVisitor {
     _process(node);
     (switch (node) {
       TransactionModeAccessMode() => processTransactionModeAccessMode(node),
-      TransactionModeIsolationLevel() =>
-        processTransactionModeIsolationLevel(node),
+      TransactionModeIsolationLevel() => processTransactionModeIsolationLevel(
+        node,
+      ),
     });
   }
 
@@ -2143,7 +2169,8 @@ class SqlAstVisitor {
   }
 
   void processTransactionModeIsolationLevel(
-      TransactionModeIsolationLevel node) {
+    TransactionModeIsolationLevel node,
+  ) {
     _process(node);
     processTransactionIsolationLevel(node.value);
   }
@@ -2428,8 +2455,9 @@ class SqlAstVisitor {
       DataTypeVarchar() => processDataTypeVarchar(node),
       DataTypeNvarchar() => processDataTypeNvarchar(node),
       DataTypeUuid() => processDataTypeUuid(node),
-      DataTypeCharacterLargeObject() =>
-        processDataTypeCharacterLargeObject(node),
+      DataTypeCharacterLargeObject() => processDataTypeCharacterLargeObject(
+        node,
+      ),
       DataTypeCharLargeObject() => processDataTypeCharLargeObject(node),
       DataTypeClob() => processDataTypeClob(node),
       DataTypeBinary() => processDataTypeBinary(node),
@@ -2506,12 +2534,14 @@ class SqlAstVisitor {
   }
 
   void processFunctionDefinitionSingleQuotedDef(
-      FunctionDefinitionSingleQuotedDef node) {
+    FunctionDefinitionSingleQuotedDef node,
+  ) {
     _process(node);
   }
 
   void processFunctionDefinitionDoubleDollarDef(
-      FunctionDefinitionDoubleDollarDef node) {
+    FunctionDefinitionDoubleDollarDef node,
+  ) {
     _process(node);
   }
 
@@ -2625,7 +2655,8 @@ class SqlAstVisitor {
   }
 
   void processUserDefinedTypeCompositeAttributeDef(
-      UserDefinedTypeCompositeAttributeDef node) {
+    UserDefinedTypeCompositeAttributeDef node,
+  ) {
     _process(node);
     processIdent(node.name);
     processDataType(node.dataType);

@@ -64,34 +64,34 @@ class CodeTextField extends StatelessWidget {
             Expanded(
               child: SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
-                child: controller.select(
-                  (state) => state.text,
-                  (context, text) {
-                    final list = text.split('\n');
-                    final maxCharacters = list.isEmpty
-                        ? 100
-                        : list
+                child: controller.select((state) => state.text, (
+                  context,
+                  text,
+                ) {
+                  final list = text.split('\n');
+                  final maxCharacters = list.isEmpty
+                      ? 100
+                      : list
                             .reduce(
                               (value, element) => value.length > element.length
                                   ? value
                                   : element,
                             )
                             .length;
-                    final w = maxCharacters * 8.3 + 24.0;
-                    return SizedBox(
-                      width: box.maxWidth > w ? box.maxWidth : w,
-                      child: TextField(
-                        style: codeTextStyle,
-                        scrollController: scrollController,
-                        focusNode: focusNode,
-                        controller: controller,
-                        expands: true,
-                        maxLines: null,
-                        minLines: null,
-                      ),
-                    );
-                  },
-                ),
+                  final w = maxCharacters * 8.3 + 24.0;
+                  return SizedBox(
+                    width: box.maxWidth > w ? box.maxWidth : w,
+                    child: TextField(
+                      style: codeTextStyle,
+                      scrollController: scrollController,
+                      focusNode: focusNode,
+                      controller: controller,
+                      expands: true,
+                      maxLines: null,
+                      minLines: null,
+                    ),
+                  );
+                }),
               ),
             ),
           ],

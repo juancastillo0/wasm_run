@@ -149,20 +149,14 @@ void testAll({TestArgs? testArgs}) {
 
     final module = compileWasmModuleSync(binary);
 
-    expect(
-      module.getExports().map((e) => e.toString()),
-      [
-        const WasmModuleExport('add', WasmExternalKind.function).toString(),
-      ],
-    );
+    expect(module.getExports().map((e) => e.toString()), [
+      const WasmModuleExport('add', WasmExternalKind.function).toString(),
+    ]);
     expect(module.getImports(), isEmpty);
 
     final instance = module.builder().buildSync();
     final add = instance.getFunction('add')!;
-    expect(
-      add.params,
-      isLibrary ? [ValueTy.i32, ValueTy.i32] : [null, null],
-    );
+    expect(add.params, isLibrary ? [ValueTy.i32, ValueTy.i32] : [null, null]);
     expect(add.results, isLibrary ? [ValueTy.i32] : null);
     final result = add.call([1, 4]);
     expect(result, [5]);
@@ -184,34 +178,25 @@ void testAll({TestArgs? testArgs}) {
     );
 
     final module = compileWasmModuleSync(binary);
-    expect(
-      module.getExports().map((e) => e.toString()),
-      [
-        const WasmModuleExport('hello', WasmExternalKind.function).toString(),
-      ],
-    );
-    expect(
-      module.getImports().map((e) => e.toString()),
-      [
-        const WasmModuleImport(
-          'host',
-          'hello',
-          WasmExternalKind.function,
-        ).toString(),
-      ],
-    );
+    expect(module.getExports().map((e) => e.toString()), [
+      const WasmModuleExport('hello', WasmExternalKind.function).toString(),
+    ]);
+    expect(module.getImports().map((e) => e.toString()), [
+      const WasmModuleImport(
+        'host',
+        'hello',
+        WasmExternalKind.function,
+      ).toString(),
+    ]);
 
     int? argsList;
 
-    final hostHello = WasmFunction.voidReturn(
-      (int args) {
-        argsList = args;
-      },
-      params: [ValueTy.i32],
-    );
+    final hostHello = WasmFunction.voidReturn((int args) {
+      argsList = args;
+    }, params: [ValueTy.i32]);
 
-    final instance =
-        (module.builder()..addImport('host', 'hello', hostHello)).buildSync();
+    final instance = (module.builder()..addImport('host', 'hello', hostHello))
+        .buildSync();
 
     expect(argsList, isNull);
     final hello = instance.getFunction('hello')!;
@@ -238,25 +223,17 @@ void testAll({TestArgs? testArgs}) {
     );
 
     final module = await compileWasmModule(binary);
-    expect(
-      module.getExports().map((e) => e.toString()),
-      [
-        const WasmModuleExport('getGlobal', WasmExternalKind.function)
-            .toString(),
-        const WasmModuleExport('incGlobal', WasmExternalKind.function)
-            .toString(),
-      ],
-    );
-    expect(
-      module.getImports().map((e) => e.toString()),
-      [
-        const WasmModuleImport(
-          'js',
-          'global',
-          WasmExternalKind.global,
-        ).toString(),
-      ],
-    );
+    expect(module.getExports().map((e) => e.toString()), [
+      const WasmModuleExport('getGlobal', WasmExternalKind.function).toString(),
+      const WasmModuleExport('incGlobal', WasmExternalKind.function).toString(),
+    ]);
+    expect(module.getImports().map((e) => e.toString()), [
+      const WasmModuleImport(
+        'js',
+        'global',
+        WasmExternalKind.global,
+      ).toString(),
+    ]);
 
     final builder = module.builder();
     final global = builder.createGlobal(WasmValue.i32(2), mutable: true);
@@ -264,8 +241,9 @@ void testAll({TestArgs? testArgs}) {
     global.set(WasmValue.i32(1));
     expect(global.get(), 1);
 
-    final instance =
-        builder.addImports([WasmImport('js', 'global', global)]).buildSync();
+    final instance = builder.addImports([
+      WasmImport('js', 'global', global),
+    ]).buildSync();
 
     final getGlobal = instance.getFunction('getGlobal')!;
     expect(getGlobal.params, <ValueTy>[]);
@@ -300,27 +278,17 @@ void testAll({TestArgs? testArgs}) {
     );
 
     final module = await compileWasmModule(binary);
-    expect(
-      module.getExports().map((e) => e.toString()),
-      [
-        const WasmModuleExport('writeHi', WasmExternalKind.function).toString(),
-      ],
-    );
-    expect(
-      module.getImports().map((e) => e.toString()),
-      [
-        const WasmModuleImport(
-          'console',
-          'logUtf8',
-          WasmExternalKind.function,
-        ).toString(),
-        const WasmModuleImport(
-          'js',
-          'mem',
-          WasmExternalKind.memory,
-        ).toString(),
-      ],
-    );
+    expect(module.getExports().map((e) => e.toString()), [
+      const WasmModuleExport('writeHi', WasmExternalKind.function).toString(),
+    ]);
+    expect(module.getImports().map((e) => e.toString()), [
+      const WasmModuleImport(
+        'console',
+        'logUtf8',
+        WasmExternalKind.function,
+      ).toString(),
+      const WasmModuleImport('js', 'mem', WasmExternalKind.memory).toString(),
+    ]);
 
     final builder = module.builder();
     final memory = builder.createMemory(minPages: 1);
@@ -329,13 +297,10 @@ void testAll({TestArgs? testArgs}) {
     expect(memory.view, Uint8List(WasmMemory.bytesPerPage));
 
     String? result;
-    final logUtf8 = WasmFunction.voidReturn(
-      (int offset, int length) {
-        final bytes = memory.view.sublist(offset, offset + length);
-        result = utf8.decode(bytes);
-      },
-      params: [ValueTy.i32, ValueTy.i32],
-    );
+    final logUtf8 = WasmFunction.voidReturn((int offset, int length) {
+      final bytes = memory.view.sublist(offset, offset + length);
+      result = utf8.decode(bytes);
+    }, params: [ValueTy.i32, ValueTy.i32]);
     final instance = builder
         .addImports([WasmImport('js', 'mem', memory)])
         .addImport('console', 'logUtf8', logUtf8)
@@ -386,17 +351,13 @@ void testAll({TestArgs? testArgs}) {
 
     final module = compileWasmModuleSync(binary);
 
-    expect(
-      module.getExports().map((e) => e.toString()),
-      [
-        const WasmModuleExport('callByIndex', WasmExternalKind.function)
-            .toString(),
-      ],
-    );
-    expect(
-      module.getImports().map((e) => e.toString()),
-      <String>[],
-    );
+    expect(module.getExports().map((e) => e.toString()), [
+      const WasmModuleExport(
+        'callByIndex',
+        WasmExternalKind.function,
+      ).toString(),
+    ]);
+    expect(module.getImports().map((e) => e.toString()), <String>[]);
 
     final instance = await module.builder().build();
 
@@ -427,20 +388,10 @@ void testAll({TestArgs? testArgs}) {
 
     final module = compileWasmModuleSync(binary);
 
-    expect(
-      module.getExports().map((e) => e.toString()),
-      <String>[],
-    );
-    expect(
-      module.getImports().map((e) => e.toString()),
-      [
-        const WasmModuleImport(
-          'js',
-          'tbl',
-          WasmExternalKind.table,
-        ).toString(),
-      ],
-    );
+    expect(module.getExports().map((e) => e.toString()), <String>[]);
+    expect(module.getImports().map((e) => e.toString()), [
+      const WasmModuleImport('js', 'tbl', WasmExternalKind.table).toString(),
+    ]);
 
     final builder = module.builder();
     final table = builder.createTable(
@@ -458,10 +409,7 @@ void testAll({TestArgs? testArgs}) {
     expect((table[1]! as WasmFunction)(), [83]);
 
     final i64p9 = table.get(2)! as WasmFunction;
-    expect(
-      i64p9([i64.fromBigInt(BigInt.from(5))]),
-      [i64.fromInt(5 + 9)],
-    );
+    expect(i64p9([i64.fromBigInt(BigInt.from(5))]), [i64.fromInt(5 + 9)]);
     expect(
       i64p9.inner(i64.fromInt(208302802)),
       i64.fromBigInt(BigInt.from(208302802 + 9)),
@@ -474,16 +422,8 @@ void testAll({TestArgs? testArgs}) {
       // The can only be set by exports
       return;
     }
-    final f43 = WasmFunction(
-      () => 43,
-      params: [],
-      results: [ValueTy.i32],
-    );
-    final f84 = WasmFunction(
-      () => 84.3,
-      params: [],
-      results: [ValueTy.f64],
-    );
+    final f43 = WasmFunction(() => 43, params: [], results: [ValueTy.i32]);
+    final f84 = WasmFunction(() => 84.3, params: [], results: [ValueTy.f64]);
     table[0] = WasmValueRef.funcRef(f43);
     table[1] = WasmValueRef.funcRef(f84);
 
@@ -495,125 +435,109 @@ void testAll({TestArgs? testArgs}) {
 
     table.set(
       0,
-      WasmValueRef.funcRef(WasmFunction(
-        (I64 p) => [-1.4, p],
-        params: [ValueTy.i64],
-        results: [ValueTy.f64, ValueTy.i64],
-      )),
+      WasmValueRef.funcRef(
+        WasmFunction(
+          (I64 p) => [-1.4, p],
+          params: [ValueTy.i64],
+          results: [ValueTy.f64, ValueTy.i64],
+        ),
+      ),
     );
 
-    expect(
-      (table.get(0)! as WasmFunction)([i64.fromBigInt(BigInt.from(5))]),
-      [-1.4, i64.fromInt(5)],
-    );
+    expect((table.get(0)! as WasmFunction)([i64.fromBigInt(BigInt.from(5))]), [
+      -1.4,
+      i64.fromInt(5),
+    ]);
     // TODO: should we allow this? 5 and BigInt.from(5) are both valid
-    expect(
-      (table.get(0)! as WasmFunction)([i64.fromInt(5)]),
-      [-1.4, i64.fromBigInt(BigInt.from(5))],
-    );
+    expect((table.get(0)! as WasmFunction)([i64.fromInt(5)]), [
+      -1.4,
+      i64.fromBigInt(BigInt.from(5)),
+    ]);
   });
-  test(
-    'loading with WasmFileUris',
-    () async {
-      final initialUri = WasmFileUris(
-        uri: Uri.parse('https://example.com/assets/wasm.wasm'),
-        simdUri: Uri.parse('https://example.com/assets/wasm.simd.wasm'),
-        threadsSimdUri:
-            Uri.parse('https://example.com/assets/wasm.threadsSimd.wasm'),
-        fallback: WasmFileUris(
-          uri: Uri.parse('https://example.com/assets/wasm.fallback.wasm'),
+  test('loading with WasmFileUris', () async {
+    final initialUri = WasmFileUris(
+      uri: Uri.parse('https://example.com/assets/wasm.wasm'),
+      simdUri: Uri.parse('https://example.com/assets/wasm.simd.wasm'),
+      threadsSimdUri: Uri.parse(
+        'https://example.com/assets/wasm.threadsSimd.wasm',
+      ),
+      fallback: WasmFileUris(
+        uri: Uri.parse('https://example.com/assets/wasm.fallback.wasm'),
+      ),
+    );
+    final uris = WasmFileUris.fromList([initialUri]);
+    // TODO: save to file? fallback to uri if not found in simd/threads?
+
+    final runtimeFeatures = await wasmRuntimeFeatures();
+    try {
+      await uris.loadModule(getUriBodyBytes: (uri) async => Uint8List(0));
+      throw Exception('should not reach');
+    } on WasmFileUrisException catch (e) {
+      expect(e.errors, hasLength(2));
+      final toString = e.toString();
+      expect(
+        toString,
+        contains(
+          'WasmFileUrisException(WasmFileUris(uri: https://example.com/assets/wasm.wasm',
         ),
       );
-      final uris = WasmFileUris.fromList([initialUri]);
-      // TODO: save to file? fallback to uri if not found in simd/threads?
+      expect(
+        toString,
+        contains('fallbackUri: https://example.com/assets/wasm.wasm'),
+      );
+      expect(
+        toString,
+        contains(
+          runtimeFeatures.supportedFeatures.threads &&
+                  runtimeFeatures.supportedFeatures.simd
+              ? 'Url "https://example.com/assets/wasm.threadsSimd.wasm" returned an empty body'
+              : runtimeFeatures.supportedFeatures.simd
+              ? 'Url "https://example.com/assets/wasm.simd.wasm" returned an empty body'
+              : 'Url "https://example.com/assets/wasm.wasm" returned an empty body',
+        ),
+      );
+    }
 
-      final runtimeFeatures = await wasmRuntimeFeatures();
-      try {
-        await uris.loadModule(getUriBodyBytes: (uri) async => Uint8List(0));
-        throw Exception('should not reach');
-      } on WasmFileUrisException catch (e) {
-        expect(e.errors, hasLength(2));
-        final toString = e.toString();
-        expect(
-          toString,
-          contains(
-            'WasmFileUrisException(WasmFileUris(uri: https://example.com/assets/wasm.wasm',
-          ),
-        );
-        expect(
-          toString,
-          contains('fallbackUri: https://example.com/assets/wasm.wasm'),
-        );
-        expect(
-          toString,
-          contains(
-            runtimeFeatures.supportedFeatures.threads &&
-                    runtimeFeatures.supportedFeatures.simd
-                ? 'Url "https://example.com/assets/wasm.threadsSimd.wasm" returned an empty body'
-                : runtimeFeatures.supportedFeatures.simd
-                    ? 'Url "https://example.com/assets/wasm.simd.wasm" returned an empty body'
-                    : 'Url "https://example.com/assets/wasm.wasm" returned an empty body',
-          ),
-        );
-      }
+    for (final v in [
+      {'threads': false, 'simd': false, 'uri': initialUri.uri},
+      {'threads': true, 'simd': true, 'uri': initialUri.threadsSimdUri},
+      {'threads': false, 'simd': true, 'uri': initialUri.simdUri},
+      {'threads': true, 'simd': false, 'uri': initialUri.uri},
+    ]) {
+      final features = WasmFeatures(
+        mutableGlobal: true,
+        saturatingFloatToInt: true,
+        signExtension: true,
+        referenceTypes: true,
+        multiValue: true,
+        bulkMemory: true,
+        simd: v['simd']! as bool,
+        relaxedSimd: true,
+        threads: v['threads']! as bool,
+        tailCall: true,
+        floats: true,
+        multiMemory: true,
+        exceptions: true,
+        memory64: true,
+        extendedConst: true,
+        componentModel: true,
+        memoryControl: true,
+        garbageCollection: true,
+        typeReflection: true,
+      );
 
-      for (final v in [
-        {
-          'threads': false,
-          'simd': false,
-          'uri': initialUri.uri,
-        },
-        {
-          'threads': true,
-          'simd': true,
-          'uri': initialUri.threadsSimdUri,
-        },
-        {
-          'threads': false,
-          'simd': true,
-          'uri': initialUri.simdUri,
-        },
-        {
-          'threads': true,
-          'simd': false,
-          'uri': initialUri.uri,
-        },
-      ]) {
-        final features = WasmFeatures(
-          mutableGlobal: true,
-          saturatingFloatToInt: true,
-          signExtension: true,
-          referenceTypes: true,
-          multiValue: true,
-          bulkMemory: true,
-          simd: v['simd']! as bool,
-          relaxedSimd: true,
-          threads: v['threads']! as bool,
-          tailCall: true,
-          floats: true,
-          multiMemory: true,
-          exceptions: true,
-          memory64: true,
-          extendedConst: true,
-          componentModel: true,
-          memoryControl: true,
-          garbageCollection: true,
-          typeReflection: true,
-        );
-
-        final uri = uris.uriForFeatures(
-          WasmRuntimeFeatures(
-            isBrowser: false,
-            name: 'wasmtime',
-            version: '0.2.1',
-            defaultFeatures: features,
-            supportedFeatures: features,
-          ),
-        );
-        expect(uri, v['uri']);
-      }
-    },
-  );
+      final uri = uris.uriForFeatures(
+        WasmRuntimeFeatures(
+          isBrowser: false,
+          name: 'wasmtime',
+          version: '0.2.1',
+          defaultFeatures: features,
+          supportedFeatures: features,
+        ),
+      );
+      expect(uri, v['uri']);
+    }
+  });
 
   /// WIT Component tests
   typesGenWitComponentTests(
@@ -650,9 +574,9 @@ void testAll({TestArgs? testArgs}) {
         () => WasmRunLibrary.set(dynLib),
         throwsA(
           predicate(
-            (p0) => p0
-                .toString()
-                .contains('WasmRun bindings were already configured'),
+            (p0) => p0.toString().contains(
+              'WasmRun bindings were already configured',
+            ),
           ),
         ),
       );
@@ -660,9 +584,9 @@ void testAll({TestArgs? testArgs}) {
         () => WasmRunLibrary.setUp(override: true),
         throwsA(
           predicate(
-            (p0) => p0
-                .toString()
-                .contains('WasmRun bindings were already configured'),
+            (p0) => p0.toString().contains(
+              'WasmRun bindings were already configured',
+            ),
           ),
         ),
       );
@@ -870,7 +794,7 @@ void testAll({TestArgs? testArgs}) {
       34,
       55,
       // TODO(fueling): try to make fueling similar between runtimes
-      if (isWasmtime) 89
+      if (isWasmtime) 89,
     ]);
 
     final runtimeFuel = isWasmtime
@@ -990,11 +914,8 @@ class Parser {
   /// Utilities for parsing data from a [memView].
   // TODO(test-improve): improve api, maybe pass WasmMemory
   // TODO(test-improve): improve api, only one method parses and it requires dealloc
-  Parser(
-    this.memView,
-    this.initialMemOffset, {
-    this.viewDelta = 0,
-  }) : memOffset = initialMemOffset;
+  Parser(this.memView, this.initialMemOffset, {this.viewDelta = 0})
+    : memOffset = initialMemOffset;
 
   void _dealloc(void Function(int offset, int bytes)? dealloc) {
     if (dealloc != null) {

@@ -30,8 +30,10 @@ class ImageOpsState extends ChangeNotifier with ErrorNotifier {
 
   bool _updateBytes(ImageFormat format) {
     if (ref == null) return false;
-    final newImage =
-        imageOps.convertFormat(image: ref!, format: format).mapErr(setError).ok;
+    final newImage = imageOps
+        .convertFormat(image: ref!, format: format)
+        .mapErr(setError)
+        .ok;
     if (newImage != null) {
       this.format = format;
       bytes = newImage;

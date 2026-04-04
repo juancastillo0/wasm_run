@@ -23,15 +23,13 @@ BaseType toDartType(DataType t) {
     DataTypeCharLargeObject() ||
     DataTypeCharacterLargeObject() ||
     DataTypeText() ||
-    DataTypeString() =>
-      BaseType.string,
+    DataTypeString() => BaseType.string,
     DataTypeUuid() => BaseType.string,
     DataTypeClob() ||
     DataTypeBinary() ||
     DataTypeBlob() ||
     DataTypeVarbinary() ||
-    DataTypeBytea() =>
-      BaseType.binary,
+    DataTypeBytea() => BaseType.binary,
     DataTypeNumeric() ||
     DataTypeDecimal() ||
     DataTypeBigNumeric() ||
@@ -42,8 +40,7 @@ BaseType toDartType(DataType t) {
     DataTypeFloat() ||
     DataTypeReal() ||
     DataTypeDouble() ||
-    DataTypeDoublePrecision() =>
-      BaseType.double,
+    DataTypeDoublePrecision() => BaseType.double,
     DataTypeTinyInt() ||
     DataTypeUnsignedTinyInt() ||
     DataTypeSmallInt() ||
@@ -53,14 +50,12 @@ BaseType toDartType(DataType t) {
     DataTypeInt() ||
     DataTypeInteger() ||
     DataTypeUnsignedInt() ||
-    DataTypeUnsignedInteger() =>
-      BaseType.int,
+    DataTypeUnsignedInteger() => BaseType.int,
     DataTypeBigInt() || DataTypeUnsignedBigInt() => BaseType.bigint,
     DataTypeBoolean() => BaseType.bool,
     DataTypeDate() ||
     DataTypeDatetime() ||
-    DataTypeTimestamp() =>
-      BaseType.datetime,
+    DataTypeTimestamp() => BaseType.datetime,
     DataTypeTime() => BaseType.string, // TODO: support time
     DataTypeInterval() => BaseType.duration,
     DataTypeJson() => BaseType.string, // TODO: separate json type
@@ -82,8 +77,8 @@ class ModelType {
     this.fields, {
     List<ModelKey>? keys,
     List<ModelReference>? references,
-  })  : keys = keys ?? [],
-        references = references ?? [];
+  }) : keys = keys ?? [],
+       references = references ?? [];
 
   Set<String>? primaryKey() {
     final index = keys.indexWhere((k) => k.primary);
@@ -120,11 +115,7 @@ class ModelKey {
   final bool unique;
 
   ///
-  ModelKey({
-    required this.fields,
-    required this.primary,
-    required this.unique,
-  });
+  ModelKey({required this.fields, required this.primary, required this.unique});
 
   @override
   String toString() {
@@ -158,10 +149,11 @@ class ModelField {
     required bool? nullable,
     bool? optional,
     this.defaultValue,
-  })  : optional = optional ??
-            ((nullable == true || type is BTypeNullable) ||
-                defaultValue != null),
-        nullable = nullable == true || type is BTypeNullable;
+  }) : optional =
+           optional ??
+           ((nullable == true || type is BTypeNullable) ||
+               defaultValue != null),
+       nullable = nullable == true || type is BTypeNullable;
 
   @override
   String toString() {
@@ -190,12 +182,7 @@ class ModelReference {
   final ReferenceKind kind;
 
   ///
-  ModelReference(
-    this.name,
-    this.columns,
-    this.foreignTable,
-    this.kind,
-  );
+  ModelReference(this.name, this.columns, this.foreignTable, this.kind);
 
   @override
   String toString() {
@@ -248,11 +235,7 @@ class CodePosition with BaseDataClass {
   final int line;
 
   ///
-  CodePosition({
-    required this.index,
-    required this.column,
-    required this.line,
-  });
+  CodePosition({required this.index, required this.column, required this.line});
 
   factory CodePosition.fromIndex(int index, List<int> lineOffsets) {
     var line = 0;
@@ -273,10 +256,11 @@ class CodePosition with BaseDataClass {
   }
 
   @override
-  DataClassProps get dataClassProps => DataClassProps(
-        'CodePosition',
-        {'index': index, 'column': column, 'line': line},
-      );
+  DataClassProps get dataClassProps => DataClassProps('CodePosition', {
+    'index': index,
+    'column': column,
+    'line': line,
+  });
 }
 
 class StatementInfo with BaseDataClass {
@@ -308,21 +292,18 @@ class StatementInfo with BaseDataClass {
   });
 
   @override
-  DataClassProps get dataClassProps => DataClassProps(
-        'StatementInfo',
-        {
-          'statement': statement,
-          'text': text,
-          'start': start,
-          'end': end,
-          'isSelect': isSelect,
-          'model': model,
-          'preparedStatement': preparedStatement,
-          'prepareError': prepareError,
-          'placeholders': placeholders,
-          'identifier': identifier,
-        },
-      );
+  DataClassProps get dataClassProps => DataClassProps('StatementInfo', {
+    'statement': statement,
+    'text': text,
+    'start': start,
+    'end': end,
+    'isSelect': isSelect,
+    'model': model,
+    'preparedStatement': preparedStatement,
+    'prepareError': prepareError,
+    'placeholders': placeholders,
+    'identifier': identifier,
+  });
 }
 
 class SqlTypeFinder {
@@ -335,7 +316,7 @@ class SqlTypeFinder {
   int _currentStatement = 0;
   // TODO: remove
   final Map<SqlAst, List<(SqlValuePlaceholder, BaseType)>>
-      statementPlaceholders = Map.identity();
+  statementPlaceholders = Map.identity();
 
   final CommonDatabase db;
   final ParsedSql parsed;
@@ -353,8 +334,9 @@ class SqlTypeFinder {
   final List<({int index, String comment})> comments = [];
 
   late final PlaceholderVisitor placeholderVisitor = PlaceholderVisitor(this);
-  late final DependenciesVisitor dependenciesVisitor =
-      DependenciesVisitor(this);
+  late final DependenciesVisitor dependenciesVisitor = DependenciesVisitor(
+    this,
+  );
   late final SqlJsonTypeFinder jsonTypeFinder = SqlJsonTypeFinder(this);
 
   ///
@@ -469,8 +451,7 @@ class SqlTypeFinder {
       final name = (switch (stmt) {
         SqlCreateTable(:final name) ||
         CreateFunction(:final name) ||
-        SqlCreateView(:final name) =>
-          name.joined,
+        SqlCreateView(:final name) => name.joined,
         CreateVirtualTable() => null,
         _ => null,
       });
@@ -483,7 +464,8 @@ class SqlTypeFinder {
       try {
         preparedStatement = db.prepare(str);
         if (preparedStatement.parameterCount != placeholders.length) {
-          prepareError = 'Expected ${placeholders.length} placeholders, '
+          prepareError =
+              'Expected ${placeholders.length} placeholders, '
               'got ${preparedStatement.parameterCount}.';
         }
       } catch (e) {
@@ -606,9 +588,9 @@ class SqlTypeFinder {
     for (final stmt in iterateStatements()) {
       (switch (stmt) {
         SqlCreateTable() => () {
-            final model = toDartClass(stmt);
-            allTables[stmt.name.joined] = model;
-          }(),
+          final model = toDartClass(stmt);
+          allTables[stmt.name.joined] = model;
+        }(),
         CreateVirtualTable() => null,
         SqlDeclare() => null,
         // 'SetVariable',
@@ -616,13 +598,13 @@ class SqlTypeFinder {
         // 'SqlExecute',
         CreateType() => null,
         CreateFunction() => () {
-            final name = stmt.name.joined;
-            final prev = allFunctions[name];
-            if (prev != null) {
-              print('Duplicate function ${name}: ${prev} and ${stmt}');
-            }
-            allFunctions[name] = stmt;
-          }(),
+          final name = stmt.name.joined;
+          final prev = allFunctions[name];
+          if (prev != null) {
+            print('Duplicate function ${name}: ${prev} and ${stmt}');
+          }
+          allFunctions[name] = stmt;
+        }(),
         CreateProcedure() => null,
         CreateMacro() => null,
         _ => null,
@@ -631,31 +613,33 @@ class SqlTypeFinder {
     for (final stmt in iterateStatements()) {
       (switch (stmt) {
         SqlCreateView() => () {
-            final model = viewToModel(stmt);
-            allTables[stmt.name.joined] = model;
-          }(),
+          final model = viewToModel(stmt);
+          allTables[stmt.name.joined] = model;
+        }(),
         SqlCreateIndex() => () {
-            final table = allTables[stmt.tableName.joined];
-            if (table == null) {
-              print(
-                'Could not find table "${stmt.tableName.joined}" for index $stmt',
-              );
-            }
-            final fields =
-                // TODO: Order of index columns
-                stmt.columns.map((c) => exprFieldName(c.expr)).toSet();
-            if (fields.contains(null)) {
-              print('Could not find field name for index $stmt');
-              return;
-            }
-            if (table != null) {
-              table.keys.add(ModelKey(
+          final table = allTables[stmt.tableName.joined];
+          if (table == null) {
+            print(
+              'Could not find table "${stmt.tableName.joined}" for index $stmt',
+            );
+          }
+          final fields =
+              // TODO: Order of index columns
+              stmt.columns.map((c) => exprFieldName(c.expr)).toSet();
+          if (fields.contains(null)) {
+            print('Could not find field name for index $stmt');
+            return;
+          }
+          if (table != null) {
+            table.keys.add(
+              ModelKey(
                 unique: stmt.unique,
                 primary: false,
                 fields: fields.cast(),
-              ));
-            }
-          }(),
+              ),
+            );
+          }
+        }(),
         _ => null,
       });
     }
@@ -669,45 +653,48 @@ class SqlTypeFinder {
     for (final stmt in iterateStatements()) {
       (switch (stmt) {
         SqlInsert() => () {
-            if (stmt.returning != null) {
-              final scope = SqlScope(this);
-              final model = queryToDartClass(stmt.source);
-              final t = scope.getTable(stmt.tableName.joined);
-              scope.allFields.addEntries(
-                [...?model?.fields, ...?t?.fields].map((e) => MapEntry(
-                      e.name,
-                      TypeWithNullability(e.type, e.type.isNullable),
-                    )),
-              );
+          if (stmt.returning != null) {
+            final scope = SqlScope(this);
+            final model = queryToDartClass(stmt.source);
+            final t = scope.getTable(stmt.tableName.joined);
+            scope.allFields.addEntries(
+              [...?model?.fields, ...?t?.fields].map(
+                (e) => MapEntry(
+                  e.name,
+                  TypeWithNullability(e.type, e.type.isNullable),
+                ),
+              ),
+            );
 
-              allReturning[stmt] =
-                  ModelType(selectedFields(stmt.returning!, scope));
-            }
-          }(),
+            allReturning[stmt] = ModelType(
+              selectedFields(stmt.returning!, scope),
+            );
+          }
+        }(),
         SqlUpdate() => () {
-            if (stmt.returning != null) {
-              allReturning[stmt] = returningModelType(
-                [stmt.table, if (stmt.from != null) stmt.from!],
-                stmt.returning!,
-              );
-            }
-          }(),
+          if (stmt.returning != null) {
+            allReturning[stmt] = returningModelType([
+              stmt.table,
+              if (stmt.from != null) stmt.from!,
+            ], stmt.returning!);
+          }
+        }(),
         SqlDelete() => () {
-            if (stmt.returning != null) {
-              allReturning[stmt] = returningModelType(
-                [...stmt.from, if (stmt.using != null) ...stmt.using!],
-                stmt.returning!,
-              );
-            }
-          }(),
+          if (stmt.returning != null) {
+            allReturning[stmt] = returningModelType([
+              ...stmt.from,
+              if (stmt.using != null) ...stmt.using!,
+            ], stmt.returning!);
+          }
+        }(),
         SqlQuery() => () {
-            final model = queryToDartClass(stmt);
-            if (model != null) {
-              allSelects[stmt] = model;
-            } else {
-              print('Count not find table for ${stmt}');
-            }
-          }(),
+          final model = queryToDartClass(stmt);
+          if (model != null) {
+            allSelects[stmt] = model;
+          } else {
+            print('Count not find table for ${stmt}');
+          }
+        }(),
         _ => null,
       });
     }
@@ -723,30 +710,33 @@ class SqlTypeFinder {
 
   ModelType toDartClass(SqlCreateTable table) {
     final model = ModelType([]);
-    model.fields.addAll(table.columns.map((f) {
-      final type = toDartType(f.dataType);
+    model.fields.addAll(
+      table.columns.map((f) {
+        final type = toDartType(f.dataType);
 
-      final ident = f.name;
-      bool nullable = true;
-      bool generated = false;
-      Expr? defaultValue;
-      for (final optDef in f.options) {
-        final opt = optDef.option;
-        (switch (opt) {
-          ColumnOptionNull() => nullable = true,
-          ColumnOptionNotNull() => nullable = false,
-          ColumnOptionDefault() => defaultValue = opt.value,
-          ColumnOptionUnique() => () {
-              model.keys.add(ModelKey(
-                fields: {ident.value},
-                unique: true,
-                primary: opt.value.isPrimary,
-              ));
+        final ident = f.name;
+        bool nullable = true;
+        bool generated = false;
+        Expr? defaultValue;
+        for (final optDef in f.options) {
+          final opt = optDef.option;
+          (switch (opt) {
+            ColumnOptionNull() => nullable = true,
+            ColumnOptionNotNull() => nullable = false,
+            ColumnOptionDefault() => defaultValue = opt.value,
+            ColumnOptionUnique() => () {
+              model.keys.add(
+                ModelKey(
+                  fields: {ident.value},
+                  unique: true,
+                  primary: opt.value.isPrimary,
+                ),
+              );
               if (opt.value.isPrimary) {
                 nullable = false;
               }
             }(),
-          ColumnOptionForeignKey() => model.references.add(
+            ColumnOptionForeignKey() => model.references.add(
               ModelReference(
                 // TODO: ref name
                 '',
@@ -755,49 +745,55 @@ class SqlTypeFinder {
                 ReferenceKind.oneRequired,
               ),
             ),
-          // TODO:
-          ColumnOptionCheck() => null,
-          ColumnOptionComment() => null,
-          ColumnOptionGenerated() => generated = true,
-          ColumnOptionDialectSpecific(:final value) => generated = generated ||
-              const ['AUTOINCREMENT', 'AUTO_INCREMENT'].contains(value),
-          _ => null,
-        });
-      }
-      return ModelField(
-        ident.value,
-        type,
-        nullable: nullable,
-        defaultValue: defaultValue,
-        optional: nullable || generated || defaultValue != null,
-      );
-    }));
+            // TODO:
+            ColumnOptionCheck() => null,
+            ColumnOptionComment() => null,
+            ColumnOptionGenerated() => generated = true,
+            ColumnOptionDialectSpecific(:final value) =>
+              generated =
+                  generated ||
+                  const ['AUTOINCREMENT', 'AUTO_INCREMENT'].contains(value),
+            _ => null,
+          });
+        }
+        return ModelField(
+          ident.value,
+          type,
+          nullable: nullable,
+          defaultValue: defaultValue,
+          optional: nullable || generated || defaultValue != null,
+        );
+      }),
+    );
 
     for (final c in table.constraints) {
       (switch (c) {
-        UniqueConstraint() => model.keys.add(ModelKey(
+        UniqueConstraint() => model.keys.add(
+          ModelKey(
             fields: c.columns.map((c) => c.value).toSet(),
             primary: c.isPrimary,
             unique: true,
-          )),
-        ForeignKeyConstraint(:final columns) => model.references.add(
-            ModelReference(
-              '',
-              columns.indexed
-                  .map((e) => ColRef(e.$2.value, c.referredColumns[e.$1].value))
-                  .toList(),
-              c.foreignTable,
-              ReferenceKind.oneRequired,
-            ),
           ),
+        ),
+        ForeignKeyConstraint(:final columns) => model.references.add(
+          ModelReference(
+            '',
+            columns.indexed
+                .map((e) => ColRef(e.$2.value, c.referredColumns[e.$1].value))
+                .toList(),
+            c.foreignTable,
+            ReferenceKind.oneRequired,
+          ),
+        ),
         // TODO display as key
         IndexConstraint(:final columns) ||
-        FullTextOrSpatialConstraint(:final columns) =>
-          model.keys.add(ModelKey(
+        FullTextOrSpatialConstraint(:final columns) => model.keys.add(
+          ModelKey(
             fields: columns.map((c) => c.value).toSet(),
             primary: false,
             unique: false,
-          )),
+          ),
+        ),
         CheckConstraint() => null,
       });
     }
@@ -825,9 +821,10 @@ class SqlTypeFinder {
       SqlSelectRef() =>
         'SELECT:${body.value(parsed).from.map((e) => identifierTableFactor(e.relation)).join(',')}',
       SqlQueryRef() => setExprIdentifier(body.value(parsed).body),
-      SetOperation() => setExprIdentifier(body.left.value(parsed)) +
-          body.op.name +
-          setExprIdentifier(body.right.value(parsed)),
+      SetOperation() =>
+        setExprIdentifier(body.left.value(parsed)) +
+            body.op.name +
+            setExprIdentifier(body.right.value(parsed)),
       Values() => 'VALUES',
       SqlInsertRef() => 'INSERT:${body.value(parsed).tableName.joined}',
       SqlUpdateRef() =>
@@ -843,27 +840,27 @@ class SqlTypeFinder {
       SqlQueryRef() => queryToDartClass(body.value(parsed)),
       SetOperation() => setExprToDartClass(body.left.value(parsed)),
       Values() => () {
-          if (body.rows.isEmpty) {
-            return null;
-          }
-          return ModelType(
-            body.rows.first.indexed
-                .map(
-                  (e) => ModelField(
-                    '${e.$1}',
-                    exprType(e.$2),
-                    nullable: true, // TODO: check
-                    defaultValue: null,
-                  ),
-                )
-                .toList(),
-          );
-        }(),
+        if (body.rows.isEmpty) {
+          return null;
+        }
+        return ModelType(
+          body.rows.first.indexed
+              .map(
+                (e) => ModelField(
+                  '${e.$1}',
+                  exprType(e.$2),
+                  nullable: true, // TODO: check
+                  defaultValue: null,
+                ),
+              )
+              .toList(),
+        );
+      }(),
       SqlInsertRef() => null,
       SqlUpdateRef() => null,
       Table() => scope.getTable(
-          '${body.schemaName == null ? '' : '${body.schemaName}.'}${body.tableName}',
-        ),
+        '${body.schemaName == null ? '' : '${body.schemaName}.'}${body.tableName}',
+      ),
     });
   }
 
@@ -896,23 +893,28 @@ class SqlTypeFinder {
     final List<ModelField> fields = [];
     for (final (i, value) in items.indexed) {
       (switch (value) {
-        SelectItemUnnamedExpr(:final value) => fields.add(ModelField(
+        SelectItemUnnamedExpr(:final value) => fields.add(
+          ModelField(
             exprFieldName(value) ?? '$i',
             exprType(value),
             nullable: null, // TODO: use join kind
-          )),
-        SelectItemExprWithAlias(:final value) => fields.add(ModelField(
+          ),
+        ),
+        SelectItemExprWithAlias(:final value) => fields.add(
+          ModelField(
             value.alias.value,
             exprType(value.expr),
             nullable: null, // TODO: use join kind
-          )),
+          ),
+        ),
         SelectItemQualifiedWildcard(:final value) => fields.addAll(
-            scope.tableFields(value.qualifier.joined) ?? const [],
-          ),
+          scope.tableFields(value.qualifier.joined) ?? const [],
+        ),
         SelectItemWildcard() => fields.addAll(
-            scope.selectedTables.keys
-                .expand((name) => scope.tableFields(name) ?? const []),
+          scope.selectedTables.keys.expand(
+            (name) => scope.tableFields(name) ?? const [],
           ),
+        ),
       });
     }
 
@@ -947,8 +949,7 @@ class SqlTypeFinder {
       UnaryOp(:final expr) ||
       BoolUnaryOp(:final expr) ||
       InList(:final expr) ||
-      InSubquery(:final expr) =>
-        exprIsNullable(expr.value(parsed)),
+      InSubquery(:final expr) => exprIsNullable(expr.value(parsed)),
       BinaryOp(:final left, :final right) ||
       IsDistinctFrom(:final left, :final right) ||
       IsNotDistinctFrom(:final left, :final right) =>
@@ -956,8 +957,7 @@ class SqlTypeFinder {
             exprIsNullable(right.value(parsed)),
       // TODO:
       AnyOp(:final expr) ||
-      AllOp(:final expr) =>
-        exprIsNullable(expr.value(parsed)),
+      AllOp(:final expr) => exprIsNullable(expr.value(parsed)),
       Exists() => false,
       NestedExpr() => exprIsNullable(expr.expr.value(parsed)),
       SqlValue() => sqlValueType(expr) is BTypeNullable,
@@ -980,14 +980,12 @@ class SqlTypeFinder {
             exprIsNullable(pattern.value(parsed)),
       Cast(:final expr) ||
       TryCast(:final expr) ||
-      SafeCast(:final expr) =>
-        exprIsNullable(expr.value(parsed)),
+      SafeCast(:final expr) => exprIsNullable(expr.value(parsed)),
       // TODO:
       AtTimeZone(:final timestamp) => exprIsNullable(timestamp.value(parsed)),
       Extract(:final expr) ||
       Ceil(:final expr) ||
-      Floor(:final expr) =>
-        exprIsNullable(expr.value(parsed)),
+      Floor(:final expr) => exprIsNullable(expr.value(parsed)),
       Position(:final expr, :final in_) => anyNullable([expr, in_]),
       Substring(:final expr, :final substringFrom, :final substringFor) =>
         anyNullable([expr, substringFrom, substringFor]),
@@ -996,7 +994,7 @@ class SqlTypeFinder {
         :final expr,
         :final overlayWhat,
         :final overlayFrom,
-        :final overlayFor
+        :final overlayFor,
       ) =>
         anyNullable([expr, overlayWhat, overlayFrom, overlayFor]),
       Collate(:final expr) => anyNullable([expr]),
@@ -1004,10 +1002,10 @@ class SqlTypeFinder {
       TypedString() => false,
       // TODO: should we use the conditions?
       CaseExpr() => anyNullable(
-          expr.results.followedBy(
-            [if (expr.elseResult != null) expr.elseResult!],
-          ).toList(),
-        ),
+        expr.results.followedBy([
+          if (expr.elseResult != null) expr.elseResult!,
+        ]).toList(),
+      ),
       ListAggRef() ||
       ArrayAggRef() ||
       ArraySubquery() ||
@@ -1015,14 +1013,15 @@ class SqlTypeFinder {
       CubeExpr() ||
       RollupExpr() ||
       TupleExpr() ||
-      ArrayExpr() =>
-        false,
+      ArrayExpr() => false,
       // TODO: check array type
       ArrayIndex() => true,
       MatchAgainst() => true,
       IntervalExpr(:final value) => exprIsNullable(value.value(parsed)),
-      AggregateExpressionWithFilter(:final expr, :final filter) =>
-        anyNullable([expr, filter]),
+      AggregateExpressionWithFilter(:final expr, :final filter) => anyNullable([
+        expr,
+        filter,
+      ]),
     });
     return isNullable;
   }
@@ -1042,74 +1041,73 @@ class SqlTypeFinder {
       NestedExpr() => exprType(expr.expr.value(parsed)),
       SqlValue() => sqlValueType(expr),
       Subquery() => () {
-          final t = queryToDartClass(expr.query.value(parsed));
-          return t != null && t.fields.length == 1
-              ? t.fields.first.type
-              : BaseType.dynamic;
-        }(),
+        final t = queryToDartClass(expr.query.value(parsed));
+        return t != null && t.fields.length == 1
+            ? t.fields.first.type
+            : BaseType.dynamic;
+      }(),
       // TODO:
       JsonAccess() => BaseType.dynamic,
       CompositeAccess() => BaseType.dynamic,
       MapAccess() => BaseType.dynamic,
       SqlFunctionRef() => () {
-          final function = expr.value(parsed);
-          final func = allFunctions[function.name.joined] ??
-              allFunctions[function.name.last.value];
-          if (func == null) {
-            final argExprs = function.args
-                .map((e) => e.expr)
-                .whereType<FunctionArgExprExpr>()
-                .map((e) => e.value)
-                .toList();
-            if (argExprs.length == function.args.length) {
-              final ty = jsonTypeFinder.typeFromJsonFunction(
-                function.name.joined,
-                argExprs,
-              );
-              if (ty != null) return ty;
-              // TODO: use other created functions
-            }
-            print('Could not find function ${function}');
-            return BaseType.dynamic;
+        final function = expr.value(parsed);
+        final func =
+            allFunctions[function.name.joined] ??
+            allFunctions[function.name.last.value];
+        if (func == null) {
+          final argExprs = function.args
+              .map((e) => e.expr)
+              .whereType<FunctionArgExprExpr>()
+              .map((e) => e.value)
+              .toList();
+          if (argExprs.length == function.args.length) {
+            final ty = jsonTypeFinder.typeFromJsonFunction(
+              function.name.joined,
+              argExprs,
+            );
+            if (ty != null) return ty;
+            // TODO: use other created functions
           }
-          final returnType = func.returnType;
-          if (returnType == null) {
-            print('Function ${function} has no return type. Definition: $func');
-            return BaseType.dynamic;
-          }
-          return toDartType(returnType);
-        }(),
+          print('Could not find function ${function}');
+          return BaseType.dynamic;
+        }
+        final returnType = func.returnType;
+        if (returnType == null) {
+          print('Function ${function} has no return type. Definition: $func');
+          return BaseType.dynamic;
+        }
+        return toDartType(returnType);
+      }(),
       InList() ||
       InSubquery() ||
       InUnnest() ||
       Between() ||
       Like() ||
       ILike() ||
-      SimilarTo() =>
-        BaseType.bool,
+      SimilarTo() => BaseType.bool,
       Cast() => toDartType(expr.dataType),
       TryCast() => toDartType(expr.dataType),
       SafeCast() => toDartType(expr.dataType),
       AtTimeZone() => BaseType.datetime,
       Extract(:final field) ||
       Ceil(:final field) ||
-      Floor(:final field) =>
-        dateTimeFieldType(field),
+      Floor(:final field) => dateTimeFieldType(field),
       Position() => BaseType.int,
       Substring() ||
       Trim() ||
       Overlay() ||
       Collate() ||
-      IntroducedString() =>
-        BaseType.string,
+      IntroducedString() => BaseType.string,
       TypedString() => toDartType(expr.dataType),
-      CaseExpr() => expr.results
-              .followedBy([if (expr.elseResult != null) expr.elseResult!])
-              .map((e) => exprType(e.value(parsed)))
-              .toSet()
-              // TODO: all must be the same
-              .singleOrNull ??
-          BaseType.dynamic,
+      CaseExpr() =>
+        expr.results
+                .followedBy([if (expr.elseResult != null) expr.elseResult!])
+                .map((e) => exprType(e.value(parsed)))
+                .toSet()
+                // TODO: all must be the same
+                .singleOrNull ??
+            BaseType.dynamic,
       ListAggRef() => BaseType.list,
       ArrayAggRef() => BaseType.list,
       ArraySubquery() => BaseType.list,
@@ -1151,20 +1149,19 @@ class SqlTypeFinder {
       MapAccess() => null,
       Cast(:final expr) ||
       TryCast(:final expr) ||
-      SafeCast(:final expr) =>
-        exprValue(expr.value(parsed)),
+      SafeCast(:final expr) => exprValue(expr.value(parsed)),
       // TODO:
       Extract() => null,
       Floor() => mapNullable(exprValue(e.expr.value(parsed)), (p0) {
-          final v = double.tryParse(p0);
-          if (v == null) return null;
-          return v.floor().toString();
-        }),
+        final v = double.tryParse(p0);
+        if (v == null) return null;
+        return v.floor().toString();
+      }),
       Ceil() => mapNullable(exprValue(e.expr.value(parsed)), (p0) {
-          final v = double.tryParse(p0);
-          if (v == null) return null;
-          return v.ceil().toString();
-        }),
+        final v = double.tryParse(p0);
+        if (v == null) return null;
+        return v.ceil().toString();
+      }),
       TypedString() => e.value,
       TupleExpr() => null,
       ArrayIndex() => null,
@@ -1202,16 +1199,18 @@ class SqlTypeFinder {
       Ident() => BaseType.dynamic,
       ExprCompoundIdentifier() => BaseType.dynamic,
       UnaryOp() => unaryOpArgType(expr.op),
-      BinaryOp() => isArg(extract(expr.left))
-          // TODO: proper evaluation logic
-          ? exprType(extract(expr.right))
-          : exprType(extract(expr.left)),
-      BoolUnaryOp() => const [
-          BoolUnaryOperator.isFalse,
-          BoolUnaryOperator.isNotFalse,
-          BoolUnaryOperator.isTrue,
-          BoolUnaryOperator.isNotTrue,
-        ].contains(expr.op)
+      BinaryOp() =>
+        isArg(extract(expr.left))
+            // TODO: proper evaluation logic
+            ? exprType(extract(expr.right))
+            : exprType(extract(expr.left)),
+      BoolUnaryOp() =>
+        const [
+              BoolUnaryOperator.isFalse,
+              BoolUnaryOperator.isNotFalse,
+              BoolUnaryOperator.isTrue,
+              BoolUnaryOperator.isNotTrue,
+            ].contains(expr.op)
             ? BaseType.bool
             : BaseType.dynamic,
       IsDistinctFrom(:final left, :final right) ||
@@ -1227,167 +1226,168 @@ class SqlTypeFinder {
       SqlValue() => BaseType.dynamic,
       // TODO:
       Subquery() => () {
-          final t = queryToDartClass(expr.query.value(parsed));
-          return t != null && t.fields.length == 1
-              ? t.fields.first.type
-              : BaseType.dynamic;
-        }(),
-      JsonAccess() => isArg(extract(expr.left))
-          ? BaseType.string // TODO: json type
-          : BaseType.string,
+        final t = queryToDartClass(expr.query.value(parsed));
+        return t != null && t.fields.length == 1
+            ? t.fields.first.type
+            : BaseType.dynamic;
+      }(),
+      JsonAccess() =>
+        isArg(extract(expr.left))
+            ? BaseType
+                  .string // TODO: json type
+            : BaseType.string,
       CompositeAccess() => BaseType.dynamic,
-      MapAccess() => isArg(extract(expr.column))
-          ? BaseType.dynamic
-          // TODO: int or string?
-          : BaseType.string,
+      MapAccess() =>
+        isArg(extract(expr.column))
+            ? BaseType.dynamic
+            // TODO: int or string?
+            : BaseType.string,
       // TODO: find functoin arg
       SqlFunctionRef() => () {
-          final function = expr.value(parsed);
-          final func = allFunctions[function.name.joined] ??
-              allFunctions[function.name.last.value];
-          if (func == null) {
-            final argExprs = function.args
-                .map((e) => e.expr)
-                .whereType<FunctionArgExprExpr>()
-                .map((e) => e.value)
-                .toList();
-            if (argExprs.length == function.args.length) {
-              final ty = jsonTypeFinder.argTypeFromJsonFunction(
-                name: function.name.joined,
-                functionExpr: expr,
-                args: argExprs,
-                placeholder: arg,
-              );
-              if (ty != null) return ty;
-              // TODO: use other created functions
-            }
-            print('Could not find function ${function}');
-            return BaseType.dynamic;
-          }
-
-          int ai = 0;
-          final argTypes = func.args
-              ?.map((a) => (a.name?.value ?? ai++, a.dataType))
+        final function = expr.value(parsed);
+        final func =
+            allFunctions[function.name.joined] ??
+            allFunctions[function.name.last.value];
+        if (func == null) {
+          final argExprs = function.args
+              .map((e) => e.expr)
+              .whereType<FunctionArgExprExpr>()
+              .map((e) => e.value)
               .toList();
-          // TODO: check order by exprs
-          if (argTypes == null) return BaseType.dynamic;
-
-          ai = 0;
-          final found = function.args
-              .map(
-                (a) => switch (a) {
-                  FunctionArgNamed() => (a.value.name.value, a.value.arg),
-                  FunctionArgUnnamed() => (ai++, a.value),
-                },
-              )
-              .map(
-                (a) => switch (a.$2) {
-                  final FunctionArgExprExpr v => (a.$1, v.value),
-                  FunctionArgExprQualifiedWildcard() => null,
-                  FunctionArgExprWildcard() => null,
-                },
-              )
-              .firstWhere((a) => isArg(a?.$2), orElse: () => null);
-          if (found == null) return BaseType.dynamic;
-          for (final a in argTypes) {
-            if (a.$1 == found.$1) {
-              return toDartType(a.$2);
-            }
+          if (argExprs.length == function.args.length) {
+            final ty = jsonTypeFinder.argTypeFromJsonFunction(
+              name: function.name.joined,
+              functionExpr: expr,
+              args: argExprs,
+              placeholder: arg,
+            );
+            if (ty != null) return ty;
+            // TODO: use other created functions
           }
-          print(
-            'Could not find argument $arg in ${function}. Definition: $func',
-          );
+          print('Could not find function ${function}');
           return BaseType.dynamic;
-        }(),
+        }
+
+        int ai = 0;
+        final argTypes = func.args
+            ?.map((a) => (a.name?.value ?? ai++, a.dataType))
+            .toList();
+        // TODO: check order by exprs
+        if (argTypes == null) return BaseType.dynamic;
+
+        ai = 0;
+        final found = function.args
+            .map(
+              (a) => switch (a) {
+                FunctionArgNamed() => (a.value.name.value, a.value.arg),
+                FunctionArgUnnamed() => (ai++, a.value),
+              },
+            )
+            .map(
+              (a) => switch (a.$2) {
+                final FunctionArgExprExpr v => (a.$1, v.value),
+                FunctionArgExprQualifiedWildcard() => null,
+                FunctionArgExprWildcard() => null,
+              },
+            )
+            .firstWhere((a) => isArg(a?.$2), orElse: () => null);
+        if (found == null) return BaseType.dynamic;
+        for (final a in argTypes) {
+          if (a.$1 == found.$1) {
+            return toDartType(a.$2);
+          }
+        }
+        print('Could not find argument $arg in ${function}. Definition: $func');
+        return BaseType.dynamic;
+      }(),
       InSubquery() => exprType(Subquery(query: expr.subquery)),
       InList() => () {
-          final diff =
-              expr.list.followedBy([expr.expr]).cast<ExprRef?>().firstWhere(
-                    (e) => !isArg(extract(e!)),
-                    orElse: () => null,
-                  );
-          if (diff == null) return BaseType.dynamic;
-          final ty = exprType(diff.value(parsed));
-          if (diff == expr.expr) {
-            // TODO: type generic
-            return BaseType.list;
-          } else {
-            return ty;
-          }
-        }(),
+        final diff = expr.list
+            .followedBy([expr.expr])
+            .cast<ExprRef?>()
+            .firstWhere((e) => !isArg(extract(e!)), orElse: () => null);
+        if (diff == null) return BaseType.dynamic;
+        final ty = exprType(diff.value(parsed));
+        if (diff == expr.expr) {
+          // TODO: type generic
+          return BaseType.list;
+        } else {
+          return ty;
+        }
+      }(),
       InUnnest() ||
       Between() ||
       Like() ||
       ILike() ||
-      SimilarTo() =>
-        BaseType.string,
+      SimilarTo() => BaseType.string,
       Cast() => toDartType(expr.dataType),
       TryCast() => toDartType(expr.dataType),
       SafeCast() => toDartType(expr.dataType),
       AtTimeZone() => BaseType.datetime,
       Extract() => BaseType.datetime,
-      Floor(:final field) ||
-      Ceil(:final field) =>
+      Floor(:final field) || Ceil(:final field) =>
         field == DateTimeField.noDateTime
             ? BaseType.numeric
             : BaseType.datetime,
-      Position() => isArg(extract(expr.expr))
-          ? switch (extract(expr.in_)) {
-              ArrayExpr(:final elem) => elem
-                      .map(extract)
-                      .where((e) => e is! SqlValuePlaceholder)
-                      .map(exprType)
-                      .toSet()
-                      .singleOrNull ??
-                  BaseType.dynamic,
-              final e => exprType(e)
-            }
-          : BaseType.list,
+      Position() =>
+        isArg(extract(expr.expr))
+            ? switch (extract(expr.in_)) {
+                ArrayExpr(:final elem) =>
+                  elem
+                          .map(extract)
+                          .where((e) => e is! SqlValuePlaceholder)
+                          .map(exprType)
+                          .toSet()
+                          .singleOrNull ??
+                      BaseType.dynamic,
+                final e => exprType(e),
+              }
+            : BaseType.list,
       Substring() => switch ((
-          extract(expr.expr),
-          mapNullable(expr.substringFrom, extract),
-          mapNullable(expr.substringFor, extract)
-        )) {
-          (_, final Expr a, _) ||
-          (_, _, final Expr a) when isArg(a) =>
-            BaseType.int,
-          _ => BaseType.string,
-        },
-      Overlay() => [
-          expr.overlayFrom,
-          if (expr.overlayFor != null) expr.overlayFor!
-        ].map(extract).any(isArg)
+        extract(expr.expr),
+        mapNullable(expr.substringFrom, extract),
+        mapNullable(expr.substringFor, extract),
+      )) {
+        (_, final Expr a, _) ||
+        (_, _, final Expr a) when isArg(a) => BaseType.int,
+        _ => BaseType.string,
+      },
+      Overlay() =>
+        [
+              expr.overlayFrom,
+              if (expr.overlayFor != null) expr.overlayFor!,
+            ].map(extract).any(isArg)
             ? BaseType.int
             : BaseType.string,
       Trim() || Collate() || IntroducedString() => BaseType.string,
       TypedString() => toDartType(expr.dataType),
       CaseExpr() => () {
-          final BaseType ty;
-          final operand = mapNullable(expr.operand, extract);
-          if (isArg(operand)) {
-            ty = expr.conditions
-                    .map(extract)
-                    .where((e) => e is! SqlValuePlaceholder)
-                    .map(exprType)
-                    .toSet()
-                    .singleOrNull ??
-                BaseType.dynamic;
-          } else if (expr.conditions.map(extract).any(isArg)) {
-            ty = mapNullable(operand, exprType) ?? BaseType.bool;
-          } else {
-            ty = expr.results
-                    .followedBy(
-                      [if (expr.elseResult != null) expr.elseResult!],
-                    )
-                    .map(extract)
-                    .where((e) => !isArg(e) && e is! SqlValuePlaceholder)
-                    .map(exprType)
-                    .toSet()
-                    .singleOrNull ??
-                BaseType.dynamic;
-          }
-          return ty;
-        }(),
+        final BaseType ty;
+        final operand = mapNullable(expr.operand, extract);
+        if (isArg(operand)) {
+          ty =
+              expr.conditions
+                  .map(extract)
+                  .where((e) => e is! SqlValuePlaceholder)
+                  .map(exprType)
+                  .toSet()
+                  .singleOrNull ??
+              BaseType.dynamic;
+        } else if (expr.conditions.map(extract).any(isArg)) {
+          ty = mapNullable(operand, exprType) ?? BaseType.bool;
+        } else {
+          ty =
+              expr.results
+                  .followedBy([if (expr.elseResult != null) expr.elseResult!])
+                  .map(extract)
+                  .where((e) => !isArg(e) && e is! SqlValuePlaceholder)
+                  .map(exprType)
+                  .toSet()
+                  .singleOrNull ??
+              BaseType.dynamic;
+        }
+        return ty;
+      }(),
       TupleExpr() => BaseType.dynamic,
       ArrayIndex() => isArg(extract(expr.obj)) ? BaseType.list : BaseType.int,
       // TODO: it's usually an int?
@@ -1397,13 +1397,14 @@ class SqlTypeFinder {
         isArg(expr.value(parsed).limit) ? BaseType.int : BaseType.dynamic,
       ArraySubquery() => BaseType.dynamic,
       MatchAgainst() => BaseType.string,
-      ArrayExpr() => expr.elem
-              .map(extract)
-              .where((e) => !isArg(e) && e is! SqlValuePlaceholder)
-              .map(exprType)
-              .toSet()
-              .singleOrNull ??
-          BaseType.dynamic,
+      ArrayExpr() =>
+        expr.elem
+                .map(extract)
+                .where((e) => !isArg(e) && e is! SqlValuePlaceholder)
+                .map(exprType)
+                .toSet()
+                .singleOrNull ??
+            BaseType.dynamic,
 
       ///
       // TODO: continue logic
@@ -1442,12 +1443,10 @@ class SqlTypeFinder {
       DateTimeField.isodow ||
       DateTimeField.isoyear ||
       DateTimeField.julian ||
-      DateTimeField.quarter =>
-        BaseType.int,
+      DateTimeField.quarter => BaseType.int,
       DateTimeField.date => BaseType.datetime,
       DateTimeField.timezoneHour ||
-      DateTimeField.timezoneMinute =>
-        BaseType.int,
+      DateTimeField.timezoneMinute => BaseType.int,
       DateTimeField.timezone => BaseType.string,
       DateTimeField.noDateTime => BaseType.int,
     };
@@ -1455,11 +1454,12 @@ class SqlTypeFinder {
 
   BaseType sqlValueType(SqlValue value) {
     return (switch (value) {
-      SqlValueNumber() => value.value.long
-          ? BaseType.bigint
-          : (int.tryParse(value.value.value) != null
-              ? BaseType.int
-              : BaseType.double),
+      SqlValueNumber() =>
+        value.value.long
+            ? BaseType.bigint
+            : (int.tryParse(value.value.value) != null
+                  ? BaseType.int
+                  : BaseType.double),
       SqlValueSingleQuotedString() ||
       SqlValueDollarQuotedString() ||
       SqlValueEscapedStringLiteral() ||
@@ -1467,34 +1467,32 @@ class SqlTypeFinder {
       SqlValueNationalStringLiteral() ||
       SqlValueHexStringLiteral() ||
       SqlValueDoubleQuotedString() ||
-      SqlValueUnQuotedString() =>
-        BaseType.string,
+      SqlValueUnQuotedString() => BaseType.string,
       SqlValueSingleQuotedByteStringLiteral() ||
-      SqlValueDoubleQuotedByteStringLiteral() =>
-        BaseType.binary,
+      SqlValueDoubleQuotedByteStringLiteral() => BaseType.binary,
       SqlValueBoolean() => BaseType.bool,
       SqlValueNull() => BaseType.dynamic,
       // TODO: find every Placeholder
       SqlValuePlaceholder() => () {
-          final list = statementPlaceholders.putIfAbsent(
-            parsed.statements[_currentStatement],
-            () => [],
-          );
-          final computedIndex = list.indexWhere((e) => identical(e.$1, value));
-          if (computedIndex != -1) return list[computedIndex].$2;
+        final list = statementPlaceholders.putIfAbsent(
+          parsed.statements[_currentStatement],
+          () => [],
+        );
+        final computedIndex = list.indexWhere((e) => identical(e.$1, value));
+        if (computedIndex != -1) return list[computedIndex].$2;
 
-          BaseType ty = BaseType.dynamic;
-          if (_expressionStack.length > 1) {
-            int i = _expressionStack.length - 2;
-            Expr parent = _expressionStack[i];
-            while (i > 0 && parent is NestedExpr) {
-              parent = _expressionStack[--i];
-            }
-            ty = exprArgType(parent, _expressionStack.last);
+        BaseType ty = BaseType.dynamic;
+        if (_expressionStack.length > 1) {
+          int i = _expressionStack.length - 2;
+          Expr parent = _expressionStack[i];
+          while (i > 0 && parent is NestedExpr) {
+            parent = _expressionStack[--i];
           }
-          list.add((value, ty));
-          return ty;
-        }(),
+          ty = exprArgType(parent, _expressionStack.last);
+        }
+        list.add((value, ty));
+        return ty;
+      }(),
     });
   }
 
@@ -1503,19 +1501,17 @@ class SqlTypeFinder {
     return switch (op.op) {
       UnaryOperator.plus ||
       UnaryOperator.minus ||
-      UnaryOperator.pgAbs =>
-        switch (t) {
-          // TODO: check
-          BaseType.int || BaseType.bigint || BaseType.double => t,
-          _ => BaseType.double,
-        },
+      UnaryOperator.pgAbs => switch (t) {
+        // TODO: check
+        BaseType.int || BaseType.bigint || BaseType.double => t,
+        _ => BaseType.double,
+      },
       UnaryOperator.not => BaseType.bool,
       UnaryOperator.pgBitwiseNot => BaseType.binary,
       UnaryOperator.pgSquareRoot => BaseType.double,
       UnaryOperator.pgCubeRoot => BaseType.double,
       UnaryOperator.pgPostfixFactorial ||
-      UnaryOperator.pgPrefixFactorial =>
-        BaseType.int,
+      UnaryOperator.pgPrefixFactorial => BaseType.int,
     };
   }
 
@@ -1523,15 +1519,13 @@ class SqlTypeFinder {
     return switch (op) {
       UnaryOperator.plus ||
       UnaryOperator.minus ||
-      UnaryOperator.pgAbs =>
-        BaseType.numeric,
+      UnaryOperator.pgAbs => BaseType.numeric,
       UnaryOperator.not => BaseType.bool,
       UnaryOperator.pgBitwiseNot => BaseType.binary,
       UnaryOperator.pgSquareRoot => BaseType.numeric,
       UnaryOperator.pgCubeRoot => BaseType.numeric,
       UnaryOperator.pgPostfixFactorial ||
-      UnaryOperator.pgPrefixFactorial =>
-        BaseType.int,
+      UnaryOperator.pgPrefixFactorial => BaseType.int,
     };
   }
 
@@ -1542,8 +1536,7 @@ class SqlTypeFinder {
     return switch (op) {
       BinaryOperatorPlus() ||
       BinaryOperatorMinus() ||
-      BinaryOperatorMultiply() =>
-        mergeNumericType(left, right),
+      BinaryOperatorMultiply() => mergeNumericType(left, right),
       BinaryOperatorDivide() => mergeNumericType(left, right, allowInt: false),
       BinaryOperatorModulo() => BaseType.int,
       BinaryOperatorStringConcat() => BaseType.string,
@@ -1556,26 +1549,21 @@ class SqlTypeFinder {
       BinaryOperatorNotEq() ||
       BinaryOperatorAnd() ||
       BinaryOperatorOr() ||
-      BinaryOperatorXor() =>
-        BaseType.bool,
+      BinaryOperatorXor() => BaseType.bool,
       BinaryOperatorBitwiseOr() ||
       BinaryOperatorBitwiseAnd() ||
-      BinaryOperatorBitwiseXor() =>
-        BaseType.binary,
+      BinaryOperatorBitwiseXor() => BaseType.binary,
       BinaryOperatorDuckIntegerDivide() ||
-      BinaryOperatorMyIntegerDivide() =>
-        BaseType.int,
+      BinaryOperatorMyIntegerDivide() => BaseType.int,
       BinaryOperatorCustom() => BaseType.dynamic,
       BinaryOperatorPgBitwiseXor() ||
       BinaryOperatorPgBitwiseShiftLeft() ||
-      BinaryOperatorPgBitwiseShiftRight() =>
-        BaseType.binary,
+      BinaryOperatorPgBitwiseShiftRight() => BaseType.binary,
       BinaryOperatorPgExp() => BaseType.double,
       BinaryOperatorPgRegexMatch() ||
       BinaryOperatorPgRegexIMatch() ||
       BinaryOperatorPgRegexNotMatch() ||
-      BinaryOperatorPgRegexNotIMatch() =>
-        BaseType.bool,
+      BinaryOperatorPgRegexNotIMatch() => BaseType.bool,
       BinaryOperatorPgCustomBinaryOperator() => BaseType.binary,
     };
   }
@@ -1591,8 +1579,7 @@ class SqlTypeFinder {
       (BTypeDecimal(), _) || (_, BTypeDecimal()) => BType.decimal,
       (BTypeFloat(), _) || (_, BTypeFloat()) => BType.double,
       (BTypeBigInt(), _) ||
-      (_, BTypeBigInt()) =>
-        allowInt ? BType.bigint : BType.double,
+      (_, BTypeBigInt()) => allowInt ? BType.bigint : BType.double,
       (BTypeInteger(), BTypeInteger()) => allowInt ? BType.int : BType.double,
       _ => orElse,
     };
@@ -1604,21 +1591,13 @@ class SqlTypeFinder {
     if (model != null) return model;
     return ModelType([
       ...stmt.columns.map(
-        (e) => ModelField(
-          e.value,
-          BaseType.dynamic,
-          nullable: true,
-        ),
-      )
+        (e) => ModelField(e.value, BaseType.dynamic, nullable: true),
+      ),
     ]);
   }
 }
 
-enum SqlDialect {
-  sqlite,
-  postgres,
-  mysql,
-}
+enum SqlDialect { sqlite, postgres, mysql }
 
 extension UnnestExtension on Expr {
   Expr unnest(ParsedSql parsed) {
@@ -1635,9 +1614,9 @@ O? mapNullable<T extends Object, O>(T? value, O? Function(T) mapper) =>
 
 extension FunctionArgExt on FunctionArg {
   FunctionArgExpr get expr => switch (this) {
-        final FunctionArgNamed v => v.value.arg,
-        final FunctionArgUnnamed v => v.value,
-      };
+    final FunctionArgNamed v => v.value.arg,
+    final FunctionArgUnnamed v => v.value,
+  };
 }
 
 bool isDatabaseDefinitionStatement(SqlAst stmt) {
@@ -1652,8 +1631,7 @@ bool isDatabaseDefinitionStatement(SqlAst stmt) {
     SqlCreateView() ||
     SqlCreateIndex() ||
     AlterTable() ||
-    AlterIndex() =>
-      true,
+    AlterIndex() => true,
     _ => false,
   };
 }
@@ -1700,32 +1678,32 @@ extension ObjectNameJoined on ObjectName {
 
 extension on JoinOperator {
   bool get rightRequired => (switch (this) {
-        JoinOperatorInner() => true,
-        JoinOperatorLeftOuter() => false,
-        JoinOperatorRightOuter() => true,
-        JoinOperatorFullOuter() => true,
-        JoinOperatorCrossJoin() => true,
-        JoinOperatorLeftSemi() => false,
-        JoinOperatorRightSemi() => true,
-        JoinOperatorLeftAnti() => false,
-        JoinOperatorRightAnti() => true,
-        JoinOperatorCrossApply() => true,
-        JoinOperatorOuterApply() => false,
-      });
+    JoinOperatorInner() => true,
+    JoinOperatorLeftOuter() => false,
+    JoinOperatorRightOuter() => true,
+    JoinOperatorFullOuter() => true,
+    JoinOperatorCrossJoin() => true,
+    JoinOperatorLeftSemi() => false,
+    JoinOperatorRightSemi() => true,
+    JoinOperatorLeftAnti() => false,
+    JoinOperatorRightAnti() => true,
+    JoinOperatorCrossApply() => true,
+    JoinOperatorOuterApply() => false,
+  });
 
   bool get leftRequired => (switch (this) {
-        JoinOperatorInner() => true,
-        JoinOperatorLeftOuter() => true,
-        JoinOperatorRightOuter() => false,
-        JoinOperatorFullOuter() => true,
-        JoinOperatorCrossJoin() => true,
-        JoinOperatorLeftSemi() => true,
-        JoinOperatorRightSemi() => false,
-        JoinOperatorLeftAnti() => true,
-        JoinOperatorRightAnti() => false,
-        JoinOperatorCrossApply() => true,
-        JoinOperatorOuterApply() => false,
-      });
+    JoinOperatorInner() => true,
+    JoinOperatorLeftOuter() => true,
+    JoinOperatorRightOuter() => false,
+    JoinOperatorFullOuter() => true,
+    JoinOperatorCrossJoin() => true,
+    JoinOperatorLeftSemi() => true,
+    JoinOperatorRightSemi() => false,
+    JoinOperatorLeftAnti() => true,
+    JoinOperatorRightAnti() => false,
+    JoinOperatorCrossApply() => true,
+    JoinOperatorOuterApply() => false,
+  });
 }
 
 class SqlScope {
@@ -1751,105 +1729,99 @@ class SqlScope {
         typeFinder.allTables[n];
   }
 
-  void _addFactor(
-    TableFactor relation, {
-    required bool isNullable,
-  }) {
+  void _addFactor(TableFactor relation, {required bool isNullable}) {
     (switch (relation) {
       TableFactorTable() => addTable(
-          SelectedTable(
-            alias: relation.alias?.name.value,
-            tableName: relation.name.joined,
-            isNullable: isNullable,
-          ),
+        SelectedTable(
+          alias: relation.alias?.name.value,
+          tableName: relation.name.joined,
+          isNullable: isNullable,
         ),
+      ),
       TableFactorDerived() => () {
-          final model =
-              typeFinder.queryToDartClass(relation.subquery.value(parsed));
-          final alias = relation.alias;
-          if (model != null && alias != null) {
-            // TODO: fields
-            _withTables[alias.name.value] = model;
-          }
-        }(),
+        final model = typeFinder.queryToDartClass(
+          relation.subquery.value(parsed),
+        );
+        final alias = relation.alias;
+        if (model != null && alias != null) {
+          // TODO: fields
+          _withTables[alias.name.value] = model;
+        }
+      }(),
       // TODO: find model from expression
       TableFactorTableFunction() => () {
-          final ty = typeFinder.exprType(relation.expr);
-          final alias = relation.alias;
-          if (ty case BTypeTable(:final inner) when inner != null) {
-            if (alias != null) {
-              final model = ModelType([
-                ...inner.entries.map(
-                  (e) => ModelField(
-                    e.key,
-                    e.value,
-                    nullable: isNullable,
-                  ),
-                ),
-              ]);
-              _withTables[alias.name.value] = model;
-            }
-            allFields.addAll(
-              inner.map(
-                (key, value) =>
-                    MapEntry(key, TypeWithNullability(value, isNullable)),
-              ),
-            );
-          }
-        }(),
-      TableFactorUnnest() => () {
-          if (relation.withOffset) {
-            allFields[relation.alias?.name.value ?? 'offset'] =
-                TypeWithNullability(BaseType.int, false);
-          }
-          final alias = relation.alias;
+        final ty = typeFinder.exprType(relation.expr);
+        final alias = relation.alias;
+        if (ty case BTypeTable(:final inner) when inner != null) {
           if (alias != null) {
-            Expr arr = relation.arrayExpr;
-            while (arr is NestedExpr) {
-              arr = arr.expr.value(parsed);
-            }
-            final v = TypeWithNullability(
-              arr is ArrayExpr
-                  ? arr.elem
+            final model = ModelType([
+              ...inner.entries.map(
+                (e) => ModelField(e.key, e.value, nullable: isNullable),
+              ),
+            ]);
+            _withTables[alias.name.value] = model;
+          }
+          allFields.addAll(
+            inner.map(
+              (key, value) =>
+                  MapEntry(key, TypeWithNullability(value, isNullable)),
+            ),
+          );
+        }
+      }(),
+      TableFactorUnnest() => () {
+        if (relation.withOffset) {
+          allFields[relation.alias?.name.value ?? 'offset'] =
+              TypeWithNullability(BaseType.int, false);
+        }
+        final alias = relation.alias;
+        if (alias != null) {
+          Expr arr = relation.arrayExpr;
+          while (arr is NestedExpr) {
+            arr = arr.expr.value(parsed);
+          }
+          final v = TypeWithNullability(
+            arr is ArrayExpr
+                ? arr.elem
                           .map(typeFinder.extract)
                           .map(typeFinder.exprType)
                           .toSet()
                           .singleOrNull ??
                       BaseType.dynamic
-                  : BaseType.dynamic,
-              false, // TODO:
-            );
-            allFields[alias.name.value] = v;
-          }
-        }(),
+                : BaseType.dynamic,
+            false, // TODO:
+          );
+          allFields[alias.name.value] = v;
+        }
+      }(),
       TableFactorNestedJoin() => () {
-          final rel = relation.tableWithJoins.value(parsed);
-          final alias = relation.alias;
-          if (alias != null) {
-            final nested = SqlScope(typeFinder)..addTableWithJoins([rel]);
-            final model = ModelType(
-              nested.allFields.entries
-                  .map(
-                    (e) => ModelField(
-                      e.key,
-                      e.value.type,
-                      nullable: e.value.isNullable || isNullable,
-                    ),
-                  )
-                  .toList(),
-            );
-            // TODO: alias columns?
-            final aliasName = alias.name.value;
-            _withTables[aliasName] = model;
-            selectedTables[aliasName] = SelectedTable(
-              alias: aliasName,
-              tableName: null,
-              isNullable: isNullable,
-            );
-          } else {
-            addTableWithJoins([rel]);
-          }
-        }(),
+        final rel = relation.tableWithJoins.value(parsed);
+        final alias = relation.alias;
+        if (alias != null) {
+          final nested = SqlScope(typeFinder)..addTableWithJoins([rel]);
+          final model = ModelType(
+            nested.allFields.entries
+                .map(
+                  (e) => ModelField(
+                    e.key,
+                    e.value.type,
+                    nullable: e.value.isNullable || isNullable,
+                  ),
+                )
+                .toList(),
+          );
+          // TODO: alias columns?
+          final aliasName = alias.name.value;
+          _withTables[aliasName] = model;
+          selectedTables[aliasName] = SelectedTable(
+            alias: aliasName,
+            tableName: null,
+            isNullable: isNullable,
+          );
+        } else {
+          addTableWithJoins([rel]);
+        }
+      }(),
       // TODO: pivot
       TableFactorPivot() => null,
     });
@@ -1923,10 +1895,10 @@ class SqlPlaceholder with BaseDataClass {
 
   @override
   DataClassProps get dataClassProps => DataClassProps('SqlPlaceholder', {
-        'ast': ast,
-        'index': index,
-        'type': type,
-      });
+    'ast': ast,
+    'index': index,
+    'type': type,
+  });
 }
 
 extension SqlPlaceholderPositional on List<SqlPlaceholder> {
@@ -1947,21 +1919,24 @@ class PlaceholderVisitor extends SqlAstVisitor {
   void processSqlInsert(SqlInsert node) {
     final map = Map<SqlValuePlaceholder, BaseType>.identity();
     final table = _scopes.last.getTable(node.tableName.joined);
-    if (node.source case SqlQuery(body: final Values values)
-        when table != null) {
+    if (node.source case SqlQuery(
+      body: final Values values,
+    ) when table != null) {
       final types = node.columns
           .map(
-            (c) => table.fields.firstWhere(
-              (e) => e.name == c.value,
-              orElse: () {
-                print('Could not find column ${c.value} in table $table');
-                return ModelField(
-                  c.value,
-                  BaseType.dynamic,
-                  nullable: true,
-                );
-              },
-            ).type,
+            (c) => table.fields
+                .firstWhere(
+                  (e) => e.name == c.value,
+                  orElse: () {
+                    print('Could not find column ${c.value} in table $table');
+                    return ModelField(
+                      c.value,
+                      BaseType.dynamic,
+                      nullable: true,
+                    );
+                  },
+                )
+                .type,
           )
           .toList();
       if (values.rows.any((row) => row.length > types.length)) {
@@ -1989,7 +1964,7 @@ class PlaceholderVisitor extends SqlAstVisitor {
         TableWithJoins(
           relation: TableFactorTable(name: node.tableName, withHints: []),
           joins: [],
-        )
+        ),
       ]);
     _scopes.add(scope);
     super.processSqlInsert(node);

@@ -63,8 +63,9 @@ class Some<T extends Object> implements Option<T> {
   bool get isNone => false;
 
   @override
-  Map<String, Object?> toJson([Object? Function(T value)? mapValue]) =>
-      {'some': mapValue == null ? value : mapValue(value)};
+  Map<String, Object?> toJson([Object? Function(T value)? mapValue]) => {
+    'some': mapValue == null ? value : mapValue(value),
+  };
 
   @override
   (int, Object?) toWasm([Object? Function(T value)? mapValue]) =>
@@ -97,8 +98,9 @@ class None<T extends Object> implements Option<T> {
   bool get isNone => true;
 
   @override
-  Map<String, Object?> toJson([Object? Function(T value)? mapValue]) =>
-      {'none': null};
+  Map<String, Object?> toJson([Object? Function(T value)? mapValue]) => {
+    'none': null,
+  };
 
   @override
   (int, Object?) toWasm([Object? Function(T value)? mapValue]) => (0, null);

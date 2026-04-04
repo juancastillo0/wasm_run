@@ -30,11 +30,9 @@ class PaginatedTextController extends ChangeNotifier {
       textControllers.add(textController);
     }
     searchController.addListener(_updateSearch);
-    searchFocusNode.addListener(
-      () {
-        if (searchFocusNode.hasFocus) notifyListeners();
-      },
-    );
+    searchFocusNode.addListener(() {
+      if (searchFocusNode.hasFocus) notifyListeners();
+    });
   }
 
   static const defaultPageSize = kIsWeb ? 20000 : 300000;
@@ -63,28 +61,30 @@ class PaginatedTextController extends ChangeNotifier {
       setSearchError(e.toString());
       return;
     }
-    final sizes = textControllers.fold(
-      <int>[0],
-      (s, e) => s..add((s.isEmpty ? 0 : s.last) + e.text.length),
-    );
+    final sizes = textControllers.fold(<int>[
+      0,
+    ], (s, e) => s..add((s.isEmpty ? 0 : s.last) + e.text.length));
 
-    searchValues = pattern.allMatches(joinedText).map((matches) {
-      final page = matches.start == 0
-          ? 0
-          : sizes.indexWhere((e) => e > matches.start) - 1;
-      final start = matches.start - sizes[page];
-      final end = matches.end - sizes[page];
-      final textController = textControllers[page];
-      return SearchValue(
-        // baseOffset: start - page * pageSize,
-        // extentOffset: end - page * pageSize,
-        textController.text.substring(
-          max(start - searchContextSize, 0),
-          min(end + searchContextSize, textController.text.length),
-        ),
-        page,
-      );
-    }).toList(growable: false);
+    searchValues = pattern
+        .allMatches(joinedText)
+        .map((matches) {
+          final page = matches.start == 0
+              ? 0
+              : sizes.indexWhere((e) => e > matches.start) - 1;
+          final start = matches.start - sizes[page];
+          final end = matches.end - sizes[page];
+          final textController = textControllers[page];
+          return SearchValue(
+            // baseOffset: start - page * pageSize,
+            // extentOffset: end - page * pageSize,
+            textController.text.substring(
+              max(start - searchContextSize, 0),
+              min(end + searchContextSize, textController.text.length),
+            ),
+            page,
+          );
+        })
+        .toList(growable: false);
     notifyListeners();
   }
 
@@ -168,12 +168,13 @@ class PaginatedTextField extends StatelessWidget {
                           controller.isSearching
                               ? 'Searching...'
                               : 'No matches found for search query:'
-                                  '\n"${controller.searchController.text}"',
+                                    '\n"${controller.searchController.text}"',
                           textAlign: TextAlign.center,
                         ).container(alignment: Alignment.center);
                       }
-                      final distinctPages =
-                          controller.searchValues.map((e) => e.page).toSet();
+                      final distinctPages = controller.searchValues
+                          .map((e) => e.page)
+                          .toSet();
                       return Column(
                         children: [
                           Row(
@@ -201,9 +202,8 @@ class PaginatedTextField extends StatelessWidget {
                                     controller.page = value.page;
                                   },
                                   child: Text(
-                                          'Page ${value.page + 1}: ${value.context}')
-                                      .container(
-                                          padding: const EdgeInsets.all(4)),
+                                    'Page ${value.page + 1}: ${value.context}',
+                                  ).container(padding: const EdgeInsets.all(4)),
                                 );
                               },
                             ),
@@ -242,8 +242,9 @@ class PaginatedTextField extends StatelessWidget {
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text('${controller.page + 1}/${controller.pageCount}')
-                          .container(padding: const EdgeInsets.all(6)),
+                      Text(
+                        '${controller.page + 1}/${controller.pageCount}',
+                      ).container(padding: const EdgeInsets.all(6)),
                       TextField(
                         onChanged: (value) {
                           final page = int.tryParse(value);

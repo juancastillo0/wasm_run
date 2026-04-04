@@ -25,7 +25,7 @@ List<Object?> recordToList(Record a) {
       final $15,
       final $16,
       final $17,
-      final $18
+      final $18,
     ) =>
       [
         $1,
@@ -45,7 +45,7 @@ List<Object?> recordToList(Record a) {
         $15,
         $16,
         $17,
-        $18
+        $18,
       ],
     (
       final $1,
@@ -64,7 +64,7 @@ List<Object?> recordToList(Record a) {
       final $14,
       final $15,
       final $16,
-      final $17
+      final $17,
     ) =>
       [
         $1,
@@ -83,7 +83,7 @@ List<Object?> recordToList(Record a) {
         $14,
         $15,
         $16,
-        $17
+        $17,
       ],
     (
       final $1,
@@ -101,7 +101,7 @@ List<Object?> recordToList(Record a) {
       final $13,
       final $14,
       final $15,
-      final $16
+      final $16,
     ) =>
       [$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16],
     (
@@ -119,7 +119,7 @@ List<Object?> recordToList(Record a) {
       final $12,
       final $13,
       final $14,
-      final $15
+      final $15,
     ) =>
       [$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15],
     (
@@ -136,7 +136,7 @@ List<Object?> recordToList(Record a) {
       final $11,
       final $12,
       final $13,
-      final $14
+      final $14,
     ) =>
       [$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14],
     (
@@ -152,7 +152,7 @@ List<Object?> recordToList(Record a) {
       final $10,
       final $11,
       final $12,
-      final $13
+      final $13,
     ) =>
       [$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13],
     (
@@ -167,7 +167,7 @@ List<Object?> recordToList(Record a) {
       final $9,
       final $10,
       final $11,
-      final $12
+      final $12,
     ) =>
       [$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12],
     (
@@ -181,7 +181,7 @@ List<Object?> recordToList(Record a) {
       final $8,
       final $9,
       final $10,
-      final $11
+      final $11,
     ) =>
       [$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11],
     (
@@ -194,7 +194,7 @@ List<Object?> recordToList(Record a) {
       final $7,
       final $8,
       final $9,
-      final $10
+      final $10,
     ) =>
       [$1, $2, $3, $4, $5, $6, $7, $8, $9, $10],
     (
@@ -206,7 +206,7 @@ List<Object?> recordToList(Record a) {
       final $6,
       final $7,
       final $8,
-      final $9
+      final $9,
     ) =>
       [$1, $2, $3, $4, $5, $6, $7, $8, $9],
     (
@@ -217,26 +217,26 @@ List<Object?> recordToList(Record a) {
       final $5,
       final $6,
       final $7,
-      final $8
+      final $8,
     ) =>
       [$1, $2, $3, $4, $5, $6, $7, $8],
     (final $1, final $2, final $3, final $4, final $5, final $6, final $7) => [
-        $1,
-        $2,
-        $3,
-        $4,
-        $5,
-        $6,
-        $7
-      ],
+      $1,
+      $2,
+      $3,
+      $4,
+      $5,
+      $6,
+      $7,
+    ],
     (final $1, final $2, final $3, final $4, final $5, final $6) => [
-        $1,
-        $2,
-        $3,
-        $4,
-        $5,
-        $6
-      ],
+      $1,
+      $2,
+      $3,
+      $4,
+      $5,
+      $6,
+    ],
     (final $1, final $2, final $3, final $4, final $5) => [$1, $2, $3, $4, $5],
     (final $1, final $2, final $3, final $4) => [$1, $2, $3, $4],
     (final $1, final $2, final $3) => [$1, $2, $3],
@@ -254,6 +254,7 @@ class InvalidRecordListException implements Exception {
   InvalidRecordListException(this.record);
 
   @override
-  String toString() => 'InvalidRecordListException(Attempted to convert $record'
+  String toString() =>
+      'InvalidRecordListException(Attempted to convert $record'
       ' to a list, but could not find a matching converter)';
 }

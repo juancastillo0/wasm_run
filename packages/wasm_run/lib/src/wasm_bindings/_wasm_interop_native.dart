@@ -31,10 +31,7 @@ Future<WasmModule> compileWasmModule(
   return _WasmModule._(module, config_);
 }
 
-WasmModule compileWasmModuleSync(
-  Uint8List bytes, {
-  ModuleConfig? config,
-}) {
+WasmModule compileWasmModuleSync(Uint8List bytes, {ModuleConfig? config}) {
   final config_ = config ?? const ModuleConfig();
   final module = defaultInstance().compileWasmSync(
     moduleWasm: bytes,
@@ -55,11 +52,7 @@ class _WasmModule extends WasmModule {
     required int maxPages,
   }) {
     final memory = module.createSharedMemory(
-      memoryType: MemoryTy(
-        shared: true,
-        minimum: minPages,
-        maximum: maxPages,
-      ),
+      memoryType: MemoryTy(shared: true, minimum: minPages, maximum: maxPages),
     );
     return _SharedMemory(memory);
   }
@@ -160,8 +153,8 @@ WasmFunction _toWasmFunction(WFunc func, WasmRunModuleId module, String? name) {
     return args == null || args.isEmpty
         ? const []
         : args
-            .map((v) => _fromWasmValueRaw(params[i++], v, module))
-            .toList(growable: false);
+              .map((v) => _fromWasmValueRaw(params[i++], v, module))
+              .toList(growable: false);
   }
 
   List<Object?> call([List<Object?>? args]) {
@@ -180,15 +173,12 @@ WasmFunction _toWasmFunction(WFunc func, WasmRunModuleId module, String? name) {
     results: type.results,
     call: call,
     name: name,
-    makeFunctionNumArgs(
-      params.length,
-      (List<Object?> args) {
-        final result = call(args);
-        if (result.isEmpty) return _noReturnPlaceholder;
-        if (result.length == 1) return result[0];
-        return result;
-      },
-    ),
+    makeFunctionNumArgs(params.length, (List<Object?> args) {
+      final result = call(args);
+      if (result.isEmpty) return _noReturnPlaceholder;
+      if (result.length == 1) return result[0];
+      return result;
+    }),
     func,
   );
 }
@@ -237,10 +227,11 @@ class _ModuleObjectReference {
   }
 }
 
-typedef GlobalWasmFunction = ffi.Pointer<wire_list_wasm_val> Function(
-  ffi.Int64 functionId,
-  WireSyncReturn wasmArguments,
-);
+typedef GlobalWasmFunction =
+    ffi.Pointer<wire_list_wasm_val> Function(
+      ffi.Int64 functionId,
+      WireSyncReturn wasmArguments,
+    );
 
 // ignore: avoid_classes_with_only_static_members
 class _References {
@@ -281,8 +272,9 @@ class _References {
       throw Exception('Function $functionId $function has no return values');
     }
 
-    final args =
-        input.map((v) => dartValueFromWasm(v, module)).toList(growable: false);
+    final args = input
+        .map((v) => dartValueFromWasm(v, module))
+        .toList(growable: false);
     final output = function.call(args);
 
     final results = function.results!;
@@ -384,9 +376,9 @@ class _Builder extends WasmInstanceBuilder {
   final _WasmInstanceFuel? _fuel;
 
   _Builder(this.module, this.mod, this.wasiConfig)
-      : _fuel = (module.config.consumeFuel ?? false)
-            ? _WasmInstanceFuel(mod)
-            : null;
+    : _fuel = (module.config.consumeFuel ?? false)
+          ? _WasmInstanceFuel(mod)
+          : null;
 
   @override
   WasmGlobal createGlobal(WasmValue value, {required bool mutable}) {
@@ -400,11 +392,7 @@ class _Builder extends WasmInstanceBuilder {
   @override
   WasmMemory createMemory({required int minPages, int? maxPages}) {
     final memory = mod.createMemory(
-      memoryType: MemoryTy(
-        shared: false,
-        minimum: minPages,
-        maximum: maxPages,
-      ),
+      memoryType: MemoryTy(shared: false, minimum: minPages, maximum: maxPages),
     );
     return _Memory(memory, mod);
   }
@@ -419,10 +407,7 @@ class _Builder extends WasmInstanceBuilder {
     return _Table(
       mod.createTable(
         value: inner,
-        tableType: TableArgs(
-          minimum: minSize,
-          maximum: maxSize,
-        ),
+        tableType: TableArgs(minimum: minSize, maximum: maxSize),
       ),
       mod,
     );
@@ -442,12 +427,11 @@ class _Builder extends WasmInstanceBuilder {
       global: (global) => ExternalValue.global((global as _Global).global),
       function: (function) {
         final desc = module.module.getModuleImports().firstWhere(
-              (e) => e.module == moduleName && e.name == name,
-              // TODO: this is different behavior from web. On web wrong imports are ignored
-              orElse: () => throw Exception(
-                'Import not found: $moduleName.$name = $value',
-              ),
-            );
+          (e) => e.module == moduleName && e.name == name,
+          // TODO: this is different behavior from web. On web wrong imports are ignored
+          orElse: () =>
+              throw Exception('Import not found: $moduleName.$name = $value'),
+        );
         final type = desc.ty;
         if (type is! ExternalType_Func) {
           throw Exception('Expected function import type found: $type');
@@ -566,13 +550,15 @@ class _Instance extends WasmInstance {
     final wasiConfig = builder.wasiConfig;
     if (wasiConfig != null) {
       if (wasiConfig.captureStderr) {
-        _stderr ??=
-            builder.mod.stdioStream(kind: StdIOKind.stderr).asBroadcastStream();
+        _stderr ??= builder.mod
+            .stdioStream(kind: StdIOKind.stderr)
+            .asBroadcastStream();
         _stderr!.first;
       }
       if (wasiConfig.captureStdout) {
-        _stdout ??=
-            builder.mod.stdioStream(kind: StdIOKind.stdout).asBroadcastStream();
+        _stdout ??= builder.mod
+            .stdioStream(kind: StdIOKind.stdout)
+            .asBroadcastStream();
         _stdout!.first;
       }
 
@@ -612,47 +598,53 @@ class _Instance extends WasmInstance {
       int i = 0;
       return args == null || args.isEmpty
           ? const []
-          : args
-              .map((v) => _fromWasmValueRaw(function.params[i++]!, v, runner));
+          : args.map(
+              (v) => _fromWasmValueRaw(function.params[i++]!, v, runner),
+            );
     }
 
     final Completer<List<List<Object?>>> completer = Completer();
 
     runner
         .callFunctionHandleParallel(
-      funcName: exportEntry.key,
-      args: argsLists.expand(mapArgs).toList(growable: false),
-      numTasks: argsLists.length,
-    )
+          funcName: exportEntry.key,
+          args: argsLists.expand(mapArgs).toList(growable: false),
+          numTasks: argsLists.length,
+        )
         .listen(
-      (event) {
-        event.when(
-          ok: (result) {
-            final resultsLength = function.results!.length;
-            final mappedResults = List.generate(
-              argsLists.length,
-              (index) => result
-                  .sublist(index * resultsLength, (index + 1) * resultsLength)
-                  .map((e) => _References.dartValueFromWasm(e, runner))
-                  .toList(growable: false),
-              growable: false,
+          (event) {
+            event.when(
+              ok: (result) {
+                final resultsLength = function.results!.length;
+                final mappedResults = List.generate(
+                  argsLists.length,
+                  (index) => result
+                      .sublist(
+                        index * resultsLength,
+                        (index + 1) * resultsLength,
+                      )
+                      .map((e) => _References.dartValueFromWasm(e, runner))
+                      .toList(growable: false),
+                  growable: false,
+                );
+                completer.complete(mappedResults);
+              },
+              err: (err) => completer.completeError(Exception(err)),
+              call: (call) {
+                final results = _References.executeFunction(
+                  call.functionId,
+                  call.args,
+                );
+                builder.mod.workerExecution(
+                  workerIndex: call.workerIndex,
+                  results: results,
+                );
+              },
             );
-            completer.complete(mappedResults);
           },
-          err: (err) => completer.completeError(Exception(err)),
-          call: (call) {
-            final results =
-                _References.executeFunction(call.functionId, call.args);
-            builder.mod.workerExecution(
-              workerIndex: call.workerIndex,
-              results: results,
-            );
-          },
+          cancelOnError: true,
+          onError: completer.completeError,
         );
-      },
-      cancelOnError: true,
-      onError: completer.completeError,
-    );
 
     return completer.future;
   }
@@ -741,8 +733,9 @@ class _Memory extends WasmMemory {
     if (_previous?.length != ptrLen.length ||
         _previous!.pointer != ptrLen.pointer) {
       _previous = ptrLen;
-      _view = ffi.Pointer<ffi.Uint8>.fromAddress(ptrLen.pointer)
-          .asTypedList(ptrLen.length);
+      _view = ffi.Pointer<ffi.Uint8>.fromAddress(
+        ptrLen.pointer,
+      ).asTypedList(ptrLen.length);
     }
     return _view;
   }

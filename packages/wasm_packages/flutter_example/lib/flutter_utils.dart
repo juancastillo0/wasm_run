@@ -5,11 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class Inherited<T> extends InheritedWidget {
-  const Inherited({
-    super.key,
-    required this.state,
-    required super.child,
-  });
+  const Inherited({super.key, required this.state, required super.child});
 
   final T state;
 
@@ -26,20 +22,14 @@ class Inherited<T> extends InheritedWidget {
 
 extension TextExt on Text {
   Widget title() => SelectableText(
-        data!,
-        style: const TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.bold,
-        ),
-      ).container(padding: const EdgeInsets.all(10));
+    data!,
+    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+  ).container(padding: const EdgeInsets.all(10));
 
   Widget subtitle() => SelectableText(
-        data!,
-        style: const TextStyle(
-          fontSize: 17,
-          fontWeight: FontWeight.bold,
-        ),
-      ).container(padding: const EdgeInsets.all(6));
+    data!,
+    style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+  ).container(padding: const EdgeInsets.all(6));
 }
 
 Future<void> downloadFile(
@@ -56,9 +46,7 @@ Future<void> downloadFile(
     if (handle == null) return;
     final writable = await handle.createWritable(keepExistingData: false);
     await writable.write(
-      fsa.FileSystemWriteChunkType.bufferSource(
-        bytes.buffer,
-      ),
+      fsa.FileSystemWriteChunkType.bufferSource(bytes.buffer),
     );
     await writable.close();
   }
@@ -138,9 +126,7 @@ class IntInput extends StatelessWidget {
     return TextFormField(
       keyboardType: TextInputType.number,
       initialValue: initialValue?.toString(),
-      decoration: InputDecoration(
-        labelText: label,
-      ),
+      decoration: InputDecoration(labelText: label),
       onChanged: (v) {
         final d = int.tryParse(v);
         if (d != null) onChanged(d);
@@ -177,7 +163,7 @@ class ErrorMessage extends StatelessWidget {
             ElevatedButton(
               onPressed: () => state.setError(''),
               child: const Text('Close'),
-            )
+            ),
           ],
         ).container(
           margin: const EdgeInsets.only(top: 12),

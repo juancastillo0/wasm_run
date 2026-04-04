@@ -17,8 +17,10 @@ import 'rust_crypto_state.dart';
 class GlobalState extends ChangeNotifier {
   GlobalState();
 
-  final wasiConfig =
-      const WasiConfig(preopenedDirs: [], webBrowserFileSystem: {});
+  final wasiConfig = const WasiConfig(
+    preopenedDirs: [],
+    webBrowserFileSystem: {},
+  );
 
   late final compressionRsAsync = FutureLoader(
     () => compression_rs.createCompressionRsInMemoryWorker(
@@ -43,14 +45,12 @@ class GlobalState extends ChangeNotifier {
       imports: const WasmParserWorldImports(),
     ).then(WasmParserState.new),
   );
-  late final sqlParser = FutureLoader(
-    () async {
-      final parserFut = createTypesqlParser();
-      final parser = await parserFut;
-      final db = await loadSqlite();
-      return TypesqlParserState(parser, db);
-    },
-  );
+  late final sqlParser = FutureLoader(() async {
+    final parserFut = createTypesqlParser();
+    final parser = await parserFut;
+    final db = await loadSqlite();
+    return TypesqlParserState(parser, db);
+  });
 
   String error = '';
 

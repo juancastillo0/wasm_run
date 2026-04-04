@@ -19,11 +19,12 @@ import 'bridge_generated.io.dart'
 part 'bridge_generated.freezed.dart';
 
 abstract class WasmRunDart {
-  WasmRunModuleId moduleBuilder(
-      {required CompiledModule module,
-      int? numThreads,
-      WasiConfigNative? wasiConfig,
-      dynamic hint});
+  WasmRunModuleId moduleBuilder({
+    required CompiledModule module,
+    int? numThreads,
+    WasiConfigNative? wasiConfig,
+    dynamic hint,
+  });
 
   FlutterRustBridgeTaskConstMeta get kModuleBuilderConstMeta;
 
@@ -31,22 +32,26 @@ abstract class WasmRunDart {
 
   FlutterRustBridgeTaskConstMeta get kParseWatFormatConstMeta;
 
-  Future<CompiledModule> compileWasm(
-      {required Uint8List moduleWasm,
-      required ModuleConfig config,
-      dynamic hint});
+  Future<CompiledModule> compileWasm({
+    required Uint8List moduleWasm,
+    required ModuleConfig config,
+    dynamic hint,
+  });
 
   FlutterRustBridgeTaskConstMeta get kCompileWasmConstMeta;
 
-  CompiledModule compileWasmSync(
-      {required Uint8List moduleWasm,
-      required ModuleConfig config,
-      dynamic hint});
+  CompiledModule compileWasmSync({
+    required Uint8List moduleWasm,
+    required ModuleConfig config,
+    dynamic hint,
+  });
 
   FlutterRustBridgeTaskConstMeta get kCompileWasmSyncConstMeta;
 
-  WasmFeatures wasmFeaturesForConfig(
-      {required ModuleConfig config, dynamic hint});
+  WasmFeatures wasmFeaturesForConfig({
+    required ModuleConfig config,
+    dynamic hint,
+  });
 
   FlutterRustBridgeTaskConstMeta get kWasmFeaturesForConfigConstMeta;
 
@@ -54,319 +59,404 @@ abstract class WasmRunDart {
 
   FlutterRustBridgeTaskConstMeta get kWasmRuntimeFeaturesConstMeta;
 
-  List<ModuleExportValue> exportsMethodWasmRunInstanceId(
-      {required WasmRunInstanceId that, dynamic hint});
+  List<ModuleExportValue> exportsMethodWasmRunInstanceId({
+    required WasmRunInstanceId that,
+    dynamic hint,
+  });
 
   FlutterRustBridgeTaskConstMeta get kExportsMethodWasmRunInstanceIdConstMeta;
 
-  WasmRunInstanceId instantiateSyncMethodWasmRunModuleId(
-      {required WasmRunModuleId that, dynamic hint});
+  WasmRunInstanceId instantiateSyncMethodWasmRunModuleId({
+    required WasmRunModuleId that,
+    dynamic hint,
+  });
 
   FlutterRustBridgeTaskConstMeta
-      get kInstantiateSyncMethodWasmRunModuleIdConstMeta;
+  get kInstantiateSyncMethodWasmRunModuleIdConstMeta;
 
-  Future<WasmRunInstanceId> instantiateMethodWasmRunModuleId(
-      {required WasmRunModuleId that, dynamic hint});
+  Future<WasmRunInstanceId> instantiateMethodWasmRunModuleId({
+    required WasmRunModuleId that,
+    dynamic hint,
+  });
 
   FlutterRustBridgeTaskConstMeta get kInstantiateMethodWasmRunModuleIdConstMeta;
 
-  void linkImportsMethodWasmRunModuleId(
-      {required WasmRunModuleId that,
-      required List<ModuleImport> imports,
-      dynamic hint});
+  void linkImportsMethodWasmRunModuleId({
+    required WasmRunModuleId that,
+    required List<ModuleImport> imports,
+    dynamic hint,
+  });
 
   FlutterRustBridgeTaskConstMeta get kLinkImportsMethodWasmRunModuleIdConstMeta;
 
-  Stream<Uint8List> stdioStreamMethodWasmRunModuleId(
-      {required WasmRunModuleId that, required StdIOKind kind, dynamic hint});
+  Stream<Uint8List> stdioStreamMethodWasmRunModuleId({
+    required WasmRunModuleId that,
+    required StdIOKind kind,
+    dynamic hint,
+  });
 
   FlutterRustBridgeTaskConstMeta get kStdioStreamMethodWasmRunModuleIdConstMeta;
 
-  Future<void> disposeMethodWasmRunModuleId(
-      {required WasmRunModuleId that, dynamic hint});
+  Future<void> disposeMethodWasmRunModuleId({
+    required WasmRunModuleId that,
+    dynamic hint,
+  });
 
   FlutterRustBridgeTaskConstMeta get kDisposeMethodWasmRunModuleIdConstMeta;
 
-  List<WasmVal> callFunctionHandleSyncMethodWasmRunModuleId(
-      {required WasmRunModuleId that,
-      required WFunc func,
-      required List<WasmVal> args,
-      dynamic hint});
+  List<WasmVal> callFunctionHandleSyncMethodWasmRunModuleId({
+    required WasmRunModuleId that,
+    required WFunc func,
+    required List<WasmVal> args,
+    dynamic hint,
+  });
 
   FlutterRustBridgeTaskConstMeta
-      get kCallFunctionHandleSyncMethodWasmRunModuleIdConstMeta;
+  get kCallFunctionHandleSyncMethodWasmRunModuleIdConstMeta;
 
-  Future<List<WasmVal>> callFunctionHandleMethodWasmRunModuleId(
-      {required WasmRunModuleId that,
-      required WFunc func,
-      required List<WasmVal> args,
-      dynamic hint});
-
-  FlutterRustBridgeTaskConstMeta
-      get kCallFunctionHandleMethodWasmRunModuleIdConstMeta;
-
-  Stream<ParallelExec> callFunctionHandleParallelMethodWasmRunModuleId(
-      {required WasmRunModuleId that,
-      required String funcName,
-      required List<WasmVal> args,
-      required int numTasks,
-      dynamic hint});
+  Future<List<WasmVal>> callFunctionHandleMethodWasmRunModuleId({
+    required WasmRunModuleId that,
+    required WFunc func,
+    required List<WasmVal> args,
+    dynamic hint,
+  });
 
   FlutterRustBridgeTaskConstMeta
-      get kCallFunctionHandleParallelMethodWasmRunModuleIdConstMeta;
+  get kCallFunctionHandleMethodWasmRunModuleIdConstMeta;
 
-  void workerExecutionMethodWasmRunModuleId(
-      {required WasmRunModuleId that,
-      required int workerIndex,
-      required List<WasmVal> results,
-      dynamic hint});
-
-  FlutterRustBridgeTaskConstMeta
-      get kWorkerExecutionMethodWasmRunModuleIdConstMeta;
-
-  FuncTy getFunctionTypeMethodWasmRunModuleId(
-      {required WasmRunModuleId that, required WFunc func, dynamic hint});
+  Stream<ParallelExec> callFunctionHandleParallelMethodWasmRunModuleId({
+    required WasmRunModuleId that,
+    required String funcName,
+    required List<WasmVal> args,
+    required int numTasks,
+    dynamic hint,
+  });
 
   FlutterRustBridgeTaskConstMeta
-      get kGetFunctionTypeMethodWasmRunModuleIdConstMeta;
+  get kCallFunctionHandleParallelMethodWasmRunModuleIdConstMeta;
 
-  WFunc createFunctionMethodWasmRunModuleId(
-      {required WasmRunModuleId that,
-      required int functionPointer,
-      required int functionId,
-      required List<ValueTy> paramTypes,
-      required List<ValueTy> resultTypes,
-      dynamic hint});
-
-  FlutterRustBridgeTaskConstMeta
-      get kCreateFunctionMethodWasmRunModuleIdConstMeta;
-
-  Memory createMemoryMethodWasmRunModuleId(
-      {required WasmRunModuleId that,
-      required MemoryTy memoryType,
-      dynamic hint});
+  void workerExecutionMethodWasmRunModuleId({
+    required WasmRunModuleId that,
+    required int workerIndex,
+    required List<WasmVal> results,
+    dynamic hint,
+  });
 
   FlutterRustBridgeTaskConstMeta
-      get kCreateMemoryMethodWasmRunModuleIdConstMeta;
+  get kWorkerExecutionMethodWasmRunModuleIdConstMeta;
 
-  Global createGlobalMethodWasmRunModuleId(
-      {required WasmRunModuleId that,
-      required WasmVal value,
-      required bool mutable,
-      dynamic hint});
+  FuncTy getFunctionTypeMethodWasmRunModuleId({
+    required WasmRunModuleId that,
+    required WFunc func,
+    dynamic hint,
+  });
 
   FlutterRustBridgeTaskConstMeta
-      get kCreateGlobalMethodWasmRunModuleIdConstMeta;
+  get kGetFunctionTypeMethodWasmRunModuleIdConstMeta;
 
-  Table createTableMethodWasmRunModuleId(
-      {required WasmRunModuleId that,
-      required WasmVal value,
-      required TableArgs tableType,
-      dynamic hint});
+  WFunc createFunctionMethodWasmRunModuleId({
+    required WasmRunModuleId that,
+    required int functionPointer,
+    required int functionId,
+    required List<ValueTy> paramTypes,
+    required List<ValueTy> resultTypes,
+    dynamic hint,
+  });
+
+  FlutterRustBridgeTaskConstMeta
+  get kCreateFunctionMethodWasmRunModuleIdConstMeta;
+
+  Memory createMemoryMethodWasmRunModuleId({
+    required WasmRunModuleId that,
+    required MemoryTy memoryType,
+    dynamic hint,
+  });
+
+  FlutterRustBridgeTaskConstMeta
+  get kCreateMemoryMethodWasmRunModuleIdConstMeta;
+
+  Global createGlobalMethodWasmRunModuleId({
+    required WasmRunModuleId that,
+    required WasmVal value,
+    required bool mutable,
+    dynamic hint,
+  });
+
+  FlutterRustBridgeTaskConstMeta
+  get kCreateGlobalMethodWasmRunModuleIdConstMeta;
+
+  Table createTableMethodWasmRunModuleId({
+    required WasmRunModuleId that,
+    required WasmVal value,
+    required TableArgs tableType,
+    dynamic hint,
+  });
 
   FlutterRustBridgeTaskConstMeta get kCreateTableMethodWasmRunModuleIdConstMeta;
 
-  GlobalTy getGlobalTypeMethodWasmRunModuleId(
-      {required WasmRunModuleId that, required Global global, dynamic hint});
+  GlobalTy getGlobalTypeMethodWasmRunModuleId({
+    required WasmRunModuleId that,
+    required Global global,
+    dynamic hint,
+  });
 
   FlutterRustBridgeTaskConstMeta
-      get kGetGlobalTypeMethodWasmRunModuleIdConstMeta;
+  get kGetGlobalTypeMethodWasmRunModuleIdConstMeta;
 
-  WasmVal getGlobalValueMethodWasmRunModuleId(
-      {required WasmRunModuleId that, required Global global, dynamic hint});
-
-  FlutterRustBridgeTaskConstMeta
-      get kGetGlobalValueMethodWasmRunModuleIdConstMeta;
-
-  void setGlobalValueMethodWasmRunModuleId(
-      {required WasmRunModuleId that,
-      required Global global,
-      required WasmVal value,
-      dynamic hint});
+  WasmVal getGlobalValueMethodWasmRunModuleId({
+    required WasmRunModuleId that,
+    required Global global,
+    dynamic hint,
+  });
 
   FlutterRustBridgeTaskConstMeta
-      get kSetGlobalValueMethodWasmRunModuleIdConstMeta;
+  get kGetGlobalValueMethodWasmRunModuleIdConstMeta;
 
-  MemoryTy getMemoryTypeMethodWasmRunModuleId(
-      {required WasmRunModuleId that, required Memory memory, dynamic hint});
-
-  FlutterRustBridgeTaskConstMeta
-      get kGetMemoryTypeMethodWasmRunModuleIdConstMeta;
-
-  Uint8List getMemoryDataMethodWasmRunModuleId(
-      {required WasmRunModuleId that, required Memory memory, dynamic hint});
+  void setGlobalValueMethodWasmRunModuleId({
+    required WasmRunModuleId that,
+    required Global global,
+    required WasmVal value,
+    dynamic hint,
+  });
 
   FlutterRustBridgeTaskConstMeta
-      get kGetMemoryDataMethodWasmRunModuleIdConstMeta;
+  get kSetGlobalValueMethodWasmRunModuleIdConstMeta;
 
-  int getMemoryDataPointerMethodWasmRunModuleId(
-      {required WasmRunModuleId that, required Memory memory, dynamic hint});
-
-  FlutterRustBridgeTaskConstMeta
-      get kGetMemoryDataPointerMethodWasmRunModuleIdConstMeta;
-
-  PointerAndLength getMemoryDataPointerAndLengthMethodWasmRunModuleId(
-      {required WasmRunModuleId that, required Memory memory, dynamic hint});
+  MemoryTy getMemoryTypeMethodWasmRunModuleId({
+    required WasmRunModuleId that,
+    required Memory memory,
+    dynamic hint,
+  });
 
   FlutterRustBridgeTaskConstMeta
-      get kGetMemoryDataPointerAndLengthMethodWasmRunModuleIdConstMeta;
+  get kGetMemoryTypeMethodWasmRunModuleIdConstMeta;
 
-  Uint8List readMemoryMethodWasmRunModuleId(
-      {required WasmRunModuleId that,
-      required Memory memory,
-      required int offset,
-      required int bytes,
-      dynamic hint});
+  Uint8List getMemoryDataMethodWasmRunModuleId({
+    required WasmRunModuleId that,
+    required Memory memory,
+    dynamic hint,
+  });
+
+  FlutterRustBridgeTaskConstMeta
+  get kGetMemoryDataMethodWasmRunModuleIdConstMeta;
+
+  int getMemoryDataPointerMethodWasmRunModuleId({
+    required WasmRunModuleId that,
+    required Memory memory,
+    dynamic hint,
+  });
+
+  FlutterRustBridgeTaskConstMeta
+  get kGetMemoryDataPointerMethodWasmRunModuleIdConstMeta;
+
+  PointerAndLength getMemoryDataPointerAndLengthMethodWasmRunModuleId({
+    required WasmRunModuleId that,
+    required Memory memory,
+    dynamic hint,
+  });
+
+  FlutterRustBridgeTaskConstMeta
+  get kGetMemoryDataPointerAndLengthMethodWasmRunModuleIdConstMeta;
+
+  Uint8List readMemoryMethodWasmRunModuleId({
+    required WasmRunModuleId that,
+    required Memory memory,
+    required int offset,
+    required int bytes,
+    dynamic hint,
+  });
 
   FlutterRustBridgeTaskConstMeta get kReadMemoryMethodWasmRunModuleIdConstMeta;
 
-  int getMemoryPagesMethodWasmRunModuleId(
-      {required WasmRunModuleId that, required Memory memory, dynamic hint});
+  int getMemoryPagesMethodWasmRunModuleId({
+    required WasmRunModuleId that,
+    required Memory memory,
+    dynamic hint,
+  });
 
   FlutterRustBridgeTaskConstMeta
-      get kGetMemoryPagesMethodWasmRunModuleIdConstMeta;
+  get kGetMemoryPagesMethodWasmRunModuleIdConstMeta;
 
-  void writeMemoryMethodWasmRunModuleId(
-      {required WasmRunModuleId that,
-      required Memory memory,
-      required int offset,
-      required Uint8List buffer,
-      dynamic hint});
+  void writeMemoryMethodWasmRunModuleId({
+    required WasmRunModuleId that,
+    required Memory memory,
+    required int offset,
+    required Uint8List buffer,
+    dynamic hint,
+  });
 
   FlutterRustBridgeTaskConstMeta get kWriteMemoryMethodWasmRunModuleIdConstMeta;
 
-  int growMemoryMethodWasmRunModuleId(
-      {required WasmRunModuleId that,
-      required Memory memory,
-      required int pages,
-      dynamic hint});
+  int growMemoryMethodWasmRunModuleId({
+    required WasmRunModuleId that,
+    required Memory memory,
+    required int pages,
+    dynamic hint,
+  });
 
   FlutterRustBridgeTaskConstMeta get kGrowMemoryMethodWasmRunModuleIdConstMeta;
 
-  int getTableSizeMethodWasmRunModuleId(
-      {required WasmRunModuleId that, required Table table, dynamic hint});
+  int getTableSizeMethodWasmRunModuleId({
+    required WasmRunModuleId that,
+    required Table table,
+    dynamic hint,
+  });
 
   FlutterRustBridgeTaskConstMeta
-      get kGetTableSizeMethodWasmRunModuleIdConstMeta;
+  get kGetTableSizeMethodWasmRunModuleIdConstMeta;
 
-  TableTy getTableTypeMethodWasmRunModuleId(
-      {required WasmRunModuleId that, required Table table, dynamic hint});
+  TableTy getTableTypeMethodWasmRunModuleId({
+    required WasmRunModuleId that,
+    required Table table,
+    dynamic hint,
+  });
 
   FlutterRustBridgeTaskConstMeta
-      get kGetTableTypeMethodWasmRunModuleIdConstMeta;
+  get kGetTableTypeMethodWasmRunModuleIdConstMeta;
 
-  int growTableMethodWasmRunModuleId(
-      {required WasmRunModuleId that,
-      required Table table,
-      required int delta,
-      required WasmVal value,
-      dynamic hint});
+  int growTableMethodWasmRunModuleId({
+    required WasmRunModuleId that,
+    required Table table,
+    required int delta,
+    required WasmVal value,
+    dynamic hint,
+  });
 
   FlutterRustBridgeTaskConstMeta get kGrowTableMethodWasmRunModuleIdConstMeta;
 
-  WasmVal? getTableMethodWasmRunModuleId(
-      {required WasmRunModuleId that,
-      required Table table,
-      required int index,
-      dynamic hint});
+  WasmVal? getTableMethodWasmRunModuleId({
+    required WasmRunModuleId that,
+    required Table table,
+    required int index,
+    dynamic hint,
+  });
 
   FlutterRustBridgeTaskConstMeta get kGetTableMethodWasmRunModuleIdConstMeta;
 
-  void setTableMethodWasmRunModuleId(
-      {required WasmRunModuleId that,
-      required Table table,
-      required int index,
-      required WasmVal value,
-      dynamic hint});
+  void setTableMethodWasmRunModuleId({
+    required WasmRunModuleId that,
+    required Table table,
+    required int index,
+    required WasmVal value,
+    dynamic hint,
+  });
 
   FlutterRustBridgeTaskConstMeta get kSetTableMethodWasmRunModuleIdConstMeta;
 
-  void fillTableMethodWasmRunModuleId(
-      {required WasmRunModuleId that,
-      required Table table,
-      required int index,
-      required WasmVal value,
-      required int len,
-      dynamic hint});
+  void fillTableMethodWasmRunModuleId({
+    required WasmRunModuleId that,
+    required Table table,
+    required int index,
+    required WasmVal value,
+    required int len,
+    dynamic hint,
+  });
 
   FlutterRustBridgeTaskConstMeta get kFillTableMethodWasmRunModuleIdConstMeta;
 
-  void addFuelMethodWasmRunModuleId(
-      {required WasmRunModuleId that, required int delta, dynamic hint});
+  void addFuelMethodWasmRunModuleId({
+    required WasmRunModuleId that,
+    required int delta,
+    dynamic hint,
+  });
 
   FlutterRustBridgeTaskConstMeta get kAddFuelMethodWasmRunModuleIdConstMeta;
 
-  int? fuelConsumedMethodWasmRunModuleId(
-      {required WasmRunModuleId that, dynamic hint});
+  int? fuelConsumedMethodWasmRunModuleId({
+    required WasmRunModuleId that,
+    dynamic hint,
+  });
 
   FlutterRustBridgeTaskConstMeta
-      get kFuelConsumedMethodWasmRunModuleIdConstMeta;
+  get kFuelConsumedMethodWasmRunModuleIdConstMeta;
 
-  int consumeFuelMethodWasmRunModuleId(
-      {required WasmRunModuleId that, required int delta, dynamic hint});
+  int consumeFuelMethodWasmRunModuleId({
+    required WasmRunModuleId that,
+    required int delta,
+    dynamic hint,
+  });
 
   FlutterRustBridgeTaskConstMeta get kConsumeFuelMethodWasmRunModuleIdConstMeta;
 
-  WasmRunSharedMemory createSharedMemoryMethodCompiledModule(
-      {required CompiledModule that,
-      required MemoryTy memoryType,
-      dynamic hint});
+  WasmRunSharedMemory createSharedMemoryMethodCompiledModule({
+    required CompiledModule that,
+    required MemoryTy memoryType,
+    dynamic hint,
+  });
 
   FlutterRustBridgeTaskConstMeta
-      get kCreateSharedMemoryMethodCompiledModuleConstMeta;
+  get kCreateSharedMemoryMethodCompiledModuleConstMeta;
 
-  List<ModuleImportDesc> getModuleImportsMethodCompiledModule(
-      {required CompiledModule that, dynamic hint});
-
-  FlutterRustBridgeTaskConstMeta
-      get kGetModuleImportsMethodCompiledModuleConstMeta;
-
-  List<ModuleExportDesc> getModuleExportsMethodCompiledModule(
-      {required CompiledModule that, dynamic hint});
+  List<ModuleImportDesc> getModuleImportsMethodCompiledModule({
+    required CompiledModule that,
+    dynamic hint,
+  });
 
   FlutterRustBridgeTaskConstMeta
-      get kGetModuleExportsMethodCompiledModuleConstMeta;
+  get kGetModuleImportsMethodCompiledModuleConstMeta;
 
-  MemoryTy tyMethodWasmRunSharedMemory(
-      {required WasmRunSharedMemory that, dynamic hint});
+  List<ModuleExportDesc> getModuleExportsMethodCompiledModule({
+    required CompiledModule that,
+    dynamic hint,
+  });
+
+  FlutterRustBridgeTaskConstMeta
+  get kGetModuleExportsMethodCompiledModuleConstMeta;
+
+  MemoryTy tyMethodWasmRunSharedMemory({
+    required WasmRunSharedMemory that,
+    dynamic hint,
+  });
 
   FlutterRustBridgeTaskConstMeta get kTyMethodWasmRunSharedMemoryConstMeta;
 
-  int sizeMethodWasmRunSharedMemory(
-      {required WasmRunSharedMemory that, dynamic hint});
+  int sizeMethodWasmRunSharedMemory({
+    required WasmRunSharedMemory that,
+    dynamic hint,
+  });
 
   FlutterRustBridgeTaskConstMeta get kSizeMethodWasmRunSharedMemoryConstMeta;
 
-  int dataSizeMethodWasmRunSharedMemory(
-      {required WasmRunSharedMemory that, dynamic hint});
+  int dataSizeMethodWasmRunSharedMemory({
+    required WasmRunSharedMemory that,
+    dynamic hint,
+  });
 
   FlutterRustBridgeTaskConstMeta
-      get kDataSizeMethodWasmRunSharedMemoryConstMeta;
+  get kDataSizeMethodWasmRunSharedMemoryConstMeta;
 
-  int dataPointerMethodWasmRunSharedMemory(
-      {required WasmRunSharedMemory that, dynamic hint});
+  int dataPointerMethodWasmRunSharedMemory({
+    required WasmRunSharedMemory that,
+    dynamic hint,
+  });
 
   FlutterRustBridgeTaskConstMeta
-      get kDataPointerMethodWasmRunSharedMemoryConstMeta;
+  get kDataPointerMethodWasmRunSharedMemoryConstMeta;
 
-  int growMethodWasmRunSharedMemory(
-      {required WasmRunSharedMemory that, required int delta, dynamic hint});
+  int growMethodWasmRunSharedMemory({
+    required WasmRunSharedMemory that,
+    required int delta,
+    dynamic hint,
+  });
 
   FlutterRustBridgeTaskConstMeta get kGrowMethodWasmRunSharedMemoryConstMeta;
 
-  Future<Atomics> atomicsMethodWasmRunSharedMemory(
-      {required WasmRunSharedMemory that, dynamic hint});
+  Future<Atomics> atomicsMethodWasmRunSharedMemory({
+    required WasmRunSharedMemory that,
+    dynamic hint,
+  });
 
   FlutterRustBridgeTaskConstMeta get kAtomicsMethodWasmRunSharedMemoryConstMeta;
 
-  int atomicNotifyMethodWasmRunSharedMemory(
-      {required WasmRunSharedMemory that,
-      required int addr,
-      required int count,
-      dynamic hint});
+  int atomicNotifyMethodWasmRunSharedMemory({
+    required WasmRunSharedMemory that,
+    required int addr,
+    required int count,
+    dynamic hint,
+  });
 
   FlutterRustBridgeTaskConstMeta
-      get kAtomicNotifyMethodWasmRunSharedMemoryConstMeta;
+  get kAtomicNotifyMethodWasmRunSharedMemoryConstMeta;
 
   /// Equivalent of the WebAssembly `memory.atomic.wait32` instruction for
   /// this shared memory.
@@ -402,14 +492,15 @@ abstract class WasmRunDart {
   ///
   /// This function will return an error if `addr` is not within bounds or
   /// not aligned to a 4-byte boundary.
-  SharedMemoryWaitResult atomicWait32MethodWasmRunSharedMemory(
-      {required WasmRunSharedMemory that,
-      required int addr,
-      required int expected,
-      dynamic hint});
+  SharedMemoryWaitResult atomicWait32MethodWasmRunSharedMemory({
+    required WasmRunSharedMemory that,
+    required int addr,
+    required int expected,
+    dynamic hint,
+  });
 
   FlutterRustBridgeTaskConstMeta
-      get kAtomicWait32MethodWasmRunSharedMemoryConstMeta;
+  get kAtomicWait32MethodWasmRunSharedMemoryConstMeta;
 
   /// Equivalent of the WebAssembly `memory.atomic.wait64` instruction for
   /// this shared memory.
@@ -420,112 +511,122 @@ abstract class WasmRunDart {
   ///
   /// Returns the same error as [`SharedMemory::atomic_wait32`] except that
   /// the specified address must be 8-byte aligned instead of 4-byte aligned.
-  SharedMemoryWaitResult atomicWait64MethodWasmRunSharedMemory(
-      {required WasmRunSharedMemory that,
-      required int addr,
-      required int expected,
-      dynamic hint});
+  SharedMemoryWaitResult atomicWait64MethodWasmRunSharedMemory({
+    required WasmRunSharedMemory that,
+    required int addr,
+    required int expected,
+    dynamic hint,
+  });
 
   FlutterRustBridgeTaskConstMeta
-      get kAtomicWait64MethodWasmRunSharedMemoryConstMeta;
+  get kAtomicWait64MethodWasmRunSharedMemoryConstMeta;
 
   /// Adds the provided value to the existing value at the specified index of the array. Returns the old value at that index.
-  Future<int> addMethodAtomics(
-      {required Atomics that,
-      required int offset,
-      required AtomicKind kind,
-      required int val,
-      required AtomicOrdering order,
-      dynamic hint});
+  Future<int> addMethodAtomics({
+    required Atomics that,
+    required int offset,
+    required AtomicKind kind,
+    required int val,
+    required AtomicOrdering order,
+    dynamic hint,
+  });
 
   FlutterRustBridgeTaskConstMeta get kAddMethodAtomicsConstMeta;
 
   /// Returns the value at the specified index of the array.
-  Future<int> loadMethodAtomics(
-      {required Atomics that,
-      required int offset,
-      required AtomicKind kind,
-      required AtomicOrdering order,
-      dynamic hint});
+  Future<int> loadMethodAtomics({
+    required Atomics that,
+    required int offset,
+    required AtomicKind kind,
+    required AtomicOrdering order,
+    dynamic hint,
+  });
 
   FlutterRustBridgeTaskConstMeta get kLoadMethodAtomicsConstMeta;
 
   /// Stores a value at the specified index of the array. Returns the value.
-  Future<void> storeMethodAtomics(
-      {required Atomics that,
-      required int offset,
-      required AtomicKind kind,
-      required int val,
-      required AtomicOrdering order,
-      dynamic hint});
+  Future<void> storeMethodAtomics({
+    required Atomics that,
+    required int offset,
+    required AtomicKind kind,
+    required int val,
+    required AtomicOrdering order,
+    dynamic hint,
+  });
 
   FlutterRustBridgeTaskConstMeta get kStoreMethodAtomicsConstMeta;
 
   /// Stores a value at the specified index of the array. Returns the old value.
-  Future<int> swapMethodAtomics(
-      {required Atomics that,
-      required int offset,
-      required AtomicKind kind,
-      required int val,
-      required AtomicOrdering order,
-      dynamic hint});
+  Future<int> swapMethodAtomics({
+    required Atomics that,
+    required int offset,
+    required AtomicKind kind,
+    required int val,
+    required AtomicOrdering order,
+    dynamic hint,
+  });
 
   FlutterRustBridgeTaskConstMeta get kSwapMethodAtomicsConstMeta;
 
   /// Stores a value at the specified index of the array, if it equals a value. Returns the old value.
-  Future<CompareExchangeResult> compareExchangeMethodAtomics(
-      {required Atomics that,
-      required int offset,
-      required AtomicKind kind,
-      required int current,
-      required int newValue,
-      required AtomicOrdering success,
-      required AtomicOrdering failure,
-      dynamic hint});
+  Future<CompareExchangeResult> compareExchangeMethodAtomics({
+    required Atomics that,
+    required int offset,
+    required AtomicKind kind,
+    required int current,
+    required int newValue,
+    required AtomicOrdering success,
+    required AtomicOrdering failure,
+    dynamic hint,
+  });
 
   FlutterRustBridgeTaskConstMeta get kCompareExchangeMethodAtomicsConstMeta;
 
   /// Subtracts a value at the specified index of the array. Returns the old value at that index.
-  Future<int> subMethodAtomics(
-      {required Atomics that,
-      required int offset,
-      required AtomicKind kind,
-      required int val,
-      required AtomicOrdering order,
-      dynamic hint});
+  Future<int> subMethodAtomics({
+    required Atomics that,
+    required int offset,
+    required AtomicKind kind,
+    required int val,
+    required AtomicOrdering order,
+    dynamic hint,
+  });
 
   FlutterRustBridgeTaskConstMeta get kSubMethodAtomicsConstMeta;
 
   /// Computes a bitwise AND on the value at the specified index of the array with the provided value. Returns the old value at that index.
-  Future<int> andMethodAtomics(
-      {required Atomics that,
-      required int offset,
-      required AtomicKind kind,
-      required int val,
-      required AtomicOrdering order,
-      dynamic hint});
+  Future<int> andMethodAtomics({
+    required Atomics that,
+    required int offset,
+    required AtomicKind kind,
+    required int val,
+    required AtomicOrdering order,
+    dynamic hint,
+  });
 
   FlutterRustBridgeTaskConstMeta get kAndMethodAtomicsConstMeta;
 
   /// Computes a bitwise OR on the value at the specified index of the array with the provided value. Returns the old value at that index.
-  Future<int> orMethodAtomics(
-      {required Atomics that,
-      required int offset,
-      required AtomicKind kind,
-      required int val,
-      required AtomicOrdering order,
-      dynamic hint});
+  Future<int> orMethodAtomics({
+    required Atomics that,
+    required int offset,
+    required AtomicKind kind,
+    required int val,
+    required AtomicOrdering order,
+    dynamic hint,
+  });
 
   FlutterRustBridgeTaskConstMeta get kOrMethodAtomicsConstMeta;
 
   /// Computes a bitwise XOR on the value at the specified index of the array with the provided value. Returns the old value at that index.
-  Future<int> xorMethodAtomics(
-      {required Atomics that,
-      required int offset,
-      required AtomicKind kind,
-      required int val,
-      required AtomicOrdering order,
-      dynamic hint});
+  Future<int> xorMethodAtomics({
+    required Atomics that,
+    required int offset,
+    required AtomicKind kind,
+    required int val,
+    required AtomicOrdering order,
+    dynamic hint,
+  });
 
   FlutterRustBridgeTaskConstMeta get kXorMethodAtomicsConstMeta;
 
@@ -562,7 +663,7 @@ abstract class WasmRunDart {
 class ArcRwLockSharedMemory extends FrbOpaque {
   final WasmRunDart bridge;
   ArcRwLockSharedMemory.fromRaw(int ptr, int size, this.bridge)
-      : super.unsafe(ptr, size);
+    : super.unsafe(ptr, size);
   @override
   DropFnType get dropFn => bridge.dropOpaqueArcRwLockSharedMemory;
 
@@ -578,7 +679,7 @@ class ArcRwLockSharedMemory extends FrbOpaque {
 class ArcStdSyncMutexModule extends FrbOpaque {
   final WasmRunDart bridge;
   ArcStdSyncMutexModule.fromRaw(int ptr, int size, this.bridge)
-      : super.unsafe(ptr, size);
+    : super.unsafe(ptr, size);
   @override
   DropFnType get dropFn => bridge.dropOpaqueArcStdSyncMutexModule;
 
@@ -660,207 +761,180 @@ class WFunc extends FrbOpaque {
   OpaqueTypeFinalizer get staticFinalizer => bridge.WFuncFinalizer;
 }
 
-enum AtomicKind {
-  I8,
-  I16,
-  I32,
-  I64,
-  U8,
-  U16,
-  U32,
-  U64,
-}
+enum AtomicKind { I8, I16, I32, I64, U8, U16, U32, U64 }
 
-enum AtomicOrdering {
-  Relaxed,
-  Release,
-  Acquire,
-  AcqRel,
-  SeqCst,
-}
+enum AtomicOrdering { Relaxed, Release, Acquire, AcqRel, SeqCst }
 
 class Atomics {
   final WasmRunDart bridge;
   final int field0;
 
-  const Atomics({
-    required this.bridge,
-    required this.field0,
-  });
+  const Atomics({required this.bridge, required this.field0});
 
   /// Adds the provided value to the existing value at the specified index of the array. Returns the old value at that index.
-  Future<int> add(
-          {required int offset,
-          required AtomicKind kind,
-          required int val,
-          required AtomicOrdering order,
-          dynamic hint}) =>
-      bridge.addMethodAtomics(
-        that: this,
-        offset: offset,
-        kind: kind,
-        val: val,
-        order: order,
-      );
+  Future<int> add({
+    required int offset,
+    required AtomicKind kind,
+    required int val,
+    required AtomicOrdering order,
+    dynamic hint,
+  }) => bridge.addMethodAtomics(
+    that: this,
+    offset: offset,
+    kind: kind,
+    val: val,
+    order: order,
+  );
 
   /// Returns the value at the specified index of the array.
-  Future<int> load(
-          {required int offset,
-          required AtomicKind kind,
-          required AtomicOrdering order,
-          dynamic hint}) =>
-      bridge.loadMethodAtomics(
-        that: this,
-        offset: offset,
-        kind: kind,
-        order: order,
-      );
+  Future<int> load({
+    required int offset,
+    required AtomicKind kind,
+    required AtomicOrdering order,
+    dynamic hint,
+  }) => bridge.loadMethodAtomics(
+    that: this,
+    offset: offset,
+    kind: kind,
+    order: order,
+  );
 
   /// Stores a value at the specified index of the array. Returns the value.
-  Future<void> store(
-          {required int offset,
-          required AtomicKind kind,
-          required int val,
-          required AtomicOrdering order,
-          dynamic hint}) =>
-      bridge.storeMethodAtomics(
-        that: this,
-        offset: offset,
-        kind: kind,
-        val: val,
-        order: order,
-      );
+  Future<void> store({
+    required int offset,
+    required AtomicKind kind,
+    required int val,
+    required AtomicOrdering order,
+    dynamic hint,
+  }) => bridge.storeMethodAtomics(
+    that: this,
+    offset: offset,
+    kind: kind,
+    val: val,
+    order: order,
+  );
 
   /// Stores a value at the specified index of the array. Returns the old value.
-  Future<int> swap(
-          {required int offset,
-          required AtomicKind kind,
-          required int val,
-          required AtomicOrdering order,
-          dynamic hint}) =>
-      bridge.swapMethodAtomics(
-        that: this,
-        offset: offset,
-        kind: kind,
-        val: val,
-        order: order,
-      );
+  Future<int> swap({
+    required int offset,
+    required AtomicKind kind,
+    required int val,
+    required AtomicOrdering order,
+    dynamic hint,
+  }) => bridge.swapMethodAtomics(
+    that: this,
+    offset: offset,
+    kind: kind,
+    val: val,
+    order: order,
+  );
 
   /// Stores a value at the specified index of the array, if it equals a value. Returns the old value.
-  Future<CompareExchangeResult> compareExchange(
-          {required int offset,
-          required AtomicKind kind,
-          required int current,
-          required int newValue,
-          required AtomicOrdering success,
-          required AtomicOrdering failure,
-          dynamic hint}) =>
-      bridge.compareExchangeMethodAtomics(
-        that: this,
-        offset: offset,
-        kind: kind,
-        current: current,
-        newValue: newValue,
-        success: success,
-        failure: failure,
-      );
+  Future<CompareExchangeResult> compareExchange({
+    required int offset,
+    required AtomicKind kind,
+    required int current,
+    required int newValue,
+    required AtomicOrdering success,
+    required AtomicOrdering failure,
+    dynamic hint,
+  }) => bridge.compareExchangeMethodAtomics(
+    that: this,
+    offset: offset,
+    kind: kind,
+    current: current,
+    newValue: newValue,
+    success: success,
+    failure: failure,
+  );
 
   /// Subtracts a value at the specified index of the array. Returns the old value at that index.
-  Future<int> sub(
-          {required int offset,
-          required AtomicKind kind,
-          required int val,
-          required AtomicOrdering order,
-          dynamic hint}) =>
-      bridge.subMethodAtomics(
-        that: this,
-        offset: offset,
-        kind: kind,
-        val: val,
-        order: order,
-      );
+  Future<int> sub({
+    required int offset,
+    required AtomicKind kind,
+    required int val,
+    required AtomicOrdering order,
+    dynamic hint,
+  }) => bridge.subMethodAtomics(
+    that: this,
+    offset: offset,
+    kind: kind,
+    val: val,
+    order: order,
+  );
 
   /// Computes a bitwise AND on the value at the specified index of the array with the provided value. Returns the old value at that index.
-  Future<int> and(
-          {required int offset,
-          required AtomicKind kind,
-          required int val,
-          required AtomicOrdering order,
-          dynamic hint}) =>
-      bridge.andMethodAtomics(
-        that: this,
-        offset: offset,
-        kind: kind,
-        val: val,
-        order: order,
-      );
+  Future<int> and({
+    required int offset,
+    required AtomicKind kind,
+    required int val,
+    required AtomicOrdering order,
+    dynamic hint,
+  }) => bridge.andMethodAtomics(
+    that: this,
+    offset: offset,
+    kind: kind,
+    val: val,
+    order: order,
+  );
 
   /// Computes a bitwise OR on the value at the specified index of the array with the provided value. Returns the old value at that index.
-  Future<int> or(
-          {required int offset,
-          required AtomicKind kind,
-          required int val,
-          required AtomicOrdering order,
-          dynamic hint}) =>
-      bridge.orMethodAtomics(
-        that: this,
-        offset: offset,
-        kind: kind,
-        val: val,
-        order: order,
-      );
+  Future<int> or({
+    required int offset,
+    required AtomicKind kind,
+    required int val,
+    required AtomicOrdering order,
+    dynamic hint,
+  }) => bridge.orMethodAtomics(
+    that: this,
+    offset: offset,
+    kind: kind,
+    val: val,
+    order: order,
+  );
 
   /// Computes a bitwise XOR on the value at the specified index of the array with the provided value. Returns the old value at that index.
-  Future<int> xor(
-          {required int offset,
-          required AtomicKind kind,
-          required int val,
-          required AtomicOrdering order,
-          dynamic hint}) =>
-      bridge.xorMethodAtomics(
-        that: this,
-        offset: offset,
-        kind: kind,
-        val: val,
-        order: order,
-      );
+  Future<int> xor({
+    required int offset,
+    required AtomicKind kind,
+    required int val,
+    required AtomicOrdering order,
+    dynamic hint,
+  }) => bridge.xorMethodAtomics(
+    that: this,
+    offset: offset,
+    kind: kind,
+    val: val,
+    order: order,
+  );
 }
 
 class CompareExchangeResult {
   final bool success;
   final int value;
 
-  const CompareExchangeResult({
-    required this.success,
-    required this.value,
-  });
+  const CompareExchangeResult({required this.success, required this.value});
 }
 
 class CompiledModule {
   final WasmRunDart bridge;
   final ArcStdSyncMutexModule field0;
 
-  const CompiledModule({
-    required this.bridge,
-    required this.field0,
-  });
+  const CompiledModule({required this.bridge, required this.field0});
 
-  WasmRunSharedMemory createSharedMemory(
-          {required MemoryTy memoryType, dynamic hint}) =>
-      bridge.createSharedMemoryMethodCompiledModule(
-        that: this,
-        memoryType: memoryType,
-      );
+  WasmRunSharedMemory createSharedMemory({
+    required MemoryTy memoryType,
+    dynamic hint,
+  }) => bridge.createSharedMemoryMethodCompiledModule(
+    that: this,
+    memoryType: memoryType,
+  );
 
   List<ModuleImportDesc> getModuleImports({dynamic hint}) =>
-      bridge.getModuleImportsMethodCompiledModule(
-        that: this,
-      );
+      bridge.getModuleImportsMethodCompiledModule(that: this);
 
   List<ModuleExportDesc> getModuleExports({dynamic hint}) =>
-      bridge.getModuleExportsMethodCompiledModule(
-        that: this,
-      );
+      bridge.getModuleExportsMethodCompiledModule(that: this);
 }
 
 class EnvVariable {
@@ -870,52 +944,32 @@ class EnvVariable {
   /// The value of the environment variable
   final String value;
 
-  const EnvVariable({
-    required this.name,
-    required this.value,
-  });
+  const EnvVariable({required this.name, required this.value});
 }
 
 @freezed
 class ExternalType with _$ExternalType {
   /// A [FuncTy].
-  const factory ExternalType.func(
-    FuncTy field0,
-  ) = ExternalType_Func;
+  const factory ExternalType.func(FuncTy field0) = ExternalType_Func;
 
   /// A [GlobalTy].
-  const factory ExternalType.global(
-    GlobalTy field0,
-  ) = ExternalType_Global;
+  const factory ExternalType.global(GlobalTy field0) = ExternalType_Global;
 
   /// A [TableTy].
-  const factory ExternalType.table(
-    TableTy field0,
-  ) = ExternalType_Table;
+  const factory ExternalType.table(TableTy field0) = ExternalType_Table;
 
   /// A [MemoryTy].
-  const factory ExternalType.memory(
-    MemoryTy field0,
-  ) = ExternalType_Memory;
+  const factory ExternalType.memory(MemoryTy field0) = ExternalType_Memory;
 }
 
 @freezed
 class ExternalValue with _$ExternalValue {
-  const factory ExternalValue.func(
-    WFunc field0,
-  ) = ExternalValue_Func;
-  const factory ExternalValue.global(
-    Global field0,
-  ) = ExternalValue_Global;
-  const factory ExternalValue.table(
-    Table field0,
-  ) = ExternalValue_Table;
-  const factory ExternalValue.memory(
-    Memory field0,
-  ) = ExternalValue_Memory;
-  const factory ExternalValue.sharedMemory(
-    WasmRunSharedMemory field0,
-  ) = ExternalValue_SharedMemory;
+  const factory ExternalValue.func(WFunc field0) = ExternalValue_Func;
+  const factory ExternalValue.global(Global field0) = ExternalValue_Global;
+  const factory ExternalValue.table(Table field0) = ExternalValue_Table;
+  const factory ExternalValue.memory(Memory field0) = ExternalValue_Memory;
+  const factory ExternalValue.sharedMemory(WasmRunSharedMemory field0) =
+      ExternalValue_SharedMemory;
 }
 
 class FuncTy {
@@ -925,10 +979,7 @@ class FuncTy {
   /// The ordered and merged parameter and result types of the function type.]
   final List<ValueTy> results;
 
-  const FuncTy({
-    required this.parameters,
-    required this.results,
-  });
+  const FuncTy({required this.parameters, required this.results});
 }
 
 class FunctionCall {
@@ -954,10 +1005,7 @@ class GlobalTy {
   /// The mutability of the global variable.
   final bool mutable;
 
-  const GlobalTy({
-    required this.value,
-    required this.mutable,
-  });
+  const GlobalTy({required this.value, required this.mutable});
 }
 
 class MemoryTy {
@@ -970,11 +1018,7 @@ class MemoryTy {
   /// The maximum number of pages this memory can have.
   final int? maximum;
 
-  const MemoryTy({
-    required this.shared,
-    required this.minimum,
-    this.maximum,
-  });
+  const MemoryTy({required this.shared, required this.minimum, this.maximum});
 }
 
 class ModuleConfig {
@@ -1103,20 +1147,14 @@ class ModuleExportDesc {
   final String name;
   final ExternalType ty;
 
-  const ModuleExportDesc({
-    required this.name,
-    required this.ty,
-  });
+  const ModuleExportDesc({required this.name, required this.ty});
 }
 
 class ModuleExportValue {
   final ModuleExportDesc desc;
   final ExternalValue value;
 
-  const ModuleExportValue({
-    required this.desc,
-    required this.value,
-  });
+  const ModuleExportValue({required this.desc, required this.value});
 }
 
 class ModuleImport {
@@ -1145,25 +1183,16 @@ class ModuleImportDesc {
 
 @freezed
 class ParallelExec with _$ParallelExec {
-  const factory ParallelExec.ok(
-    List<WasmVal> field0,
-  ) = ParallelExec_Ok;
-  const factory ParallelExec.err(
-    String field0,
-  ) = ParallelExec_Err;
-  const factory ParallelExec.call(
-    FunctionCall field0,
-  ) = ParallelExec_Call;
+  const factory ParallelExec.ok(List<WasmVal> field0) = ParallelExec_Ok;
+  const factory ParallelExec.err(String field0) = ParallelExec_Err;
+  const factory ParallelExec.call(FunctionCall field0) = ParallelExec_Call;
 }
 
 class PointerAndLength {
   final int pointer;
   final int length;
 
-  const PointerAndLength({
-    required this.pointer,
-    required this.length,
-  });
+  const PointerAndLength({required this.pointer, required this.length});
 }
 
 /// A preopened directory that the WASM module will be able to access
@@ -1176,10 +1205,7 @@ class PreopenedDir {
   /// and corresponds to the [wasm_guest_path]
   final String hostPath;
 
-  const PreopenedDir({
-    required this.wasmGuestPath,
-    required this.hostPath,
-  });
+  const PreopenedDir({required this.wasmGuestPath, required this.hostPath});
 }
 
 /// Result of [SharedMemory.atomicWait32] and [SharedMemory.atomicWait64]
@@ -1197,10 +1223,7 @@ enum SharedMemoryWaitResult {
   timedOut,
 }
 
-enum StdIOKind {
-  stdout,
-  stderr,
-}
+enum StdIOKind { stdout, stderr }
 
 class TableArgs {
   /// The minimum number of elements the [`Table`] must have.
@@ -1211,10 +1234,7 @@ class TableArgs {
   /// If this is `None` then the [`Table`] is not limited in size.
   final int? maximum;
 
-  const TableArgs({
-    required this.minimum,
-    this.maximum,
-  });
+  const TableArgs({required this.minimum, this.maximum});
 }
 
 class TableTy {
@@ -1229,18 +1249,12 @@ class TableTy {
   /// If this is `None` then the [WasmTable] is not limited in size.
   final int? maximum;
 
-  const TableTy({
-    required this.element,
-    required this.minimum,
-    this.maximum,
-  });
+  const TableTy({required this.element, required this.minimum, this.maximum});
 }
 
 class U8Array16 extends NonGrowableListView<int> {
   static const arraySize = 16;
-  U8Array16(Uint8List inner)
-      : assert(inner.length == arraySize),
-        super(inner);
+  U8Array16(Uint8List inner) : assert(inner.length == arraySize), super(inner);
   U8Array16.unchecked(Uint8List inner) : super(inner);
   U8Array16.init() : super(Uint8List(arraySize));
 }
@@ -1433,15 +1447,10 @@ class WasmRunInstanceId {
   final WasmRunDart bridge;
   final int field0;
 
-  const WasmRunInstanceId({
-    required this.bridge,
-    required this.field0,
-  });
+  const WasmRunInstanceId({required this.bridge, required this.field0});
 
   List<ModuleExportValue> exports({dynamic hint}) =>
-      bridge.exportsMethodWasmRunInstanceId(
-        that: this,
-      );
+      bridge.exportsMethodWasmRunInstanceId(that: this);
 }
 
 class WasmRunModuleId {
@@ -1456,187 +1465,161 @@ class WasmRunModuleId {
   });
 
   WasmRunInstanceId instantiateSync({dynamic hint}) =>
-      bridge.instantiateSyncMethodWasmRunModuleId(
-        that: this,
-      );
+      bridge.instantiateSyncMethodWasmRunModuleId(that: this);
 
   Future<WasmRunInstanceId> instantiate({dynamic hint}) =>
-      bridge.instantiateMethodWasmRunModuleId(
-        that: this,
-      );
+      bridge.instantiateMethodWasmRunModuleId(that: this);
 
   void linkImports({required List<ModuleImport> imports, dynamic hint}) =>
-      bridge.linkImportsMethodWasmRunModuleId(
-        that: this,
-        imports: imports,
-      );
+      bridge.linkImportsMethodWasmRunModuleId(that: this, imports: imports);
 
   Stream<Uint8List> stdioStream({required StdIOKind kind, dynamic hint}) =>
-      bridge.stdioStreamMethodWasmRunModuleId(
-        that: this,
-        kind: kind,
-      );
+      bridge.stdioStreamMethodWasmRunModuleId(that: this, kind: kind);
 
-  Future<void> dispose({dynamic hint}) => bridge.disposeMethodWasmRunModuleId(
-        that: this,
-      );
+  Future<void> dispose({dynamic hint}) =>
+      bridge.disposeMethodWasmRunModuleId(that: this);
 
-  List<WasmVal> callFunctionHandleSync(
-          {required WFunc func, required List<WasmVal> args, dynamic hint}) =>
-      bridge.callFunctionHandleSyncMethodWasmRunModuleId(
-        that: this,
-        func: func,
-        args: args,
-      );
+  List<WasmVal> callFunctionHandleSync({
+    required WFunc func,
+    required List<WasmVal> args,
+    dynamic hint,
+  }) => bridge.callFunctionHandleSyncMethodWasmRunModuleId(
+    that: this,
+    func: func,
+    args: args,
+  );
 
-  Future<List<WasmVal>> callFunctionHandle(
-          {required WFunc func, required List<WasmVal> args, dynamic hint}) =>
-      bridge.callFunctionHandleMethodWasmRunModuleId(
-        that: this,
-        func: func,
-        args: args,
-      );
+  Future<List<WasmVal>> callFunctionHandle({
+    required WFunc func,
+    required List<WasmVal> args,
+    dynamic hint,
+  }) => bridge.callFunctionHandleMethodWasmRunModuleId(
+    that: this,
+    func: func,
+    args: args,
+  );
 
-  Stream<ParallelExec> callFunctionHandleParallel(
-          {required String funcName,
-          required List<WasmVal> args,
-          required int numTasks,
-          dynamic hint}) =>
-      bridge.callFunctionHandleParallelMethodWasmRunModuleId(
-        that: this,
-        funcName: funcName,
-        args: args,
-        numTasks: numTasks,
-      );
+  Stream<ParallelExec> callFunctionHandleParallel({
+    required String funcName,
+    required List<WasmVal> args,
+    required int numTasks,
+    dynamic hint,
+  }) => bridge.callFunctionHandleParallelMethodWasmRunModuleId(
+    that: this,
+    funcName: funcName,
+    args: args,
+    numTasks: numTasks,
+  );
 
-  void workerExecution(
-          {required int workerIndex,
-          required List<WasmVal> results,
-          dynamic hint}) =>
-      bridge.workerExecutionMethodWasmRunModuleId(
-        that: this,
-        workerIndex: workerIndex,
-        results: results,
-      );
+  void workerExecution({
+    required int workerIndex,
+    required List<WasmVal> results,
+    dynamic hint,
+  }) => bridge.workerExecutionMethodWasmRunModuleId(
+    that: this,
+    workerIndex: workerIndex,
+    results: results,
+  );
 
   FuncTy getFunctionType({required WFunc func, dynamic hint}) =>
-      bridge.getFunctionTypeMethodWasmRunModuleId(
-        that: this,
-        func: func,
-      );
+      bridge.getFunctionTypeMethodWasmRunModuleId(that: this, func: func);
 
-  WFunc createFunction(
-          {required int functionPointer,
-          required int functionId,
-          required List<ValueTy> paramTypes,
-          required List<ValueTy> resultTypes,
-          dynamic hint}) =>
-      bridge.createFunctionMethodWasmRunModuleId(
-        that: this,
-        functionPointer: functionPointer,
-        functionId: functionId,
-        paramTypes: paramTypes,
-        resultTypes: resultTypes,
-      );
+  WFunc createFunction({
+    required int functionPointer,
+    required int functionId,
+    required List<ValueTy> paramTypes,
+    required List<ValueTy> resultTypes,
+    dynamic hint,
+  }) => bridge.createFunctionMethodWasmRunModuleId(
+    that: this,
+    functionPointer: functionPointer,
+    functionId: functionId,
+    paramTypes: paramTypes,
+    resultTypes: resultTypes,
+  );
 
-  Memory createMemory({required MemoryTy memoryType, dynamic hint}) =>
-      bridge.createMemoryMethodWasmRunModuleId(
-        that: this,
-        memoryType: memoryType,
-      );
+  Memory createMemory({required MemoryTy memoryType, dynamic hint}) => bridge
+      .createMemoryMethodWasmRunModuleId(that: this, memoryType: memoryType);
 
-  Global createGlobal(
-          {required WasmVal value, required bool mutable, dynamic hint}) =>
-      bridge.createGlobalMethodWasmRunModuleId(
-        that: this,
-        value: value,
-        mutable: mutable,
-      );
+  Global createGlobal({
+    required WasmVal value,
+    required bool mutable,
+    dynamic hint,
+  }) => bridge.createGlobalMethodWasmRunModuleId(
+    that: this,
+    value: value,
+    mutable: mutable,
+  );
 
-  Table createTable(
-          {required WasmVal value,
-          required TableArgs tableType,
-          dynamic hint}) =>
-      bridge.createTableMethodWasmRunModuleId(
-        that: this,
-        value: value,
-        tableType: tableType,
-      );
+  Table createTable({
+    required WasmVal value,
+    required TableArgs tableType,
+    dynamic hint,
+  }) => bridge.createTableMethodWasmRunModuleId(
+    that: this,
+    value: value,
+    tableType: tableType,
+  );
 
   GlobalTy getGlobalType({required Global global, dynamic hint}) =>
-      bridge.getGlobalTypeMethodWasmRunModuleId(
-        that: this,
-        global: global,
-      );
+      bridge.getGlobalTypeMethodWasmRunModuleId(that: this, global: global);
 
   WasmVal getGlobalValue({required Global global, dynamic hint}) =>
-      bridge.getGlobalValueMethodWasmRunModuleId(
-        that: this,
-        global: global,
-      );
+      bridge.getGlobalValueMethodWasmRunModuleId(that: this, global: global);
 
-  void setGlobalValue(
-          {required Global global, required WasmVal value, dynamic hint}) =>
-      bridge.setGlobalValueMethodWasmRunModuleId(
-        that: this,
-        global: global,
-        value: value,
-      );
+  void setGlobalValue({
+    required Global global,
+    required WasmVal value,
+    dynamic hint,
+  }) => bridge.setGlobalValueMethodWasmRunModuleId(
+    that: this,
+    global: global,
+    value: value,
+  );
 
   MemoryTy getMemoryType({required Memory memory, dynamic hint}) =>
-      bridge.getMemoryTypeMethodWasmRunModuleId(
-        that: this,
-        memory: memory,
-      );
+      bridge.getMemoryTypeMethodWasmRunModuleId(that: this, memory: memory);
 
   Uint8List getMemoryData({required Memory memory, dynamic hint}) =>
-      bridge.getMemoryDataMethodWasmRunModuleId(
-        that: this,
-        memory: memory,
-      );
+      bridge.getMemoryDataMethodWasmRunModuleId(that: this, memory: memory);
 
-  int getMemoryDataPointer({required Memory memory, dynamic hint}) =>
-      bridge.getMemoryDataPointerMethodWasmRunModuleId(
-        that: this,
-        memory: memory,
-      );
+  int getMemoryDataPointer({required Memory memory, dynamic hint}) => bridge
+      .getMemoryDataPointerMethodWasmRunModuleId(that: this, memory: memory);
 
-  PointerAndLength getMemoryDataPointerAndLength(
-          {required Memory memory, dynamic hint}) =>
-      bridge.getMemoryDataPointerAndLengthMethodWasmRunModuleId(
-        that: this,
-        memory: memory,
-      );
+  PointerAndLength getMemoryDataPointerAndLength({
+    required Memory memory,
+    dynamic hint,
+  }) => bridge.getMemoryDataPointerAndLengthMethodWasmRunModuleId(
+    that: this,
+    memory: memory,
+  );
 
-  Uint8List readMemory(
-          {required Memory memory,
-          required int offset,
-          required int bytes,
-          dynamic hint}) =>
-      bridge.readMemoryMethodWasmRunModuleId(
-        that: this,
-        memory: memory,
-        offset: offset,
-        bytes: bytes,
-      );
+  Uint8List readMemory({
+    required Memory memory,
+    required int offset,
+    required int bytes,
+    dynamic hint,
+  }) => bridge.readMemoryMethodWasmRunModuleId(
+    that: this,
+    memory: memory,
+    offset: offset,
+    bytes: bytes,
+  );
 
   int getMemoryPages({required Memory memory, dynamic hint}) =>
-      bridge.getMemoryPagesMethodWasmRunModuleId(
-        that: this,
-        memory: memory,
-      );
+      bridge.getMemoryPagesMethodWasmRunModuleId(that: this, memory: memory);
 
-  void writeMemory(
-          {required Memory memory,
-          required int offset,
-          required Uint8List buffer,
-          dynamic hint}) =>
-      bridge.writeMemoryMethodWasmRunModuleId(
-        that: this,
-        memory: memory,
-        offset: offset,
-        buffer: buffer,
-      );
+  void writeMemory({
+    required Memory memory,
+    required int offset,
+    required Uint8List buffer,
+    dynamic hint,
+  }) => bridge.writeMemoryMethodWasmRunModuleId(
+    that: this,
+    memory: memory,
+    offset: offset,
+    buffer: buffer,
+  );
 
   int growMemory({required Memory memory, required int pages, dynamic hint}) =>
       bridge.growMemoryMethodWasmRunModuleId(
@@ -1646,28 +1629,22 @@ class WasmRunModuleId {
       );
 
   int getTableSize({required Table table, dynamic hint}) =>
-      bridge.getTableSizeMethodWasmRunModuleId(
-        that: this,
-        table: table,
-      );
+      bridge.getTableSizeMethodWasmRunModuleId(that: this, table: table);
 
   TableTy getTableType({required Table table, dynamic hint}) =>
-      bridge.getTableTypeMethodWasmRunModuleId(
-        that: this,
-        table: table,
-      );
+      bridge.getTableTypeMethodWasmRunModuleId(that: this, table: table);
 
-  int growTable(
-          {required Table table,
-          required int delta,
-          required WasmVal value,
-          dynamic hint}) =>
-      bridge.growTableMethodWasmRunModuleId(
-        that: this,
-        table: table,
-        delta: delta,
-        value: value,
-      );
+  int growTable({
+    required Table table,
+    required int delta,
+    required WasmVal value,
+    dynamic hint,
+  }) => bridge.growTableMethodWasmRunModuleId(
+    that: this,
+    table: table,
+    delta: delta,
+    value: value,
+  );
 
   WasmVal? getTable({required Table table, required int index, dynamic hint}) =>
       bridge.getTableMethodWasmRunModuleId(
@@ -1676,85 +1653,63 @@ class WasmRunModuleId {
         index: index,
       );
 
-  void setTable(
-          {required Table table,
-          required int index,
-          required WasmVal value,
-          dynamic hint}) =>
-      bridge.setTableMethodWasmRunModuleId(
-        that: this,
-        table: table,
-        index: index,
-        value: value,
-      );
+  void setTable({
+    required Table table,
+    required int index,
+    required WasmVal value,
+    dynamic hint,
+  }) => bridge.setTableMethodWasmRunModuleId(
+    that: this,
+    table: table,
+    index: index,
+    value: value,
+  );
 
-  void fillTable(
-          {required Table table,
-          required int index,
-          required WasmVal value,
-          required int len,
-          dynamic hint}) =>
-      bridge.fillTableMethodWasmRunModuleId(
-        that: this,
-        table: table,
-        index: index,
-        value: value,
-        len: len,
-      );
+  void fillTable({
+    required Table table,
+    required int index,
+    required WasmVal value,
+    required int len,
+    dynamic hint,
+  }) => bridge.fillTableMethodWasmRunModuleId(
+    that: this,
+    table: table,
+    index: index,
+    value: value,
+    len: len,
+  );
 
   void addFuel({required int delta, dynamic hint}) =>
-      bridge.addFuelMethodWasmRunModuleId(
-        that: this,
-        delta: delta,
-      );
+      bridge.addFuelMethodWasmRunModuleId(that: this, delta: delta);
 
-  int? fuelConsumed({dynamic hint}) => bridge.fuelConsumedMethodWasmRunModuleId(
-        that: this,
-      );
+  int? fuelConsumed({dynamic hint}) =>
+      bridge.fuelConsumedMethodWasmRunModuleId(that: this);
 
   int consumeFuel({required int delta, dynamic hint}) =>
-      bridge.consumeFuelMethodWasmRunModuleId(
-        that: this,
-        delta: delta,
-      );
+      bridge.consumeFuelMethodWasmRunModuleId(that: this, delta: delta);
 }
 
 class WasmRunSharedMemory {
   final WasmRunDart bridge;
   final ArcRwLockSharedMemory field0;
 
-  const WasmRunSharedMemory({
-    required this.bridge,
-    required this.field0,
-  });
+  const WasmRunSharedMemory({required this.bridge, required this.field0});
 
-  MemoryTy ty({dynamic hint}) => bridge.tyMethodWasmRunSharedMemory(
-        that: this,
-      );
+  MemoryTy ty({dynamic hint}) => bridge.tyMethodWasmRunSharedMemory(that: this);
 
-  int size({dynamic hint}) => bridge.sizeMethodWasmRunSharedMemory(
-        that: this,
-      );
+  int size({dynamic hint}) => bridge.sizeMethodWasmRunSharedMemory(that: this);
 
-  int dataSize({dynamic hint}) => bridge.dataSizeMethodWasmRunSharedMemory(
-        that: this,
-      );
+  int dataSize({dynamic hint}) =>
+      bridge.dataSizeMethodWasmRunSharedMemory(that: this);
 
   int dataPointer({dynamic hint}) =>
-      bridge.dataPointerMethodWasmRunSharedMemory(
-        that: this,
-      );
+      bridge.dataPointerMethodWasmRunSharedMemory(that: this);
 
   int grow({required int delta, dynamic hint}) =>
-      bridge.growMethodWasmRunSharedMemory(
-        that: this,
-        delta: delta,
-      );
+      bridge.growMethodWasmRunSharedMemory(that: this, delta: delta);
 
   Future<Atomics> atomics({dynamic hint}) =>
-      bridge.atomicsMethodWasmRunSharedMemory(
-        that: this,
-      );
+      bridge.atomicsMethodWasmRunSharedMemory(that: this);
 
   int atomicNotify({required int addr, required int count, dynamic hint}) =>
       bridge.atomicNotifyMethodWasmRunSharedMemory(
@@ -1797,13 +1752,15 @@ class WasmRunSharedMemory {
   ///
   /// This function will return an error if `addr` is not within bounds or
   /// not aligned to a 4-byte boundary.
-  SharedMemoryWaitResult atomicWait32(
-          {required int addr, required int expected, dynamic hint}) =>
-      bridge.atomicWait32MethodWasmRunSharedMemory(
-        that: this,
-        addr: addr,
-        expected: expected,
-      );
+  SharedMemoryWaitResult atomicWait32({
+    required int addr,
+    required int expected,
+    dynamic hint,
+  }) => bridge.atomicWait32MethodWasmRunSharedMemory(
+    that: this,
+    addr: addr,
+    expected: expected,
+  );
 
   /// Equivalent of the WebAssembly `memory.atomic.wait64` instruction for
   /// this shared memory.
@@ -1814,13 +1771,15 @@ class WasmRunSharedMemory {
   ///
   /// Returns the same error as [`SharedMemory::atomic_wait32`] except that
   /// the specified address must be 8-byte aligned instead of 4-byte aligned.
-  SharedMemoryWaitResult atomicWait64(
-          {required int addr, required int expected, dynamic hint}) =>
-      bridge.atomicWait64MethodWasmRunSharedMemory(
-        that: this,
-        addr: addr,
-        expected: expected,
-      );
+  SharedMemoryWaitResult atomicWait64({
+    required int addr,
+    required int expected,
+    dynamic hint,
+  }) => bridge.atomicWait64MethodWasmRunSharedMemory(
+    that: this,
+    addr: addr,
+    expected: expected,
+  );
 }
 
 class WasmRuntimeFeatures {
@@ -1856,39 +1815,25 @@ class WasmRuntimeFeatures {
 @freezed
 class WasmVal with _$WasmVal {
   /// Value of 32-bit signed or unsigned integer.
-  const factory WasmVal.i32(
-    int field0,
-  ) = WasmVal_i32;
+  const factory WasmVal.i32(int field0) = WasmVal_i32;
 
   /// Value of 64-bit signed or unsigned integer.
-  const factory WasmVal.i64(
-    int field0,
-  ) = WasmVal_i64;
+  const factory WasmVal.i64(int field0) = WasmVal_i64;
 
   /// Value of 32-bit IEEE 754-2008 floating point number.
-  const factory WasmVal.f32(
-    double field0,
-  ) = WasmVal_f32;
+  const factory WasmVal.f32(double field0) = WasmVal_f32;
 
   /// Value of 64-bit IEEE 754-2008 floating point number.
-  const factory WasmVal.f64(
-    double field0,
-  ) = WasmVal_f64;
+  const factory WasmVal.f64(double field0) = WasmVal_f64;
 
   /// A 128 bit number.
-  const factory WasmVal.v128(
-    U8Array16 field0,
-  ) = WasmVal_v128;
+  const factory WasmVal.v128(U8Array16 field0) = WasmVal_v128;
 
   /// A nullable function.
-  const factory WasmVal.funcRef([
-    WFunc? field0,
-  ]) = WasmVal_funcRef;
+  const factory WasmVal.funcRef([WFunc? field0]) = WasmVal_funcRef;
 
   /// A nullable external object reference.
-  const factory WasmVal.externRef([
-    int? field0,
-  ]) = WasmVal_externRef;
+  const factory WasmVal.externRef([int? field0]) = WasmVal_externRef;
 }
 
 /// https://docs.wasmtime.dev/stability-wasi-proposals-support.html
@@ -1937,23 +1882,27 @@ class WasmRunDartImpl implements WasmRunDart {
   factory WasmRunDartImpl.wasm(FutureOr<WasmModule> module) =>
       WasmRunDartImpl(module as ExternalLibrary);
   WasmRunDartImpl.raw(this._platform);
-  WasmRunModuleId moduleBuilder(
-      {required CompiledModule module,
-      int? numThreads,
-      WasiConfigNative? wasiConfig,
-      dynamic hint}) {
+  WasmRunModuleId moduleBuilder({
+    required CompiledModule module,
+    int? numThreads,
+    WasiConfigNative? wasiConfig,
+    dynamic hint,
+  }) {
     var arg0 = _platform.api2wire_box_autoadd_compiled_module(module);
     var arg1 = _platform.api2wire_opt_box_autoadd_usize(numThreads);
-    var arg2 =
-        _platform.api2wire_opt_box_autoadd_wasi_config_native(wasiConfig);
-    return _platform.executeSync(FlutterRustBridgeSyncTask(
-      callFfi: () => _platform.inner.wire_module_builder(arg0, arg1, arg2),
-      parseSuccessData: _wire2api_wasm_run_module_id,
-      parseErrorData: _wire2api_FrbAnyhowException,
-      constMeta: kModuleBuilderConstMeta,
-      argValues: [module, numThreads, wasiConfig],
-      hint: hint,
-    ));
+    var arg2 = _platform.api2wire_opt_box_autoadd_wasi_config_native(
+      wasiConfig,
+    );
+    return _platform.executeSync(
+      FlutterRustBridgeSyncTask(
+        callFfi: () => _platform.inner.wire_module_builder(arg0, arg1, arg2),
+        parseSuccessData: _wire2api_wasm_run_module_id,
+        parseErrorData: _wire2api_FrbAnyhowException,
+        constMeta: kModuleBuilderConstMeta,
+        argValues: [module, numThreads, wasiConfig],
+        hint: hint,
+      ),
+    );
   }
 
   FlutterRustBridgeTaskConstMeta get kModuleBuilderConstMeta =>
@@ -1964,14 +1913,16 @@ class WasmRunDartImpl implements WasmRunDart {
 
   Future<Uint8List> parseWatFormat({required String wat, dynamic hint}) {
     var arg0 = _platform.api2wire_String(wat);
-    return _platform.executeNormal(FlutterRustBridgeTask(
-      callFfi: (port_) => _platform.inner.wire_parse_wat_format(port_, arg0),
-      parseSuccessData: _wire2api_uint_8_list,
-      parseErrorData: _wire2api_FrbAnyhowException,
-      constMeta: kParseWatFormatConstMeta,
-      argValues: [wat],
-      hint: hint,
-    ));
+    return _platform.executeNormal(
+      FlutterRustBridgeTask(
+        callFfi: (port_) => _platform.inner.wire_parse_wat_format(port_, arg0),
+        parseSuccessData: _wire2api_uint_8_list,
+        parseErrorData: _wire2api_FrbAnyhowException,
+        constMeta: kParseWatFormatConstMeta,
+        argValues: [wat],
+        hint: hint,
+      ),
+    );
   }
 
   FlutterRustBridgeTaskConstMeta get kParseWatFormatConstMeta =>
@@ -1980,20 +1931,24 @@ class WasmRunDartImpl implements WasmRunDart {
         argNames: ["wat"],
       );
 
-  Future<CompiledModule> compileWasm(
-      {required Uint8List moduleWasm,
-      required ModuleConfig config,
-      dynamic hint}) {
+  Future<CompiledModule> compileWasm({
+    required Uint8List moduleWasm,
+    required ModuleConfig config,
+    dynamic hint,
+  }) {
     var arg0 = _platform.api2wire_uint_8_list(moduleWasm);
     var arg1 = _platform.api2wire_box_autoadd_module_config(config);
-    return _platform.executeNormal(FlutterRustBridgeTask(
-      callFfi: (port_) => _platform.inner.wire_compile_wasm(port_, arg0, arg1),
-      parseSuccessData: (d) => _wire2api_compiled_module(d),
-      parseErrorData: _wire2api_FrbAnyhowException,
-      constMeta: kCompileWasmConstMeta,
-      argValues: [moduleWasm, config],
-      hint: hint,
-    ));
+    return _platform.executeNormal(
+      FlutterRustBridgeTask(
+        callFfi: (port_) =>
+            _platform.inner.wire_compile_wasm(port_, arg0, arg1),
+        parseSuccessData: (d) => _wire2api_compiled_module(d),
+        parseErrorData: _wire2api_FrbAnyhowException,
+        constMeta: kCompileWasmConstMeta,
+        argValues: [moduleWasm, config],
+        hint: hint,
+      ),
+    );
   }
 
   FlutterRustBridgeTaskConstMeta get kCompileWasmConstMeta =>
@@ -2002,20 +1957,23 @@ class WasmRunDartImpl implements WasmRunDart {
         argNames: ["moduleWasm", "config"],
       );
 
-  CompiledModule compileWasmSync(
-      {required Uint8List moduleWasm,
-      required ModuleConfig config,
-      dynamic hint}) {
+  CompiledModule compileWasmSync({
+    required Uint8List moduleWasm,
+    required ModuleConfig config,
+    dynamic hint,
+  }) {
     var arg0 = _platform.api2wire_uint_8_list(moduleWasm);
     var arg1 = _platform.api2wire_box_autoadd_module_config(config);
-    return _platform.executeSync(FlutterRustBridgeSyncTask(
-      callFfi: () => _platform.inner.wire_compile_wasm_sync(arg0, arg1),
-      parseSuccessData: _wire2api_compiled_module,
-      parseErrorData: _wire2api_FrbAnyhowException,
-      constMeta: kCompileWasmSyncConstMeta,
-      argValues: [moduleWasm, config],
-      hint: hint,
-    ));
+    return _platform.executeSync(
+      FlutterRustBridgeSyncTask(
+        callFfi: () => _platform.inner.wire_compile_wasm_sync(arg0, arg1),
+        parseSuccessData: _wire2api_compiled_module,
+        parseErrorData: _wire2api_FrbAnyhowException,
+        constMeta: kCompileWasmSyncConstMeta,
+        argValues: [moduleWasm, config],
+        hint: hint,
+      ),
+    );
   }
 
   FlutterRustBridgeTaskConstMeta get kCompileWasmSyncConstMeta =>
@@ -2024,17 +1982,21 @@ class WasmRunDartImpl implements WasmRunDart {
         argNames: ["moduleWasm", "config"],
       );
 
-  WasmFeatures wasmFeaturesForConfig(
-      {required ModuleConfig config, dynamic hint}) {
+  WasmFeatures wasmFeaturesForConfig({
+    required ModuleConfig config,
+    dynamic hint,
+  }) {
     var arg0 = _platform.api2wire_box_autoadd_module_config(config);
-    return _platform.executeSync(FlutterRustBridgeSyncTask(
-      callFfi: () => _platform.inner.wire_wasm_features_for_config(arg0),
-      parseSuccessData: _wire2api_wasm_features,
-      parseErrorData: null,
-      constMeta: kWasmFeaturesForConfigConstMeta,
-      argValues: [config],
-      hint: hint,
-    ));
+    return _platform.executeSync(
+      FlutterRustBridgeSyncTask(
+        callFfi: () => _platform.inner.wire_wasm_features_for_config(arg0),
+        parseSuccessData: _wire2api_wasm_features,
+        parseErrorData: null,
+        constMeta: kWasmFeaturesForConfigConstMeta,
+        argValues: [config],
+        hint: hint,
+      ),
+    );
   }
 
   FlutterRustBridgeTaskConstMeta get kWasmFeaturesForConfigConstMeta =>
@@ -2044,14 +2006,16 @@ class WasmRunDartImpl implements WasmRunDart {
       );
 
   WasmRuntimeFeatures wasmRuntimeFeatures({dynamic hint}) {
-    return _platform.executeSync(FlutterRustBridgeSyncTask(
-      callFfi: () => _platform.inner.wire_wasm_runtime_features(),
-      parseSuccessData: _wire2api_wasm_runtime_features,
-      parseErrorData: null,
-      constMeta: kWasmRuntimeFeaturesConstMeta,
-      argValues: [],
-      hint: hint,
-    ));
+    return _platform.executeSync(
+      FlutterRustBridgeSyncTask(
+        callFfi: () => _platform.inner.wire_wasm_runtime_features(),
+        parseSuccessData: _wire2api_wasm_runtime_features,
+        parseErrorData: null,
+        constMeta: kWasmRuntimeFeaturesConstMeta,
+        argValues: [],
+        hint: hint,
+      ),
+    );
   }
 
   FlutterRustBridgeTaskConstMeta get kWasmRuntimeFeaturesConstMeta =>
@@ -2060,18 +2024,22 @@ class WasmRunDartImpl implements WasmRunDart {
         argNames: [],
       );
 
-  List<ModuleExportValue> exportsMethodWasmRunInstanceId(
-      {required WasmRunInstanceId that, dynamic hint}) {
+  List<ModuleExportValue> exportsMethodWasmRunInstanceId({
+    required WasmRunInstanceId that,
+    dynamic hint,
+  }) {
     var arg0 = _platform.api2wire_box_autoadd_wasm_run_instance_id(that);
-    return _platform.executeSync(FlutterRustBridgeSyncTask(
-      callFfi: () =>
-          _platform.inner.wire_exports__method__WasmRunInstanceId(arg0),
-      parseSuccessData: _wire2api_list_module_export_value,
-      parseErrorData: null,
-      constMeta: kExportsMethodWasmRunInstanceIdConstMeta,
-      argValues: [that],
-      hint: hint,
-    ));
+    return _platform.executeSync(
+      FlutterRustBridgeSyncTask(
+        callFfi: () =>
+            _platform.inner.wire_exports__method__WasmRunInstanceId(arg0),
+        parseSuccessData: _wire2api_list_module_export_value,
+        parseErrorData: null,
+        constMeta: kExportsMethodWasmRunInstanceIdConstMeta,
+        argValues: [that],
+        hint: hint,
+      ),
+    );
   }
 
   FlutterRustBridgeTaskConstMeta get kExportsMethodWasmRunInstanceIdConstMeta =>
@@ -2080,106 +2048,126 @@ class WasmRunDartImpl implements WasmRunDart {
         argNames: ["that"],
       );
 
-  WasmRunInstanceId instantiateSyncMethodWasmRunModuleId(
-      {required WasmRunModuleId that, dynamic hint}) {
+  WasmRunInstanceId instantiateSyncMethodWasmRunModuleId({
+    required WasmRunModuleId that,
+    dynamic hint,
+  }) {
     var arg0 = _platform.api2wire_box_autoadd_wasm_run_module_id(that);
-    return _platform.executeSync(FlutterRustBridgeSyncTask(
-      callFfi: () =>
-          _platform.inner.wire_instantiate_sync__method__WasmRunModuleId(arg0),
-      parseSuccessData: _wire2api_wasm_run_instance_id,
-      parseErrorData: _wire2api_FrbAnyhowException,
-      constMeta: kInstantiateSyncMethodWasmRunModuleIdConstMeta,
-      argValues: [that],
-      hint: hint,
-    ));
+    return _platform.executeSync(
+      FlutterRustBridgeSyncTask(
+        callFfi: () => _platform.inner
+            .wire_instantiate_sync__method__WasmRunModuleId(arg0),
+        parseSuccessData: _wire2api_wasm_run_instance_id,
+        parseErrorData: _wire2api_FrbAnyhowException,
+        constMeta: kInstantiateSyncMethodWasmRunModuleIdConstMeta,
+        argValues: [that],
+        hint: hint,
+      ),
+    );
   }
 
   FlutterRustBridgeTaskConstMeta
-      get kInstantiateSyncMethodWasmRunModuleIdConstMeta =>
-          const FlutterRustBridgeTaskConstMeta(
-            debugName: "instantiate_sync__method__WasmRunModuleId",
-            argNames: ["that"],
-          );
+  get kInstantiateSyncMethodWasmRunModuleIdConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "instantiate_sync__method__WasmRunModuleId",
+        argNames: ["that"],
+      );
 
-  Future<WasmRunInstanceId> instantiateMethodWasmRunModuleId(
-      {required WasmRunModuleId that, dynamic hint}) {
+  Future<WasmRunInstanceId> instantiateMethodWasmRunModuleId({
+    required WasmRunModuleId that,
+    dynamic hint,
+  }) {
     var arg0 = _platform.api2wire_box_autoadd_wasm_run_module_id(that);
-    return _platform.executeNormal(FlutterRustBridgeTask(
-      callFfi: (port_) => _platform.inner
-          .wire_instantiate__method__WasmRunModuleId(port_, arg0),
-      parseSuccessData: (d) => _wire2api_wasm_run_instance_id(d),
-      parseErrorData: _wire2api_FrbAnyhowException,
-      constMeta: kInstantiateMethodWasmRunModuleIdConstMeta,
-      argValues: [that],
-      hint: hint,
-    ));
+    return _platform.executeNormal(
+      FlutterRustBridgeTask(
+        callFfi: (port_) => _platform.inner
+            .wire_instantiate__method__WasmRunModuleId(port_, arg0),
+        parseSuccessData: (d) => _wire2api_wasm_run_instance_id(d),
+        parseErrorData: _wire2api_FrbAnyhowException,
+        constMeta: kInstantiateMethodWasmRunModuleIdConstMeta,
+        argValues: [that],
+        hint: hint,
+      ),
+    );
   }
 
   FlutterRustBridgeTaskConstMeta
-      get kInstantiateMethodWasmRunModuleIdConstMeta =>
-          const FlutterRustBridgeTaskConstMeta(
-            debugName: "instantiate__method__WasmRunModuleId",
-            argNames: ["that"],
-          );
+  get kInstantiateMethodWasmRunModuleIdConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "instantiate__method__WasmRunModuleId",
+        argNames: ["that"],
+      );
 
-  void linkImportsMethodWasmRunModuleId(
-      {required WasmRunModuleId that,
-      required List<ModuleImport> imports,
-      dynamic hint}) {
+  void linkImportsMethodWasmRunModuleId({
+    required WasmRunModuleId that,
+    required List<ModuleImport> imports,
+    dynamic hint,
+  }) {
     var arg0 = _platform.api2wire_box_autoadd_wasm_run_module_id(that);
     var arg1 = _platform.api2wire_list_module_import(imports);
-    return _platform.executeSync(FlutterRustBridgeSyncTask(
-      callFfi: () => _platform.inner
-          .wire_link_imports__method__WasmRunModuleId(arg0, arg1),
-      parseSuccessData: _wire2api_unit,
-      parseErrorData: _wire2api_FrbAnyhowException,
-      constMeta: kLinkImportsMethodWasmRunModuleIdConstMeta,
-      argValues: [that, imports],
-      hint: hint,
-    ));
+    return _platform.executeSync(
+      FlutterRustBridgeSyncTask(
+        callFfi: () => _platform.inner
+            .wire_link_imports__method__WasmRunModuleId(arg0, arg1),
+        parseSuccessData: _wire2api_unit,
+        parseErrorData: _wire2api_FrbAnyhowException,
+        constMeta: kLinkImportsMethodWasmRunModuleIdConstMeta,
+        argValues: [that, imports],
+        hint: hint,
+      ),
+    );
   }
 
   FlutterRustBridgeTaskConstMeta
-      get kLinkImportsMethodWasmRunModuleIdConstMeta =>
-          const FlutterRustBridgeTaskConstMeta(
-            debugName: "link_imports__method__WasmRunModuleId",
-            argNames: ["that", "imports"],
-          );
+  get kLinkImportsMethodWasmRunModuleIdConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "link_imports__method__WasmRunModuleId",
+        argNames: ["that", "imports"],
+      );
 
-  Stream<Uint8List> stdioStreamMethodWasmRunModuleId(
-      {required WasmRunModuleId that, required StdIOKind kind, dynamic hint}) {
+  Stream<Uint8List> stdioStreamMethodWasmRunModuleId({
+    required WasmRunModuleId that,
+    required StdIOKind kind,
+    dynamic hint,
+  }) {
     var arg0 = _platform.api2wire_box_autoadd_wasm_run_module_id(that);
     var arg1 = api2wire_std_io_kind(kind);
-    return _platform.executeStream(FlutterRustBridgeTask(
-      callFfi: (port_) => _platform.inner
-          .wire_stdio_stream__method__WasmRunModuleId(port_, arg0, arg1),
-      parseSuccessData: _wire2api_uint_8_list,
-      parseErrorData: _wire2api_FrbAnyhowException,
-      constMeta: kStdioStreamMethodWasmRunModuleIdConstMeta,
-      argValues: [that, kind],
-      hint: hint,
-    ));
+    return _platform.executeStream(
+      FlutterRustBridgeTask(
+        callFfi: (port_) => _platform.inner
+            .wire_stdio_stream__method__WasmRunModuleId(port_, arg0, arg1),
+        parseSuccessData: _wire2api_uint_8_list,
+        parseErrorData: _wire2api_FrbAnyhowException,
+        constMeta: kStdioStreamMethodWasmRunModuleIdConstMeta,
+        argValues: [that, kind],
+        hint: hint,
+      ),
+    );
   }
 
   FlutterRustBridgeTaskConstMeta
-      get kStdioStreamMethodWasmRunModuleIdConstMeta =>
-          const FlutterRustBridgeTaskConstMeta(
-            debugName: "stdio_stream__method__WasmRunModuleId",
-            argNames: ["that", "kind"],
-          );
+  get kStdioStreamMethodWasmRunModuleIdConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "stdio_stream__method__WasmRunModuleId",
+        argNames: ["that", "kind"],
+      );
 
-  Future<void> disposeMethodWasmRunModuleId(
-      {required WasmRunModuleId that, dynamic hint}) {
+  Future<void> disposeMethodWasmRunModuleId({
+    required WasmRunModuleId that,
+    dynamic hint,
+  }) {
     var arg0 = _platform.api2wire_box_autoadd_wasm_run_module_id(that);
-    return _platform.executeNormal(FlutterRustBridgeTask(
-      callFfi: (port_) =>
-          _platform.inner.wire_dispose__method__WasmRunModuleId(port_, arg0),
-      parseSuccessData: _wire2api_unit,
-      parseErrorData: _wire2api_FrbAnyhowException,
-      constMeta: kDisposeMethodWasmRunModuleIdConstMeta,
-      argValues: [that],
-      hint: hint,
-    ));
+    return _platform.executeNormal(
+      FlutterRustBridgeTask(
+        callFfi: (port_) =>
+            _platform.inner.wire_dispose__method__WasmRunModuleId(port_, arg0),
+        parseSuccessData: _wire2api_unit,
+        parseErrorData: _wire2api_FrbAnyhowException,
+        constMeta: kDisposeMethodWasmRunModuleIdConstMeta,
+        argValues: [that],
+        hint: hint,
+      ),
+    );
   }
 
   FlutterRustBridgeTaskConstMeta get kDisposeMethodWasmRunModuleIdConstMeta =>
@@ -2188,577 +2176,689 @@ class WasmRunDartImpl implements WasmRunDart {
         argNames: ["that"],
       );
 
-  List<WasmVal> callFunctionHandleSyncMethodWasmRunModuleId(
-      {required WasmRunModuleId that,
-      required WFunc func,
-      required List<WasmVal> args,
-      dynamic hint}) {
+  List<WasmVal> callFunctionHandleSyncMethodWasmRunModuleId({
+    required WasmRunModuleId that,
+    required WFunc func,
+    required List<WasmVal> args,
+    dynamic hint,
+  }) {
     var arg0 = _platform.api2wire_box_autoadd_wasm_run_module_id(that);
     var arg1 = _platform.api2wire_WFunc(func);
     var arg2 = _platform.api2wire_list_wasm_val(args);
-    return _platform.executeSync(FlutterRustBridgeSyncTask(
-      callFfi: () => _platform.inner
-          .wire_call_function_handle_sync__method__WasmRunModuleId(
-              arg0, arg1, arg2),
-      parseSuccessData: _wire2api_list_wasm_val,
-      parseErrorData: _wire2api_FrbAnyhowException,
-      constMeta: kCallFunctionHandleSyncMethodWasmRunModuleIdConstMeta,
-      argValues: [that, func, args],
-      hint: hint,
-    ));
+    return _platform.executeSync(
+      FlutterRustBridgeSyncTask(
+        callFfi: () => _platform.inner
+            .wire_call_function_handle_sync__method__WasmRunModuleId(
+              arg0,
+              arg1,
+              arg2,
+            ),
+        parseSuccessData: _wire2api_list_wasm_val,
+        parseErrorData: _wire2api_FrbAnyhowException,
+        constMeta: kCallFunctionHandleSyncMethodWasmRunModuleIdConstMeta,
+        argValues: [that, func, args],
+        hint: hint,
+      ),
+    );
   }
 
   FlutterRustBridgeTaskConstMeta
-      get kCallFunctionHandleSyncMethodWasmRunModuleIdConstMeta =>
-          const FlutterRustBridgeTaskConstMeta(
-            debugName: "call_function_handle_sync__method__WasmRunModuleId",
-            argNames: ["that", "func", "args"],
-          );
+  get kCallFunctionHandleSyncMethodWasmRunModuleIdConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "call_function_handle_sync__method__WasmRunModuleId",
+        argNames: ["that", "func", "args"],
+      );
 
-  Future<List<WasmVal>> callFunctionHandleMethodWasmRunModuleId(
-      {required WasmRunModuleId that,
-      required WFunc func,
-      required List<WasmVal> args,
-      dynamic hint}) {
+  Future<List<WasmVal>> callFunctionHandleMethodWasmRunModuleId({
+    required WasmRunModuleId that,
+    required WFunc func,
+    required List<WasmVal> args,
+    dynamic hint,
+  }) {
     var arg0 = _platform.api2wire_box_autoadd_wasm_run_module_id(that);
     var arg1 = _platform.api2wire_WFunc(func);
     var arg2 = _platform.api2wire_list_wasm_val(args);
-    return _platform.executeNormal(FlutterRustBridgeTask(
-      callFfi: (port_) => _platform.inner
-          .wire_call_function_handle__method__WasmRunModuleId(
-              port_, arg0, arg1, arg2),
-      parseSuccessData: _wire2api_list_wasm_val,
-      parseErrorData: _wire2api_FrbAnyhowException,
-      constMeta: kCallFunctionHandleMethodWasmRunModuleIdConstMeta,
-      argValues: [that, func, args],
-      hint: hint,
-    ));
+    return _platform.executeNormal(
+      FlutterRustBridgeTask(
+        callFfi: (port_) =>
+            _platform.inner.wire_call_function_handle__method__WasmRunModuleId(
+              port_,
+              arg0,
+              arg1,
+              arg2,
+            ),
+        parseSuccessData: _wire2api_list_wasm_val,
+        parseErrorData: _wire2api_FrbAnyhowException,
+        constMeta: kCallFunctionHandleMethodWasmRunModuleIdConstMeta,
+        argValues: [that, func, args],
+        hint: hint,
+      ),
+    );
   }
 
   FlutterRustBridgeTaskConstMeta
-      get kCallFunctionHandleMethodWasmRunModuleIdConstMeta =>
-          const FlutterRustBridgeTaskConstMeta(
-            debugName: "call_function_handle__method__WasmRunModuleId",
-            argNames: ["that", "func", "args"],
-          );
+  get kCallFunctionHandleMethodWasmRunModuleIdConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "call_function_handle__method__WasmRunModuleId",
+        argNames: ["that", "func", "args"],
+      );
 
-  Stream<ParallelExec> callFunctionHandleParallelMethodWasmRunModuleId(
-      {required WasmRunModuleId that,
-      required String funcName,
-      required List<WasmVal> args,
-      required int numTasks,
-      dynamic hint}) {
+  Stream<ParallelExec> callFunctionHandleParallelMethodWasmRunModuleId({
+    required WasmRunModuleId that,
+    required String funcName,
+    required List<WasmVal> args,
+    required int numTasks,
+    dynamic hint,
+  }) {
     var arg0 = _platform.api2wire_box_autoadd_wasm_run_module_id(that);
     var arg1 = _platform.api2wire_String(funcName);
     var arg2 = _platform.api2wire_list_wasm_val(args);
     var arg3 = api2wire_usize(numTasks);
-    return _platform.executeStream(FlutterRustBridgeTask(
-      callFfi: (port_) => _platform.inner
-          .wire_call_function_handle_parallel__method__WasmRunModuleId(
-              port_, arg0, arg1, arg2, arg3),
-      parseSuccessData: _wire2api_parallel_exec,
-      parseErrorData: null,
-      constMeta: kCallFunctionHandleParallelMethodWasmRunModuleIdConstMeta,
-      argValues: [that, funcName, args, numTasks],
-      hint: hint,
-    ));
+    return _platform.executeStream(
+      FlutterRustBridgeTask(
+        callFfi: (port_) => _platform.inner
+            .wire_call_function_handle_parallel__method__WasmRunModuleId(
+              port_,
+              arg0,
+              arg1,
+              arg2,
+              arg3,
+            ),
+        parseSuccessData: _wire2api_parallel_exec,
+        parseErrorData: null,
+        constMeta: kCallFunctionHandleParallelMethodWasmRunModuleIdConstMeta,
+        argValues: [that, funcName, args, numTasks],
+        hint: hint,
+      ),
+    );
   }
 
   FlutterRustBridgeTaskConstMeta
-      get kCallFunctionHandleParallelMethodWasmRunModuleIdConstMeta =>
-          const FlutterRustBridgeTaskConstMeta(
-            debugName: "call_function_handle_parallel__method__WasmRunModuleId",
-            argNames: ["that", "funcName", "args", "numTasks"],
-          );
+  get kCallFunctionHandleParallelMethodWasmRunModuleIdConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "call_function_handle_parallel__method__WasmRunModuleId",
+        argNames: ["that", "funcName", "args", "numTasks"],
+      );
 
-  void workerExecutionMethodWasmRunModuleId(
-      {required WasmRunModuleId that,
-      required int workerIndex,
-      required List<WasmVal> results,
-      dynamic hint}) {
+  void workerExecutionMethodWasmRunModuleId({
+    required WasmRunModuleId that,
+    required int workerIndex,
+    required List<WasmVal> results,
+    dynamic hint,
+  }) {
     var arg0 = _platform.api2wire_box_autoadd_wasm_run_module_id(that);
     var arg1 = api2wire_usize(workerIndex);
     var arg2 = _platform.api2wire_list_wasm_val(results);
-    return _platform.executeSync(FlutterRustBridgeSyncTask(
-      callFfi: () => _platform.inner
-          .wire_worker_execution__method__WasmRunModuleId(arg0, arg1, arg2),
-      parseSuccessData: _wire2api_unit,
-      parseErrorData: _wire2api_FrbAnyhowException,
-      constMeta: kWorkerExecutionMethodWasmRunModuleIdConstMeta,
-      argValues: [that, workerIndex, results],
-      hint: hint,
-    ));
+    return _platform.executeSync(
+      FlutterRustBridgeSyncTask(
+        callFfi: () => _platform.inner
+            .wire_worker_execution__method__WasmRunModuleId(arg0, arg1, arg2),
+        parseSuccessData: _wire2api_unit,
+        parseErrorData: _wire2api_FrbAnyhowException,
+        constMeta: kWorkerExecutionMethodWasmRunModuleIdConstMeta,
+        argValues: [that, workerIndex, results],
+        hint: hint,
+      ),
+    );
   }
 
   FlutterRustBridgeTaskConstMeta
-      get kWorkerExecutionMethodWasmRunModuleIdConstMeta =>
-          const FlutterRustBridgeTaskConstMeta(
-            debugName: "worker_execution__method__WasmRunModuleId",
-            argNames: ["that", "workerIndex", "results"],
-          );
+  get kWorkerExecutionMethodWasmRunModuleIdConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "worker_execution__method__WasmRunModuleId",
+        argNames: ["that", "workerIndex", "results"],
+      );
 
-  FuncTy getFunctionTypeMethodWasmRunModuleId(
-      {required WasmRunModuleId that, required WFunc func, dynamic hint}) {
+  FuncTy getFunctionTypeMethodWasmRunModuleId({
+    required WasmRunModuleId that,
+    required WFunc func,
+    dynamic hint,
+  }) {
     var arg0 = _platform.api2wire_box_autoadd_wasm_run_module_id(that);
     var arg1 = _platform.api2wire_WFunc(func);
-    return _platform.executeSync(FlutterRustBridgeSyncTask(
-      callFfi: () => _platform.inner
-          .wire_get_function_type__method__WasmRunModuleId(arg0, arg1),
-      parseSuccessData: _wire2api_func_ty,
-      parseErrorData: null,
-      constMeta: kGetFunctionTypeMethodWasmRunModuleIdConstMeta,
-      argValues: [that, func],
-      hint: hint,
-    ));
+    return _platform.executeSync(
+      FlutterRustBridgeSyncTask(
+        callFfi: () => _platform.inner
+            .wire_get_function_type__method__WasmRunModuleId(arg0, arg1),
+        parseSuccessData: _wire2api_func_ty,
+        parseErrorData: null,
+        constMeta: kGetFunctionTypeMethodWasmRunModuleIdConstMeta,
+        argValues: [that, func],
+        hint: hint,
+      ),
+    );
   }
 
   FlutterRustBridgeTaskConstMeta
-      get kGetFunctionTypeMethodWasmRunModuleIdConstMeta =>
-          const FlutterRustBridgeTaskConstMeta(
-            debugName: "get_function_type__method__WasmRunModuleId",
-            argNames: ["that", "func"],
-          );
+  get kGetFunctionTypeMethodWasmRunModuleIdConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "get_function_type__method__WasmRunModuleId",
+        argNames: ["that", "func"],
+      );
 
-  WFunc createFunctionMethodWasmRunModuleId(
-      {required WasmRunModuleId that,
-      required int functionPointer,
-      required int functionId,
-      required List<ValueTy> paramTypes,
-      required List<ValueTy> resultTypes,
-      dynamic hint}) {
+  WFunc createFunctionMethodWasmRunModuleId({
+    required WasmRunModuleId that,
+    required int functionPointer,
+    required int functionId,
+    required List<ValueTy> paramTypes,
+    required List<ValueTy> resultTypes,
+    dynamic hint,
+  }) {
     var arg0 = _platform.api2wire_box_autoadd_wasm_run_module_id(that);
     var arg1 = api2wire_usize(functionPointer);
     var arg2 = api2wire_u32(functionId);
     var arg3 = _platform.api2wire_list_value_ty(paramTypes);
     var arg4 = _platform.api2wire_list_value_ty(resultTypes);
-    return _platform.executeSync(FlutterRustBridgeSyncTask(
-      callFfi: () => _platform.inner
-          .wire_create_function__method__WasmRunModuleId(
-              arg0, arg1, arg2, arg3, arg4),
-      parseSuccessData: _wire2api_WFunc,
-      parseErrorData: _wire2api_FrbAnyhowException,
-      constMeta: kCreateFunctionMethodWasmRunModuleIdConstMeta,
-      argValues: [that, functionPointer, functionId, paramTypes, resultTypes],
-      hint: hint,
-    ));
+    return _platform.executeSync(
+      FlutterRustBridgeSyncTask(
+        callFfi: () =>
+            _platform.inner.wire_create_function__method__WasmRunModuleId(
+              arg0,
+              arg1,
+              arg2,
+              arg3,
+              arg4,
+            ),
+        parseSuccessData: _wire2api_WFunc,
+        parseErrorData: _wire2api_FrbAnyhowException,
+        constMeta: kCreateFunctionMethodWasmRunModuleIdConstMeta,
+        argValues: [that, functionPointer, functionId, paramTypes, resultTypes],
+        hint: hint,
+      ),
+    );
   }
 
   FlutterRustBridgeTaskConstMeta
-      get kCreateFunctionMethodWasmRunModuleIdConstMeta =>
-          const FlutterRustBridgeTaskConstMeta(
-            debugName: "create_function__method__WasmRunModuleId",
-            argNames: [
-              "that",
-              "functionPointer",
-              "functionId",
-              "paramTypes",
-              "resultTypes"
-            ],
-          );
+  get kCreateFunctionMethodWasmRunModuleIdConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "create_function__method__WasmRunModuleId",
+        argNames: [
+          "that",
+          "functionPointer",
+          "functionId",
+          "paramTypes",
+          "resultTypes",
+        ],
+      );
 
-  Memory createMemoryMethodWasmRunModuleId(
-      {required WasmRunModuleId that,
-      required MemoryTy memoryType,
-      dynamic hint}) {
+  Memory createMemoryMethodWasmRunModuleId({
+    required WasmRunModuleId that,
+    required MemoryTy memoryType,
+    dynamic hint,
+  }) {
     var arg0 = _platform.api2wire_box_autoadd_wasm_run_module_id(that);
     var arg1 = _platform.api2wire_box_autoadd_memory_ty(memoryType);
-    return _platform.executeSync(FlutterRustBridgeSyncTask(
-      callFfi: () => _platform.inner
-          .wire_create_memory__method__WasmRunModuleId(arg0, arg1),
-      parseSuccessData: _wire2api_Memory,
-      parseErrorData: _wire2api_FrbAnyhowException,
-      constMeta: kCreateMemoryMethodWasmRunModuleIdConstMeta,
-      argValues: [that, memoryType],
-      hint: hint,
-    ));
+    return _platform.executeSync(
+      FlutterRustBridgeSyncTask(
+        callFfi: () => _platform.inner
+            .wire_create_memory__method__WasmRunModuleId(arg0, arg1),
+        parseSuccessData: _wire2api_Memory,
+        parseErrorData: _wire2api_FrbAnyhowException,
+        constMeta: kCreateMemoryMethodWasmRunModuleIdConstMeta,
+        argValues: [that, memoryType],
+        hint: hint,
+      ),
+    );
   }
 
   FlutterRustBridgeTaskConstMeta
-      get kCreateMemoryMethodWasmRunModuleIdConstMeta =>
-          const FlutterRustBridgeTaskConstMeta(
-            debugName: "create_memory__method__WasmRunModuleId",
-            argNames: ["that", "memoryType"],
-          );
+  get kCreateMemoryMethodWasmRunModuleIdConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "create_memory__method__WasmRunModuleId",
+        argNames: ["that", "memoryType"],
+      );
 
-  Global createGlobalMethodWasmRunModuleId(
-      {required WasmRunModuleId that,
-      required WasmVal value,
-      required bool mutable,
-      dynamic hint}) {
+  Global createGlobalMethodWasmRunModuleId({
+    required WasmRunModuleId that,
+    required WasmVal value,
+    required bool mutable,
+    dynamic hint,
+  }) {
     var arg0 = _platform.api2wire_box_autoadd_wasm_run_module_id(that);
     var arg1 = _platform.api2wire_box_autoadd_wasm_val(value);
     var arg2 = mutable;
-    return _platform.executeSync(FlutterRustBridgeSyncTask(
-      callFfi: () => _platform.inner
-          .wire_create_global__method__WasmRunModuleId(arg0, arg1, arg2),
-      parseSuccessData: _wire2api_Global,
-      parseErrorData: _wire2api_FrbAnyhowException,
-      constMeta: kCreateGlobalMethodWasmRunModuleIdConstMeta,
-      argValues: [that, value, mutable],
-      hint: hint,
-    ));
+    return _platform.executeSync(
+      FlutterRustBridgeSyncTask(
+        callFfi: () => _platform.inner
+            .wire_create_global__method__WasmRunModuleId(arg0, arg1, arg2),
+        parseSuccessData: _wire2api_Global,
+        parseErrorData: _wire2api_FrbAnyhowException,
+        constMeta: kCreateGlobalMethodWasmRunModuleIdConstMeta,
+        argValues: [that, value, mutable],
+        hint: hint,
+      ),
+    );
   }
 
   FlutterRustBridgeTaskConstMeta
-      get kCreateGlobalMethodWasmRunModuleIdConstMeta =>
-          const FlutterRustBridgeTaskConstMeta(
-            debugName: "create_global__method__WasmRunModuleId",
-            argNames: ["that", "value", "mutable"],
-          );
+  get kCreateGlobalMethodWasmRunModuleIdConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "create_global__method__WasmRunModuleId",
+        argNames: ["that", "value", "mutable"],
+      );
 
-  Table createTableMethodWasmRunModuleId(
-      {required WasmRunModuleId that,
-      required WasmVal value,
-      required TableArgs tableType,
-      dynamic hint}) {
+  Table createTableMethodWasmRunModuleId({
+    required WasmRunModuleId that,
+    required WasmVal value,
+    required TableArgs tableType,
+    dynamic hint,
+  }) {
     var arg0 = _platform.api2wire_box_autoadd_wasm_run_module_id(that);
     var arg1 = _platform.api2wire_box_autoadd_wasm_val(value);
     var arg2 = _platform.api2wire_box_autoadd_table_args(tableType);
-    return _platform.executeSync(FlutterRustBridgeSyncTask(
-      callFfi: () => _platform.inner
-          .wire_create_table__method__WasmRunModuleId(arg0, arg1, arg2),
-      parseSuccessData: _wire2api_Table,
-      parseErrorData: _wire2api_FrbAnyhowException,
-      constMeta: kCreateTableMethodWasmRunModuleIdConstMeta,
-      argValues: [that, value, tableType],
-      hint: hint,
-    ));
+    return _platform.executeSync(
+      FlutterRustBridgeSyncTask(
+        callFfi: () => _platform.inner
+            .wire_create_table__method__WasmRunModuleId(arg0, arg1, arg2),
+        parseSuccessData: _wire2api_Table,
+        parseErrorData: _wire2api_FrbAnyhowException,
+        constMeta: kCreateTableMethodWasmRunModuleIdConstMeta,
+        argValues: [that, value, tableType],
+        hint: hint,
+      ),
+    );
   }
 
   FlutterRustBridgeTaskConstMeta
-      get kCreateTableMethodWasmRunModuleIdConstMeta =>
-          const FlutterRustBridgeTaskConstMeta(
-            debugName: "create_table__method__WasmRunModuleId",
-            argNames: ["that", "value", "tableType"],
-          );
+  get kCreateTableMethodWasmRunModuleIdConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "create_table__method__WasmRunModuleId",
+        argNames: ["that", "value", "tableType"],
+      );
 
-  GlobalTy getGlobalTypeMethodWasmRunModuleId(
-      {required WasmRunModuleId that, required Global global, dynamic hint}) {
+  GlobalTy getGlobalTypeMethodWasmRunModuleId({
+    required WasmRunModuleId that,
+    required Global global,
+    dynamic hint,
+  }) {
     var arg0 = _platform.api2wire_box_autoadd_wasm_run_module_id(that);
     var arg1 = _platform.api2wire_Global(global);
-    return _platform.executeSync(FlutterRustBridgeSyncTask(
-      callFfi: () => _platform.inner
-          .wire_get_global_type__method__WasmRunModuleId(arg0, arg1),
-      parseSuccessData: _wire2api_global_ty,
-      parseErrorData: null,
-      constMeta: kGetGlobalTypeMethodWasmRunModuleIdConstMeta,
-      argValues: [that, global],
-      hint: hint,
-    ));
+    return _platform.executeSync(
+      FlutterRustBridgeSyncTask(
+        callFfi: () => _platform.inner
+            .wire_get_global_type__method__WasmRunModuleId(arg0, arg1),
+        parseSuccessData: _wire2api_global_ty,
+        parseErrorData: null,
+        constMeta: kGetGlobalTypeMethodWasmRunModuleIdConstMeta,
+        argValues: [that, global],
+        hint: hint,
+      ),
+    );
   }
 
   FlutterRustBridgeTaskConstMeta
-      get kGetGlobalTypeMethodWasmRunModuleIdConstMeta =>
-          const FlutterRustBridgeTaskConstMeta(
-            debugName: "get_global_type__method__WasmRunModuleId",
-            argNames: ["that", "global"],
-          );
+  get kGetGlobalTypeMethodWasmRunModuleIdConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "get_global_type__method__WasmRunModuleId",
+        argNames: ["that", "global"],
+      );
 
-  WasmVal getGlobalValueMethodWasmRunModuleId(
-      {required WasmRunModuleId that, required Global global, dynamic hint}) {
+  WasmVal getGlobalValueMethodWasmRunModuleId({
+    required WasmRunModuleId that,
+    required Global global,
+    dynamic hint,
+  }) {
     var arg0 = _platform.api2wire_box_autoadd_wasm_run_module_id(that);
     var arg1 = _platform.api2wire_Global(global);
-    return _platform.executeSync(FlutterRustBridgeSyncTask(
-      callFfi: () => _platform.inner
-          .wire_get_global_value__method__WasmRunModuleId(arg0, arg1),
-      parseSuccessData: _wire2api_wasm_val,
-      parseErrorData: null,
-      constMeta: kGetGlobalValueMethodWasmRunModuleIdConstMeta,
-      argValues: [that, global],
-      hint: hint,
-    ));
+    return _platform.executeSync(
+      FlutterRustBridgeSyncTask(
+        callFfi: () => _platform.inner
+            .wire_get_global_value__method__WasmRunModuleId(arg0, arg1),
+        parseSuccessData: _wire2api_wasm_val,
+        parseErrorData: null,
+        constMeta: kGetGlobalValueMethodWasmRunModuleIdConstMeta,
+        argValues: [that, global],
+        hint: hint,
+      ),
+    );
   }
 
   FlutterRustBridgeTaskConstMeta
-      get kGetGlobalValueMethodWasmRunModuleIdConstMeta =>
-          const FlutterRustBridgeTaskConstMeta(
-            debugName: "get_global_value__method__WasmRunModuleId",
-            argNames: ["that", "global"],
-          );
+  get kGetGlobalValueMethodWasmRunModuleIdConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "get_global_value__method__WasmRunModuleId",
+        argNames: ["that", "global"],
+      );
 
-  void setGlobalValueMethodWasmRunModuleId(
-      {required WasmRunModuleId that,
-      required Global global,
-      required WasmVal value,
-      dynamic hint}) {
+  void setGlobalValueMethodWasmRunModuleId({
+    required WasmRunModuleId that,
+    required Global global,
+    required WasmVal value,
+    dynamic hint,
+  }) {
     var arg0 = _platform.api2wire_box_autoadd_wasm_run_module_id(that);
     var arg1 = _platform.api2wire_Global(global);
     var arg2 = _platform.api2wire_box_autoadd_wasm_val(value);
-    return _platform.executeSync(FlutterRustBridgeSyncTask(
-      callFfi: () => _platform.inner
-          .wire_set_global_value__method__WasmRunModuleId(arg0, arg1, arg2),
-      parseSuccessData: _wire2api_unit,
-      parseErrorData: _wire2api_FrbAnyhowException,
-      constMeta: kSetGlobalValueMethodWasmRunModuleIdConstMeta,
-      argValues: [that, global, value],
-      hint: hint,
-    ));
+    return _platform.executeSync(
+      FlutterRustBridgeSyncTask(
+        callFfi: () => _platform.inner
+            .wire_set_global_value__method__WasmRunModuleId(arg0, arg1, arg2),
+        parseSuccessData: _wire2api_unit,
+        parseErrorData: _wire2api_FrbAnyhowException,
+        constMeta: kSetGlobalValueMethodWasmRunModuleIdConstMeta,
+        argValues: [that, global, value],
+        hint: hint,
+      ),
+    );
   }
 
   FlutterRustBridgeTaskConstMeta
-      get kSetGlobalValueMethodWasmRunModuleIdConstMeta =>
-          const FlutterRustBridgeTaskConstMeta(
-            debugName: "set_global_value__method__WasmRunModuleId",
-            argNames: ["that", "global", "value"],
-          );
+  get kSetGlobalValueMethodWasmRunModuleIdConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "set_global_value__method__WasmRunModuleId",
+        argNames: ["that", "global", "value"],
+      );
 
-  MemoryTy getMemoryTypeMethodWasmRunModuleId(
-      {required WasmRunModuleId that, required Memory memory, dynamic hint}) {
+  MemoryTy getMemoryTypeMethodWasmRunModuleId({
+    required WasmRunModuleId that,
+    required Memory memory,
+    dynamic hint,
+  }) {
     var arg0 = _platform.api2wire_box_autoadd_wasm_run_module_id(that);
     var arg1 = _platform.api2wire_Memory(memory);
-    return _platform.executeSync(FlutterRustBridgeSyncTask(
-      callFfi: () => _platform.inner
-          .wire_get_memory_type__method__WasmRunModuleId(arg0, arg1),
-      parseSuccessData: _wire2api_memory_ty,
-      parseErrorData: null,
-      constMeta: kGetMemoryTypeMethodWasmRunModuleIdConstMeta,
-      argValues: [that, memory],
-      hint: hint,
-    ));
+    return _platform.executeSync(
+      FlutterRustBridgeSyncTask(
+        callFfi: () => _platform.inner
+            .wire_get_memory_type__method__WasmRunModuleId(arg0, arg1),
+        parseSuccessData: _wire2api_memory_ty,
+        parseErrorData: null,
+        constMeta: kGetMemoryTypeMethodWasmRunModuleIdConstMeta,
+        argValues: [that, memory],
+        hint: hint,
+      ),
+    );
   }
 
   FlutterRustBridgeTaskConstMeta
-      get kGetMemoryTypeMethodWasmRunModuleIdConstMeta =>
-          const FlutterRustBridgeTaskConstMeta(
-            debugName: "get_memory_type__method__WasmRunModuleId",
-            argNames: ["that", "memory"],
-          );
+  get kGetMemoryTypeMethodWasmRunModuleIdConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "get_memory_type__method__WasmRunModuleId",
+        argNames: ["that", "memory"],
+      );
 
-  Uint8List getMemoryDataMethodWasmRunModuleId(
-      {required WasmRunModuleId that, required Memory memory, dynamic hint}) {
+  Uint8List getMemoryDataMethodWasmRunModuleId({
+    required WasmRunModuleId that,
+    required Memory memory,
+    dynamic hint,
+  }) {
     var arg0 = _platform.api2wire_box_autoadd_wasm_run_module_id(that);
     var arg1 = _platform.api2wire_Memory(memory);
-    return _platform.executeSync(FlutterRustBridgeSyncTask(
-      callFfi: () => _platform.inner
-          .wire_get_memory_data__method__WasmRunModuleId(arg0, arg1),
-      parseSuccessData: _wire2api_uint_8_list,
-      parseErrorData: null,
-      constMeta: kGetMemoryDataMethodWasmRunModuleIdConstMeta,
-      argValues: [that, memory],
-      hint: hint,
-    ));
+    return _platform.executeSync(
+      FlutterRustBridgeSyncTask(
+        callFfi: () => _platform.inner
+            .wire_get_memory_data__method__WasmRunModuleId(arg0, arg1),
+        parseSuccessData: _wire2api_uint_8_list,
+        parseErrorData: null,
+        constMeta: kGetMemoryDataMethodWasmRunModuleIdConstMeta,
+        argValues: [that, memory],
+        hint: hint,
+      ),
+    );
   }
 
   FlutterRustBridgeTaskConstMeta
-      get kGetMemoryDataMethodWasmRunModuleIdConstMeta =>
-          const FlutterRustBridgeTaskConstMeta(
-            debugName: "get_memory_data__method__WasmRunModuleId",
-            argNames: ["that", "memory"],
-          );
+  get kGetMemoryDataMethodWasmRunModuleIdConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "get_memory_data__method__WasmRunModuleId",
+        argNames: ["that", "memory"],
+      );
 
-  int getMemoryDataPointerMethodWasmRunModuleId(
-      {required WasmRunModuleId that, required Memory memory, dynamic hint}) {
+  int getMemoryDataPointerMethodWasmRunModuleId({
+    required WasmRunModuleId that,
+    required Memory memory,
+    dynamic hint,
+  }) {
     var arg0 = _platform.api2wire_box_autoadd_wasm_run_module_id(that);
     var arg1 = _platform.api2wire_Memory(memory);
-    return _platform.executeSync(FlutterRustBridgeSyncTask(
-      callFfi: () => _platform.inner
-          .wire_get_memory_data_pointer__method__WasmRunModuleId(arg0, arg1),
-      parseSuccessData: _wire2api_usize,
-      parseErrorData: null,
-      constMeta: kGetMemoryDataPointerMethodWasmRunModuleIdConstMeta,
-      argValues: [that, memory],
-      hint: hint,
-    ));
+    return _platform.executeSync(
+      FlutterRustBridgeSyncTask(
+        callFfi: () => _platform.inner
+            .wire_get_memory_data_pointer__method__WasmRunModuleId(arg0, arg1),
+        parseSuccessData: _wire2api_usize,
+        parseErrorData: null,
+        constMeta: kGetMemoryDataPointerMethodWasmRunModuleIdConstMeta,
+        argValues: [that, memory],
+        hint: hint,
+      ),
+    );
   }
 
   FlutterRustBridgeTaskConstMeta
-      get kGetMemoryDataPointerMethodWasmRunModuleIdConstMeta =>
-          const FlutterRustBridgeTaskConstMeta(
-            debugName: "get_memory_data_pointer__method__WasmRunModuleId",
-            argNames: ["that", "memory"],
-          );
+  get kGetMemoryDataPointerMethodWasmRunModuleIdConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "get_memory_data_pointer__method__WasmRunModuleId",
+        argNames: ["that", "memory"],
+      );
 
-  PointerAndLength getMemoryDataPointerAndLengthMethodWasmRunModuleId(
-      {required WasmRunModuleId that, required Memory memory, dynamic hint}) {
+  PointerAndLength getMemoryDataPointerAndLengthMethodWasmRunModuleId({
+    required WasmRunModuleId that,
+    required Memory memory,
+    dynamic hint,
+  }) {
     var arg0 = _platform.api2wire_box_autoadd_wasm_run_module_id(that);
     var arg1 = _platform.api2wire_Memory(memory);
-    return _platform.executeSync(FlutterRustBridgeSyncTask(
-      callFfi: () => _platform.inner
-          .wire_get_memory_data_pointer_and_length__method__WasmRunModuleId(
-              arg0, arg1),
-      parseSuccessData: _wire2api_pointer_and_length,
-      parseErrorData: null,
-      constMeta: kGetMemoryDataPointerAndLengthMethodWasmRunModuleIdConstMeta,
-      argValues: [that, memory],
-      hint: hint,
-    ));
+    return _platform.executeSync(
+      FlutterRustBridgeSyncTask(
+        callFfi: () => _platform.inner
+            .wire_get_memory_data_pointer_and_length__method__WasmRunModuleId(
+              arg0,
+              arg1,
+            ),
+        parseSuccessData: _wire2api_pointer_and_length,
+        parseErrorData: null,
+        constMeta: kGetMemoryDataPointerAndLengthMethodWasmRunModuleIdConstMeta,
+        argValues: [that, memory],
+        hint: hint,
+      ),
+    );
   }
 
   FlutterRustBridgeTaskConstMeta
-      get kGetMemoryDataPointerAndLengthMethodWasmRunModuleIdConstMeta =>
-          const FlutterRustBridgeTaskConstMeta(
-            debugName:
-                "get_memory_data_pointer_and_length__method__WasmRunModuleId",
-            argNames: ["that", "memory"],
-          );
+  get kGetMemoryDataPointerAndLengthMethodWasmRunModuleIdConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName:
+            "get_memory_data_pointer_and_length__method__WasmRunModuleId",
+        argNames: ["that", "memory"],
+      );
 
-  Uint8List readMemoryMethodWasmRunModuleId(
-      {required WasmRunModuleId that,
-      required Memory memory,
-      required int offset,
-      required int bytes,
-      dynamic hint}) {
+  Uint8List readMemoryMethodWasmRunModuleId({
+    required WasmRunModuleId that,
+    required Memory memory,
+    required int offset,
+    required int bytes,
+    dynamic hint,
+  }) {
     var arg0 = _platform.api2wire_box_autoadd_wasm_run_module_id(that);
     var arg1 = _platform.api2wire_Memory(memory);
     var arg2 = api2wire_usize(offset);
     var arg3 = api2wire_usize(bytes);
-    return _platform.executeSync(FlutterRustBridgeSyncTask(
-      callFfi: () => _platform.inner
-          .wire_read_memory__method__WasmRunModuleId(arg0, arg1, arg2, arg3),
-      parseSuccessData: _wire2api_uint_8_list,
-      parseErrorData: _wire2api_FrbAnyhowException,
-      constMeta: kReadMemoryMethodWasmRunModuleIdConstMeta,
-      argValues: [that, memory, offset, bytes],
-      hint: hint,
-    ));
+    return _platform.executeSync(
+      FlutterRustBridgeSyncTask(
+        callFfi: () => _platform.inner
+            .wire_read_memory__method__WasmRunModuleId(arg0, arg1, arg2, arg3),
+        parseSuccessData: _wire2api_uint_8_list,
+        parseErrorData: _wire2api_FrbAnyhowException,
+        constMeta: kReadMemoryMethodWasmRunModuleIdConstMeta,
+        argValues: [that, memory, offset, bytes],
+        hint: hint,
+      ),
+    );
   }
 
   FlutterRustBridgeTaskConstMeta
-      get kReadMemoryMethodWasmRunModuleIdConstMeta =>
-          const FlutterRustBridgeTaskConstMeta(
-            debugName: "read_memory__method__WasmRunModuleId",
-            argNames: ["that", "memory", "offset", "bytes"],
-          );
+  get kReadMemoryMethodWasmRunModuleIdConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "read_memory__method__WasmRunModuleId",
+        argNames: ["that", "memory", "offset", "bytes"],
+      );
 
-  int getMemoryPagesMethodWasmRunModuleId(
-      {required WasmRunModuleId that, required Memory memory, dynamic hint}) {
+  int getMemoryPagesMethodWasmRunModuleId({
+    required WasmRunModuleId that,
+    required Memory memory,
+    dynamic hint,
+  }) {
     var arg0 = _platform.api2wire_box_autoadd_wasm_run_module_id(that);
     var arg1 = _platform.api2wire_Memory(memory);
-    return _platform.executeSync(FlutterRustBridgeSyncTask(
-      callFfi: () => _platform.inner
-          .wire_get_memory_pages__method__WasmRunModuleId(arg0, arg1),
-      parseSuccessData: _wire2api_u32,
-      parseErrorData: null,
-      constMeta: kGetMemoryPagesMethodWasmRunModuleIdConstMeta,
-      argValues: [that, memory],
-      hint: hint,
-    ));
+    return _platform.executeSync(
+      FlutterRustBridgeSyncTask(
+        callFfi: () => _platform.inner
+            .wire_get_memory_pages__method__WasmRunModuleId(arg0, arg1),
+        parseSuccessData: _wire2api_u32,
+        parseErrorData: null,
+        constMeta: kGetMemoryPagesMethodWasmRunModuleIdConstMeta,
+        argValues: [that, memory],
+        hint: hint,
+      ),
+    );
   }
 
   FlutterRustBridgeTaskConstMeta
-      get kGetMemoryPagesMethodWasmRunModuleIdConstMeta =>
-          const FlutterRustBridgeTaskConstMeta(
-            debugName: "get_memory_pages__method__WasmRunModuleId",
-            argNames: ["that", "memory"],
-          );
+  get kGetMemoryPagesMethodWasmRunModuleIdConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "get_memory_pages__method__WasmRunModuleId",
+        argNames: ["that", "memory"],
+      );
 
-  void writeMemoryMethodWasmRunModuleId(
-      {required WasmRunModuleId that,
-      required Memory memory,
-      required int offset,
-      required Uint8List buffer,
-      dynamic hint}) {
+  void writeMemoryMethodWasmRunModuleId({
+    required WasmRunModuleId that,
+    required Memory memory,
+    required int offset,
+    required Uint8List buffer,
+    dynamic hint,
+  }) {
     var arg0 = _platform.api2wire_box_autoadd_wasm_run_module_id(that);
     var arg1 = _platform.api2wire_Memory(memory);
     var arg2 = api2wire_usize(offset);
     var arg3 = _platform.api2wire_uint_8_list(buffer);
-    return _platform.executeSync(FlutterRustBridgeSyncTask(
-      callFfi: () => _platform.inner
-          .wire_write_memory__method__WasmRunModuleId(arg0, arg1, arg2, arg3),
-      parseSuccessData: _wire2api_unit,
-      parseErrorData: _wire2api_FrbAnyhowException,
-      constMeta: kWriteMemoryMethodWasmRunModuleIdConstMeta,
-      argValues: [that, memory, offset, buffer],
-      hint: hint,
-    ));
+    return _platform.executeSync(
+      FlutterRustBridgeSyncTask(
+        callFfi: () => _platform.inner
+            .wire_write_memory__method__WasmRunModuleId(arg0, arg1, arg2, arg3),
+        parseSuccessData: _wire2api_unit,
+        parseErrorData: _wire2api_FrbAnyhowException,
+        constMeta: kWriteMemoryMethodWasmRunModuleIdConstMeta,
+        argValues: [that, memory, offset, buffer],
+        hint: hint,
+      ),
+    );
   }
 
   FlutterRustBridgeTaskConstMeta
-      get kWriteMemoryMethodWasmRunModuleIdConstMeta =>
-          const FlutterRustBridgeTaskConstMeta(
-            debugName: "write_memory__method__WasmRunModuleId",
-            argNames: ["that", "memory", "offset", "buffer"],
-          );
+  get kWriteMemoryMethodWasmRunModuleIdConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "write_memory__method__WasmRunModuleId",
+        argNames: ["that", "memory", "offset", "buffer"],
+      );
 
-  int growMemoryMethodWasmRunModuleId(
-      {required WasmRunModuleId that,
-      required Memory memory,
-      required int pages,
-      dynamic hint}) {
+  int growMemoryMethodWasmRunModuleId({
+    required WasmRunModuleId that,
+    required Memory memory,
+    required int pages,
+    dynamic hint,
+  }) {
     var arg0 = _platform.api2wire_box_autoadd_wasm_run_module_id(that);
     var arg1 = _platform.api2wire_Memory(memory);
     var arg2 = api2wire_u32(pages);
-    return _platform.executeSync(FlutterRustBridgeSyncTask(
-      callFfi: () => _platform.inner
-          .wire_grow_memory__method__WasmRunModuleId(arg0, arg1, arg2),
-      parseSuccessData: _wire2api_u32,
-      parseErrorData: _wire2api_FrbAnyhowException,
-      constMeta: kGrowMemoryMethodWasmRunModuleIdConstMeta,
-      argValues: [that, memory, pages],
-      hint: hint,
-    ));
+    return _platform.executeSync(
+      FlutterRustBridgeSyncTask(
+        callFfi: () => _platform.inner
+            .wire_grow_memory__method__WasmRunModuleId(arg0, arg1, arg2),
+        parseSuccessData: _wire2api_u32,
+        parseErrorData: _wire2api_FrbAnyhowException,
+        constMeta: kGrowMemoryMethodWasmRunModuleIdConstMeta,
+        argValues: [that, memory, pages],
+        hint: hint,
+      ),
+    );
   }
 
   FlutterRustBridgeTaskConstMeta
-      get kGrowMemoryMethodWasmRunModuleIdConstMeta =>
-          const FlutterRustBridgeTaskConstMeta(
-            debugName: "grow_memory__method__WasmRunModuleId",
-            argNames: ["that", "memory", "pages"],
-          );
+  get kGrowMemoryMethodWasmRunModuleIdConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "grow_memory__method__WasmRunModuleId",
+        argNames: ["that", "memory", "pages"],
+      );
 
-  int getTableSizeMethodWasmRunModuleId(
-      {required WasmRunModuleId that, required Table table, dynamic hint}) {
+  int getTableSizeMethodWasmRunModuleId({
+    required WasmRunModuleId that,
+    required Table table,
+    dynamic hint,
+  }) {
     var arg0 = _platform.api2wire_box_autoadd_wasm_run_module_id(that);
     var arg1 = _platform.api2wire_Table(table);
-    return _platform.executeSync(FlutterRustBridgeSyncTask(
-      callFfi: () => _platform.inner
-          .wire_get_table_size__method__WasmRunModuleId(arg0, arg1),
-      parseSuccessData: _wire2api_u32,
-      parseErrorData: null,
-      constMeta: kGetTableSizeMethodWasmRunModuleIdConstMeta,
-      argValues: [that, table],
-      hint: hint,
-    ));
+    return _platform.executeSync(
+      FlutterRustBridgeSyncTask(
+        callFfi: () => _platform.inner
+            .wire_get_table_size__method__WasmRunModuleId(arg0, arg1),
+        parseSuccessData: _wire2api_u32,
+        parseErrorData: null,
+        constMeta: kGetTableSizeMethodWasmRunModuleIdConstMeta,
+        argValues: [that, table],
+        hint: hint,
+      ),
+    );
   }
 
   FlutterRustBridgeTaskConstMeta
-      get kGetTableSizeMethodWasmRunModuleIdConstMeta =>
-          const FlutterRustBridgeTaskConstMeta(
-            debugName: "get_table_size__method__WasmRunModuleId",
-            argNames: ["that", "table"],
-          );
+  get kGetTableSizeMethodWasmRunModuleIdConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "get_table_size__method__WasmRunModuleId",
+        argNames: ["that", "table"],
+      );
 
-  TableTy getTableTypeMethodWasmRunModuleId(
-      {required WasmRunModuleId that, required Table table, dynamic hint}) {
+  TableTy getTableTypeMethodWasmRunModuleId({
+    required WasmRunModuleId that,
+    required Table table,
+    dynamic hint,
+  }) {
     var arg0 = _platform.api2wire_box_autoadd_wasm_run_module_id(that);
     var arg1 = _platform.api2wire_Table(table);
-    return _platform.executeSync(FlutterRustBridgeSyncTask(
-      callFfi: () => _platform.inner
-          .wire_get_table_type__method__WasmRunModuleId(arg0, arg1),
-      parseSuccessData: _wire2api_table_ty,
-      parseErrorData: null,
-      constMeta: kGetTableTypeMethodWasmRunModuleIdConstMeta,
-      argValues: [that, table],
-      hint: hint,
-    ));
+    return _platform.executeSync(
+      FlutterRustBridgeSyncTask(
+        callFfi: () => _platform.inner
+            .wire_get_table_type__method__WasmRunModuleId(arg0, arg1),
+        parseSuccessData: _wire2api_table_ty,
+        parseErrorData: null,
+        constMeta: kGetTableTypeMethodWasmRunModuleIdConstMeta,
+        argValues: [that, table],
+        hint: hint,
+      ),
+    );
   }
 
   FlutterRustBridgeTaskConstMeta
-      get kGetTableTypeMethodWasmRunModuleIdConstMeta =>
-          const FlutterRustBridgeTaskConstMeta(
-            debugName: "get_table_type__method__WasmRunModuleId",
-            argNames: ["that", "table"],
-          );
+  get kGetTableTypeMethodWasmRunModuleIdConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "get_table_type__method__WasmRunModuleId",
+        argNames: ["that", "table"],
+      );
 
-  int growTableMethodWasmRunModuleId(
-      {required WasmRunModuleId that,
-      required Table table,
-      required int delta,
-      required WasmVal value,
-      dynamic hint}) {
+  int growTableMethodWasmRunModuleId({
+    required WasmRunModuleId that,
+    required Table table,
+    required int delta,
+    required WasmVal value,
+    dynamic hint,
+  }) {
     var arg0 = _platform.api2wire_box_autoadd_wasm_run_module_id(that);
     var arg1 = _platform.api2wire_Table(table);
     var arg2 = api2wire_u32(delta);
     var arg3 = _platform.api2wire_box_autoadd_wasm_val(value);
-    return _platform.executeSync(FlutterRustBridgeSyncTask(
-      callFfi: () => _platform.inner
-          .wire_grow_table__method__WasmRunModuleId(arg0, arg1, arg2, arg3),
-      parseSuccessData: _wire2api_u32,
-      parseErrorData: _wire2api_FrbAnyhowException,
-      constMeta: kGrowTableMethodWasmRunModuleIdConstMeta,
-      argValues: [that, table, delta, value],
-      hint: hint,
-    ));
+    return _platform.executeSync(
+      FlutterRustBridgeSyncTask(
+        callFfi: () => _platform.inner.wire_grow_table__method__WasmRunModuleId(
+          arg0,
+          arg1,
+          arg2,
+          arg3,
+        ),
+        parseSuccessData: _wire2api_u32,
+        parseErrorData: _wire2api_FrbAnyhowException,
+        constMeta: kGrowTableMethodWasmRunModuleIdConstMeta,
+        argValues: [that, table, delta, value],
+        hint: hint,
+      ),
+    );
   }
 
   FlutterRustBridgeTaskConstMeta get kGrowTableMethodWasmRunModuleIdConstMeta =>
@@ -2767,23 +2867,29 @@ class WasmRunDartImpl implements WasmRunDart {
         argNames: ["that", "table", "delta", "value"],
       );
 
-  WasmVal? getTableMethodWasmRunModuleId(
-      {required WasmRunModuleId that,
-      required Table table,
-      required int index,
-      dynamic hint}) {
+  WasmVal? getTableMethodWasmRunModuleId({
+    required WasmRunModuleId that,
+    required Table table,
+    required int index,
+    dynamic hint,
+  }) {
     var arg0 = _platform.api2wire_box_autoadd_wasm_run_module_id(that);
     var arg1 = _platform.api2wire_Table(table);
     var arg2 = api2wire_u32(index);
-    return _platform.executeSync(FlutterRustBridgeSyncTask(
-      callFfi: () => _platform.inner
-          .wire_get_table__method__WasmRunModuleId(arg0, arg1, arg2),
-      parseSuccessData: _wire2api_opt_box_autoadd_wasm_val,
-      parseErrorData: null,
-      constMeta: kGetTableMethodWasmRunModuleIdConstMeta,
-      argValues: [that, table, index],
-      hint: hint,
-    ));
+    return _platform.executeSync(
+      FlutterRustBridgeSyncTask(
+        callFfi: () => _platform.inner.wire_get_table__method__WasmRunModuleId(
+          arg0,
+          arg1,
+          arg2,
+        ),
+        parseSuccessData: _wire2api_opt_box_autoadd_wasm_val,
+        parseErrorData: null,
+        constMeta: kGetTableMethodWasmRunModuleIdConstMeta,
+        argValues: [that, table, index],
+        hint: hint,
+      ),
+    );
   }
 
   FlutterRustBridgeTaskConstMeta get kGetTableMethodWasmRunModuleIdConstMeta =>
@@ -2792,25 +2898,32 @@ class WasmRunDartImpl implements WasmRunDart {
         argNames: ["that", "table", "index"],
       );
 
-  void setTableMethodWasmRunModuleId(
-      {required WasmRunModuleId that,
-      required Table table,
-      required int index,
-      required WasmVal value,
-      dynamic hint}) {
+  void setTableMethodWasmRunModuleId({
+    required WasmRunModuleId that,
+    required Table table,
+    required int index,
+    required WasmVal value,
+    dynamic hint,
+  }) {
     var arg0 = _platform.api2wire_box_autoadd_wasm_run_module_id(that);
     var arg1 = _platform.api2wire_Table(table);
     var arg2 = api2wire_u32(index);
     var arg3 = _platform.api2wire_box_autoadd_wasm_val(value);
-    return _platform.executeSync(FlutterRustBridgeSyncTask(
-      callFfi: () => _platform.inner
-          .wire_set_table__method__WasmRunModuleId(arg0, arg1, arg2, arg3),
-      parseSuccessData: _wire2api_unit,
-      parseErrorData: _wire2api_FrbAnyhowException,
-      constMeta: kSetTableMethodWasmRunModuleIdConstMeta,
-      argValues: [that, table, index, value],
-      hint: hint,
-    ));
+    return _platform.executeSync(
+      FlutterRustBridgeSyncTask(
+        callFfi: () => _platform.inner.wire_set_table__method__WasmRunModuleId(
+          arg0,
+          arg1,
+          arg2,
+          arg3,
+        ),
+        parseSuccessData: _wire2api_unit,
+        parseErrorData: _wire2api_FrbAnyhowException,
+        constMeta: kSetTableMethodWasmRunModuleIdConstMeta,
+        argValues: [that, table, index, value],
+        hint: hint,
+      ),
+    );
   }
 
   FlutterRustBridgeTaskConstMeta get kSetTableMethodWasmRunModuleIdConstMeta =>
@@ -2819,27 +2932,35 @@ class WasmRunDartImpl implements WasmRunDart {
         argNames: ["that", "table", "index", "value"],
       );
 
-  void fillTableMethodWasmRunModuleId(
-      {required WasmRunModuleId that,
-      required Table table,
-      required int index,
-      required WasmVal value,
-      required int len,
-      dynamic hint}) {
+  void fillTableMethodWasmRunModuleId({
+    required WasmRunModuleId that,
+    required Table table,
+    required int index,
+    required WasmVal value,
+    required int len,
+    dynamic hint,
+  }) {
     var arg0 = _platform.api2wire_box_autoadd_wasm_run_module_id(that);
     var arg1 = _platform.api2wire_Table(table);
     var arg2 = api2wire_u32(index);
     var arg3 = _platform.api2wire_box_autoadd_wasm_val(value);
     var arg4 = api2wire_u32(len);
-    return _platform.executeSync(FlutterRustBridgeSyncTask(
-      callFfi: () => _platform.inner.wire_fill_table__method__WasmRunModuleId(
-          arg0, arg1, arg2, arg3, arg4),
-      parseSuccessData: _wire2api_unit,
-      parseErrorData: _wire2api_FrbAnyhowException,
-      constMeta: kFillTableMethodWasmRunModuleIdConstMeta,
-      argValues: [that, table, index, value, len],
-      hint: hint,
-    ));
+    return _platform.executeSync(
+      FlutterRustBridgeSyncTask(
+        callFfi: () => _platform.inner.wire_fill_table__method__WasmRunModuleId(
+          arg0,
+          arg1,
+          arg2,
+          arg3,
+          arg4,
+        ),
+        parseSuccessData: _wire2api_unit,
+        parseErrorData: _wire2api_FrbAnyhowException,
+        constMeta: kFillTableMethodWasmRunModuleIdConstMeta,
+        argValues: [that, table, index, value, len],
+        hint: hint,
+      ),
+    );
   }
 
   FlutterRustBridgeTaskConstMeta get kFillTableMethodWasmRunModuleIdConstMeta =>
@@ -2848,19 +2969,24 @@ class WasmRunDartImpl implements WasmRunDart {
         argNames: ["that", "table", "index", "value", "len"],
       );
 
-  void addFuelMethodWasmRunModuleId(
-      {required WasmRunModuleId that, required int delta, dynamic hint}) {
+  void addFuelMethodWasmRunModuleId({
+    required WasmRunModuleId that,
+    required int delta,
+    dynamic hint,
+  }) {
     var arg0 = _platform.api2wire_box_autoadd_wasm_run_module_id(that);
     var arg1 = _platform.api2wire_u64(delta);
-    return _platform.executeSync(FlutterRustBridgeSyncTask(
-      callFfi: () =>
-          _platform.inner.wire_add_fuel__method__WasmRunModuleId(arg0, arg1),
-      parseSuccessData: _wire2api_unit,
-      parseErrorData: _wire2api_FrbAnyhowException,
-      constMeta: kAddFuelMethodWasmRunModuleIdConstMeta,
-      argValues: [that, delta],
-      hint: hint,
-    ));
+    return _platform.executeSync(
+      FlutterRustBridgeSyncTask(
+        callFfi: () =>
+            _platform.inner.wire_add_fuel__method__WasmRunModuleId(arg0, arg1),
+        parseSuccessData: _wire2api_unit,
+        parseErrorData: _wire2api_FrbAnyhowException,
+        constMeta: kAddFuelMethodWasmRunModuleIdConstMeta,
+        argValues: [that, delta],
+        hint: hint,
+      ),
+    );
   }
 
   FlutterRustBridgeTaskConstMeta get kAddFuelMethodWasmRunModuleIdConstMeta =>
@@ -2869,126 +2995,151 @@ class WasmRunDartImpl implements WasmRunDart {
         argNames: ["that", "delta"],
       );
 
-  int? fuelConsumedMethodWasmRunModuleId(
-      {required WasmRunModuleId that, dynamic hint}) {
+  int? fuelConsumedMethodWasmRunModuleId({
+    required WasmRunModuleId that,
+    dynamic hint,
+  }) {
     var arg0 = _platform.api2wire_box_autoadd_wasm_run_module_id(that);
-    return _platform.executeSync(FlutterRustBridgeSyncTask(
-      callFfi: () =>
-          _platform.inner.wire_fuel_consumed__method__WasmRunModuleId(arg0),
-      parseSuccessData: _wire2api_opt_box_autoadd_u64,
-      parseErrorData: null,
-      constMeta: kFuelConsumedMethodWasmRunModuleIdConstMeta,
-      argValues: [that],
-      hint: hint,
-    ));
+    return _platform.executeSync(
+      FlutterRustBridgeSyncTask(
+        callFfi: () =>
+            _platform.inner.wire_fuel_consumed__method__WasmRunModuleId(arg0),
+        parseSuccessData: _wire2api_opt_box_autoadd_u64,
+        parseErrorData: null,
+        constMeta: kFuelConsumedMethodWasmRunModuleIdConstMeta,
+        argValues: [that],
+        hint: hint,
+      ),
+    );
   }
 
   FlutterRustBridgeTaskConstMeta
-      get kFuelConsumedMethodWasmRunModuleIdConstMeta =>
-          const FlutterRustBridgeTaskConstMeta(
-            debugName: "fuel_consumed__method__WasmRunModuleId",
-            argNames: ["that"],
-          );
+  get kFuelConsumedMethodWasmRunModuleIdConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "fuel_consumed__method__WasmRunModuleId",
+        argNames: ["that"],
+      );
 
-  int consumeFuelMethodWasmRunModuleId(
-      {required WasmRunModuleId that, required int delta, dynamic hint}) {
+  int consumeFuelMethodWasmRunModuleId({
+    required WasmRunModuleId that,
+    required int delta,
+    dynamic hint,
+  }) {
     var arg0 = _platform.api2wire_box_autoadd_wasm_run_module_id(that);
     var arg1 = _platform.api2wire_u64(delta);
-    return _platform.executeSync(FlutterRustBridgeSyncTask(
-      callFfi: () => _platform.inner
-          .wire_consume_fuel__method__WasmRunModuleId(arg0, arg1),
-      parseSuccessData: _wire2api_u64,
-      parseErrorData: _wire2api_FrbAnyhowException,
-      constMeta: kConsumeFuelMethodWasmRunModuleIdConstMeta,
-      argValues: [that, delta],
-      hint: hint,
-    ));
+    return _platform.executeSync(
+      FlutterRustBridgeSyncTask(
+        callFfi: () => _platform.inner
+            .wire_consume_fuel__method__WasmRunModuleId(arg0, arg1),
+        parseSuccessData: _wire2api_u64,
+        parseErrorData: _wire2api_FrbAnyhowException,
+        constMeta: kConsumeFuelMethodWasmRunModuleIdConstMeta,
+        argValues: [that, delta],
+        hint: hint,
+      ),
+    );
   }
 
   FlutterRustBridgeTaskConstMeta
-      get kConsumeFuelMethodWasmRunModuleIdConstMeta =>
-          const FlutterRustBridgeTaskConstMeta(
-            debugName: "consume_fuel__method__WasmRunModuleId",
-            argNames: ["that", "delta"],
-          );
+  get kConsumeFuelMethodWasmRunModuleIdConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "consume_fuel__method__WasmRunModuleId",
+        argNames: ["that", "delta"],
+      );
 
-  WasmRunSharedMemory createSharedMemoryMethodCompiledModule(
-      {required CompiledModule that,
-      required MemoryTy memoryType,
-      dynamic hint}) {
+  WasmRunSharedMemory createSharedMemoryMethodCompiledModule({
+    required CompiledModule that,
+    required MemoryTy memoryType,
+    dynamic hint,
+  }) {
     var arg0 = _platform.api2wire_box_autoadd_compiled_module(that);
     var arg1 = _platform.api2wire_box_autoadd_memory_ty(memoryType);
-    return _platform.executeSync(FlutterRustBridgeSyncTask(
-      callFfi: () => _platform.inner
-          .wire_create_shared_memory__method__CompiledModule(arg0, arg1),
-      parseSuccessData: _wire2api_wasm_run_shared_memory,
-      parseErrorData: _wire2api_FrbAnyhowException,
-      constMeta: kCreateSharedMemoryMethodCompiledModuleConstMeta,
-      argValues: [that, memoryType],
-      hint: hint,
-    ));
+    return _platform.executeSync(
+      FlutterRustBridgeSyncTask(
+        callFfi: () => _platform.inner
+            .wire_create_shared_memory__method__CompiledModule(arg0, arg1),
+        parseSuccessData: _wire2api_wasm_run_shared_memory,
+        parseErrorData: _wire2api_FrbAnyhowException,
+        constMeta: kCreateSharedMemoryMethodCompiledModuleConstMeta,
+        argValues: [that, memoryType],
+        hint: hint,
+      ),
+    );
   }
 
   FlutterRustBridgeTaskConstMeta
-      get kCreateSharedMemoryMethodCompiledModuleConstMeta =>
-          const FlutterRustBridgeTaskConstMeta(
-            debugName: "create_shared_memory__method__CompiledModule",
-            argNames: ["that", "memoryType"],
-          );
+  get kCreateSharedMemoryMethodCompiledModuleConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "create_shared_memory__method__CompiledModule",
+        argNames: ["that", "memoryType"],
+      );
 
-  List<ModuleImportDesc> getModuleImportsMethodCompiledModule(
-      {required CompiledModule that, dynamic hint}) {
+  List<ModuleImportDesc> getModuleImportsMethodCompiledModule({
+    required CompiledModule that,
+    dynamic hint,
+  }) {
     var arg0 = _platform.api2wire_box_autoadd_compiled_module(that);
-    return _platform.executeSync(FlutterRustBridgeSyncTask(
-      callFfi: () =>
-          _platform.inner.wire_get_module_imports__method__CompiledModule(arg0),
-      parseSuccessData: _wire2api_list_module_import_desc,
-      parseErrorData: null,
-      constMeta: kGetModuleImportsMethodCompiledModuleConstMeta,
-      argValues: [that],
-      hint: hint,
-    ));
+    return _platform.executeSync(
+      FlutterRustBridgeSyncTask(
+        callFfi: () => _platform.inner
+            .wire_get_module_imports__method__CompiledModule(arg0),
+        parseSuccessData: _wire2api_list_module_import_desc,
+        parseErrorData: null,
+        constMeta: kGetModuleImportsMethodCompiledModuleConstMeta,
+        argValues: [that],
+        hint: hint,
+      ),
+    );
   }
 
   FlutterRustBridgeTaskConstMeta
-      get kGetModuleImportsMethodCompiledModuleConstMeta =>
-          const FlutterRustBridgeTaskConstMeta(
-            debugName: "get_module_imports__method__CompiledModule",
-            argNames: ["that"],
-          );
+  get kGetModuleImportsMethodCompiledModuleConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "get_module_imports__method__CompiledModule",
+        argNames: ["that"],
+      );
 
-  List<ModuleExportDesc> getModuleExportsMethodCompiledModule(
-      {required CompiledModule that, dynamic hint}) {
+  List<ModuleExportDesc> getModuleExportsMethodCompiledModule({
+    required CompiledModule that,
+    dynamic hint,
+  }) {
     var arg0 = _platform.api2wire_box_autoadd_compiled_module(that);
-    return _platform.executeSync(FlutterRustBridgeSyncTask(
-      callFfi: () =>
-          _platform.inner.wire_get_module_exports__method__CompiledModule(arg0),
-      parseSuccessData: _wire2api_list_module_export_desc,
-      parseErrorData: null,
-      constMeta: kGetModuleExportsMethodCompiledModuleConstMeta,
-      argValues: [that],
-      hint: hint,
-    ));
+    return _platform.executeSync(
+      FlutterRustBridgeSyncTask(
+        callFfi: () => _platform.inner
+            .wire_get_module_exports__method__CompiledModule(arg0),
+        parseSuccessData: _wire2api_list_module_export_desc,
+        parseErrorData: null,
+        constMeta: kGetModuleExportsMethodCompiledModuleConstMeta,
+        argValues: [that],
+        hint: hint,
+      ),
+    );
   }
 
   FlutterRustBridgeTaskConstMeta
-      get kGetModuleExportsMethodCompiledModuleConstMeta =>
-          const FlutterRustBridgeTaskConstMeta(
-            debugName: "get_module_exports__method__CompiledModule",
-            argNames: ["that"],
-          );
+  get kGetModuleExportsMethodCompiledModuleConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "get_module_exports__method__CompiledModule",
+        argNames: ["that"],
+      );
 
-  MemoryTy tyMethodWasmRunSharedMemory(
-      {required WasmRunSharedMemory that, dynamic hint}) {
+  MemoryTy tyMethodWasmRunSharedMemory({
+    required WasmRunSharedMemory that,
+    dynamic hint,
+  }) {
     var arg0 = _platform.api2wire_box_autoadd_wasm_run_shared_memory(that);
-    return _platform.executeSync(FlutterRustBridgeSyncTask(
-      callFfi: () => _platform.inner.wire_ty__method__WasmRunSharedMemory(arg0),
-      parseSuccessData: _wire2api_memory_ty,
-      parseErrorData: null,
-      constMeta: kTyMethodWasmRunSharedMemoryConstMeta,
-      argValues: [that],
-      hint: hint,
-    ));
+    return _platform.executeSync(
+      FlutterRustBridgeSyncTask(
+        callFfi: () =>
+            _platform.inner.wire_ty__method__WasmRunSharedMemory(arg0),
+        parseSuccessData: _wire2api_memory_ty,
+        parseErrorData: null,
+        constMeta: kTyMethodWasmRunSharedMemoryConstMeta,
+        argValues: [that],
+        hint: hint,
+      ),
+    );
   }
 
   FlutterRustBridgeTaskConstMeta get kTyMethodWasmRunSharedMemoryConstMeta =>
@@ -2997,18 +3148,22 @@ class WasmRunDartImpl implements WasmRunDart {
         argNames: ["that"],
       );
 
-  int sizeMethodWasmRunSharedMemory(
-      {required WasmRunSharedMemory that, dynamic hint}) {
+  int sizeMethodWasmRunSharedMemory({
+    required WasmRunSharedMemory that,
+    dynamic hint,
+  }) {
     var arg0 = _platform.api2wire_box_autoadd_wasm_run_shared_memory(that);
-    return _platform.executeSync(FlutterRustBridgeSyncTask(
-      callFfi: () =>
-          _platform.inner.wire_size__method__WasmRunSharedMemory(arg0),
-      parseSuccessData: _wire2api_u64,
-      parseErrorData: null,
-      constMeta: kSizeMethodWasmRunSharedMemoryConstMeta,
-      argValues: [that],
-      hint: hint,
-    ));
+    return _platform.executeSync(
+      FlutterRustBridgeSyncTask(
+        callFfi: () =>
+            _platform.inner.wire_size__method__WasmRunSharedMemory(arg0),
+        parseSuccessData: _wire2api_u64,
+        parseErrorData: null,
+        constMeta: kSizeMethodWasmRunSharedMemoryConstMeta,
+        argValues: [that],
+        hint: hint,
+      ),
+    );
   }
 
   FlutterRustBridgeTaskConstMeta get kSizeMethodWasmRunSharedMemoryConstMeta =>
@@ -3017,61 +3172,74 @@ class WasmRunDartImpl implements WasmRunDart {
         argNames: ["that"],
       );
 
-  int dataSizeMethodWasmRunSharedMemory(
-      {required WasmRunSharedMemory that, dynamic hint}) {
+  int dataSizeMethodWasmRunSharedMemory({
+    required WasmRunSharedMemory that,
+    dynamic hint,
+  }) {
     var arg0 = _platform.api2wire_box_autoadd_wasm_run_shared_memory(that);
-    return _platform.executeSync(FlutterRustBridgeSyncTask(
-      callFfi: () =>
-          _platform.inner.wire_data_size__method__WasmRunSharedMemory(arg0),
-      parseSuccessData: _wire2api_usize,
-      parseErrorData: null,
-      constMeta: kDataSizeMethodWasmRunSharedMemoryConstMeta,
-      argValues: [that],
-      hint: hint,
-    ));
+    return _platform.executeSync(
+      FlutterRustBridgeSyncTask(
+        callFfi: () =>
+            _platform.inner.wire_data_size__method__WasmRunSharedMemory(arg0),
+        parseSuccessData: _wire2api_usize,
+        parseErrorData: null,
+        constMeta: kDataSizeMethodWasmRunSharedMemoryConstMeta,
+        argValues: [that],
+        hint: hint,
+      ),
+    );
   }
 
   FlutterRustBridgeTaskConstMeta
-      get kDataSizeMethodWasmRunSharedMemoryConstMeta =>
-          const FlutterRustBridgeTaskConstMeta(
-            debugName: "data_size__method__WasmRunSharedMemory",
-            argNames: ["that"],
-          );
+  get kDataSizeMethodWasmRunSharedMemoryConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "data_size__method__WasmRunSharedMemory",
+        argNames: ["that"],
+      );
 
-  int dataPointerMethodWasmRunSharedMemory(
-      {required WasmRunSharedMemory that, dynamic hint}) {
+  int dataPointerMethodWasmRunSharedMemory({
+    required WasmRunSharedMemory that,
+    dynamic hint,
+  }) {
     var arg0 = _platform.api2wire_box_autoadd_wasm_run_shared_memory(that);
-    return _platform.executeSync(FlutterRustBridgeSyncTask(
-      callFfi: () =>
-          _platform.inner.wire_data_pointer__method__WasmRunSharedMemory(arg0),
-      parseSuccessData: _wire2api_usize,
-      parseErrorData: null,
-      constMeta: kDataPointerMethodWasmRunSharedMemoryConstMeta,
-      argValues: [that],
-      hint: hint,
-    ));
+    return _platform.executeSync(
+      FlutterRustBridgeSyncTask(
+        callFfi: () => _platform.inner
+            .wire_data_pointer__method__WasmRunSharedMemory(arg0),
+        parseSuccessData: _wire2api_usize,
+        parseErrorData: null,
+        constMeta: kDataPointerMethodWasmRunSharedMemoryConstMeta,
+        argValues: [that],
+        hint: hint,
+      ),
+    );
   }
 
   FlutterRustBridgeTaskConstMeta
-      get kDataPointerMethodWasmRunSharedMemoryConstMeta =>
-          const FlutterRustBridgeTaskConstMeta(
-            debugName: "data_pointer__method__WasmRunSharedMemory",
-            argNames: ["that"],
-          );
+  get kDataPointerMethodWasmRunSharedMemoryConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "data_pointer__method__WasmRunSharedMemory",
+        argNames: ["that"],
+      );
 
-  int growMethodWasmRunSharedMemory(
-      {required WasmRunSharedMemory that, required int delta, dynamic hint}) {
+  int growMethodWasmRunSharedMemory({
+    required WasmRunSharedMemory that,
+    required int delta,
+    dynamic hint,
+  }) {
     var arg0 = _platform.api2wire_box_autoadd_wasm_run_shared_memory(that);
     var arg1 = _platform.api2wire_u64(delta);
-    return _platform.executeSync(FlutterRustBridgeSyncTask(
-      callFfi: () =>
-          _platform.inner.wire_grow__method__WasmRunSharedMemory(arg0, arg1),
-      parseSuccessData: _wire2api_u64,
-      parseErrorData: _wire2api_FrbAnyhowException,
-      constMeta: kGrowMethodWasmRunSharedMemoryConstMeta,
-      argValues: [that, delta],
-      hint: hint,
-    ));
+    return _platform.executeSync(
+      FlutterRustBridgeSyncTask(
+        callFfi: () =>
+            _platform.inner.wire_grow__method__WasmRunSharedMemory(arg0, arg1),
+        parseSuccessData: _wire2api_u64,
+        parseErrorData: _wire2api_FrbAnyhowException,
+        constMeta: kGrowMethodWasmRunSharedMemoryConstMeta,
+        argValues: [that, delta],
+        hint: hint,
+      ),
+    );
   }
 
   FlutterRustBridgeTaskConstMeta get kGrowMethodWasmRunSharedMemoryConstMeta =>
@@ -3080,126 +3248,148 @@ class WasmRunDartImpl implements WasmRunDart {
         argNames: ["that", "delta"],
       );
 
-  Future<Atomics> atomicsMethodWasmRunSharedMemory(
-      {required WasmRunSharedMemory that, dynamic hint}) {
+  Future<Atomics> atomicsMethodWasmRunSharedMemory({
+    required WasmRunSharedMemory that,
+    dynamic hint,
+  }) {
     var arg0 = _platform.api2wire_box_autoadd_wasm_run_shared_memory(that);
-    return _platform.executeNormal(FlutterRustBridgeTask(
-      callFfi: (port_) => _platform.inner
-          .wire_atomics__method__WasmRunSharedMemory(port_, arg0),
-      parseSuccessData: (d) => _wire2api_atomics(d),
-      parseErrorData: null,
-      constMeta: kAtomicsMethodWasmRunSharedMemoryConstMeta,
-      argValues: [that],
-      hint: hint,
-    ));
+    return _platform.executeNormal(
+      FlutterRustBridgeTask(
+        callFfi: (port_) => _platform.inner
+            .wire_atomics__method__WasmRunSharedMemory(port_, arg0),
+        parseSuccessData: (d) => _wire2api_atomics(d),
+        parseErrorData: null,
+        constMeta: kAtomicsMethodWasmRunSharedMemoryConstMeta,
+        argValues: [that],
+        hint: hint,
+      ),
+    );
   }
 
   FlutterRustBridgeTaskConstMeta
-      get kAtomicsMethodWasmRunSharedMemoryConstMeta =>
-          const FlutterRustBridgeTaskConstMeta(
-            debugName: "atomics__method__WasmRunSharedMemory",
-            argNames: ["that"],
-          );
+  get kAtomicsMethodWasmRunSharedMemoryConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "atomics__method__WasmRunSharedMemory",
+        argNames: ["that"],
+      );
 
-  int atomicNotifyMethodWasmRunSharedMemory(
-      {required WasmRunSharedMemory that,
-      required int addr,
-      required int count,
-      dynamic hint}) {
+  int atomicNotifyMethodWasmRunSharedMemory({
+    required WasmRunSharedMemory that,
+    required int addr,
+    required int count,
+    dynamic hint,
+  }) {
     var arg0 = _platform.api2wire_box_autoadd_wasm_run_shared_memory(that);
     var arg1 = _platform.api2wire_u64(addr);
     var arg2 = api2wire_u32(count);
-    return _platform.executeSync(FlutterRustBridgeSyncTask(
-      callFfi: () => _platform.inner
-          .wire_atomic_notify__method__WasmRunSharedMemory(arg0, arg1, arg2),
-      parseSuccessData: _wire2api_u32,
-      parseErrorData: _wire2api_FrbAnyhowException,
-      constMeta: kAtomicNotifyMethodWasmRunSharedMemoryConstMeta,
-      argValues: [that, addr, count],
-      hint: hint,
-    ));
+    return _platform.executeSync(
+      FlutterRustBridgeSyncTask(
+        callFfi: () => _platform.inner
+            .wire_atomic_notify__method__WasmRunSharedMemory(arg0, arg1, arg2),
+        parseSuccessData: _wire2api_u32,
+        parseErrorData: _wire2api_FrbAnyhowException,
+        constMeta: kAtomicNotifyMethodWasmRunSharedMemoryConstMeta,
+        argValues: [that, addr, count],
+        hint: hint,
+      ),
+    );
   }
 
   FlutterRustBridgeTaskConstMeta
-      get kAtomicNotifyMethodWasmRunSharedMemoryConstMeta =>
-          const FlutterRustBridgeTaskConstMeta(
-            debugName: "atomic_notify__method__WasmRunSharedMemory",
-            argNames: ["that", "addr", "count"],
-          );
+  get kAtomicNotifyMethodWasmRunSharedMemoryConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "atomic_notify__method__WasmRunSharedMemory",
+        argNames: ["that", "addr", "count"],
+      );
 
-  SharedMemoryWaitResult atomicWait32MethodWasmRunSharedMemory(
-      {required WasmRunSharedMemory that,
-      required int addr,
-      required int expected,
-      dynamic hint}) {
+  SharedMemoryWaitResult atomicWait32MethodWasmRunSharedMemory({
+    required WasmRunSharedMemory that,
+    required int addr,
+    required int expected,
+    dynamic hint,
+  }) {
     var arg0 = _platform.api2wire_box_autoadd_wasm_run_shared_memory(that);
     var arg1 = _platform.api2wire_u64(addr);
     var arg2 = api2wire_u32(expected);
-    return _platform.executeSync(FlutterRustBridgeSyncTask(
-      callFfi: () => _platform.inner
-          .wire_atomic_wait32__method__WasmRunSharedMemory(arg0, arg1, arg2),
-      parseSuccessData: _wire2api_shared_memory_wait_result,
-      parseErrorData: _wire2api_FrbAnyhowException,
-      constMeta: kAtomicWait32MethodWasmRunSharedMemoryConstMeta,
-      argValues: [that, addr, expected],
-      hint: hint,
-    ));
+    return _platform.executeSync(
+      FlutterRustBridgeSyncTask(
+        callFfi: () => _platform.inner
+            .wire_atomic_wait32__method__WasmRunSharedMemory(arg0, arg1, arg2),
+        parseSuccessData: _wire2api_shared_memory_wait_result,
+        parseErrorData: _wire2api_FrbAnyhowException,
+        constMeta: kAtomicWait32MethodWasmRunSharedMemoryConstMeta,
+        argValues: [that, addr, expected],
+        hint: hint,
+      ),
+    );
   }
 
   FlutterRustBridgeTaskConstMeta
-      get kAtomicWait32MethodWasmRunSharedMemoryConstMeta =>
-          const FlutterRustBridgeTaskConstMeta(
-            debugName: "atomic_wait32__method__WasmRunSharedMemory",
-            argNames: ["that", "addr", "expected"],
-          );
+  get kAtomicWait32MethodWasmRunSharedMemoryConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "atomic_wait32__method__WasmRunSharedMemory",
+        argNames: ["that", "addr", "expected"],
+      );
 
-  SharedMemoryWaitResult atomicWait64MethodWasmRunSharedMemory(
-      {required WasmRunSharedMemory that,
-      required int addr,
-      required int expected,
-      dynamic hint}) {
+  SharedMemoryWaitResult atomicWait64MethodWasmRunSharedMemory({
+    required WasmRunSharedMemory that,
+    required int addr,
+    required int expected,
+    dynamic hint,
+  }) {
     var arg0 = _platform.api2wire_box_autoadd_wasm_run_shared_memory(that);
     var arg1 = _platform.api2wire_u64(addr);
     var arg2 = _platform.api2wire_u64(expected);
-    return _platform.executeSync(FlutterRustBridgeSyncTask(
-      callFfi: () => _platform.inner
-          .wire_atomic_wait64__method__WasmRunSharedMemory(arg0, arg1, arg2),
-      parseSuccessData: _wire2api_shared_memory_wait_result,
-      parseErrorData: _wire2api_FrbAnyhowException,
-      constMeta: kAtomicWait64MethodWasmRunSharedMemoryConstMeta,
-      argValues: [that, addr, expected],
-      hint: hint,
-    ));
+    return _platform.executeSync(
+      FlutterRustBridgeSyncTask(
+        callFfi: () => _platform.inner
+            .wire_atomic_wait64__method__WasmRunSharedMemory(arg0, arg1, arg2),
+        parseSuccessData: _wire2api_shared_memory_wait_result,
+        parseErrorData: _wire2api_FrbAnyhowException,
+        constMeta: kAtomicWait64MethodWasmRunSharedMemoryConstMeta,
+        argValues: [that, addr, expected],
+        hint: hint,
+      ),
+    );
   }
 
   FlutterRustBridgeTaskConstMeta
-      get kAtomicWait64MethodWasmRunSharedMemoryConstMeta =>
-          const FlutterRustBridgeTaskConstMeta(
-            debugName: "atomic_wait64__method__WasmRunSharedMemory",
-            argNames: ["that", "addr", "expected"],
-          );
+  get kAtomicWait64MethodWasmRunSharedMemoryConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "atomic_wait64__method__WasmRunSharedMemory",
+        argNames: ["that", "addr", "expected"],
+      );
 
-  Future<int> addMethodAtomics(
-      {required Atomics that,
-      required int offset,
-      required AtomicKind kind,
-      required int val,
-      required AtomicOrdering order,
-      dynamic hint}) {
+  Future<int> addMethodAtomics({
+    required Atomics that,
+    required int offset,
+    required AtomicKind kind,
+    required int val,
+    required AtomicOrdering order,
+    dynamic hint,
+  }) {
     var arg0 = _platform.api2wire_box_autoadd_atomics(that);
     var arg1 = api2wire_usize(offset);
     var arg2 = api2wire_atomic_kind(kind);
     var arg3 = _platform.api2wire_i64(val);
     var arg4 = api2wire_atomic_ordering(order);
-    return _platform.executeNormal(FlutterRustBridgeTask(
-      callFfi: (port_) => _platform.inner
-          .wire_add__method__Atomics(port_, arg0, arg1, arg2, arg3, arg4),
-      parseSuccessData: _wire2api_i64,
-      parseErrorData: null,
-      constMeta: kAddMethodAtomicsConstMeta,
-      argValues: [that, offset, kind, val, order],
-      hint: hint,
-    ));
+    return _platform.executeNormal(
+      FlutterRustBridgeTask(
+        callFfi: (port_) => _platform.inner.wire_add__method__Atomics(
+          port_,
+          arg0,
+          arg1,
+          arg2,
+          arg3,
+          arg4,
+        ),
+        parseSuccessData: _wire2api_i64,
+        parseErrorData: null,
+        constMeta: kAddMethodAtomicsConstMeta,
+        argValues: [that, offset, kind, val, order],
+        hint: hint,
+      ),
+    );
   }
 
   FlutterRustBridgeTaskConstMeta get kAddMethodAtomicsConstMeta =>
@@ -3208,25 +3398,33 @@ class WasmRunDartImpl implements WasmRunDart {
         argNames: ["that", "offset", "kind", "val", "order"],
       );
 
-  Future<int> loadMethodAtomics(
-      {required Atomics that,
-      required int offset,
-      required AtomicKind kind,
-      required AtomicOrdering order,
-      dynamic hint}) {
+  Future<int> loadMethodAtomics({
+    required Atomics that,
+    required int offset,
+    required AtomicKind kind,
+    required AtomicOrdering order,
+    dynamic hint,
+  }) {
     var arg0 = _platform.api2wire_box_autoadd_atomics(that);
     var arg1 = api2wire_usize(offset);
     var arg2 = api2wire_atomic_kind(kind);
     var arg3 = api2wire_atomic_ordering(order);
-    return _platform.executeNormal(FlutterRustBridgeTask(
-      callFfi: (port_) => _platform.inner
-          .wire_load__method__Atomics(port_, arg0, arg1, arg2, arg3),
-      parseSuccessData: _wire2api_i64,
-      parseErrorData: null,
-      constMeta: kLoadMethodAtomicsConstMeta,
-      argValues: [that, offset, kind, order],
-      hint: hint,
-    ));
+    return _platform.executeNormal(
+      FlutterRustBridgeTask(
+        callFfi: (port_) => _platform.inner.wire_load__method__Atomics(
+          port_,
+          arg0,
+          arg1,
+          arg2,
+          arg3,
+        ),
+        parseSuccessData: _wire2api_i64,
+        parseErrorData: null,
+        constMeta: kLoadMethodAtomicsConstMeta,
+        argValues: [that, offset, kind, order],
+        hint: hint,
+      ),
+    );
   }
 
   FlutterRustBridgeTaskConstMeta get kLoadMethodAtomicsConstMeta =>
@@ -3235,27 +3433,36 @@ class WasmRunDartImpl implements WasmRunDart {
         argNames: ["that", "offset", "kind", "order"],
       );
 
-  Future<void> storeMethodAtomics(
-      {required Atomics that,
-      required int offset,
-      required AtomicKind kind,
-      required int val,
-      required AtomicOrdering order,
-      dynamic hint}) {
+  Future<void> storeMethodAtomics({
+    required Atomics that,
+    required int offset,
+    required AtomicKind kind,
+    required int val,
+    required AtomicOrdering order,
+    dynamic hint,
+  }) {
     var arg0 = _platform.api2wire_box_autoadd_atomics(that);
     var arg1 = api2wire_usize(offset);
     var arg2 = api2wire_atomic_kind(kind);
     var arg3 = _platform.api2wire_i64(val);
     var arg4 = api2wire_atomic_ordering(order);
-    return _platform.executeNormal(FlutterRustBridgeTask(
-      callFfi: (port_) => _platform.inner
-          .wire_store__method__Atomics(port_, arg0, arg1, arg2, arg3, arg4),
-      parseSuccessData: _wire2api_unit,
-      parseErrorData: null,
-      constMeta: kStoreMethodAtomicsConstMeta,
-      argValues: [that, offset, kind, val, order],
-      hint: hint,
-    ));
+    return _platform.executeNormal(
+      FlutterRustBridgeTask(
+        callFfi: (port_) => _platform.inner.wire_store__method__Atomics(
+          port_,
+          arg0,
+          arg1,
+          arg2,
+          arg3,
+          arg4,
+        ),
+        parseSuccessData: _wire2api_unit,
+        parseErrorData: null,
+        constMeta: kStoreMethodAtomicsConstMeta,
+        argValues: [that, offset, kind, val, order],
+        hint: hint,
+      ),
+    );
   }
 
   FlutterRustBridgeTaskConstMeta get kStoreMethodAtomicsConstMeta =>
@@ -3264,27 +3471,36 @@ class WasmRunDartImpl implements WasmRunDart {
         argNames: ["that", "offset", "kind", "val", "order"],
       );
 
-  Future<int> swapMethodAtomics(
-      {required Atomics that,
-      required int offset,
-      required AtomicKind kind,
-      required int val,
-      required AtomicOrdering order,
-      dynamic hint}) {
+  Future<int> swapMethodAtomics({
+    required Atomics that,
+    required int offset,
+    required AtomicKind kind,
+    required int val,
+    required AtomicOrdering order,
+    dynamic hint,
+  }) {
     var arg0 = _platform.api2wire_box_autoadd_atomics(that);
     var arg1 = api2wire_usize(offset);
     var arg2 = api2wire_atomic_kind(kind);
     var arg3 = _platform.api2wire_i64(val);
     var arg4 = api2wire_atomic_ordering(order);
-    return _platform.executeNormal(FlutterRustBridgeTask(
-      callFfi: (port_) => _platform.inner
-          .wire_swap__method__Atomics(port_, arg0, arg1, arg2, arg3, arg4),
-      parseSuccessData: _wire2api_i64,
-      parseErrorData: null,
-      constMeta: kSwapMethodAtomicsConstMeta,
-      argValues: [that, offset, kind, val, order],
-      hint: hint,
-    ));
+    return _platform.executeNormal(
+      FlutterRustBridgeTask(
+        callFfi: (port_) => _platform.inner.wire_swap__method__Atomics(
+          port_,
+          arg0,
+          arg1,
+          arg2,
+          arg3,
+          arg4,
+        ),
+        parseSuccessData: _wire2api_i64,
+        parseErrorData: null,
+        constMeta: kSwapMethodAtomicsConstMeta,
+        argValues: [that, offset, kind, val, order],
+        hint: hint,
+      ),
+    );
   }
 
   FlutterRustBridgeTaskConstMeta get kSwapMethodAtomicsConstMeta =>
@@ -3293,15 +3509,16 @@ class WasmRunDartImpl implements WasmRunDart {
         argNames: ["that", "offset", "kind", "val", "order"],
       );
 
-  Future<CompareExchangeResult> compareExchangeMethodAtomics(
-      {required Atomics that,
-      required int offset,
-      required AtomicKind kind,
-      required int current,
-      required int newValue,
-      required AtomicOrdering success,
-      required AtomicOrdering failure,
-      dynamic hint}) {
+  Future<CompareExchangeResult> compareExchangeMethodAtomics({
+    required Atomics that,
+    required int offset,
+    required AtomicKind kind,
+    required int current,
+    required int newValue,
+    required AtomicOrdering success,
+    required AtomicOrdering failure,
+    dynamic hint,
+  }) {
     var arg0 = _platform.api2wire_box_autoadd_atomics(that);
     var arg1 = api2wire_usize(offset);
     var arg2 = api2wire_atomic_kind(kind);
@@ -3309,16 +3526,26 @@ class WasmRunDartImpl implements WasmRunDart {
     var arg4 = _platform.api2wire_i64(newValue);
     var arg5 = api2wire_atomic_ordering(success);
     var arg6 = api2wire_atomic_ordering(failure);
-    return _platform.executeNormal(FlutterRustBridgeTask(
-      callFfi: (port_) => _platform.inner
-          .wire_compare_exchange__method__Atomics(
-              port_, arg0, arg1, arg2, arg3, arg4, arg5, arg6),
-      parseSuccessData: _wire2api_compare_exchange_result,
-      parseErrorData: null,
-      constMeta: kCompareExchangeMethodAtomicsConstMeta,
-      argValues: [that, offset, kind, current, newValue, success, failure],
-      hint: hint,
-    ));
+    return _platform.executeNormal(
+      FlutterRustBridgeTask(
+        callFfi: (port_) =>
+            _platform.inner.wire_compare_exchange__method__Atomics(
+              port_,
+              arg0,
+              arg1,
+              arg2,
+              arg3,
+              arg4,
+              arg5,
+              arg6,
+            ),
+        parseSuccessData: _wire2api_compare_exchange_result,
+        parseErrorData: null,
+        constMeta: kCompareExchangeMethodAtomicsConstMeta,
+        argValues: [that, offset, kind, current, newValue, success, failure],
+        hint: hint,
+      ),
+    );
   }
 
   FlutterRustBridgeTaskConstMeta get kCompareExchangeMethodAtomicsConstMeta =>
@@ -3331,31 +3558,40 @@ class WasmRunDartImpl implements WasmRunDart {
           "current",
           "newValue",
           "success",
-          "failure"
+          "failure",
         ],
       );
 
-  Future<int> subMethodAtomics(
-      {required Atomics that,
-      required int offset,
-      required AtomicKind kind,
-      required int val,
-      required AtomicOrdering order,
-      dynamic hint}) {
+  Future<int> subMethodAtomics({
+    required Atomics that,
+    required int offset,
+    required AtomicKind kind,
+    required int val,
+    required AtomicOrdering order,
+    dynamic hint,
+  }) {
     var arg0 = _platform.api2wire_box_autoadd_atomics(that);
     var arg1 = api2wire_usize(offset);
     var arg2 = api2wire_atomic_kind(kind);
     var arg3 = _platform.api2wire_i64(val);
     var arg4 = api2wire_atomic_ordering(order);
-    return _platform.executeNormal(FlutterRustBridgeTask(
-      callFfi: (port_) => _platform.inner
-          .wire_sub__method__Atomics(port_, arg0, arg1, arg2, arg3, arg4),
-      parseSuccessData: _wire2api_i64,
-      parseErrorData: null,
-      constMeta: kSubMethodAtomicsConstMeta,
-      argValues: [that, offset, kind, val, order],
-      hint: hint,
-    ));
+    return _platform.executeNormal(
+      FlutterRustBridgeTask(
+        callFfi: (port_) => _platform.inner.wire_sub__method__Atomics(
+          port_,
+          arg0,
+          arg1,
+          arg2,
+          arg3,
+          arg4,
+        ),
+        parseSuccessData: _wire2api_i64,
+        parseErrorData: null,
+        constMeta: kSubMethodAtomicsConstMeta,
+        argValues: [that, offset, kind, val, order],
+        hint: hint,
+      ),
+    );
   }
 
   FlutterRustBridgeTaskConstMeta get kSubMethodAtomicsConstMeta =>
@@ -3364,27 +3600,36 @@ class WasmRunDartImpl implements WasmRunDart {
         argNames: ["that", "offset", "kind", "val", "order"],
       );
 
-  Future<int> andMethodAtomics(
-      {required Atomics that,
-      required int offset,
-      required AtomicKind kind,
-      required int val,
-      required AtomicOrdering order,
-      dynamic hint}) {
+  Future<int> andMethodAtomics({
+    required Atomics that,
+    required int offset,
+    required AtomicKind kind,
+    required int val,
+    required AtomicOrdering order,
+    dynamic hint,
+  }) {
     var arg0 = _platform.api2wire_box_autoadd_atomics(that);
     var arg1 = api2wire_usize(offset);
     var arg2 = api2wire_atomic_kind(kind);
     var arg3 = _platform.api2wire_i64(val);
     var arg4 = api2wire_atomic_ordering(order);
-    return _platform.executeNormal(FlutterRustBridgeTask(
-      callFfi: (port_) => _platform.inner
-          .wire_and__method__Atomics(port_, arg0, arg1, arg2, arg3, arg4),
-      parseSuccessData: _wire2api_i64,
-      parseErrorData: null,
-      constMeta: kAndMethodAtomicsConstMeta,
-      argValues: [that, offset, kind, val, order],
-      hint: hint,
-    ));
+    return _platform.executeNormal(
+      FlutterRustBridgeTask(
+        callFfi: (port_) => _platform.inner.wire_and__method__Atomics(
+          port_,
+          arg0,
+          arg1,
+          arg2,
+          arg3,
+          arg4,
+        ),
+        parseSuccessData: _wire2api_i64,
+        parseErrorData: null,
+        constMeta: kAndMethodAtomicsConstMeta,
+        argValues: [that, offset, kind, val, order],
+        hint: hint,
+      ),
+    );
   }
 
   FlutterRustBridgeTaskConstMeta get kAndMethodAtomicsConstMeta =>
@@ -3393,27 +3638,36 @@ class WasmRunDartImpl implements WasmRunDart {
         argNames: ["that", "offset", "kind", "val", "order"],
       );
 
-  Future<int> orMethodAtomics(
-      {required Atomics that,
-      required int offset,
-      required AtomicKind kind,
-      required int val,
-      required AtomicOrdering order,
-      dynamic hint}) {
+  Future<int> orMethodAtomics({
+    required Atomics that,
+    required int offset,
+    required AtomicKind kind,
+    required int val,
+    required AtomicOrdering order,
+    dynamic hint,
+  }) {
     var arg0 = _platform.api2wire_box_autoadd_atomics(that);
     var arg1 = api2wire_usize(offset);
     var arg2 = api2wire_atomic_kind(kind);
     var arg3 = _platform.api2wire_i64(val);
     var arg4 = api2wire_atomic_ordering(order);
-    return _platform.executeNormal(FlutterRustBridgeTask(
-      callFfi: (port_) => _platform.inner
-          .wire_or__method__Atomics(port_, arg0, arg1, arg2, arg3, arg4),
-      parseSuccessData: _wire2api_i64,
-      parseErrorData: null,
-      constMeta: kOrMethodAtomicsConstMeta,
-      argValues: [that, offset, kind, val, order],
-      hint: hint,
-    ));
+    return _platform.executeNormal(
+      FlutterRustBridgeTask(
+        callFfi: (port_) => _platform.inner.wire_or__method__Atomics(
+          port_,
+          arg0,
+          arg1,
+          arg2,
+          arg3,
+          arg4,
+        ),
+        parseSuccessData: _wire2api_i64,
+        parseErrorData: null,
+        constMeta: kOrMethodAtomicsConstMeta,
+        argValues: [that, offset, kind, val, order],
+        hint: hint,
+      ),
+    );
   }
 
   FlutterRustBridgeTaskConstMeta get kOrMethodAtomicsConstMeta =>
@@ -3422,27 +3676,36 @@ class WasmRunDartImpl implements WasmRunDart {
         argNames: ["that", "offset", "kind", "val", "order"],
       );
 
-  Future<int> xorMethodAtomics(
-      {required Atomics that,
-      required int offset,
-      required AtomicKind kind,
-      required int val,
-      required AtomicOrdering order,
-      dynamic hint}) {
+  Future<int> xorMethodAtomics({
+    required Atomics that,
+    required int offset,
+    required AtomicKind kind,
+    required int val,
+    required AtomicOrdering order,
+    dynamic hint,
+  }) {
     var arg0 = _platform.api2wire_box_autoadd_atomics(that);
     var arg1 = api2wire_usize(offset);
     var arg2 = api2wire_atomic_kind(kind);
     var arg3 = _platform.api2wire_i64(val);
     var arg4 = api2wire_atomic_ordering(order);
-    return _platform.executeNormal(FlutterRustBridgeTask(
-      callFfi: (port_) => _platform.inner
-          .wire_xor__method__Atomics(port_, arg0, arg1, arg2, arg3, arg4),
-      parseSuccessData: _wire2api_i64,
-      parseErrorData: null,
-      constMeta: kXorMethodAtomicsConstMeta,
-      argValues: [that, offset, kind, val, order],
-      hint: hint,
-    ));
+    return _platform.executeNormal(
+      FlutterRustBridgeTask(
+        callFfi: (port_) => _platform.inner.wire_xor__method__Atomics(
+          port_,
+          arg0,
+          arg1,
+          arg2,
+          arg3,
+          arg4,
+        ),
+        parseSuccessData: _wire2api_i64,
+        parseErrorData: null,
+        constMeta: kXorMethodAtomicsConstMeta,
+        argValues: [that, offset, kind, val, order],
+        hint: hint,
+      ),
+    );
   }
 
   FlutterRustBridgeTaskConstMeta get kXorMethodAtomicsConstMeta =>
@@ -3489,7 +3752,7 @@ class WasmRunDartImpl implements WasmRunDart {
   void dispose() {
     _platform.dispose();
   }
-// Section: wire2api
+  // Section: wire2api
 
   ArcRwLockSharedMemory _wire2api_ArcRwLockSharedMemory(dynamic raw) {
     return ArcRwLockSharedMemory.fromRaw(raw[0], raw[1], this);
@@ -3531,10 +3794,7 @@ class WasmRunDartImpl implements WasmRunDart {
     final arr = raw as List<dynamic>;
     if (arr.length != 1)
       throw Exception('unexpected arr length: expect 1 but see ${arr.length}');
-    return Atomics(
-      bridge: this,
-      field0: _wire2api_usize(arr[0]),
-    );
+    return Atomics(bridge: this, field0: _wire2api_usize(arr[0]));
   }
 
   bool _wire2api_bool(dynamic raw) {
@@ -3574,7 +3834,8 @@ class WasmRunDartImpl implements WasmRunDart {
   }
 
   WasmRunSharedMemory _wire2api_box_autoadd_wasm_run_shared_memory(
-      dynamic raw) {
+    dynamic raw,
+  ) {
     return _wire2api_wasm_run_shared_memory(raw);
   }
 
@@ -3609,21 +3870,13 @@ class WasmRunDartImpl implements WasmRunDart {
   ExternalType _wire2api_external_type(dynamic raw) {
     switch (raw[0]) {
       case 0:
-        return ExternalType_Func(
-          _wire2api_box_autoadd_func_ty(raw[1]),
-        );
+        return ExternalType_Func(_wire2api_box_autoadd_func_ty(raw[1]));
       case 1:
-        return ExternalType_Global(
-          _wire2api_box_autoadd_global_ty(raw[1]),
-        );
+        return ExternalType_Global(_wire2api_box_autoadd_global_ty(raw[1]));
       case 2:
-        return ExternalType_Table(
-          _wire2api_box_autoadd_table_ty(raw[1]),
-        );
+        return ExternalType_Table(_wire2api_box_autoadd_table_ty(raw[1]));
       case 3:
-        return ExternalType_Memory(
-          _wire2api_box_autoadd_memory_ty(raw[1]),
-        );
+        return ExternalType_Memory(_wire2api_box_autoadd_memory_ty(raw[1]));
       default:
         throw Exception("unreachable");
     }
@@ -3632,21 +3885,13 @@ class WasmRunDartImpl implements WasmRunDart {
   ExternalValue _wire2api_external_value(dynamic raw) {
     switch (raw[0]) {
       case 0:
-        return ExternalValue_Func(
-          _wire2api_WFunc(raw[1]),
-        );
+        return ExternalValue_Func(_wire2api_WFunc(raw[1]));
       case 1:
-        return ExternalValue_Global(
-          _wire2api_Global(raw[1]),
-        );
+        return ExternalValue_Global(_wire2api_Global(raw[1]));
       case 2:
-        return ExternalValue_Table(
-          _wire2api_Table(raw[1]),
-        );
+        return ExternalValue_Table(_wire2api_Table(raw[1]));
       case 3:
-        return ExternalValue_Memory(
-          _wire2api_Memory(raw[1]),
-        );
+        return ExternalValue_Memory(_wire2api_Memory(raw[1]));
       case 4:
         return ExternalValue_SharedMemory(
           _wire2api_box_autoadd_wasm_run_shared_memory(raw[1]),
@@ -3790,17 +4035,11 @@ class WasmRunDartImpl implements WasmRunDart {
   ParallelExec _wire2api_parallel_exec(dynamic raw) {
     switch (raw[0]) {
       case 0:
-        return ParallelExec_Ok(
-          _wire2api_list_wasm_val(raw[1]),
-        );
+        return ParallelExec_Ok(_wire2api_list_wasm_val(raw[1]));
       case 1:
-        return ParallelExec_Err(
-          _wire2api_String(raw[1]),
-        );
+        return ParallelExec_Err(_wire2api_String(raw[1]));
       case 2:
-        return ParallelExec_Call(
-          _wire2api_box_autoadd_function_call(raw[1]),
-        );
+        return ParallelExec_Call(_wire2api_box_autoadd_function_call(raw[1]));
       default:
         throw Exception("unreachable");
     }
@@ -3895,10 +4134,7 @@ class WasmRunDartImpl implements WasmRunDart {
     final arr = raw as List<dynamic>;
     if (arr.length != 1)
       throw Exception('unexpected arr length: expect 1 but see ${arr.length}');
-    return WasmRunInstanceId(
-      bridge: this,
-      field0: _wire2api_u32(arr[0]),
-    );
+    return WasmRunInstanceId(bridge: this, field0: _wire2api_u32(arr[0]));
   }
 
   WasmRunModuleId _wire2api_wasm_run_module_id(dynamic raw) {
@@ -3938,33 +4174,19 @@ class WasmRunDartImpl implements WasmRunDart {
   WasmVal _wire2api_wasm_val(dynamic raw) {
     switch (raw[0]) {
       case 0:
-        return WasmVal_i32(
-          _wire2api_i32(raw[1]),
-        );
+        return WasmVal_i32(_wire2api_i32(raw[1]));
       case 1:
-        return WasmVal_i64(
-          _wire2api_i64(raw[1]),
-        );
+        return WasmVal_i64(_wire2api_i64(raw[1]));
       case 2:
-        return WasmVal_f32(
-          _wire2api_f32(raw[1]),
-        );
+        return WasmVal_f32(_wire2api_f32(raw[1]));
       case 3:
-        return WasmVal_f64(
-          _wire2api_f64(raw[1]),
-        );
+        return WasmVal_f64(_wire2api_f64(raw[1]));
       case 4:
-        return WasmVal_v128(
-          _wire2api_u8_array_16(raw[1]),
-        );
+        return WasmVal_v128(_wire2api_u8_array_16(raw[1]));
       case 5:
-        return WasmVal_funcRef(
-          _wire2api_opt_box_autoadd_WFunc(raw[1]),
-        );
+        return WasmVal_funcRef(_wire2api_opt_box_autoadd_WFunc(raw[1]));
       case 6:
-        return WasmVal_externRef(
-          _wire2api_opt_box_autoadd_u32(raw[1]),
-        );
+        return WasmVal_externRef(_wire2api_opt_box_autoadd_u32(raw[1]));
       default:
         throw Exception("unreachable");
     }

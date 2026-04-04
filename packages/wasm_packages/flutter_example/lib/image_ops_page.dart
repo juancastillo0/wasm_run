@@ -27,10 +27,7 @@ class ImageOpsPage extends StatelessWidget {
 
     void loadImage(void Function(String name, Uint8List bytes) onLoad) async {
       final files = await FileSystem.instance.showOpenFilePickerWebSafe(
-        const FsOpenOptions(
-          multiple: false,
-          types: [imageFileType],
-        ),
+        const FsOpenOptions(multiple: false, types: [imageFileType]),
       );
       if (files.isNotEmpty) {
         final file = files.first;
@@ -40,17 +37,11 @@ class ImageOpsPage extends StatelessWidget {
     }
 
     Widget imageOpToWidget(ImgOp e) {
-      final button = TextButton(
-        onPressed: op(e.exec),
-        child: Text(e.name),
-      );
+      final button = TextButton(onPressed: op(e.exec), child: Text(e.name));
       if (e.fields != null) {
         return Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            button,
-            e.fields!.container(width: 80),
-          ],
+          children: [button, e.fields!.container(width: 80)],
         );
       }
       return button;
@@ -75,18 +66,9 @@ class ImageOpsPage extends StatelessWidget {
                             const Text('Rotate'),
                             const SizedBox(width: 4),
                             ...([
-                              (
-                                90,
-                                state.imageOps.operations.rotate90,
-                              ),
-                              (
-                                180,
-                                state.imageOps.operations.rotate180,
-                              ),
-                              (
-                                270,
-                                state.imageOps.operations.rotate270,
-                              )
+                              (90, state.imageOps.operations.rotate90),
+                              (180, state.imageOps.operations.rotate180),
+                              (270, state.imageOps.operations.rotate270),
                             ]).map(
                               (e) => TextButton(
                                 style: TextButton.styleFrom(
@@ -99,7 +81,7 @@ class ImageOpsPage extends StatelessWidget {
                                 onPressed: op((ref) => e.$2(imageRef: ref)),
                                 child: Text('${e.$1}'),
                               ),
-                            )
+                            ),
                           ],
                         ),
                         ...imageOps(state).map(imageOpToWidget),
@@ -126,8 +108,9 @@ class ImageOpsPage extends StatelessWidget {
                               )
                               .toList(growable: false),
                         ).container(
-                            width: 140,
-                            padding: const EdgeInsets.symmetric(horizontal: 6)),
+                          width: 140,
+                          padding: const EdgeInsets.symmetric(horizontal: 6),
+                        ),
                         // TODO: /// Resize the supplied image to the specified dimensions.
                         // /// The image's aspect ratio is preserved. The image is scaled to the
                         // /// maximum possible size that fits within the larger (relative to aspect ratio)
@@ -137,28 +120,32 @@ class ImageOpsPage extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.center,
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            IntInput(label: 'Width', onChanged: values.setWidth)
-                                .container(width: 80),
                             IntInput(
-                                    label: 'Height',
-                                    onChanged: values.setHeight)
-                                .container(width: 80),
+                              label: 'Width',
+                              onChanged: values.setWidth,
+                            ).container(width: 80),
+                            IntInput(
+                              label: 'Height',
+                              onChanged: values.setHeight,
+                            ).container(width: 80),
                           ],
                         ),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            IntInput(label: 'X', onChanged: values.setX)
-                                .container(width: 80),
-                            IntInput(label: 'Y', onChanged: values.setY)
-                                .container(width: 80),
+                            IntInput(
+                              label: 'X',
+                              onChanged: values.setX,
+                            ).container(width: 80),
+                            IntInput(
+                              label: 'Y',
+                              onChanged: values.setY,
+                            ).container(width: 80),
                           ],
                         ),
                         const SizedBox(height: 5),
-                      ]
-                          .expand((e) => [const SizedBox(height: 5), e])
-                          .toList(growable: false),
+                      ].expand((e) => [const SizedBox(height: 5), e]).toList(growable: false),
                     ).container(
                       width: 180,
                       padding: const EdgeInsets.only(left: 6),
@@ -171,73 +158,80 @@ class ImageOpsPage extends StatelessWidget {
               child: Column(
                 children: [
                   FocusTraversalGroup(
-                    child: AnimatedBuilder(
-                      animation: values,
-                      builder: (context, _) => Wrap(
-                        runSpacing: 4,
-                        spacing: 4,
-                        children: [
-                          TextButton.icon(
-                            onPressed: state.toggleShowOperations,
-                            icon: state.showOperations
-                                ? const Icon(Icons.arrow_back_ios, size: 14)
-                                : const Icon(Icons.arrow_forward_ios, size: 14),
-                            label: state.showOperations
-                                ? const Text('Hide')
-                                : const Text('Show'),
+                    child:
+                        AnimatedBuilder(
+                          animation: values,
+                          builder: (context, _) => Wrap(
+                            runSpacing: 4,
+                            spacing: 4,
+                            children: [
+                              TextButton.icon(
+                                onPressed: state.toggleShowOperations,
+                                icon: state.showOperations
+                                    ? const Icon(Icons.arrow_back_ios, size: 14)
+                                    : const Icon(
+                                        Icons.arrow_forward_ios,
+                                        size: 14,
+                                      ),
+                                label: state.showOperations
+                                    ? const Text('Hide')
+                                    : const Text('Show'),
+                              ),
+                              TextButton(
+                                onPressed: () => loadImage(state.loadImage),
+                                child: const Text('Load Image'),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  final extensions = state.imageOps
+                                      .formatExtensions(format: state.format);
+                                  downloadFile(
+                                    'image.${extensions.firstOrNull ?? ''}',
+                                    state.bytes!,
+                                  );
+                                },
+                                child: const Text('Download'),
+                              ),
+                              DropdownButtonFormField(
+                                value: state.format,
+                                onChanged: (f) => state.setFormat(f!),
+                                items: image_ops.ImageFormat.values
+                                    .where(
+                                      (e) => e != image_ops.ImageFormat.unknown,
+                                    )
+                                    .map(
+                                      (e) => DropdownMenuItem(
+                                        value: e,
+                                        child: Text(e.name),
+                                      ),
+                                    )
+                                    .toList(growable: false),
+                              ).container(width: 110),
+                              DropdownButtonFormField(
+                                value: state.color,
+                                onChanged: (f) => state.setColor(f!),
+                                items: image_ops.ColorType.values
+                                    .where(
+                                      (e) => e != image_ops.ColorType.unknown,
+                                    )
+                                    .map(
+                                      (e) => DropdownMenuItem(
+                                        value: e,
+                                        child: Text(e.name),
+                                      ),
+                                    )
+                                    .toList(growable: false),
+                              ).container(width: 110),
+                              TextButton.icon(
+                                onPressed: state.revert,
+                                icon: const Icon(Icons.restore),
+                                label: const Text('Revert Changes'),
+                              ),
+                            ],
                           ),
-                          TextButton(
-                            onPressed: () => loadImage(state.loadImage),
-                            child: const Text('Load Image'),
-                          ),
-                          TextButton(
-                            onPressed: () {
-                              final extensions = state.imageOps
-                                  .formatExtensions(format: state.format);
-                              downloadFile(
-                                'image.${extensions.firstOrNull ?? ''}',
-                                state.bytes!,
-                              );
-                            },
-                            child: const Text('Download'),
-                          ),
-                          DropdownButtonFormField(
-                            value: state.format,
-                            onChanged: (f) => state.setFormat(f!),
-                            items: image_ops.ImageFormat.values
-                                .where(
-                                  (e) => e != image_ops.ImageFormat.unknown,
-                                )
-                                .map(
-                                  (e) => DropdownMenuItem(
-                                    value: e,
-                                    child: Text(e.name),
-                                  ),
-                                )
-                                .toList(growable: false),
-                          ).container(width: 110),
-                          DropdownButtonFormField(
-                            value: state.color,
-                            onChanged: (f) => state.setColor(f!),
-                            items: image_ops.ColorType.values
-                                .where((e) => e != image_ops.ColorType.unknown)
-                                .map(
-                                  (e) => DropdownMenuItem(
-                                    value: e,
-                                    child: Text(e.name),
-                                  ),
-                                )
-                                .toList(growable: false),
-                          ).container(width: 110),
-                          TextButton.icon(
-                            onPressed: state.revert,
-                            icon: const Icon(Icons.restore),
-                            label: const Text('Revert Changes'),
-                          ),
-                        ],
-                      ),
-                    ).container(
-                        padding: const EdgeInsets.symmetric(vertical: 5)),
+                        ).container(
+                          padding: const EdgeInsets.symmetric(vertical: 5),
+                        ),
                   ),
                   if (state.bytes != null)
                     Expanded(
@@ -315,22 +309,25 @@ class ImageInfo extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Text('width: ${ref.width}'),
-        Text('height: ${ref.height}'),
-        Text('color: ${ref.color.name}'),
-        Text('format: ${format.name}'),
-        Text('size: ${(length / 1024).toStringAsFixed(1)}kb'),
-        // TODO: Text('channels: ${ref.channels}'),
-        // Text('bytesPerRow: ${ref.bytesPerRow}'),
-        // Text('bytesPerPixel: ${ref.bytesPerPixel}'),
-        // Text('bytesPerImage: ${ref.bytesPerImage}'),
-        // Text('bytes: ${ref.bytes}'),
-      ]
-          .map((e) => e.container(
-                padding: const EdgeInsets.symmetric(horizontal: 4),
-              ))
-          .toList(),
+      children:
+          [
+                Text('width: ${ref.width}'),
+                Text('height: ${ref.height}'),
+                Text('color: ${ref.color.name}'),
+                Text('format: ${format.name}'),
+                Text('size: ${(length / 1024).toStringAsFixed(1)}kb'),
+                // TODO: Text('channels: ${ref.channels}'),
+                // Text('bytesPerRow: ${ref.bytesPerRow}'),
+                // Text('bytesPerPixel: ${ref.bytesPerPixel}'),
+                // Text('bytesPerImage: ${ref.bytesPerImage}'),
+                // Text('bytes: ${ref.bytes}'),
+              ]
+              .map(
+                (e) => e.container(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                ),
+              )
+              .toList(),
     );
   }
 }
@@ -360,10 +357,7 @@ List<ImgOp> imageOps(ImageOpsState state) {
       'grayscale',
       (ref) => state.imageOps.operations.grayscale(imageRef: ref),
     ),
-    ImgOp(
-      'invert',
-      (ref) => state.imageOps.operations.invert(imageRef: ref),
-    ),
+    ImgOp('invert', (ref) => state.imageOps.operations.invert(imageRef: ref)),
     // ImgOp(
     //   'rotate90',
     //   (ref) => state.imageOps.operations.rotate90(imageRef: ref),
@@ -384,20 +378,26 @@ List<ImgOp> imageOps(ImageOpsState state) {
     ),
     ImgOp(
       'brighten',
-      (ref) => state.imageOps.operations
-          .brighten(imageRef: ref, value: values.brighten),
+      (ref) => state.imageOps.operations.brighten(
+        imageRef: ref,
+        value: values.brighten,
+      ),
       fields: IntInput(onChanged: values.setBrighten),
     ),
     ImgOp(
       'huerotate',
-      (ref) => state.imageOps.operations
-          .huerotate(imageRef: ref, value: values.huerotate),
+      (ref) => state.imageOps.operations.huerotate(
+        imageRef: ref,
+        value: values.huerotate,
+      ),
       fields: IntInput(onChanged: values.setHuerotate),
     ),
     ImgOp(
       'contrast',
-      (ref) => state.imageOps.operations
-          .adjustContrast(imageRef: ref, c: values.contrast),
+      (ref) => state.imageOps.operations.adjustContrast(
+        imageRef: ref,
+        c: values.contrast,
+      ),
       fields: DoubleInput(onChanged: values.setContrast),
     ),
     ImgOp(
@@ -422,10 +422,14 @@ List<ImgOp> imageOps(ImageOpsState state) {
     ImgOp(
       'thumbnail',
       (ref) => values.keepAspectRatio
-          ? state.imageOps.operations
-              .thumbnail(imageRef: ref, size: values.size)
-          : state.imageOps.operations
-              .thumbnailExact(imageRef: ref, size: values.size),
+          ? state.imageOps.operations.thumbnail(
+              imageRef: ref,
+              size: values.size,
+            )
+          : state.imageOps.operations.thumbnailExact(
+              imageRef: ref,
+              size: values.size,
+            ),
     ),
   ];
 }

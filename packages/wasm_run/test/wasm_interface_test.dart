@@ -30,12 +30,9 @@ void main() {
 
       final module = compileWasmModuleSync(binary);
 
-      expect(
-        module.getExports().map((e) => e.toString()),
-        [
-          const WasmModuleExport('add', WasmExternalKind.function).toString(),
-        ],
-      );
+      expect(module.getExports().map((e) => e.toString()), [
+        const WasmModuleExport('add', WasmExternalKind.function).toString(),
+      ]);
       expect(module.getImports(), isEmpty);
 
       final instance = module.builder().buildSync();

@@ -87,8 +87,10 @@ class ComputedTypeData {
   }
 
   static final Map<ValType, ComputedTypeData> cache = Map.identity();
-  static const isUsingCache =
-      bool.fromEnvironment('CANONICAL_ABI_TYPES_CACHE', defaultValue: true);
+  static const isUsingCache = bool.fromEnvironment(
+    'CANONICAL_ABI_TYPES_CACHE',
+    defaultValue: true,
+  );
 
   static ComputedFuncTypeData cacheFunction(FuncType ft) {
     final computed = ComputedFuncTypeData._cacheFunction(ft);
@@ -125,19 +127,17 @@ class ComputedTypeData {
       Flags() ||
       Own() ||
       Borrow() ||
-      EnumType() =>
-        self,
+      EnumType() => self,
       OptionType(:final t) ||
-      ListType(:final t) =>
-        childrenType(t).followedBy(self),
+      ListType(:final t) => childrenType(t).followedBy(self),
       Tuple(:final ts) ||
-      Union(:final ts) =>
-        ts.expand(childrenType).followedBy(self),
+      Union(:final ts) => ts.expand(childrenType).followedBy(self),
       RecordType(:final fields) =>
         fields.expand((e) => childrenType(e.t)).followedBy(self),
-      Variant(:final cases) => cases
-          .expand((e) => e.t == null ? const <ValType>[] : childrenType(e.t!))
-          .followedBy(self),
+      Variant(:final cases) =>
+        cases
+            .expand((e) => e.t == null ? const <ValType>[] : childrenType(e.t!))
+            .followedBy(self),
       ResultType(:final ok, :final error) =>
         (ok == null ? const <ValType>[] : childrenType(ok))
             .followedBy(error == null ? const <ValType>[] : childrenType(error))

@@ -27,10 +27,12 @@ void main() {
         imports: const WasmParserWorldImports(),
       );
       final wasmBinary = isWeb
-          ? await wasm_run_ffi.getUriBodyBytes(Uri.parse(
-              // TODO: improve error message
-              './packages/wasm_parser/assets/wasm_parser_wasm.wasm',
-            ))
+          ? await wasm_run_ffi.getUriBodyBytes(
+              Uri.parse(
+                // TODO: improve error message
+                './packages/wasm_parser/assets/wasm_parser_wasm.wasm',
+              ),
+            )
           : File('lib/assets/wasm_parser_wasm.wasm').readAsBytesSync();
 
       final adapterUri = await WasmFileUris.uriForPackage(
@@ -42,27 +44,31 @@ void main() {
           ? await wasm_run_ffi.getUriBodyBytes(adapterUri)
           : File.fromUri(adapterUri).readAsBytesSync();
 
-      final component = world.wasm2wasmComponent(
+      final component = world
+          .wasm2wasmComponent(
+            input: WasmInput.binary(wasmBinary),
+            adapters: [
+              ComponentAdapter(
+                name: 'wasi_snapshot_preview1',
+                wasm: WasmInput.binary(adapter),
+              ),
+            ],
+          )
+          .unwrap();
+
+      final resultComponent = world.wasmComponent2wit(
+        input: WasmInput.binary(component),
+      );
+      final result = world.wasmComponent2wit(
         input: WasmInput.binary(wasmBinary),
-        adapters: [
-          ComponentAdapter(
-            name: 'wasi_snapshot_preview1',
-            wasm: WasmInput.binary(adapter),
-          ),
-        ],
-      ).unwrap();
+      );
 
-      final resultComponent =
-          world.wasmComponent2wit(input: WasmInput.binary(component));
-      final result =
-          world.wasmComponent2wit(input: WasmInput.binary(wasmBinary));
-
-      final componentType = world
-          .parseWasm(input: WasmInput.binary(component))
-          .unwrap() as ComponentType;
-      final moduleType = world
-          .parseWasm(input: WasmInput.binary(wasmBinary))
-          .unwrap() as ModuleType;
+      final componentType =
+          world.parseWasm(input: WasmInput.binary(component)).unwrap()
+              as ComponentType;
+      final moduleType =
+          world.parseWasm(input: WasmInput.binary(wasmBinary)).unwrap()
+              as ModuleType;
       expect([componentType.modules.first], [moduleType]);
       expect(componentType.modules, hasLength(4));
 
@@ -102,8 +108,9 @@ void main() {
       final wasmBinary = WasmInput.binary(wasmBytes);
       final wasmType2 = world.parseWasm(input: wasmBinary).unwrap();
       final String mappedWat = world.wasm2wat(input: wasmBinary).unwrap();
-      final wasmType3 =
-          world.parseWat(input: WatInput.text(mappedWat)).unwrap();
+      final wasmType3 = world
+          .parseWat(input: WatInput.text(mappedWat))
+          .unwrap();
 
       expect(moduleType, wasmType2);
       expect(moduleType, wasmType3);
@@ -117,9 +124,7 @@ void main() {
       final module = await compileWasmModule(
         wasmBytes,
         config: const ModuleConfig(
-          wasmtime: ModuleConfigWasmtime(
-            wasmMultiMemory: true,
-          ),
+          wasmtime: ModuleConfigWasmtime(wasmMultiMemory: true),
         ),
       );
       if (features.supportedFeatures.typeReflection) {
@@ -171,19 +176,13 @@ void main() {
               ModuleImport(
                 module: 'host',
                 name: 'hello',
-                type: FunctionType(
-                  parameters: [ValueType.i32()],
-                  results: [],
-                ),
+                type: FunctionType(parameters: [ValueType.i32()], results: []),
               ),
             ],
             [
               ModuleExport(
                 name: 'hello',
-                type: FunctionType(
-                  parameters: [],
-                  results: [],
-                ),
+                type: FunctionType(parameters: [], results: []),
               ),
             ],
           ),
@@ -207,26 +206,17 @@ void main() {
               ModuleImport(
                 module: 'js',
                 name: 'global',
-                type: GlobalType(
-                  mutable: true,
-                  value: ValueType.i32(),
-                ),
+                type: GlobalType(mutable: true, value: ValueType.i32()),
               ),
             ],
             [
               ModuleExport(
                 name: 'getGlobal',
-                type: FunctionType(
-                  parameters: [],
-                  results: [ValueType.i32()],
-                ),
+                type: FunctionType(parameters: [], results: [ValueType.i32()]),
               ),
               ModuleExport(
                 name: 'incGlobal',
-                type: FunctionType(
-                  parameters: [],
-                  results: [],
-                ),
+                type: FunctionType(parameters: [], results: []),
               ),
             ],
           ),

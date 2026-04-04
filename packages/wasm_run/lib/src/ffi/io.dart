@@ -92,9 +92,6 @@ Future<Uint8List> getUriBodyBytesImpl(Uri uri) async {
   if (response.contentLength == 0) {
     throw Exception('Failed to fetch $uri: ${response.statusCode}');
   }
-  final bytes = await response.fold(
-    BytesBuilder(),
-    (b, d) => b..add(d),
-  );
+  final bytes = await response.fold(BytesBuilder(), (b, d) => b..add(d));
   return bytes.takeBytes();
 }

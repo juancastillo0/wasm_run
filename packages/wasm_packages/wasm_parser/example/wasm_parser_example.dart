@@ -23,23 +23,15 @@ Future<void> main() async {
       ModuleImport(
         module: 'host',
         name: 'hello',
-        type: FunctionType(
-          parameters: [ValueType.i32()],
-          results: [],
-        ),
+        type: FunctionType(parameters: [ValueType.i32()], results: []),
       ),
     ],
     exports: [
       ModuleExport(
         name: 'hello',
-        type: FunctionType(
-          parameters: [],
-          results: [],
-        ),
+        type: FunctionType(parameters: [], results: []),
       ),
     ],
   );
-  assert(
-    result == const Ok<WasmType, String>(expected),
-  );
+  assert(result == const Ok<WasmType, String>(expected));
 }

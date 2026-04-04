@@ -56,9 +56,7 @@ Future<RustCryptoWorld> rustCryptoInstance({
 
     module = await uris.loadModule();
   }
-  final builder = module.builder(
-    wasiConfig: wasiConfig,
-  );
+  final builder = module.builder(wasiConfig: wasiConfig);
   final world = await RustCryptoWorld.init(
     builder,
     imports: const RustCryptoWorldImports(),

@@ -103,8 +103,9 @@ sealed class AnyVal implements ToJsonSerializable, YValueAny {
   factory AnyVal.fromJson(Object? json_) {
     Object? json = json_;
     if (json is Map) {
-      final MapEntry(:key, :value) =
-          json.entries.firstWhere((e) => e.key != 'runtimeType');
+      final MapEntry(:key, :value) = json.entries.firstWhere(
+        (e) => e.key != 'runtimeType',
+      );
       json = (
         key is int
             ? key
@@ -128,21 +129,21 @@ sealed class AnyVal implements ToJsonSerializable, YValueAny {
       (2, final value) || [2, final value] => AnyValBoolean(value! as bool),
       (3, final value) || [3, final value] => AnyValNumber(value! as double),
       (4, final value) ||
-      [4, final value] =>
-        AnyValBigInt(bigIntFromJson(value)),
-      (5, final value) ||
-      [5, final value] =>
-        AnyValStr(value is String ? value : (value! as ParsedString).value),
-      (6, final value) || [6, final value] => AnyValBuffer((value is Uint8List
-          ? value
-          : Uint8List.fromList((value! as List).cast()))),
-      (7, final value) ||
-      [7, final value] =>
-        AnyValArray((value as Iterable).map(AnyVal.fromJson).toList()),
+      [4, final value] => AnyValBigInt(bigIntFromJson(value)),
+      (5, final value) || [5, final value] => AnyValStr(
+        value is String ? value : (value! as ParsedString).value,
+      ),
+      (6, final value) || [6, final value] => AnyValBuffer(
+        (value is Uint8List
+            ? value
+            : Uint8List.fromList((value! as List).cast())),
+      ),
+      (7, final value) || [7, final value] => AnyValArray(
+        (value as Iterable).map(AnyVal.fromJson).toList(),
+      ),
       (8, final value) || [8, final value] => AnyValMap(
-          (value as Map)
-              .map((k, v) => MapEntry(k as String, AnyVal.fromJson(v))),
-        ),
+        (value as Map).map((k, v) => MapEntry(k as String, AnyVal.fromJson(v))),
+      ),
       _ => throw Exception('Invalid JSON $json_'),
     };
   }
@@ -173,15 +174,15 @@ sealed class AnyVal implements ToJsonSerializable, YValueAny {
         final AnyValStr v => JsonValueStr(v.value),
         final AnyValBuffer v => JsonValueBuffer(v.value),
         final AnyValArray v => JsonValueArray(() {
-            arrayReferences.add(v.value.map(mapValue).toList());
-            return JsonArrayRef(index_: arrayReferences.length - 1);
-          }()),
+          arrayReferences.add(v.value.map(mapValue).toList());
+          return JsonArrayRef(index_: arrayReferences.length - 1);
+        }()),
         final AnyValMap v => JsonValueMap(() {
-            mapReferences.add(v.value.entries
-                .map((e) => (e.key, mapValue(e.value)))
-                .toList());
-            return JsonMapRef(index_: mapReferences.length - 1);
-          }()),
+          mapReferences.add(
+            v.value.entries.map((e) => (e.key, mapValue(e.value))).toList(),
+          );
+          return JsonMapRef(index_: mapReferences.length - 1);
+        }()),
       };
     }
 
@@ -205,28 +206,34 @@ sealed class AnyVal implements ToJsonSerializable, YValueAny {
       final JsonValueStr v => AnyValStr(v.value),
       final JsonValueBuffer v => AnyValBuffer(v.value),
       final JsonValueArray v => AnyValArray(
-          arrayReferences[v.value.index_]
-              .map(
-                (e) => AnyVal.fromItem(JsonValueItem(
+        arrayReferences[v.value.index_]
+            .map(
+              (e) => AnyVal.fromItem(
+                JsonValueItem(
                   item: e,
                   arrayReferences: arrayReferences,
                   mapReferences: mapReferences,
-                )),
-              )
-              .toList(),
-        ),
+                ),
+              ),
+            )
+            .toList(),
+      ),
       final JsonValueMap v => AnyValMap(
-          Map.fromEntries(
-            mapReferences[v.value.index_].map((e) => MapEntry(
-                  e.$1,
-                  AnyVal.fromItem(JsonValueItem(
-                    item: e.$2,
-                    arrayReferences: arrayReferences,
-                    mapReferences: mapReferences,
-                  )),
-                )),
+        Map.fromEntries(
+          mapReferences[v.value.index_].map(
+            (e) => MapEntry(
+              e.$1,
+              AnyVal.fromItem(
+                JsonValueItem(
+                  item: e.$2,
+                  arrayReferences: arrayReferences,
+                  mapReferences: mapReferences,
+                ),
+              ),
+            ),
           ),
         ),
+      ),
     };
   }
 }
@@ -248,8 +255,10 @@ class AnyValUndefined extends AnyVal {
   const AnyValUndefined();
 
   @override
-  Map<String, Object?> toJson() =>
-      {'runtimeType': 'AnyValUndefined', 'undefined': null};
+  Map<String, Object?> toJson() => {
+    'runtimeType': 'AnyValUndefined',
+    'undefined': null,
+  };
 
   @override
   String toString() => 'AnyValUndefined()';
@@ -264,8 +273,10 @@ class AnyValBoolean extends AnyVal {
   const AnyValBoolean(this.value);
 
   @override
-  Map<String, Object?> toJson() =>
-      {'runtimeType': 'AnyValBoolean', 'boolean': value};
+  Map<String, Object?> toJson() => {
+    'runtimeType': 'AnyValBoolean',
+    'boolean': value,
+  };
 
   @override
   String toString() => 'AnyValBoolean($value)';
@@ -282,8 +293,10 @@ class AnyValNumber extends AnyVal {
   const AnyValNumber(this.value);
 
   @override
-  Map<String, Object?> toJson() =>
-      {'runtimeType': 'AnyValNumber', 'number': value};
+  Map<String, Object?> toJson() => {
+    'runtimeType': 'AnyValNumber',
+    'number': value,
+  };
   @override
   String toString() => 'AnyValNumber($value)';
   @override
@@ -299,8 +312,10 @@ class AnyValBigInt extends AnyVal {
   const AnyValBigInt(this.value);
 
   @override
-  Map<String, Object?> toJson() =>
-      {'runtimeType': 'AnyValBigInt', 'big-int': value.toString()};
+  Map<String, Object?> toJson() => {
+    'runtimeType': 'AnyValBigInt',
+    'big-int': value.toString(),
+  };
   @override
   String toString() => 'AnyValBigInt($value)';
   @override
@@ -332,8 +347,10 @@ class AnyValBuffer extends AnyVal {
   const AnyValBuffer(this.value);
 
   @override
-  Map<String, Object?> toJson() =>
-      {'runtimeType': 'AnyValBuffer', 'buffer': value.toList()};
+  Map<String, Object?> toJson() => {
+    'runtimeType': 'AnyValBuffer',
+    'buffer': value.toList(),
+  };
   @override
   String toString() => 'AnyValBuffer($value)';
   @override
@@ -352,8 +369,10 @@ class AnyValArray extends AnyVal {
   const AnyValArray(this.value);
 
   @override
-  Map<String, Object?> toJson() =>
-      {'runtimeType': 'AnyValArray', 'array': value};
+  Map<String, Object?> toJson() => {
+    'runtimeType': 'AnyValArray',
+    'array': value,
+  };
 
   @override
   String toString() => 'AnyValArray($value)';

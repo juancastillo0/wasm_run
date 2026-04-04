@@ -74,12 +74,7 @@ List<FlatType> flatten_types(List<ValType> ts) {
 
 // #
 
-enum FlatType {
-  i32,
-  i64,
-  f32,
-  f64,
-}
+enum FlatType { i32, i64, f32, f64 }
 
 List<FlatType> flatten_type(ValType t) {
   if (ComputedTypeData.isUsingCache) {
@@ -97,8 +92,11 @@ List<FlatType> flatten_type(ValType t) {
     StringType() || ListType() => const [FlatType.i32, FlatType.i32],
     RecordType(:final fields) => _flatten_record(fields),
     Variant(:final cases) => _flatten_variant(cases),
-    Flags(:final labels) =>
-      List.filled(num_i32_flags(labels), FlatType.i32, growable: false),
+    Flags(:final labels) => List.filled(
+      num_i32_flags(labels),
+      FlatType.i32,
+      growable: false,
+    ),
     Own() || Borrow() => const [FlatType.i32],
   };
 }
@@ -136,7 +134,9 @@ List<FlatType> _flatten_variant(List<Case> cases) {
 FlatType _join(FlatType a, FlatType b) {
   if (a == b) return a;
   if ((a == FlatType.i32 && b == FlatType.f32) ||
-      (a == FlatType.f32 && b == FlatType.i32)) return FlatType.i32;
+      (a == FlatType.f32 && b == FlatType.i32)) {
+    return FlatType.i32;
+  }
   return FlatType.i64;
 }
 
@@ -345,18 +345,23 @@ List<FlatValue> lower_flat(Context cx, Object? v, ValType t) {
     U8() || U16() || U32() => singleList(FlatValue(FlatType.i32, v! as int)),
     S8() || S16() || S32() => _lower_flat_signed(v! as int, 32),
     // TODO: remove this
-    U64() ||
-    S64() =>
-      singleList(FlatValue(FlatType.i64, v is String ? BigInt.parse(v) : v!)),
-    Float32() =>
-      singleList(FlatValue(FlatType.f32, canonicalize32(v! as double))),
-    Float64() =>
-      singleList(FlatValue(FlatType.f64, canonicalize64(v! as double))),
+    U64() || S64() => singleList(
+      FlatValue(FlatType.i64, v is String ? BigInt.parse(v) : v!),
+    ),
+    Float32() => singleList(
+      FlatValue(FlatType.f32, canonicalize32(v! as double)),
+    ),
+    Float64() => singleList(
+      FlatValue(FlatType.f64, canonicalize64(v! as double)),
+    ),
     Char() => singleList(FlatValue(FlatType.i32, char_to_i32(v! as String))),
     StringType() => _lower_flat_string(cx, ParsedString.fromJson(v)),
     ListType(:final t) => _lower_flat_list(cx, v! as ListValue, t),
-    RecordType(:final fields) =>
-      _lower_flat_record(cx, toRecordValue(v, fields), fields),
+    RecordType(:final fields) => _lower_flat_record(
+      cx,
+      toRecordValue(v, fields),
+      fields,
+    ),
     final Variant t => _lower_flat_variant(cx, toVariantValue(v, t.cases), t),
     Flags(:final labels) => _lower_flat_flags(v! as FlagsValue, labels),
     Own() => [FlatValue(FlatType.i32, lower_own(cx, v! as int, t_))],
@@ -399,7 +404,10 @@ List<FlatValue> _lower_flat_list(Context cx, ListValue v, ValType elem_type) {
 
 /// Records are lowered by recursively lowering their fields
 List<FlatValue> _lower_flat_record(
-    Context cx, RecordValue v, List<Field> fields) {
+  Context cx,
+  RecordValue v,
+  List<Field> fields,
+) {
   final List<FlatValue> flat = fields
       .expand((f) => lower_flat(cx, v[f.label], f.t))
       .toList(growable: false);
@@ -412,7 +420,10 @@ List<FlatValue> _lower_flat_record(
 /// must consume all flattened types of [_flatten_variant],
 /// manually coercing the otherwise-incompatible type pairings allowed by [_join]
 List<FlatValue> _lower_flat_variant(
-    Context cx, VariantValue2 v, Variant variant) {
+  Context cx,
+  VariantValue2 v,
+  Variant variant,
+) {
   final cases = variant.cases;
   final (case_index, case_value) = v;
   final flat_types = flatten_type(variant); // flatten_variant(cases);
@@ -420,23 +431,30 @@ List<FlatValue> _lower_flat_variant(
   final disc = flat_types[flat_index++];
   assert(disc == FlatType.i32);
   final c = cases[case_index];
-  final List<FlatValue> payload =
-      c.t == null ? [] : lower_flat(cx, case_value, c.t!);
+  final List<FlatValue> payload = c.t == null
+      ? []
+      : lower_flat(cx, case_value, c.t!);
 
   for (final (i, have) in payload.indexed) {
     final want = flat_types[flat_index++];
     switch ((have.t, want)) {
       case (FlatType.f32, FlatType.i32):
-        payload[i] =
-            FlatValue(FlatType.i32, reinterpret_float_as_i32(have.v as double));
+        payload[i] = FlatValue(
+          FlatType.i32,
+          reinterpret_float_as_i32(have.v as double),
+        );
       case (FlatType.i32, FlatType.i64):
         payload[i] = FlatValue(FlatType.i64, i64.fromInt(have.v as int));
       case (FlatType.f32, FlatType.i64):
-        payload[i] =
-            FlatValue(FlatType.i64, reinterpret_float_as_i32(have.v as double));
+        payload[i] = FlatValue(
+          FlatType.i64,
+          reinterpret_float_as_i32(have.v as double),
+        );
       case (FlatType.f64, FlatType.i64):
-        payload[i] =
-            FlatValue(FlatType.i64, reinterpret_float_as_i64(have.v as double));
+        payload[i] = FlatValue(
+          FlatType.i64,
+          reinterpret_float_as_i64(have.v as double),
+        );
       case _:
         break;
     }
@@ -446,7 +464,7 @@ List<FlatValue> _lower_flat_variant(
     FlatValue(FlatType.i32, case_index),
     ...payload,
     for (; flat_index < flat_types.length; flat_index++)
-      FlatValue(flat_types[flat_index], 0)
+      FlatValue(flat_types[flat_index], 0),
   ];
 }
 // #

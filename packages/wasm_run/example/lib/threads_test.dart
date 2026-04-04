@@ -67,20 +67,17 @@ void threadsTest({TestArgs? testArgs}) {
       List.generate(executions, (_) => <int>[]),
     );
     expect(localStates, List.generate(executions, (_) => [0]));
-    final localResult = await instance.runParallel(
-      setStateLocal,
-      [
-        [2]
-      ],
-    );
+    final localResult = await instance.runParallel(setStateLocal, [
+      [2],
+    ]);
     // old value
     expect(localResult, [
-      [0]
+      [0],
     ]);
     expect(getStateLocal(), [1]);
     localStates = await instance.runParallel(getStateLocal, const [[]]);
     expect(localStates, [
-      [2]
+      [2],
     ]);
 
     ///
@@ -93,13 +90,10 @@ void threadsTest({TestArgs? testArgs}) {
     );
     expect(states, List.generate(executions, (_) => [i64.fromInt(2)]));
 
-    final result = await instance.runParallel(
-      increaseState,
-      [
-        [i64.fromInt(2)],
-        [i64.fromInt(2)]
-      ],
-    );
+    final result = await instance.runParallel(increaseState, [
+      [i64.fromInt(2)],
+      [i64.fromInt(2)],
+    ]);
     expect(result.map((e) => i64.toInt(e[0]!)).toSet(), {2, 4});
 
     states = await instance.runParallel(
@@ -111,58 +105,53 @@ void threadsTest({TestArgs? testArgs}) {
     // main instance
     expect(getState().cast<Object>().map(i64.toInt), [6]);
 
-    await instance.runParallel(
-      mapState,
-      const [[], []],
-    );
+    await instance.runParallel(mapState, const [[], []]);
     expect(getState().cast<Object>().map(i64.toInt), [8]);
   }
 
+  test('threads-state', timeout: _threadsTimeout, threadsStateTest);
+
   test(
-    'threads-state',
+    'threads-state web custom import',
     timeout: _threadsTimeout,
-    threadsStateTest,
-  );
+    skip: !isWeb,
+    () async {
+      final workerMessages = <Object?>[];
+      await threadsStateTest(onWorkerMessage: workerMessages.add);
 
-  test('threads-state web custom import',
-      timeout: _threadsTimeout, skip: !isWeb, () async {
-    final workerMessages = <Object?>[];
-    await threadsStateTest(onWorkerMessage: workerMessages.add);
+      final features = await wasmRuntimeFeatures();
+      if (getRunnerIdentity().contains('Chrome') &&
+          !features.supportedFeatures.threads) {
+        throw Exception(
+          'You should enable threads in Chrome'
+          ' by passing `--enable-features=SharedArrayBuffer` to Chrome',
+        );
+      }
+      if (!features.supportedFeatures.threads) return;
 
-    final features = await wasmRuntimeFeatures();
-    if (getRunnerIdentity().contains('Chrome') &&
-        !features.supportedFeatures.threads) {
-      throw Exception(
-        'You should enable threads in Chrome'
-        ' by passing `--enable-features=SharedArrayBuffer` to Chrome',
-      );
-    }
-    if (!features.supportedFeatures.threads) return;
-
-    await Future<void>.delayed(const Duration(milliseconds: 10));
-    expect(
-      workerMessages.skip(workerMessages.length - 2).map(
-        (e_) {
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+      expect(
+        workerMessages.skip(workerMessages.length - 2).map((e_) {
           final e = e_! as Map;
           return {...e, 'arg': i64.toInt(e['arg'] as Object)};
-        },
-      ).toList(),
-      [
-        {
-          'kind': 'call',
-          'function': 'host_map_state',
-          'arg': 6,
-          'workerId': isA<int>(),
-        },
-        {
-          'kind': 'call',
-          'function': 'host_map_state',
-          'arg': 7,
-          'workerId': isA<int>(),
-        },
-      ],
-    );
-  });
+        }).toList(),
+        [
+          {
+            'kind': 'call',
+            'function': 'host_map_state',
+            'arg': 6,
+            'workerId': isA<int>(),
+          },
+          {
+            'kind': 'call',
+            'function': 'host_map_state',
+            'arg': 7,
+            'workerId': isA<int>(),
+          },
+        ],
+      );
+    },
+  );
 }
 
 Directory getRootDirectory() {
@@ -242,8 +231,9 @@ Future<ThreadedInstance> getThreadsInstance(
   final builder = module.builder(
     workersConfig: WorkersConfig(
       numberOfWorkers: numThreads,
-      workerMapImportsScriptUrl:
-          onWorkerMessage == null ? null : '../../../worker_map_imports.js',
+      workerMapImportsScriptUrl: onWorkerMessage == null
+          ? null
+          : '../../../worker_map_imports.js',
       onWorkerMessage: onWorkerMessage,
     ),
   );
@@ -261,10 +251,7 @@ Future<ThreadedInstance> getThreadsInstance(
       maxPages: memoryType.maximum!, // 16384
     );
   } else {
-    memory = module.createSharedMemory(
-      minPages: 17,
-      maxPages: 16384,
-    );
+    memory = module.createSharedMemory(minPages: 17, maxPages: 16384);
   }
   // TODO: MemoryTy toString()
   print(memory);
@@ -367,10 +354,14 @@ Future<void> main({bool onlyTest = false, TestArgs? testArgs}) async {
 
   print(values.reduce(add));
 
-  final valueSum =
-      resultSum.fold<int>(0, (valueSum, l) => (l[0]! as int) + valueSum);
-  final valueMax =
-      resultMax.fold<int>(0, (valueSum, l) => max(l[0]! as int, valueSum));
+  final valueSum = resultSum.fold<int>(
+    0,
+    (valueSum, l) => (l[0]! as int) + valueSum,
+  );
+  final valueMax = resultMax.fold<int>(
+    0,
+    (valueSum, l) => max(l[0]! as int, valueSum),
+  );
 
   dealloc.inner(pointer, size);
 

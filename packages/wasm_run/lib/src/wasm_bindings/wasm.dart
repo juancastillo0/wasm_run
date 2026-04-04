@@ -3,7 +3,8 @@ import 'dart:typed_data';
 import 'package:wasm_run/src/bridge_generated.dart';
 import 'package:wasm_run/src/wasm_bindings/_wasm_interop_stub.dart'
     if (dart.library.io) '_wasm_interop_native.dart'
-    if (dart.library.html) '_wasm_interop_web.dart' as platform_impl;
+    if (dart.library.html) '_wasm_interop_web.dart'
+    as platform_impl;
 import 'package:wasm_run/src/wasm_bindings/wasm_interface.dart';
 
 export 'package:wasm_run/src/bridge_generated.dart'
@@ -39,9 +40,6 @@ Future<WasmModule> compileWasmModule(
 
 /// Compiles a Wasm module synchronously.
 /// You should use [compileWasmModule], unless the module is small.
-WasmModule compileWasmModuleSync(
-  Uint8List bytes, {
-  ModuleConfig? config,
-}) {
+WasmModule compileWasmModuleSync(Uint8List bytes, {ModuleConfig? config}) {
   return platform_impl.compileWasmModuleSync(bytes, config: config);
 }

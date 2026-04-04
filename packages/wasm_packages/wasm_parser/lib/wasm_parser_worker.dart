@@ -40,9 +40,7 @@ Future<WasmParserWorld> createWasmParserWorker({
     );
     final uris = WasmFileUris(uri: uri);
     module = await uris.loadModule(
-      config: ModuleConfig(
-        wasmtime: ModuleConfigWasmtime(wasmThreads: true),
-      ),
+      config: ModuleConfig(wasmtime: ModuleConfigWasmtime(wasmThreads: true)),
     );
   }
   final numWorkers = identical(0, 0.0) ? 2 : Platform.numberOfProcessors;

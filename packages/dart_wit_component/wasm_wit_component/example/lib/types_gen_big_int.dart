@@ -16,8 +16,9 @@ sealed class HumanTypesInterface implements ToJsonSerializable {
   factory HumanTypesInterface.fromJson(Object? json_) {
     Object? json = json_;
     if (json is Map) {
-      final MapEntry(:key, :value) =
-          json.entries.firstWhere((e) => e.key != 'runtimeType');
+      final MapEntry(:key, :value) = json.entries.firstWhere(
+        (e) => e.key != 'runtimeType',
+      );
       json = (
         key is int ? key : _spec.cases.indexWhere((c) => c.label == key),
         value,
@@ -26,8 +27,7 @@ sealed class HumanTypesInterface implements ToJsonSerializable {
     return switch (json) {
       (0, null) || [0, null] => const HumanTypesInterfaceBaby(),
       (1, final value) ||
-      [1, final value] =>
-        HumanTypesInterfaceChild(value! as int),
+      [1, final value] => HumanTypesInterfaceChild(value! as int),
       (2, null) || [2, null] => const HumanTypesInterfaceAdult(),
       _ => throw Exception('Invalid JSON $json_'),
     };
@@ -41,15 +41,20 @@ sealed class HumanTypesInterface implements ToJsonSerializable {
 
   /// Returns this as a WASM canonical abi value.
   (int, Object?) toWasm();
-  static const _spec =
-      Variant([Case('baby', null), Case('child', U32()), Case('adult', null)]);
+  static const _spec = Variant([
+    Case('baby', null),
+    Case('child', U32()),
+    Case('adult', null),
+  ]);
 }
 
 class HumanTypesInterfaceBaby implements HumanTypesInterface {
   const HumanTypesInterfaceBaby();
   @override
-  Map<String, Object?> toJson() =>
-      {'runtimeType': 'HumanTypesInterfaceBaby', 'baby': null};
+  Map<String, Object?> toJson() => {
+    'runtimeType': 'HumanTypesInterfaceBaby',
+    'baby': null,
+  };
 
   /// Returns this as a WASM canonical abi value.
   @override
@@ -69,8 +74,10 @@ class HumanTypesInterfaceChild implements HumanTypesInterface {
   /// type payload
   const HumanTypesInterfaceChild(this.value);
   @override
-  Map<String, Object?> toJson() =>
-      {'runtimeType': 'HumanTypesInterfaceChild', 'child': value};
+  Map<String, Object?> toJson() => {
+    'runtimeType': 'HumanTypesInterfaceChild',
+    'child': value,
+  };
 
   /// Returns this as a WASM canonical abi value.
   @override
@@ -88,8 +95,10 @@ class HumanTypesInterfaceChild implements HumanTypesInterface {
 class HumanTypesInterfaceAdult implements HumanTypesInterface {
   const HumanTypesInterfaceAdult();
   @override
-  Map<String, Object?> toJson() =>
-      {'runtimeType': 'HumanTypesInterfaceAdult', 'adult': null};
+  Map<String, Object?> toJson() => {
+    'runtimeType': 'HumanTypesInterfaceAdult',
+    'adult': null,
+  };
 
   /// Returns this as a WASM canonical abi value.
   @override
@@ -115,13 +124,19 @@ enum ErrnoTypesInterface implements ToJsonSerializable {
     return ToJsonSerializable.enumFromJson(json, values, _spec);
   }
   @override
-  Map<String, Object?> toJson() =>
-      {'runtimeType': 'ErrnoTypesInterface', _spec.labels[index]: null};
+  Map<String, Object?> toJson() => {
+    'runtimeType': 'ErrnoTypesInterface',
+    _spec.labels[index]: null,
+  };
 
   /// Returns this as a WASM canonical abi value.
   int toWasm() => index;
-  static const _spec =
-      EnumType(['too-big', 'too-small', 'too-fast', 'too-slow']);
+  static const _spec = EnumType([
+    'too-big',
+    'too-small',
+    'too-fast',
+    'too-slow',
+  ]);
 }
 
 /// similar to `variant`, but doesn't require naming cases and all variants
@@ -143,11 +158,10 @@ sealed class Input implements ToJsonSerializable {
     }
     return switch (json) {
       (0, final value) ||
-      [0, final value] =>
-        InputBigIntU64(bigIntFromJson(value)),
-      (1, final value) ||
-      [1, final value] =>
-        InputString(value is String ? value : (value! as ParsedString).value),
+      [0, final value] => InputBigIntU64(bigIntFromJson(value)),
+      (1, final value) || [1, final value] => InputString(
+        value is String ? value : (value! as ParsedString).value,
+      ),
       _ => throw Exception('Invalid JSON $json_'),
     };
   }
@@ -158,10 +172,10 @@ sealed class Input implements ToJsonSerializable {
 
   /// Returns this as a WASM canonical abi value.
   static (int, Object?) toWasm(Input value) => switch (value) {
-        InputBigIntU64() => value.toWasm(),
-        InputString() => value.toWasm(),
-      };
-// ignore: unused_field
+    InputBigIntU64() => value.toWasm(),
+    InputString() => value.toWasm(),
+  };
+  // ignore: unused_field
   static const _spec = Union([U64(), StringType()]);
 }
 
@@ -169,8 +183,10 @@ class InputBigIntU64 implements Input {
   final BigInt /*U64*/ value;
   const InputBigIntU64(this.value);
   @override
-  Map<String, Object?> toJson() =>
-      {'runtimeType': 'InputBigIntU64', '0': value.toString()};
+  Map<String, Object?> toJson() => {
+    'runtimeType': 'InputBigIntU64',
+    '0': value.toString(),
+  };
 
   /// Returns this as a WASM canonical abi value.
   (int, Object?) toWasm() => (0, value);
@@ -218,8 +234,11 @@ class Permissions implements ToJsonSerializable {
   Permissions.all() : flagsBits = FlagsBits.all(numFlags: 3);
 
   /// Creates an instance with flags booleans passed as arguments.
-  factory Permissions.fromBool(
-      {bool read = false, bool write = false, bool exec = false}) {
+  factory Permissions.fromBool({
+    bool read = false,
+    bool write = false,
+    bool exec = false,
+  }) {
     final value_ = Permissions.none();
     if (read) value_.read = true;
     if (write) value_.write = true;
@@ -240,11 +259,8 @@ class Permissions implements ToJsonSerializable {
   /// Returns this as a WASM canonical abi value.
   Uint32List toWasm() => Uint32List.sublistView(flagsBits.data);
   @override
-  String toString() => 'Permissions(${[
-        if (read) 'read',
-        if (write) 'write',
-        if (exec) 'exec',
-      ].join(', ')})';
+  String toString() =>
+      'Permissions(${[if (read) 'read', if (write) 'write', if (exec) 'exec'].join(', ')})';
   @override
   bool operator ==(Object other) =>
       other is Permissions &&
@@ -290,40 +306,41 @@ class ManyFlags implements ToJsonSerializable {
   ManyFlags.all() : flagsBits = FlagsBits.all(numFlags: 33);
 
   /// Creates an instance with flags booleans passed as arguments.
-  factory ManyFlags.fromBool(
-      {bool f1 = false,
-      bool f2 = false,
-      bool f3 = false,
-      bool f4 = false,
-      bool f5 = false,
-      bool f6 = false,
-      bool f7 = false,
-      bool f8 = false,
-      bool f9 = false,
-      bool f10 = false,
-      bool f11 = false,
-      bool f12 = false,
-      bool f13 = false,
-      bool f14 = false,
-      bool f15 = false,
-      bool f16 = false,
-      bool f17 = false,
-      bool f18 = false,
-      bool f19 = false,
-      bool f20 = false,
-      bool f21 = false,
-      bool f22 = false,
-      bool f23 = false,
-      bool f24 = false,
-      bool f25 = false,
-      bool f26 = false,
-      bool f27 = false,
-      bool f28 = false,
-      bool f29 = false,
-      bool f30 = false,
-      bool f31 = false,
-      bool f32 = false,
-      bool f33 = false}) {
+  factory ManyFlags.fromBool({
+    bool f1 = false,
+    bool f2 = false,
+    bool f3 = false,
+    bool f4 = false,
+    bool f5 = false,
+    bool f6 = false,
+    bool f7 = false,
+    bool f8 = false,
+    bool f9 = false,
+    bool f10 = false,
+    bool f11 = false,
+    bool f12 = false,
+    bool f13 = false,
+    bool f14 = false,
+    bool f15 = false,
+    bool f16 = false,
+    bool f17 = false,
+    bool f18 = false,
+    bool f19 = false,
+    bool f20 = false,
+    bool f21 = false,
+    bool f22 = false,
+    bool f23 = false,
+    bool f24 = false,
+    bool f25 = false,
+    bool f26 = false,
+    bool f27 = false,
+    bool f28 = false,
+    bool f29 = false,
+    bool f30 = false,
+    bool f31 = false,
+    bool f32 = false,
+    bool f33 = false,
+  }) {
     final value_ = ManyFlags.none();
     if (f1) value_.f1 = true;
     if (f2) value_.f2 = true;
@@ -374,41 +391,8 @@ class ManyFlags implements ToJsonSerializable {
   /// Returns this as a WASM canonical abi value.
   Uint32List toWasm() => Uint32List.sublistView(flagsBits.data);
   @override
-  String toString() => 'ManyFlags(${[
-        if (f1) 'f1',
-        if (f2) 'f2',
-        if (f3) 'f3',
-        if (f4) 'f4',
-        if (f5) 'f5',
-        if (f6) 'f6',
-        if (f7) 'f7',
-        if (f8) 'f8',
-        if (f9) 'f9',
-        if (f10) 'f10',
-        if (f11) 'f11',
-        if (f12) 'f12',
-        if (f13) 'f13',
-        if (f14) 'f14',
-        if (f15) 'f15',
-        if (f16) 'f16',
-        if (f17) 'f17',
-        if (f18) 'f18',
-        if (f19) 'f19',
-        if (f20) 'f20',
-        if (f21) 'f21',
-        if (f22) 'f22',
-        if (f23) 'f23',
-        if (f24) 'f24',
-        if (f25) 'f25',
-        if (f26) 'f26',
-        if (f27) 'f27',
-        if (f28) 'f28',
-        if (f29) 'f29',
-        if (f30) 'f30',
-        if (f31) 'f31',
-        if (f32) 'f32',
-        if (f33) 'f33',
-      ].join(', ')})';
+  String toString() =>
+      'ManyFlags(${[if (f1) 'f1', if (f2) 'f2', if (f3) 'f3', if (f4) 'f4', if (f5) 'f5', if (f6) 'f6', if (f7) 'f7', if (f8) 'f8', if (f9) 'f9', if (f10) 'f10', if (f11) 'f11', if (f12) 'f12', if (f13) 'f13', if (f14) 'f14', if (f15) 'f15', if (f16) 'f16', if (f17) 'f17', if (f18) 'f18', if (f19) 'f19', if (f20) 'f20', if (f21) 'f21', if (f22) 'f22', if (f23) 'f23', if (f24) 'f24', if (f25) 'f25', if (f26) 'f26', if (f27) 'f27', if (f28) 'f28', if (f29) 'f29', if (f30) 'f30', if (f31) 'f31', if (f32) 'f32', if (f33) 'f33'].join(', ')})';
   @override
   bool operator ==(Object other) =>
       other is ManyFlags &&
@@ -529,32 +513,21 @@ class ManyFlags implements ToJsonSerializable {
     'f30',
     'f31',
     'f32',
-    'f33'
+    'f33',
   ]);
 }
 
 typedef T1 = int /*U32*/;
-typedef T2 = (
-  int /*U32*/,
-  BigInt /*U64*/,
-);
+typedef T2 = (int /*U32*/, BigInt /*U64*/);
 typedef T3 = String;
-typedef T4 = Option<int /*U32*/ >;
+typedef T4 = Option<int /*U32*/>;
 
 /// "package of named fields"
 class R implements ToJsonSerializable {
   final int /*U32*/ a;
   final String b;
-  final List<
-      (
-        String,
-        T4?,
-      )> c;
-  final Option<
-      (
-        List<BigInt /*S64*/ >,
-        Option<BigInt /*U64*/ >?,
-      )>? d;
+  final List<(String, T4?)> c;
+  final Option<(List<BigInt /*S64*/>, Option<BigInt /*U64*/>?)>? d;
   final ErrnoTypesInterface e;
   final Input i;
   final Permissions p;
@@ -587,7 +560,7 @@ class R implements ToJsonSerializable {
         final e,
         final i,
         final p,
-        final f
+        final f,
       ] ||
       (
         final a,
@@ -597,112 +570,127 @@ class R implements ToJsonSerializable {
         final e,
         final i,
         final p,
-        final f
-      ) =>
-        R(
-          a: a! as int,
-          b: b is String ? b : (b! as ParsedString).value,
-          c: (c! as Iterable)
-              .map((e) => (() {
-                    final l = e is Map
-                        ? List.generate(2, (i) => e[i.toString()],
-                            growable: false)
-                        : e;
-                    return switch (l) {
-                      [final v0, final v1] || (final v0, final v1) => (
-                          v0 is String ? v0 : (v0! as ParsedString).value,
-                          Option.fromJson(
-                              v1,
-                              (some) => Option.fromJson(
-                                  some, (some) => some! as int)).value,
-                        ),
-                      _ => throw Exception('Invalid JSON $e')
-                    };
-                  })())
-              .toList(),
-          d: Option.fromJson(
-              d,
-              (some) => Option.fromJson(
-                  some,
-                  (some) => (() {
-                        final l = some is Map
-                            ? List.generate(2, (i) => some[i.toString()],
-                                growable: false)
-                            : some;
-                        return switch (l) {
-                          [final v0, final v1] || (final v0, final v1) => (
-                              (v0! as Iterable).map(bigIntFromJson).toList(),
-                              Option.fromJson(
-                                      v1,
-                                      (some) => Option.fromJson(
-                                          some, (some) => bigIntFromJson(some)))
-                                  .value,
-                            ),
-                          _ => throw Exception('Invalid JSON $some')
-                        };
-                      })())).value,
-          e: ErrnoTypesInterface.fromJson(e),
-          i: Input.fromJson(i),
-          p: Permissions.fromJson(p),
-          f: ManyFlags.fromJson(f),
-        ),
-      _ => throw Exception('Invalid JSON $json_')
+        final f,
+      ) => R(
+        a: a! as int,
+        b: b is String ? b : (b! as ParsedString).value,
+        c: (c! as Iterable)
+            .map(
+              (e) => (() {
+                final l = e is Map
+                    ? List.generate(2, (i) => e[i.toString()], growable: false)
+                    : e;
+                return switch (l) {
+                  [final v0, final v1] || (final v0, final v1) => (
+                    v0 is String ? v0 : (v0! as ParsedString).value,
+                    Option.fromJson(
+                      v1,
+                      (some) => Option.fromJson(some, (some) => some! as int),
+                    ).value,
+                  ),
+                  _ => throw Exception('Invalid JSON $e'),
+                };
+              })(),
+            )
+            .toList(),
+        d: Option.fromJson(
+          d,
+          (some) => Option.fromJson(
+            some,
+            (some) => (() {
+              final l = some is Map
+                  ? List.generate(2, (i) => some[i.toString()], growable: false)
+                  : some;
+              return switch (l) {
+                [final v0, final v1] || (final v0, final v1) => (
+                  (v0! as Iterable).map(bigIntFromJson).toList(),
+                  Option.fromJson(
+                    v1,
+                    (some) =>
+                        Option.fromJson(some, (some) => bigIntFromJson(some)),
+                  ).value,
+                ),
+                _ => throw Exception('Invalid JSON $some'),
+              };
+            })(),
+          ),
+        ).value,
+        e: ErrnoTypesInterface.fromJson(e),
+        i: Input.fromJson(i),
+        p: Permissions.fromJson(p),
+        f: ManyFlags.fromJson(f),
+      ),
+      _ => throw Exception('Invalid JSON $json_'),
     };
   }
   @override
   Map<String, Object?> toJson() => {
-        'runtimeType': 'R',
-        'a': a,
-        'b': b,
-        'c': c
-            .map((e) => [
-                  e.$1,
-                  (e.$2 == null
-                      ? const None().toJson()
-                      : Option.fromValue(e.$2).toJson((some) => some.toJson()))
-                ])
-            .toList(),
-        'd': (d == null
-            ? const None().toJson()
-            : Option.fromValue(d).toJson((some) => some.toJson((some) => [
-                  some.$1.map((e) => e.toString()).toList(),
-                  (some.$2 == null
-                      ? const None().toJson()
-                      : Option.fromValue(some.$2).toJson(
-                          (some) => some.toJson((some) => some.toString())))
-                ]))),
-        'e': e.toJson(),
-        'i': i.toJson(),
-        'p': p.toJson(),
-        'f': f.toJson(),
-      };
+    'runtimeType': 'R',
+    'a': a,
+    'b': b,
+    'c': c
+        .map(
+          (e) => [
+            e.$1,
+            (e.$2 == null
+                ? const None().toJson()
+                : Option.fromValue(e.$2).toJson((some) => some.toJson())),
+          ],
+        )
+        .toList(),
+    'd': (d == null
+        ? const None().toJson()
+        : Option.fromValue(d).toJson(
+            (some) => some.toJson(
+              (some) => [
+                some.$1.map((e) => e.toString()).toList(),
+                (some.$2 == null
+                    ? const None().toJson()
+                    : Option.fromValue(some.$2).toJson(
+                        (some) => some.toJson((some) => some.toString()),
+                      )),
+              ],
+            ),
+          )),
+    'e': e.toJson(),
+    'i': i.toJson(),
+    'p': p.toJson(),
+    'f': f.toJson(),
+  };
 
   /// Returns this as a WASM canonical abi value.
   List<Object?> toWasm() => [
-        a,
-        b,
-        c
-            .map((e) => [
-                  e.$1,
-                  (e.$2 == null
-                      ? const None().toWasm()
-                      : Option.fromValue(e.$2).toWasm((some) => some.toWasm()))
-                ])
-            .toList(growable: false),
-        (d == null
-            ? const None().toWasm()
-            : Option.fromValue(d).toWasm((some) => some.toWasm((some) => [
-                  some.$1,
-                  (some.$2 == null
-                      ? const None().toWasm()
-                      : Option.fromValue(some.$2)
-                          .toWasm((some) => some.toWasm()))
-                ]))),
-        e.toWasm(),
-        Input.toWasm(i),
-        p.toWasm(),
-        f.toWasm()
-      ];
+    a,
+    b,
+    c
+        .map(
+          (e) => [
+            e.$1,
+            (e.$2 == null
+                ? const None().toWasm()
+                : Option.fromValue(e.$2).toWasm((some) => some.toWasm())),
+          ],
+        )
+        .toList(growable: false),
+    (d == null
+        ? const None().toWasm()
+        : Option.fromValue(d).toWasm(
+            (some) => some.toWasm(
+              (some) => [
+                some.$1,
+                (some.$2 == null
+                    ? const None().toWasm()
+                    : Option.fromValue(
+                        some.$2,
+                      ).toWasm((some) => some.toWasm())),
+              ],
+            ),
+          )),
+    e.toWasm(),
+    Input.toWasm(i),
+    p.toWasm(),
+    f.toWasm(),
+  ];
   @override
   String toString() =>
       'R${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
@@ -711,33 +699,22 @@ class R implements ToJsonSerializable {
   R copyWith({
     int /*U32*/ ? a,
     String? b,
-    List<
-            (
-              String,
-              T4?,
-            )>?
-        c,
-    Option<
-            Option<
-                (
-                  List<BigInt /*S64*/ >,
-                  Option<BigInt /*U64*/ >?,
-                )>>?
-        d,
+    List<(String, T4?)>? c,
+    Option<Option<(List<BigInt /*S64*/>, Option<BigInt /*U64*/>?)>>? d,
     ErrnoTypesInterface? e,
     Input? i,
     Permissions? p,
     ManyFlags? f,
-  }) =>
-      R(
-          a: a ?? this.a,
-          b: b ?? this.b,
-          c: c ?? this.c,
-          d: d != null ? d.value : this.d,
-          e: e ?? this.e,
-          i: i ?? this.i,
-          p: p ?? this.p,
-          f: f ?? this.f);
+  }) => R(
+    a: a ?? this.a,
+    b: b ?? this.b,
+    c: c ?? this.c,
+    d: d != null ? d.value : this.d,
+    e: e ?? this.e,
+    i: i ?? this.i,
+    p: p ?? this.p,
+    f: f ?? this.f,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -753,17 +730,18 @@ class R implements ToJsonSerializable {
     (label: 'b', t: StringType()),
     (
       label: 'c',
-      t: ListType(Tuple([StringType(), OptionType(OptionType(U32()))]))
+      t: ListType(Tuple([StringType(), OptionType(OptionType(U32()))])),
     ),
     (
       label: 'd',
       t: OptionType(
-          OptionType(Tuple([ListType(S64()), OptionType(OptionType(U64()))])))
+        OptionType(Tuple([ListType(S64()), OptionType(OptionType(U64()))])),
+      ),
     ),
     (label: 'e', t: ErrnoTypesInterface._spec),
     (label: 'i', t: Input._spec),
     (label: 'p', t: Permissions._spec),
-    (label: 'f', t: ManyFlags._spec)
+    (label: 'f', t: ManyFlags._spec),
   ]);
 }
 
@@ -816,7 +794,7 @@ class RoundTripNumbersData implements ToJsonSerializable {
         final si32,
         final si64,
         final f32,
-        final f64
+        final f64,
       ] ||
       (
         final un8,
@@ -828,41 +806,50 @@ class RoundTripNumbersData implements ToJsonSerializable {
         final si32,
         final si64,
         final f32,
-        final f64
-      ) =>
-        RoundTripNumbersData(
-          un8: un8! as int,
-          un16: un16! as int,
-          un32: un32! as int,
-          un64: bigIntFromJson(un64),
-          si8: si8! as int,
-          si16: si16! as int,
-          si32: si32! as int,
-          si64: bigIntFromJson(si64),
-          f32: f32! as double,
-          f64: f64! as double,
-        ),
-      _ => throw Exception('Invalid JSON $json_')
+        final f64,
+      ) => RoundTripNumbersData(
+        un8: un8! as int,
+        un16: un16! as int,
+        un32: un32! as int,
+        un64: bigIntFromJson(un64),
+        si8: si8! as int,
+        si16: si16! as int,
+        si32: si32! as int,
+        si64: bigIntFromJson(si64),
+        f32: f32! as double,
+        f64: f64! as double,
+      ),
+      _ => throw Exception('Invalid JSON $json_'),
     };
   }
   @override
   Map<String, Object?> toJson() => {
-        'runtimeType': 'RoundTripNumbersData',
-        'un8': un8,
-        'un16': un16,
-        'un32': un32,
-        'un64': un64.toString(),
-        'si8': si8,
-        'si16': si16,
-        'si32': si32,
-        'si64': si64.toString(),
-        'f32': f32,
-        'f64': f64,
-      };
+    'runtimeType': 'RoundTripNumbersData',
+    'un8': un8,
+    'un16': un16,
+    'un32': un32,
+    'un64': un64.toString(),
+    'si8': si8,
+    'si16': si16,
+    'si32': si32,
+    'si64': si64.toString(),
+    'f32': f32,
+    'f64': f64,
+  };
 
   /// Returns this as a WASM canonical abi value.
-  List<Object?> toWasm() =>
-      [un8, un16, un32, un64, si8, si16, si32, si64, f32, f64];
+  List<Object?> toWasm() => [
+    un8,
+    un16,
+    un32,
+    un64,
+    si8,
+    si16,
+    si32,
+    si64,
+    f32,
+    f64,
+  ];
   @override
   String toString() =>
       'RoundTripNumbersData${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
@@ -879,18 +866,18 @@ class RoundTripNumbersData implements ToJsonSerializable {
     BigInt /*S64*/ ? si64,
     double /*F32*/ ? f32,
     double /*F64*/ ? f64,
-  }) =>
-      RoundTripNumbersData(
-          un8: un8 ?? this.un8,
-          un16: un16 ?? this.un16,
-          un32: un32 ?? this.un32,
-          un64: un64 ?? this.un64,
-          si8: si8 ?? this.si8,
-          si16: si16 ?? this.si16,
-          si32: si32 ?? this.si32,
-          si64: si64 ?? this.si64,
-          f32: f32 ?? this.f32,
-          f64: f64 ?? this.f64);
+  }) => RoundTripNumbersData(
+    un8: un8 ?? this.un8,
+    un16: un16 ?? this.un16,
+    un32: un32 ?? this.un32,
+    un64: un64 ?? this.un64,
+    si8: si8 ?? this.si8,
+    si16: si16 ?? this.si16,
+    si32: si32 ?? this.si32,
+    si64: si64 ?? this.si64,
+    f32: f32 ?? this.f32,
+    f64: f64 ?? this.f64,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -900,8 +887,18 @@ class RoundTripNumbersData implements ToJsonSerializable {
   int get hashCode => const ObjectComparator().hashProps(_props);
 
   // ignore: unused_field
-  List<Object?> get _props =>
-      [un8, un16, un32, un64, si8, si16, si32, si64, f32, f64];
+  List<Object?> get _props => [
+    un8,
+    un16,
+    un32,
+    un64,
+    si8,
+    si16,
+    si32,
+    si64,
+    f32,
+    f64,
+  ];
   static const _spec = RecordType([
     (label: 'un8', t: U8()),
     (label: 'un16', t: U16()),
@@ -912,7 +909,7 @@ class RoundTripNumbersData implements ToJsonSerializable {
     (label: 'si32', t: S32()),
     (label: 'si64', t: S64()),
     (label: 'f32', t: Float32()),
-    (label: 'f64', t: Float64())
+    (label: 'f64', t: Float64()),
   ]);
 }
 
@@ -920,13 +917,13 @@ class RoundTripNumbersListData implements ToJsonSerializable {
   final Uint8List un8;
   final Uint16List un16;
   final Uint32List un32;
-  final List<BigInt /*U64*/ > un64;
+  final List<BigInt /*U64*/> un64;
   final Int8List si8;
   final Int16List si16;
   final Int32List si32;
-  final List<BigInt /*S64*/ > si64;
-  final List<List<BigInt /*S64*/ >> si64List;
-  final List<List<BigInt /*U64*/ >> un64List;
+  final List<BigInt /*S64*/> si64;
+  final List<List<BigInt /*S64*/>> si64List;
+  final List<List<BigInt /*U64*/>> un64List;
   final List<Uint8List> un8List;
   final Float32List f32;
   final Float64List f64;
@@ -966,7 +963,7 @@ class RoundTripNumbersListData implements ToJsonSerializable {
         final un64List,
         final un8List,
         final f32,
-        final f64
+        final f64,
       ] ||
       (
         final un8,
@@ -981,86 +978,87 @@ class RoundTripNumbersListData implements ToJsonSerializable {
         final un64List,
         final un8List,
         final f32,
-        final f64
-      ) =>
-        RoundTripNumbersListData(
-          un8: (un8 is Uint8List
-              ? un8
-              : Uint8List.fromList((un8! as List).cast())),
-          un16: (un16 is Uint16List
-              ? un16
-              : Uint16List.fromList((un16! as List).cast())),
-          un32: (un32 is Uint32List
-              ? un32
-              : Uint32List.fromList((un32! as List).cast())),
-          un64: (un64! as Iterable).map(bigIntFromJson).toList(),
-          si8: (si8 is Int8List
-              ? si8
-              : Int8List.fromList((si8! as List).cast())),
-          si16: (si16 is Int16List
-              ? si16
-              : Int16List.fromList((si16! as List).cast())),
-          si32: (si32 is Int32List
-              ? si32
-              : Int32List.fromList((si32! as List).cast())),
-          si64: (si64! as Iterable).map(bigIntFromJson).toList(),
-          si64List: (si64List! as Iterable)
-              .map((e) => (e! as Iterable).map(bigIntFromJson).toList())
-              .toList(),
-          un64List: (un64List! as Iterable)
-              .map((e) => (e! as Iterable).map(bigIntFromJson).toList())
-              .toList(),
-          un8List: (un8List! as Iterable)
-              .map((e) => (e is Uint8List
+        final f64,
+      ) => RoundTripNumbersListData(
+        un8: (un8 is Uint8List
+            ? un8
+            : Uint8List.fromList((un8! as List).cast())),
+        un16: (un16 is Uint16List
+            ? un16
+            : Uint16List.fromList((un16! as List).cast())),
+        un32: (un32 is Uint32List
+            ? un32
+            : Uint32List.fromList((un32! as List).cast())),
+        un64: (un64! as Iterable).map(bigIntFromJson).toList(),
+        si8: (si8 is Int8List ? si8 : Int8List.fromList((si8! as List).cast())),
+        si16: (si16 is Int16List
+            ? si16
+            : Int16List.fromList((si16! as List).cast())),
+        si32: (si32 is Int32List
+            ? si32
+            : Int32List.fromList((si32! as List).cast())),
+        si64: (si64! as Iterable).map(bigIntFromJson).toList(),
+        si64List: (si64List! as Iterable)
+            .map((e) => (e! as Iterable).map(bigIntFromJson).toList())
+            .toList(),
+        un64List: (un64List! as Iterable)
+            .map((e) => (e! as Iterable).map(bigIntFromJson).toList())
+            .toList(),
+        un8List: (un8List! as Iterable)
+            .map(
+              (e) => (e is Uint8List
                   ? e
-                  : Uint8List.fromList((e! as List).cast())))
-              .toList(),
-          f32: (f32 is Float32List
-              ? f32
-              : Float32List.fromList((f32! as List).cast())),
-          f64: (f64 is Float64List
-              ? f64
-              : Float64List.fromList((f64! as List).cast())),
-        ),
-      _ => throw Exception('Invalid JSON $json_')
+                  : Uint8List.fromList((e! as List).cast())),
+            )
+            .toList(),
+        f32: (f32 is Float32List
+            ? f32
+            : Float32List.fromList((f32! as List).cast())),
+        f64: (f64 is Float64List
+            ? f64
+            : Float64List.fromList((f64! as List).cast())),
+      ),
+      _ => throw Exception('Invalid JSON $json_'),
     };
   }
   @override
   Map<String, Object?> toJson() => {
-        'runtimeType': 'RoundTripNumbersListData',
-        'un8': un8.toList(),
-        'un16': un16.toList(),
-        'un32': un32.toList(),
-        'un64': un64.map((e) => e.toString()).toList(),
-        'si8': si8.toList(),
-        'si16': si16.toList(),
-        'si32': si32.toList(),
-        'si64': si64.map((e) => e.toString()).toList(),
-        'si64-list':
-            si64List.map((e) => e.map((e) => e.toString()).toList()).toList(),
-        'un64-list':
-            un64List.map((e) => e.map((e) => e.toString()).toList()).toList(),
-        'un8-list': un8List.map((e) => e.toList()).toList(),
-        'f32': f32.toList(),
-        'f64': f64.toList(),
-      };
+    'runtimeType': 'RoundTripNumbersListData',
+    'un8': un8.toList(),
+    'un16': un16.toList(),
+    'un32': un32.toList(),
+    'un64': un64.map((e) => e.toString()).toList(),
+    'si8': si8.toList(),
+    'si16': si16.toList(),
+    'si32': si32.toList(),
+    'si64': si64.map((e) => e.toString()).toList(),
+    'si64-list': si64List
+        .map((e) => e.map((e) => e.toString()).toList())
+        .toList(),
+    'un64-list': un64List
+        .map((e) => e.map((e) => e.toString()).toList())
+        .toList(),
+    'un8-list': un8List.map((e) => e.toList()).toList(),
+    'f32': f32.toList(),
+    'f64': f64.toList(),
+  };
 
   /// Returns this as a WASM canonical abi value.
   List<Object?> toWasm() => [
-        un8,
-        un16,
-        un32,
-        un64,
-        si8,
-        si16,
-        si32,
-        si64,
-        si64List,
-        un64List,
-        un8List,
-        f32,
-        f64
-      ];
+    un8,
+    un16,
+    un32,
+    un64,
+    si8,
+    si16,
+    si32,
+    si64,
+    si64List,
+    un64List,
+    un8List,
+    f32,
+    f64,
+  ];
   @override
   String toString() =>
       'RoundTripNumbersListData${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
@@ -1070,31 +1068,31 @@ class RoundTripNumbersListData implements ToJsonSerializable {
     Uint8List? un8,
     Uint16List? un16,
     Uint32List? un32,
-    List<BigInt /*U64*/ >? un64,
+    List<BigInt /*U64*/>? un64,
     Int8List? si8,
     Int16List? si16,
     Int32List? si32,
-    List<BigInt /*S64*/ >? si64,
-    List<List<BigInt /*S64*/ >>? si64List,
-    List<List<BigInt /*U64*/ >>? un64List,
+    List<BigInt /*S64*/>? si64,
+    List<List<BigInt /*S64*/>>? si64List,
+    List<List<BigInt /*U64*/>>? un64List,
     List<Uint8List>? un8List,
     Float32List? f32,
     Float64List? f64,
-  }) =>
-      RoundTripNumbersListData(
-          un8: un8 ?? this.un8,
-          un16: un16 ?? this.un16,
-          un32: un32 ?? this.un32,
-          un64: un64 ?? this.un64,
-          si8: si8 ?? this.si8,
-          si16: si16 ?? this.si16,
-          si32: si32 ?? this.si32,
-          si64: si64 ?? this.si64,
-          si64List: si64List ?? this.si64List,
-          un64List: un64List ?? this.un64List,
-          un8List: un8List ?? this.un8List,
-          f32: f32 ?? this.f32,
-          f64: f64 ?? this.f64);
+  }) => RoundTripNumbersListData(
+    un8: un8 ?? this.un8,
+    un16: un16 ?? this.un16,
+    un32: un32 ?? this.un32,
+    un64: un64 ?? this.un64,
+    si8: si8 ?? this.si8,
+    si16: si16 ?? this.si16,
+    si32: si32 ?? this.si32,
+    si64: si64 ?? this.si64,
+    si64List: si64List ?? this.si64List,
+    un64List: un64List ?? this.un64List,
+    un8List: un8List ?? this.un8List,
+    f32: f32 ?? this.f32,
+    f64: f64 ?? this.f64,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1105,20 +1103,20 @@ class RoundTripNumbersListData implements ToJsonSerializable {
 
   // ignore: unused_field
   List<Object?> get _props => [
-        un8,
-        un16,
-        un32,
-        un64,
-        si8,
-        si16,
-        si32,
-        si64,
-        si64List,
-        un64List,
-        un8List,
-        f32,
-        f64
-      ];
+    un8,
+    un16,
+    un32,
+    un64,
+    si8,
+    si16,
+    si32,
+    si64,
+    si64List,
+    un64List,
+    un8List,
+    f32,
+    f64,
+  ];
   static const _spec = RecordType([
     (label: 'un8', t: ListType(U8())),
     (label: 'un16', t: ListType(U16())),
@@ -1132,7 +1130,7 @@ class RoundTripNumbersListData implements ToJsonSerializable {
     (label: 'un64-list', t: ListType(ListType(U64()))),
     (label: 'un8-list', t: ListType(ListType(U8()))),
     (label: 'f32', t: ListType(Float32())),
-    (label: 'f64', t: ListType(Float64()))
+    (label: 'f64', t: ListType(Float64())),
   ]);
 }
 
@@ -1145,8 +1143,9 @@ sealed class HumanApiImports implements ToJsonSerializable {
   factory HumanApiImports.fromJson(Object? json_) {
     Object? json = json_;
     if (json is Map) {
-      final MapEntry(:key, :value) =
-          json.entries.firstWhere((e) => e.key != 'runtimeType');
+      final MapEntry(:key, :value) = json.entries.firstWhere(
+        (e) => e.key != 'runtimeType',
+      );
       json = (
         key is int ? key : _spec.cases.indexWhere((c) => c.label == key),
         value,
@@ -1155,38 +1154,38 @@ sealed class HumanApiImports implements ToJsonSerializable {
     return switch (json) {
       (0, null) || [0, null] => const HumanApiImportsBaby(),
       (1, final value) ||
-      [1, final value] =>
-        HumanApiImportsChild(bigIntFromJson(value)),
-      (2, final value) || [2, final value] => HumanApiImportsAdult((() {
+      [1, final value] => HumanApiImportsChild(bigIntFromJson(value)),
+      (2, final value) || [2, final value] => HumanApiImportsAdult(
+        (() {
           final l = value is Map
               ? List.generate(3, (i) => value[i.toString()], growable: false)
               : value;
           return switch (l) {
             [final v0, final v1, final v2] ||
-            (final v0, final v1, final v2) =>
-              (
-                v0 is String ? v0 : (v0! as ParsedString).value,
-                Option.fromJson(
-                    v1,
-                    (some) => Option.fromJson(
-                        some,
-                        (some) => some is String
-                            ? some
-                            : (some! as ParsedString).value)).value,
-                (() {
-                  final l = v2 is Map
-                      ? List.generate(1, (i) => v2[i.toString()],
-                          growable: false)
-                      : v2;
-                  return switch (l) {
-                    [final v0] || (final v0,) => (bigIntFromJson(v0),),
-                    _ => throw Exception('Invalid JSON $v2')
-                  };
-                })(),
-              ),
-            _ => throw Exception('Invalid JSON $value')
+            (final v0, final v1, final v2) => (
+              v0 is String ? v0 : (v0! as ParsedString).value,
+              Option.fromJson(
+                v1,
+                (some) => Option.fromJson(
+                  some,
+                  (some) =>
+                      some is String ? some : (some! as ParsedString).value,
+                ),
+              ).value,
+              (() {
+                final l = v2 is Map
+                    ? List.generate(1, (i) => v2[i.toString()], growable: false)
+                    : v2;
+                return switch (l) {
+                  [final v0] || (final v0,) => (bigIntFromJson(v0),),
+                  _ => throw Exception('Invalid JSON $v2'),
+                };
+              })(),
+            ),
+            _ => throw Exception('Invalid JSON $value'),
           };
-        })()),
+        })(),
+      ),
       _ => throw Exception('Invalid JSON $json_'),
     };
   }
@@ -1194,11 +1193,8 @@ sealed class HumanApiImports implements ToJsonSerializable {
   const factory HumanApiImports.child(BigInt /*U64*/ value) =
       HumanApiImportsChild;
   const factory HumanApiImports.adult(
-      (
-        String,
-        Option<String>?,
-        (BigInt /*S64*/,),
-      ) value) = HumanApiImportsAdult;
+    (String, Option<String>?, (BigInt /*S64*/,)) value,
+  ) = HumanApiImportsAdult;
   @override
   Map<String, Object?> toJson();
 
@@ -1208,20 +1204,23 @@ sealed class HumanApiImports implements ToJsonSerializable {
     Case('baby', null),
     Case('child', U64()),
     Case(
-        'adult',
-        Tuple([
-          StringType(),
-          OptionType(OptionType(StringType())),
-          Tuple([S64()])
-        ]))
+      'adult',
+      Tuple([
+        StringType(),
+        OptionType(OptionType(StringType())),
+        Tuple([S64()]),
+      ]),
+    ),
   ]);
 }
 
 class HumanApiImportsBaby implements HumanApiImports {
   const HumanApiImportsBaby();
   @override
-  Map<String, Object?> toJson() =>
-      {'runtimeType': 'HumanApiImportsBaby', 'baby': null};
+  Map<String, Object?> toJson() => {
+    'runtimeType': 'HumanApiImportsBaby',
+    'baby': null,
+  };
 
   /// Returns this as a WASM canonical abi value.
   @override
@@ -1238,8 +1237,10 @@ class HumanApiImportsChild implements HumanApiImports {
   final BigInt /*U64*/ value;
   const HumanApiImportsChild(this.value);
   @override
-  Map<String, Object?> toJson() =>
-      {'runtimeType': 'HumanApiImportsChild', 'child': value.toString()};
+  Map<String, Object?> toJson() => {
+    'runtimeType': 'HumanApiImportsChild',
+    'child': value.toString(),
+  };
 
   /// Returns this as a WASM canonical abi value.
   @override
@@ -1255,36 +1256,32 @@ class HumanApiImportsChild implements HumanApiImports {
 }
 
 class HumanApiImportsAdult implements HumanApiImports {
-  final (
-    String,
-    Option<String>?,
-    (BigInt /*S64*/,),
-  ) value;
+  final (String, Option<String>?, (BigInt /*S64*/,)) value;
   const HumanApiImportsAdult(this.value);
   @override
   Map<String, Object?> toJson() => {
-        'runtimeType': 'HumanApiImportsAdult',
-        'adult': [
-          value.$1,
-          (value.$2 == null
-              ? const None().toJson()
-              : Option.fromValue(value.$2).toJson((some) => some.toJson())),
-          [value.$3.$1.toString()]
-        ]
-      };
+    'runtimeType': 'HumanApiImportsAdult',
+    'adult': [
+      value.$1,
+      (value.$2 == null
+          ? const None().toJson()
+          : Option.fromValue(value.$2).toJson((some) => some.toJson())),
+      [value.$3.$1.toString()],
+    ],
+  };
 
   /// Returns this as a WASM canonical abi value.
   @override
   (int, Object?) toWasm() => (
-        2,
-        [
-          value.$1,
-          (value.$2 == null
-              ? const None().toWasm()
-              : Option.fromValue(value.$2).toWasm((some) => some.toWasm())),
-          [value.$3.$1]
-        ]
-      );
+    2,
+    [
+      value.$1,
+      (value.$2 == null
+          ? const None().toWasm()
+          : Option.fromValue(value.$2).toWasm((some) => some.toWasm())),
+      [value.$3.$1],
+    ],
+  );
   @override
   String toString() => 'HumanApiImportsAdult($value)';
   @override
@@ -1301,15 +1298,10 @@ class ErrnoApi implements ToJsonSerializable {
   final BigInt /*U64*/ aU1;
 
   /// A list of signed 64-bit integers
-  final List<BigInt /*S64*/ > listS1;
+  final List<BigInt /*S64*/> listS1;
   final String? str;
   final String /*Char*/ ? c;
-  const ErrnoApi({
-    required this.aU1,
-    required this.listS1,
-    this.str,
-    this.c,
-  });
+  const ErrnoApi({required this.aU1, required this.listS1, this.str, this.c});
 
   /// Returns a new instance from a JSON value.
   /// May throw if the value does not have the expected structure.
@@ -1319,37 +1311,36 @@ class ErrnoApi implements ToJsonSerializable {
         : json_;
     return switch (json) {
       [final aU1, final listS1, final str, final c] ||
-      (final aU1, final listS1, final str, final c) =>
-        ErrnoApi(
-          aU1: bigIntFromJson(aU1),
-          listS1: (listS1! as Iterable).map(bigIntFromJson).toList(),
-          str: Option.fromJson(
-              str,
-              (some) =>
-                  some is String ? some : (some! as ParsedString).value).value,
-          c: Option.fromJson(c, (some) => some! as String).value,
-        ),
-      _ => throw Exception('Invalid JSON $json_')
+      (final aU1, final listS1, final str, final c) => ErrnoApi(
+        aU1: bigIntFromJson(aU1),
+        listS1: (listS1! as Iterable).map(bigIntFromJson).toList(),
+        str: Option.fromJson(
+          str,
+          (some) => some is String ? some : (some! as ParsedString).value,
+        ).value,
+        c: Option.fromJson(c, (some) => some! as String).value,
+      ),
+      _ => throw Exception('Invalid JSON $json_'),
     };
   }
   @override
   Map<String, Object?> toJson() => {
-        'runtimeType': 'ErrnoApi',
-        'a-u1': aU1.toString(),
-        'list-s1': listS1.map((e) => e.toString()).toList(),
-        'str': (str == null
-            ? const None().toJson()
-            : Option.fromValue(str).toJson()),
-        'c': (c == null ? const None().toJson() : Option.fromValue(c).toJson()),
-      };
+    'runtimeType': 'ErrnoApi',
+    'a-u1': aU1.toString(),
+    'list-s1': listS1.map((e) => e.toString()).toList(),
+    'str': (str == null
+        ? const None().toJson()
+        : Option.fromValue(str).toJson()),
+    'c': (c == null ? const None().toJson() : Option.fromValue(c).toJson()),
+  };
 
   /// Returns this as a WASM canonical abi value.
   List<Object?> toWasm() => [
-        aU1,
-        listS1,
-        (str == null ? const None().toWasm() : Option.fromValue(str).toWasm()),
-        (c == null ? const None().toWasm() : Option.fromValue(c).toWasm())
-      ];
+    aU1,
+    listS1,
+    (str == null ? const None().toWasm() : Option.fromValue(str).toWasm()),
+    (c == null ? const None().toWasm() : Option.fromValue(c).toWasm()),
+  ];
   @override
   String toString() =>
       'ErrnoApi${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
@@ -1357,15 +1348,15 @@ class ErrnoApi implements ToJsonSerializable {
   /// Returns a new instance by overriding the values passed as arguments
   ErrnoApi copyWith({
     BigInt /*U64*/ ? aU1,
-    List<BigInt /*S64*/ >? listS1,
+    List<BigInt /*S64*/>? listS1,
     Option<String>? str,
-    Option<String /*Char*/ >? c,
-  }) =>
-      ErrnoApi(
-          aU1: aU1 ?? this.aU1,
-          listS1: listS1 ?? this.listS1,
-          str: str != null ? str.value : this.str,
-          c: c != null ? c.value : this.c);
+    Option<String /*Char*/>? c,
+  }) => ErrnoApi(
+    aU1: aU1 ?? this.aU1,
+    listS1: listS1 ?? this.listS1,
+    str: str != null ? str.value : this.str,
+    c: c != null ? c.value : this.c,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1380,7 +1371,7 @@ class ErrnoApi implements ToJsonSerializable {
     (label: 'a-u1', t: U64()),
     (label: 'list-s1', t: ListType(S64())),
     (label: 'str', t: OptionType(StringType())),
-    (label: 'c', t: OptionType(Char()))
+    (label: 'c', t: OptionType(Char())),
   ]);
 }
 
@@ -1405,10 +1396,7 @@ class R1 implements ToJsonSerializable {
   int toWasm() => _rep;
 
   /// constructor for r1
-  factory R1.constructorR1(
-    Api api, {
-    required String name,
-  }) {
+  factory R1.constructorR1(Api api, {required String name}) {
     return api.constructorR1(name: name);
   }
 
@@ -1421,30 +1409,22 @@ class R1 implements ToJsonSerializable {
     return _world.api.methodR1Name(self: this);
   }
 
-  static String staticDefault(
-    Api api,
-  ) {
+  static String staticDefault(Api api) {
     return api.staticR1StaticDefault();
   }
 
   /// Comment for static f1
-  static String staticF1(
-    Api api, {
-    required R1 a,
-  }) {
+  static String staticF1(Api api, {required R1 a}) {
     return api.staticR1StaticF1(a: a);
   }
 
-  static R1 merge(
-    Api api, {
-    required R1 lhs,
-    required R1 rhs,
-  }) {
+  static R1 merge(Api api, {required R1 lhs, required R1 rhs}) {
     return api.staticR1Merge(lhs: lhs, rhs: rhs);
   }
 
-  static const _spec =
-      ResourceType('types-example-namespace:types-example-pkg/api#r1');
+  static const _spec = ResourceType(
+    'types-example-namespace:types-example-pkg/api#r1',
+  );
 }
 
 typedef T2Renamed = T2;
@@ -1462,8 +1442,10 @@ enum LogLevel implements ToJsonSerializable {
     return ToJsonSerializable.enumFromJson(json, values, _spec);
   }
   @override
-  Map<String, Object?> toJson() =>
-      {'runtimeType': 'LogLevel', _spec.labels[index]: null};
+  Map<String, Object?> toJson() => {
+    'runtimeType': 'LogLevel',
+    _spec.labels[index]: null,
+  };
 
   /// Returns this as a WASM canonical abi value.
   int toWasm() => index;
@@ -1477,9 +1459,7 @@ class Empty implements ToJsonSerializable {
   /// May throw if the value does not have the expected structure.
   factory Empty.fromJson(Object? _) => const Empty();
   @override
-  Map<String, Object?> toJson() => {
-        'runtimeType': 'Empty',
-      };
+  Map<String, Object?> toJson() => {'runtimeType': 'Empty'};
 
   /// Returns this as a WASM canonical abi value.
   List<Object?> toWasm() => [];
@@ -1504,9 +1484,7 @@ class Empty implements ToJsonSerializable {
 
 /// Comment for import interface
 abstract class ApiImportsImport {
-  ({T7 h1, HumanApiImports val2}) apiA1B2({
-    required List<HumanApiImports> arg,
-  });
+  ({T7 h1, HumanApiImports val2}) apiA1B2({required List<HumanApiImports> arg});
 
   /// Function with a record, enum, flags and union types
   ({R r, ErrnoApiImports e, Permissions p, Input i}) recordFunc({
@@ -1520,15 +1498,13 @@ abstract class ApiImportsImport {
 /// Comment for import inline
 abstract class InlineImport {
   /// Comment for import inline function
-  Result<void, String /*Char*/ > inlineImp({
+  Result<void, String /*Char*/> inlineImp({
     required List<String /*Char*/ ?> args,
   });
 }
 
 abstract class RoundTripNumbersImport {
-  RoundTripNumbersData roundTripNumbers({
-    required RoundTripNumbersData data,
-  });
+  RoundTripNumbersData roundTripNumbers({required RoundTripNumbersData data});
   RoundTripNumbersListData roundTripNumbersList({
     required RoundTripNumbersListData data,
   });
@@ -1538,10 +1514,7 @@ class TypesExampleWorldImports {
   final ApiImportsImport apiImports;
   final InlineImport inline;
   final RoundTripNumbersImport roundTripNumbers;
-  final void Function({
-    required String message,
-    required LogLevel level,
-  }) print;
+  final void Function({required String message, required LogLevel level}) print;
   const TypesExampleWorldImports({
     required this.apiImports,
     required this.inline,
@@ -1553,20 +1526,22 @@ class TypesExampleWorldImports {
 class RoundTripNumbers {
   final TypesExampleWorld _world;
   RoundTripNumbers(this._world)
-      : _roundTripNumbers = _world.library.getComponentFunction(
-          'types-example-namespace:types-example-pkg/round-trip-numbers#round-trip-numbers',
-          const FuncType([('data', RoundTripNumbersData._spec)],
-              [('', RoundTripNumbersData._spec)]),
-        )!,
-        _roundTripNumbersList = _world.library.getComponentFunction(
-          'types-example-namespace:types-example-pkg/round-trip-numbers#round-trip-numbers-list',
-          const FuncType([('data', RoundTripNumbersListData._spec)],
-              [('', RoundTripNumbersListData._spec)]),
-        )!;
+    : _roundTripNumbers = _world.library.getComponentFunction(
+        'types-example-namespace:types-example-pkg/round-trip-numbers#round-trip-numbers',
+        const FuncType(
+          [('data', RoundTripNumbersData._spec)],
+          [('', RoundTripNumbersData._spec)],
+        ),
+      )!,
+      _roundTripNumbersList = _world.library.getComponentFunction(
+        'types-example-namespace:types-example-pkg/round-trip-numbers#round-trip-numbers-list',
+        const FuncType(
+          [('data', RoundTripNumbersListData._spec)],
+          [('', RoundTripNumbersListData._spec)],
+        ),
+      )!;
   final ListValue Function(ListValue) _roundTripNumbers;
-  RoundTripNumbersData roundTripNumbers({
-    required RoundTripNumbersData data,
-  }) {
+  RoundTripNumbersData roundTripNumbers({required RoundTripNumbersData data}) {
     final results = _roundTripNumbers([data.toWasm()]);
     final result = results[0];
     return _world.withContext(() => RoundTripNumbersData.fromJson(result));
@@ -1585,82 +1560,92 @@ class RoundTripNumbers {
 class Api {
   final TypesExampleWorld _world;
   Api(this._world)
-      : _f12 = _world.library.getComponentFunction(
-          'types-example-namespace:types-example-pkg/api#f12',
-          const FuncType([], [
-            ('val-one', Tuple([S32()])),
-            ('val2', StringType())
-          ]),
-        )!,
-        _class_ = _world.library.getComponentFunction(
-          'types-example-namespace:types-example-pkg/api#class',
-          const FuncType([
+    : _f12 = _world.library.getComponentFunction(
+        'types-example-namespace:types-example-pkg/api#f12',
+        const FuncType([], [
+          ('val-one', Tuple([S32()])),
+          ('val2', StringType()),
+        ]),
+      )!,
+      _class_ = _world.library.getComponentFunction(
+        'types-example-namespace:types-example-pkg/api#class',
+        const FuncType(
+          [
             (
               'break',
               OptionType(
-                  OptionType(ResultType(null, OptionType(ErrnoApi._spec))))
-            )
-          ], [
-            ('', Tuple([]))
-          ]),
-        )!,
-        _continue_ = _world.library.getComponentFunction(
-          'types-example-namespace:types-example-pkg/api#continue',
-          const FuncType([
+                OptionType(ResultType(null, OptionType(ErrnoApi._spec))),
+              ),
+            ),
+          ],
+          [('', Tuple([]))],
+        ),
+      )!,
+      _continue_ = _world.library.getComponentFunction(
+        'types-example-namespace:types-example-pkg/api#continue',
+        const FuncType(
+          [
             ('abstract', OptionType(ResultType(null, ErrnoApi._spec))),
-            ('extends', Tuple([]))
-          ], [
-            ('implements', OptionType(Tuple([])))
-          ]),
-        )!,
-        _recordFunc = _world.library.getComponentFunction(
-          'types-example-namespace:types-example-pkg/api#record-func',
-          const FuncType([
+            ('extends', Tuple([])),
+          ],
+          [('implements', OptionType(Tuple([])))],
+        ),
+      )!,
+      _recordFunc = _world.library.getComponentFunction(
+        'types-example-namespace:types-example-pkg/api#record-func',
+        const FuncType(
+          [
             ('r', R._spec),
             ('e', ErrnoTypesInterface._spec),
             ('p', Permissions._spec),
-            ('i', Input._spec)
-          ], [
+            ('i', Input._spec),
+          ],
+          [
             ('r', R._spec),
             ('e', ErrnoTypesInterface._spec),
             ('p', Permissions._spec),
-            ('i', Input._spec)
-          ]),
-        )!,
-        _constructorR1 = _world.library.getComponentFunction(
-          'types-example-namespace:types-example-pkg/api#[constructor]r1',
-          const FuncType([('name', StringType())], [('', Own(R1._spec))]),
-        )!,
-        _methodR1Length = _world.library.getComponentFunction(
-          'types-example-namespace:types-example-pkg/api#[method]r1.length',
-          const FuncType([('self', Borrow(R1._spec))], [('', U32())]),
-        )!,
-        _methodR1Name = _world.library.getComponentFunction(
-          'types-example-namespace:types-example-pkg/api#[method]r1.name',
-          const FuncType([('self', Borrow(R1._spec))], [('', StringType())]),
-        )!,
-        _staticR1StaticDefault = _world.library.getComponentFunction(
-          'types-example-namespace:types-example-pkg/api#[static]r1.static-default',
-          const FuncType([], [('', StringType())]),
-        )!,
-        _staticR1StaticF1 = _world.library.getComponentFunction(
-          'types-example-namespace:types-example-pkg/api#[static]r1.static-f1',
-          const FuncType([('a', Own(R1._spec))], [('', StringType())]),
-        )!,
-        _staticR1Merge = _world.library.getComponentFunction(
-          'types-example-namespace:types-example-pkg/api#[static]r1.merge',
-          const FuncType([('lhs', Borrow(R1._spec)), ('rhs', Borrow(R1._spec))],
-              [('', Own(R1._spec))]),
-        )!,
-        _staticF1 = _world.library.getComponentFunction(
-          'types-example-namespace:types-example-pkg/api#static-f1',
-          const FuncType([('a', Own(R1._spec))], [('', StringType())]),
-        )!,
-        _merge = _world.library.getComponentFunction(
-          'types-example-namespace:types-example-pkg/api#merge',
-          const FuncType([('lhs', Borrow(R1._spec)), ('rhs', Borrow(R1._spec))],
-              [('', Own(R1._spec))]),
-        )!;
+            ('i', Input._spec),
+          ],
+        ),
+      )!,
+      _constructorR1 = _world.library.getComponentFunction(
+        'types-example-namespace:types-example-pkg/api#[constructor]r1',
+        const FuncType([('name', StringType())], [('', Own(R1._spec))]),
+      )!,
+      _methodR1Length = _world.library.getComponentFunction(
+        'types-example-namespace:types-example-pkg/api#[method]r1.length',
+        const FuncType([('self', Borrow(R1._spec))], [('', U32())]),
+      )!,
+      _methodR1Name = _world.library.getComponentFunction(
+        'types-example-namespace:types-example-pkg/api#[method]r1.name',
+        const FuncType([('self', Borrow(R1._spec))], [('', StringType())]),
+      )!,
+      _staticR1StaticDefault = _world.library.getComponentFunction(
+        'types-example-namespace:types-example-pkg/api#[static]r1.static-default',
+        const FuncType([], [('', StringType())]),
+      )!,
+      _staticR1StaticF1 = _world.library.getComponentFunction(
+        'types-example-namespace:types-example-pkg/api#[static]r1.static-f1',
+        const FuncType([('a', Own(R1._spec))], [('', StringType())]),
+      )!,
+      _staticR1Merge = _world.library.getComponentFunction(
+        'types-example-namespace:types-example-pkg/api#[static]r1.merge',
+        const FuncType(
+          [('lhs', Borrow(R1._spec)), ('rhs', Borrow(R1._spec))],
+          [('', Own(R1._spec))],
+        ),
+      )!,
+      _staticF1 = _world.library.getComponentFunction(
+        'types-example-namespace:types-example-pkg/api#static-f1',
+        const FuncType([('a', Own(R1._spec))], [('', StringType())]),
+      )!,
+      _merge = _world.library.getComponentFunction(
+        'types-example-namespace:types-example-pkg/api#merge',
+        const FuncType(
+          [('lhs', Borrow(R1._spec)), ('rhs', Borrow(R1._spec))],
+          [('', Own(R1._spec))],
+        ),
+      )!;
   final ListValue Function(ListValue) _f12;
 
   /// Comment for export function
@@ -1668,34 +1653,39 @@ class Api {
     final results = _f12([]);
     final r0 = results[0];
     final r1 = results[1];
-    return _world.withContext(() => (
-          valOne: (() {
-            final l = r0 is Map
-                ? List.generate(1, (i) => r0[i.toString()], growable: false)
-                : r0;
-            return switch (l) {
-              [final v0] || (final v0,) => (v0! as int,),
-              _ => throw Exception('Invalid JSON $r0')
-            };
-          })(),
-          val2: r1 is String ? r1 : (r1! as ParsedString).value,
-        ));
+    return _world.withContext(
+      () => (
+        valOne: (() {
+          final l = r0 is Map
+              ? List.generate(1, (i) => r0[i.toString()], growable: false)
+              : r0;
+          return switch (l) {
+            [final v0] || (final v0,) => (v0! as int,),
+            _ => throw Exception('Invalid JSON $r0'),
+          };
+        })(),
+        val2: r1 is String ? r1 : (r1! as ParsedString).value,
+      ),
+    );
   }
 
   final ListValue Function(ListValue) _class_;
-  () class_({
-    Option<T5Api>? break_,
-  }) {
+  () class_({Option<T5Api>? break_}) {
     _class_([
       (break_ == null
           ? const None().toWasm()
-          : Option.fromValue(break_).toWasm((some) => some.toWasm((some) =>
-              some.toWasm(
+          : Option.fromValue(break_).toWasm(
+              (some) => some.toWasm(
+                (some) => some.toWasm(
                   null,
                   (error) => (error == null
                       ? const None().toWasm()
-                      : Option.fromValue(error)
-                          .toWasm((some) => some.toWasm()))))))
+                      : Option.fromValue(
+                          error,
+                        ).toWasm((some) => some.toWasm())),
+                ),
+              ),
+            )),
     ]);
     return ();
   }
@@ -1708,13 +1698,15 @@ class Api {
     final results = _continue_([
       (abstract_ == null
           ? const None().toWasm()
-          : Option.fromValue(abstract_)
-              .toWasm((some) => some.toWasm(null, (error) => error.toWasm()))),
-      []
+          : Option.fromValue(
+              abstract_,
+            ).toWasm((some) => some.toWasm(null, (error) => error.toWasm()))),
+      [],
     ]);
     final r0 = results[0];
     return _world.withContext(
-        () => (implements_: Option.fromJson(r0, (some) => ()).value,));
+      () => (implements_: Option.fromJson(r0, (some) => ()).value),
+    );
   }
 
   final ListValue Function(ListValue) _recordFunc;
@@ -1726,26 +1718,30 @@ class Api {
     required Permissions p,
     required Input i,
   }) {
-    final results =
-        _recordFunc([r.toWasm(), e.toWasm(), p.toWasm(), Input.toWasm(i)]);
+    final results = _recordFunc([
+      r.toWasm(),
+      e.toWasm(),
+      p.toWasm(),
+      Input.toWasm(i),
+    ]);
     final r0 = results[0];
     final r1 = results[1];
     final r2 = results[2];
     final r3 = results[3];
-    return _world.withContext(() => (
-          r: R.fromJson(r0),
-          e: ErrnoTypesInterface.fromJson(r1),
-          p: Permissions.fromJson(r2),
-          i: Input.fromJson(r3),
-        ));
+    return _world.withContext(
+      () => (
+        r: R.fromJson(r0),
+        e: ErrnoTypesInterface.fromJson(r1),
+        p: Permissions.fromJson(r2),
+        i: Input.fromJson(r3),
+      ),
+    );
   }
 
   final ListValue Function(ListValue) _constructorR1;
 
   /// constructor for r1
-  R1 constructorR1({
-    required String name,
-  }) {
+  R1 constructorR1({required String name}) {
     final results = _constructorR1([name]);
     final result = results[0];
     return _world.withContext(() => R1.fromJson(result));
@@ -1754,18 +1750,14 @@ class Api {
   final ListValue Function(ListValue) _methodR1Length;
 
   /// Comment for f2
-  int /*U32*/ methodR1Length({
-    required R1 self,
-  }) {
+  int /*U32*/ methodR1Length({required R1 self}) {
     final results = _methodR1Length([self.toWasm()]);
     final result = results[0];
     return result! as int;
   }
 
   final ListValue Function(ListValue) _methodR1Name;
-  String methodR1Name({
-    required R1 self,
-  }) {
+  String methodR1Name({required R1 self}) {
     final results = _methodR1Name([self.toWasm()]);
     final result = results[0];
     return result is String ? result : (result! as ParsedString).value;
@@ -1781,38 +1773,28 @@ class Api {
   final ListValue Function(ListValue) _staticR1StaticF1;
 
   /// Comment for static f1
-  String staticR1StaticF1({
-    required R1 a,
-  }) {
+  String staticR1StaticF1({required R1 a}) {
     final results = _staticR1StaticF1([a.toWasm()]);
     final result = results[0];
     return result is String ? result : (result! as ParsedString).value;
   }
 
   final ListValue Function(ListValue) _staticR1Merge;
-  R1 staticR1Merge({
-    required R1 lhs,
-    required R1 rhs,
-  }) {
+  R1 staticR1Merge({required R1 lhs, required R1 rhs}) {
     final results = _staticR1Merge([lhs.toWasm(), rhs.toWasm()]);
     final result = results[0];
     return _world.withContext(() => R1.fromJson(result));
   }
 
   final ListValue Function(ListValue) _staticF1;
-  String staticF1({
-    required R1 a,
-  }) {
+  String staticF1({required R1 a}) {
     final results = _staticF1([a.toWasm()]);
     final result = results[0];
     return result is String ? result : (result! as ParsedString).value;
   }
 
   final ListValue Function(ListValue) _merge;
-  R1 merge({
-    required R1 lhs,
-    required R1 rhs,
-  }) {
+  R1 merge({required R1 lhs, required R1 rhs}) {
     final results = _merge([lhs.toWasm(), rhs.toWasm()]);
     final result = results[0];
     return _world.withContext(() => R1.fromJson(result));
@@ -1828,42 +1810,48 @@ class TypesExampleWorld {
   late final RoundTripNumbers roundTripNumbers;
   late final Api api;
 
-  TypesExampleWorld({
-    required this.imports,
-    required this.library,
-  })  : _fF1 = library.getComponentFunction(
-          'f-f1',
-          const FuncType([('typedef', ListType(StringType()))],
-              [('', ListType(StringType()))]),
-        )!,
-        _f1 = library.getComponentFunction(
-          'f1',
-          const FuncType([
+  TypesExampleWorld({required this.imports, required this.library})
+    : _fF1 = library.getComponentFunction(
+        'f-f1',
+        const FuncType(
+          [('typedef', ListType(StringType()))],
+          [('', ListType(StringType()))],
+        ),
+      )!,
+      _f1 = library.getComponentFunction(
+        'f1',
+        const FuncType(
+          [
             ('f', Float32()),
-            ('f-list', ListType(Tuple([Char(), Float64()])))
-          ], [
-            ('val-p1', S64()),
-            ('val2', StringType())
-          ]),
-        )!,
-        _reNamed = library.getComponentFunction(
-          're-named',
-          const FuncType([
+            ('f-list', ListType(Tuple([Char(), Float64()]))),
+          ],
+          [('val-p1', S64()), ('val2', StringType())],
+        ),
+      )!,
+      _reNamed = library.getComponentFunction(
+        're-named',
+        const FuncType(
+          [
             ('perm', OptionType(Permissions._spec)),
-            ('e', OptionType(Empty._spec))
-          ], [
-            ('', Tuple([U32(), U64()]))
-          ]),
-        )!,
-        _reNamed2 = library.getComponentFunction(
-          're-named2',
-          const FuncType([
+            ('e', OptionType(Empty._spec)),
+          ],
+          [
+            ('', Tuple([U32(), U64()])),
+          ],
+        ),
+      )!,
+      _reNamed2 = library.getComponentFunction(
+        're-named2',
+        const FuncType(
+          [
             ('tup', Tuple([ListType(U16())])),
-            ('e', Empty._spec)
-          ], [
-            ('', Tuple([OptionType(U8()), S8()]))
-          ]),
-        )! {
+            ('e', Empty._spec),
+          ],
+          [
+            ('', Tuple([OptionType(U8()), S8()])),
+          ],
+        ),
+      )! {
     roundTripNumbers = RoundTripNumbers(this);
     api = Api(this);
   }
@@ -1876,166 +1864,205 @@ class TypesExampleWorld {
     WasmLibrary getLib() => library;
 
     {
-      const ft = FuncType([
-        ('arg', ListType(HumanApiImports._spec))
-      ], [
-        ('h1', ResultType(Char(), ErrnoTypesInterface._spec)),
-        ('val2', HumanApiImports._spec)
-      ]);
+      const ft = FuncType(
+        [('arg', ListType(HumanApiImports._spec))],
+        [
+          ('h1', ResultType(Char(), ErrnoTypesInterface._spec)),
+          ('val2', HumanApiImports._spec),
+        ],
+      );
 
       (ListValue, void Function()) execImportsApiImportsApiA1b2(
-          ListValue args) {
+        ListValue args,
+      ) {
         final args0 = args[0];
         final results = imports.apiImports.apiA1B2(
-            arg: (args0! as Iterable).map(HumanApiImports.fromJson).toList());
+          arg: (args0! as Iterable).map(HumanApiImports.fromJson).toList(),
+        );
         return (
           [
             results.h1.toWasm(null, (error) => error.toWasm()),
-            results.val2.toWasm()
+            results.val2.toWasm(),
           ],
-          () {}
+          () {},
         );
       }
 
       final lowered = loweredImportFunction(
-          r'types-example-namespace:types-example-pkg/api-imports#api-a1-b2',
-          ft,
-          execImportsApiImportsApiA1b2,
-          getLib);
+        r'types-example-namespace:types-example-pkg/api-imports#api-a1-b2',
+        ft,
+        execImportsApiImportsApiA1b2,
+        getLib,
+      );
       builder.addImport(
-          r'types-example-namespace:types-example-pkg/api-imports',
-          'api-a1-b2',
-          lowered);
+        r'types-example-namespace:types-example-pkg/api-imports',
+        'api-a1-b2',
+        lowered,
+      );
     }
     {
-      const ft = FuncType([
-        ('r', R._spec),
-        ('e', ErrnoTypesInterface._spec),
-        ('p', Permissions._spec),
-        ('i', Input._spec)
-      ], [
-        ('r', R._spec),
-        ('e', ErrnoTypesInterface._spec),
-        ('p', Permissions._spec),
-        ('i', Input._spec)
-      ]);
+      const ft = FuncType(
+        [
+          ('r', R._spec),
+          ('e', ErrnoTypesInterface._spec),
+          ('p', Permissions._spec),
+          ('i', Input._spec),
+        ],
+        [
+          ('r', R._spec),
+          ('e', ErrnoTypesInterface._spec),
+          ('p', Permissions._spec),
+          ('i', Input._spec),
+        ],
+      );
 
       (ListValue, void Function()) execImportsApiImportsRecordFunc(
-          ListValue args) {
+        ListValue args,
+      ) {
         final args0 = args[0];
         final args1 = args[1];
         final args2 = args[2];
         final args3 = args[3];
         final results = imports.apiImports.recordFunc(
-            r: R.fromJson(args0),
-            e: ErrnoTypesInterface.fromJson(args1),
-            p: Permissions.fromJson(args2),
-            i: Input.fromJson(args3));
+          r: R.fromJson(args0),
+          e: ErrnoTypesInterface.fromJson(args1),
+          p: Permissions.fromJson(args2),
+          i: Input.fromJson(args3),
+        );
         return (
           [
             results.r.toWasm(),
             results.e.toWasm(),
             results.p.toWasm(),
-            Input.toWasm(results.i)
+            Input.toWasm(results.i),
           ],
-          () {}
+          () {},
         );
       }
 
       final lowered = loweredImportFunction(
-          r'types-example-namespace:types-example-pkg/api-imports#record-func',
-          ft,
-          execImportsApiImportsRecordFunc,
-          getLib);
+        r'types-example-namespace:types-example-pkg/api-imports#record-func',
+        ft,
+        execImportsApiImportsRecordFunc,
+        getLib,
+      );
       builder.addImport(
-          r'types-example-namespace:types-example-pkg/api-imports',
-          'record-func',
-          lowered);
+        r'types-example-namespace:types-example-pkg/api-imports',
+        'record-func',
+        lowered,
+      );
     }
     {
-      const ft = FuncType([('args', ListType(OptionType(Char())))],
-          [('', ResultType(null, Char()))]);
+      const ft = FuncType(
+        [('args', ListType(OptionType(Char())))],
+        [('', ResultType(null, Char()))],
+      );
 
       (ListValue, void Function()) execImportsInlineInlineImp(ListValue args) {
         final args0 = args[0];
         final results = imports.inline.inlineImp(
-            args: (args0! as Iterable)
-                .map((e) => Option.fromJson(e, (some) => some! as String).value)
-                .toList());
+          args: (args0! as Iterable)
+              .map((e) => Option.fromJson(e, (some) => some! as String).value)
+              .toList(),
+        );
         return ([results.toWasm(null, null)], () {});
       }
 
       final lowered = loweredImportFunction(
-          r'inline#inline-imp', ft, execImportsInlineInlineImp, getLib);
+        r'inline#inline-imp',
+        ft,
+        execImportsInlineInlineImp,
+        getLib,
+      );
       builder.addImport(r'inline', 'inline-imp', lowered);
     }
     {
-      const ft = FuncType([('data', RoundTripNumbersData._spec)],
-          [('', RoundTripNumbersData._spec)]);
+      const ft = FuncType(
+        [('data', RoundTripNumbersData._spec)],
+        [('', RoundTripNumbersData._spec)],
+      );
 
       (ListValue, void Function()) execImportsRoundTripNumbersRoundTripNumbers(
-          ListValue args) {
+        ListValue args,
+      ) {
         final args0 = args[0];
-        final results = imports.roundTripNumbers
-            .roundTripNumbers(data: RoundTripNumbersData.fromJson(args0));
+        final results = imports.roundTripNumbers.roundTripNumbers(
+          data: RoundTripNumbersData.fromJson(args0),
+        );
         return ([results.toWasm()], () {});
       }
 
       final lowered = loweredImportFunction(
-          r'types-example-namespace:types-example-pkg/round-trip-numbers#round-trip-numbers',
-          ft,
-          execImportsRoundTripNumbersRoundTripNumbers,
-          getLib);
+        r'types-example-namespace:types-example-pkg/round-trip-numbers#round-trip-numbers',
+        ft,
+        execImportsRoundTripNumbersRoundTripNumbers,
+        getLib,
+      );
       builder.addImport(
-          r'types-example-namespace:types-example-pkg/round-trip-numbers',
-          'round-trip-numbers',
-          lowered);
+        r'types-example-namespace:types-example-pkg/round-trip-numbers',
+        'round-trip-numbers',
+        lowered,
+      );
     }
     {
-      const ft = FuncType([('data', RoundTripNumbersListData._spec)],
-          [('', RoundTripNumbersListData._spec)]);
+      const ft = FuncType(
+        [('data', RoundTripNumbersListData._spec)],
+        [('', RoundTripNumbersListData._spec)],
+      );
 
       (ListValue, void Function())
-          execImportsRoundTripNumbersRoundTripNumbersList(ListValue args) {
+      execImportsRoundTripNumbersRoundTripNumbersList(ListValue args) {
         final args0 = args[0];
         final results = imports.roundTripNumbers.roundTripNumbersList(
-            data: RoundTripNumbersListData.fromJson(args0));
+          data: RoundTripNumbersListData.fromJson(args0),
+        );
         return ([results.toWasm()], () {});
       }
 
       final lowered = loweredImportFunction(
-          r'types-example-namespace:types-example-pkg/round-trip-numbers#round-trip-numbers-list',
-          ft,
-          execImportsRoundTripNumbersRoundTripNumbersList,
-          getLib);
+        r'types-example-namespace:types-example-pkg/round-trip-numbers#round-trip-numbers-list',
+        ft,
+        execImportsRoundTripNumbersRoundTripNumbersList,
+        getLib,
+      );
       builder.addImport(
-          r'types-example-namespace:types-example-pkg/round-trip-numbers',
-          'round-trip-numbers-list',
-          lowered);
+        r'types-example-namespace:types-example-pkg/round-trip-numbers',
+        'round-trip-numbers-list',
+        lowered,
+      );
     }
     builder.addImports(resourceImports(getLib, R1._spec));
     {
-      const ft =
-          FuncType([('message', StringType()), ('level', LogLevel._spec)], []);
+      const ft = FuncType([
+        ('message', StringType()),
+        ('level', LogLevel._spec),
+      ], []);
 
       (ListValue, void Function()) execImportsPrint(ListValue args) {
         final args0 = args[0];
         final args1 = args[1];
         imports.print(
-            message: args0 is String ? args0 : (args0! as ParsedString).value,
-            level: LogLevel.fromJson(args1));
+          message: args0 is String ? args0 : (args0! as ParsedString).value,
+          level: LogLevel.fromJson(args1),
+        );
         return (const [], () {});
       }
 
-      final lowered =
-          loweredImportFunction(r'$root#print', ft, execImportsPrint, getLib);
+      final lowered = loweredImportFunction(
+        r'$root#print',
+        ft,
+        execImportsPrint,
+        getLib,
+      );
       builder.addImport(r'$root', 'print', lowered);
     }
     final instance = await builder.build();
 
-    library = WasmLibrary(instance,
-        componentId: 'types-example-namespace:types-example-pkg/types-example',
-        int64Type: Int64TypeConfig.bigInt);
+    library = WasmLibrary(
+      instance,
+      componentId: 'types-example-namespace:types-example-pkg/types-example',
+      int64Type: Int64TypeConfig.bigInt,
+    );
     return TypesExampleWorld(imports: imports, library: library);
   }
 
@@ -2046,92 +2073,85 @@ class TypesExampleWorld {
   T withContext<T>(T Function() fn) => runZoned(fn, zoneValues: _zoneValues);
 
   final ListValue Function(ListValue) _fF1;
-  T10 fF1({
-    required T10 typedef_,
-  }) {
+  T10 fF1({required T10 typedef_}) {
     final results = _fF1([typedef_]);
     final result = results[0];
-    return withContext(() => (result! as Iterable)
-        .map((e) => e is String ? e : (e! as ParsedString).value)
-        .toList());
+    return withContext(
+      () => (result! as Iterable)
+          .map((e) => e is String ? e : (e! as ParsedString).value)
+          .toList(),
+    );
   }
 
   final ListValue Function(ListValue) _f1;
   ({BigInt /*S64*/ valP1, String val2}) f1({
     required double /*F32*/ f,
-    required List<
-            (
-              String /*Char*/,
-              double /*F64*/,
-            )>
-        fList,
+    required List<(String /*Char*/, double /*F64*/)> fList,
   }) {
     final results = _f1([
       f,
-      fList.map((e) => [e.$1, e.$2]).toList(growable: false)
+      fList.map((e) => [e.$1, e.$2]).toList(growable: false),
     ]);
     final r0 = results[0];
     final r1 = results[1];
-    return withContext(() => (
-          valP1: bigIntFromJson(r0),
-          val2: r1 is String ? r1 : (r1! as ParsedString).value,
-        ));
+    return withContext(
+      () => (
+        valP1: bigIntFromJson(r0),
+        val2: r1 is String ? r1 : (r1! as ParsedString).value,
+      ),
+    );
   }
 
   final ListValue Function(ListValue) _reNamed;
 
   /// t2 has been renamed with `use types-interface.{t2 as t2-renamed}`
-  T2Renamed reNamed({
-    Permissions? perm,
-    Empty? e,
-  }) {
+  T2Renamed reNamed({Permissions? perm, Empty? e}) {
     final results = _reNamed([
       (perm == null
           ? const None().toWasm()
           : Option.fromValue(perm).toWasm((some) => some.toWasm())),
       (e == null
           ? const None().toWasm()
-          : Option.fromValue(e).toWasm((some) => some.toWasm()))
+          : Option.fromValue(e).toWasm((some) => some.toWasm())),
     ]);
     final result = results[0];
-    return withContext(() => (() {
-          final l = result is Map
-              ? List.generate(2, (i) => result[i.toString()], growable: false)
-              : result;
-          return switch (l) {
-            [final v0, final v1] || (final v0, final v1) => (
-                v0! as int,
-                bigIntFromJson(v1),
-              ),
-            _ => throw Exception('Invalid JSON $result')
-          };
-        })());
+    return withContext(
+      () => (() {
+        final l = result is Map
+            ? List.generate(2, (i) => result[i.toString()], growable: false)
+            : result;
+        return switch (l) {
+          [final v0, final v1] ||
+          (final v0, final v1) => (v0! as int, bigIntFromJson(v1)),
+          _ => throw Exception('Invalid JSON $result'),
+        };
+      })(),
+    );
   }
 
   final ListValue Function(ListValue) _reNamed2;
-  (
-    int /*U8*/ ?,
-    int /*S8*/,
-  ) reNamed2({
+  (int /*U8*/ ?, int /*S8*/) reNamed2({
     required (Uint16List,) tup,
     required Empty e,
   }) {
     final results = _reNamed2([
       [tup.$1],
-      e.toWasm()
+      e.toWasm(),
     ]);
     final result = results[0];
-    return withContext(() => (() {
-          final l = result is Map
-              ? List.generate(2, (i) => result[i.toString()], growable: false)
-              : result;
-          return switch (l) {
-            [final v0, final v1] || (final v0, final v1) => (
-                Option.fromJson(v0, (some) => some! as int).value,
-                v1! as int,
-              ),
-            _ => throw Exception('Invalid JSON $result')
-          };
-        })());
+    return withContext(
+      () => (() {
+        final l = result is Map
+            ? List.generate(2, (i) => result[i.toString()], growable: false)
+            : result;
+        return switch (l) {
+          [final v0, final v1] || (final v0, final v1) => (
+            Option.fromJson(v0, (some) => some! as int).value,
+            v1! as int,
+          ),
+          _ => throw Exception('Invalid JSON $result'),
+        };
+      })(),
+    );
   }
 }

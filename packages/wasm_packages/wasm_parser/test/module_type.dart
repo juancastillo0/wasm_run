@@ -15,12 +15,7 @@ ModuleType moduleToType(WasmModule module) {
         .toList(),
     exports: module
         .getExports()
-        .map(
-          (e) => ModuleExport(
-            name: e.name,
-            type: mapExternalType(e.type!),
-          ),
-        )
+        .map((e) => ModuleExport(name: e.name, type: mapExternalType(e.type!)))
         .toList(),
   );
 }
@@ -46,10 +41,8 @@ ExternType mapExternalType(ExternalType type) {
       parameters: func.parameters.map(mapValueTy).toList(),
       results: func.results.map(mapValueTy).toList(),
     ),
-    global: (global) => GlobalType(
-      mutable: global.mutable,
-      value: mapValueTy(global.value),
-    ),
+    global: (global) =>
+        GlobalType(mutable: global.mutable, value: mapValueTy(global.value)),
     table: (table) => TableType(
       minimum: table.minimum,
       maximum: table.maximum,
@@ -71,9 +64,11 @@ ValueType mapValueTy(ValueTy type) {
     ValueTy.f32 => const ValueType.f32(),
     ValueTy.f64 => const ValueType.f64(),
     ValueTy.v128 => const ValueType.v128(),
-    ValueTy.externRef =>
-      const ValueType.ref(RefType(nullable: true, heapType: HeapType.extern())),
-    ValueTy.funcRef =>
-      const ValueType.ref(RefType(nullable: true, heapType: HeapType.func())),
+    ValueTy.externRef => const ValueType.ref(
+      RefType(nullable: true, heapType: HeapType.extern()),
+    ),
+    ValueTy.funcRef => const ValueType.ref(
+      RefType(nullable: true, heapType: HeapType.func()),
+    ),
   };
 }

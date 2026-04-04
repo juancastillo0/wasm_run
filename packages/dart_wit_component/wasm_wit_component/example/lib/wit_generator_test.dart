@@ -47,9 +47,12 @@ void witDartGeneratorTests({Future<Directory> Function()? getDirectory}) {
       test('--no-default', () {
         const pathToWit = 'wit/file.wit';
         const pathToDartFile = 'lib/file.dart';
-        final args = GeneratorCLIArgs.fromArgs(
-          [pathToWit, pathToDartFile, '--no-default', '--json-serialization'],
-        );
+        final args = GeneratorCLIArgs.fromArgs([
+          pathToWit,
+          pathToDartFile,
+          '--no-default',
+          '--json-serialization',
+        ]);
 
         expect(
           args,
@@ -78,14 +81,12 @@ void witDartGeneratorTests({Future<Directory> Function()? getDirectory}) {
 
       test('--no-copy-with --json-serialization=false', () {
         const pathToWit = 'wit/file.wit';
-        final args = GeneratorCLIArgs.fromArgs(
-          [
-            pathToWit,
-            '--no-copy-with',
-            '--watch',
-            '--json-serialization=false',
-          ],
-        );
+        final args = GeneratorCLIArgs.fromArgs([
+          pathToWit,
+          '--no-copy-with',
+          '--watch',
+          '--json-serialization=false',
+        ]);
 
         expect(
           args,
@@ -120,22 +121,23 @@ void witDartGeneratorTests({Future<Directory> Function()? getDirectory}) {
           );
         }
 
-        hasError(
-          ['wit/file.wit', '-no-copy-with'],
-          'Invalid argument (1, -no-copy-with). Should be --<name>',
-        );
-        hasError(
-          ['file.wit', '--no-copy-with', '--copy-with'],
-          'Duplicate argument (2, --copy-with).',
-        );
-        hasError(
-          ['/wit/file.wit', '--watch', '--copy-with=no'],
-          'Invalid argument (2, --copy-with=no). Should be true or false.',
-        );
-        hasError(
-          ['--copy-with=true'],
-          'Missing positional argument `witInputPath`.',
-        );
+        hasError([
+          'wit/file.wit',
+          '-no-copy-with',
+        ], 'Invalid argument (1, -no-copy-with). Should be --<name>');
+        hasError([
+          'file.wit',
+          '--no-copy-with',
+          '--copy-with',
+        ], 'Duplicate argument (2, --copy-with).');
+        hasError([
+          '/wit/file.wit',
+          '--watch',
+          '--copy-with=no',
+        ], 'Invalid argument (2, --copy-with=no). Should be true or false.');
+        hasError([
+          '--copy-with=true',
+        ], 'Missing positional argument `witInputPath`.');
       });
     });
 
@@ -164,23 +166,25 @@ world host {
       final String witPath;
       if (!isWeb && getDirectory != null) {
         final dir = await getDirectory();
-        final file = File(
-          dir.uri.resolve('host.wit').toFilePath(windows: Platform.isWindows),
-        )
-          ..createSync(recursive: true)
-          ..writeAsStringSync(hostWitContents);
+        final file =
+            File(
+                dir.uri
+                    .resolve('host.wit')
+                    .toFilePath(windows: Platform.isWindows),
+              )
+              ..createSync(recursive: true)
+              ..writeAsStringSync(hostWitContents);
         addTearDown(file.deleteSync);
 
         witPath = file.path;
       } else {
         witPath = isWeb
             ? 'host/host.wit'
-            : getRootDirectory()
-                .uri
-                .resolve(
-                  'packages/dart_wit_component/wasm_wit_component/example/lib/host.wit',
-                )
-                .toFilePath();
+            : getRootDirectory().uri
+                  .resolve(
+                    'packages/dart_wit_component/wasm_wit_component/example/lib/host.wit',
+                  )
+                  .toFilePath();
       }
       final wasiConfig = wasiConfigFromPath(
         witPath,
@@ -189,7 +193,7 @@ world host {
             'host': WasiDirectory({
               'host.wit': WasiFile(
                 const Utf8Encoder().convert(hostWitContents),
-              )
+              ),
             }),
         },
       );
@@ -211,10 +215,7 @@ world host {
         ),
       );
       const inputs = InMemoryFiles(
-        worldFile: WitFile(
-          path: 'host.wit',
-          contents: hostWitContents,
-        ),
+        worldFile: WitFile(path: 'host.wit', contents: hostWitContents),
         pkgFiles: [],
       );
 
@@ -224,9 +225,7 @@ world host {
 }
 
 void _validateHostResult(DartWitGeneratorWorld g, WitGeneratorInput inputs) {
-  final result = g.generate(
-    config: defaultGeneratorConfig(inputs: inputs),
-  );
+  final result = g.generate(config: defaultGeneratorConfig(inputs: inputs));
 
   switch (result) {
     case Err(:final error):

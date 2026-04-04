@@ -54,7 +54,9 @@ class RustCryptoTest {
       Benchmark('wasm', () => world.sha2.sha256(bytes: data)),
       Benchmark('crypto', () => crypto.sha256.convert(data).bytes),
       Benchmark(
-          'cryptographySync', () => cryptographySync.hashSync(data).bytes),
+        'cryptographySync',
+        () => cryptographySync.hashSync(data).bytes,
+      ),
       Benchmark('pointycastle', () => pointycastleSha256.process(data)),
       Benchmark('hashlib', () => hashlib.sha256.convert(data).bytes),
     ];
@@ -98,11 +100,14 @@ class RustCryptoTest {
       Benchmark('crypto', () => cryptoHmac.convert(data).bytes),
       Benchmark(
           'cryptographySync',
-          () => cryptographySync.calculateMacSync(
+        () => cryptographySync
+            .calculateMacSync(
                 secretKeyData: cryptography.SecretKeyData(key),
                 data,
                 nonce: const [],
-              ).bytes),
+            )
+            .bytes,
+      ),
       Benchmark('pointycastle', () => pointycastleHmac.process(data)),
       Benchmark('hashlib', () => hashlibHmac.convert(data).bytes),
     ];
@@ -159,7 +164,8 @@ class RustCryptoTest {
           'wasm',
           () => world.argon2
               .rawHash(config: config, password: password, salt: salt)
-              .unwrap()),
+            .unwrap(),
+      ),
       // Benchmark('argon2', () => crypto.argon2.convert(data).bytes),
       Benchmark(
           'dargon2',
@@ -174,7 +180,8 @@ class RustCryptoTest {
                 type: dargon2.Argon2Type.id,
                 version: dargon2.Argon2Version.V13,
               )
-              .rawBytes),
+            .rawBytes,
+      ),
       Benchmark('pointycastle', () => pointycastleArgon2.process(password)),
       Benchmark('hashlib', () => hasLibArgon2.convert(password).bytes),
     ];
@@ -233,8 +240,8 @@ class RustCryptoTest {
       ),
       Benchmark(
         'pointycastle',
-        () => (pointycastle.GCMBlockCipher(pointycastle.AESEngine())
-              ..init(
+        () =>
+            (pointycastle.GCMBlockCipher(pointycastle.AESEngine())..init(
                 true,
                 pointycastle.AEADParameters(
                   pointycastle.KeyParameter(key),
@@ -259,7 +266,8 @@ class RustCryptoTest {
           benchmark.fn();
         }
         print(
-            'encrypt aesGcm ${benchmark.name} ${sw.elapsedMilliseconds / count}ms');
+          'encrypt aesGcm ${benchmark.name} ${sw.elapsedMilliseconds / count}ms',
+        );
       }
     }
 
@@ -295,8 +303,8 @@ class RustCryptoTest {
       ),
       Benchmark(
         'pointycastle',
-        () => (pointycastle.GCMBlockCipher(pointycastle.AESEngine())
-              ..init(
+        () =>
+            (pointycastle.GCMBlockCipher(pointycastle.AESEngine())..init(
                 false,
                 pointycastle.AEADParameters(
                   pointycastle.KeyParameter(key),
@@ -324,7 +332,8 @@ class RustCryptoTest {
           benchmark.fn();
         }
         print(
-            'decrypt aesGcm ${benchmark.name} ${sw.elapsedMilliseconds / count}ms');
+          'decrypt aesGcm ${benchmark.name} ${sw.elapsedMilliseconds / count}ms',
+        );
       }
     }
   }

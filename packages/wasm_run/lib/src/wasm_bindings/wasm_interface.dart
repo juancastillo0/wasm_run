@@ -460,7 +460,7 @@ class WasmFunction extends WasmExternal {
     required this.params,
     this.name,
     List<Object?> Function([List<Object?>? args])? call,
-  })  : results = const [],
+  }) : results = const [],
         _call = call;
 
   /// Optional name for debugging purposes.
@@ -608,45 +608,30 @@ class WasmValue {
   final ValueTy type;
 
   /// Value of 32-bit signed or unsigned integer.
-  const WasmValue.i32(
-    int this.value,
-  ) : type = ValueTy.i32;
+  const WasmValue.i32(int this.value) : type = ValueTy.i32;
 
   /// Value of 64-bit signed or unsigned integer.
-  WasmValue.i64BigInt(
-    BigInt value,
-  )   : value = i64.fromBigInt(value),
+  WasmValue.i64BigInt(BigInt value)
+    : value = i64.fromBigInt(value),
         type = ValueTy.i64;
 
   /// Value of 64-bit signed or unsigned integer.
-  WasmValue.i64(int value)
-      : value = i64.fromInt(value),
-        type = ValueTy.i64;
+  WasmValue.i64(int value) : value = i64.fromInt(value), type = ValueTy.i64;
 
   /// Value of 32-bit IEEE 754-2008 floating point number.
-  const WasmValue.f32(
-    double this.value,
-  ) : type = ValueTy.f32;
+  const WasmValue.f32(double this.value) : type = ValueTy.f32;
 
   /// Value of 64-bit IEEE 754-2008 floating point number.
-  const WasmValue.f64(
-    double this.value,
-  ) : type = ValueTy.f64;
+  const WasmValue.f64(double this.value) : type = ValueTy.f64;
 
   /// A 128 bit number.
-  const WasmValue.v128(
-    U8Array16 this.value,
-  ) : type = ValueTy.v128;
+  const WasmValue.v128(U8Array16 this.value) : type = ValueTy.v128;
 
   /// A nullable function reference.
-  const factory WasmValue.funcRef(
-    WasmFunction? value,
-  ) = WasmValueRef.funcRef;
+  const factory WasmValue.funcRef(WasmFunction? value) = WasmValueRef.funcRef;
 
   /// A nullable external object reference.
-  const factory WasmValue.externRef(
-    Object? value,
-  ) = WasmValueRef.externRef;
+  const factory WasmValue.externRef(Object? value) = WasmValueRef.externRef;
 
   @override
   String toString() => 'WasmValue($value, $type)';
@@ -680,14 +665,10 @@ class WasmValueRef implements WasmValue {
   final ValueTy type;
 
   /// A nullable function reference.
-  const WasmValueRef.funcRef(
-    WasmFunction? this.value,
-  ) : type = ValueTy.funcRef;
+  const WasmValueRef.funcRef(WasmFunction? this.value) : type = ValueTy.funcRef;
 
   /// A nullable external object reference.
-  const WasmValueRef.externRef(
-    this.value,
-  ) : type = ValueTy.externRef;
+  const WasmValueRef.externRef(this.value) : type = ValueTy.externRef;
 }
 
 /// Returns the fuel that can be used to limit the amount of
@@ -728,12 +709,7 @@ class WasmModuleImport {
   final ExternalType? type;
 
   /// [WasmModule] import entry.
-  const WasmModuleImport(
-    this.module,
-    this.name,
-    this.kind, {
-    this.type,
-  });
+  const WasmModuleImport(this.module, this.name, this.kind, {this.type});
 
   @override
   String toString() => 'WasmModuleImport($module, $name, $kind)';
@@ -751,11 +727,7 @@ class WasmModuleExport {
   final ExternalType? type;
 
   /// [WasmModule] exports entry.
-  const WasmModuleExport(
-    this.name,
-    this.kind, {
-    this.type,
-  });
+  const WasmModuleExport(this.name, this.kind, {this.type});
 
   @override
   String toString() => 'WasmModuleExport($name, $kind)';
@@ -773,7 +745,7 @@ enum WasmExternalKind {
   memory,
 
   /// [WasmTable]
-  table
+  table,
 }
 
 // TODO: https://developer.mozilla.org/en-US/docs/WebAssembly/JavaScript_interface/Global/Global

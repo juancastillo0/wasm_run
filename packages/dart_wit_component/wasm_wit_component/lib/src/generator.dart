@@ -19,9 +19,7 @@ class FileSystemPaths implements WitGeneratorInput, ToJsonSerializable {
   final String inputPath;
 
   /// The paths in the file system that contain the wit files.
-  const FileSystemPaths({
-    required this.inputPath,
-  });
+  const FileSystemPaths({required this.inputPath});
 
   /// Returns a new instance from a JSON value.
   /// May throw if the value does not have the expected structure.
@@ -31,18 +29,18 @@ class FileSystemPaths implements WitGeneratorInput, ToJsonSerializable {
         : json_;
     return switch (json) {
       [final inputPath] || (final inputPath,) => FileSystemPaths(
-          inputPath: inputPath is String
-              ? inputPath
-              : (inputPath! as ParsedString).value,
-        ),
-      _ => throw Exception('Invalid JSON $json_')
+        inputPath: inputPath is String
+            ? inputPath
+            : (inputPath! as ParsedString).value,
+      ),
+      _ => throw Exception('Invalid JSON $json_'),
     };
   }
   @override
   Map<String, Object?> toJson() => {
-        'runtimeType': 'FileSystemPaths',
-        'input-path': inputPath,
-      };
+    'runtimeType': 'FileSystemPaths',
+    'input-path': inputPath,
+  };
 
   /// Returns this as a WASM canonical abi value.
   List<Object?> toWasm() => [inputPath];
@@ -51,9 +49,7 @@ class FileSystemPaths implements WitGeneratorInput, ToJsonSerializable {
       'FileSystemPaths${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
 
   /// Returns a new instance by overriding the values passed as arguments
-  FileSystemPaths copyWith({
-    String? inputPath,
-  }) =>
+  FileSystemPaths copyWith({String? inputPath}) =>
       FileSystemPaths(inputPath: inputPath ?? this.inputPath);
   @override
   bool operator ==(Object other) =>
@@ -108,13 +104,19 @@ enum Int64TypeConfig implements ToJsonSerializable {
     return ToJsonSerializable.enumFromJson(json, values, _spec);
   }
   @override
-  Map<String, Object?> toJson() =>
-      {'runtimeType': 'Int64TypeConfig', _spec.labels[index]: null};
+  Map<String, Object?> toJson() => {
+    'runtimeType': 'Int64TypeConfig',
+    _spec.labels[index]: null,
+  };
 
   /// Returns this as a WASM canonical abi value.
   int toWasm() => index;
-  static const _spec = EnumType(
-      ['native-object', 'big-int', 'big-int-unsigned-only', 'core-int']);
+  static const _spec = EnumType([
+    'native-object',
+    'big-int',
+    'big-int-unsigned-only',
+    'core-int',
+  ]);
 }
 
 class WitFile implements ToJsonSerializable {
@@ -124,10 +126,7 @@ class WitFile implements ToJsonSerializable {
 
   /// The contents of the file.
   final String contents;
-  const WitFile({
-    required this.path,
-    required this.contents,
-  });
+  const WitFile({required this.path, required this.contents});
 
   /// Returns a new instance from a JSON value.
   /// May throw if the value does not have the expected structure.
@@ -137,19 +136,20 @@ class WitFile implements ToJsonSerializable {
         : json_;
     return switch (json) {
       [final path, final contents] || (final path, final contents) => WitFile(
-          path: path is String ? path : (path! as ParsedString).value,
-          contents:
-              contents is String ? contents : (contents! as ParsedString).value,
-        ),
-      _ => throw Exception('Invalid JSON $json_')
+        path: path is String ? path : (path! as ParsedString).value,
+        contents: contents is String
+            ? contents
+            : (contents! as ParsedString).value,
+      ),
+      _ => throw Exception('Invalid JSON $json_'),
     };
   }
   @override
   Map<String, Object?> toJson() => {
-        'runtimeType': 'WitFile',
-        'path': path,
-        'contents': contents,
-      };
+    'runtimeType': 'WitFile',
+    'path': path,
+    'contents': contents,
+  };
 
   /// Returns this as a WASM canonical abi value.
   List<Object?> toWasm() => [path, contents];
@@ -158,10 +158,7 @@ class WitFile implements ToJsonSerializable {
       'WitFile${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
 
   /// Returns a new instance by overriding the values passed as arguments
-  WitFile copyWith({
-    String? path,
-    String? contents,
-  }) =>
+  WitFile copyWith({String? path, String? contents}) =>
       WitFile(path: path ?? this.path, contents: contents ?? this.contents);
   @override
   bool operator ==(Object other) =>
@@ -173,8 +170,10 @@ class WitFile implements ToJsonSerializable {
 
   // ignore: unused_field
   List<Object?> get _props => [path, contents];
-  static const _spec = RecordType(
-      [(label: 'path', t: StringType()), (label: 'contents', t: StringType())]);
+  static const _spec = RecordType([
+    (label: 'path', t: StringType()),
+    (label: 'contents', t: StringType()),
+  ]);
 }
 
 /// Files paths and their contents.
@@ -187,10 +186,7 @@ class InMemoryFiles implements WitGeneratorInput, ToJsonSerializable {
   final List<WitFile> pkgFiles;
 
   /// Files paths and their contents.
-  const InMemoryFiles({
-    required this.worldFile,
-    required this.pkgFiles,
-  });
+  const InMemoryFiles({required this.worldFile, required this.pkgFiles});
 
   /// Returns a new instance from a JSON value.
   /// May throw if the value does not have the expected structure.
@@ -200,38 +196,35 @@ class InMemoryFiles implements WitGeneratorInput, ToJsonSerializable {
         : json_;
     return switch (json) {
       [final worldFile, final pkgFiles] ||
-      (final worldFile, final pkgFiles) =>
-        InMemoryFiles(
-          worldFile: WitFile.fromJson(worldFile),
-          pkgFiles: (pkgFiles! as Iterable).map(WitFile.fromJson).toList(),
-        ),
-      _ => throw Exception('Invalid JSON $json_')
+      (final worldFile, final pkgFiles) => InMemoryFiles(
+        worldFile: WitFile.fromJson(worldFile),
+        pkgFiles: (pkgFiles! as Iterable).map(WitFile.fromJson).toList(),
+      ),
+      _ => throw Exception('Invalid JSON $json_'),
     };
   }
   @override
   Map<String, Object?> toJson() => {
-        'runtimeType': 'InMemoryFiles',
-        'world-file': worldFile.toJson(),
-        'pkg-files': pkgFiles.map((e) => e.toJson()).toList(),
-      };
+    'runtimeType': 'InMemoryFiles',
+    'world-file': worldFile.toJson(),
+    'pkg-files': pkgFiles.map((e) => e.toJson()).toList(),
+  };
 
   /// Returns this as a WASM canonical abi value.
   List<Object?> toWasm() => [
-        worldFile.toWasm(),
-        pkgFiles.map((e) => e.toWasm()).toList(growable: false)
-      ];
+    worldFile.toWasm(),
+    pkgFiles.map((e) => e.toWasm()).toList(growable: false),
+  ];
   @override
   String toString() =>
       'InMemoryFiles${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
 
   /// Returns a new instance by overriding the values passed as arguments
-  InMemoryFiles copyWith({
-    WitFile? worldFile,
-    List<WitFile>? pkgFiles,
-  }) =>
+  InMemoryFiles copyWith({WitFile? worldFile, List<WitFile>? pkgFiles}) =>
       InMemoryFiles(
-          worldFile: worldFile ?? this.worldFile,
-          pkgFiles: pkgFiles ?? this.pkgFiles);
+        worldFile: worldFile ?? this.worldFile,
+        pkgFiles: pkgFiles ?? this.pkgFiles,
+      );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -244,7 +237,7 @@ class InMemoryFiles implements WitGeneratorInput, ToJsonSerializable {
   List<Object?> get _props => [worldFile, pkgFiles];
   static const _spec = RecordType([
     (label: 'world-file', t: WitFile._spec),
-    (label: 'pkg-files', t: ListType(WitFile._spec))
+    (label: 'pkg-files', t: ListType(WitFile._spec)),
   ]);
 }
 
@@ -274,10 +267,10 @@ sealed class WitGeneratorInput implements ToJsonSerializable {
 
   /// Returns this as a WASM canonical abi value.
   static (int, Object?) toWasm(WitGeneratorInput value) => switch (value) {
-        FileSystemPaths() => (0, value.toWasm()),
-        InMemoryFiles() => (1, value.toWasm()),
-      };
-// ignore: unused_field
+    FileSystemPaths() => (0, value.toWasm()),
+    InMemoryFiles() => (1, value.toWasm()),
+  };
+  // ignore: unused_field
   static const _spec = Union([FileSystemPaths._spec, InMemoryFiles._spec]);
 }
 
@@ -368,7 +361,7 @@ class WitGeneratorConfig implements ToJsonSerializable {
         final int64Type,
         final typedNumberLists,
         final asyncWorker,
-        final sameClassUnion
+        final sameClassUnion,
       ] ||
       (
         final inputs,
@@ -384,77 +377,76 @@ class WitGeneratorConfig implements ToJsonSerializable {
         final int64Type,
         final typedNumberLists,
         final asyncWorker,
-        final sameClassUnion
-      ) =>
-        WitGeneratorConfig(
-          inputs: WitGeneratorInput.fromJson(inputs),
-          jsonSerialization: jsonSerialization! as bool,
-          copyWith_: copyWith_! as bool,
-          equalityAndHashCode: equalityAndHashCode! as bool,
-          toString_: toString_! as bool,
-          generateDocs: generateDocs! as bool,
-          fileHeader: Option.fromJson(
-              fileHeader,
-              (some) =>
-                  some is String ? some : (some! as ParsedString).value).value,
-          objectComparator: Option.fromJson(
-              objectComparator,
-              (some) =>
-                  some is String ? some : (some! as ParsedString).value).value,
-          useNullForOption: useNullForOption! as bool,
-          requiredOption: requiredOption! as bool,
-          int64Type: Int64TypeConfig.fromJson(int64Type),
-          typedNumberLists: typedNumberLists! as bool,
-          asyncWorker: asyncWorker! as bool,
-          sameClassUnion: sameClassUnion! as bool,
-        ),
-      _ => throw Exception('Invalid JSON $json_')
+        final sameClassUnion,
+      ) => WitGeneratorConfig(
+        inputs: WitGeneratorInput.fromJson(inputs),
+        jsonSerialization: jsonSerialization! as bool,
+        copyWith_: copyWith_! as bool,
+        equalityAndHashCode: equalityAndHashCode! as bool,
+        toString_: toString_! as bool,
+        generateDocs: generateDocs! as bool,
+        fileHeader: Option.fromJson(
+          fileHeader,
+          (some) => some is String ? some : (some! as ParsedString).value,
+        ).value,
+        objectComparator: Option.fromJson(
+          objectComparator,
+          (some) => some is String ? some : (some! as ParsedString).value,
+        ).value,
+        useNullForOption: useNullForOption! as bool,
+        requiredOption: requiredOption! as bool,
+        int64Type: Int64TypeConfig.fromJson(int64Type),
+        typedNumberLists: typedNumberLists! as bool,
+        asyncWorker: asyncWorker! as bool,
+        sameClassUnion: sameClassUnion! as bool,
+      ),
+      _ => throw Exception('Invalid JSON $json_'),
     };
   }
   @override
   Map<String, Object?> toJson() => {
-        'runtimeType': 'WitGeneratorConfig',
-        'inputs': inputs.toJson(),
-        'json-serialization': jsonSerialization,
-        'copy-with': copyWith_,
-        'equality-and-hash-code': equalityAndHashCode,
-        'to-string': toString_,
-        'generate-docs': generateDocs,
-        'file-header': (fileHeader == null
-            ? const None().toJson()
-            : Option.fromValue(fileHeader).toJson()),
-        'object-comparator': (objectComparator == null
-            ? const None().toJson()
-            : Option.fromValue(objectComparator).toJson()),
-        'use-null-for-option': useNullForOption,
-        'required-option': requiredOption,
-        'int64-type': int64Type.toJson(),
-        'typed-number-lists': typedNumberLists,
-        'async-worker': asyncWorker,
-        'same-class-union': sameClassUnion,
-      };
+    'runtimeType': 'WitGeneratorConfig',
+    'inputs': inputs.toJson(),
+    'json-serialization': jsonSerialization,
+    'copy-with': copyWith_,
+    'equality-and-hash-code': equalityAndHashCode,
+    'to-string': toString_,
+    'generate-docs': generateDocs,
+    'file-header': (fileHeader == null
+        ? const None().toJson()
+        : Option.fromValue(fileHeader).toJson()),
+    'object-comparator': (objectComparator == null
+        ? const None().toJson()
+        : Option.fromValue(objectComparator).toJson()),
+    'use-null-for-option': useNullForOption,
+    'required-option': requiredOption,
+    'int64-type': int64Type.toJson(),
+    'typed-number-lists': typedNumberLists,
+    'async-worker': asyncWorker,
+    'same-class-union': sameClassUnion,
+  };
 
   /// Returns this as a WASM canonical abi value.
   List<Object?> toWasm() => [
-        WitGeneratorInput.toWasm(inputs),
-        jsonSerialization,
-        copyWith_,
-        equalityAndHashCode,
-        toString_,
-        generateDocs,
-        (fileHeader == null
-            ? const None().toWasm()
-            : Option.fromValue(fileHeader).toWasm()),
-        (objectComparator == null
-            ? const None().toWasm()
-            : Option.fromValue(objectComparator).toWasm()),
-        useNullForOption,
-        requiredOption,
-        int64Type.toWasm(),
-        typedNumberLists,
-        asyncWorker,
-        sameClassUnion
-      ];
+    WitGeneratorInput.toWasm(inputs),
+    jsonSerialization,
+    copyWith_,
+    equalityAndHashCode,
+    toString_,
+    generateDocs,
+    (fileHeader == null
+        ? const None().toWasm()
+        : Option.fromValue(fileHeader).toWasm()),
+    (objectComparator == null
+        ? const None().toWasm()
+        : Option.fromValue(objectComparator).toWasm()),
+    useNullForOption,
+    requiredOption,
+    int64Type.toWasm(),
+    typedNumberLists,
+    asyncWorker,
+    sameClassUnion,
+  ];
   @override
   String toString() =>
       'WitGeneratorConfig${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
@@ -475,24 +467,24 @@ class WitGeneratorConfig implements ToJsonSerializable {
     bool? typedNumberLists,
     bool? asyncWorker,
     bool? sameClassUnion,
-  }) =>
-      WitGeneratorConfig(
-          inputs: inputs ?? this.inputs,
-          jsonSerialization: jsonSerialization ?? this.jsonSerialization,
-          copyWith_: copyWith_ ?? this.copyWith_,
-          equalityAndHashCode: equalityAndHashCode ?? this.equalityAndHashCode,
-          toString_: toString_ ?? this.toString_,
-          generateDocs: generateDocs ?? this.generateDocs,
-          fileHeader: fileHeader != null ? fileHeader.value : this.fileHeader,
-          objectComparator: objectComparator != null
-              ? objectComparator.value
-              : this.objectComparator,
-          useNullForOption: useNullForOption ?? this.useNullForOption,
-          requiredOption: requiredOption ?? this.requiredOption,
-          int64Type: int64Type ?? this.int64Type,
-          typedNumberLists: typedNumberLists ?? this.typedNumberLists,
-          asyncWorker: asyncWorker ?? this.asyncWorker,
-          sameClassUnion: sameClassUnion ?? this.sameClassUnion);
+  }) => WitGeneratorConfig(
+    inputs: inputs ?? this.inputs,
+    jsonSerialization: jsonSerialization ?? this.jsonSerialization,
+    copyWith_: copyWith_ ?? this.copyWith_,
+    equalityAndHashCode: equalityAndHashCode ?? this.equalityAndHashCode,
+    toString_: toString_ ?? this.toString_,
+    generateDocs: generateDocs ?? this.generateDocs,
+    fileHeader: fileHeader != null ? fileHeader.value : this.fileHeader,
+    objectComparator: objectComparator != null
+        ? objectComparator.value
+        : this.objectComparator,
+    useNullForOption: useNullForOption ?? this.useNullForOption,
+    requiredOption: requiredOption ?? this.requiredOption,
+    int64Type: int64Type ?? this.int64Type,
+    typedNumberLists: typedNumberLists ?? this.typedNumberLists,
+    asyncWorker: asyncWorker ?? this.asyncWorker,
+    sameClassUnion: sameClassUnion ?? this.sameClassUnion,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -503,21 +495,21 @@ class WitGeneratorConfig implements ToJsonSerializable {
 
   // ignore: unused_field
   List<Object?> get _props => [
-        inputs,
-        jsonSerialization,
-        copyWith_,
-        equalityAndHashCode,
-        toString_,
-        generateDocs,
-        fileHeader,
-        objectComparator,
-        useNullForOption,
-        requiredOption,
-        int64Type,
-        typedNumberLists,
-        asyncWorker,
-        sameClassUnion
-      ];
+    inputs,
+    jsonSerialization,
+    copyWith_,
+    equalityAndHashCode,
+    toString_,
+    generateDocs,
+    fileHeader,
+    objectComparator,
+    useNullForOption,
+    requiredOption,
+    int64Type,
+    typedNumberLists,
+    asyncWorker,
+    sameClassUnion,
+  ];
   static const _spec = RecordType([
     (label: 'inputs', t: WitGeneratorInput._spec),
     (label: 'json-serialization', t: Bool()),
@@ -532,7 +524,7 @@ class WitGeneratorConfig implements ToJsonSerializable {
     (label: 'int64-type', t: Int64TypeConfig._spec),
     (label: 'typed-number-lists', t: Bool()),
     (label: 'async-worker', t: Bool()),
-    (label: 'same-class-union', t: Bool())
+    (label: 'same-class-union', t: Bool()),
   ]);
 }
 
@@ -544,23 +536,21 @@ class DartWitGeneratorWorld {
   final DartWitGeneratorWorldImports imports;
   final WasmLibrary library;
 
-  DartWitGeneratorWorld({
-    required this.imports,
-    required this.library,
-  })  : _generate = library.getComponentFunction(
-          'generate',
-          const FuncType([('config', WitGeneratorConfig._spec)],
-              [('', ResultType(WitFile._spec, StringType()))]),
-        )!,
-        _generateToFile = library.getComponentFunction(
-          'generate-to-file',
-          const FuncType([
-            ('config', WitGeneratorConfig._spec),
-            ('file-path', StringType())
-          ], [
-            ('', ResultType(null, StringType()))
-          ]),
-        )!;
+  DartWitGeneratorWorld({required this.imports, required this.library})
+    : _generate = library.getComponentFunction(
+        'generate',
+        const FuncType(
+          [('config', WitGeneratorConfig._spec)],
+          [('', ResultType(WitFile._spec, StringType()))],
+        ),
+      )!,
+      _generateToFile = library.getComponentFunction(
+        'generate-to-file',
+        const FuncType(
+          [('config', WitGeneratorConfig._spec), ('file-path', StringType())],
+          [('', ResultType(null, StringType()))],
+        ),
+      )!;
 
   static Future<DartWitGeneratorWorld> init(
     WasmInstanceBuilder builder, {
@@ -571,9 +561,11 @@ class DartWitGeneratorWorld {
 
     final instance = await builder.build();
 
-    library = WasmLibrary(instance,
-        componentId: 'wasm-run-dart:dart-wit-generator/dart-wit-generator',
-        int64Type: Int64TypeConfig.bigInt);
+    library = WasmLibrary(
+      instance,
+      componentId: 'wasm-run-dart:dart-wit-generator/dart-wit-generator',
+      int64Type: Int64TypeConfig.bigInt,
+    );
     return DartWitGeneratorWorld(imports: imports, library: library);
   }
 
@@ -586,15 +578,16 @@ class DartWitGeneratorWorld {
   final ListValue Function(ListValue) _generate;
 
   /// Generates a world from the given configuration.
-  Result<WitFile, String> generate({
-    required WitGeneratorConfig config,
-  }) {
+  Result<WitFile, String> generate({required WitGeneratorConfig config}) {
     final results = _generate([config.toWasm()]);
     final result = results[0];
-    return withContext(() => Result.fromJson(
+    return withContext(
+      () => Result.fromJson(
         result,
         (ok) => WitFile.fromJson(ok),
-        (error) => error is String ? error : (error! as ParsedString).value));
+        (error) => error is String ? error : (error! as ParsedString).value,
+      ),
+    );
   }
 
   final ListValue Function(ListValue) _generateToFile;
@@ -606,7 +599,12 @@ class DartWitGeneratorWorld {
   }) {
     final results = _generateToFile([config.toWasm(), filePath]);
     final result = results[0];
-    return withContext(() => Result.fromJson(result, (ok) => null,
-        (error) => error is String ? error : (error! as ParsedString).value));
+    return withContext(
+      () => Result.fromJson(
+        result,
+        (ok) => null,
+        (error) => error is String ? error : (error! as ParsedString).value,
+      ),
+    );
   }
 }
