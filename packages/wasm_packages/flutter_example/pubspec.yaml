@@ -19,7 +19,8 @@ publish_to: "none" # Remove this line if you wish to publish to pub.dev
 version: 1.0.0+1
 
 environment:
-  sdk: ">=3.0.0 <4.0.0"
+  sdk: ^3.10.0
+resolution: workspace
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -66,7 +67,7 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  very_good_analysis: ^5.0.0
+  very_good_analysis: ^10.0.0
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
@@ -78,24 +79,6 @@ dev_dependencies:
 dependency_overrides:
   file_picker: ^5.3.2
   ffi: ^2.0.1
-  wasm_run_flutter:
-    path: ../../wasm_run_flutter
-  wasm_wit_component:
-    path: ../../dart_wit_component/wasm_wit_component
-  compression_rs:
-    path: ../compression_rs
-  image_ops:
-    path: ../image_ops
-  rust_crypto:
-    path: ../rust_crypto
-  wasm_parser:
-    path: ../wasm_parser
-  typesql_parser:
-    path: ../typesql_parser
-  typesql:
-    path: ../typesql_parser/typesql
-  typesql_generator:
-    path: ../typesql_parser/typesql_generator
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

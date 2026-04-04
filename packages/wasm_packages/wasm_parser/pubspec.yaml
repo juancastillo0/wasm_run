@@ -9,7 +9,8 @@ topics:
   - wat
 
 environment:
-  sdk: ^3.0.0
+  sdk: ^3.10.0
+resolution: workspace
 
 flutter:
   assets:

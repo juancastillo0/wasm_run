@@ -260,7 +260,7 @@ topics:
   - wit
 
 environment:
-  sdk: ^3.0.0
+  sdk: ^3.10.0
 
 flutter:
   assets:

@@ -86,10 +86,10 @@ class RustCryptoTest {
     final key = Uint8List.fromList(
       List.generate(keyLength, (_) => random.nextInt(255)),
     );
-    final pointycastleHmac =
-        pointycastle.HMac.withDigest(pointycastle.SHA512Digest())
-          ..init(pointycastle.KeyParameter(key));
-    final hashlibHmac = hashlib.sha512.hmac(key);
+    final pointycastleHmac = pointycastle.HMac.withDigest(
+      pointycastle.SHA512Digest(),
+    )..init(pointycastle.KeyParameter(key));
+    final hashlibHmac = hashlib.sha512.hmac.by(key);
     final cryptoHmac = crypto.Hmac(crypto.sha512, key);
 
     final hmacSha512Benchmarks = [
@@ -99,12 +99,12 @@ class RustCryptoTest {
       ),
       Benchmark('crypto', () => cryptoHmac.convert(data).bytes),
       Benchmark(
-          'cryptographySync',
+        'cryptographySync',
         () => cryptographySync
             .calculateMacSync(
-                secretKeyData: cryptography.SecretKeyData(key),
-                data,
-                nonce: const [],
+              secretKeyData: cryptography.SecretKeyData(key),
+              data,
+              nonce: const [],
             )
             .bytes,
       ),
@@ -161,25 +161,25 @@ class RustCryptoTest {
 
     final argon2Benchmarks = [
       Benchmark(
-          'wasm',
-          () => world.argon2
-              .rawHash(config: config, password: password, salt: salt)
+        'wasm',
+        () => world.argon2
+            .rawHash(config: config, password: password, salt: salt)
             .unwrap(),
       ),
       // Benchmark('argon2', () => crypto.argon2.convert(data).bytes),
       Benchmark(
-          'dargon2',
-          () => dargon2.argon2
-              .hashPasswordBytesSync(
-                password,
-                salt: dargon2Salt,
-                iterations: config.timeCost,
-                memory: config.memoryCost,
-                parallelism: config.parallelismCost,
-                length: defaultOutputLength,
-                type: dargon2.Argon2Type.id,
-                version: dargon2.Argon2Version.V13,
-              )
+        'dargon2',
+        () => dargon2.argon2
+            .hashPasswordBytesSync(
+              password,
+              salt: dargon2Salt,
+              iterations: config.timeCost,
+              memory: config.memoryCost,
+              parallelism: config.parallelismCost,
+              length: defaultOutputLength,
+              type: dargon2.Argon2Type.id,
+              version: dargon2.Argon2Version.V13,
+            )
             .rawBytes,
       ),
       Benchmark('pointycastle', () => pointycastleArgon2.process(password)),
@@ -242,15 +242,15 @@ class RustCryptoTest {
         'pointycastle',
         () =>
             (pointycastle.GCMBlockCipher(pointycastle.AESEngine())..init(
-                true,
-                pointycastle.AEADParameters(
-                  pointycastle.KeyParameter(key),
-                  macLength,
-                  nonce,
-                  associatedData,
-                ),
-              ))
-            .process(data),
+                  true,
+                  pointycastle.AEADParameters(
+                    pointycastle.KeyParameter(key),
+                    macLength,
+                    nonce,
+                    associatedData,
+                  ),
+                ))
+                .process(data),
       ),
     ];
 
@@ -305,15 +305,15 @@ class RustCryptoTest {
         'pointycastle',
         () =>
             (pointycastle.GCMBlockCipher(pointycastle.AESEngine())..init(
-                false,
-                pointycastle.AEADParameters(
-                  pointycastle.KeyParameter(key),
-                  macLength,
-                  nonce,
-                  associatedData,
-                ),
-              ))
-            .process(cipherTextPointycastle),
+                  false,
+                  pointycastle.AEADParameters(
+                    pointycastle.KeyParameter(key),
+                    macLength,
+                    nonce,
+                    associatedData,
+                  ),
+                ))
+                .process(cipherTextPointycastle),
       ),
     ];
 

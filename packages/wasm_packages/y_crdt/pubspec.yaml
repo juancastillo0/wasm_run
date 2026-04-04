@@ -10,12 +10,12 @@ topics:
   - peer-to-peer
 
 environment:
-  sdk: ^3.0.0
+  sdk: ^3.10.0
+resolution: workspace
 
 flutter:
   assets:
     - lib/assets/
-
 dependencies:
   wasm_run: ^0.1.0
   wasm_wit_component: ^0.0.1

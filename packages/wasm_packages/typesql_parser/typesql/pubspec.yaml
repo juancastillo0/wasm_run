@@ -6,7 +6,8 @@ topics:
   - sql
 
 environment:
-  sdk: ^3.0.0
+  sdk: ^3.10.0
+resolution: workspace
 
 dependencies:
   typesql_parser: ^0.0.1
