@@ -16,7 +16,8 @@ import 'package:wasm_run/src/bridge_generated.dart'
 import 'package:wasm_run/src/int64_bigint/int64_bigint.dart';
 import 'package:wasm_run/src/wasm_bindings/_wasm_interop_stub.dart'
     if (dart.library.io) '_wasm_interop_native.dart'
-    if (dart.library.html) '_wasm_interop_web.dart' show isVoidReturn;
+    if (dart.library.html) '_wasm_interop_web.dart'
+    show isVoidReturn;
 
 export 'package:wasm_run/src/bridge_generated.dart'
     show
@@ -461,7 +462,7 @@ class WasmFunction extends WasmExternal {
     this.name,
     List<Object?> Function([List<Object?>? args])? call,
   }) : results = const [],
-        _call = call;
+       _call = call;
 
   /// Optional name for debugging purposes.
   final String? name;
@@ -561,11 +562,11 @@ abstract class WasmExternal {
 
   /// The kind of this [WasmExternal].
   WasmExternalKind get kind => when(
-        memory: (_) => WasmExternalKind.memory,
-        table: (_) => WasmExternalKind.table,
-        global: (_) => WasmExternalKind.global,
-        function: (_) => WasmExternalKind.function,
-      );
+    memory: (_) => WasmExternalKind.memory,
+    table: (_) => WasmExternalKind.table,
+    global: (_) => WasmExternalKind.global,
+    function: (_) => WasmExternalKind.function,
+  );
 }
 
 /// A WASM import that can be used in [WasmInstanceBuilder.addImports]
@@ -595,7 +596,7 @@ class WasmValue {
   ///
   /// Cloud be an:
   /// - [int] for [ValueTy.i32]
-  /// - [I64] ([int] or JS browser's `BigInt`) for [ValueTy.i64]
+  /// - [I64] ([int] or [js_interop.JSBigInt]) for [ValueTy.i64]
   /// - [double] for [ValueTy.f32]
   /// - [double] for [ValueTy.f64]
   /// - [U8Array16] for [ValueTy.v128]
@@ -613,7 +614,7 @@ class WasmValue {
   /// Value of 64-bit signed or unsigned integer.
   WasmValue.i64BigInt(BigInt value)
     : value = i64.fromBigInt(value),
-        type = ValueTy.i64;
+      type = ValueTy.i64;
 
   /// Value of 64-bit signed or unsigned integer.
   WasmValue.i64(int value) : value = i64.fromInt(value), type = ValueTy.i64;
