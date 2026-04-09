@@ -7,8 +7,8 @@ on:
     branches-ignore:
       - gh-pages
   schedule:
-    # runs the CI everyday at 10AM
-    - cron: "0 10 * * *"
+    # runs the CI at 10AM on Monday
+    - cron: "0 10 * * 1"
 
 env:
   FLUTTER_CHANNEL: beta
