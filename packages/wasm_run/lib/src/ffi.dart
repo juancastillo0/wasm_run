@@ -1,10 +1,17 @@
 import 'dart:typed_data';
 
-import 'package:wasm_run/src/bridge_generated.dart';
+import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart'
+    show ExternalLibrary;
 import 'package:wasm_run/src/ffi/setup_dynamic_library.dart';
 import 'package:wasm_run/src/ffi/stub.dart'
     if (dart.library.io) 'ffi/io.dart'
     if (dart.library.html) 'ffi/web.dart';
+
+export 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart'
+    show ExternalLibrary;
+
+// TODO(migrationv1): remove
+typedef WasmRunDart = bool;
 
 WasmRunDart? _wrapper;
 
@@ -12,13 +19,14 @@ final _alreadyInitialized = Exception(
   'WasmRun bindings were already configured',
 );
 
-WasmRunDart _createWrapper(ExternalLibrary lib) {
+Future<WasmRunDart> _createWrapper(ExternalLibrary lib) async {
   if (_wrapper != null) throw _alreadyInitialized;
-  _wrapper = createWrapperImpl(lib);
+  _wrapper = await createWrapperImpl(lib);
   return _wrapper!;
 }
 
-WasmRunDart _createLib() => _createWrapper(createLibraryImpl());
+Future<WasmRunDart> _createLib() async =>
+    _createWrapper(await createLibraryImpl());
 
 /// Executes a GET request to the [uri] and returns the body bytes.
 Future<Uint8List> getUriBodyBytes(Uri uri) => getUriBodyBytesImpl(uri);
@@ -60,10 +68,10 @@ class WasmRunLibrary {
   /// Returns whether the dynamic library is reachable in the default locations
   /// for the current application or in the WASM_RUN_DART_DYNAMIC_LIBRARY
   /// environment variable.
-  static bool isReachable() {
+  static Future<bool> isReachable() async {
     if (_isWeb || _wrapper != null) return true;
     try {
-      createLibraryImpl();
+      await createLibraryImpl();
       return true;
     } catch (_) {
       return false;
@@ -91,16 +99,19 @@ class WasmRunLibrary {
           defaultValue: true,
         ),
       );
+    } else if (override && _wrapper != null) {
+      throw _alreadyInitialized;
+    } else if (override || !await isReachable()) {
+      await setUpDesktopDynamicLibrary();
     }
-    if (override && _wrapper != null) throw _alreadyInitialized;
-    if (!override && isReachable()) return;
-    await setUpDesktopDynamicLibrary();
+
+    await defaultInstance();
   }
 }
 
-WasmRunDart defaultInstance() {
+Future<WasmRunDart> defaultInstance() {
   if (_wrapper != null) {
-    return _wrapper!;
+    return Future.value(_wrapper!);
   }
   try {
     return _createLib();

@@ -550,7 +550,7 @@ class _Instance extends WasmInstance {
         // (directory ? oflagsDIRECTORY : 0) |
         (exclusive ? oflagsEXCL : 0);
     for (final dir in directories) {
-      final dirName = utf8.decode(dir.prestat_name);
+      final dirName = utf8.decode(dir.prestat_name.toDart);
       if (!path.startsWith(dirName)) {
         continue;
       }
@@ -641,12 +641,14 @@ class _SharedMemory extends _Memory implements WasmSharedMemory {
 
   @override
   int atomicNotify(int addr, int count) {
-    return atomics.notify(view, addr, count);
+    // TODO(migrationv1): use memory.buffer?
+    return atomics.notify(view.toJS, addr, count);
   }
 
   @override
   SharedMemoryWaitResult atomicWait32(int addr, int expected) {
-    final value = atomics.wait(view, addr, expected, null);
+    // TODO(migrationv1): use memory.buffer?
+    final value = atomics.wait(view.toJS, addr, expected, null);
     switch (value) {
       case 'ok':
         return SharedMemoryWaitResult.ok;
@@ -773,28 +775,28 @@ String valueTypeToJson(ValueTy ty) {
 }
 
 Map<String, Object?> typeToJson(ExternalType ty) {
-  return ty.when(
-    func: (func) => {
+  return switch (ty) {
+    (ExternalType_Func(field0: final func)) => {
       'parameters': func.parameters.map(valueTypeToJson).toList(),
       'results': func.results.map(valueTypeToJson).toList(),
     },
-    global: (global) => {
+    (ExternalType_Global(field0: final global)) => {
       'value': valueTypeToJson(global.value),
       'mutable': global.mutable,
     },
-    table: (table) => {
+    (ExternalType_Table(field0: final table)) => {
       'element': valueTypeToJson(table.element),
       'minimum': table.minimum,
       'initial': table.minimum,
       if (table.maximum != null) 'maximum': table.maximum,
     },
-    memory: (memory) => {
+    (ExternalType_Memory(field0: final memory)) => {
       'shared': memory.shared,
       'minimum': memory.minimum,
       'initial': memory.minimum,
       if (memory.maximum != null) 'maximum': memory.maximum,
     },
-  );
+  };
 }
 
 MemoryTy? _getMemoryType(JSObject value) {

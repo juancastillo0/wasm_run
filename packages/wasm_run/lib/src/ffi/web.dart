@@ -2,15 +2,11 @@ import 'dart:js_interop' as js_util;
 import 'dart:js_interop_unsafe';
 import 'dart:typed_data';
 
-import 'package:flutter_rust_bridge/flutter_rust_bridge.dart' as frb;
-import 'package:wasm_run/src/bridge_generated.dart';
 import 'package:wasm_run/src/ffi.dart';
 import 'package:web/web.dart' as web;
 
-typedef ExternalLibrary = frb.WasmModule;
-
-WasmRunDart createWrapperImpl(ExternalLibrary module) =>
-    WasmRunDartImpl.wasm(module);
+Future<WasmRunDart> createWrapperImpl(ExternalLibrary module) =>
+    throw UnimplementedError();
 
 ExternalLibrary localTestingLibraryImpl() => throw UnimplementedError();
 

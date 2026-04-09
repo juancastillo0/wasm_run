@@ -19,8 +19,8 @@ library browser_wasi_shim;
 import 'dart:async';
 import 'dart:js_interop';
 import 'dart:js_interop_unsafe';
+import 'dart:typed_data';
 
-import 'package:flutter_rust_bridge/flutter_rust_bridge.dart';
 import 'package:web/web.dart';
 
 const oflagsCREAT = 1 << 0;
@@ -59,7 +59,7 @@ extension type PreopenDirectory._(OpenDirectory _) implements OpenDirectory {
     String name,
     JSAny items, // Map<String, Object? /*File | Directory*/ > items,
   );
-  external Uint8List get prestat_name;
+  external JSUint8Array get prestat_name;
 }
 
 @JS('WASI')
@@ -253,7 +253,7 @@ extension type PrestatGet._(JSObject _) implements JSObject {
 @JS()
 extension type PrestatDirNameGet._(JSObject _) implements JSObject {
   external int get ret;
-  external Uint8List? get prestat_dir_name;
+  external JSUint8Array? get prestat_dir_name;
 }
 
 @JS()

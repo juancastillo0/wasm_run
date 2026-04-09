@@ -7,7 +7,6 @@ import 'dart:js_interop';
 import 'dart:js_interop_unsafe';
 import 'dart:typed_data';
 
-import 'package:flutter_rust_bridge/flutter_rust_bridge.dart' show JS;
 import 'package:wasm_run/src/wasm_bindings/_atomics_web.dart';
 import 'package:wasm_run/src/wasm_bindings/wasm_interface.dart';
 import 'package:web/web.dart' as html;
@@ -140,11 +139,11 @@ class WasmWorker {
   }
 
   void _handleMessage(html.MessageEvent event) {
-    if (event.data is String) {
+    if (event.data.isA<JSString>()) {
       print(event.data);
       return;
     }
-    final data_ = (event.data as Map).cast<String, Object?>();
+    final data_ = (event.data.dartify()! as Map).cast<String, Object?>();
     switch (data_['cmd']) {
       case 'loaded':
         _onLoaded.complete(this);
@@ -180,10 +179,11 @@ class WasmWorker {
               throw UnimplementedError();
           }
         }
-        atomics.notify(Int32List.sublistView(bytes), 0, 1);
+        atomics.notify(Int32List.sublistView(bytes).toJS, 0, 1);
         break;
       case 'event':
         _workersConfig.onWorkerMessage?.call(
+          // TODO(migrationv1): test
           (data_['data'] is JSAny
               ? (data_['data'] as JSAny).dartify()
               : data_['data']),
