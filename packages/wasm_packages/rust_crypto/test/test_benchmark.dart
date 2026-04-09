@@ -11,7 +11,6 @@ import 'package:wasm_wit_component/wasm_wit_component.dart';
 import 'package:cryptography/cryptography.dart' as cryptography;
 import 'package:crypto/crypto.dart' as crypto;
 import 'package:hashlib/hashlib.dart' as hashlib;
-import 'package:dargon2/dargon2.dart' as dargon2;
 
 /// sha256 wasm 0.0936ms
 /// sha256 crypto 0.2329ms
@@ -31,6 +30,32 @@ import 'package:dargon2/dargon2.dart' as dargon2;
 /// decrypt aesGcm wasm 0.436ms
 /// decrypt aesGcm cryptographySync 1.253ms
 /// decrypt aesGcm pointycastle 17.427ms
+///
+/// 2026-04-08
+///
+/// sha256 wasm 0.063ms
+/// sha256 crypto 0.1332ms
+/// sha256 cryptographySync 0.1861ms
+/// sha256 pointycastle 0.7183ms
+/// sha256 hashlib 0.1777ms
+///
+/// hmacSha512 wasm 0.0488ms
+/// hmacSha512 crypto 0.2047ms
+/// hmacSha512 cryptographySync 0.2056ms
+/// hmacSha512 pointycastle 4.0151ms
+/// hmacSha512 hashlib 0.1048ms
+///
+/// argon2 wasm 19.04ms
+/// argon2 pointycastle 78.34ms
+/// argon2 hashlib 30.06ms
+///
+/// encrypt aesGcm wasm 0.359ms
+/// encrypt aesGcm cryptographySync 1.621ms
+/// encrypt aesGcm pointycastle 17.929ms
+///
+/// decrypt aesGcm wasm 0.332ms
+/// decrypt aesGcm cryptographySync 1.583ms
+/// decrypt aesGcm pointycastle 17.985ms
 class RustCryptoTest {
   final RustCryptoWorld world;
   final bool runBenchmark;
@@ -157,7 +182,6 @@ class RustCryptoTest {
       personalization: null,
     );
     final password = const Utf8Encoder().convert('MK_wpon9d()n#OD)N');
-    final dargon2Salt = dargon2.Salt(salt);
 
     final argon2Benchmarks = [
       Benchmark(
@@ -167,21 +191,6 @@ class RustCryptoTest {
             .unwrap(),
       ),
       // Benchmark('argon2', () => crypto.argon2.convert(data).bytes),
-      Benchmark(
-        'dargon2',
-        () => dargon2.argon2
-            .hashPasswordBytesSync(
-              password,
-              salt: dargon2Salt,
-              iterations: config.timeCost,
-              memory: config.memoryCost,
-              parallelism: config.parallelismCost,
-              length: defaultOutputLength,
-              type: dargon2.Argon2Type.id,
-              version: dargon2.Argon2Version.V13,
-            )
-            .rawBytes,
-      ),
       Benchmark('pointycastle', () => pointycastleArgon2.process(password)),
       Benchmark('hashlib', () => hasLibArgon2.convert(password).bytes),
     ];

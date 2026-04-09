@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:test/test.dart';
 import 'package:wasm_run/src/ffi.dart';
+import 'package:wasm_run/src/rust/api.dart' as api;
 import 'package:wasm_run/src/wasm_bindings/wasm.dart';
 
 void main() {
@@ -14,8 +15,8 @@ void main() {
           'AGFzbQEAAAABBwFgAn9/AX8DAgEABwcBA2FkZAAACgkBBwAgACABagsAEARuYW1lAgkBAAIAAWEBAWI=',
         );
       } else {
-        final w = defaultInstance();
-        binary = await w.parseWatFormat(
+        await defaultInstance();
+        binary = await api.parseWatFormat(
           wat: r'''
 (module
     (func (export "add") (param $a i32) (param $b i32) (result i32)

@@ -41,9 +41,7 @@ Future<TypesExampleWorld> initTypesWorld(
   TypesExampleWorldImports imports,
   Future<Uint8List> Function()? getWitComponentExampleBytes,
 ) async {
-  if (_isWeb) {
-    await WasmRunLibrary.setUp(override: false);
-  }
+  await WasmRunLibrary.setUp(override: false);
   final WasmModule module;
   if (getWitComponentExampleBytes != null) {
     final bytes = await getWitComponentExampleBytes();

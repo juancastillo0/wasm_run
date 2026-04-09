@@ -283,7 +283,9 @@ class ${ReCase(fileName).pascalCase}Queries {
 
   String out = buf.toString();
   try {
-    out = DartFormatter().format(out);
+    out = DartFormatter(
+      languageVersion: DartFormatter.latestLanguageVersion,
+    ).format(out);
   } catch (_) {}
   return out;
 }

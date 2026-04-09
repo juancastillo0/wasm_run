@@ -156,7 +156,9 @@ void threadsTest({TestArgs? testArgs}) {
 
 Directory getRootDirectory() {
   var dir = Directory.current;
-  while (!File('${dir.path}${Platform.pathSeparator}melos.yaml').existsSync()) {
+  while (!Directory(
+    '${dir.path}${Platform.pathSeparator}.github',
+  ).existsSync()) {
     if (dir.path == '/' || dir.path == '' || dir.path == dir.parent.path) {
       throw Exception('Could not find root directory');
     }

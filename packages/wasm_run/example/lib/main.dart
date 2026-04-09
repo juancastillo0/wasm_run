@@ -6,12 +6,14 @@ import 'dart:typed_data';
 
 import 'package:test/test.dart';
 import 'package:wasm_run/load_module.dart';
-// TODO(wat): implement wat in main api
 // ignore: implementation_imports
 import 'package:wasm_run/src/ffi.dart' show defaultInstance;
 // ignore: implementation_imports
 import 'package:wasm_run/src/ffi/setup_dynamic_library.dart'
     show setUpDesktopDynamicLibrary;
+// TODO(wat): implement wat in main api
+// ignore: implementation_imports
+import 'package:wasm_run/src/rust/api.dart' as api;
 import 'package:wasm_run/wasm_run.dart';
 import 'package:wasm_run_example/runner_identity/runner_identity.dart';
 import 'package:wasm_run_example/simd_test.dart' show simdTests;
@@ -35,8 +37,8 @@ Future<Uint8List> getBinary({
 }) async {
   Uint8List binary;
   try {
-    final w = defaultInstance();
-    binary = await w.parseWatFormat(wat: wat);
+    await defaultInstance();
+    binary = await api.parseWatFormat(wat: wat);
     // ignore: avoid_catching_errors
   } catch (_) {
     if (isWeb) {
@@ -74,6 +76,7 @@ void testAll({TestArgs? testArgs}) {
   print('RUNNING ALL TEST IN ${getRunnerIdentity()}');
 
   test('WasmFeature', () async {
+    await WasmRunLibrary.setUp(override: false);
     final runtime = await wasmRuntimeFeatures();
     final defaultFeatures = runtime.defaultFeatures;
     final supportedFeatures = runtime.supportedFeatures;
@@ -567,19 +570,8 @@ void testAll({TestArgs? testArgs}) {
           .toFilePath();
       await setUpDesktopDynamicLibrary(dynamicLibraryPath: library);
       addTearDown(() => File(library).deleteSync());
-      expect(WasmRunLibrary.isReachable(), true);
+      expect(await WasmRunLibrary.isReachable(), true);
 
-      final dynLib = openDynamicLibrary(library);
-      expect(
-        () => WasmRunLibrary.set(dynLib),
-        throwsA(
-          predicate(
-            (p0) => p0.toString().contains(
-              'WasmRun bindings were already configured',
-            ),
-          ),
-        ),
-      );
       expect(
         () => WasmRunLibrary.setUp(override: true),
         throwsA(

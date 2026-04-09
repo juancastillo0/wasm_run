@@ -135,10 +135,9 @@ void wasiTest({TestArgs? testArgs}) {
     final features = await wasmRuntimeFeatures();
     if (features.supportedFeatures.typeReflection) {
       // TODO: add more tests
-      module.getImports().first.type!.maybeWhen(
-        orElse: () => throw Exception(),
-        func: (field0) => field0.parameters,
-      );
+      if (module.getImports().first.type! is! ExternalType_Func) {
+        throw Exception();
+      }
     }
 
     final String directoryToAllow;
