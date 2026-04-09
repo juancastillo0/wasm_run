@@ -45,9 +45,7 @@ Future<void> downloadFile(
     );
     if (handle == null) return;
     final writable = await handle.createWritable(keepExistingData: false);
-    await writable.write(
-      fsa.FileSystemWriteChunkType.bufferSource(bytes.buffer),
-    );
+    await writable.write(fsa.WriteChunkType.bufferSource(bytes.buffer));
     await writable.close();
   }
 }

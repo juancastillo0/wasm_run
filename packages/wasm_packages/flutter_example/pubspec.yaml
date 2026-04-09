@@ -33,9 +33,9 @@ dependencies:
     sdk: flutter
 
   url_launcher: ^6.1.11
-  google_fonts: ^5.1.0
-  sqlite3: ^2.0.0
-  sqlite3_flutter_libs: ^0.5.15
+  google_fonts: ^8.0.2
+  sqlite3: ^3.3.0
+  sqlite3_flutter_libs: ^0.6.0+eol
 
   wasm_run_flutter:
     path: ../../wasm_run_flutter
@@ -54,7 +54,7 @@ dependencies:
   file_system_access:
     git:
       url: https://github.com/juancastillo0/file_system_access_web.git
-      ref: 7b88010f653a49ec2cb8e98052bbb164ce9c0242
+      ref: 7317b51799ca85553e7a8922eeb2437476f9bf8a
   typesql:
     path: ../typesql_parser/typesql
   typesql_generator:
@@ -74,11 +74,7 @@ dev_dependencies:
   # activated in the `analysis_options.yaml` file located at the root of your
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
-  flutter_lints: ^2.0.0
-
-dependency_overrides:
-  file_picker: ^5.3.2
-  ffi: ^2.0.1
+  flutter_lints: ^6.0.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

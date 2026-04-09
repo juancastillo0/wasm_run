@@ -12,7 +12,7 @@ dependencies:
     path: ../
   wasm_wit_component_example:
     path: ../../dart_wit_component/wasm_wit_component/example
-  test: ^1.21.0
+  test: ^1.30.0
 
 dev_dependencies:
   very_good_analysis: ^10.0.0

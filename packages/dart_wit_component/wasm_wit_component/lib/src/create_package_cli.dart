@@ -272,7 +272,7 @@ dependencies:
 
 dev_dependencies:
   lints: ^2.0.0
-  test: ^1.21.0
+  test: ^1.30.0
 ''';
   }
 

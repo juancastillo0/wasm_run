@@ -10,7 +10,9 @@ import 'package:wasm_wit_component/wasm_wit_component.dart';
 import 'package:wasm_wit_component_example/host_wit_generation.dart';
 import 'package:wasm_wit_component_example/test_utils.dart';
 
-final _formatter = DartFormatter();
+final _formatter = DartFormatter(
+  languageVersion: DartFormatter.latestLanguageVersion,
+);
 
 void witDartGeneratorTests({Future<Directory> Function()? getDirectory}) {
   group('wit generator', () {

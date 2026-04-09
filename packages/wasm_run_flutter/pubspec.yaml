@@ -25,8 +25,8 @@ dependencies:
   wasm_run: ^0.1.0
 
 dev_dependencies:
-  ffi: ^2.0.1
-  ffigen: ">=8.0.0 <10.0.0"
+  ffi: ^2.2.0
+  ffigen: ^20.1.1
   very_good_analysis: ^10.0.0
 
 # For information on the generic Dart part of this file, see the

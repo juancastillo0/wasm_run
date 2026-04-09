@@ -12,8 +12,8 @@ dependencies:
     path: ../../../wasm_run
   wasm_wit_component:
     path: ../
-  test: ^1.21.0
-  dart_style: ^2.3.0
+  test: ^1.30.0
+  dart_style: ^3.1.7
 
 dev_dependencies:
   very_good_analysis: ^10.0.0
