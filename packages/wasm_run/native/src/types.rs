@@ -1,13 +1,15 @@
 use std::fmt::Display;
 
+use crate::frb_generated::RustOpaque;
 use anyhow::Result;
-use flutter_rust_bridge::RustOpaque;
 
 use crate::external::*;
 #[cfg(not(feature = "wasmtime"))]
 use wasmi::{core::ValueType, *};
 #[cfg(not(feature = "wasmtime"))]
 pub use wasmi::{Func, Global, GlobalType, Memory, Mutability, Table};
+#[cfg(feature = "wasmtime")]
+use wasmtime::{Global, Memory, Table};
 
 #[allow(non_camel_case_types)]
 #[derive(Debug)]
@@ -409,9 +411,9 @@ impl ModuleExportValue {
 #[derive(Debug)]
 pub enum ExternalValue {
     Func(RustOpaque<WFunc>),
-    Global(RustOpaque<wasmtime::Global>),
-    Table(RustOpaque<wasmtime::Table>),
-    Memory(RustOpaque<wasmtime::Memory>),
+    Global(RustOpaque<Global>),
+    Table(RustOpaque<Table>),
+    Memory(RustOpaque<Memory>),
     SharedMemory(crate::api::WasmRunSharedMemory),
 }
 
@@ -570,8 +572,8 @@ impl From<&wasmtime::MemoryType> for MemoryTy {
 }
 
 pub struct PointerAndLength {
-    pub pointer: usize,
-    pub length: usize,
+    pub pointer: i64,
+    pub length: i64,
 }
 
 pub fn to_anyhow<T: Display>(value: T) -> anyhow::Error {

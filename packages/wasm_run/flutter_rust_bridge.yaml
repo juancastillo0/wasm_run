@@ -1,0 +1,32 @@
+rust_root: native/
+rust_input: crate::api
+dart_output: lib/src/rust
+c_output: frb_generated.h
+# TODO: https://github.com/fzyzcjy/flutter_rust_bridge/issues/2507 full_dep: true
+full_dep: true
+parse_const: true
+web: false
+# type_64bit_int: true
+
+# dart-preamble: Raw header of output generated Dart code, pasted as-it-is
+
+# rust-preamble: Raw header of output generated Rust code, pasted as-it-is
+
+# # this config, together with usage of that type, tests the feature of type rename
+# dart_type_rename:
+#   Box<dyn Any + Send + Sync + 'static>: BoxAnyMyDartTypeRename
+
+rust_preamble: "use crate::api::{Global, GlobalType, Memory, Module, SharedMemory, Table, CallStack, RwLock};use crate::external::{WFunc};"
+# dart_preamble: "import 'dart:io';"
+
+# # To help developing flutter_rust_bridge; normal users usually do not set this
+# stop_on_error: true
+
+# enable_lifetime: true
+
+# # only for development of flutter_rust_bridge, not for normal users (dump all debug information)
+# dump_all: true
+# # only for development of flutter_rust_bridge, not for normal users (use local dependency)
+# local: true
+# rust_features:
+#   - internal_feature_for_testing
