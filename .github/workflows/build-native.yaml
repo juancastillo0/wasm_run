@@ -1,0 +1,104 @@
+name: Build Native Libraries
+
+on:
+  workflow_dispatch:
+    inputs:
+      create_release:
+        description: 'Create a GitHub release with the built artifacts'
+        required: false
+        type: boolean
+        default: false
+  push:
+    tags:
+      - "wasm_run-v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+
+      - name: Install cross-rs
+        run: cargo install cross --git https://github.com/cross-rs/cross
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Check disk space
+        run: df -h
+
+      - name: Build all native libraries
+        run: |
+          cd packages/wasm_run/native
+          ./scripts/cross-build.sh --all --keep-images
+        timeout-minutes: 60
+
+      - name: Package libraries for release
+        run: |
+          cd packages/wasm_run/native/lib
+
+          # Create release directory
+          mkdir -p ../release
+
+          # Package Android libraries (jniLibs structure)
+          mkdir -p jniLibs/arm64-v8a jniLibs/armeabi-v7a jniLibs/x86_64 jniLibs/x86
+          cp aarch64-linux-android/libwasm_run_native.so jniLibs/arm64-v8a/
+          cp armv7-linux-androideabi/libwasm_run_native.so jniLibs/armeabi-v7a/
+          cp x86_64-linux-android/libwasm_run_native.so jniLibs/x86_64/
+          cp i686-linux-android/libwasm_run_native.so jniLibs/x86/
+          tar -czvf ../release/android.tar.gz -C jniLibs .
+          rm -rf jniLibs
+
+          # Package macOS libraries
+          mkdir -p macos-arm64 macos-x64
+          cp aarch64-apple-darwin/libwasm_run_native.dylib macos-arm64/
+          cp x86_64-apple-darwin/libwasm_run_native.dylib macos-x64/
+          tar -czvf ../release/macos.tar.gz macos-arm64 macos-x64
+          rm -rf macos-arm64 macos-x64
+
+          # Package Linux libraries
+          mkdir -p linux-arm64 linux-x64
+          cp aarch64-unknown-linux-gnu/libwasm_run_native.so linux-arm64/
+          cp x86_64-unknown-linux-gnu/libwasm_run_native.so linux-x64/
+          tar -czvf ../release/linux.tar.gz linux-arm64 linux-x64
+          rm -rf linux-arm64 linux-x64
+
+          # Package Windows libraries
+          mkdir -p windows-x64
+          cp x86_64-pc-windows-gnu/wasm_run_native.dll windows-x64/
+          tar -czvf ../release/windows.tar.gz windows-x64
+          rm -rf windows-x64
+
+          # Package iOS library
+          mkdir -p ios-arm64
+          cp aarch64-apple-ios/libwasm_run_native.dylib ios-arm64/
+          tar -czvf ../release/ios.tar.gz ios-arm64
+          rm -rf ios-arm64
+
+          # List release artifacts
+          ls -la ../release/
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-libraries
+          path: packages/wasm_run/native/release/
+          retention-days: 7
+
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/') || inputs.create_release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: packages/wasm_run/native/release/*
+          tag_name: ${{ github.ref_name || format('v{0}', github.run_number) }}
+          draft: ${{ inputs.create_release || false }}
+          generate_release_notes: true

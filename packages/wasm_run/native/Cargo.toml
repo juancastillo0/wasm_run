@@ -1,29 +1,69 @@
 [package]
-name = "wasm_run_dart"
+name = "wasm_run_native"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
+rust-version = "1.85"
+description = "Native WebAssembly runtime using wasmtime or wasmi. Provides Dart/Flutter FFI bindings via flutter_rust_bridge."
+license = "MIT"
+repository = "https://github.com/juancastillo0/wasm_run"
+keywords = ["wasm", "webassembly", "wasmtime", "wasmi", "wasi"]
+categories = ["wasm", "api-bindings"]
 
 [lib]
 crate-type = ["staticlib", "cdylib"]
 
-[build-dependencies]
-flutter_rust_bridge_codegen = "1.82.4"
-
 [dependencies]
-flutter_rust_bridge = "1.82.4"
-anyhow = "1.0.75"
-once_cell = "1.18.0"
-wat = "1.0.77"
+flutter_rust_bridge = "=2.11.1"
+anyhow = "1.0.100"
+once_cell = "1.21.3"
+wat = "1.244.0"
 
-rayon = "1.8.0"
+rayon = "1.11.0"
+cap-std = "4.0.0"
 
-wasi-common = "14.0.4"
-cap-std = "2.0.0"
-wasmtime = "14.0.4"
-wasmtime-wasi = "14.0.4"
+# Wasmtime runtime (default) - supports all features including GC, threads, SIMD
+# Enable component-model for WIT and Component Model support
+# Disable profiling (ittapi) for Windows cross-compilation compatibility
+wasmtime = { version = "41.0.1", optional = true, default-features = false, features = [
+    "component-model",
+    "async",
+    "cache",
+    "gc",
+    "threads",
+    "demangle",
+    "addr2line",
+    "coredump",
+    "runtime",
+    "cranelift",
+    "winch",
+    "std",
+    "parallel-compilation",
+] }
+wasmtime-wasi = { version = "41.0.1", optional = true }
+
+# Wasmi runtime (interpreter) - supports SIMD, no threads/GC
+wasmi = { version = "1.0.8", optional = true }
+wasmi_wasi = { version = "1.0.8", optional = true }
 
 [features]
-default = ["wasmtime", "wasi"]
+# Default to wasmtime as it supports more features (GC, threads, etc.)
+default = ["wasmtime-runtime", "wasi"]
+
+# Use wasmtime runtime (recommended - supports all features)
+# Note: Using dependency names directly (not dep:) so that implicit features are enabled
+# This allows cfg(feature = "wasmtime") checks in code to work
+wasmtime-runtime = ["wasmtime", "wasmtime-wasi"]
+
+# Use wasmi interpreter (no threads/GC, but works on more platforms)
+# Enable simd feature for SIMD support in wasmi
+wasmi-runtime = ["wasmi", "wasmi_wasi", "simd"]
+
+# Enable WASI support
 wasi = []
-wasmi = []
-wasmtime = []
+
+# Enable SIMD support for wasmi (opt-in due to code size)
+simd = ["wasmi/simd"]
+
+[lints.rust]
+# flutter_rust_bridge uses frb_expand cfg
+unexpected_cfgs = { level = "warn", check-cfg = ["cfg(frb_expand)"] }

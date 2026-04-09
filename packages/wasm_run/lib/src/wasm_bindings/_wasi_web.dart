@@ -13,13 +13,11 @@
 ///     }),
 /// ];
 /// let wasi = new WASI(args, env, fds);
-@JS('browser_wasi_shim')
-library browser_wasi_shim;
 
 import 'dart:async';
-import 'dart:js_util';
-
-import 'package:flutter_rust_bridge/flutter_rust_bridge.dart';
+import 'dart:js_interop';
+import 'dart:js_interop_unsafe';
+import 'dart:typed_data';
 
 const oflagsCREAT = 1 << 0;
 const oflagsDIRECTORY = 1 << 1;
@@ -27,224 +25,269 @@ const oflagsEXCL = 1 << 2;
 const oflagsTRUNC = 1 << 3;
 
 @JS('File')
-abstract class WasiWebFile {
-  external factory WasiWebFile(Uint8List data);
-  external Uint8List get data;
+external WasiWebFileConstructor get _wasiWebFileConstructor;
+
+extension type WasiWebFileConstructor(JSFunction _) implements JSFunction {
+  external WasiWebFile call(JSUint8Array data);
 }
+
+extension type WasiWebFile._(JSObject _) implements JSObject {
+  external JSUint8Array get data;
+  Uint8List get dartData => data.toDart;
+}
+
+WasiWebFile createWasiWebFile(Uint8List data) =>
+    _wasiWebFileConstructor.call(data.toJS);
 
 @JS('Directory')
-abstract class WasiWebDirectory {
-  external factory WasiWebDirectory(
-    Map<String, Object? /*File | Directory*/ > items,
-  );
+external WasiWebDirectoryConstructor get _wasiWebDirectoryConstructor;
+
+extension type WasiWebDirectoryConstructor(JSFunction _) implements JSFunction {
+  external WasiWebDirectory call(JSObject items);
 }
 
+extension type WasiWebDirectory._(JSObject _) implements JSObject {}
+
+WasiWebDirectory createWasiWebDirectory(Map<String, Object?> items) =>
+    _wasiWebDirectoryConstructor.call(items.jsify()! as JSObject);
+
 @JS('OpenFile')
-abstract class OpenFile extends Fd {
-  external factory OpenFile(WasiWebFile file);
+external OpenFileConstructor get _openFileConstructor;
+
+extension type OpenFileConstructor(JSFunction _) implements JSFunction {
+  external OpenFile call(WasiWebFile file);
+}
+
+extension type OpenFile._(JSObject _) implements Fd {
   external WasiWebFile get file;
 }
 
+OpenFile createOpenFile(WasiWebFile file) => _openFileConstructor.call(file);
+
 @JS('OpenDirectory')
-abstract class OpenDirectory extends Fd {
-  external factory OpenDirectory(WasiWebDirectory dir);
+external OpenDirectoryConstructor get _openDirectoryConstructor;
+
+extension type OpenDirectoryConstructor(JSFunction _) implements JSFunction {
+  external OpenDirectory call(WasiWebDirectory dir);
+}
+
+extension type OpenDirectory._(JSObject _) implements Fd {
   external WasiWebDirectory get dir;
 }
 
+OpenDirectory createOpenDirectory(WasiWebDirectory dir) =>
+    _openDirectoryConstructor.call(dir);
+
 @JS('PreopenDirectory')
-abstract class PreopenDirectory extends OpenDirectory {
-  external factory PreopenDirectory(
-    String name,
-    Object items, // Map<String, Object? /*File | Directory*/ > items,
-  );
-  external Uint8List get prestat_name;
+external PreopenDirectoryConstructor get _preopenDirectoryConstructor;
+
+extension type PreopenDirectoryConstructor(JSFunction _) implements JSFunction {
+  external PreopenDirectory call(JSString name, JSObject items);
 }
+
+extension type PreopenDirectory._(JSObject _) implements OpenDirectory {
+  external JSUint8Array get prestat_name;
+}
+
+PreopenDirectory createPreopenDirectory(String name, Object items) =>
+    _preopenDirectoryConstructor.call(name.toJS, items as JSObject);
 
 @JS('WASI')
-abstract class WASI {
-  /// Create a new WASI instance.
-  external factory WASI(
-    List<String> args,
-    // ["FOO=bar""]
-    List<String> env,
-    List<Fd> fds,
-  );
-  external List<String> get args;
-  // ["FOO=bar""]
-  external List<String> get env;
-  external List<Fd> get fds;
+external WASIConstructor get _wasiConstructor;
 
-  external Map<String, Function> get wasiImport;
-
-  external void start(Object /*Instance*/ instance);
-  external void initialize(Object /*Instance*/ instance);
+extension type WASIConstructor(JSFunction _) implements JSFunction {
+  external WASI call(JSArray<JSString> args, JSArray<JSString> env, JSArray fds);
 }
 
-typedef IntOrBigInt = Object; // number | BigInt;
+extension type WASI._(JSObject _) implements JSObject {
+  external JSArray<JSString> get args;
+  external JSArray<JSString> get env;
+  external JSArray get fds;
+  external JSObject get wasiImport;
+  external void start(JSObject instance);
+  external void initialize(JSObject instance);
+}
+
+/// Create a new WASI instance.
+WASI createWASI(List<String> args, List<String> env, List<Fd> fds) =>
+    _wasiConstructor.call(
+      args.map((s) => s.toJS).toList().toJS,
+      env.map((s) => s.toJS).toList().toJS,
+      fds.toJS,
+    );
+
+typedef IntOrBigInt = JSAny; // number | BigInt;
 
 class WasiStdio {
-  ///
   WasiStdio() {
-    setProperty(fd, 'fd_write', allowInterop(fd_write));
+    fd.setProperty('fd_write'.toJS, _fdWriteCallback);
   }
 
-  final Fd fd = Fd();
+  final Fd fd = createFd();
   final streamController = StreamController<Uint8List>.broadcast();
 
-  NwrittenGet fd_write(Uint8List view8, Object? iovs) {
+  NwrittenGet _fdWrite(Uint8List view8, JSArray iovs) {
     var nwritten = 0;
-    for (var iovec in (iovs! as List).cast<Iovec>()) {
+    for (var i = 0; i < iovs.length; i++) {
+      final iovec = Iovec(iovs[i]! as JSObject);
       final buffer = view8.sublist(iovec.buf, iovec.buf + iovec.buf_len);
       streamController.add(buffer);
       nwritten += iovec.buf_len;
     }
-    return NwrittenGet(ret: 0, nwritten: nwritten);
+    return createNwrittenGet(ret: 0, nwritten: nwritten);
   }
+
+  JSFunction get _fdWriteCallback =>
+      ((JSUint8Array view8, JSArray iovs) => _fdWrite(view8.toDart, iovs)).toJS;
 }
 
 @JS('strace')
-external Object strace(Object instance, List<String> no_trace);
+external JSObject strace(JSObject instance, JSArray<JSString> no_trace);
 
-@JS('Iovec')
-abstract class Iovec {
-  external int buf;
-  external int buf_len;
+extension type Iovec(JSObject _) implements JSObject {
+  external int get buf;
+  external int get buf_len;
 }
 
-@JS('Filestat')
-abstract class Filestat {}
+extension type Filestat(JSObject _) implements JSObject {}
 
-@JS('Fdstat')
-abstract class Fdstat {}
+extension type Fdstat(JSObject _) implements JSObject {}
 
-typedef FstFlags = Object?;
-typedef Atim = Object?;
-typedef Mtim = Object?;
-typedef Flags = Object?;
-typedef OldFlags = Object?;
-typedef Dirflags = Object?;
-typedef Oflags = Object?;
-typedef FsRightsBase = Object?;
-typedef FsRightsInheriting = Object?;
-typedef Fdflags = Object?;
+typedef FstFlags = JSAny?;
+typedef Atim = JSAny?;
+typedef Mtim = JSAny?;
+typedef Flags = JSAny?;
+typedef OldFlags = JSAny?;
+typedef Dirflags = JSAny?;
+typedef Oflags = JSAny?;
+typedef FsRightsBase = JSAny?;
+typedef FsRightsInheriting = JSAny?;
+typedef Fdflags = JSAny?;
 
 @JS('Fd')
-abstract class Fd {
-  external factory Fd();
+external FdConstructor get _fdConstructor;
 
-  external int fd_advise(IntOrBigInt offset, BigInt len, IntOrBigInt advice);
-  external int fd_allocate(IntOrBigInt offset, BigInt len);
+extension type FdConstructor(JSFunction _) implements JSFunction {
+  external Fd call();
+}
+
+extension type Fd(JSObject _) implements JSObject {
+  external int fd_advise(IntOrBigInt offset, JSBigInt len, IntOrBigInt advice);
+  external int fd_allocate(IntOrBigInt offset, JSBigInt len);
   external int fd_close();
   external int fd_datasync();
   external FdstatGet fd_fdstat_get();
   external int fd_fdstat_set_flags(int flags);
   external int fd_fdstat_set_rights(
-      BigInt fs_rights_base, BigInt fs_rights_inheriting);
+    JSBigInt fs_rights_base,
+    JSBigInt fs_rights_inheriting,
+  );
   external FilestatGet fd_filestat_get();
   external int fd_filestat_set_size(IntOrBigInt size);
   external int fd_filestat_set_times(Atim atim, Mtim mtim, FstFlags fst_flags);
-  external Read fd_pread(Uint8List view8, List<Iovec> iovs, IntOrBigInt offset);
+  external Read fd_pread(
+    JSUint8Array view8,
+    JSArray<Iovec> iovs,
+    IntOrBigInt offset,
+  );
   external PrestatGet fd_prestat_get();
   external PrestatDirNameGet fd_prestat_dir_name(int path_ptr, int path_len);
   external NwrittenGet fd_pwrite(
-      Uint8List view8, List<Iovec> iovs, IntOrBigInt offset);
-  external Read fd_read(Uint8List view8, List<Iovec> iovs);
-  external DirentGet fd_readdir_single(BigInt cookie);
+    JSUint8Array view8,
+    JSArray<Iovec> iovs,
+    IntOrBigInt offset,
+  );
+  external Read fd_read(JSUint8Array view8, JSArray<Iovec> iovs);
+  external DirentGet fd_readdir_single(JSBigInt cookie);
   external OffsetGet fd_seek(IntOrBigInt offset, int whence);
   external int fd_sync();
   external OffsetGet fd_tell();
-  external NwrittenGet fd_write(Uint8List view8, List<Iovec> iovs);
-  external int path_create_directory(String path);
-  external FilestatGet path_filestat_get(Flags flags, String path);
+  external NwrittenGet fd_write(JSUint8Array view8, JSArray<Iovec> iovs);
+  external int path_create_directory(JSString path);
+  external FilestatGet path_filestat_get(Flags flags, JSString path);
   external void path_filestat_set_times(
-      Flags flags, String path, Atim atim, Mtim mtim, FstFlags fst_flags);
+    Flags flags,
+    JSString path,
+    Atim atim,
+    Mtim mtim,
+    FstFlags fst_flags,
+  );
   external int path_link(
-      int old_fd, OldFlags old_flags, String old_path, String new_path);
+    int old_fd,
+    OldFlags old_flags,
+    JSString old_path,
+    JSString new_path,
+  );
   external FdObjGet path_open(
-      Dirflags dirflags,
-      String path,
-      Oflags oflags,
-      FsRightsBase fs_rights_base,
-      FsRightsInheriting fs_rights_inheriting,
-      Fdflags fdflags);
-  external DataGet path_readlink(String path);
-  external int path_remove_directory(String path);
-  external int path_rename(String old_path, int new_fd, String new_path);
-  external int path_symlink(String old_path, String new_path);
-  external int path_unlink_file(String path);
+    Dirflags dirflags,
+    String path,
+    int oflags,
+    FsRightsBase fs_rights_base,
+    FsRightsInheriting fs_rights_inheriting,
+    Fdflags fdflags,
+  );
+  external DataGet path_readlink(JSString path);
+  external int path_remove_directory(JSString path);
+  external int path_rename(JSString old_path, int new_fd, JSString new_path);
+  external int path_symlink(JSString old_path, JSString new_path);
+  external int path_unlink_file(JSString path);
 }
 
-@JS()
-@anonymous
-abstract class Read {
+Fd createFd() => _fdConstructor.call();
+
+extension type Read(JSObject _) implements JSObject {
   external int get ret;
   external int get nread;
 }
 
-@JS()
-@anonymous
-abstract class FilestatGet {
+extension type FilestatGet(JSObject _) implements JSObject {
   external int get ret;
   external Filestat? get filestat;
 }
 
-@JS()
-@anonymous
-abstract class FdstatGet {
+extension type FdstatGet(JSObject _) implements JSObject {
   external int get ret;
   external Fdstat? get fdstat;
 }
 
-@JS()
-@anonymous
-abstract class OffsetGet {
+extension type OffsetGet(JSObject _) implements JSObject {
   external int get ret;
   external int get offset;
 }
 
-@JS()
-@anonymous
-abstract class NwrittenGet {
+extension type NwrittenGet(JSObject _) implements JSObject {
   external int get ret;
   external int get nwritten;
-
-  external factory NwrittenGet({
-    required int ret,
-    required int nwritten,
-  });
 }
 
-@JS()
-@anonymous
-abstract class PrestatGet {
+NwrittenGet createNwrittenGet({required int ret, required int nwritten}) {
+  final obj = JSObject();
+  obj['ret'] = ret.toJS;
+  obj['nwritten'] = nwritten.toJS;
+  return NwrittenGet(obj);
+}
+
+extension type PrestatGet(JSObject _) implements JSObject {
   external int get ret;
   external int get prestat;
 }
 
-@JS()
-@anonymous
-abstract class PrestatDirNameGet {
+extension type PrestatDirNameGet(JSObject _) implements JSObject {
   external int get ret;
-  external Uint8List? get prestat_dir_name;
+  external JSUint8Array? get prestat_dir_name;
 }
 
-@JS()
-@anonymous
-abstract class DirentGet {
+extension type DirentGet(JSObject _) implements JSObject {
   external int get ret;
-  external Object? get dirent;
+  external JSObject? get dirent;
 }
 
-@JS()
-@anonymous
-abstract class FdObjGet {
+extension type FdObjGet(JSObject _) implements JSObject {
   external int get ret;
-  external Object? get fd_obj;
+  external JSObject? get fd_obj;
 }
 
-@JS()
-@anonymous
-abstract class DataGet {
+extension type DataGet(JSObject _) implements JSObject {
   external int get ret;
-  external Object? get data;
+  external JSObject? get data;
 }

@@ -1,0 +1,67 @@
+# Cross-compilation configuration for cross-rs/cross
+# See: https://github.com/cross-rs/cross/wiki/Configuration
+#
+# SUPPORTED TARGETS (from Linux host with cross-rs/cross):
+# ✅ aarch64-unknown-linux-gnu   - Linux ARM64
+# ✅ aarch64-linux-android       - Android ARM64
+# ✅ armv7-linux-androideabi     - Android ARM32
+# ✅ x86_64-linux-android        - Android x64
+# ✅ i686-linux-android          - Android x86
+# ✅ x86_64-pc-windows-gnu       - Windows x64
+#
+# REQUIRES OSXCROSS (from Linux host):
+# ⚠️ x86_64-apple-darwin   - macOS x64
+# ⚠️ aarch64-apple-darwin  - macOS ARM64
+#
+# MACOS-ONLY TARGETS (requires Xcode):
+# 📱 aarch64-apple-ios  - iOS ARM64 (no Linux cross-compile available)
+#
+# NOT SUPPORTED:
+# ❌ Windows MSVC    - Requires Windows host
+
+[build]
+pre-build = []
+
+# Use custom Dockerfile that runs as non-root user
+# This ensures build artifacts are owned by host user, not root
+[build.dockerfile]
+file = "./docker/cross-user.dockerfile"
+context = "./docker"
+
+[build.dockerfile.build-args]
+USER_ID = { env = "CROSS_USER_ID", default = "1000" }
+GROUP_ID = { env = "CROSS_GROUP_ID", default = "1000" }
+
+[build.env]
+passthrough = [
+    "RUST_BACKTRACE",
+    "RUST_LOG",
+    "CROSS_USER_ID",
+    "CROSS_GROUP_ID",
+]
+
+# Linux ARM64 - TESTED ✅
+[target.aarch64-unknown-linux-gnu]
+image = "ghcr.io/cross-rs/aarch64-unknown-linux-gnu:main"
+
+# Android ARM64 - TESTED ✅
+[target.aarch64-linux-android]
+image = "ghcr.io/cross-rs/aarch64-linux-android:main"
+
+# Android ARM32
+[target.armv7-linux-androideabi]
+image = "ghcr.io/cross-rs/armv7-linux-androideabi:main"
+
+# Android x64
+[target.x86_64-linux-android]
+image = "ghcr.io/cross-rs/x86_64-linux-android:main"
+
+# Android x86
+[target.i686-linux-android]
+image = "ghcr.io/cross-rs/i686-linux-android:main"
+
+# Windows x64 (GNU toolchain)
+# Note: Has linker issues with wasmtime's ittapi-sys (strnlen_s undefined)
+# For production Windows builds, use native Windows CI or MSVC toolchain
+[target.x86_64-pc-windows-gnu]
+image = "ghcr.io/cross-rs/x86_64-pc-windows-gnu:main"

@@ -1,11 +1,11 @@
 use std::{ffi::c_char, fs::Metadata, time::SystemTime};
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn print_hello() {
     println!("Hello, world! 2");
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn stderr_log(msg_utf16: *const u16, msg_utf16_length: u32) {
     let msg = String::from_utf16(unsafe {
         std::slice::from_raw_parts(msg_utf16, msg_utf16_length.try_into().unwrap())
@@ -17,7 +17,7 @@ pub extern "C" fn stderr_log(msg_utf16: *const u16, msg_utf16_length: u32) {
     eprint!("{}", err);
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn read_file_size(path: *const c_char) -> u64 {
     let path = unsafe { std::ffi::CStr::from_ptr(path) };
     let metadata = std::fs::metadata(path.to_str().unwrap());
@@ -30,7 +30,7 @@ pub extern "C" fn read_file_size(path: *const c_char) -> u64 {
 }
 
 // TODO: test default -> Rust FileData -> memory bytes pointer -> Dart FileData
-// #[no_mangle]
+// #[unsafe(no_mangle)]
 // pub extern "C" fn file_data(path_utf8: *const u8, path_utf8_length: u32) -> FileData {
 //     let path = std::str::from_utf8(unsafe {
 //         std::slice::from_raw_parts(path_utf8, path_utf8_length.try_into().unwrap())
@@ -41,7 +41,7 @@ pub extern "C" fn read_file_size(path: *const c_char) -> u64 {
 //     metadata.into()
 // }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn file_data_raw(path_utf8: *const u8, path_utf8_length: u32) -> *const u8 {
     let path = std::str::from_utf8(unsafe {
         std::slice::from_raw_parts(path_utf8, path_utf8_length.try_into().unwrap())
@@ -94,12 +94,12 @@ impl FileData {
 // final bool captureStdout;
 // final bool captureStderr;
 // final bool inheritStdin;
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn current_time() -> u64 {
     timestamp(&std::time::SystemTime::now())
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn get_args() -> *const u8 {
     // Vec::from_raw_parts(ptr, length, capacity);
     let mut bytes = Vec::new();
@@ -110,14 +110,15 @@ pub extern "C" fn get_args() -> *const u8 {
     forget_and_return_pointer(bytes)
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub unsafe extern "C" fn dealloc(pointer: *mut u8, bytes: usize) {
-    let data = Vec::from_raw_parts(pointer, bytes, bytes);
-
-    std::mem::drop(data);
+    unsafe {
+        let data = Vec::from_raw_parts(pointer, bytes, bytes);
+        std::mem::drop(data);
+    }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub unsafe extern "C" fn alloc(bytes: usize) -> *mut u8 {
     let mut data = Vec::with_capacity(bytes);
     let pointer = data.as_mut_ptr();
@@ -125,7 +126,7 @@ pub unsafe extern "C" fn alloc(bytes: usize) -> *mut u8 {
     pointer
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn get_env_vars() -> *const u8 {
     let mut bytes = Vec::new();
     bytes.extend(vec_size(std::env::vars()));
@@ -209,7 +210,7 @@ pub struct MyStruct {
 // }
 
 #[link(wasm_import_module = "example_imports")]
-extern "C" {
+unsafe extern "C" {
     // functions can have integer/float arguments/return values
     fn translate(a: i32) -> f64;
 

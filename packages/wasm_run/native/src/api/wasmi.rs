@@ -11,11 +11,17 @@ use once_cell::sync::Lazy;
 use std::io::Write;
 pub use std::sync::RwLock;
 use std::{collections::HashMap, sync::Arc};
+// wasmi 1.0 API changes
 #[cfg(feature = "wasi")]
-use wasi_common::pipe::WritePipe;
-use wasmi::core::Trap;
-pub use wasmi::{core::Pages, Func, Global, Memory, Module, Table};
-use wasmi::{core::ValueType, *};
+use wasmi_wasi::wasi_common::pipe::WritePipe;
+pub use wasmi::{Func, Global, Memory, Module, Table};
+use wasmi::*;
+
+// Type aliases for wasmi 1.0 compatibility
+type Value = wasmi::Val;
+type ValueType = wasmi::ValType;
+// Note: wasmi::Error replaces the old Trap type for error handling
+type Trap = wasmi::Error;
 
 static ARRAY: Lazy<RwLock<GlobalState>> = Lazy::new(|| RwLock::new(Default::default()));
 
@@ -37,7 +43,7 @@ struct WasmiModuleImpl {
 
 struct StoreState {
     #[cfg(feature = "wasi")]
-    wasi_ctx: Option<wasi_common::WasiCtx>,
+    wasi_ctx: Option<wasmi_wasi::WasiCtx>,
     stdout: Option<StreamSink<Vec<u8>>>,
     stderr: Option<StreamSink<Vec<u8>>>,
     stack: CallStack,
@@ -53,19 +59,21 @@ pub struct SharedMemory;
 #[derive(Clone)]
 pub struct WasmRunModuleId(pub u32, pub RustOpaque<CallStack>);
 
+#[frb(ignore)]
 #[derive(Clone, Default)]
 pub struct CallStack(Arc<RwLock<Vec<RwLock<StoreContextMut<'static, StoreState>>>>>);
 
 #[derive(Debug, Clone, Copy)]
 pub struct WasmRunInstanceId(pub u32);
 
+#[cfg(feature = "wasi")]
 fn make_wasi_ctx(
     id: &WasmRunModuleId,
     wasi_config: &Option<WasiConfigNative>,
-) -> Result<Option<wasi_common::WasiCtx>> {
+) -> Result<Option<wasmi_wasi::WasiCtx>> {
     let mut wasi_ctx = None;
     if let Some(wasi_config) = wasi_config {
-        let mut wasi = wasi_config.to_wasi_ctx()?;
+        let wasi = wasi_config.to_wasi_ctx()?;
 
         if wasi_config.capture_stdout {
             let stdout_handler = ModuleIOWriter {
@@ -87,6 +95,14 @@ fn make_wasi_ctx(
     Ok(wasi_ctx)
 }
 
+#[cfg(not(feature = "wasi"))]
+fn make_wasi_ctx(
+    _id: &WasmRunModuleId,
+    _wasi_config: &Option<WasiConfigNative>,
+) -> Result<Option<()>> {
+    Ok(None)
+}
+
 pub fn module_builder(
     module: CompiledModule,
     num_threads: Option<usize>,
@@ -99,7 +115,7 @@ pub fn module_builder(
     }
     if num_threads.is_some() {
         return Err(anyhow::Error::msg(
-            "Multi-threading is not supported for the wasmi runtime.",
+            crate::errors::wasmi_limitations::THREADS
         ));
     }
 
@@ -197,10 +213,10 @@ impl WasmRunModuleId {
         if module.instance.is_some() {
             return Err(anyhow::anyhow!("Instance already exists"));
         }
+        // wasmi 1.0: use instantiate_and_start instead of separate instantiate().start()
         let instance = module
             .linker
-            .instantiate(&mut module.store, &module.module.lock().unwrap())?
-            .start(&mut module.store)?;
+            .instantiate_and_start(&mut module.store, &module.module.lock().unwrap())?;
 
         module.instance = Some(instance);
         Ok(WasmRunInstanceId(self.0))
@@ -284,7 +300,7 @@ impl WasmRunModuleId {
         function_stream: StreamSink<ParallelExec>,
     ) {
         function_stream.add(ParallelExec::Err(
-            "Parallel execution is not supported for wasmit.".to_string(),
+            crate::errors::wasmi_limitations::PARALLEL_EXEC.to_string(),
         ));
     }
 
@@ -295,7 +311,7 @@ impl WasmRunModuleId {
         results: Vec<WasmVal>,
     ) -> Result<SyncReturn<()>> {
         Err(anyhow::anyhow!(
-            "Parallel execution is not supported for wasmit."
+            crate::errors::wasmi_limitations::PARALLEL_EXEC
         ))
     }
 
@@ -462,8 +478,8 @@ impl WasmRunModuleId {
         SyncReturn(self.with_module(|store| (&global.ty(store)).into()))
     }
 
-    pub fn get_global_value(&self, global: RustOpaque<Global>) -> SyncReturn<WasmVal> {
-        SyncReturn(self.with_module(|store| WasmVal::from_value(&global.get(store), store)))
+    pub fn get_global_value(&self, global: RustOpaque<Global>) -> Result<SyncReturn<WasmVal>> {
+        Ok(SyncReturn(self.with_module(|store| WasmVal::from_value(&global.get(store), store))))
     }
 
     pub fn set_global_value(
@@ -522,7 +538,8 @@ impl WasmRunModuleId {
         })
     }
     pub fn get_memory_pages(&self, memory: RustOpaque<Memory>) -> SyncReturn<u32> {
-        SyncReturn(self.with_module(|store| memory.current_pages(store).into()))
+        // wasmi 1.0: current_pages() renamed to size(), returns u64
+        SyncReturn(self.with_module(|store| memory.size(store) as u32))
     }
 
     pub fn write_memory(
@@ -539,13 +556,11 @@ impl WasmRunModuleId {
         })
     }
     pub fn grow_memory(&self, memory: RustOpaque<Memory>, pages: u32) -> Result<SyncReturn<u32>> {
+        // wasmi 1.0: Pages type removed, use u64 directly
         self.with_module_mut(|store| {
             memory
-                .grow(
-                    store,
-                    Pages::new(pages).ok_or(anyhow::anyhow!("Invalid pages"))?,
-                )
-                .map(|p| SyncReturn(p.into()))
+                .grow(store, pages as u64)
+                .map(|p| SyncReturn(p as u32))
                 .map_err(to_anyhow)
         })
     }
@@ -553,7 +568,8 @@ impl WasmRunModuleId {
     // TABLE
 
     pub fn get_table_size(&self, table: RustOpaque<Table>) -> SyncReturn<u32> {
-        SyncReturn(self.with_module(|store| table.size(store)))
+        // wasmi 1.0: size() returns u64
+        SyncReturn(self.with_module(|store| table.size(store) as u32))
     }
     pub fn get_table_type(&self, table: RustOpaque<Table>) -> SyncReturn<TableTy> {
         SyncReturn(self.with_module(|store| (&table.ty(store)).into()))
@@ -565,21 +581,23 @@ impl WasmRunModuleId {
         delta: u32,
         value: WasmVal,
     ) -> Result<SyncReturn<u32>> {
+        // wasmi 1.0: grow() takes u64 delta and returns u64
         self.with_module_mut(|mut store| {
             let mapped = value.to_value(&mut store);
             table
-                .grow(&mut store, delta, mapped)
-                .map(SyncReturn)
+                .grow(&mut store, delta as u64, mapped)
+                .map(|v| SyncReturn(v as u32))
                 .map_err(to_anyhow)
         })
     }
 
-    pub fn get_table(&self, table: RustOpaque<Table>, index: u32) -> SyncReturn<Option<WasmVal>> {
-        SyncReturn(self.with_module(|store| {
+    pub fn get_table(&self, table: RustOpaque<Table>, index: u32) -> Result<SyncReturn<Option<WasmVal>>> {
+        // wasmi 1.0: get() takes u64 index
+        Ok(SyncReturn(self.with_module(|store| {
             table
-                .get(store, index)
+                .get(store, index as u64)
                 .map(|v| WasmVal::from_value(&v, store))
-        }))
+        })))
     }
 
     pub fn set_table(
@@ -588,10 +606,11 @@ impl WasmRunModuleId {
         index: u32,
         value: WasmVal,
     ) -> Result<SyncReturn<()>> {
+        // wasmi 1.0: set() takes u64 index
         self.with_module_mut(|mut store| {
             let mapped = value.to_value(&mut store);
             table
-                .set(&mut store, index, mapped)
+                .set(&mut store, index as u64, mapped)
                 .map(SyncReturn)
                 .map_err(to_anyhow)
         })
@@ -604,26 +623,38 @@ impl WasmRunModuleId {
         value: WasmVal,
         len: u32,
     ) -> Result<SyncReturn<()>> {
+        // wasmi 1.0: fill() takes u64 dst and len
         self.with_module_mut(|mut store| {
             let mapped = value.to_value(&mut store);
             table
-                .fill(&mut store, index, mapped, len)
+                .fill(&mut store, index as u64, mapped, len as u64)
                 .map(|_| SyncReturn(()))
                 .map_err(to_anyhow)
         })
     }
 
     // FUEL
-    //
+    // wasmi 1.0: API changed to get_fuel()/set_fuel() instead of add/consume/consumed
 
     pub fn add_fuel(&self, delta: u64) -> Result<SyncReturn<()>> {
-        self.with_module_mut2(|store| store.add_fuel(delta).map(SyncReturn).map_err(to_anyhow))
+        self.with_module_mut2(|store| {
+            let current = store.get_fuel().map_err(to_anyhow)?;
+            store.set_fuel(current.saturating_add(delta)).map_err(to_anyhow)?;
+            Ok(SyncReturn(()))
+        })
     }
     pub fn fuel_consumed(&self) -> SyncReturn<Option<u64>> {
-        self.with_module_mut2(|store| SyncReturn(store.fuel_consumed()))
+        // wasmi 1.0: get_fuel returns remaining fuel, not consumed
+        // Return None if fuel metering is disabled (get_fuel returns Err)
+        self.with_module_mut2(|store| SyncReturn(store.get_fuel().ok()))
     }
     pub fn consume_fuel(&self, delta: u64) -> Result<SyncReturn<u64>> {
-        self.with_module_mut2(|store| store.consume_fuel(delta).map(SyncReturn).map_err(to_anyhow))
+        self.with_module_mut2(|store| {
+            let current = store.get_fuel().map_err(to_anyhow)?;
+            let new_fuel = current.saturating_sub(delta);
+            store.set_fuel(new_fuel).map_err(to_anyhow)?;
+            Ok(SyncReturn(new_fuel))
+        })
     }
 }
 
@@ -643,7 +674,7 @@ impl CompiledModule {
         memory_type: MemoryTy,
     ) -> Result<SyncReturn<WasmRunSharedMemory>> {
         Err(anyhow::Error::msg(
-            "shared_memory is not supported for wasmi",
+            crate::errors::wasmi_limitations::SHARED_MEMORY,
         ))
     }
 
@@ -701,29 +732,26 @@ pub fn wasm_runtime_features() -> SyncReturn<WasmRuntimeFeatures> {
 #[allow(unused)]
 impl WasmRunSharedMemory {
     pub fn ty(&self) -> SyncReturn<MemoryTy> {
-        unreachable!()
+        panic!("{}", crate::errors::wasmi_limitations::SHARED_MEMORY)
     }
     pub fn size(&self) -> SyncReturn<u64> {
-        unreachable!()
+        panic!("{}", crate::errors::wasmi_limitations::SHARED_MEMORY)
     }
     pub fn data_size(&self) -> SyncReturn<usize> {
-        unreachable!()
+        panic!("{}", crate::errors::wasmi_limitations::SHARED_MEMORY)
     }
     pub fn data_pointer(&self) -> SyncReturn<usize> {
-        unreachable!()
+        panic!("{}", crate::errors::wasmi_limitations::SHARED_MEMORY)
     }
     pub fn grow(&self, delta: u64) -> Result<SyncReturn<u64>> {
-        unreachable!()
+        panic!("{}", crate::errors::wasmi_limitations::SHARED_MEMORY)
     }
-    // pub fn atomic_i8(&self) -> crate::atomics::Ati8 {
-    //     crate::atomics::Ati8(self.0.read().unwrap().data().as_ptr() as usize)
-    // }
 
     pub fn atomics(&self) -> Atomics {
-        unreachable!()
+        panic!("{}", crate::errors::wasmi_limitations::ATOMICS)
     }
     pub fn atomic_notify(&self, addr: u64, count: u32) -> Result<SyncReturn<u32>> {
-        unreachable!()
+        panic!("{}", crate::errors::wasmi_limitations::ATOMICS)
     }
 
     /// Equivalent of the WebAssembly `memory.atomic.wait32` instruction for
@@ -766,7 +794,7 @@ impl WasmRunSharedMemory {
         expected: u32,
         // TODO: timeout: Option<Instant>,
     ) -> Result<SyncReturn<SharedMemoryWaitResult>> {
-        unreachable!()
+        panic!("{}", crate::errors::wasmi_limitations::ATOMICS)
     }
 
     /// Equivalent of the WebAssembly `memory.atomic.wait64` instruction for
@@ -784,7 +812,7 @@ impl WasmRunSharedMemory {
         expected: u64,
         // TODO: timeout: Option<Instant>,
     ) -> Result<SyncReturn<SharedMemoryWaitResult>> {
-        unreachable!()
+        panic!("{}", crate::errors::wasmi_limitations::ATOMICS)
     }
 }
 
@@ -792,22 +820,22 @@ impl WasmRunSharedMemory {
 impl Atomics {
     /// Adds the provided value to the existing value at the specified index of the array. Returns the old value at that index.
     pub fn add(&self, offset: usize, kind: AtomicKind, val: i64, order: AtomicOrdering) -> i64 {
-        unreachable!()
+        panic!("{}", crate::errors::wasmi_limitations::ATOMICS)
     }
 
     /// Returns the value at the specified index of the array.
     pub fn load(&self, offset: usize, kind: AtomicKind, order: AtomicOrdering) -> i64 {
-        unreachable!()
+        panic!("{}", crate::errors::wasmi_limitations::ATOMICS)
     }
 
     /// Stores a value at the specified index of the array. Returns the value.
     pub fn store(&self, offset: usize, kind: AtomicKind, val: i64, order: AtomicOrdering) {
-        unreachable!()
+        panic!("{}", crate::errors::wasmi_limitations::ATOMICS)
     }
 
     /// Stores a value at the specified index of the array. Returns the old value.
     pub fn swap(&self, offset: usize, kind: AtomicKind, val: i64, order: AtomicOrdering) -> i64 {
-        unreachable!()
+        panic!("{}", crate::errors::wasmi_limitations::ATOMICS)
     }
 
     /// Stores a value at the specified index of the array, if it equals a value. Returns the old value.
@@ -820,26 +848,84 @@ impl Atomics {
         success: AtomicOrdering,
         failure: AtomicOrdering,
     ) -> CompareExchangeResult {
-        unreachable!()
+        panic!("{}", crate::errors::wasmi_limitations::ATOMICS)
     }
 
     /// Subtracts a value at the specified index of the array. Returns the old value at that index.
     pub fn sub(&self, offset: usize, kind: AtomicKind, val: i64, order: AtomicOrdering) -> i64 {
-        unreachable!()
+        panic!("{}", crate::errors::wasmi_limitations::ATOMICS)
     }
 
     /// Computes a bitwise AND on the value at the specified index of the array with the provided value. Returns the old value at that index.
     pub fn and(&self, offset: usize, kind: AtomicKind, val: i64, order: AtomicOrdering) -> i64 {
-        unreachable!()
+        panic!("{}", crate::errors::wasmi_limitations::ATOMICS)
     }
 
     /// Computes a bitwise OR on the value at the specified index of the array with the provided value. Returns the old value at that index.
     pub fn or(&self, offset: usize, kind: AtomicKind, val: i64, order: AtomicOrdering) -> i64 {
-        unreachable!()
+        panic!("{}", crate::errors::wasmi_limitations::ATOMICS)
     }
 
     /// Computes a bitwise XOR on the value at the specified index of the array with the provided value. Returns the old value at that index.
     pub fn xor(&self, offset: usize, kind: AtomicKind, val: i64, order: AtomicOrdering) -> i64 {
-        unreachable!()
+        panic!("{}", crate::errors::wasmi_limitations::ATOMICS)
     }
+}
+
+// ============================================================================
+// Component Model Stubs (Not supported in wasmi)
+// ============================================================================
+
+/// The kind of WebAssembly binary (core module or component)
+/// Note: Components are not supported in wasmi - this is here for API compatibility
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum WasmBinaryKind {
+    /// Core WebAssembly module (uses WASI Preview1)
+    Module,
+    /// WebAssembly Component (uses WASI Preview2) - NOT SUPPORTED IN WASMI
+    Component,
+}
+
+/// Detect whether the given bytes are a core module or a component.
+/// Note: wasmi only supports core modules, not components.
+pub fn detect_wasm_kind(wasm_bytes: Vec<u8>) -> SyncReturn<Option<WasmBinaryKind>> {
+    if wasm_bytes.len() < 8 {
+        return SyncReturn(None);
+    }
+    if &wasm_bytes[0..4] != b"\0asm" {
+        return SyncReturn(None);
+    }
+    match &wasm_bytes[4..8] {
+        [0x01, 0x00, 0x00, 0x00] => SyncReturn(Some(WasmBinaryKind::Module)),
+        [0x0d, 0x00, 0x01, 0x00] => SyncReturn(Some(WasmBinaryKind::Component)),
+        _ => SyncReturn(None),
+    }
+}
+
+/// Placeholder for CompiledComponent - not supported in wasmi
+/// The Component Model requires wasmtime runtime.
+// Use the Component stub from bridge_generated for type compatibility
+pub struct CompiledComponent(pub RustOpaque<Arc<std::sync::Mutex<crate::bridge_generated::Component>>>);
+
+impl CompiledComponent {
+    pub fn get_component_imports(&self) -> SyncReturn<Vec<String>> {
+        panic!("{}", crate::errors::wasmi_limitations::COMPONENT_MODEL)
+    }
+
+    pub fn get_component_exports(&self) -> SyncReturn<Vec<String>> {
+        panic!("{}", crate::errors::wasmi_limitations::COMPONENT_MODEL)
+    }
+}
+
+/// Compile a WebAssembly Component - NOT SUPPORTED IN WASMI
+pub fn compile_component(_component_wasm: Vec<u8>, _config: ModuleConfig) -> Result<CompiledComponent> {
+    Err(anyhow::Error::msg(crate::errors::wasmi_limitations::COMPONENT_MODEL))
+}
+
+/// Compile a WebAssembly Component synchronously - NOT SUPPORTED IN WASMI
+pub fn compile_component_sync(
+    component_wasm: Vec<u8>,
+    config: ModuleConfig,
+) -> Result<SyncReturn<CompiledComponent>> {
+    compile_component(component_wasm, config).map(SyncReturn)
 }

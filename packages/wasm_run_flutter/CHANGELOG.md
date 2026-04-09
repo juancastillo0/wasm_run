@@ -1,3 +1,12 @@
+## 0.2.0
+
+ - Upgrade to wasmtime 41.0.1 and wasmi 1.0.7
+ - Native crate renamed to `wasm_run_native`
+ - New WebAssembly features: GC, tail call, exceptions, component model (wasmtime)
+ - New WebAssembly features: SIMD, relaxed SIMD, multi-memory, memory64 (wasmi)
+ - WASI Preview2 support for WebAssembly Components
+ - See wasm_run 0.2.0 changelog for full details
+
 ## 0.1.0
 
  - flutter_rust_bridge: ">=1.82.4"

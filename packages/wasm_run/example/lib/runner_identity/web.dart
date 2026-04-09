@@ -1,12 +1,11 @@
-import 'dart:html' as html;
-// ignore: depend_on_referenced_packages
-import 'package:flutter_rust_bridge/flutter_rust_bridge.dart' as frb;
+import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
+import 'package:web/web.dart' as web;
 
 String getRunnerIdentityImpl() {
-  return html.window.navigator.userAgent;
+  return web.window.navigator.userAgent;
 }
 
-typedef OpenDynamicLibraryResultImpl = frb.WasmModule;
+typedef OpenDynamicLibraryResultImpl = ExternalLibrary;
 
 OpenDynamicLibraryResultImpl openDynamicLibraryImpl(String path) {
   throw UnimplementedError();

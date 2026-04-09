@@ -2,9 +2,45 @@
 
 A Web Assembly executor for the Dart programming language.
 
-Currently it uses the [`wasmtime 14.0`](https://github.com/bytecodealliance/wasmtime) or [`wasmi 0.31`](https://github.com/paritytech/wasmi) Rust crates for parsing and executing WASM modules. Bindings are created using [`package:flutter_rust_bridge`](https://github.com/fzyzcjy/flutter_rust_bridge).
+Currently it uses the [`wasmtime 41.0`](https://github.com/bytecodealliance/wasmtime) or [`wasmi 1.0`](https://github.com/paritytech/wasmi) Rust crates for parsing and executing WASM modules. Bindings are created using [`package:flutter_rust_bridge`](https://github.com/fzyzcjy/flutter_rust_bridge).
 
 For more information on usage and documentation, please visit the main repository: https://github.com/juancastillo0/wasm_run.
+
+## Runtime Features
+
+### wasmtime 41.0.1 (default)
+
+High-performance JIT compiler with comprehensive WebAssembly support:
+
+| Feature | Status | Description |
+|---------|--------|-------------|
+| SIMD | Default | 128-bit vector operations |
+| Threads | Optional | Shared memory and atomics |
+| GC | Optional | Garbage collection (anyref, structref, arrayref) |
+| Tail Call | Default | Tail call optimization |
+| Multi-Memory | Optional | Multiple memories per module |
+| Memory64 | Optional | 64-bit memory addresses |
+| Exceptions | Optional | Exception handling |
+| Component Model | Optional | WASI Preview2 support |
+
+### wasmi 1.0.7
+
+Pure interpreter for platforms without JIT support:
+
+| Feature | Status | Description |
+|---------|--------|-------------|
+| SIMD | Supported | New in wasmi 1.0 |
+| Relaxed SIMD | Supported | New in wasmi 1.0 |
+| Multi-Memory | Supported | New in wasmi 1.0 |
+| Memory64 | Supported | New in wasmi 1.0 |
+| Tail Call | Supported | |
+| Threads | Not supported | Use wasmtime for threads |
+| GC | Not supported | Use wasmtime for GC |
+
+## WASI Support
+
+- **Preview1**: All core WebAssembly modules (Rust wasm32-wasi, C/C++ wasi-sdk, Go, etc.)
+- **Preview2**: WebAssembly Components (experimental, use `compile_component()`)
 
 # Pure Dart (Native)
 

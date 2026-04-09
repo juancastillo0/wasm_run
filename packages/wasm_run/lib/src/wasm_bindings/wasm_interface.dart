@@ -1,36 +1,23 @@
 import 'dart:typed_data';
 
 import 'package:meta/meta.dart';
-import 'package:wasm_run/src/bridge_generated.dart'
-    show
-        EnvVariable,
-        ExternalType,
-        GlobalTy,
-        MemoryTy,
-        PreopenedDir,
-        SharedMemoryWaitResult,
-        TableTy,
-        U8Array16,
-        ValueTy,
-        WasiConfigNative;
+import 'package:wasm_run/src/rust/atomics.dart' show SharedMemoryWaitResult;
+import 'package:wasm_run/src/rust/config.dart'
+    show EnvVariable, PreopenedDir, WasiConfigNative;
+import 'package:wasm_run/src/rust/lib.dart' show U8Array16;
+import 'package:wasm_run/src/rust/types.dart'
+    show ExternalType, GlobalTy, MemoryTy, TableTy, ValueTy;
 import 'package:wasm_run/src/int64_bigint/int64_bigint.dart';
 import 'package:wasm_run/src/wasm_bindings/_wasm_interop_stub.dart'
     if (dart.library.io) '_wasm_interop_native.dart'
     if (dart.library.html) '_wasm_interop_web.dart' show isVoidReturn;
 
-export 'package:wasm_run/src/bridge_generated.dart'
-    show
-        EnvVariable,
-        ExternalType,
-        FuncTy,
-        GlobalTy,
-        MemoryTy,
-        PreopenedDir,
-        SharedMemoryWaitResult,
-        TableTy,
-        U8Array16,
-        ValueTy,
-        WasmFeatures;
+export 'package:wasm_run/src/rust/atomics.dart' show SharedMemoryWaitResult;
+export 'package:wasm_run/src/rust/config.dart'
+    show EnvVariable, PreopenedDir, WasmFeatures;
+export 'package:wasm_run/src/rust/lib.dart' show U8Array16;
+export 'package:wasm_run/src/rust/types.dart'
+    show ExternalType, FuncTy, GlobalTy, MemoryTy, TableTy, ValueTy;
 export 'package:wasm_run/src/int64_bigint/int64_bigint.dart';
 
 /// A compiled WASM module.
@@ -493,7 +480,7 @@ class WasmFunction extends WasmExternal {
   /// Invokes [inner] with the given [args]
   /// and casts the result to a [List] of Dart values.
   List<Object?> call([List<Object?>? args]) {
-    if (_call != null) return _call!(args);
+    if (_call != null) return _call(args);
 
     // `?? const []` is required for dart2js
     final values = Function.apply(inner, args ?? const []);

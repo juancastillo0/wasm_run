@@ -20,6 +20,7 @@ pub struct WasiConfigNative {
     /// Custom Environment variables to pass to the WASM module
     pub env: Vec<EnvVariable>,
     /// Custom preopened files to pass to the WASM module
+    #[allow(dead_code)]
     pub preopened_files: Vec<String>,
     /// Custom preopened directories to pass to the WASM module
     /// The module will be able to access and edit these directories
@@ -33,42 +34,39 @@ pub enum StdIOKind {
     stderr,
 }
 
-#[cfg(feature = "wasi")]
+// WASI context builder for wasmi backend only
+// wasmtime backend handles WASI context creation directly in api.rs using Preview1 API
+#[cfg(all(feature = "wasi", not(feature = "wasmtime")))]
 impl WasiConfigNative {
-    pub fn to_wasi_ctx(&self) -> anyhow::Result<wasi_common::WasiCtx> {
-        #[cfg(not(feature = "wasmtime"))]
-        use wasmi_wasi::{ambient_authority, WasiCtxBuilder};
-        #[cfg(feature = "wasmtime")]
-        use wasmtime_wasi::{ambient_authority, WasiCtxBuilder};
+    pub fn to_wasi_ctx(&self) -> anyhow::Result<wasmi_wasi::WasiCtx> {
+        // Use wasi_common re-exports from wasmi_wasi to avoid cap-std version conflicts
+        use wasmi_wasi::wasi_common::sync::{ambient_authority, Dir, WasiCtxBuilder};
 
-        // add wasi to linker
-        #[cfg(not(feature = "wasmtime"))]
+        // wasmi_wasi 1.0: builder methods now return &mut Self
         let mut wasi_builder = WasiCtxBuilder::new();
-        #[cfg(feature = "wasmtime")]
-        let mut wasi_builder = &mut WasiCtxBuilder::new();
         if self.inherit_args {
-            wasi_builder = wasi_builder.inherit_args()?;
+            wasi_builder.inherit_args()?;
         }
         if self.inherit_env {
-            wasi_builder = wasi_builder.inherit_env()?;
+            wasi_builder.inherit_env()?;
         }
         if self.inherit_stdin {
-            wasi_builder = wasi_builder.inherit_stdin();
+            wasi_builder.inherit_stdin();
         }
         if !self.capture_stdout {
-            wasi_builder = wasi_builder.inherit_stdout();
+            wasi_builder.inherit_stdout();
         }
         if !self.capture_stderr {
-            wasi_builder = wasi_builder.inherit_stderr();
+            wasi_builder.inherit_stderr();
         }
         if !self.args.is_empty() {
             for value in &self.args {
-                wasi_builder = wasi_builder.arg(value)?;
+                wasi_builder.arg(value)?;
             }
         }
         if !self.env.is_empty() {
             for EnvVariable { name, value } in &self.env {
-                wasi_builder = wasi_builder.env(name, value)?;
+                wasi_builder.env(name, value)?;
             }
         }
         if !self.preopened_dirs.is_empty() {
@@ -77,8 +75,9 @@ impl WasiConfigNative {
                 host_path,
             } in &self.preopened_dirs
             {
-                let dir = cap_std::fs::Dir::open_ambient_dir(host_path, ambient_authority())?;
-                wasi_builder = wasi_builder.preopened_dir(dir, wasm_guest_path)?;
+                // Use Dir from wasi_common::sync to match wasmi_wasi's cap-std version
+                let dir = Dir::open_ambient_dir(host_path, ambient_authority())?;
+                wasi_builder.preopened_dir(dir, wasm_guest_path)?;
             }
         }
 
@@ -128,7 +127,7 @@ impl Default for WasmRuntimeFeatures {
     fn default() -> Self {
         WasmRuntimeFeatures {
             name: "wasmi".to_string(),
-            version: "0.31.0".to_string(),
+            version: "1.0.7".to_string(),
             is_browser: false,
             supported_features: WasmFeatures::supported(),
             default_features: WasmFeatures::default(),
@@ -139,7 +138,7 @@ impl Default for WasmRuntimeFeatures {
     fn default() -> Self {
         WasmRuntimeFeatures {
             name: "wasmtime".to_string(),
-            version: "14.0.4".to_string(),
+            version: "41.0.0".to_string(),
             is_browser: false,
             supported_features: WasmFeatures::supported(),
             default_features: WasmFeatures::default(),
@@ -186,16 +185,22 @@ impl From<ModuleConfig> for wasmtime::Config {
                 .map(|v| config.relaxed_simd_deterministic(v));
             wtc.wasm_threads.map(|v| config.wasm_threads(v));
             wtc.wasm_multi_memory.map(|v| config.wasm_multi_memory(v));
-            // TODO: wtc.tail_call.map(|v| config.wasm_tail_call(v));
             wtc.wasm_memory64.map(|v| config.wasm_memory64(v));
-            // TODO: feature component-model
-            // wtc.wasm_component_model.map(|v| config.wasm_component_model(v));
-            wtc.static_memory_maximum_size
-                .map(|v| config.static_memory_maximum_size(v));
-            wtc.static_memory_forced
-                .map(|v| config.static_memory_forced(v));
+            // New wasmtime 41+ features
+            wtc.wasm_tail_call.map(|v| config.wasm_tail_call(v));
+            wtc.wasm_gc.map(|v| config.wasm_gc(v));
+            wtc.wasm_function_references.map(|v| config.wasm_function_references(v));
+            wtc.wasm_exceptions.map(|v| config.wasm_exceptions(v));
+            wtc.wasm_component_model.map(|v| config.wasm_component_model(v));
+            // These config options have been removed/renamed in wasmtime 41
+            // TODO: Use new memory configuration API if needed
+            // wtc.static_memory_maximum_size
+            //     .map(|v| config.static_memory_maximum_size(v));
+            // wtc.static_memory_forced
+            //     .map(|v| config.static_memory_forced(v));
+            // Use memory_guard_size instead of static_memory_guard_size
             wtc.static_memory_guard_size
-                .map(|v| config.static_memory_guard_size(v));
+                .map(|v| config.memory_guard_size(v));
             wtc.parallel_compilation
                 .map(|v| config.parallel_compilation(v));
             wtc.generate_address_map
@@ -214,9 +219,11 @@ impl From<ModuleConfig> for wasmi::Config {
         c.reference_types.map(|v| config.wasm_reference_types(v));
         c.consume_fuel.map(|v| config.consume_fuel(v));
         if let Some(wic) = c.wasmi {
-            wic.stack_limits
-                .map(|v| config.set_stack_limits(v.try_into().unwrap()));
-            wic.cached_stacks.map(|v| config.set_cached_stacks(v));
+            // wasmi 1.0: stack limits applied directly to config
+            if let Some(stack_limits) = wic.stack_limits {
+                stack_limits.apply_to_config(&mut config);
+            }
+            wic.cached_stacks.map(|v| config.set_max_cached_stacks(v));
             wic.mutable_global.map(|v| config.wasm_mutable_global(v));
             wic.sign_extension.map(|v| config.wasm_sign_extension(v));
             wic.saturating_float_to_int
@@ -224,7 +231,14 @@ impl From<ModuleConfig> for wasmi::Config {
             wic.tail_call.map(|v| config.wasm_tail_call(v));
             wic.extended_const.map(|v| config.wasm_extended_const(v));
             wic.floats.map(|v| config.floats(v));
-            // config.set_fuel_costs(wic.flue_costs);
+            // New wasmi 1.0 features - some require the "simd" feature in wasmi
+            #[cfg(feature = "simd")]
+            {
+                wic.simd.map(|v| config.wasm_simd(v));
+                wic.relaxed_simd.map(|v| config.wasm_relaxed_simd(v));
+            }
+            wic.multi_memory.map(|v| config.wasm_multi_memory(v));
+            wic.memory64.map(|v| config.wasm_memory64(v));
         }
         config
     }
@@ -243,15 +257,19 @@ pub struct ModuleConfigWasmi {
     /// Is `true` if the `saturating-float-to-int` Wasm proposal is enabled.
     pub saturating_float_to_int: Option<bool>,
     /// Is `true` if the [`tail-call`] Wasm proposal is enabled.
-    pub tail_call: Option<bool>, // wasmtime disabled
+    pub tail_call: Option<bool>,
     /// Is `true` if the [`extended-const`] Wasm proposal is enabled.
     pub extended_const: Option<bool>,
     /// Is `true` if Wasm instructions on `f32` and `f64` types are allowed.
     pub floats: Option<bool>,
-    // /// The fuel consumption mode of the `wasmi` [`Engine`](crate::Engine).
-    // // TODO: pub fuel_consumption_mode: FuelConsumptionMode,
-    // /// The configured fuel costs of all `wasmi` bytecode instructions.
-    // // pub fuel_costs: FuelCosts,
+    /// Is `true` if the `simd` Wasm proposal is enabled (wasmi 1.0+).
+    pub simd: Option<bool>,
+    /// Is `true` if the `relaxed-simd` Wasm proposal is enabled (wasmi 1.0+).
+    pub relaxed_simd: Option<bool>,
+    /// Is `true` if the `multi-memory` Wasm proposal is enabled (wasmi 1.0+).
+    pub multi_memory: Option<bool>,
+    /// Is `true` if the `memory64` Wasm proposal is enabled (wasmi 1.0+).
+    pub memory64: Option<bool>,
 }
 
 /// The configured limits of the Wasm stack.
@@ -265,19 +283,16 @@ pub struct WasiStackLimits {
     pub maximum_recursion_depth: usize,
 }
 
+// Note: wasmi 1.0 removed StackLimits type. Stack configuration is now done
+// directly on Config via set_max_recursion_depth(), set_min_stack_height(),
+// set_max_stack_height(), and set_max_cached_stacks().
 #[cfg(not(feature = "wasmtime"))]
-impl TryFrom<WasiStackLimits> for wasmi::StackLimits {
-    type Error = anyhow::Error;
-
-    fn try_from(value: WasiStackLimits) -> std::result::Result<Self, Self::Error> {
-        use crate::types::to_anyhow;
-
-        Self::new(
-            value.initial_value_stack_height,
-            value.maximum_value_stack_height,
-            value.maximum_recursion_depth,
-        )
-        .map_err(to_anyhow)
+impl WasiStackLimits {
+    /// Apply stack limits to a wasmi Config (wasmi 1.0+ API)
+    pub fn apply_to_config(&self, config: &mut wasmi::Config) {
+        config.set_max_recursion_depth(self.maximum_recursion_depth);
+        config.set_min_stack_height(self.initial_value_stack_height);
+        config.set_max_stack_height(self.maximum_value_stack_height);
     }
 }
 
@@ -312,7 +327,22 @@ pub struct ModuleConfigWasmtime {
     /// Whether or not to enable the `memory64` WebAssembly feature.
     /// This is not enabled by default.
     pub wasm_memory64: Option<bool>,
-    // TODO: pub wasm_component_model: Option<bool>, // false component-model feature
+    /// Whether or not to enable the `tail-call` WebAssembly proposal.
+    /// Tail call is now default in wasmtime 41+.
+    pub wasm_tail_call: Option<bool>,
+    /// Whether or not to enable the WebAssembly GC proposal.
+    /// This enables typed function references and struct/array types.
+    /// Not enabled by default. Requires `reference_types` to be enabled.
+    pub wasm_gc: Option<bool>,
+    /// Whether or not to enable the WebAssembly function-references proposal.
+    /// This is automatically enabled when GC is enabled.
+    pub wasm_function_references: Option<bool>,
+    /// Whether or not to enable the WebAssembly exception-handling proposal.
+    /// Not enabled by default.
+    pub wasm_exceptions: Option<bool>,
+    /// Whether or not to enable the WebAssembly component-model.
+    /// Required for WASI Preview2 and components.
+    pub wasm_component_model: Option<bool>,
     //
     // pub strategy: Strategy,
     // TODO: pub profiler: ProfilingStrategy,
@@ -429,6 +459,7 @@ impl WasmFeatures {
     pub fn default() -> WasmFeatures {
         #[cfg(feature = "wasmtime")]
         {
+            // wasmtime 42.0 default features
             return WasmFeatures {
                 multi_value: true,
                 bulk_memory: true,
@@ -439,15 +470,15 @@ impl WasmFeatures {
                 extended_const: true,
                 floats: true,
                 simd: true,
-                relaxed_simd: false,
-                threads: false,      // Default false
-                multi_memory: false, // Default false
-                memory64: false,     // Default false
-                // Unsupported
-                component_model: false, // Feature
-                garbage_collection: false,
-                tail_call: false,
-                exceptions: false,
+                relaxed_simd: false,         // Default false
+                threads: false,              // Default false
+                multi_memory: false,         // Default false
+                memory64: false,             // Default false
+                tail_call: true,             // Now default true in wasmtime 42
+                garbage_collection: false,   // Default false (requires enabling)
+                exceptions: false,           // Default false
+                // Unsupported/Experimental
+                component_model: false,      // Feature
                 memory_control: false,
                 type_reflection: true,
                 wasi_features: if cfg!(feature = "wasi") {
@@ -457,7 +488,7 @@ impl WasmFeatures {
                 },
             };
         }
-        // TODO: use features crate
+        // wasmi 1.0.7 default features
         #[allow(unreachable_code)]
         WasmFeatures {
             multi_value: true,
@@ -466,18 +497,18 @@ impl WasmFeatures {
             mutable_global: true,
             saturating_float_to_int: true,
             sign_extension: true,
-            tail_call: false,      // Default false
-            extended_const: false, // Default false
+            tail_call: true,       // Supported in wasmi 1.0
+            extended_const: true,  // Supported in wasmi 1.0
             floats: true,
-            // Unsupported
+            simd: true,            // Supported in wasmi 1.0
+            relaxed_simd: true,    // Supported in wasmi 1.0
+            multi_memory: true,    // Supported in wasmi 1.0
+            memory64: true,        // Supported in wasmi 1.0
+            // Unsupported in wasmi
             component_model: false,
-            garbage_collection: false,
-            simd: false,
-            relaxed_simd: false,
-            threads: false,
-            multi_memory: false,
-            exceptions: false,
-            memory64: false,
+            garbage_collection: false,  // Not supported in wasmi
+            threads: false,             // Not supported in wasmi
+            exceptions: false,          // Not supported in wasmi
             memory_control: false,
             type_reflection: true,
             wasi_features: if cfg!(feature = "wasi") {
@@ -491,6 +522,7 @@ impl WasmFeatures {
     pub fn supported() -> WasmFeatures {
         #[cfg(feature = "wasmtime")]
         {
+            // wasmtime 42.0 supported features
             return WasmFeatures {
                 multi_value: true,
                 bulk_memory: true,
@@ -505,11 +537,11 @@ impl WasmFeatures {
                 threads: true,
                 multi_memory: true,
                 memory64: true,
-                // Unsupported
-                component_model: false, // Feature
-                garbage_collection: false,
-                exceptions: false,
-                tail_call: false,
+                tail_call: true,            // Now stable in wasmtime 42
+                garbage_collection: true,    // GC supported in wasmtime 42
+                exceptions: true,            // Exception handling supported
+                // Unsupported/Experimental
+                component_model: false,      // Requires component-model feature
                 memory_control: false,
                 type_reflection: true,
                 wasi_features: if cfg!(feature = "wasi") {
@@ -519,7 +551,7 @@ impl WasmFeatures {
                 },
             };
         }
-        // TODO: use features crate
+        // wasmi 1.0.7 supported features
         #[allow(unreachable_code)]
         WasmFeatures {
             multi_value: true,
@@ -528,18 +560,18 @@ impl WasmFeatures {
             mutable_global: true,
             saturating_float_to_int: true,
             sign_extension: true,
-            tail_call: true,
-            extended_const: true,
+            tail_call: true,       // Supported in wasmi 1.0
+            extended_const: true,  // Supported in wasmi 1.0
             floats: true,
-            // Unsupported
+            simd: true,            // Supported in wasmi 1.0
+            relaxed_simd: true,    // Supported in wasmi 1.0
+            multi_memory: true,    // Supported in wasmi 1.0
+            memory64: true,        // Supported in wasmi 1.0
+            // Unsupported in wasmi
             component_model: false,
-            garbage_collection: false,
-            simd: false,
-            relaxed_simd: false,
-            threads: false,
-            multi_memory: false,
-            exceptions: false,
-            memory64: false,
+            garbage_collection: false,  // Not supported in wasmi
+            threads: false,             // Not supported in wasmi
+            exceptions: false,          // Not supported in wasmi
             memory_control: false,
             type_reflection: true,
             wasi_features: if cfg!(feature = "wasi") {
@@ -580,11 +612,11 @@ impl ModuleConfig {
                 relaxed_simd: w
                     .and_then(|w| w.wasm_relaxed_simd)
                     .unwrap_or(def.relaxed_simd),
-                // Unsupported
-                component_model: false, // Feature
-                garbage_collection: false,
-                tail_call: false,
-                exceptions: false,
+                // New wasmtime 41+ features - now configurable
+                tail_call: w.and_then(|w| w.wasm_tail_call).unwrap_or(def.tail_call),
+                garbage_collection: w.and_then(|w| w.wasm_gc).unwrap_or(def.garbage_collection),
+                exceptions: w.and_then(|w| w.wasm_exceptions).unwrap_or(def.exceptions),
+                component_model: w.and_then(|w| w.wasm_component_model).unwrap_or(def.component_model),
                 memory_control: false,
                 type_reflection: true,
                 wasi_features: if cfg!(feature = "wasi") {

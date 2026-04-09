@@ -1,13 +1,12 @@
 use std::fmt::Display;
 
 use anyhow::Result;
-use flutter_rust_bridge::RustOpaque;
+use crate::frb_generated::RustOpaque;
 
-use crate::external::*;
+use crate::external::{WFunc, WGlobal, WTable, WMemory, WAnyRef, WExnRef};
+// wasmi 1.0: ValType is now directly exported (not from core module)
 #[cfg(not(feature = "wasmtime"))]
-use wasmi::{core::ValueType, *};
-#[cfg(not(feature = "wasmtime"))]
-pub use wasmi::{Func, Global, GlobalType, Memory, Mutability, Table};
+use wasmi::{ValType as ValueType, *};
 
 #[allow(non_camel_case_types)]
 #[derive(Debug)]
@@ -22,71 +21,184 @@ pub enum WasmVal {
     f64(f64),
     /// A 128 bit number.
     v128([u8; 16]),
-    /// A nullable function.
+    /// A nullable function reference.
     funcRef(Option<RustOpaque<WFunc>>),
     /// A nullable external object reference.
     externRef(Option<u32>), // NonZeroU32
+    /// A nullable internal GC reference (wasmtime GC only).
+    /// Represents anyref/eqref/structref/arrayref/i31ref types.
+    #[cfg(feature = "wasmtime")]
+    anyRef(Option<RustOpaque<WAnyRef>>),
+    /// A nullable exception reference (wasmtime exception handling only).
+    #[cfg(feature = "wasmtime")]
+    exnRef(Option<RustOpaque<WExnRef>>),
 }
 
 impl WasmVal {
     #[cfg(not(feature = "wasmtime"))]
     #[allow(clippy::wrong_self_convention)]
-    pub fn to_value(self, ctx: impl AsContextMut) -> Value {
+    pub fn to_value(self, mut ctx: impl AsContextMut) -> wasmi::Val {
+        use wasmi::Ref;
         match self {
-            WasmVal::i32(i) => Value::I32(i),
-            WasmVal::i64(i) => Value::I64(i),
-            WasmVal::f32(i) => Value::F32(i.to_bits().into()),
-            WasmVal::f64(i) => Value::F64(i.to_bits().into()),
-            WasmVal::v128(_i) => panic!("v128 is not supported in wasmi"),
+            WasmVal::i32(i) => wasmi::Val::I32(i),
+            WasmVal::i64(i) => wasmi::Val::I64(i),
+            WasmVal::f32(i) => wasmi::Val::F32(wasmi::F32::from_bits(i.to_bits())),
+            WasmVal::f64(i) => wasmi::Val::F64(wasmi::F64::from_bits(i.to_bits())),
+            WasmVal::v128(i) => wasmi::Val::V128(wasmi::V128::from(u128::from_ne_bytes(i))),
             WasmVal::funcRef(i) => {
-                let inner = i.map(|f| Func::clone(&f.func_wasmi));
-                Value::FuncRef(FuncRef::new(inner))
+                // wasmi 1.0: Val::FuncRef uses Ref<Func> for nullable references
+                match i {
+                    Some(f) => wasmi::Val::FuncRef(Ref::Val(Func::clone(&f.func_wasmi))),
+                    None => wasmi::Val::FuncRef(Ref::Null),
+                }
             }
-            WasmVal::externRef(i) => Value::ExternRef(ExternRef::new::<u32>(ctx, i)),
+            WasmVal::externRef(i) => {
+                // wasmi 1.0: Val::ExternRef uses Ref<ExternRef> for nullable references
+                match i {
+                    Some(val) => {
+                        let extern_ref = ExternRef::new(&mut ctx, val);
+                        wasmi::Val::ExternRef(Ref::Val(extern_ref))
+                    }
+                    None => wasmi::Val::ExternRef(Ref::Null),
+                }
+            }
         }
     }
 
     #[cfg(not(feature = "wasmtime"))]
-    pub fn from_value<'a, T: 'a>(value: &Value, ctx: impl Into<StoreContext<'a, T>>) -> Self {
+    pub fn from_value<'a, T: 'a>(value: &wasmi::Val, ctx: impl Into<StoreContext<'a, T>>) -> Self {
+        let ctx = ctx.into();
         match value {
-            Value::I32(i) => WasmVal::i32(*i),
-            Value::I64(i) => WasmVal::i64(*i),
-            Value::F32(i) => WasmVal::f32(i.to_float()),
-            Value::F64(i) => WasmVal::f64(i.to_float()),
-            Value::FuncRef(i) => WasmVal::funcRef(i.func().map(|f| RustOpaque::new((*f).into()))), // NonZeroU32::new(1).unwrap()),
-            Value::ExternRef(i) => {
-                WasmVal::externRef(i.data(ctx).map(|i| *i.downcast_ref::<u32>().unwrap()))
-            } // NonZeroU32::new(1).unwrap()),
+            wasmi::Val::I32(i) => WasmVal::i32(*i),
+            wasmi::Val::I64(i) => WasmVal::i64(*i),
+            wasmi::Val::F32(i) => WasmVal::f32(i.to_float()),
+            wasmi::Val::F64(i) => WasmVal::f64(i.to_float()),
+            // wasmi 1.0: V128 doesn't impl Into<u128>, use transmute
+            wasmi::Val::V128(i) => WasmVal::v128(unsafe { std::mem::transmute::<wasmi::V128, [u8; 16]>(*i) }),
+            wasmi::Val::FuncRef(ref_func) => {
+                // wasmi 1.0: FuncRef uses Ref<Func>
+                WasmVal::funcRef(ref_func.val().map(|f| RustOpaque::new((*f).into())))
+            }
+            wasmi::Val::ExternRef(ref_extern) => {
+                // wasmi 1.0: ExternRef uses Ref<ExternRef>
+                WasmVal::externRef(
+                    ref_extern
+                        .val()
+                        .and_then(|er| er.data(&ctx).downcast_ref::<u32>().copied())
+                )
+            }
         }
     }
 
     #[cfg(feature = "wasmtime")]
     #[allow(clippy::wrong_self_convention)]
-    pub fn to_val(self) -> wasmtime::Val {
-        match self {
+    pub fn to_val(self, mut store: impl wasmtime::AsContextMut) -> Result<wasmtime::Val> {
+        Ok(match self {
             WasmVal::i32(i) => wasmtime::Val::I32(i),
             WasmVal::i64(i) => wasmtime::Val::I64(i),
             WasmVal::f32(i) => wasmtime::Val::F32(i.to_bits()),
             WasmVal::f64(i) => wasmtime::Val::F64(i.to_bits()),
             WasmVal::v128(i) => wasmtime::Val::V128(wasmtime::V128::from(u128::from_ne_bytes(i))),
             WasmVal::funcRef(i) => wasmtime::Val::FuncRef(i.map(|f| f.func_wasmtime)),
-            WasmVal::externRef(i) => wasmtime::Val::ExternRef(i.map(wasmtime::ExternRef::new)),
-        }
+            WasmVal::externRef(i) => match i {
+                Some(val) => {
+                    let extern_ref = wasmtime::ExternRef::new(&mut store, val)?;
+                    wasmtime::Val::ExternRef(Some(extern_ref))
+                }
+                None => wasmtime::Val::ExternRef(None),
+            },
+            WasmVal::anyRef(i) => wasmtime::Val::AnyRef(i.map(|r| r.inner.clone())),
+            WasmVal::exnRef(i) => wasmtime::Val::ExnRef(i.map(|r| r.inner.clone())),
+        })
     }
 
+    /// Convert to Val without a store context.
+    /// Only works for simple types (i32, i64, f32, f64, v128, funcRef, null externRef).
+    /// For non-null externRef and GC types, use `to_val` with a store context.
     #[cfg(feature = "wasmtime")]
-    pub fn from_val(val: wasmtime::Val) -> Self {
-        match val {
+    #[allow(clippy::wrong_self_convention)]
+    pub fn to_val_simple(self) -> Result<wasmtime::Val> {
+        Ok(match self {
+            WasmVal::i32(i) => wasmtime::Val::I32(i),
+            WasmVal::i64(i) => wasmtime::Val::I64(i),
+            WasmVal::f32(i) => wasmtime::Val::F32(i.to_bits()),
+            WasmVal::f64(i) => wasmtime::Val::F64(i.to_bits()),
+            WasmVal::v128(i) => wasmtime::Val::V128(wasmtime::V128::from(u128::from_ne_bytes(i))),
+            WasmVal::funcRef(i) => wasmtime::Val::FuncRef(i.map(|f| f.func_wasmtime)),
+            WasmVal::externRef(None) => wasmtime::Val::ExternRef(None),
+            WasmVal::externRef(Some(_)) => {
+                return Err(anyhow::anyhow!(
+                    "Cannot convert non-null externRef without a store context. \
+                     Use to_val() with a store context instead."
+                ))
+            }
+            WasmVal::anyRef(_) | WasmVal::exnRef(_) => {
+                return Err(anyhow::anyhow!(
+                    "Cannot convert GC reference types (anyRef, exnRef) without a store context. \
+                     Use to_val() with a store context instead."
+                ))
+            }
+        })
+    }
+
+    /// Convert from Val without a store context.
+    /// Only works for simple types (i32, i64, f32, f64, v128, funcRef).
+    /// For externRef and GC types, use `from_val` with a store context.
+    #[cfg(feature = "wasmtime")]
+    #[allow(dead_code)]
+    pub fn from_val_simple(val: wasmtime::Val) -> Result<Self> {
+        Ok(match val {
             wasmtime::Val::I32(i) => WasmVal::i32(i),
             wasmtime::Val::I64(i) => WasmVal::i64(i),
             wasmtime::Val::V128(i) => WasmVal::v128(i.as_u128().to_ne_bytes()),
             wasmtime::Val::F32(i) => WasmVal::f32(f32::from_bits(i)),
             wasmtime::Val::F64(i) => WasmVal::f64(f64::from_bits(i)),
             wasmtime::Val::FuncRef(i) => WasmVal::funcRef(i.map(|f| RustOpaque::new(f.into()))),
-            wasmtime::Val::ExternRef(i) => {
-                WasmVal::externRef(i.map(|i| *i.data().downcast_ref::<u32>().unwrap()))
+            wasmtime::Val::ExternRef(None) => WasmVal::externRef(None),
+            wasmtime::Val::ExternRef(Some(_)) => {
+                return Err(anyhow::anyhow!(
+                    "Cannot convert non-null externRef without a store context. \
+                     Use from_val() with a store context instead."
+                ))
             }
-        }
+            wasmtime::Val::AnyRef(_) | wasmtime::Val::ExnRef(_) | wasmtime::Val::ContRef(_) => {
+                return Err(anyhow::anyhow!(
+                    "Cannot convert GC reference types without a store context. \
+                     Use from_val() with a store context instead."
+                ))
+            }
+        })
+    }
+
+    #[cfg(feature = "wasmtime")]
+    pub fn from_val(val: wasmtime::Val, store: impl wasmtime::AsContext) -> Result<Self> {
+        Ok(match val {
+            wasmtime::Val::I32(i) => WasmVal::i32(i),
+            wasmtime::Val::I64(i) => WasmVal::i64(i),
+            wasmtime::Val::V128(i) => WasmVal::v128(i.as_u128().to_ne_bytes()),
+            wasmtime::Val::F32(i) => WasmVal::f32(f32::from_bits(i)),
+            wasmtime::Val::F64(i) => WasmVal::f64(f64::from_bits(i)),
+            wasmtime::Val::FuncRef(i) => WasmVal::funcRef(i.map(|f| RustOpaque::new(f.into()))),
+            wasmtime::Val::ExternRef(i) => match i {
+                Some(extern_ref) => {
+                    let data = extern_ref.data(&store)?;
+                    WasmVal::externRef(data.and_then(|d| d.downcast_ref::<u32>().copied()))
+                }
+                None => WasmVal::externRef(None),
+            },
+            wasmtime::Val::AnyRef(i) => {
+                WasmVal::anyRef(i.map(|r| RustOpaque::new(WAnyRef { inner: r })))
+            }
+            wasmtime::Val::ExnRef(i) => {
+                WasmVal::exnRef(i.map(|r| RustOpaque::new(WExnRef { inner: r })))
+            }
+            wasmtime::Val::ContRef(_) => {
+                // ContRef is a stub implementation - return an error for now
+                return Err(anyhow::anyhow!(
+                    "Continuation references (contref) are not yet fully supported in wasmtime"
+                ));
+            }
+        })
     }
 }
 
@@ -135,8 +247,9 @@ impl From<&TableType> for TableTy {
     fn from(value: &TableType) -> Self {
         TableTy {
             element: (&value.element()).into(),
-            minimum: value.minimum(),
-            maximum: value.maximum(),
+            // wasmi 1.0: minimum/maximum return u64
+            minimum: value.minimum() as u32,
+            maximum: value.maximum().map(|v| v as u32),
         }
     }
 }
@@ -144,10 +257,16 @@ impl From<&TableType> for TableTy {
 #[cfg(feature = "wasmtime")]
 impl From<&wasmtime::TableType> for TableTy {
     fn from(value: &wasmtime::TableType) -> Self {
+        // Convert RefType to ValueTy based on the heap type
+        let element = match value.element().heap_type() {
+            wasmtime::HeapType::Func | wasmtime::HeapType::ConcreteFunc(_) | wasmtime::HeapType::NoFunc => ValueTy::funcRef,
+            wasmtime::HeapType::Extern | wasmtime::HeapType::NoExtern => ValueTy::externRef,
+            _ => ValueTy::externRef, // Default to externRef for other heap types
+        };
         TableTy {
-            element: (&value.element()).into(),
-            minimum: value.minimum(),
-            maximum: value.maximum(),
+            element,
+            minimum: value.minimum() as u32,
+            maximum: value.maximum().map(|v| v as u32),
         }
     }
 }
@@ -169,6 +288,20 @@ pub enum ValueTy {
     funcRef,
     /// A nullable external reference.
     externRef,
+    /// A nullable internal GC reference (wasmtime GC only).
+    anyRef,
+    /// A nullable eq reference for GC comparison (wasmtime GC only).
+    eqRef,
+    /// A nullable i31 reference - 31-bit integer (wasmtime GC only).
+    i31Ref,
+    /// A nullable struct reference (wasmtime GC only).
+    structRef,
+    /// A nullable array reference (wasmtime GC only).
+    arrayRef,
+    /// A nullable exception reference (wasmtime exception handling only).
+    exnRef,
+    /// A nullable continuation reference (wasmtime stack switching - experimental).
+    contRef,
 }
 
 #[cfg(not(feature = "wasmtime"))]
@@ -179,6 +312,7 @@ impl From<&ValueType> for ValueTy {
             ValueType::I64 => ValueTy::i64,
             ValueType::F32 => ValueTy::f32,
             ValueType::F64 => ValueTy::f64,
+            ValueType::V128 => ValueTy::v128,
             ValueType::FuncRef => ValueTy::funcRef,
             ValueType::ExternRef => ValueTy::externRef,
         }
@@ -194,8 +328,39 @@ impl From<&wasmtime::ValType> for ValueTy {
             wasmtime::ValType::F32 => ValueTy::f32,
             wasmtime::ValType::F64 => ValueTy::f64,
             wasmtime::ValType::V128 => ValueTy::v128,
-            wasmtime::ValType::FuncRef => ValueTy::funcRef,
-            wasmtime::ValType::ExternRef => ValueTy::externRef,
+            wasmtime::ValType::Ref(ref_type) => {
+                // Determine the base heap type (ignoring nullability)
+                let heap_type = ref_type.heap_type();
+                match heap_type {
+                    wasmtime::HeapType::Func | wasmtime::HeapType::ConcreteFunc(_) | wasmtime::HeapType::NoFunc => {
+                        ValueTy::funcRef
+                    }
+                    wasmtime::HeapType::Extern | wasmtime::HeapType::NoExtern => {
+                        ValueTy::externRef
+                    }
+                    wasmtime::HeapType::Any | wasmtime::HeapType::None => {
+                        ValueTy::anyRef
+                    }
+                    wasmtime::HeapType::Eq => {
+                        ValueTy::eqRef
+                    }
+                    wasmtime::HeapType::I31 => {
+                        ValueTy::i31Ref
+                    }
+                    wasmtime::HeapType::Struct | wasmtime::HeapType::ConcreteStruct(_) => {
+                        ValueTy::structRef
+                    }
+                    wasmtime::HeapType::Array | wasmtime::HeapType::ConcreteArray(_) => {
+                        ValueTy::arrayRef
+                    }
+                    wasmtime::HeapType::Exn | wasmtime::HeapType::ConcreteExn(_) | wasmtime::HeapType::NoExn => {
+                        ValueTy::exnRef
+                    }
+                    wasmtime::HeapType::Cont | wasmtime::HeapType::ConcreteCont(_) | wasmtime::HeapType::NoCont => {
+                        ValueTy::contRef
+                    }
+                }
+            }
         }
     }
 }
@@ -203,14 +368,29 @@ impl From<&wasmtime::ValType> for ValueTy {
 #[cfg(not(feature = "wasmtime"))]
 impl From<ValueTy> for ValueType {
     fn from(value: ValueTy) -> Self {
+        use crate::errors::wasmi_limitations;
         match value {
             ValueTy::i32 => ValueType::I32,
             ValueTy::i64 => ValueType::I64,
             ValueTy::f32 => ValueType::F32,
             ValueTy::f64 => ValueType::F64,
-            ValueTy::v128 => panic!("V128 not supported for wasmi"),
+            ValueTy::v128 => ValueType::V128,
             ValueTy::funcRef => ValueType::FuncRef,
             ValueTy::externRef => ValueType::ExternRef,
+            // GC types not supported in wasmi
+            ValueTy::anyRef | ValueTy::eqRef | ValueTy::i31Ref | ValueTy::structRef | ValueTy::arrayRef => {
+                panic!("{}", wasmi_limitations::GC)
+            }
+            // Exception handling not supported in wasmi
+            ValueTy::exnRef => {
+                panic!("Exception handling (exnref) is not supported in the wasmi runtime. \
+                        For exception handling support, use the wasmtime runtime by enabling the 'wasmtime' feature.")
+            }
+            // Continuation/stack switching not supported in wasmi
+            ValueTy::contRef => {
+                panic!("Continuation references (contref) are not supported in the wasmi runtime. \
+                        For stack switching support, use the wasmtime runtime by enabling the 'wasmtime' feature.")
+            }
         }
     }
 }
@@ -224,8 +404,15 @@ impl From<ValueTy> for wasmtime::ValType {
             ValueTy::f32 => wasmtime::ValType::F32,
             ValueTy::f64 => wasmtime::ValType::F64,
             ValueTy::v128 => wasmtime::ValType::V128,
-            ValueTy::funcRef => wasmtime::ValType::FuncRef,
-            ValueTy::externRef => wasmtime::ValType::ExternRef,
+            ValueTy::funcRef => wasmtime::ValType::FUNCREF,
+            ValueTy::externRef => wasmtime::ValType::EXTERNREF,
+            ValueTy::anyRef => wasmtime::ValType::ANYREF,
+            ValueTy::eqRef => wasmtime::ValType::EQREF,
+            ValueTy::i31Ref => wasmtime::ValType::I31REF,
+            ValueTy::structRef => wasmtime::ValType::STRUCTREF,
+            ValueTy::arrayRef => wasmtime::ValType::ARRAYREF,
+            ValueTy::exnRef => wasmtime::ValType::EXNREF,
+            ValueTy::contRef => wasmtime::ValType::CONTREF,
         }
     }
 }
@@ -270,6 +457,10 @@ impl From<&wasmtime::ExternType> for ExternalType {
             wasmtime::ExternType::Global(f) => ExternalType::Global(f.into()),
             wasmtime::ExternType::Table(f) => ExternalType::Table(f.into()),
             wasmtime::ExternType::Memory(f) => ExternalType::Memory(f.into()),
+            // Tag type is for exception handling - treat as a function for now
+            wasmtime::ExternType::Tag(_) => {
+                panic!("Tag exports are not yet supported")
+            }
         }
     }
 }
@@ -405,23 +596,12 @@ impl ModuleExportValue {
     }
 }
 
-#[cfg(feature = "wasmtime")]
 #[derive(Debug)]
 pub enum ExternalValue {
     Func(RustOpaque<WFunc>),
-    Global(RustOpaque<wasmtime::Global>),
-    Table(RustOpaque<wasmtime::Table>),
-    Memory(RustOpaque<wasmtime::Memory>),
-    SharedMemory(crate::api::WasmRunSharedMemory),
-}
-
-#[cfg(not(feature = "wasmtime"))]
-#[derive(Debug)]
-pub enum ExternalValue {
-    Func(RustOpaque<WFunc>),
-    Global(RustOpaque<Global>),
-    Table(RustOpaque<Table>),
-    Memory(RustOpaque<Memory>),
+    Global(RustOpaque<WGlobal>),
+    Table(RustOpaque<WTable>),
+    Memory(RustOpaque<WMemory>),
     SharedMemory(crate::api::WasmRunSharedMemory),
 }
 
@@ -430,9 +610,9 @@ impl From<Extern> for ExternalValue {
     fn from(extern_: Extern) -> Self {
         match extern_ {
             Extern::Func(f) => ExternalValue::Func(RustOpaque::new(f.into())),
-            Extern::Global(g) => ExternalValue::Global(RustOpaque::new(g)),
-            Extern::Table(t) => ExternalValue::Table(RustOpaque::new(t)),
-            Extern::Memory(m) => ExternalValue::Memory(RustOpaque::new(m)),
+            Extern::Global(g) => ExternalValue::Global(RustOpaque::new(g.into())),
+            Extern::Table(t) => ExternalValue::Table(RustOpaque::new(t.into())),
+            Extern::Memory(m) => ExternalValue::Memory(RustOpaque::new(m.into())),
         }
     }
 }
@@ -442,10 +622,14 @@ impl From<wasmtime::Extern> for ExternalValue {
     fn from(extern_: wasmtime::Extern) -> Self {
         match extern_ {
             wasmtime::Extern::Func(f) => ExternalValue::Func(RustOpaque::new(f.into())),
-            wasmtime::Extern::Global(g) => ExternalValue::Global(RustOpaque::new(g)),
-            wasmtime::Extern::Table(t) => ExternalValue::Table(RustOpaque::new(t)),
-            wasmtime::Extern::Memory(m) => ExternalValue::Memory(RustOpaque::new(m)),
+            wasmtime::Extern::Global(g) => ExternalValue::Global(RustOpaque::new(g.into())),
+            wasmtime::Extern::Table(t) => ExternalValue::Table(RustOpaque::new(t.into())),
+            wasmtime::Extern::Memory(m) => ExternalValue::Memory(RustOpaque::new(m.into())),
             wasmtime::Extern::SharedMemory(m) => ExternalValue::SharedMemory(m.into()),
+            // Tag type is for exception handling - not yet supported
+            wasmtime::Extern::Tag(_) => {
+                panic!("Tag exports are not yet supported")
+            }
         }
     }
 }
@@ -455,41 +639,12 @@ impl From<&ExternalValue> for Extern {
     fn from(e: &ExternalValue) -> Extern {
         match e {
             ExternalValue::Func(f) => Extern::Func(f.func_wasmi),
-            ExternalValue::Global(g) => Extern::Global(**g),
-            ExternalValue::Table(t) => Extern::Table(**t),
-            ExternalValue::Memory(m) => Extern::Memory(**m),
+            ExternalValue::Global(g) => Extern::Global(g.inner),
+            ExternalValue::Table(t) => Extern::Table(t.inner),
+            ExternalValue::Memory(m) => Extern::Memory(m.inner),
             ExternalValue::SharedMemory(_) => unreachable!(),
         }
     }
-    // fn to_extern<T>(&self, store: &mut Store<T>) -> Result<Extern> {
-    //     match self {
-    //         ExternalValue::Global { value, mutability } => {
-    //             let mapped = value.to_value(store);
-    //             let global = Global::new(store, mapped, *mutability);
-    //             Ok(Extern::Global(global))
-    //         }
-    //         ExternalValue::Table { value, ty } => {
-    //             let mapped_value = value.to_value(store);
-    //             let table = Table::new(
-    //                 store,
-    //                 TableType::new(mapped_value.ty(), ty.min, ty.max),
-    //                 mapped_value,
-    //             )
-    //             .map_err(to_anyhow)?;
-    //             Ok(Extern::Table(table))
-    //         }
-    //         ExternalValue::Memory { ty } => {
-    //             let memory = Memory::new(store, ty.to_memory_type()?).map_err(to_anyhow)?;
-    //             Ok(Extern::Memory(memory))
-    //         }
-    //         ExternalValue::Func { pointer } => {
-    //             let f: wasm_func = unsafe { std::mem::transmute(*pointer) };
-    //             // TODO: let func = Func::wrap(store, f);
-    //             let func = Func::wrap(store, || {});
-    //             Ok(Extern::Func(func))
-    //         }
-    //     }
-    // }
 }
 
 #[cfg(feature = "wasmtime")]
@@ -497,11 +652,11 @@ impl From<&ExternalValue> for wasmtime::Extern {
     fn from(e: &ExternalValue) -> wasmtime::Extern {
         match e {
             ExternalValue::Func(f) => wasmtime::Extern::Func(f.func_wasmtime),
-            ExternalValue::Global(g) => wasmtime::Extern::Global(**g),
-            ExternalValue::Table(t) => wasmtime::Extern::Table(**t),
-            ExternalValue::Memory(m) => wasmtime::Extern::Memory(**m),
+            ExternalValue::Global(g) => wasmtime::Extern::Global(g.inner),
+            ExternalValue::Table(t) => wasmtime::Extern::Table(t.inner),
+            ExternalValue::Memory(m) => wasmtime::Extern::Memory(m.inner),
             ExternalValue::SharedMemory(m) => {
-                wasmtime::Extern::SharedMemory(m.0.read().unwrap().clone())
+                wasmtime::Extern::SharedMemory(m.0.read().unwrap().inner.clone())
             }
         }
     }
@@ -530,7 +685,8 @@ pub struct MemoryTy {
 impl MemoryTy {
     #[cfg(not(feature = "wasmtime"))]
     pub fn to_memory_type(&self) -> Result<MemoryType> {
-        MemoryType::new(self.minimum, self.maximum).map_err(to_anyhow)
+        // wasmi 1.0: MemoryType::new doesn't return Result
+        Ok(MemoryType::new(self.minimum, self.maximum))
     }
 
     #[cfg(feature = "wasmtime")]
@@ -551,8 +707,9 @@ impl MemoryTy {
 impl From<&MemoryType> for MemoryTy {
     fn from(memory_type: &MemoryType) -> Self {
         MemoryTy {
-            minimum: memory_type.initial_pages().into(),
-            maximum: memory_type.maximum_pages().map(|v| v.into()),
+            // wasmi 1.0: minimum/maximum return u64, renamed from initial_pages/maximum_pages
+            minimum: memory_type.minimum() as u32,
+            maximum: memory_type.maximum().map(|v| v as u32),
             shared: false,
         }
     }

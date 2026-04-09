@@ -1,5 +1,8 @@
 [workspace]
-members = ["packages/wasm_run/native"]
+# wasm_run/native is the canonical location for the Rust native code
+members = [
+    "packages/wasm_run/native",
+]
 exclude = [
     "packages/rust_wasi_example",
     "packages/dart_wit_component",

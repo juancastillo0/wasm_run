@@ -1,15 +1,15 @@
 import 'dart:typed_data';
 
-import 'package:wasm_run/src/bridge_generated.dart';
+import 'package:wasm_run/src/rust/config.dart' show ModuleConfig, WasmRuntimeFeatures;
 import 'package:wasm_run/src/wasm_bindings/_wasm_interop_stub.dart'
     if (dart.library.io) '_wasm_interop_native.dart'
     if (dart.library.html) '_wasm_interop_web.dart' as platform_impl;
 import 'package:wasm_run/src/wasm_bindings/wasm_interface.dart';
 
-export 'package:wasm_run/src/bridge_generated.dart'
+// Re-export types from the generated files
+export 'package:wasm_run/src/rust/config.dart'
     show
         EnvVariable,
-        ExternalType,
         ModuleConfig,
         ModuleConfigWasmi,
         ModuleConfigWasmtime,
@@ -18,6 +18,13 @@ export 'package:wasm_run/src/bridge_generated.dart'
         WasmFeatures,
         WasmRuntimeFeatures,
         WasmWasiFeatures;
+export 'package:wasm_run/src/rust/types.dart'
+    show
+        ExternalType,
+        ExternalType_Func,
+        ExternalType_Global,
+        ExternalType_Memory,
+        ExternalType_Table;
 export 'package:wasm_run/src/wasm_bindings/wasm_interface.dart';
 
 // TODO(config): The default [ModuleConfig] used by [compileWasmModule].

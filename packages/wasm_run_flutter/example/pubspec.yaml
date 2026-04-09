@@ -19,7 +19,7 @@ publish_to: "none" # Remove this line if you wish to publish to pub.dev
 version: 1.0.0+1
 
 environment:
-  sdk: ">=2.19.0 <4.0.0"
+  sdk: ">=3.6.0 <4.0.0"
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -31,6 +31,7 @@ dependencies:
   flutter:
     sdk: flutter
 
+  path_provider: ^2.0.14
   wasm_run_flutter:
     # When depending on this package from a real application you should use:
     #   wasm_run_flutter: ^x.y.z
@@ -38,14 +39,13 @@ dependencies:
     # The example app is bundled with the plugin so we use a path dependency on
     # the parent directory to use the current plugin's version.
     path: ../
-  path_provider: ^2.0.14
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   integration_test:
     sdk: flutter
-  very_good_analysis: ^5.0.0
+  very_good_analysis: ^6.0.0
   wasm_run_example:
     path: ../../wasm_run/example
 

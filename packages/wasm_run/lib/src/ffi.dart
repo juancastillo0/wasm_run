@@ -1,23 +1,16 @@
 import 'dart:typed_data';
 
-import 'package:wasm_run/src/bridge_generated.dart';
+import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
+import 'package:wasm_run/src/rust/frb_generated.dart';
 import 'package:wasm_run/src/ffi/setup_dynamic_library.dart';
 import 'package:wasm_run/src/ffi/stub.dart'
     if (dart.library.io) 'ffi/io.dart'
     if (dart.library.html) 'ffi/web.dart';
 
-WasmRunDart? _wrapper;
+bool _initialized = false;
 
 final _alreadyInitialized =
     Exception('WasmRun bindings were already configured');
-
-WasmRunDart _createWrapper(ExternalLibrary lib) {
-  if (_wrapper != null) throw _alreadyInitialized;
-  _wrapper = createWrapperImpl(lib);
-  return _wrapper!;
-}
-
-WasmRunDart _createLib() => _createWrapper(createLibraryImpl());
 
 /// Executes a GET request to the [uri] and returns the body bytes.
 Future<Uint8List> getUriBodyBytes(Uri uri) => getUriBodyBytesImpl(uri);
@@ -40,6 +33,14 @@ class WasmRunLibrary {
 
   static const _isWeb = identical(0, 0.0);
 
+  /// Initialize the library with the provided external library.
+  /// Call this before using any wasm_run functions.
+  static Future<void> init({ExternalLibrary? externalLibrary}) async {
+    if (_initialized) return;
+    await RustLib.init(externalLibrary: externalLibrary);
+    _initialized = true;
+  }
+
   /// Sets the dynamic library to use for the native bindings.
   ///
   /// You may call [setUp] or execute the script `dart run wasm_run:setup`
@@ -52,15 +53,20 @@ class WasmRunLibrary {
   /// before using the package. The <nativeLibraryForYourPlatform> can be
   /// downloaded from the releases of the Github repository of the package:
   /// https://github.com/juancastillo0/wasm_run/releases
-  static void set(ExternalLibrary lib) {
-    _createWrapper(lib);
+  static Future<void> set(ExternalLibrary lib) async {
+    if (_initialized) throw _alreadyInitialized;
+    await RustLib.init(externalLibrary: lib);
+    _initialized = true;
   }
+
+  /// Returns whether the library has been initialized.
+  static bool get isInitialized => _initialized;
 
   /// Returns whether the dynamic library is reachable in the default locations
   /// for the current application or in the WASM_RUN_DART_DYNAMIC_LIBRARY
   /// environment variable.
   static bool isReachable() {
-    if (_isWeb || _wrapper != null) return true;
+    if (_isWeb || _initialized) return true;
     try {
       createLibraryImpl();
       return true;
@@ -91,22 +97,38 @@ class WasmRunLibrary {
         ),
       );
     }
-    if (override && _wrapper != null) throw _alreadyInitialized;
-    if (!override && isReachable()) return;
+    if (!override && _initialized) return;
+    if (override && _initialized) throw _alreadyInitialized;
+    if (!override && isReachable()) {
+      await init();
+      return;
+    }
     await setUpDesktopDynamicLibrary();
+    await init();
   }
 }
 
-WasmRunDart defaultInstance() {
-  if (_wrapper != null) {
-    return _wrapper!;
+/// Get the API instance. Initializes the library if not already initialized.
+RustLibApi api() {
+  if (!_initialized) {
+    throw StateError(
+      'WasmRunLibrary not initialized. Call WasmRunLibrary.init() or WasmRunLibrary.setUp() first.',
+    );
   }
+  // ignore: invalid_use_of_internal_member
+  return RustLib.instance.api;
+}
+
+/// Initialize the library with default settings if not already initialized.
+Future<void> ensureInitialized() async {
+  if (_initialized) return;
   try {
-    return _createLib();
+    final lib = createLibraryImpl();
+    await WasmRunLibrary.set(lib);
   } catch (_) {
     try {
       final externalLib = localTestingLibraryImpl();
-      return _createWrapper(externalLib);
+      await WasmRunLibrary.set(externalLib);
     } catch (_) {
       if (!WasmRunLibrary._isWeb) {
         print(
