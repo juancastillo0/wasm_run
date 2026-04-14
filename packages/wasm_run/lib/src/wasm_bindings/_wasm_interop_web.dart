@@ -271,7 +271,7 @@ class _Builder extends WasmInstanceBuilder {
     required int minSize,
     int? maxSize,
   }) {
-    final element = value.type == ValueTy.funcRef ? 'funcref' : 'externref';
+    final element = value.type == ValueTy.funcRef ? 'anyfunc' : 'externref';
     return _Table(
       Table(
         maxSize == null
@@ -617,15 +617,12 @@ WasmExternal _makeWasmFunction(JSFunction value, String? name) {
       List.filled((value['length']! as JSNumber).toDartInt, null);
   final function = WasmFunction(
     // TODO(migrationv1): more args
-    value.callAsFunction,
+    value as Function,
     name: name,
     params: params,
-    call: ([args]) {
-      final result = value.callMethod(
-        'apply'.toJS,
-        null,
-        args?.cast<JSAny?>().toJS,
-      );
+    call: ([List<Object?>? args]) {
+      final result = value.callMethod('apply'.toJS, value, args.jsify());
+
       if (result.isA<JSArray>()) return (result! as JSArray).toDart;
       if (result.isUndefined || isVoidReturn(result)) return const [];
       return List.filled(1, result);
@@ -667,6 +664,17 @@ class _SharedMemory extends _Memory implements WasmSharedMemory {
   }
 }
 
+/// A JavaScript `Uint8Array`.
+@JS('Uint8Array')
+extension type _JSUint8Array2._(JSObject _jsUint8Array) implements JSObject {
+  /// Creates a JavaScript `Uint8Array` with [buffer] as its backing storage,
+  /// offset by [byteOffset] bytes, of size [length].
+  ///
+  /// If no [buffer] is provided, creates an empty `Uint8Array`.
+  // ignore: unused_element_parameter
+  external _JSUint8Array2([JSObject buffer, int byteOffset, int length]);
+}
+
 class _Memory extends WasmMemory {
   final Memory memory;
   @override
@@ -679,14 +687,18 @@ class _Memory extends WasmMemory {
     memory.grow(deltaPages);
   }
 
+  // Necessary since the SharedArrayBuffer throws when casting to JSArrayBuffer
+  // https://github.com/dart-lang/sdk/issues/56455
+  JSObject get _buffer => memory['buffer']! as JSObject;
+
   @override
-  int get lengthInBytes => (memory.buffer['byteLength']! as JSNumber).toDartInt;
+  int get lengthInBytes => (_buffer['byteLength']! as JSNumber).toDartInt;
 
   @override
   int get lengthInPages => lengthInBytes >> 16;
 
   @override
-  Uint8List get view => Uint8List.view(memory.buffer.toDart);
+  Uint8List get view => (_JSUint8Array2(_buffer) as JSUint8Array).toDart;
 }
 
 class _Global extends WasmGlobal {
@@ -699,7 +711,10 @@ class _Global extends WasmGlobal {
     : type = type ?? _getGlobalType(global);
 
   @override
-  Object? get() => global.value;
+  Object? get() {
+    final v = global.value;
+    return v.isA<JSBoxedDartObject>() ? (v! as JSBoxedDartObject).toDart : v;
+  }
 
   @override
   void set(WasmValue value) {
@@ -734,7 +749,7 @@ class _Table extends WasmTable {
         (v! as JSFunction).has('length')) {
       return _makeWasmFunction(v as JSFunction, null);
     }
-    return v;
+    return v.isA<JSBoxedDartObject>() ? (v! as JSBoxedDartObject).toDart : v;
   }
 
   @override
@@ -785,7 +800,7 @@ Map<String, Object?> typeToJson(ExternalType ty) {
       'mutable': global.mutable,
     },
     (ExternalType_Table(field0: final table)) => {
-      'element': valueTypeToJson(table.element),
+      'element': valueTypeToJson(table.element).toLowerCase(),
       'minimum': table.minimum,
       'initial': table.minimum,
       if (table.maximum != null) 'maximum': table.maximum,
