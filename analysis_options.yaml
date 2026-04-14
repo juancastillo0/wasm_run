@@ -8,8 +8,7 @@ analyzer:
     strict-raw-types: true
 
   exclude:
-    - "packages/wasm_run/lib/src/bridge_generated.dart"
-    - "packages/wasm_run/lib/src/bridge_generated.web.dart"
+    - "packages/wasm_run/lib/src/rust/**.dart"
     #- '**.freezed.dart'
     #- '**.g.dart'
 

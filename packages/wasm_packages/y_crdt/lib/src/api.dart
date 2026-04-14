@@ -201,7 +201,6 @@ sealed class YValueI extends YValueAny {
 class YUndoManager {
   final UndoManagerRef _ref;
   final YCrdt _world;
-  YDocMethods get _m => _world._m;
 
   YUndoManager._(this._ref, this._world) {
     _world._undoManagerFinalizer.attach(this, _ref);

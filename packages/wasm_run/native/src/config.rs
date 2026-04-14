@@ -179,7 +179,8 @@ impl From<ModuleConfig> for wasmtime::Config {
             wtc.wasm_backtrace.map(|v| config.wasm_backtrace(v));
             wtc.native_unwind_info.map(|v| config.native_unwind_info(v));
             // wtc.epoch_interruption.map(|v| config.epoch_interruption(v));
-            wtc.max_wasm_stack.map(|v| config.max_wasm_stack(v as usize));
+            wtc.max_wasm_stack
+                .map(|v| config.max_wasm_stack(v as usize));
             wtc.wasm_simd.map(|v| config.wasm_simd(v));
             wtc.wasm_relaxed_simd.map(|v| config.wasm_relaxed_simd(v));
             wtc.relaxed_simd_deterministic

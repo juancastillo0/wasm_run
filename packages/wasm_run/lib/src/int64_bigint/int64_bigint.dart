@@ -29,10 +29,12 @@ class i64 {
   static I64 fromBigInt(BigInt value) => impl.int64FromBigIntImpl(value);
 
   /// Convert [I64] to [int]
-  static int toInt(I64 value) => impl.toIntImpl(value);
+  // ignore: unnecessary_cast
+  static int toInt(I64 value) => impl.toIntImpl(value as impl.I64);
 
   /// Convert [I64] to [BigInt]
-  static BigInt toBigInt(I64 value) => impl.toBigIntImpl(value);
+  // ignore: unnecessary_cast
+  static BigInt toBigInt(I64 value) => impl.toBigIntImpl(value as impl.I64);
 
   /// Read [I64] from [bytes] ([ByteData]) in [offset]
   static I64 getInt64(ByteData bytes, int offset, Endian endian) =>

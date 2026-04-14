@@ -3,8 +3,6 @@ library wasm_feature_detect;
 
 import 'dart:js_interop';
 
-import 'package:flutter_rust_bridge/flutter_rust_bridge.dart';
-
 @JS('wasmFeatureDetect')
 external WasmFeatureDetect get wasmFeatureDetect;
 

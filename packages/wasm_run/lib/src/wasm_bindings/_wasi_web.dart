@@ -122,7 +122,7 @@ class WasiStdio {
 }
 
 @JS('strace')
-external Object strace(Object instance, List<String> no_trace);
+external JSAny strace(Instance instance, JSArray<JSString> no_trace);
 
 @JS('Iovec')
 extension type Iovec._(JSObject _) implements JSObject {
@@ -259,17 +259,17 @@ extension type PrestatDirNameGet._(JSObject _) implements JSObject {
 @JS()
 extension type DirentGet._(JSObject _) implements JSObject {
   external int get ret;
-  external Object? get dirent;
+  external JSObject? get dirent;
 }
 
 @JS()
 extension type FdObjGet._(JSObject _) implements JSObject {
   external int get ret;
-  external Object? get fd_obj;
+  external JSObject? get fd_obj;
 }
 
 @JS()
 extension type DataGet._(JSObject _) implements JSObject {
   external int get ret;
-  external Object? get data;
+  external JSObject? get data;
 }

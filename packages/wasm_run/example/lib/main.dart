@@ -701,6 +701,7 @@ void testAll({TestArgs? testArgs}) {
 
     final l = ['2'];
     table.set(1, WasmValueRef.externRef(l));
+    expect(l, table.get(1));
     expect(identical(l, table.get(1)), true);
   });
 

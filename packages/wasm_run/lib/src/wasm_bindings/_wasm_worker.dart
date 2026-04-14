@@ -78,7 +78,7 @@ class WasmWorker {
     required List<WasmFunction> functions,
   }) {
     final sharedBuffer = SharedArrayBuffer(256);
-    final byteData = JSDataView(sharedBuffer).toDart;
+    final byteData = (_JSDataView2(sharedBuffer) as JSDataView).toDart;
     final worker = html.Worker(workersConfig.workerScriptUrl.toJS);
 
     final wasmWorker = WasmWorker._(
@@ -88,7 +88,9 @@ class WasmWorker {
       functions,
       byteData,
     );
-    worker.onerror = wasmWorker._onLoaded.completeError.toJS;
+    worker.onerror = (html.Event o) {
+      wasmWorker._onLoaded.completeError(o, StackTrace.current);
+    }.toJS;
 
     postMessageToWorker(
       worker,
@@ -185,7 +187,7 @@ class WasmWorker {
         _workersConfig.onWorkerMessage?.call(
           // TODO(migrationv1): test
           (data_['data'] is JSAny
-              ? (data_['data'] as JSAny).dartify()
+              ? (data_['data']! as JSAny).dartify()
               : data_['data']),
         );
         break;
@@ -221,8 +223,16 @@ class WasmWorker {
 
 // TODO(migrationv1): JSFunction get sharedArrayBufferConstructor;
 @JS('SharedArrayBuffer')
-extension type SharedArrayBuffer._(JSArrayBuffer _) implements JSArrayBuffer {
+extension type SharedArrayBuffer._(JSObject _) implements JSObject {
   external SharedArrayBuffer(int length, [JSObject options]);
+}
+
+@JS('DataView')
+extension type _JSDataView2._(JSObject _jsDataView) implements JSObject {
+  /// Creates a JavaScript `DataView` with [buffer] as its backing storage,
+  /// offset by [byteOffset] bytes, of size [byteLength].
+  // ignore: unused_element_parameter
+  external _JSDataView2(JSObject buffer, [int byteOffset, int byteLength]);
 }
 
 class _PostMessageResult {
