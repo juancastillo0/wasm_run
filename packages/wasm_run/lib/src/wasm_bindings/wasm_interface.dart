@@ -440,6 +440,7 @@ class WasmFunction extends WasmExternal {
     required this.results,
     this.name,
     List<Object?> Function([List<Object?>? args])? call,
+    this.jsFunction,
   }) : _call = call;
 
   /// Constructs a Wasm function with no results.
@@ -449,7 +450,8 @@ class WasmFunction extends WasmExternal {
     this.name,
     List<Object?> Function([List<Object?>? args])? call,
   }) : results = const [],
-       _call = call;
+       _call = call,
+       jsFunction = null;
 
   /// Optional name for debugging purposes.
   final String? name;
@@ -476,12 +478,17 @@ class WasmFunction extends WasmExternal {
   /// not be cast to a [List].
   final Function inner;
 
+  /// The [js_interop.JSFunction] that is called internally.
+  /// Saved for maintaining the same reference with JS.
+  /// // TODO(migrationv1): validate whether this is necessary
+  final Object? jsFunction;
+
   final List<Object?> Function([List<Object?>? args])? _call;
 
   /// Invokes [inner] with the given [args]
   /// and casts the result to a [List] of Dart values.
   List<Object?> call([List<Object?>? args]) {
-    if (_call != null) return _call!(args);
+    if (_call != null) return _call(args);
 
     // `?? const []` is required for dart2js
     final values = Function.apply(inner, args ?? const []);

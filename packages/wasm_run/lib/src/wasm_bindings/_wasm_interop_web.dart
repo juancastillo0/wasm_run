@@ -10,6 +10,7 @@ import 'package:wasm_run/src/wasm_bindings/_atomics_web.dart';
 import 'package:wasm_run/src/wasm_bindings/_wasi_web.dart';
 import 'package:wasm_run/src/wasm_bindings/_wasm_feature_detect_web.dart';
 import 'package:wasm_run/src/wasm_bindings/_wasm_worker.dart';
+import 'package:wasm_run/src/wasm_bindings/make_function_num_args.web.dart';
 import 'package:wasm_run/src/wasm_bindings/wasm.dart';
 import 'package:web/web.dart';
 
@@ -338,16 +339,16 @@ class _Builder extends WasmInstanceBuilder {
     return _Instance(this, instance, workers);
   }
 
-  Map<String, Map<String, Object>> _mapImports() {
+  Map<String, Map<String, JSAny>> _mapImports() {
     final mappedImports = importMap.map(
       (key, value) => MapEntry(
         key,
         value.map((key, value) {
-          final mapped = value.when(
+          final mapped = value.when<JSAny>(
             memory: (memory) => (memory as _Memory).memory,
             table: (table) => (table as _Table).table,
             global: (global) => (global as _Global).global,
-            function: (function) => function.inner,
+            function: wasmFunctionToJS,
           );
           return MapEntry(key, mapped);
         }),
@@ -629,6 +630,7 @@ WasmExternal _makeWasmFunction(JSFunction value, String? name) {
     },
     // results is not supported on web https://github.com/WebAssembly/js-types/blob/main/proposals/js-types/Overview.md
     results: ty?.results,
+    jsFunction: value,
   );
   return function;
 }
@@ -733,12 +735,7 @@ class _Table extends WasmTable {
 
   @override
   void set(int index, WasmValue value) {
-    if (value.type == ValueTy.funcRef && value.value is WasmFunction) {
-      final v = value.value! as WasmFunction;
-      table.set(index, v.inner.toJS);
-    } else {
-      table.set(index, wasmValueToJS(value));
-    }
+    table.set(index, wasmValueToJS(value));
   }
 
   @override
@@ -869,16 +866,36 @@ Map<String, Object?>? _getType(JSObject value) {
 }
 
 JSAny? wasmValueToJS(WasmValue value) {
+  final v = value.value;
   return switch (value.type) {
-    ValueTy.i32 => (value.value as int?)?.toJS,
-    ValueTy.i64 => value.value as JSBigInt?,
-    ValueTy.f32 => (value.value as double?)?.toJS,
-    ValueTy.f64 => (value.value as double?)?.toJS,
+    ValueTy.i32 => (v as int?)?.toJS,
+    ValueTy.i64 => v as JSBigInt?,
+    ValueTy.f32 => (v as double?)?.toJS,
+    ValueTy.f64 => (v as double?)?.toJS,
     ValueTy.v128 => throw Exception(
       'v128 external values are not supported on JavaScript',
     ),
-    ValueTy.externRef => value.value?.toJSBox,
+    ValueTy.externRef => () {
+      try {
+        return v?.toJSBox;
+      } catch (_) {
+        return v! as JSAny;
+      }
+    }(),
     // TODO(migrationv1): should we use toJSBox?
-    ValueTy.funcRef => (value.value as WasmFunction?)?.inner.toJS,
+    ValueTy.funcRef => v == null ? null : wasmFunctionToJS(v as WasmFunction),
   };
+}
+
+JSFunction wasmFunctionToJS(WasmFunction v) {
+  return v.jsFunction as JSFunction? ??
+      // TODO(migrationv1): test
+      makeFunctionNumArgsJS(v.numberOfParameters, (List<Object?> a) {
+        final r = v.call(a);
+        return switch (r.length) {
+          0 => null,
+          1 => r[0],
+          _ => r,
+        };
+      });
 }
