@@ -3,12 +3,8 @@
 
 // ignore_for_file: invalid_use_of_internal_member, unused_import, unnecessary_import
 
+import 'frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
-import 'package:wasm_run/src/rust/frb_generated.dart';
-import 'package:wasm_run/src/wasm_bindings/wasm.dart' show WasmInstance;
-import 'package:wasm_run/src/wasm_bindings/wasm_interface.dart'
-    show WasmInstance;
-import 'package:wasm_run/wasm_run.dart' show WasmInstance;
 
 class EnvVariable {
   /// The name of the environment variable

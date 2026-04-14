@@ -3,18 +3,17 @@
 
 // ignore_for_file: unused_import, unused_element, unnecessary_import, duplicate_ignore, invalid_use_of_internal_member, annotate_overrides, non_constant_identifier_names, curly_braces_in_flow_control_structures, prefer_const_literals_to_create_immutables, unused_field
 
+import 'api.dart';
+import 'atomics.dart';
+import 'config.dart';
 import 'dart:async';
 import 'dart:convert';
-
-import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
-import 'package:wasm_run/src/rust/api.dart';
-import 'package:wasm_run/src/rust/atomics.dart';
-import 'package:wasm_run/src/rust/config.dart';
-import 'package:wasm_run/src/rust/frb_generated.dart';
-import 'package:wasm_run/src/rust/frb_generated.io.dart'
+import 'frb_generated.dart';
+import 'frb_generated.io.dart'
     if (dart.library.js_interop) 'frb_generated.web.dart';
-import 'package:wasm_run/src/rust/lib.dart';
-import 'package:wasm_run/src/rust/types.dart';
+import 'lib.dart';
+import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
+import 'types.dart';
 
 /// Main entrypoint of the Rust API
 class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
@@ -492,11 +491,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
-          final arg0 = cst_encode_box_autoadd_atomics(that);
-          final arg1 = cst_encode_i_64(offset);
-          final arg2 = cst_encode_atomic_kind(kind);
-          final arg3 = cst_encode_i_64(val);
-          final arg4 = cst_encode_atomic_ordering(order);
+          var arg0 = cst_encode_box_autoadd_atomics(that);
+          var arg1 = cst_encode_i_64(offset);
+          var arg2 = cst_encode_atomic_kind(kind);
+          var arg3 = cst_encode_i_64(val);
+          var arg4 = cst_encode_atomic_ordering(order);
           return wire.wire__crate__atomics__atomics_add(
             port_,
             arg0,
@@ -518,8 +517,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateAtomicsAtomicsAddConstMeta => const TaskConstMeta(
-    debugName: 'atomics_add',
-    argNames: ['that', 'offset', 'kind', 'val', 'order'],
+    debugName: "atomics_add",
+    argNames: ["that", "offset", "kind", "val", "order"],
   );
 
   @override
@@ -533,11 +532,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
-          final arg0 = cst_encode_box_autoadd_atomics(that);
-          final arg1 = cst_encode_i_64(offset);
-          final arg2 = cst_encode_atomic_kind(kind);
-          final arg3 = cst_encode_i_64(val);
-          final arg4 = cst_encode_atomic_ordering(order);
+          var arg0 = cst_encode_box_autoadd_atomics(that);
+          var arg1 = cst_encode_i_64(offset);
+          var arg2 = cst_encode_atomic_kind(kind);
+          var arg3 = cst_encode_i_64(val);
+          var arg4 = cst_encode_atomic_ordering(order);
           return wire.wire__crate__atomics__atomics_and(
             port_,
             arg0,
@@ -559,8 +558,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateAtomicsAtomicsAndConstMeta => const TaskConstMeta(
-    debugName: 'atomics_and',
-    argNames: ['that', 'offset', 'kind', 'val', 'order'],
+    debugName: "atomics_and",
+    argNames: ["that", "offset", "kind", "val", "order"],
   );
 
   @override
@@ -576,13 +575,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
-          final arg0 = cst_encode_box_autoadd_atomics(that);
-          final arg1 = cst_encode_i_64(offset);
-          final arg2 = cst_encode_atomic_kind(kind);
-          final arg3 = cst_encode_i_64(current);
-          final arg4 = cst_encode_i_64(newValue);
-          final arg5 = cst_encode_atomic_ordering(success);
-          final arg6 = cst_encode_atomic_ordering(failure);
+          var arg0 = cst_encode_box_autoadd_atomics(that);
+          var arg1 = cst_encode_i_64(offset);
+          var arg2 = cst_encode_atomic_kind(kind);
+          var arg3 = cst_encode_i_64(current);
+          var arg4 = cst_encode_i_64(newValue);
+          var arg5 = cst_encode_atomic_ordering(success);
+          var arg6 = cst_encode_atomic_ordering(failure);
           return wire.wire__crate__atomics__atomics_compare_exchange(
             port_,
             arg0,
@@ -607,15 +606,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   TaskConstMeta get kCrateAtomicsAtomicsCompareExchangeConstMeta =>
       const TaskConstMeta(
-        debugName: 'atomics_compare_exchange',
+        debugName: "atomics_compare_exchange",
         argNames: [
-          'that',
-          'offset',
-          'kind',
-          'current',
-          'newValue',
-          'success',
-          'failure',
+          "that",
+          "offset",
+          "kind",
+          "current",
+          "newValue",
+          "success",
+          "failure",
         ],
       );
 
@@ -629,10 +628,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
-          final arg0 = cst_encode_box_autoadd_atomics(that);
-          final arg1 = cst_encode_i_64(offset);
-          final arg2 = cst_encode_atomic_kind(kind);
-          final arg3 = cst_encode_atomic_ordering(order);
+          var arg0 = cst_encode_box_autoadd_atomics(that);
+          var arg1 = cst_encode_i_64(offset);
+          var arg2 = cst_encode_atomic_kind(kind);
+          var arg3 = cst_encode_atomic_ordering(order);
           return wire.wire__crate__atomics__atomics_load(
             port_,
             arg0,
@@ -653,8 +652,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateAtomicsAtomicsLoadConstMeta => const TaskConstMeta(
-    debugName: 'atomics_load',
-    argNames: ['that', 'offset', 'kind', 'order'],
+    debugName: "atomics_load",
+    argNames: ["that", "offset", "kind", "order"],
   );
 
   @override
@@ -668,11 +667,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
-          final arg0 = cst_encode_box_autoadd_atomics(that);
-          final arg1 = cst_encode_i_64(offset);
-          final arg2 = cst_encode_atomic_kind(kind);
-          final arg3 = cst_encode_i_64(val);
-          final arg4 = cst_encode_atomic_ordering(order);
+          var arg0 = cst_encode_box_autoadd_atomics(that);
+          var arg1 = cst_encode_i_64(offset);
+          var arg2 = cst_encode_atomic_kind(kind);
+          var arg3 = cst_encode_i_64(val);
+          var arg4 = cst_encode_atomic_ordering(order);
           return wire.wire__crate__atomics__atomics_or(
             port_,
             arg0,
@@ -694,8 +693,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateAtomicsAtomicsOrConstMeta => const TaskConstMeta(
-    debugName: 'atomics_or',
-    argNames: ['that', 'offset', 'kind', 'val', 'order'],
+    debugName: "atomics_or",
+    argNames: ["that", "offset", "kind", "val", "order"],
   );
 
   @override
@@ -709,11 +708,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
-          final arg0 = cst_encode_box_autoadd_atomics(that);
-          final arg1 = cst_encode_i_64(offset);
-          final arg2 = cst_encode_atomic_kind(kind);
-          final arg3 = cst_encode_i_64(val);
-          final arg4 = cst_encode_atomic_ordering(order);
+          var arg0 = cst_encode_box_autoadd_atomics(that);
+          var arg1 = cst_encode_i_64(offset);
+          var arg2 = cst_encode_atomic_kind(kind);
+          var arg3 = cst_encode_i_64(val);
+          var arg4 = cst_encode_atomic_ordering(order);
           return wire.wire__crate__atomics__atomics_store(
             port_,
             arg0,
@@ -735,8 +734,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateAtomicsAtomicsStoreConstMeta => const TaskConstMeta(
-    debugName: 'atomics_store',
-    argNames: ['that', 'offset', 'kind', 'val', 'order'],
+    debugName: "atomics_store",
+    argNames: ["that", "offset", "kind", "val", "order"],
   );
 
   @override
@@ -750,11 +749,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
-          final arg0 = cst_encode_box_autoadd_atomics(that);
-          final arg1 = cst_encode_i_64(offset);
-          final arg2 = cst_encode_atomic_kind(kind);
-          final arg3 = cst_encode_i_64(val);
-          final arg4 = cst_encode_atomic_ordering(order);
+          var arg0 = cst_encode_box_autoadd_atomics(that);
+          var arg1 = cst_encode_i_64(offset);
+          var arg2 = cst_encode_atomic_kind(kind);
+          var arg3 = cst_encode_i_64(val);
+          var arg4 = cst_encode_atomic_ordering(order);
           return wire.wire__crate__atomics__atomics_sub(
             port_,
             arg0,
@@ -776,8 +775,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateAtomicsAtomicsSubConstMeta => const TaskConstMeta(
-    debugName: 'atomics_sub',
-    argNames: ['that', 'offset', 'kind', 'val', 'order'],
+    debugName: "atomics_sub",
+    argNames: ["that", "offset", "kind", "val", "order"],
   );
 
   @override
@@ -791,11 +790,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
-          final arg0 = cst_encode_box_autoadd_atomics(that);
-          final arg1 = cst_encode_i_64(offset);
-          final arg2 = cst_encode_atomic_kind(kind);
-          final arg3 = cst_encode_i_64(val);
-          final arg4 = cst_encode_atomic_ordering(order);
+          var arg0 = cst_encode_box_autoadd_atomics(that);
+          var arg1 = cst_encode_i_64(offset);
+          var arg2 = cst_encode_atomic_kind(kind);
+          var arg3 = cst_encode_i_64(val);
+          var arg4 = cst_encode_atomic_ordering(order);
           return wire.wire__crate__atomics__atomics_swap(
             port_,
             arg0,
@@ -817,8 +816,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateAtomicsAtomicsSwapConstMeta => const TaskConstMeta(
-    debugName: 'atomics_swap',
-    argNames: ['that', 'offset', 'kind', 'val', 'order'],
+    debugName: "atomics_swap",
+    argNames: ["that", "offset", "kind", "val", "order"],
   );
 
   @override
@@ -832,11 +831,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
-          final arg0 = cst_encode_box_autoadd_atomics(that);
-          final arg1 = cst_encode_i_64(offset);
-          final arg2 = cst_encode_atomic_kind(kind);
-          final arg3 = cst_encode_i_64(val);
-          final arg4 = cst_encode_atomic_ordering(order);
+          var arg0 = cst_encode_box_autoadd_atomics(that);
+          var arg1 = cst_encode_i_64(offset);
+          var arg2 = cst_encode_atomic_kind(kind);
+          var arg3 = cst_encode_i_64(val);
+          var arg4 = cst_encode_atomic_ordering(order);
           return wire.wire__crate__atomics__atomics_xor(
             port_,
             arg0,
@@ -858,8 +857,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateAtomicsAtomicsXorConstMeta => const TaskConstMeta(
-    debugName: 'atomics_xor',
-    argNames: ['that', 'offset', 'kind', 'val', 'order'],
+    debugName: "atomics_xor",
+    argNames: ["that", "offset", "kind", "val", "order"],
   );
 
   @override
@@ -870,8 +869,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
-          final arg0 = cst_encode_list_prim_u_8_loose(moduleWasm);
-          final arg1 = cst_encode_box_autoadd_module_config(config);
+          var arg0 = cst_encode_list_prim_u_8_loose(moduleWasm);
+          var arg1 = cst_encode_box_autoadd_module_config(config);
           return wire.wire__crate__api__compile_wasm(port_, arg0, arg1);
         },
         codec: DcoCodec(
@@ -886,8 +885,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateApiCompileWasmConstMeta => const TaskConstMeta(
-    debugName: 'compile_wasm',
-    argNames: ['moduleWasm', 'config'],
+    debugName: "compile_wasm",
+    argNames: ["moduleWasm", "config"],
   );
 
   @override
@@ -898,8 +897,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 = cst_encode_list_prim_u_8_loose(moduleWasm);
-          final arg1 = cst_encode_box_autoadd_module_config(config);
+          var arg0 = cst_encode_list_prim_u_8_loose(moduleWasm);
+          var arg1 = cst_encode_box_autoadd_module_config(config);
           return wire.wire__crate__api__compile_wasm_sync(arg0, arg1);
         },
         codec: DcoCodec(
@@ -914,8 +913,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateApiCompileWasmSyncConstMeta => const TaskConstMeta(
-    debugName: 'compile_wasm_sync',
-    argNames: ['moduleWasm', 'config'],
+    debugName: "compile_wasm_sync",
+    argNames: ["moduleWasm", "config"],
   );
 
   @override
@@ -926,8 +925,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 = cst_encode_box_autoadd_compiled_module(that);
-          final arg1 = cst_encode_box_autoadd_memory_ty(memoryType);
+          var arg0 = cst_encode_box_autoadd_compiled_module(that);
+          var arg1 = cst_encode_box_autoadd_memory_ty(memoryType);
           return wire.wire__crate__api__compiled_module_create_shared_memory(
             arg0,
             arg1,
@@ -946,8 +945,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   TaskConstMeta get kCrateApiCompiledModuleCreateSharedMemoryConstMeta =>
       const TaskConstMeta(
-        debugName: 'compiled_module_create_shared_memory',
-        argNames: ['that', 'memoryType'],
+        debugName: "compiled_module_create_shared_memory",
+        argNames: ["that", "memoryType"],
       );
 
   @override
@@ -957,7 +956,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 = cst_encode_box_autoadd_compiled_module(that);
+          var arg0 = cst_encode_box_autoadd_compiled_module(that);
           return wire.wire__crate__api__compiled_module_get_module_exports(
             arg0,
           );
@@ -975,8 +974,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   TaskConstMeta get kCrateApiCompiledModuleGetModuleExportsConstMeta =>
       const TaskConstMeta(
-        debugName: 'compiled_module_get_module_exports',
-        argNames: ['that'],
+        debugName: "compiled_module_get_module_exports",
+        argNames: ["that"],
       );
 
   @override
@@ -986,7 +985,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 = cst_encode_box_autoadd_compiled_module(that);
+          var arg0 = cst_encode_box_autoadd_compiled_module(that);
           return wire.wire__crate__api__compiled_module_get_module_imports(
             arg0,
           );
@@ -1004,8 +1003,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   TaskConstMeta get kCrateApiCompiledModuleGetModuleImportsConstMeta =>
       const TaskConstMeta(
-        debugName: 'compiled_module_get_module_imports',
-        argNames: ['that'],
+        debugName: "compiled_module_get_module_imports",
+        argNames: ["that"],
       );
 
   @override
@@ -1017,11 +1016,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 = cst_encode_box_autoadd_compiled_module(module);
-          final arg1 = cst_encode_opt_box_autoadd_u_32(numThreads);
-          final arg2 = cst_encode_opt_box_autoadd_wasi_config_native(
-            wasiConfig,
-          );
+          var arg0 = cst_encode_box_autoadd_compiled_module(module);
+          var arg1 = cst_encode_opt_box_autoadd_u_32(numThreads);
+          var arg2 = cst_encode_opt_box_autoadd_wasi_config_native(wasiConfig);
           return wire.wire__crate__api__module_builder(arg0, arg1, arg2);
         },
         codec: DcoCodec(
@@ -1036,8 +1033,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateApiModuleBuilderConstMeta => const TaskConstMeta(
-    debugName: 'module_builder',
-    argNames: ['module', 'numThreads', 'wasiConfig'],
+    debugName: "module_builder",
+    argNames: ["module", "numThreads", "wasiConfig"],
   );
 
   @override
@@ -1045,7 +1042,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
-          final arg0 = cst_encode_String(wat);
+          var arg0 = cst_encode_String(wat);
           return wire.wire__crate__api__parse_wat_format(port_, arg0);
         },
         codec: DcoCodec(
@@ -1060,14 +1057,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateApiParseWatFormatConstMeta =>
-      const TaskConstMeta(debugName: 'parse_wat_format', argNames: ['wat']);
+      const TaskConstMeta(debugName: "parse_wat_format", argNames: ["wat"]);
 
   @override
   WasmFeatures crateApiWasmFeaturesForConfig({required ModuleConfig config}) {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 = cst_encode_box_autoadd_module_config(config);
+          var arg0 = cst_encode_box_autoadd_module_config(config);
           return wire.wire__crate__api__wasm_features_for_config(arg0);
         },
         codec: DcoCodec(
@@ -1083,8 +1080,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   TaskConstMeta get kCrateApiWasmFeaturesForConfigConstMeta =>
       const TaskConstMeta(
-        debugName: 'wasm_features_for_config',
-        argNames: ['config'],
+        debugName: "wasm_features_for_config",
+        argNames: ["config"],
       );
 
   @override
@@ -1094,7 +1091,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 = cst_encode_box_autoadd_wasm_run_instance_id(that);
+          var arg0 = cst_encode_box_autoadd_wasm_run_instance_id(that);
           return wire.wire__crate__api__wasm_run_instance_id_exports(arg0);
         },
         codec: DcoCodec(
@@ -1110,8 +1107,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   TaskConstMeta get kCrateApiWasmRunInstanceIdExportsConstMeta =>
       const TaskConstMeta(
-        debugName: 'wasm_run_instance_id_exports',
-        argNames: ['that'],
+        debugName: "wasm_run_instance_id_exports",
+        argNames: ["that"],
       );
 
   @override
@@ -1122,8 +1119,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 = cst_encode_box_autoadd_wasm_run_module_id(that);
-          final arg1 = cst_encode_i_64(delta);
+          var arg0 = cst_encode_box_autoadd_wasm_run_module_id(that);
+          var arg1 = cst_encode_i_64(delta);
           return wire.wire__crate__api__wasm_run_module_id_add_fuel(arg0, arg1);
         },
         codec: DcoCodec(
@@ -1139,8 +1136,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   TaskConstMeta get kCrateApiWasmRunModuleIdAddFuelConstMeta =>
       const TaskConstMeta(
-        debugName: 'wasm_run_module_id_add_fuel',
-        argNames: ['that', 'delta'],
+        debugName: "wasm_run_module_id_add_fuel",
+        argNames: ["that", "delta"],
       );
 
   @override
@@ -1152,9 +1149,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
-          final arg0 = cst_encode_box_autoadd_wasm_run_module_id(that);
-          final arg1 = cst_encode_RustOpaque_WFunc(func);
-          final arg2 = cst_encode_list_wasm_val(args);
+          var arg0 = cst_encode_box_autoadd_wasm_run_module_id(that);
+          var arg1 = cst_encode_RustOpaque_WFunc(func);
+          var arg2 = cst_encode_list_wasm_val(args);
           return wire.wire__crate__api__wasm_run_module_id_call_function_handle(
             port_,
             arg0,
@@ -1175,8 +1172,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   TaskConstMeta get kCrateApiWasmRunModuleIdCallFunctionHandleConstMeta =>
       const TaskConstMeta(
-        debugName: 'wasm_run_module_id_call_function_handle',
-        argNames: ['that', 'func', 'args'],
+        debugName: "wasm_run_module_id_call_function_handle",
+        argNames: ["that", "func", "args"],
       );
 
   @override
@@ -1191,13 +1188,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       handler.executeNormal(
         NormalTask(
           callFfi: (port_) {
-            final arg0 = cst_encode_box_autoadd_wasm_run_module_id(that);
-            final arg1 = cst_encode_String(funcName);
-            final arg2 = cst_encode_list_wasm_val(args);
-            final arg3 = cst_encode_u_32(numTasks);
-            final arg4 = cst_encode_StreamSink_parallel_exec_Dco(
-              functionStream,
-            );
+            var arg0 = cst_encode_box_autoadd_wasm_run_module_id(that);
+            var arg1 = cst_encode_String(funcName);
+            var arg2 = cst_encode_list_wasm_val(args);
+            var arg3 = cst_encode_u_32(numTasks);
+            var arg4 = cst_encode_StreamSink_parallel_exec_Dco(functionStream);
             return wire
                 .wire__crate__api__wasm_run_module_id_call_function_handle_parallel(
                   port_,
@@ -1225,8 +1220,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   TaskConstMeta
   get kCrateApiWasmRunModuleIdCallFunctionHandleParallelConstMeta =>
       const TaskConstMeta(
-        debugName: 'wasm_run_module_id_call_function_handle_parallel',
-        argNames: ['that', 'funcName', 'args', 'numTasks', 'functionStream'],
+        debugName: "wasm_run_module_id_call_function_handle_parallel",
+        argNames: ["that", "funcName", "args", "numTasks", "functionStream"],
       );
 
   @override
@@ -1238,9 +1233,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 = cst_encode_box_autoadd_wasm_run_module_id(that);
-          final arg1 = cst_encode_RustOpaque_WFunc(func);
-          final arg2 = cst_encode_list_wasm_val(args);
+          var arg0 = cst_encode_box_autoadd_wasm_run_module_id(that);
+          var arg1 = cst_encode_RustOpaque_WFunc(func);
+          var arg2 = cst_encode_list_wasm_val(args);
           return wire
               .wire__crate__api__wasm_run_module_id_call_function_handle_sync(
                 arg0,
@@ -1261,8 +1256,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   TaskConstMeta get kCrateApiWasmRunModuleIdCallFunctionHandleSyncConstMeta =>
       const TaskConstMeta(
-        debugName: 'wasm_run_module_id_call_function_handle_sync',
-        argNames: ['that', 'func', 'args'],
+        debugName: "wasm_run_module_id_call_function_handle_sync",
+        argNames: ["that", "func", "args"],
       );
 
   @override
@@ -1273,8 +1268,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 = cst_encode_box_autoadd_wasm_run_module_id(that);
-          final arg1 = cst_encode_i_64(delta);
+          var arg0 = cst_encode_box_autoadd_wasm_run_module_id(that);
+          var arg1 = cst_encode_i_64(delta);
           return wire.wire__crate__api__wasm_run_module_id_consume_fuel(
             arg0,
             arg1,
@@ -1293,8 +1288,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   TaskConstMeta get kCrateApiWasmRunModuleIdConsumeFuelConstMeta =>
       const TaskConstMeta(
-        debugName: 'wasm_run_module_id_consume_fuel',
-        argNames: ['that', 'delta'],
+        debugName: "wasm_run_module_id_consume_fuel",
+        argNames: ["that", "delta"],
       );
 
   @override
@@ -1308,11 +1303,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 = cst_encode_box_autoadd_wasm_run_module_id(that);
-          final arg1 = cst_encode_i_64(functionPointer);
-          final arg2 = cst_encode_u_32(functionId);
-          final arg3 = cst_encode_list_value_ty(paramTypes);
-          final arg4 = cst_encode_list_value_ty(resultTypes);
+          var arg0 = cst_encode_box_autoadd_wasm_run_module_id(that);
+          var arg1 = cst_encode_i_64(functionPointer);
+          var arg2 = cst_encode_u_32(functionId);
+          var arg3 = cst_encode_list_value_ty(paramTypes);
+          var arg4 = cst_encode_list_value_ty(resultTypes);
           return wire.wire__crate__api__wasm_run_module_id_create_function(
             arg0,
             arg1,
@@ -1334,13 +1329,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   TaskConstMeta get kCrateApiWasmRunModuleIdCreateFunctionConstMeta =>
       const TaskConstMeta(
-        debugName: 'wasm_run_module_id_create_function',
+        debugName: "wasm_run_module_id_create_function",
         argNames: [
-          'that',
-          'functionPointer',
-          'functionId',
-          'paramTypes',
-          'resultTypes',
+          "that",
+          "functionPointer",
+          "functionId",
+          "paramTypes",
+          "resultTypes",
         ],
       );
 
@@ -1353,9 +1348,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 = cst_encode_box_autoadd_wasm_run_module_id(that);
-          final arg1 = cst_encode_box_autoadd_wasm_val(value);
-          final arg2 = cst_encode_bool(mutable);
+          var arg0 = cst_encode_box_autoadd_wasm_run_module_id(that);
+          var arg1 = cst_encode_box_autoadd_wasm_val(value);
+          var arg2 = cst_encode_bool(mutable);
           return wire.wire__crate__api__wasm_run_module_id_create_global(
             arg0,
             arg1,
@@ -1375,8 +1370,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   TaskConstMeta get kCrateApiWasmRunModuleIdCreateGlobalConstMeta =>
       const TaskConstMeta(
-        debugName: 'wasm_run_module_id_create_global',
-        argNames: ['that', 'value', 'mutable'],
+        debugName: "wasm_run_module_id_create_global",
+        argNames: ["that", "value", "mutable"],
       );
 
   @override
@@ -1387,8 +1382,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 = cst_encode_box_autoadd_wasm_run_module_id(that);
-          final arg1 = cst_encode_box_autoadd_memory_ty(memoryType);
+          var arg0 = cst_encode_box_autoadd_wasm_run_module_id(that);
+          var arg1 = cst_encode_box_autoadd_memory_ty(memoryType);
           return wire.wire__crate__api__wasm_run_module_id_create_memory(
             arg0,
             arg1,
@@ -1407,8 +1402,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   TaskConstMeta get kCrateApiWasmRunModuleIdCreateMemoryConstMeta =>
       const TaskConstMeta(
-        debugName: 'wasm_run_module_id_create_memory',
-        argNames: ['that', 'memoryType'],
+        debugName: "wasm_run_module_id_create_memory",
+        argNames: ["that", "memoryType"],
       );
 
   @override
@@ -1420,9 +1415,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 = cst_encode_box_autoadd_wasm_run_module_id(that);
-          final arg1 = cst_encode_box_autoadd_wasm_val(value);
-          final arg2 = cst_encode_box_autoadd_table_args(tableType);
+          var arg0 = cst_encode_box_autoadd_wasm_run_module_id(that);
+          var arg1 = cst_encode_box_autoadd_wasm_val(value);
+          var arg2 = cst_encode_box_autoadd_table_args(tableType);
           return wire.wire__crate__api__wasm_run_module_id_create_table(
             arg0,
             arg1,
@@ -1442,8 +1437,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   TaskConstMeta get kCrateApiWasmRunModuleIdCreateTableConstMeta =>
       const TaskConstMeta(
-        debugName: 'wasm_run_module_id_create_table',
-        argNames: ['that', 'value', 'tableType'],
+        debugName: "wasm_run_module_id_create_table",
+        argNames: ["that", "value", "tableType"],
       );
 
   @override
@@ -1451,7 +1446,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
-          final arg0 = cst_encode_box_autoadd_wasm_run_module_id(that);
+          var arg0 = cst_encode_box_autoadd_wasm_run_module_id(that);
           return wire.wire__crate__api__wasm_run_module_id_dispose(port_, arg0);
         },
         codec: DcoCodec(
@@ -1467,8 +1462,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   TaskConstMeta get kCrateApiWasmRunModuleIdDisposeConstMeta =>
       const TaskConstMeta(
-        debugName: 'wasm_run_module_id_dispose',
-        argNames: ['that'],
+        debugName: "wasm_run_module_id_dispose",
+        argNames: ["that"],
       );
 
   @override
@@ -1482,11 +1477,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 = cst_encode_box_autoadd_wasm_run_module_id(that);
-          final arg1 = cst_encode_RustOpaque_Table(table);
-          final arg2 = cst_encode_u_32(index);
-          final arg3 = cst_encode_box_autoadd_wasm_val(value);
-          final arg4 = cst_encode_u_32(len);
+          var arg0 = cst_encode_box_autoadd_wasm_run_module_id(that);
+          var arg1 = cst_encode_RustOpaque_Table(table);
+          var arg2 = cst_encode_u_32(index);
+          var arg3 = cst_encode_box_autoadd_wasm_val(value);
+          var arg4 = cst_encode_u_32(len);
           return wire.wire__crate__api__wasm_run_module_id_fill_table(
             arg0,
             arg1,
@@ -1508,8 +1503,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   TaskConstMeta get kCrateApiWasmRunModuleIdFillTableConstMeta =>
       const TaskConstMeta(
-        debugName: 'wasm_run_module_id_fill_table',
-        argNames: ['that', 'table', 'index', 'value', 'len'],
+        debugName: "wasm_run_module_id_fill_table",
+        argNames: ["that", "table", "index", "value", "len"],
       );
 
   @override
@@ -1519,7 +1514,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 = cst_encode_box_autoadd_wasm_run_module_id(that);
+          var arg0 = cst_encode_box_autoadd_wasm_run_module_id(that);
           return wire.wire__crate__api__wasm_run_module_id_fuel_consumed(arg0);
         },
         codec: DcoCodec(
@@ -1535,8 +1530,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   TaskConstMeta get kCrateApiWasmRunModuleIdFuelConsumedConstMeta =>
       const TaskConstMeta(
-        debugName: 'wasm_run_module_id_fuel_consumed',
-        argNames: ['that'],
+        debugName: "wasm_run_module_id_fuel_consumed",
+        argNames: ["that"],
       );
 
   @override
@@ -1547,8 +1542,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 = cst_encode_box_autoadd_wasm_run_module_id(that);
-          final arg1 = cst_encode_RustOpaque_WFunc(func);
+          var arg0 = cst_encode_box_autoadd_wasm_run_module_id(that);
+          var arg1 = cst_encode_RustOpaque_WFunc(func);
           return wire.wire__crate__api__wasm_run_module_id_get_function_type(
             arg0,
             arg1,
@@ -1567,8 +1562,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   TaskConstMeta get kCrateApiWasmRunModuleIdGetFunctionTypeConstMeta =>
       const TaskConstMeta(
-        debugName: 'wasm_run_module_id_get_function_type',
-        argNames: ['that', 'func'],
+        debugName: "wasm_run_module_id_get_function_type",
+        argNames: ["that", "func"],
       );
 
   @override
@@ -1579,8 +1574,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 = cst_encode_box_autoadd_wasm_run_module_id(that);
-          final arg1 = cst_encode_RustOpaque_Global(global);
+          var arg0 = cst_encode_box_autoadd_wasm_run_module_id(that);
+          var arg1 = cst_encode_RustOpaque_Global(global);
           return wire.wire__crate__api__wasm_run_module_id_get_global_type(
             arg0,
             arg1,
@@ -1599,8 +1594,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   TaskConstMeta get kCrateApiWasmRunModuleIdGetGlobalTypeConstMeta =>
       const TaskConstMeta(
-        debugName: 'wasm_run_module_id_get_global_type',
-        argNames: ['that', 'global'],
+        debugName: "wasm_run_module_id_get_global_type",
+        argNames: ["that", "global"],
       );
 
   @override
@@ -1611,8 +1606,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 = cst_encode_box_autoadd_wasm_run_module_id(that);
-          final arg1 = cst_encode_RustOpaque_Global(global);
+          var arg0 = cst_encode_box_autoadd_wasm_run_module_id(that);
+          var arg1 = cst_encode_RustOpaque_Global(global);
           return wire.wire__crate__api__wasm_run_module_id_get_global_value(
             arg0,
             arg1,
@@ -1631,8 +1626,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   TaskConstMeta get kCrateApiWasmRunModuleIdGetGlobalValueConstMeta =>
       const TaskConstMeta(
-        debugName: 'wasm_run_module_id_get_global_value',
-        argNames: ['that', 'global'],
+        debugName: "wasm_run_module_id_get_global_value",
+        argNames: ["that", "global"],
       );
 
   @override
@@ -1643,8 +1638,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 = cst_encode_box_autoadd_wasm_run_module_id(that);
-          final arg1 = cst_encode_RustOpaque_Memory(memory);
+          var arg0 = cst_encode_box_autoadd_wasm_run_module_id(that);
+          var arg1 = cst_encode_RustOpaque_Memory(memory);
           return wire.wire__crate__api__wasm_run_module_id_get_memory_data(
             arg0,
             arg1,
@@ -1663,8 +1658,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   TaskConstMeta get kCrateApiWasmRunModuleIdGetMemoryDataConstMeta =>
       const TaskConstMeta(
-        debugName: 'wasm_run_module_id_get_memory_data',
-        argNames: ['that', 'memory'],
+        debugName: "wasm_run_module_id_get_memory_data",
+        argNames: ["that", "memory"],
       );
 
   @override
@@ -1675,8 +1670,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 = cst_encode_box_autoadd_wasm_run_module_id(that);
-          final arg1 = cst_encode_RustOpaque_Memory(memory);
+          var arg0 = cst_encode_box_autoadd_wasm_run_module_id(that);
+          var arg1 = cst_encode_RustOpaque_Memory(memory);
           return wire
               .wire__crate__api__wasm_run_module_id_get_memory_data_pointer(
                 arg0,
@@ -1696,8 +1691,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   TaskConstMeta get kCrateApiWasmRunModuleIdGetMemoryDataPointerConstMeta =>
       const TaskConstMeta(
-        debugName: 'wasm_run_module_id_get_memory_data_pointer',
-        argNames: ['that', 'memory'],
+        debugName: "wasm_run_module_id_get_memory_data_pointer",
+        argNames: ["that", "memory"],
       );
 
   @override
@@ -1708,8 +1703,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 = cst_encode_box_autoadd_wasm_run_module_id(that);
-          final arg1 = cst_encode_RustOpaque_Memory(memory);
+          var arg0 = cst_encode_box_autoadd_wasm_run_module_id(that);
+          var arg1 = cst_encode_RustOpaque_Memory(memory);
           return wire
               .wire__crate__api__wasm_run_module_id_get_memory_data_pointer_and_length(
                 arg0,
@@ -1731,8 +1726,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   TaskConstMeta
   get kCrateApiWasmRunModuleIdGetMemoryDataPointerAndLengthConstMeta =>
       const TaskConstMeta(
-        debugName: 'wasm_run_module_id_get_memory_data_pointer_and_length',
-        argNames: ['that', 'memory'],
+        debugName: "wasm_run_module_id_get_memory_data_pointer_and_length",
+        argNames: ["that", "memory"],
       );
 
   @override
@@ -1743,8 +1738,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 = cst_encode_box_autoadd_wasm_run_module_id(that);
-          final arg1 = cst_encode_RustOpaque_Memory(memory);
+          var arg0 = cst_encode_box_autoadd_wasm_run_module_id(that);
+          var arg1 = cst_encode_RustOpaque_Memory(memory);
           return wire.wire__crate__api__wasm_run_module_id_get_memory_pages(
             arg0,
             arg1,
@@ -1763,8 +1758,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   TaskConstMeta get kCrateApiWasmRunModuleIdGetMemoryPagesConstMeta =>
       const TaskConstMeta(
-        debugName: 'wasm_run_module_id_get_memory_pages',
-        argNames: ['that', 'memory'],
+        debugName: "wasm_run_module_id_get_memory_pages",
+        argNames: ["that", "memory"],
       );
 
   @override
@@ -1775,8 +1770,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 = cst_encode_box_autoadd_wasm_run_module_id(that);
-          final arg1 = cst_encode_RustOpaque_Memory(memory);
+          var arg0 = cst_encode_box_autoadd_wasm_run_module_id(that);
+          var arg1 = cst_encode_RustOpaque_Memory(memory);
           return wire.wire__crate__api__wasm_run_module_id_get_memory_type(
             arg0,
             arg1,
@@ -1795,8 +1790,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   TaskConstMeta get kCrateApiWasmRunModuleIdGetMemoryTypeConstMeta =>
       const TaskConstMeta(
-        debugName: 'wasm_run_module_id_get_memory_type',
-        argNames: ['that', 'memory'],
+        debugName: "wasm_run_module_id_get_memory_type",
+        argNames: ["that", "memory"],
       );
 
   @override
@@ -1808,9 +1803,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 = cst_encode_box_autoadd_wasm_run_module_id(that);
-          final arg1 = cst_encode_RustOpaque_Table(table);
-          final arg2 = cst_encode_u_32(index);
+          var arg0 = cst_encode_box_autoadd_wasm_run_module_id(that);
+          var arg1 = cst_encode_RustOpaque_Table(table);
+          var arg2 = cst_encode_u_32(index);
           return wire.wire__crate__api__wasm_run_module_id_get_table(
             arg0,
             arg1,
@@ -1830,8 +1825,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   TaskConstMeta get kCrateApiWasmRunModuleIdGetTableConstMeta =>
       const TaskConstMeta(
-        debugName: 'wasm_run_module_id_get_table',
-        argNames: ['that', 'table', 'index'],
+        debugName: "wasm_run_module_id_get_table",
+        argNames: ["that", "table", "index"],
       );
 
   @override
@@ -1842,8 +1837,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 = cst_encode_box_autoadd_wasm_run_module_id(that);
-          final arg1 = cst_encode_RustOpaque_Table(table);
+          var arg0 = cst_encode_box_autoadd_wasm_run_module_id(that);
+          var arg1 = cst_encode_RustOpaque_Table(table);
           return wire.wire__crate__api__wasm_run_module_id_get_table_size(
             arg0,
             arg1,
@@ -1862,8 +1857,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   TaskConstMeta get kCrateApiWasmRunModuleIdGetTableSizeConstMeta =>
       const TaskConstMeta(
-        debugName: 'wasm_run_module_id_get_table_size',
-        argNames: ['that', 'table'],
+        debugName: "wasm_run_module_id_get_table_size",
+        argNames: ["that", "table"],
       );
 
   @override
@@ -1874,8 +1869,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 = cst_encode_box_autoadd_wasm_run_module_id(that);
-          final arg1 = cst_encode_RustOpaque_Table(table);
+          var arg0 = cst_encode_box_autoadd_wasm_run_module_id(that);
+          var arg1 = cst_encode_RustOpaque_Table(table);
           return wire.wire__crate__api__wasm_run_module_id_get_table_type(
             arg0,
             arg1,
@@ -1894,8 +1889,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   TaskConstMeta get kCrateApiWasmRunModuleIdGetTableTypeConstMeta =>
       const TaskConstMeta(
-        debugName: 'wasm_run_module_id_get_table_type',
-        argNames: ['that', 'table'],
+        debugName: "wasm_run_module_id_get_table_type",
+        argNames: ["that", "table"],
       );
 
   @override
@@ -1907,9 +1902,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 = cst_encode_box_autoadd_wasm_run_module_id(that);
-          final arg1 = cst_encode_RustOpaque_Memory(memory);
-          final arg2 = cst_encode_u_32(pages);
+          var arg0 = cst_encode_box_autoadd_wasm_run_module_id(that);
+          var arg1 = cst_encode_RustOpaque_Memory(memory);
+          var arg2 = cst_encode_u_32(pages);
           return wire.wire__crate__api__wasm_run_module_id_grow_memory(
             arg0,
             arg1,
@@ -1929,8 +1924,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   TaskConstMeta get kCrateApiWasmRunModuleIdGrowMemoryConstMeta =>
       const TaskConstMeta(
-        debugName: 'wasm_run_module_id_grow_memory',
-        argNames: ['that', 'memory', 'pages'],
+        debugName: "wasm_run_module_id_grow_memory",
+        argNames: ["that", "memory", "pages"],
       );
 
   @override
@@ -1943,10 +1938,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 = cst_encode_box_autoadd_wasm_run_module_id(that);
-          final arg1 = cst_encode_RustOpaque_Table(table);
-          final arg2 = cst_encode_u_32(delta);
-          final arg3 = cst_encode_box_autoadd_wasm_val(value);
+          var arg0 = cst_encode_box_autoadd_wasm_run_module_id(that);
+          var arg1 = cst_encode_RustOpaque_Table(table);
+          var arg2 = cst_encode_u_32(delta);
+          var arg3 = cst_encode_box_autoadd_wasm_val(value);
           return wire.wire__crate__api__wasm_run_module_id_grow_table(
             arg0,
             arg1,
@@ -1967,8 +1962,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   TaskConstMeta get kCrateApiWasmRunModuleIdGrowTableConstMeta =>
       const TaskConstMeta(
-        debugName: 'wasm_run_module_id_grow_table',
-        argNames: ['that', 'table', 'delta', 'value'],
+        debugName: "wasm_run_module_id_grow_table",
+        argNames: ["that", "table", "delta", "value"],
       );
 
   @override
@@ -1978,7 +1973,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
-          final arg0 = cst_encode_box_autoadd_wasm_run_module_id(that);
+          var arg0 = cst_encode_box_autoadd_wasm_run_module_id(that);
           return wire.wire__crate__api__wasm_run_module_id_instantiate(
             port_,
             arg0,
@@ -1997,8 +1992,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   TaskConstMeta get kCrateApiWasmRunModuleIdInstantiateConstMeta =>
       const TaskConstMeta(
-        debugName: 'wasm_run_module_id_instantiate',
-        argNames: ['that'],
+        debugName: "wasm_run_module_id_instantiate",
+        argNames: ["that"],
       );
 
   @override
@@ -2008,7 +2003,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 = cst_encode_box_autoadd_wasm_run_module_id(that);
+          var arg0 = cst_encode_box_autoadd_wasm_run_module_id(that);
           return wire.wire__crate__api__wasm_run_module_id_instantiate_sync(
             arg0,
           );
@@ -2026,8 +2021,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   TaskConstMeta get kCrateApiWasmRunModuleIdInstantiateSyncConstMeta =>
       const TaskConstMeta(
-        debugName: 'wasm_run_module_id_instantiate_sync',
-        argNames: ['that'],
+        debugName: "wasm_run_module_id_instantiate_sync",
+        argNames: ["that"],
       );
 
   @override
@@ -2038,8 +2033,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 = cst_encode_box_autoadd_wasm_run_module_id(that);
-          final arg1 = cst_encode_list_module_import(imports);
+          var arg0 = cst_encode_box_autoadd_wasm_run_module_id(that);
+          var arg1 = cst_encode_list_module_import(imports);
           return wire.wire__crate__api__wasm_run_module_id_link_imports(
             arg0,
             arg1,
@@ -2058,8 +2053,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   TaskConstMeta get kCrateApiWasmRunModuleIdLinkImportsConstMeta =>
       const TaskConstMeta(
-        debugName: 'wasm_run_module_id_link_imports',
-        argNames: ['that', 'imports'],
+        debugName: "wasm_run_module_id_link_imports",
+        argNames: ["that", "imports"],
       );
 
   @override
@@ -2072,10 +2067,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 = cst_encode_box_autoadd_wasm_run_module_id(that);
-          final arg1 = cst_encode_RustOpaque_Memory(memory);
-          final arg2 = cst_encode_usize(offset);
-          final arg3 = cst_encode_usize(bytes);
+          var arg0 = cst_encode_box_autoadd_wasm_run_module_id(that);
+          var arg1 = cst_encode_RustOpaque_Memory(memory);
+          var arg2 = cst_encode_usize(offset);
+          var arg3 = cst_encode_usize(bytes);
           return wire.wire__crate__api__wasm_run_module_id_read_memory(
             arg0,
             arg1,
@@ -2096,8 +2091,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   TaskConstMeta get kCrateApiWasmRunModuleIdReadMemoryConstMeta =>
       const TaskConstMeta(
-        debugName: 'wasm_run_module_id_read_memory',
-        argNames: ['that', 'memory', 'offset', 'bytes'],
+        debugName: "wasm_run_module_id_read_memory",
+        argNames: ["that", "memory", "offset", "bytes"],
       );
 
   @override
@@ -2109,9 +2104,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 = cst_encode_box_autoadd_wasm_run_module_id(that);
-          final arg1 = cst_encode_RustOpaque_Global(global);
-          final arg2 = cst_encode_box_autoadd_wasm_val(value);
+          var arg0 = cst_encode_box_autoadd_wasm_run_module_id(that);
+          var arg1 = cst_encode_RustOpaque_Global(global);
+          var arg2 = cst_encode_box_autoadd_wasm_val(value);
           return wire.wire__crate__api__wasm_run_module_id_set_global_value(
             arg0,
             arg1,
@@ -2131,8 +2126,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   TaskConstMeta get kCrateApiWasmRunModuleIdSetGlobalValueConstMeta =>
       const TaskConstMeta(
-        debugName: 'wasm_run_module_id_set_global_value',
-        argNames: ['that', 'global', 'value'],
+        debugName: "wasm_run_module_id_set_global_value",
+        argNames: ["that", "global", "value"],
       );
 
   @override
@@ -2145,10 +2140,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 = cst_encode_box_autoadd_wasm_run_module_id(that);
-          final arg1 = cst_encode_RustOpaque_Table(table);
-          final arg2 = cst_encode_u_32(index);
-          final arg3 = cst_encode_box_autoadd_wasm_val(value);
+          var arg0 = cst_encode_box_autoadd_wasm_run_module_id(that);
+          var arg1 = cst_encode_RustOpaque_Table(table);
+          var arg2 = cst_encode_u_32(index);
+          var arg3 = cst_encode_box_autoadd_wasm_val(value);
           return wire.wire__crate__api__wasm_run_module_id_set_table(
             arg0,
             arg1,
@@ -2169,8 +2164,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   TaskConstMeta get kCrateApiWasmRunModuleIdSetTableConstMeta =>
       const TaskConstMeta(
-        debugName: 'wasm_run_module_id_set_table',
-        argNames: ['that', 'table', 'index', 'value'],
+        debugName: "wasm_run_module_id_set_table",
+        argNames: ["that", "table", "index", "value"],
       );
 
   @override
@@ -2183,9 +2178,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       handler.executeNormal(
         NormalTask(
           callFfi: (port_) {
-            final arg0 = cst_encode_box_autoadd_wasm_run_module_id(that);
-            final arg1 = cst_encode_StreamSink_list_prim_u_8_strict_Dco(sink);
-            final arg2 = cst_encode_std_io_kind(kind);
+            var arg0 = cst_encode_box_autoadd_wasm_run_module_id(that);
+            var arg1 = cst_encode_StreamSink_list_prim_u_8_strict_Dco(sink);
+            var arg2 = cst_encode_std_io_kind(kind);
             return wire.wire__crate__api__wasm_run_module_id_stdio_stream(
               port_,
               arg0,
@@ -2208,8 +2203,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   TaskConstMeta get kCrateApiWasmRunModuleIdStdioStreamConstMeta =>
       const TaskConstMeta(
-        debugName: 'wasm_run_module_id_stdio_stream',
-        argNames: ['that', 'sink', 'kind'],
+        debugName: "wasm_run_module_id_stdio_stream",
+        argNames: ["that", "sink", "kind"],
       );
 
   @override
@@ -2221,9 +2216,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 = cst_encode_box_autoadd_wasm_run_module_id(that);
-          final arg1 = cst_encode_u_32(workerIndex);
-          final arg2 = cst_encode_list_wasm_val(results);
+          var arg0 = cst_encode_box_autoadd_wasm_run_module_id(that);
+          var arg1 = cst_encode_u_32(workerIndex);
+          var arg2 = cst_encode_list_wasm_val(results);
           return wire.wire__crate__api__wasm_run_module_id_worker_execution(
             arg0,
             arg1,
@@ -2243,8 +2238,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   TaskConstMeta get kCrateApiWasmRunModuleIdWorkerExecutionConstMeta =>
       const TaskConstMeta(
-        debugName: 'wasm_run_module_id_worker_execution',
-        argNames: ['that', 'workerIndex', 'results'],
+        debugName: "wasm_run_module_id_worker_execution",
+        argNames: ["that", "workerIndex", "results"],
       );
 
   @override
@@ -2257,10 +2252,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 = cst_encode_box_autoadd_wasm_run_module_id(that);
-          final arg1 = cst_encode_RustOpaque_Memory(memory);
-          final arg2 = cst_encode_usize(offset);
-          final arg3 = cst_encode_list_prim_u_8_loose(buffer);
+          var arg0 = cst_encode_box_autoadd_wasm_run_module_id(that);
+          var arg1 = cst_encode_RustOpaque_Memory(memory);
+          var arg2 = cst_encode_usize(offset);
+          var arg3 = cst_encode_list_prim_u_8_loose(buffer);
           return wire.wire__crate__api__wasm_run_module_id_write_memory(
             arg0,
             arg1,
@@ -2281,8 +2276,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   TaskConstMeta get kCrateApiWasmRunModuleIdWriteMemoryConstMeta =>
       const TaskConstMeta(
-        debugName: 'wasm_run_module_id_write_memory',
-        argNames: ['that', 'memory', 'offset', 'buffer'],
+        debugName: "wasm_run_module_id_write_memory",
+        argNames: ["that", "memory", "offset", "buffer"],
       );
 
   @override
@@ -2294,9 +2289,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 = cst_encode_box_autoadd_wasm_run_shared_memory(that);
-          final arg1 = cst_encode_i_64(addr);
-          final arg2 = cst_encode_u_32(count);
+          var arg0 = cst_encode_box_autoadd_wasm_run_shared_memory(that);
+          var arg1 = cst_encode_i_64(addr);
+          var arg2 = cst_encode_u_32(count);
           return wire.wire__crate__api__wasm_run_shared_memory_atomic_notify(
             arg0,
             arg1,
@@ -2316,8 +2311,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   TaskConstMeta get kCrateApiWasmRunSharedMemoryAtomicNotifyConstMeta =>
       const TaskConstMeta(
-        debugName: 'wasm_run_shared_memory_atomic_notify',
-        argNames: ['that', 'addr', 'count'],
+        debugName: "wasm_run_shared_memory_atomic_notify",
+        argNames: ["that", "addr", "count"],
       );
 
   @override
@@ -2329,9 +2324,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 = cst_encode_box_autoadd_wasm_run_shared_memory(that);
-          final arg1 = cst_encode_i_64(addr);
-          final arg2 = cst_encode_u_32(expected);
+          var arg0 = cst_encode_box_autoadd_wasm_run_shared_memory(that);
+          var arg1 = cst_encode_i_64(addr);
+          var arg2 = cst_encode_u_32(expected);
           return wire.wire__crate__api__wasm_run_shared_memory_atomic_wait32(
             arg0,
             arg1,
@@ -2351,8 +2346,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   TaskConstMeta get kCrateApiWasmRunSharedMemoryAtomicWait32ConstMeta =>
       const TaskConstMeta(
-        debugName: 'wasm_run_shared_memory_atomic_wait32',
-        argNames: ['that', 'addr', 'expected'],
+        debugName: "wasm_run_shared_memory_atomic_wait32",
+        argNames: ["that", "addr", "expected"],
       );
 
   @override
@@ -2364,9 +2359,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 = cst_encode_box_autoadd_wasm_run_shared_memory(that);
-          final arg1 = cst_encode_i_64(addr);
-          final arg2 = cst_encode_i_64(expected);
+          var arg0 = cst_encode_box_autoadd_wasm_run_shared_memory(that);
+          var arg1 = cst_encode_i_64(addr);
+          var arg2 = cst_encode_i_64(expected);
           return wire.wire__crate__api__wasm_run_shared_memory_atomic_wait64(
             arg0,
             arg1,
@@ -2386,8 +2381,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   TaskConstMeta get kCrateApiWasmRunSharedMemoryAtomicWait64ConstMeta =>
       const TaskConstMeta(
-        debugName: 'wasm_run_shared_memory_atomic_wait64',
-        argNames: ['that', 'addr', 'expected'],
+        debugName: "wasm_run_shared_memory_atomic_wait64",
+        argNames: ["that", "addr", "expected"],
       );
 
   @override
@@ -2397,7 +2392,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
-          final arg0 = cst_encode_box_autoadd_wasm_run_shared_memory(that);
+          var arg0 = cst_encode_box_autoadd_wasm_run_shared_memory(that);
           return wire.wire__crate__api__wasm_run_shared_memory_atomics(
             port_,
             arg0,
@@ -2416,8 +2411,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   TaskConstMeta get kCrateApiWasmRunSharedMemoryAtomicsConstMeta =>
       const TaskConstMeta(
-        debugName: 'wasm_run_shared_memory_atomics',
-        argNames: ['that'],
+        debugName: "wasm_run_shared_memory_atomics",
+        argNames: ["that"],
       );
 
   @override
@@ -2427,7 +2422,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 = cst_encode_box_autoadd_wasm_run_shared_memory(that);
+          var arg0 = cst_encode_box_autoadd_wasm_run_shared_memory(that);
           return wire.wire__crate__api__wasm_run_shared_memory_data_pointer(
             arg0,
           );
@@ -2445,8 +2440,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   TaskConstMeta get kCrateApiWasmRunSharedMemoryDataPointerConstMeta =>
       const TaskConstMeta(
-        debugName: 'wasm_run_shared_memory_data_pointer',
-        argNames: ['that'],
+        debugName: "wasm_run_shared_memory_data_pointer",
+        argNames: ["that"],
       );
 
   @override
@@ -2456,7 +2451,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 = cst_encode_box_autoadd_wasm_run_shared_memory(that);
+          var arg0 = cst_encode_box_autoadd_wasm_run_shared_memory(that);
           return wire.wire__crate__api__wasm_run_shared_memory_data_size(arg0);
         },
         codec: DcoCodec(
@@ -2472,8 +2467,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   TaskConstMeta get kCrateApiWasmRunSharedMemoryDataSizeConstMeta =>
       const TaskConstMeta(
-        debugName: 'wasm_run_shared_memory_data_size',
-        argNames: ['that'],
+        debugName: "wasm_run_shared_memory_data_size",
+        argNames: ["that"],
       );
 
   @override
@@ -2484,8 +2479,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 = cst_encode_box_autoadd_wasm_run_shared_memory(that);
-          final arg1 = cst_encode_i_64(delta);
+          var arg0 = cst_encode_box_autoadd_wasm_run_shared_memory(that);
+          var arg1 = cst_encode_i_64(delta);
           return wire.wire__crate__api__wasm_run_shared_memory_grow(arg0, arg1);
         },
         codec: DcoCodec(
@@ -2501,8 +2496,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   TaskConstMeta get kCrateApiWasmRunSharedMemoryGrowConstMeta =>
       const TaskConstMeta(
-        debugName: 'wasm_run_shared_memory_grow',
-        argNames: ['that', 'delta'],
+        debugName: "wasm_run_shared_memory_grow",
+        argNames: ["that", "delta"],
       );
 
   @override
@@ -2512,7 +2507,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 = cst_encode_box_autoadd_wasm_run_shared_memory(that);
+          var arg0 = cst_encode_box_autoadd_wasm_run_shared_memory(that);
           return wire.wire__crate__api__wasm_run_shared_memory_size(arg0);
         },
         codec: DcoCodec(
@@ -2528,8 +2523,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   TaskConstMeta get kCrateApiWasmRunSharedMemorySizeConstMeta =>
       const TaskConstMeta(
-        debugName: 'wasm_run_shared_memory_size',
-        argNames: ['that'],
+        debugName: "wasm_run_shared_memory_size",
+        argNames: ["that"],
       );
 
   @override
@@ -2537,7 +2532,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 = cst_encode_box_autoadd_wasm_run_shared_memory(that);
+          var arg0 = cst_encode_box_autoadd_wasm_run_shared_memory(that);
           return wire.wire__crate__api__wasm_run_shared_memory_ty(arg0);
         },
         codec: DcoCodec(
@@ -2553,15 +2548,17 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   TaskConstMeta get kCrateApiWasmRunSharedMemoryTyConstMeta =>
       const TaskConstMeta(
-        debugName: 'wasm_run_shared_memory_ty',
-        argNames: ['that'],
+        debugName: "wasm_run_shared_memory_ty",
+        argNames: ["that"],
       );
 
   @override
   WasmRuntimeFeatures crateApiWasmRuntimeFeatures() {
     return handler.executeSync(
       SyncTask(
-        callFfi: wire.wire__crate__api__wasm_runtime_features,
+        callFfi: () {
+          return wire.wire__crate__api__wasm_runtime_features();
+        },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_wasm_runtime_features,
           decodeErrorData: null,
@@ -2574,7 +2571,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateApiWasmRuntimeFeaturesConstMeta =>
-      const TaskConstMeta(debugName: 'wasm_runtime_features', argNames: []);
+      const TaskConstMeta(debugName: "wasm_runtime_features", argNames: []);
 
   RustArcIncrementStrongCountFnType
   get rust_arc_increment_strong_count_ArcRwLockSharedMemory =>
@@ -2923,7 +2920,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       case 3:
         return ExternalType_Memory(dco_decode_box_autoadd_memory_ty(raw[1]));
       default:
-        throw Exception('unreachable');
+        throw Exception("unreachable");
     }
   }
 
@@ -2944,7 +2941,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           dco_decode_box_autoadd_wasm_run_shared_memory(raw[1]),
         );
       default:
-        throw Exception('unreachable');
+        throw Exception("unreachable");
     }
   }
 
@@ -3282,7 +3279,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       case 2:
         return ParallelExec_Call(dco_decode_box_autoadd_function_call(raw[1]));
       default:
-        throw Exception('unreachable');
+        throw Exception("unreachable");
     }
   }
 
@@ -3519,7 +3516,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       case 6:
         return WasmVal_externRef(dco_decode_opt_box_autoadd_u_32(raw[1]));
       default:
-        throw Exception('unreachable');
+        throw Exception("unreachable");
     }
   }
 
@@ -3544,7 +3541,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   AnyhowException sse_decode_AnyhowException(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    final inner = sse_decode_String(deserializer);
+    var inner = sse_decode_String(deserializer);
     return AnyhowException(inner);
   }
 
@@ -3634,28 +3631,28 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   String sse_decode_String(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    final inner = sse_decode_list_prim_u_8_strict(deserializer);
+    var inner = sse_decode_list_prim_u_8_strict(deserializer);
     return utf8.decoder.convert(inner);
   }
 
   @protected
   AtomicKind sse_decode_atomic_kind(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    final inner = sse_decode_i_32(deserializer);
+    var inner = sse_decode_i_32(deserializer);
     return AtomicKind.values[inner];
   }
 
   @protected
   AtomicOrdering sse_decode_atomic_ordering(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    final inner = sse_decode_i_32(deserializer);
+    var inner = sse_decode_i_32(deserializer);
     return AtomicOrdering.values[inner];
   }
 
   @protected
   Atomics sse_decode_atomics(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    final var_field0 = sse_decode_usize(deserializer);
+    var var_field0 = sse_decode_usize(deserializer);
     return Atomics(field0: var_field0);
   }
 
@@ -3668,19 +3665,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   WFunc sse_decode_box_autoadd_RustOpaque_WFunc(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return sse_decode_RustOpaque_WFunc(deserializer);
+    return (sse_decode_RustOpaque_WFunc(deserializer));
   }
 
   @protected
   Atomics sse_decode_box_autoadd_atomics(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return sse_decode_atomics(deserializer);
+    return (sse_decode_atomics(deserializer));
   }
 
   @protected
   bool sse_decode_box_autoadd_bool(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return sse_decode_bool(deserializer);
+    return (sse_decode_bool(deserializer));
   }
 
   @protected
@@ -3688,13 +3685,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return sse_decode_compiled_module(deserializer);
+    return (sse_decode_compiled_module(deserializer));
   }
 
   @protected
   FuncTy sse_decode_box_autoadd_func_ty(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return sse_decode_func_ty(deserializer);
+    return (sse_decode_func_ty(deserializer));
   }
 
   @protected
@@ -3702,25 +3699,25 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return sse_decode_function_call(deserializer);
+    return (sse_decode_function_call(deserializer));
   }
 
   @protected
   GlobalTy sse_decode_box_autoadd_global_ty(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return sse_decode_global_ty(deserializer);
+    return (sse_decode_global_ty(deserializer));
   }
 
   @protected
   PlatformInt64 sse_decode_box_autoadd_i_64(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return sse_decode_i_64(deserializer);
+    return (sse_decode_i_64(deserializer));
   }
 
   @protected
   MemoryTy sse_decode_box_autoadd_memory_ty(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return sse_decode_memory_ty(deserializer);
+    return (sse_decode_memory_ty(deserializer));
   }
 
   @protected
@@ -3728,7 +3725,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return sse_decode_module_config(deserializer);
+    return (sse_decode_module_config(deserializer));
   }
 
   @protected
@@ -3736,7 +3733,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return sse_decode_module_config_wasmi(deserializer);
+    return (sse_decode_module_config_wasmi(deserializer));
   }
 
   @protected
@@ -3744,31 +3741,31 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return sse_decode_module_config_wasmtime(deserializer);
+    return (sse_decode_module_config_wasmtime(deserializer));
   }
 
   @protected
   TableArgs sse_decode_box_autoadd_table_args(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return sse_decode_table_args(deserializer);
+    return (sse_decode_table_args(deserializer));
   }
 
   @protected
   TableTy sse_decode_box_autoadd_table_ty(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return sse_decode_table_ty(deserializer);
+    return (sse_decode_table_ty(deserializer));
   }
 
   @protected
   int sse_decode_box_autoadd_u_32(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return sse_decode_u_32(deserializer);
+    return (sse_decode_u_32(deserializer));
   }
 
   @protected
   BigInt sse_decode_box_autoadd_u_64(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return sse_decode_u_64(deserializer);
+    return (sse_decode_u_64(deserializer));
   }
 
   @protected
@@ -3776,7 +3773,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return sse_decode_wasi_config_native(deserializer);
+    return (sse_decode_wasi_config_native(deserializer));
   }
 
   @protected
@@ -3784,7 +3781,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return sse_decode_wasi_stack_limits(deserializer);
+    return (sse_decode_wasi_stack_limits(deserializer));
   }
 
   @protected
@@ -3792,7 +3789,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return sse_decode_wasm_run_instance_id(deserializer);
+    return (sse_decode_wasm_run_instance_id(deserializer));
   }
 
   @protected
@@ -3800,7 +3797,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return sse_decode_wasm_run_module_id(deserializer);
+    return (sse_decode_wasm_run_module_id(deserializer));
   }
 
   @protected
@@ -3808,13 +3805,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return sse_decode_wasm_run_shared_memory(deserializer);
+    return (sse_decode_wasm_run_shared_memory(deserializer));
   }
 
   @protected
   WasmVal sse_decode_box_autoadd_wasm_val(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return sse_decode_wasm_val(deserializer);
+    return (sse_decode_wasm_val(deserializer));
   }
 
   @protected
@@ -3822,7 +3819,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return sse_decode_wasm_wasi_features(deserializer);
+    return (sse_decode_wasm_wasi_features(deserializer));
   }
 
   @protected
@@ -3830,25 +3827,23 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    final var_success = sse_decode_bool(deserializer);
-    final var_value = sse_decode_i_64(deserializer);
+    var var_success = sse_decode_bool(deserializer);
+    var var_value = sse_decode_i_64(deserializer);
     return CompareExchangeResult(success: var_success, value: var_value);
   }
 
   @protected
   CompiledModule sse_decode_compiled_module(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    final var_field0 = sse_decode_RustOpaque_ArcstdsyncMutexModule(
-      deserializer,
-    );
+    var var_field0 = sse_decode_RustOpaque_ArcstdsyncMutexModule(deserializer);
     return CompiledModule(field0: var_field0);
   }
 
   @protected
   EnvVariable sse_decode_env_variable(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    final var_name = sse_decode_String(deserializer);
-    final var_value = sse_decode_String(deserializer);
+    var var_name = sse_decode_String(deserializer);
+    var var_value = sse_decode_String(deserializer);
     return EnvVariable(name: var_name, value: var_value);
   }
 
@@ -3856,19 +3851,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ExternalType sse_decode_external_type(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
-    final tag_ = sse_decode_i_32(deserializer);
+    var tag_ = sse_decode_i_32(deserializer);
     switch (tag_) {
       case 0:
-        final var_field0 = sse_decode_box_autoadd_func_ty(deserializer);
+        var var_field0 = sse_decode_box_autoadd_func_ty(deserializer);
         return ExternalType_Func(var_field0);
       case 1:
-        final var_field0 = sse_decode_box_autoadd_global_ty(deserializer);
+        var var_field0 = sse_decode_box_autoadd_global_ty(deserializer);
         return ExternalType_Global(var_field0);
       case 2:
-        final var_field0 = sse_decode_box_autoadd_table_ty(deserializer);
+        var var_field0 = sse_decode_box_autoadd_table_ty(deserializer);
         return ExternalType_Table(var_field0);
       case 3:
-        final var_field0 = sse_decode_box_autoadd_memory_ty(deserializer);
+        var var_field0 = sse_decode_box_autoadd_memory_ty(deserializer);
         return ExternalType_Memory(var_field0);
       default:
         throw UnimplementedError('');
@@ -3879,22 +3874,22 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ExternalValue sse_decode_external_value(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
-    final tag_ = sse_decode_i_32(deserializer);
+    var tag_ = sse_decode_i_32(deserializer);
     switch (tag_) {
       case 0:
-        final var_field0 = sse_decode_RustOpaque_WFunc(deserializer);
+        var var_field0 = sse_decode_RustOpaque_WFunc(deserializer);
         return ExternalValue_Func(var_field0);
       case 1:
-        final var_field0 = sse_decode_RustOpaque_Global(deserializer);
+        var var_field0 = sse_decode_RustOpaque_Global(deserializer);
         return ExternalValue_Global(var_field0);
       case 2:
-        final var_field0 = sse_decode_RustOpaque_Table(deserializer);
+        var var_field0 = sse_decode_RustOpaque_Table(deserializer);
         return ExternalValue_Table(var_field0);
       case 3:
-        final var_field0 = sse_decode_RustOpaque_Memory(deserializer);
+        var var_field0 = sse_decode_RustOpaque_Memory(deserializer);
         return ExternalValue_Memory(var_field0);
       case 4:
-        final var_field0 = sse_decode_box_autoadd_wasm_run_shared_memory(
+        var var_field0 = sse_decode_box_autoadd_wasm_run_shared_memory(
           deserializer,
         );
         return ExternalValue_SharedMemory(var_field0);
@@ -3918,19 +3913,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   FuncTy sse_decode_func_ty(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    final var_parameters = sse_decode_list_value_ty(deserializer);
-    final var_results = sse_decode_list_value_ty(deserializer);
+    var var_parameters = sse_decode_list_value_ty(deserializer);
+    var var_results = sse_decode_list_value_ty(deserializer);
     return FuncTy(parameters: var_parameters, results: var_results);
   }
 
   @protected
   FunctionCall sse_decode_function_call(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    final var_args = sse_decode_list_wasm_val(deserializer);
-    final var_functionId = sse_decode_u_32(deserializer);
-    final var_functionPointer = sse_decode_usize(deserializer);
-    final var_numResults = sse_decode_usize(deserializer);
-    final var_workerIndex = sse_decode_usize(deserializer);
+    var var_args = sse_decode_list_wasm_val(deserializer);
+    var var_functionId = sse_decode_u_32(deserializer);
+    var var_functionPointer = sse_decode_usize(deserializer);
+    var var_numResults = sse_decode_usize(deserializer);
+    var var_workerIndex = sse_decode_usize(deserializer);
     return FunctionCall(
       args: var_args,
       functionId: var_functionId,
@@ -3943,8 +3938,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   GlobalTy sse_decode_global_ty(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    final var_value = sse_decode_value_ty(deserializer);
-    final var_mutable = sse_decode_bool(deserializer);
+    var var_value = sse_decode_value_ty(deserializer);
+    var var_mutable = sse_decode_bool(deserializer);
     return GlobalTy(value: var_value, mutable: var_mutable);
   }
 
@@ -3964,8 +3959,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   List<String> sse_decode_list_String(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
-    final len_ = sse_decode_i_32(deserializer);
-    final ans_ = <String>[];
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <String>[];
     for (var idx_ = 0; idx_ < len_; ++idx_) {
       ans_.add(sse_decode_String(deserializer));
     }
@@ -3976,8 +3971,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   List<EnvVariable> sse_decode_list_env_variable(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
-    final len_ = sse_decode_i_32(deserializer);
-    final ans_ = <EnvVariable>[];
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <EnvVariable>[];
     for (var idx_ = 0; idx_ < len_; ++idx_) {
       ans_.add(sse_decode_env_variable(deserializer));
     }
@@ -3990,8 +3985,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
-    final len_ = sse_decode_i_32(deserializer);
-    final ans_ = <ModuleExportDesc>[];
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <ModuleExportDesc>[];
     for (var idx_ = 0; idx_ < len_; ++idx_) {
       ans_.add(sse_decode_module_export_desc(deserializer));
     }
@@ -4004,8 +3999,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
-    final len_ = sse_decode_i_32(deserializer);
-    final ans_ = <ModuleExportValue>[];
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <ModuleExportValue>[];
     for (var idx_ = 0; idx_ < len_; ++idx_) {
       ans_.add(sse_decode_module_export_value(deserializer));
     }
@@ -4018,8 +4013,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
-    final len_ = sse_decode_i_32(deserializer);
-    final ans_ = <ModuleImport>[];
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <ModuleImport>[];
     for (var idx_ = 0; idx_ < len_; ++idx_) {
       ans_.add(sse_decode_module_import(deserializer));
     }
@@ -4032,8 +4027,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
-    final len_ = sse_decode_i_32(deserializer);
-    final ans_ = <ModuleImportDesc>[];
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <ModuleImportDesc>[];
     for (var idx_ = 0; idx_ < len_; ++idx_) {
       ans_.add(sse_decode_module_import_desc(deserializer));
     }
@@ -4046,8 +4041,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
-    final len_ = sse_decode_i_32(deserializer);
-    final ans_ = <PreopenedDir>[];
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <PreopenedDir>[];
     for (var idx_ = 0; idx_ < len_; ++idx_) {
       ans_.add(sse_decode_preopened_dir(deserializer));
     }
@@ -4057,14 +4052,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   List<int> sse_decode_list_prim_u_8_loose(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    final len_ = sse_decode_i_32(deserializer);
+    var len_ = sse_decode_i_32(deserializer);
     return deserializer.buffer.getUint8List(len_);
   }
 
   @protected
   Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    final len_ = sse_decode_i_32(deserializer);
+    var len_ = sse_decode_i_32(deserializer);
     return deserializer.buffer.getUint8List(len_);
   }
 
@@ -4072,8 +4067,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   List<ValueTy> sse_decode_list_value_ty(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
-    final len_ = sse_decode_i_32(deserializer);
-    final ans_ = <ValueTy>[];
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <ValueTy>[];
     for (var idx_ = 0; idx_ < len_; ++idx_) {
       ans_.add(sse_decode_value_ty(deserializer));
     }
@@ -4084,8 +4079,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   List<WasmVal> sse_decode_list_wasm_val(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
-    final len_ = sse_decode_i_32(deserializer);
-    final ans_ = <WasmVal>[];
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <WasmVal>[];
     for (var idx_ = 0; idx_ < len_; ++idx_) {
       ans_.add(sse_decode_wasm_val(deserializer));
     }
@@ -4095,9 +4090,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   MemoryTy sse_decode_memory_ty(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    final var_shared = sse_decode_bool(deserializer);
-    final var_minimum = sse_decode_u_32(deserializer);
-    final var_maximum = sse_decode_opt_box_autoadd_u_32(deserializer);
+    var var_shared = sse_decode_bool(deserializer);
+    var var_minimum = sse_decode_u_32(deserializer);
+    var var_maximum = sse_decode_opt_box_autoadd_u_32(deserializer);
     return MemoryTy(
       shared: var_shared,
       minimum: var_minimum,
@@ -4108,14 +4103,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   ModuleConfig sse_decode_module_config(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    final var_multiValue = sse_decode_opt_box_autoadd_bool(deserializer);
-    final var_bulkMemory = sse_decode_opt_box_autoadd_bool(deserializer);
-    final var_referenceTypes = sse_decode_opt_box_autoadd_bool(deserializer);
-    final var_consumeFuel = sse_decode_opt_box_autoadd_bool(deserializer);
-    final var_wasmi = sse_decode_opt_box_autoadd_module_config_wasmi(
+    var var_multiValue = sse_decode_opt_box_autoadd_bool(deserializer);
+    var var_bulkMemory = sse_decode_opt_box_autoadd_bool(deserializer);
+    var var_referenceTypes = sse_decode_opt_box_autoadd_bool(deserializer);
+    var var_consumeFuel = sse_decode_opt_box_autoadd_bool(deserializer);
+    var var_wasmi = sse_decode_opt_box_autoadd_module_config_wasmi(
       deserializer,
     );
-    final var_wasmtime = sse_decode_opt_box_autoadd_module_config_wasmtime(
+    var var_wasmtime = sse_decode_opt_box_autoadd_module_config_wasmtime(
       deserializer,
     );
     return ModuleConfig(
@@ -4133,18 +4128,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    final var_stackLimits = sse_decode_opt_box_autoadd_wasi_stack_limits(
+    var var_stackLimits = sse_decode_opt_box_autoadd_wasi_stack_limits(
       deserializer,
     );
-    final var_cachedStacks = sse_decode_opt_box_autoadd_i_64(deserializer);
-    final var_mutableGlobal = sse_decode_opt_box_autoadd_bool(deserializer);
-    final var_signExtension = sse_decode_opt_box_autoadd_bool(deserializer);
-    final var_saturatingFloatToInt = sse_decode_opt_box_autoadd_bool(
+    var var_cachedStacks = sse_decode_opt_box_autoadd_i_64(deserializer);
+    var var_mutableGlobal = sse_decode_opt_box_autoadd_bool(deserializer);
+    var var_signExtension = sse_decode_opt_box_autoadd_bool(deserializer);
+    var var_saturatingFloatToInt = sse_decode_opt_box_autoadd_bool(
       deserializer,
     );
-    final var_tailCall = sse_decode_opt_box_autoadd_bool(deserializer);
-    final var_extendedConst = sse_decode_opt_box_autoadd_bool(deserializer);
-    final var_floats = sse_decode_opt_box_autoadd_bool(deserializer);
+    var var_tailCall = sse_decode_opt_box_autoadd_bool(deserializer);
+    var var_extendedConst = sse_decode_opt_box_autoadd_bool(deserializer);
+    var var_floats = sse_decode_opt_box_autoadd_bool(deserializer);
     return ModuleConfigWasmi(
       stackLimits: var_stackLimits,
       cachedStacks: var_cachedStacks,
@@ -4162,33 +4157,27 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    final var_debugInfo = sse_decode_opt_box_autoadd_bool(deserializer);
-    final var_wasmBacktrace = sse_decode_opt_box_autoadd_bool(deserializer);
-    final var_nativeUnwindInfo = sse_decode_opt_box_autoadd_bool(deserializer);
-    final var_maxWasmStack = sse_decode_opt_box_autoadd_i_64(deserializer);
-    final var_wasmThreads = sse_decode_opt_box_autoadd_bool(deserializer);
-    final var_wasmSimd = sse_decode_opt_box_autoadd_bool(deserializer);
-    final var_wasmRelaxedSimd = sse_decode_opt_box_autoadd_bool(deserializer);
-    final var_relaxedSimdDeterministic = sse_decode_opt_box_autoadd_bool(
+    var var_debugInfo = sse_decode_opt_box_autoadd_bool(deserializer);
+    var var_wasmBacktrace = sse_decode_opt_box_autoadd_bool(deserializer);
+    var var_nativeUnwindInfo = sse_decode_opt_box_autoadd_bool(deserializer);
+    var var_maxWasmStack = sse_decode_opt_box_autoadd_i_64(deserializer);
+    var var_wasmThreads = sse_decode_opt_box_autoadd_bool(deserializer);
+    var var_wasmSimd = sse_decode_opt_box_autoadd_bool(deserializer);
+    var var_wasmRelaxedSimd = sse_decode_opt_box_autoadd_bool(deserializer);
+    var var_relaxedSimdDeterministic = sse_decode_opt_box_autoadd_bool(
       deserializer,
     );
-    final var_wasmMultiMemory = sse_decode_opt_box_autoadd_bool(deserializer);
-    final var_wasmMemory64 = sse_decode_opt_box_autoadd_bool(deserializer);
-    final var_staticMemoryMaximumSize = sse_decode_opt_box_autoadd_u_64(
+    var var_wasmMultiMemory = sse_decode_opt_box_autoadd_bool(deserializer);
+    var var_wasmMemory64 = sse_decode_opt_box_autoadd_bool(deserializer);
+    var var_staticMemoryMaximumSize = sse_decode_opt_box_autoadd_u_64(
       deserializer,
     );
-    final var_staticMemoryForced = sse_decode_opt_box_autoadd_bool(
+    var var_staticMemoryForced = sse_decode_opt_box_autoadd_bool(deserializer);
+    var var_staticMemoryGuardSize = sse_decode_opt_box_autoadd_u_64(
       deserializer,
     );
-    final var_staticMemoryGuardSize = sse_decode_opt_box_autoadd_u_64(
-      deserializer,
-    );
-    final var_parallelCompilation = sse_decode_opt_box_autoadd_bool(
-      deserializer,
-    );
-    final var_generateAddressMap = sse_decode_opt_box_autoadd_bool(
-      deserializer,
-    );
+    var var_parallelCompilation = sse_decode_opt_box_autoadd_bool(deserializer);
+    var var_generateAddressMap = sse_decode_opt_box_autoadd_bool(deserializer);
     return ModuleConfigWasmtime(
       debugInfo: var_debugInfo,
       wasmBacktrace: var_wasmBacktrace,
@@ -4211,8 +4200,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   ModuleExportDesc sse_decode_module_export_desc(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    final var_name = sse_decode_String(deserializer);
-    final var_ty = sse_decode_external_type(deserializer);
+    var var_name = sse_decode_String(deserializer);
+    var var_ty = sse_decode_external_type(deserializer);
     return ModuleExportDesc(name: var_name, ty: var_ty);
   }
 
@@ -4221,26 +4210,26 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    final var_desc = sse_decode_module_export_desc(deserializer);
-    final var_value = sse_decode_external_value(deserializer);
+    var var_desc = sse_decode_module_export_desc(deserializer);
+    var var_value = sse_decode_external_value(deserializer);
     return ModuleExportValue(desc: var_desc, value: var_value);
   }
 
   @protected
   ModuleImport sse_decode_module_import(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    final var_module = sse_decode_String(deserializer);
-    final var_name = sse_decode_String(deserializer);
-    final var_value = sse_decode_external_value(deserializer);
+    var var_module = sse_decode_String(deserializer);
+    var var_name = sse_decode_String(deserializer);
+    var var_value = sse_decode_external_value(deserializer);
     return ModuleImport(module: var_module, name: var_name, value: var_value);
   }
 
   @protected
   ModuleImportDesc sse_decode_module_import_desc(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    final var_module = sse_decode_String(deserializer);
-    final var_name = sse_decode_String(deserializer);
-    final var_ty = sse_decode_external_type(deserializer);
+    var var_module = sse_decode_String(deserializer);
+    var var_name = sse_decode_String(deserializer);
+    var var_ty = sse_decode_external_type(deserializer);
     return ModuleImportDesc(module: var_module, name: var_name, ty: var_ty);
   }
 
@@ -4251,7 +4240,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
     if (sse_decode_bool(deserializer)) {
-      return sse_decode_box_autoadd_RustOpaque_WFunc(deserializer);
+      return (sse_decode_box_autoadd_RustOpaque_WFunc(deserializer));
     } else {
       return null;
     }
@@ -4262,7 +4251,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
     if (sse_decode_bool(deserializer)) {
-      return sse_decode_box_autoadd_bool(deserializer);
+      return (sse_decode_box_autoadd_bool(deserializer));
     } else {
       return null;
     }
@@ -4273,7 +4262,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
     if (sse_decode_bool(deserializer)) {
-      return sse_decode_box_autoadd_i_64(deserializer);
+      return (sse_decode_box_autoadd_i_64(deserializer));
     } else {
       return null;
     }
@@ -4286,7 +4275,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
     if (sse_decode_bool(deserializer)) {
-      return sse_decode_box_autoadd_module_config_wasmi(deserializer);
+      return (sse_decode_box_autoadd_module_config_wasmi(deserializer));
     } else {
       return null;
     }
@@ -4299,7 +4288,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
     if (sse_decode_bool(deserializer)) {
-      return sse_decode_box_autoadd_module_config_wasmtime(deserializer);
+      return (sse_decode_box_autoadd_module_config_wasmtime(deserializer));
     } else {
       return null;
     }
@@ -4310,7 +4299,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
     if (sse_decode_bool(deserializer)) {
-      return sse_decode_box_autoadd_u_32(deserializer);
+      return (sse_decode_box_autoadd_u_32(deserializer));
     } else {
       return null;
     }
@@ -4321,7 +4310,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
     if (sse_decode_bool(deserializer)) {
-      return sse_decode_box_autoadd_u_64(deserializer);
+      return (sse_decode_box_autoadd_u_64(deserializer));
     } else {
       return null;
     }
@@ -4334,7 +4323,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
     if (sse_decode_bool(deserializer)) {
-      return sse_decode_box_autoadd_wasi_config_native(deserializer);
+      return (sse_decode_box_autoadd_wasi_config_native(deserializer));
     } else {
       return null;
     }
@@ -4347,7 +4336,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
     if (sse_decode_bool(deserializer)) {
-      return sse_decode_box_autoadd_wasi_stack_limits(deserializer);
+      return (sse_decode_box_autoadd_wasi_stack_limits(deserializer));
     } else {
       return null;
     }
@@ -4358,7 +4347,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
     if (sse_decode_bool(deserializer)) {
-      return sse_decode_box_autoadd_wasm_val(deserializer);
+      return (sse_decode_box_autoadd_wasm_val(deserializer));
     } else {
       return null;
     }
@@ -4371,7 +4360,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
     if (sse_decode_bool(deserializer)) {
-      return sse_decode_box_autoadd_wasm_wasi_features(deserializer);
+      return (sse_decode_box_autoadd_wasm_wasi_features(deserializer));
     } else {
       return null;
     }
@@ -4381,16 +4370,16 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ParallelExec sse_decode_parallel_exec(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
-    final tag_ = sse_decode_i_32(deserializer);
+    var tag_ = sse_decode_i_32(deserializer);
     switch (tag_) {
       case 0:
-        final var_field0 = sse_decode_list_wasm_val(deserializer);
+        var var_field0 = sse_decode_list_wasm_val(deserializer);
         return ParallelExec_Ok(var_field0);
       case 1:
-        final var_field0 = sse_decode_String(deserializer);
+        var var_field0 = sse_decode_String(deserializer);
         return ParallelExec_Err(var_field0);
       case 2:
-        final var_field0 = sse_decode_box_autoadd_function_call(deserializer);
+        var var_field0 = sse_decode_box_autoadd_function_call(deserializer);
         return ParallelExec_Call(var_field0);
       default:
         throw UnimplementedError('');
@@ -4400,16 +4389,16 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   PointerAndLength sse_decode_pointer_and_length(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    final var_pointer = sse_decode_i_64(deserializer);
-    final var_length = sse_decode_i_64(deserializer);
+    var var_pointer = sse_decode_i_64(deserializer);
+    var var_length = sse_decode_i_64(deserializer);
     return PointerAndLength(pointer: var_pointer, length: var_length);
   }
 
   @protected
   PreopenedDir sse_decode_preopened_dir(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    final var_wasmGuestPath = sse_decode_String(deserializer);
-    final var_hostPath = sse_decode_String(deserializer);
+    var var_wasmGuestPath = sse_decode_String(deserializer);
+    var var_hostPath = sse_decode_String(deserializer);
     return PreopenedDir(
       wasmGuestPath: var_wasmGuestPath,
       hostPath: var_hostPath,
@@ -4421,31 +4410,31 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    final inner = sse_decode_i_32(deserializer);
+    var inner = sse_decode_i_32(deserializer);
     return SharedMemoryWaitResult.values[inner];
   }
 
   @protected
   StdIOKind sse_decode_std_io_kind(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    final inner = sse_decode_i_32(deserializer);
+    var inner = sse_decode_i_32(deserializer);
     return StdIOKind.values[inner];
   }
 
   @protected
   TableArgs sse_decode_table_args(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    final var_minimum = sse_decode_u_32(deserializer);
-    final var_maximum = sse_decode_opt_box_autoadd_u_32(deserializer);
+    var var_minimum = sse_decode_u_32(deserializer);
+    var var_maximum = sse_decode_opt_box_autoadd_u_32(deserializer);
     return TableArgs(minimum: var_minimum, maximum: var_maximum);
   }
 
   @protected
   TableTy sse_decode_table_ty(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    final var_element = sse_decode_value_ty(deserializer);
-    final var_minimum = sse_decode_u_32(deserializer);
-    final var_maximum = sse_decode_opt_box_autoadd_u_32(deserializer);
+    var var_element = sse_decode_value_ty(deserializer);
+    var var_minimum = sse_decode_u_32(deserializer);
+    var var_maximum = sse_decode_opt_box_autoadd_u_32(deserializer);
     return TableTy(
       element: var_element,
       minimum: var_minimum,
@@ -4474,7 +4463,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   U8Array16 sse_decode_u_8_array_16(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    final inner = sse_decode_list_prim_u_8_strict(deserializer);
+    var inner = sse_decode_list_prim_u_8_strict(deserializer);
     return U8Array16(inner);
   }
 
@@ -4492,22 +4481,22 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   ValueTy sse_decode_value_ty(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    final inner = sse_decode_i_32(deserializer);
+    var inner = sse_decode_i_32(deserializer);
     return ValueTy.values[inner];
   }
 
   @protected
   WasiConfigNative sse_decode_wasi_config_native(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    final var_captureStdout = sse_decode_bool(deserializer);
-    final var_captureStderr = sse_decode_bool(deserializer);
-    final var_inheritStdin = sse_decode_bool(deserializer);
-    final var_inheritEnv = sse_decode_bool(deserializer);
-    final var_inheritArgs = sse_decode_bool(deserializer);
-    final var_args = sse_decode_list_String(deserializer);
-    final var_env = sse_decode_list_env_variable(deserializer);
-    final var_preopenedFiles = sse_decode_list_String(deserializer);
-    final var_preopenedDirs = sse_decode_list_preopened_dir(deserializer);
+    var var_captureStdout = sse_decode_bool(deserializer);
+    var var_captureStderr = sse_decode_bool(deserializer);
+    var var_inheritStdin = sse_decode_bool(deserializer);
+    var var_inheritEnv = sse_decode_bool(deserializer);
+    var var_inheritArgs = sse_decode_bool(deserializer);
+    var var_args = sse_decode_list_String(deserializer);
+    var var_env = sse_decode_list_env_variable(deserializer);
+    var var_preopenedFiles = sse_decode_list_String(deserializer);
+    var var_preopenedDirs = sse_decode_list_preopened_dir(deserializer);
     return WasiConfigNative(
       captureStdout: var_captureStdout,
       captureStderr: var_captureStderr,
@@ -4524,9 +4513,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   WasiStackLimits sse_decode_wasi_stack_limits(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    final var_initialValueStackHeight = sse_decode_i_64(deserializer);
-    final var_maximumValueStackHeight = sse_decode_i_64(deserializer);
-    final var_maximumRecursionDepth = sse_decode_i_64(deserializer);
+    var var_initialValueStackHeight = sse_decode_i_64(deserializer);
+    var var_maximumValueStackHeight = sse_decode_i_64(deserializer);
+    var var_maximumRecursionDepth = sse_decode_i_64(deserializer);
     return WasiStackLimits(
       initialValueStackHeight: var_initialValueStackHeight,
       maximumValueStackHeight: var_maximumValueStackHeight,
@@ -4537,26 +4526,26 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   WasmFeatures sse_decode_wasm_features(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    final var_mutableGlobal = sse_decode_bool(deserializer);
-    final var_saturatingFloatToInt = sse_decode_bool(deserializer);
-    final var_signExtension = sse_decode_bool(deserializer);
-    final var_referenceTypes = sse_decode_bool(deserializer);
-    final var_multiValue = sse_decode_bool(deserializer);
-    final var_bulkMemory = sse_decode_bool(deserializer);
-    final var_simd = sse_decode_bool(deserializer);
-    final var_relaxedSimd = sse_decode_bool(deserializer);
-    final var_threads = sse_decode_bool(deserializer);
-    final var_tailCall = sse_decode_bool(deserializer);
-    final var_floats = sse_decode_bool(deserializer);
-    final var_multiMemory = sse_decode_bool(deserializer);
-    final var_exceptions = sse_decode_bool(deserializer);
-    final var_memory64 = sse_decode_bool(deserializer);
-    final var_extendedConst = sse_decode_bool(deserializer);
-    final var_componentModel = sse_decode_bool(deserializer);
-    final var_memoryControl = sse_decode_bool(deserializer);
-    final var_garbageCollection = sse_decode_bool(deserializer);
-    final var_typeReflection = sse_decode_bool(deserializer);
-    final var_wasiFeatures = sse_decode_opt_box_autoadd_wasm_wasi_features(
+    var var_mutableGlobal = sse_decode_bool(deserializer);
+    var var_saturatingFloatToInt = sse_decode_bool(deserializer);
+    var var_signExtension = sse_decode_bool(deserializer);
+    var var_referenceTypes = sse_decode_bool(deserializer);
+    var var_multiValue = sse_decode_bool(deserializer);
+    var var_bulkMemory = sse_decode_bool(deserializer);
+    var var_simd = sse_decode_bool(deserializer);
+    var var_relaxedSimd = sse_decode_bool(deserializer);
+    var var_threads = sse_decode_bool(deserializer);
+    var var_tailCall = sse_decode_bool(deserializer);
+    var var_floats = sse_decode_bool(deserializer);
+    var var_multiMemory = sse_decode_bool(deserializer);
+    var var_exceptions = sse_decode_bool(deserializer);
+    var var_memory64 = sse_decode_bool(deserializer);
+    var var_extendedConst = sse_decode_bool(deserializer);
+    var var_componentModel = sse_decode_bool(deserializer);
+    var var_memoryControl = sse_decode_bool(deserializer);
+    var var_garbageCollection = sse_decode_bool(deserializer);
+    var var_typeReflection = sse_decode_bool(deserializer);
+    var var_wasiFeatures = sse_decode_opt_box_autoadd_wasm_wasi_features(
       deserializer,
     );
     return WasmFeatures(
@@ -4588,15 +4577,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    final var_field0 = sse_decode_u_32(deserializer);
+    var var_field0 = sse_decode_u_32(deserializer);
     return WasmRunInstanceId(field0: var_field0);
   }
 
   @protected
   WasmRunModuleId sse_decode_wasm_run_module_id(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    final var_field0 = sse_decode_u_32(deserializer);
-    final var_field1 = sse_decode_RustOpaque_CallStack(deserializer);
+    var var_field0 = sse_decode_u_32(deserializer);
+    var var_field1 = sse_decode_RustOpaque_CallStack(deserializer);
     return WasmRunModuleId(field0: var_field0, field1: var_field1);
   }
 
@@ -4605,9 +4594,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    final var_field0 = sse_decode_RustOpaque_ArcRwLockSharedMemory(
-      deserializer,
-    );
+    var var_field0 = sse_decode_RustOpaque_ArcRwLockSharedMemory(deserializer);
     return WasmRunSharedMemory(field0: var_field0);
   }
 
@@ -4616,11 +4603,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    final var_name = sse_decode_String(deserializer);
-    final var_version = sse_decode_String(deserializer);
-    final var_isBrowser = sse_decode_bool(deserializer);
-    final var_supportedFeatures = sse_decode_wasm_features(deserializer);
-    final var_defaultFeatures = sse_decode_wasm_features(deserializer);
+    var var_name = sse_decode_String(deserializer);
+    var var_version = sse_decode_String(deserializer);
+    var var_isBrowser = sse_decode_bool(deserializer);
+    var var_supportedFeatures = sse_decode_wasm_features(deserializer);
+    var var_defaultFeatures = sse_decode_wasm_features(deserializer);
     return WasmRuntimeFeatures(
       name: var_name,
       version: var_version,
@@ -4634,30 +4621,30 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   WasmVal sse_decode_wasm_val(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
-    final tag_ = sse_decode_i_32(deserializer);
+    var tag_ = sse_decode_i_32(deserializer);
     switch (tag_) {
       case 0:
-        final var_field0 = sse_decode_i_32(deserializer);
+        var var_field0 = sse_decode_i_32(deserializer);
         return WasmVal_i32(var_field0);
       case 1:
-        final var_field0 = sse_decode_i_64(deserializer);
+        var var_field0 = sse_decode_i_64(deserializer);
         return WasmVal_i64(var_field0);
       case 2:
-        final var_field0 = sse_decode_f_32(deserializer);
+        var var_field0 = sse_decode_f_32(deserializer);
         return WasmVal_f32(var_field0);
       case 3:
-        final var_field0 = sse_decode_f_64(deserializer);
+        var var_field0 = sse_decode_f_64(deserializer);
         return WasmVal_f64(var_field0);
       case 4:
-        final var_field0 = sse_decode_u_8_array_16(deserializer);
+        var var_field0 = sse_decode_u_8_array_16(deserializer);
         return WasmVal_v128(var_field0);
       case 5:
-        final var_field0 = sse_decode_opt_box_autoadd_RustOpaque_WFunc(
+        var var_field0 = sse_decode_opt_box_autoadd_RustOpaque_WFunc(
           deserializer,
         );
         return WasmVal_funcRef(var_field0);
       case 6:
-        final var_field0 = sse_decode_opt_box_autoadd_u_32(deserializer);
+        var var_field0 = sse_decode_opt_box_autoadd_u_32(deserializer);
         return WasmVal_externRef(var_field0);
       default:
         throw UnimplementedError('');
@@ -4667,14 +4654,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   WasmWasiFeatures sse_decode_wasm_wasi_features(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    final var_io = sse_decode_bool(deserializer);
-    final var_filesystem = sse_decode_bool(deserializer);
-    final var_clocks = sse_decode_bool(deserializer);
-    final var_random = sse_decode_bool(deserializer);
-    final var_poll = sse_decode_bool(deserializer);
-    final var_machineLearning = sse_decode_bool(deserializer);
-    final var_crypto = sse_decode_bool(deserializer);
-    final var_threads = sse_decode_bool(deserializer);
+    var var_io = sse_decode_bool(deserializer);
+    var var_filesystem = sse_decode_bool(deserializer);
+    var var_clocks = sse_decode_bool(deserializer);
+    var var_random = sse_decode_bool(deserializer);
+    var var_poll = sse_decode_bool(deserializer);
+    var var_machineLearning = sse_decode_bool(deserializer);
+    var var_crypto = sse_decode_bool(deserializer);
+    var var_threads = sse_decode_bool(deserializer);
     return WasmWasiFeatures(
       io: var_io,
       filesystem: var_filesystem,

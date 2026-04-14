@@ -3,12 +3,12 @@
 
 // ignore_for_file: invalid_use_of_internal_member, unused_import, unnecessary_import
 
+import 'atomics.dart';
+import 'config.dart';
+import 'frb_generated.dart';
+import 'lib.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
-import 'package:wasm_run/src/rust/atomics.dart';
-import 'package:wasm_run/src/rust/config.dart';
-import 'package:wasm_run/src/rust/frb_generated.dart';
-import 'package:wasm_run/src/rust/lib.dart';
-import 'package:wasm_run/src/rust/types.dart';
+import 'types.dart';
 
 // These functions are ignored because they are not marked as `pub`: `STORE`, `_create_function`, `default_val`, `execute_function`, `make_wasi_ctx`, `map_function`, `new`, `with_module_mut`, `with_module`
 // These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `FunctionChannels`, `GlobalState`, `HostFunction`, `ModuleIOWriter`, `StoreState`, `WasmiModuleImpl`

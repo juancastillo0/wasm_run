@@ -6,16 +6,15 @@
 // Static analysis wrongly picks the IO variant, thus ignore this
 // ignore_for_file: argument_type_not_assignable
 
+import 'api.dart';
+import 'atomics.dart';
+import 'config.dart';
 import 'dart:async';
 import 'dart:convert';
-
+import 'frb_generated.dart';
+import 'lib.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated_web.dart';
-import 'package:wasm_run/src/rust/api.dart';
-import 'package:wasm_run/src/rust/atomics.dart';
-import 'package:wasm_run/src/rust/config.dart';
-import 'package:wasm_run/src/rust/frb_generated.dart';
-import 'package:wasm_run/src/rust/lib.dart';
-import 'package:wasm_run/src/rust/types.dart';
+import 'types.dart';
 
 abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   RustLibApiImplPlatform({
@@ -2005,7 +2004,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 // Section: wire_class
 
 class RustLibWire implements BaseWire {
-  RustLibWire.fromExternalLibrary();
+  RustLibWire.fromExternalLibrary(ExternalLibrary lib);
 
   void wire__crate__atomics__atomics_add(
     NativePortType port_,

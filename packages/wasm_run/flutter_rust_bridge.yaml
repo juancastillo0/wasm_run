@@ -5,7 +5,6 @@ c_output: frb_generated.h
 # TODO: https://github.com/fzyzcjy/flutter_rust_bridge/issues/2507 full_dep: true
 full_dep: true
 parse_const: true
-web: false
 # type_64bit_int: true
 
 # dart-preamble: Raw header of output generated Dart code, pasted as-it-is

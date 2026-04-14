@@ -3,15 +3,11 @@
 
 // ignore_for_file: invalid_use_of_internal_member, unused_import, unnecessary_import
 
+import 'api.dart';
+import 'frb_generated.dart';
+import 'lib.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'package:freezed_annotation/freezed_annotation.dart' hide protected;
-import 'package:wasm_run/src/rust/api.dart';
-import 'package:wasm_run/src/rust/frb_generated.dart';
-import 'package:wasm_run/src/rust/lib.dart';
-import 'package:wasm_run/src/wasm_bindings/wasm.dart' show WasmTable;
-import 'package:wasm_run/src/wasm_bindings/wasm_interface.dart' show WasmTable;
-import 'package:wasm_run/wasm_run.dart' show WasmTable;
-
 part 'types.freezed.dart';
 
 @freezed
