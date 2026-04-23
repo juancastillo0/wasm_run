@@ -9,27 +9,22 @@ String join(List<String> pathSegments) =>
 
 void main(List<String> args) async {
   final implIndex = args.indexWhere((element) => element == '--impl');
-  final impl = implIndex != -1 ? args[implIndex + 1] : 'wasmtime';
+  final impl = implIndex != -1
+      ? args[implIndex + 1]
+      : args.isNotEmpty
+      ? args[0]
+      : 'wasmtime';
   if (!validImpl.contains(impl)) {
-    throw Exception(
-      'Invalid impl: $impl. Valid impls are: $validImpl',
-    );
+    throw Exception('Invalid impl: $impl. Valid impls are: $validImpl');
   }
 
-  final prefix = join(
-    [
-      // initial "/"
-      Platform.script.path.substring(
-        0,
-        Platform.script.path.indexOf(Platform.script.pathSegments.first),
-      ),
-      // remove "scripts/config_api.dart"
-      ...Platform.script.pathSegments.reversed.skip(2).toList().reversed,
-      'packages',
-      'wasmi',
-      'native',
-    ],
-  );
+  final prefix = join([
+    // remove "scripts/config_api.dart"
+    ...Platform.script.pathSegments.reversed.skip(2).toList().reversed,
+    'packages',
+    'wasm_run',
+    'native',
+  ]);
   print('config_api: using WASM runtime "$impl"');
 
   final cargoTomlFile = File(join([prefix, 'Cargo.toml']));
