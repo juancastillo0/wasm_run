@@ -168,8 +168,7 @@ void main() {
                 as Uint8List,
           ),
           decompress: ({required input}) => Ok(
-            archive.GZipDecoder().decodeBytes((input as InputBytes).value)
-                as Uint8List,
+            archive.GZipDecoder().decodeBytes((input as InputBytes).value),
           ),
           compressFile: ({required input, required outputPath}) =>
               throw UnimplementedError(),
@@ -183,8 +182,7 @@ void main() {
                 as Uint8List,
           ),
           decompress: ({required input}) => Ok(
-            archive.ZLibDecoder().decodeBytes((input as InputBytes).value)
-                as Uint8List,
+            archive.ZLibDecoder().decodeBytes((input as InputBytes).value),
           ),
           compressFile: ({required input, required outputPath}) =>
               throw UnimplementedError(),
@@ -198,8 +196,7 @@ void main() {
                 as Uint8List,
           ),
           decompress: ({required input}) => Ok(
-            archive.BZip2Decoder().decodeBytes((input as InputBytes).value)
-                as Uint8List,
+            archive.BZip2Decoder().decodeBytes((input as InputBytes).value),
           ),
           compressFile: ({required input, required outputPath}) =>
               throw UnimplementedError(),

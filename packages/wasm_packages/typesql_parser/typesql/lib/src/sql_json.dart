@@ -48,8 +48,7 @@ class SqlJsonTypeFinder {
         path.length > 1
             ? const BTypeJsonArray(BType.jsonDynamic)
             : BType.jsonDynamic, // (json,path,...)
-      ('json', []) => BType.jsonDynamic, //  -> path
-      ('json', []) => BType.jsonDynamic, //  ->> path
+      ('json', []) => BType.jsonDynamic, //  -> path or ->> path
       (
         'json_insert' ||
             'JSON_APPEND' ||
@@ -320,8 +319,7 @@ class SqlJsonTypeFinder {
       ('json_error_position', [final json]) => BType.jsonDynamic, // (json)
       ('json_extract' || 'JSON_EXTRACT', [final json, ...final path]) =>
         jsonOrPath, // (json,path,...)
-      ('json', []) => BType.jsonDynamic, //  -> path
-      ('json', []) => BType.jsonDynamic, //  ->> path
+      ('json', []) => BType.jsonDynamic, //  -> path or ->> path
       (
         'json_insert' ||
             'JSON_APPEND' ||

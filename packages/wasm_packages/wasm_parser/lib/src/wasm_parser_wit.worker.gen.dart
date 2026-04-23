@@ -1888,6 +1888,7 @@ class WasmParserWorld {
     } catch (_) {}
 
     var attempts = 0;
+    // ignore: experimental_member_use
     late WasmSharedMemory wasmMemory;
     WasmInstance? instance;
     while (instance == null) {
