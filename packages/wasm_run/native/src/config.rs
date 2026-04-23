@@ -217,7 +217,8 @@ impl From<ModuleConfig> for wasmi::Config {
         if let Some(wic) = c.wasmi {
             wic.stack_limits
                 .map(|v| config.set_stack_limits(v.try_into().unwrap()));
-            wic.cached_stacks.map(|v| config.set_cached_stacks(v));
+            wic.cached_stacks
+                .map(|v| config.set_cached_stacks(v.try_into().unwrap()));
             wic.mutable_global.map(|v| config.wasm_mutable_global(v));
             wic.sign_extension.map(|v| config.wasm_sign_extension(v));
             wic.saturating_float_to_int
@@ -274,9 +275,9 @@ impl TryFrom<WasiStackLimits> for wasmi::StackLimits {
         use crate::types::to_anyhow;
 
         Self::new(
-            value.initial_value_stack_height,
-            value.maximum_value_stack_height,
-            value.maximum_recursion_depth,
+            value.initial_value_stack_height.try_into().unwrap(),
+            value.maximum_value_stack_height.try_into().unwrap(),
+            value.maximum_recursion_depth.try_into().unwrap(),
         )
         .map_err(to_anyhow)
     }
