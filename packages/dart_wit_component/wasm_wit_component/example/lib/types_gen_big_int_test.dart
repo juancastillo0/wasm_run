@@ -625,6 +625,11 @@ class _TypesWorldTest {
       final def = R1.staticDefault(api);
       expect(def, 'DEFAULT');
 
+      // TODO(migrationv1): drop and handles. Merge receives reference of r1 dropped in staticF1
+      //  improve error message
+      // final v = R1.staticF1(api, a: r1);
+      // print('v $v');
+
       final rMerged = R1.merge(api, lhs: r1, rhs: r1);
       expect(rMerged.length(), 2);
       expect(rMerged.name(), '11');

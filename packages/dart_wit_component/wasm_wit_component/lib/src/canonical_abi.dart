@@ -192,6 +192,7 @@ class Handle {
 /// consults the free list, which is popped LIFO to better detect
 /// use-after-free bugs in the guest code.
 class HandleTable {
+  final Map<int, Handle> repToHandle = {};
   final List<Handle?> array = [];
   final List<int> free = [];
 
@@ -205,6 +206,7 @@ class HandleTable {
       i = array.length;
       array.add(h);
     }
+    repToHandle[h.rep] = h;
     return i;
   }
 
@@ -514,8 +516,18 @@ int canon_resource_new(ComponentInstance inst, ResourceType rt, int rep) {
 
 // ### `resource.drop`
 
-void canon_resource_drop(ComponentInstance inst, ResourceType rt, int i) {
-  final h = inst.handles.remove(rt, i);
+void canon_resource_drop(
+  ComponentInstance inst,
+  ResourceType rt,
+  int i, {
+  // TODO: this should not be necessary, save te index/handle in the object
+  //  instead of just the rep
+  bool isIndex = false,
+}) {
+  final h = isIndex
+      ? inst.handles.remove(rt, i)
+      : inst.handles.rt_to_table[rt]!.repToHandle.remove(i);
+  if (h == null) return;
   if (h.own) {
     assert(h.scope == null);
     trap_if(h.lend_count != 0);

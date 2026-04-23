@@ -231,6 +231,7 @@ List<WasmImport> resourceImports(
           getWasmLibrary().componentInstance,
           rt,
           a! as int,
+          isIndex: true,
         ),
         params: const [ValueTy.i32],
         results: const [],
@@ -392,6 +393,7 @@ class WasmLibrary {
     final postFunc = postReturnFunction(name);
     Future<List<FlatValue>> coreFunc(List<FlatValue> p) async {
       final args = _mapValuesToFlat(componentInstance.int64Type, p);
+      // ignore: experimental_member_use
       final resultsParallel = await instance.runParallel(func, [args]);
       final results = resultsParallel[0];
       if (results.isEmpty) return const [];
