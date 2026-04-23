@@ -20,7 +20,29 @@ We use the [wasm-feature-detect JavaScript library](https://github.com/GoogleChr
 
 ```html
 <script src="./packages/wasm_run/assets/wasm-feature-detect.js"></script>
-<script type="module" src="./packages/wasm_run/assets/browser_wasi_shim.js"></script>
+<script
+  type="module"
+  src="./packages/wasm_run/assets/browser_wasi_shim.js"
+></script>
 ```
 
+# Building
 
+## Codegen
+
+We use `flutter_rust_bridge (FRB)` for creating the Rust bindings. For that and for building the native package you will need to [install the Rust toolchain and cargo](https://rust-lang.org/tools/install/).
+Then install the FRB codegen cli:
+
+`cargo install flutter_rust_bridge_codegen`
+
+And execute the generate command:
+
+`flutter_rust_bridge_codegen generate --watch`
+
+This will build the code in the [lib/src/rust](./lib/src/rust) directory.
+
+## Rust
+
+The Rust code is in the [native](./native) directory. You can compile it in debug mode with:
+
+`cargo build`
