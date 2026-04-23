@@ -1,6 +1,6 @@
 {
-    "name": "example",
-    "short_name": "example",
+    "name": "wasm_run_flutter_example",
+    "short_name": "wasm_run_flutter_example",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

@@ -3,9 +3,18 @@
 import 'dart:convert' show base64Decode;
 import 'dart:typed_data' show Uint8List;
 
+import 'package:flutter/widgets.dart';
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:wasm_run_flutter/wasm_run_flutter.dart';
 
 Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await WasmRunLibrary.setUp(
+    override: false,
+    isFlutter: true,
+    loadAsset: rootBundle.load,
+  );
+
   /// WASM WAT source:
   ///
   /// ```wat
