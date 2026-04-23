@@ -316,7 +316,12 @@ impl WasmRunModuleId {
 
         let mut ctx = value.store.as_context_mut();
         {
-            let v = RwLock::new(unsafe { std::mem::transmute(ctx.as_context_mut()) });
+            let v = RwLock::new(unsafe {
+                std::mem::transmute::<
+                    wasmi::StoreContextMut<'_, StoreState>,
+                    wasmi::StoreContextMut<'_, StoreState>,
+                >(ctx.as_context_mut())
+            });
             self.1 .0.write().unwrap().push(v);
         }
         let result = f(ctx);
@@ -336,7 +341,11 @@ impl WasmRunModuleId {
 
         let ctx = &mut value.store;
         {
-            let v = RwLock::new(unsafe { std::mem::transmute(&mut *ctx) });
+            let v = RwLock::new(unsafe {
+                std::mem::transmute::<&mut wasmi::Store<StoreState>, &mut wasmi::Store<StoreState>>(
+                    &mut *ctx,
+                )
+            });
             CALLER_STACK2.write().unwrap().push(v);
         }
         let result = f(ctx);
@@ -385,8 +394,12 @@ impl WasmRunModuleId {
                     let inputs = vec![mapped].into_dart();
                     let stack = {
                         let stack = caller.data().stack.clone();
-                        let v =
-                            RwLock::new(unsafe { std::mem::transmute(caller.as_context_mut()) });
+                        let v = RwLock::new(unsafe {
+                            std::mem::transmute::<
+                                wasmi::StoreContextMut<'_, StoreState>,
+                                wasmi::StoreContextMut<'_, StoreState>,
+                            >(caller.as_context_mut())
+                        });
                         stack.0.write().unwrap().push(v);
                         stack
                     };
