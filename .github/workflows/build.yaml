@@ -109,13 +109,6 @@ jobs:
           verbose: true
           files: ./packages/wasm_run/coverage/lcov.info
 
-      # Web Browser tests
-      - run: |
-          git clone https://github.com/flutter/web_installers.git
-          cd web_installers/packages/web_drivers
-          dart pub get
-        if: always()
-
       # Chrome
       - name: Install and run Chrome Driver
         run: ${CHROMEWEBDRIVER}/chromedriver --port=4445 &
@@ -130,10 +123,7 @@ jobs:
 
       # Firefox
       - name: Install and run Firefox Driver
-        run: |
-          dart lib/web_driver_installer.dart firefoxdriver --install-only --driver-version="v0.26.0"
-          firefoxdriver/geckodriver --port=4446 &
-        working-directory: web_installers/packages/web_drivers
+        run: ${GECKOWEBDRIVER}/geckodriver --port=4446 &
         id: firefoxdriver
         if: always()
       - run: flutter drive --driver=test_driver/integration_test.dart --target=integration_test/main_test.dart -d web-server --browser-name=firefox --driver-port=4446
@@ -175,21 +165,10 @@ jobs:
         working-directory: packages/wasm_run_flutter/example
         run: flutter test -d macos integration_test --timeout "1200s" # 20 minutes
 
-      # Web Browser tests
-      - run: |
-          git clone https://github.com/flutter/web_installers.git
-          cd web_installers/packages/web_drivers
-          dart pub get
-        if: always()
-
       # Safari
-      - run: dart lib/web_driver_installer.dart safaridriver &
-        working-directory: web_installers/packages/web_drivers
+      - run: sudo safaridriver --enable
         id: safaridriver
         if: always()
-      # - run: sudo safaridriver --enable
-      #   id: safaridriver
-      #   if: always()
       - run: dart run test -p safari --timeout "600s" # 10 minutes
         working-directory: packages/wasm_run
         if: always() && steps.safaridriver.outcome == 'success'
@@ -335,11 +314,11 @@ jobs:
           components: rustfmt
       - uses: nttld/setup-ndk@v1
         with:
-          ndk-version: r25b
-      - uses: actions/setup-java@v3
+          ndk-version: r27d
+      - uses: actions/setup-java@v5
         with:
           distribution: zulu
-          java-version: "11.x"
+          java-version: "21"
 
       - name: Build the binaries
         run: melos run build:android -- dev
@@ -385,11 +364,11 @@ jobs:
           components: rustfmt
       - uses: nttld/setup-ndk@v1
         with:
-          ndk-version: r25b
-      - uses: actions/setup-java@v3
+          ndk-version: r27d
+      - uses: actions/setup-java@v5
         with:
           distribution: zulu
-          java-version: "11.x"
+          java-version: "21"
 
       - name: Build the binaries
         run: melos run build:android -- dev
