@@ -6,6 +6,7 @@ import 'package:wasm_run/src/ffi/setup_dynamic_library.dart';
 import 'package:wasm_run/src/ffi/stub.dart'
     if (dart.library.io) 'ffi/io.dart'
     if (dart.library.html) 'ffi/web.dart';
+import 'package:wasm_run/src/rust/frb_generated.dart';
 
 export 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart'
     show ExternalLibrary;
@@ -101,7 +102,7 @@ class WasmRunLibrary {
       );
     } else if (override && _wrapper != null) {
       throw _alreadyInitialized;
-    } else if (override || !await isReachable()) {
+    } else if ((override || !await isReachable()) && !kIsFlutter) {
       await setUpDesktopDynamicLibrary();
     }
 
@@ -109,7 +110,7 @@ class WasmRunLibrary {
   }
 }
 
-Future<WasmRunDart> defaultInstance() {
+Future<WasmRunDart> defaultInstance() async {
   if (_wrapper != null) {
     return Future.value(_wrapper!);
   }
@@ -120,18 +121,23 @@ Future<WasmRunDart> defaultInstance() {
       final externalLib = localTestingLibraryImpl();
       return _createWrapper(externalLib);
     } catch (_) {
-      if (!WasmRunLibrary._isWeb) {
-        print(
-          'When building a pure Dart application (backend or cli, for example),'
-          ' you must execute the cli command `wasm_run:setup`'
-          ' to download the binary locally, run `WasmRunLibrary.setUp`, or'
-          ' call `WasmRunLibrary.set(<nativeLibraryForYourPlatform>)`'
-          ' before using the library. The <nativeLibraryForYourPlatform> can'
-          ' be downloaded from the releases of the github repository'
-          ' of the package.',
-        );
+      try {
+        await RustLib.init();
+        return true;
+      } catch (_) {
+        if (!WasmRunLibrary._isWeb) {
+          print(
+            'When building a pure Dart application (backend or cli, for example),'
+            ' you must execute the cli command `wasm_run:setup`'
+            ' to download the binary locally, run `WasmRunLibrary.setUp`, or'
+            ' call `WasmRunLibrary.set(<nativeLibraryForYourPlatform>)`'
+            ' before using the library. The <nativeLibraryForYourPlatform> can'
+            ' be downloaded from the releases of the github repository'
+            ' of the package.',
+          );
+        }
+        rethrow;
       }
-      rethrow;
     }
   }
 }
