@@ -1,15 +1,30 @@
 name: build_rust_binaries
-description: A starting point for Dart libraries or applications.
-version: 1.0.0
-# repository: https://github.com/my_org/my_repo
+description: >
+  Build hooks and cli for building Rust locally or automatically in CI & CD
+  or retriving Rust binaries from a CDN like those built in Github Actions for a Github Releases.
+version: 0.1.0
+homepage: https://github.com/juancastillo0/wasm_run
+
+topics:
+  - rust
+  - interop
+  - cross-compilation
+  - ffi
+  - build
+  - hooks
+  - binaries
 
 environment:
-  sdk: ^3.11.4
+  sdk: ^3.10.0
+resolution: workspace
 
-# Add regular dependencies here.
 dependencies:
-  # path: ^1.9.0
+  yaml: ^3.1.0
+  args: ^2.4.0
+
+  code_assets: ^1.0.0
+  crypto: ^3.0.0
+  hooks: ^1.0.0
 
 dev_dependencies:
-  lints: ^6.0.0
-  test: ^1.25.6
+  test: ^1.30.0

@@ -1,0 +1,85 @@
+assetName: wasm_run_dart-$libraryType-$target
+outputDirectory: platform-build
+hostOSSupportedTargets:
+  windows:
+    - "aarch64-pc-windows-msvc"
+    - "x86_64-pc-windows-msvc"
+
+    - "x86_64-linux-android"
+    - "i686-linux-android"
+    - "armv7-linux-androideabi"
+    - "aarch64-linux-android"
+    - "riscv64-linux-android"
+
+    - "riscv64gc-unknown-linux-gnu"
+    - "x86_64-unknown-linux-gnu"
+    - "aarch64-unknown-linux-gnu"
+    - "armv7-unknown-linux-gnueabihf"
+  linux:
+    - "x86_64-linux-android"
+    - "i686-linux-android"
+    - "armv7-linux-androideabi"
+    - "aarch64-linux-android"
+    - "riscv64-linux-android"
+
+    - "x86_64-unknown-linux-gnu"
+    - "aarch64-unknown-linux-gnu"
+    - "armv7-unknown-linux-gnueabihf"
+    - "riscv64gc-unknown-linux-gnu"
+  darwin:
+    - "aarch64-apple-darwin"
+    - "x86_64-apple-darwin"
+    - "aarch64-apple-ios"
+    - "aarch64-apple-ios-sim"
+    - "x86_64-apple-ios"
+
+    - "aarch64-unknown-linux-gnu"
+    - "x86_64-unknown-linux-gnu"
+outputs:
+  wasm_run-wasmi-$target:
+    features: wasmi,wasi
+    targets:
+      - "aarch64-apple-ios"
+      - "aarch64-apple-ios-sim"
+      - "x86_64-apple-ios"
+      - "x86_64-linux-android"
+      - "i686-linux-android"
+      - "armv7-linux-androideabi"
+  wasm_run-wasmtime-$target:
+    targets:
+      - "aarch64-linux-android"
+      - "riscv64-linux-android"
+      # - "aarch64-unknown-fuchsia"
+      # - "x86_64-unknown-fuchsia"
+      - "armv7-unknown-linux-gnueabihf"
+      - "aarch64-unknown-linux-gnu"
+      # - "i686-unknown-linux-gnu"
+      # - "riscv32gc-unknown-linux-gnu"
+      - "riscv64gc-unknown-linux-gnu"
+      - "x86_64-unknown-linux-gnu"
+      - "aarch64-apple-darwin"
+      - "x86_64-apple-darwin"
+      - "aarch64-pc-windows-msvc"
+      # - "i686-pc-windows-msvc"
+      - "x86_64-pc-windows-msvc"
+
+# (OS.android, Architecture.arm) => 'armv7-linux-androideabi',
+# (OS.android, Architecture.arm64) => 'aarch64-linux-android',
+# (OS.android, Architecture.ia32) => 'i686-linux-android',
+# (OS.android, Architecture.riscv64) => 'riscv64-linux-android',
+# (OS.android, Architecture.x64) => 'x86_64-linux-android',
+# (OS.fuchsia, Architecture.arm64) => 'aarch64-unknown-fuchsia',
+# (OS.fuchsia, Architecture.x64) => 'x86_64-unknown-fuchsia',
+# (OS.iOS, Architecture.arm64) => 'aarch64-apple-ios',
+# (OS.iOS, Architecture.x64) => 'x86_64-apple-ios',
+# (OS.linux, Architecture.arm) => 'armv7-unknown-linux-gnueabihf',
+# (OS.linux, Architecture.arm64) => 'aarch64-unknown-linux-gnu',
+# (OS.linux, Architecture.ia32) => 'i686-unknown-linux-gnu',
+# (OS.linux, Architecture.riscv32) => 'riscv32gc-unknown-linux-gnu',
+# (OS.linux, Architecture.riscv64) => 'riscv64gc-unknown-linux-gnu',
+# (OS.linux, Architecture.x64) => 'x86_64-unknown-linux-gnu',
+# (OS.macOS, Architecture.arm64) => 'aarch64-apple-darwin',
+# (OS.macOS, Architecture.x64) => 'x86_64-apple-darwin',
+# (OS.windows, Architecture.arm64) => 'aarch64-pc-windows-msvc',
+# (OS.windows, Architecture.ia32) => 'i686-pc-windows-msvc',
+# (OS.windows, Architecture.x64) => 'x86_64-pc-windows-msvc',

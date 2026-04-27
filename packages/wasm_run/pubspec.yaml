@@ -25,6 +25,7 @@ dependencies:
   logging: ^1.1.0
   collection: ^1.17.0
   web: ^1.1.1
+  build_rust_binaries: ^0.1.0
 
 dev_dependencies:
   ffigen: ^20.1.1

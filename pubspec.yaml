@@ -1,5 +1,13 @@
 name: wasm_run_workspace
 
+hooks:
+  user_defines:
+    wasm_run:
+      buildMode: checkout
+      checkoutPath: packages/wasm_run/native/
+      # buildMode: local
+      # localPath: target/debug/wasm_run_dart.dll
+
 publish_to: none
 environment:
   sdk: ^3.10.0
@@ -10,6 +18,7 @@ workspace:
   - packages/wasm_run_flutter/example
   - packages/dart_wit_component/wasm_wit_component
   - packages/dart_wit_component/wasm_wit_component/example
+  - packages/build_rust_binaries
   - packages/wasm_packages/flutter_example
   - packages/wasm_packages/compression_rs
   - packages/wasm_packages/image_ops
