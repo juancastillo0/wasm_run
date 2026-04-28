@@ -473,6 +473,6 @@ jobs:
           sudo xcode-select --install || true
 
       - run: mkdir platform-build
-      - run: dart run bin/build_binaries.dart --createCargoConfig --outputDirectory ../../platform-build
+      - run: dart run bin/build_binaries.dart --createCargoConfig --outputDirectory ../../platform-build --no-failFast
         working-directory: packages/wasm_run
       - run: ls platform-build
