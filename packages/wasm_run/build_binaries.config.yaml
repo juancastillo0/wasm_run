@@ -1,6 +1,6 @@
 assetName: wasm_run_dart-$libraryType-$target
 outputDirectory: platform-build
-hostOSSupportedTargets:
+hostSupportedTargets:
   windows:
     - "aarch64-pc-windows-msvc"
     - "x86_64-pc-windows-msvc"
@@ -11,10 +11,8 @@ hostOSSupportedTargets:
     - "aarch64-linux-android"
     - "riscv64-linux-android"
 
-    - "riscv64gc-unknown-linux-gnu"
     - "x86_64-unknown-linux-gnu"
     - "aarch64-unknown-linux-gnu"
-    - "armv7-unknown-linux-gnueabihf"
   linux:
     - "x86_64-linux-android"
     - "i686-linux-android"
@@ -35,6 +33,12 @@ hostOSSupportedTargets:
 
     - "aarch64-unknown-linux-gnu"
     - "x86_64-unknown-linux-gnu"
+
+    - "x86_64-linux-android"
+    - "i686-linux-android"
+    - "armv7-linux-androideabi"
+    - "aarch64-linux-android"
+    - "riscv64-linux-android"
 outputs:
   wasm_run-wasmi-$target:
     features: wasmi,wasi

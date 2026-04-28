@@ -9,12 +9,18 @@ class SourceBinariesParams {
   final String Function(BuildInputParams input)? sha256ForAsset;
   final BuildOptions? defaultBuildOptions;
   final HttpClient httpClient;
+  final Future<void> Function(BuildInput input, BuildOutputBuilder output)?
+  buildWeb;
+  final Future<void> Function(BuildInputParams input, CLICommand command)?
+  runProcess;
 
   SourceBinariesParams({
     required this.fetchAssetUrl,
     this.sha256ForAsset,
     this.defaultBuildOptions,
+    this.buildWeb,
     HttpClient? httpClient,
+    this.runProcess,
   }) : httpClient = httpClient ?? HttpClient();
 }
 
@@ -23,6 +29,12 @@ Future<void> sourceRustBinariesBuildHook(
   SourceBinariesParams params,
 ) async {
   await build(args, (input, output) async {
+    try {
+      input.config.code;
+    } catch (_) {
+      // TODO: compile wasm?
+      return params.buildWeb?.call(input, output);
+    }
     BuildOptions buildOptions;
     try {
       buildOptions = BuildOptions.fromDefines(
@@ -79,6 +91,9 @@ hooks:
         inputParams,
         buildOptions.checkoutPath,
         buildOptions.features,
+        runProcess: params.runProcess != null
+            ? (command) => params.runProcess!(inputParams, command)
+            : CLICommand.defaultRunProcess,
       ),
       BuildModeEnum.fetch => FetchMode(inputParams, params, buildOptions),
     };
@@ -307,24 +322,16 @@ final class LocalMode extends BuildMode {
   List<Uri> get dependencies => [Uri.file(_localLibraryPath)];
 }
 
-typedef RunProcessFunction =
-    Future<void> Function(
-      String executable,
-      List<String> arguments, {
-      Directory? workingDirectory,
-      Map<String, String>? environment,
-    });
-
 final class CheckoutMode extends BuildMode {
   final Uri? checkoutPath;
   final String? features;
-  final RunProcessFunction runProcess;
+  final Future<void> Function(CLICommand command) runProcess;
 
   CheckoutMode(
     super.input,
     this.checkoutPath,
     this.features, {
-    this.runProcess = _defaultRunProcess,
+    this.runProcess = CLICommand.defaultRunProcess,
   });
 
   /// Taken from https://github.com/unicode-org/icu4x/blob/3b55a3ee7e2b879a83065ceb7d1540e44688b548/ffi/capi/build.sh
@@ -383,78 +390,60 @@ final class CheckoutMode extends BuildMode {
         Platform.environment['PINNED_CI_NIGHTLY'] ?? 'nightly-2025-09-27';
 
     if (buildStatic || isNoStd) {
-      await runProcess('rustup', [
-        'toolchain',
-        'install',
-        '--no-self-update',
-        nightly,
-        '--component',
-        'rust-src',
-      ], workingDirectory: workingDirectory);
+      await runProcess(
+        CLICommand('rustup', [
+          'toolchain',
+          'install',
+          '--no-self-update',
+          nightly,
+          '--component',
+          'rust-src',
+        ], workingDirectory: workingDirectory),
+      );
     }
 
-    await runProcess('rustup', [
-      'target',
-      'add',
-      rustTarget,
-      if (buildStatic || isNoStd) ...['--toolchain', nightly],
-    ], workingDirectory: workingDirectory);
+    await runProcess(
+      CLICommand('rustup', [
+        'target',
+        'add',
+        rustTarget,
+        if (buildStatic || isNoStd) ...['--toolchain', nightly],
+      ], workingDirectory: workingDirectory),
+    );
 
     await runProcess(
-      'cargo',
-      [
-        if (buildStatic || isNoStd) '+$nightly',
-        'rustc',
-        '--manifest-path=Cargo.toml',
-        '--crate-type=${buildStatic ? 'staticlib' : 'cdylib'}',
-        '--release',
-        '--config=profile.release.panic="abort"',
-        '--config=profile.release.codegen-units=1',
-        if (features != null) '--no-default-features',
-        if (features != null) '--features=$features',
-        if (isNoStd) '-Zbuild-std=core,alloc',
-        if (buildStatic || isNoStd) ...['-Zbuild-std=std,panic_abort'],
-        '--target=$rustTarget',
-        '--',
-        '--emit',
-        'link=${out.toFilePath(windows: Platform.isWindows)}',
-      ],
-      workingDirectory: workingDirectory,
-      environment: {
-        if (isNoStd) 'RUSTFLAGS': '-Zunstable-options -Cpanic=immediate-abort',
-      },
+      CLICommand(
+        'cargo',
+        [
+          if (buildStatic || isNoStd) '+$nightly',
+          'rustc',
+          '--manifest-path=Cargo.toml',
+          '--crate-type=${buildStatic ? 'staticlib' : 'cdylib'}',
+          '--release',
+          '--config=profile.release.panic="abort"',
+          '--config=profile.release.codegen-units=1',
+          if (features != null) '--no-default-features',
+          if (features != null) '--features=$features',
+          if (isNoStd) '-Zbuild-std=core,alloc',
+          if (buildStatic || isNoStd) ...['-Zbuild-std=std,panic_abort'],
+          '--target=$rustTarget',
+          '--',
+          '--emit',
+          'link=${out.toFilePath(windows: Platform.isWindows)}',
+        ],
+        workingDirectory: workingDirectory,
+        environment: {
+          if (isNoStd)
+            'RUSTFLAGS': '-Zunstable-options -Cpanic=immediate-abort',
+        },
+      ),
     );
     return out;
   }
 
+  // TODO: use cargo project as dependency with Cargo.lock
   @override
   List<Uri> get dependencies => [checkoutPath!.resolve('Cargo.toml')];
-
-  static Future<void> _defaultRunProcess(
-    String executable,
-    List<String> arguments, {
-    Directory? workingDirectory,
-    Map<String, String>? environment,
-  }) async {
-    print('----------');
-    print('Running `$executable $arguments` in $workingDirectory');
-    final processResult = await Process.run(
-      executable,
-      arguments,
-      workingDirectory: workingDirectory?.path,
-      environment: environment,
-    );
-    print('stdout:');
-    print(processResult.stdout);
-    if ((processResult.stderr as String).isNotEmpty) {
-      print('stderr:');
-      print(processResult.stderr);
-    }
-    if (processResult.exitCode != 0) {
-      throw ProcessException(executable, arguments, '', processResult.exitCode);
-    }
-    print('==========');
-  }
 }
 
 bool _isNoStdTarget(String target) => const [
@@ -506,4 +495,44 @@ OS _rustTargetToOS(String target) {
     'msvc' => OS.windows,
     _ => throw UnimplementedError('Target $target not available for rust'),
   };
+}
+
+class CLICommand {
+  final String executable;
+  final List<String> args;
+  final Directory? workingDirectory;
+  final Map<String, String>? environment;
+
+  CLICommand(
+    this.executable,
+    this.args, {
+    this.workingDirectory,
+    this.environment,
+  });
+
+  static Future<void> defaultRunProcess(CLICommand command) async {
+    final executable = command.executable;
+    final arguments = command.args;
+    final workingDirectory = command.workingDirectory;
+    final environment = command.environment;
+
+    print('----------');
+    print('Running `$executable $arguments` in $workingDirectory');
+    final processResult = await Process.run(
+      executable,
+      arguments,
+      workingDirectory: workingDirectory?.path,
+      environment: environment,
+    );
+    print('stdout:');
+    print(processResult.stdout);
+    if ((processResult.stderr as String).isNotEmpty) {
+      print('stderr:');
+      print(processResult.stderr);
+    }
+    if (processResult.exitCode != 0) {
+      throw ProcessException(executable, arguments, '', processResult.exitCode);
+    }
+    print('==========');
+  }
 }

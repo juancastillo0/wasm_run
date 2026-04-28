@@ -20,6 +20,7 @@ class BuildRustBinariesCLI {
     this.androidVersionDefault = '31,riscv64-linux-android=35',
     this.assetNameDefault = r'$libraryType-$target',
     this.log = print,
+    this.runProcess,
   });
 
   final String configPathDefault;
@@ -28,11 +29,17 @@ class BuildRustBinariesCLI {
   final String androidVersionDefault;
   final String assetNameDefault;
   final void Function(Object message) log;
+  final Future<void> Function(BuildInputParams input, CLICommand command)?
+  runProcess;
 
   ArgParser makeParser() {
     final parser = ArgParser()
       ..addFlag('help', abbr: 'h', negatable: false)
-      ..addOption('outputDir', abbr: 'o', help: 'Output directory')
+      ..addOption(
+        'outputDirectory',
+        abbr: 'o',
+        help: 'Directory to place built libraries',
+      )
       ..addOption(
         'features',
         abbr: 'f',
@@ -95,8 +102,14 @@ class BuildRustBinariesCLI {
     if (!cargoConfig.existsSync()) {
       final ndkHome =
           Platform.environment['ANDROID_NDK_ROOT'] ??
-          Platform.environment['ANDROID_NDK_LATEST_HOME'] ??
-          Platform.environment['ANDROID_NDK_HOME'];
+          Platform.environment['ANDROID_NDK_HOME'] ??
+          Platform.environment['ANDROID_NDK_LATEST_HOME'];
+      if (ndkHome == null) {
+        throw Exception(
+          'ANDROID_NDK_ROOT, ANDROID_NDK_LATEST_HOME, or ANDROID_NDK_HOME'
+          ' environment variable must be set to create Cargo config for Android targets.',
+        );
+      }
 
       final os = Platform.isMacOS ? 'darwin' : Platform.operatingSystem;
       // TODO: darwin aarch64?
@@ -119,9 +132,19 @@ class BuildRustBinariesCLI {
               return MapEntry(s[0], s[1]);
             }),
       );
-      String linkerLine(String rustTarget, String linkerPrefix) {
+      String linkerLine(
+        String rustTarget,
+        String linkerPrefix, {
+        bool cc = false,
+      }) {
         final av = avMap[rustTarget] ?? baseAV;
-        return '$rustTarget.linker="$ndkHome/toolchains/llvm/prebuilt/$os-x86_64/bin/$linkerPrefix$av-clang$suffix"';
+        final path = Directory(ndkHome).absolute.uri
+            .resolve(
+              'toolchains/llvm/prebuilt/$os-x86_64/bin/$linkerPrefix$av-clang$suffix',
+            )
+            .toFilePath(windows: false);
+        if (cc) return 'CC_$rustTarget="$path"';
+        return '$rustTarget.linker="$path"';
       }
 
       await cargoConfig.create(recursive: true);
@@ -136,6 +159,13 @@ ${linkerLine('riscv64-linux-android', 'riscv64-linux-android')}
 aarch64-unknown-linux-gnu.linker="aarch64-linux-gnu-gcc"
 armv7-unknown-linux-gnueabihf.linker="arm-linux-gnueabihf-gcc"
 riscv64gc-unknown-linux-gnu.linker="riscv64-linux-gnu-gcc"
+
+[env]
+${linkerLine('aarch64-linux-android', 'aarch64-linux-android', cc: true)}
+${linkerLine('armv7-linux-androideabi', 'armv7a-linux-androideabi', cc: true)}
+${linkerLine('i686-linux-android', 'i686-linux-android', cc: true)}
+${linkerLine('x86_64-linux-android', 'x86_64-linux-android', cc: true)}
+${linkerLine('riscv64-linux-android', 'riscv64-linux-android', cc: true)}
 ''');
     }
   }
@@ -145,7 +175,14 @@ riscv64gc-unknown-linux-gnu.linker="riscv64-linux-gnu-gcc"
     Uri rustDirectory,
     String? features,
   ) {
-    return CheckoutMode(params, rustDirectory, features);
+    return CheckoutMode(
+      params,
+      rustDirectory,
+      features,
+      runProcess: runProcess != null
+          ? (command) => runProcess!(params, command)
+          : CLICommand.defaultRunProcess,
+    );
   }
 
   Future<void> mainCli(List<String> args) async {
@@ -167,7 +204,7 @@ riscv64gc-unknown-linux-gnu.linker="riscv64-linux-gnu-gcc"
       exit(1);
     }
 
-    final outputDirStr = parserResult['outputDir'] as String?;
+    final outputDirStr = parserResult['outputDirectory'] as String?;
     final cliFeatures = parserResult['features'] as String?;
     final targetsStr = parserResult['targets'] as String?;
     final manifestPath =
@@ -214,7 +251,9 @@ riscv64gc-unknown-linux-gnu.linker="riscv64-linux-gnu-gcc"
     // It can be provided via CLI or in the config file.
     final baseOutputDirStr = outputDirStr ?? config?.outputDirectory;
     if (baseOutputDirStr == null) {
-      log('Error: --outputDir is required (either via CLI or in config file).');
+      log(
+        'Error: --outputDirectory is required (either via CLI or in config file).',
+      );
       exit(1);
     }
     final baseOutputDirectory = (await Directory(

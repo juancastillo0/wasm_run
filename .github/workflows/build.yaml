@@ -11,9 +11,9 @@ on:
     - cron: "0 10 * * 1"
 
 env:
-  FLUTTER_CHANNEL: beta
+  FLUTTER_CHANNEL: stable
   RUST_TOOLCHAIN: nightly
-  MELOS_VERSION: "3.1.0"
+  MELOS_VERSION: "7.5.1"
 
 jobs:
   # General build, check, and test steps
@@ -428,3 +428,28 @@ jobs:
           ram-size: 1024M
           disk-size: 2048M
           script: cd packages/wasm_run_flutter/example && flutter test -d `flutter devices | grep android | tr ' ' '\n' | grep emulator-` integration_test && echo "Finished Android integration tests"
+
+  build_binaries:
+    runs-on: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v3
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: ${{ env.FLUTTER_CHANNEL }}
+      - run: dart pub global activate melos ${{ env.MELOS_VERSION }} && melos bs
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ env.RUST_TOOLCHAIN }}
+          components: rustfmt, clippy
+      - run: rustup show
+
+      - name: Setup additional linkers
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install gcc-aarch64-linux-gnu gcc-arm-linux-gnueabihf gcc-riscv64-linux-gnu gcc-i686-linux-gnu
+
+      - run: mkdir platform-build
+      - run: dart run bin/build_binaries.dart --createCargoConfig --outputDirectory ../../platform-build
+        working-directory: packages/wasm_run
+      - run: ls platform-build
