@@ -29,10 +29,18 @@ void main(List<String> args) async {
   await configApi(impl, prefix);
 }
 
-Future<void> configApi(String impl, String prefix) async {
+Future<bool> configApi(String impl, String prefix) async {
   print('config_api: using WASM runtime "$impl"');
 
   final cargoTomlFile = File(join([prefix, 'Cargo.toml']));
+  final originalToml = await cargoTomlFile.readAsString();
+  if (originalToml.contains('''
+[features]
+default = ["$impl", "wasi"]
+''')) {
+    return false;
+  }
+
   final cargoTomlSourceFile = impl == 'wasmi'
       ? File(join([prefix, 'Cargo.wasmi.toml']))
       : File(join([prefix, 'Cargo.wasmtime.toml']));
@@ -42,11 +50,9 @@ Future<void> configApi(String impl, String prefix) async {
       ? File(join([prefix, 'src', 'api_wasmi.rs']))
       : File(join([prefix, 'src', 'api_wasmtime.rs']));
 
-  final content = await apiSourceFile.readAsString();
-  await apiFile.writeAsString(content);
-
-  final cargoTomlContent = await cargoTomlSourceFile.readAsString();
-  await cargoTomlFile.writeAsString(cargoTomlContent);
+  await apiSourceFile.copy(apiFile.path);
+  await cargoTomlSourceFile.copy(cargoTomlFile.path);
+  return true;
 }
 
 Future<void> runProcessWithConfigAPI(
@@ -64,13 +70,16 @@ Future<void> runProcessWithConfigAPI(
         'x86_64-apple-ios',
       ].contains(input.rustTarget)) {
     final prefix = command.workingDirectory!.path;
+    bool updated = false;
     try {
-      await configApi('wasmi', prefix);
+      updated = await configApi('wasmi', prefix);
       await CLICommand.defaultRunProcess(command);
     } catch (e) {
-      try {
-        await configApi('wasmtime', prefix);
-      } catch (_) {}
+      if (updated) {
+        try {
+          await configApi('wasmtime', prefix);
+        } catch (_) {}
+      }
       rethrow;
     }
   } else {

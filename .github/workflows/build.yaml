@@ -149,6 +149,11 @@ jobs:
         with:
           toolchain: ${{ env.RUST_TOOLCHAIN }}
           components: rustfmt
+      - name: Set SDKROOT and Xcode command line tools
+        run: |
+          echo "SDKROOT=$(xcrun --show-sdk-path)" >> $GITHUB_ENV
+          export SDKROOT=$(xcrun --show-sdk-path)
+          sudo xcode-select --install || true
 
       - name: Build the XCFramework
         run: melos run build:apple -- dev
@@ -325,6 +330,10 @@ jobs:
         with:
           distribution: zulu
           java-version: "21"
+      - name: Setup additional linkers
+        run: |
+          sudo apt-get update
+          sudo apt-get install gcc-aarch64-linux-gnu gcc-arm-linux-gnueabihf gcc-riscv64-linux-gnu gcc-i686-linux-gnu
 
       - name: Build the binaries
         run: melos run build:android -- dev
@@ -380,6 +389,10 @@ jobs:
         with:
           distribution: zulu
           java-version: "21"
+      - name: Setup additional linkers
+        run: |
+          sudo apt-get update
+          sudo apt-get install gcc-aarch64-linux-gnu gcc-arm-linux-gnueabihf gcc-riscv64-linux-gnu gcc-i686-linux-gnu
 
       - name: Build the binaries
         run: melos run build:android -- dev
@@ -430,7 +443,11 @@ jobs:
           script: cd packages/wasm_run_flutter/example && flutter test -d `flutter devices | grep android | tr ' ' '\n' | grep emulator-` integration_test && echo "Finished Android integration tests"
 
   build_binaries:
-    runs-on: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
     steps:
       - uses: actions/checkout@v3
       - uses: subosito/flutter-action@v2
@@ -448,6 +465,12 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install gcc-aarch64-linux-gnu gcc-arm-linux-gnueabihf gcc-riscv64-linux-gnu gcc-i686-linux-gnu
+      - name: Set SDKROOT and Xcode command line tools
+        if: matrix.os == 'macos-latest'
+        run: |
+          echo "SDKROOT=$(xcrun --show-sdk-path)" >> $GITHUB_ENV
+          export SDKROOT=$(xcrun --show-sdk-path)
+          sudo xcode-select --install || true
 
       - run: mkdir platform-build
       - run: dart run bin/build_binaries.dart --createCargoConfig --outputDirectory ../../platform-build
