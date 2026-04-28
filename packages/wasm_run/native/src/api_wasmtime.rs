@@ -725,7 +725,8 @@ impl WasmRunModuleId {
         hf: HostFunction,
         worker_channel: Option<WorkerSendRecv>,
     ) -> Result<RustOpaque<WFunc>> {
-        let f: WasmFunction = unsafe { std::mem::transmute(hf.function_pointer) };
+        let p: usize = hf.function_pointer.try_into().unwrap();
+        let f: WasmFunction = unsafe { std::mem::transmute(p) };
         let func = Func::new(
             store.as_context_mut(),
             FuncType::new(

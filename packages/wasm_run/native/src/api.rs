@@ -20,7 +20,7 @@ type ValueType = wasmtime::ValType;
 
 static ARRAY: Lazy<RwLock<GlobalState>> = Lazy::new(|| RwLock::new(Default::default()));
 
-thread_local!(static STORE: RefCell<Option<WasmiModuleImpl>> = RefCell::new(None));
+thread_local!(static STORE: RefCell<Option<WasmiModuleImpl>> = const { RefCell::new(None) });
 
 #[frb(ignore)]
 #[derive(Default)]
@@ -538,10 +538,10 @@ impl WasmRunModuleId {
                 .unwrap();
             let num_params = func.ty(&module.store).params().count();
             if (num_params == 0 && !args.is_empty())
-                || (num_params != 0 && args.len() % num_params != 0)
+                || (num_params != 0 && !args.len().is_multiple_of(num_params))
                 || num_params * (num_tasks as usize) != args.len()
             {
-                function_stream.add(ParallelExec::Err(format!(
+                let _ = function_stream.add(ParallelExec::Err(format!(
                     "Number of arguments must be a multiple of {num_params}"
                 )));
                 return;
@@ -613,10 +613,10 @@ impl WasmRunModuleId {
             loop {
                 let req = main_recv_c.recv().unwrap();
                 if req.function_pointer == 0 {
-                    function_stream.add(ParallelExec::Ok(req.args));
+                    let _ = function_stream.add(ParallelExec::Ok(req.args));
                     return;
                 }
-                function_stream.add(ParallelExec::Call(req));
+                let _ = function_stream.add(ParallelExec::Call(req));
                 // TODO: try this code with sync function
                 // let worker = &c.workers_out[req.worker_index];
 
@@ -633,7 +633,7 @@ impl WasmRunModuleId {
                 // worker.send(results).unwrap();
             }
         } else {
-            function_stream.add(ParallelExec::Err(
+            let _ = function_stream.add(ParallelExec::Err(
                 "Instance has no thread pool configured".to_string(),
             ));
         }
@@ -667,7 +667,12 @@ impl WasmRunModuleId {
 
         let mut ctx = value.store.as_context_mut();
         {
-            let v = RwLock::new(unsafe { std::mem::transmute(ctx.as_context_mut()) });
+            let v = RwLock::new(unsafe {
+                std::mem::transmute::<
+                    wasmtime::StoreContextMut<'_, StoreState>,
+                    wasmtime::StoreContextMut<'_, StoreState>,
+                >(ctx.as_context_mut())
+            });
             self.1 .0.write().unwrap().push(v);
         }
         let result = f(ctx);
@@ -720,7 +725,8 @@ impl WasmRunModuleId {
         hf: HostFunction,
         worker_channel: Option<WorkerSendRecv>,
     ) -> Result<RustOpaque<WFunc>> {
-        let f: WasmFunction = unsafe { std::mem::transmute(hf.function_pointer) };
+        let p: usize = hf.function_pointer.try_into().unwrap();
+        let f: WasmFunction = unsafe { std::mem::transmute(p) };
         let func = Func::new(
             store.as_context_mut(),
             FuncType::new(
@@ -775,7 +781,12 @@ impl WasmRunModuleId {
         let inputs = vec![mapped].into_dart();
         let stack = {
             let stack = caller.data().stack.clone();
-            let v = RwLock::new(unsafe { std::mem::transmute(caller) });
+            let v = RwLock::new(unsafe {
+                std::mem::transmute::<
+                    wasmtime::StoreContextMut<'_, StoreState>,
+                    wasmtime::StoreContextMut<'_, StoreState>,
+                >(caller)
+            });
             stack.0.write().unwrap().push(v);
             stack
         };

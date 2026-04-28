@@ -379,7 +379,8 @@ impl WasmRunModuleId {
         result_types: Vec<ValueTy>,
     ) -> Result<RustOpaque<WFunc>> {
         self.with_module_mut(|store| {
-            let f: WasmFunction = unsafe { std::mem::transmute(function_pointer) };
+            let p: usize = function_pointer.try_into().unwrap();
+            let f: WasmFunction = unsafe { std::mem::transmute(p) };
             let func = Func::new(
                 store,
                 FuncType::new(
