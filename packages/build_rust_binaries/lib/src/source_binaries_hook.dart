@@ -90,7 +90,8 @@ hooks:
       BuildModeEnum.checkout => CheckoutMode(
         inputParams,
         buildOptions.checkoutPath,
-        buildOptions.features,
+        features: buildOptions.features,
+        defaultFeatures: buildOptions.defaultFeatures,
         runProcess: params.runProcess != null
             ? (command) => params.runProcess!(inputParams, command)
             : CLICommand.defaultRunProcess,
@@ -124,6 +125,7 @@ class BuildOptions {
   final Uri? localPath;
   final Uri? checkoutPath;
   final String? features;
+  final bool? defaultFeatures;
   final String? fetchUri;
   final String? fetchUriBase;
 
@@ -138,6 +140,7 @@ class BuildOptions {
     this.localPath,
     this.checkoutPath,
     this.features,
+    this.defaultFeatures,
     this.fetchUri,
     this.fetchUriBase,
     this.assetsSha256,
@@ -158,6 +161,8 @@ class BuildOptions {
       localPath: defines.path('localPath') ?? defaults?.localPath,
       checkoutPath: defines.path('checkoutPath') ?? defaults?.checkoutPath,
       features: features is List ? features.join(',') : features as String?,
+      defaultFeatures:
+          defines['defaultFeatures'] as bool? ?? defaults?.defaultFeatures,
       fetchUri: defines['fetchUri'] as String? ?? defaults?.fetchUri,
       fetchUriBase:
           defines['fetchUriBase'] as String? ?? defaults?.fetchUriBase,
@@ -167,6 +172,24 @@ class BuildOptions {
           defaults?.assetsSha256,
       libraryName: defines['libraryName'] as String? ?? defaults?.libraryName,
     );
+  }
+
+  Map<String, Object?> toJson() => {
+    'buildMode': buildMode.name,
+    if (localPath != null) 'localPath': localPath.toString(),
+    if (checkoutPath != null) 'checkoutPath': checkoutPath.toString(),
+    if (features != null) 'features': features,
+    if (defaultFeatures != null) 'defaultFeatures': defaultFeatures,
+    if (fetchUri != null) 'fetchUri': fetchUri,
+    if (fetchUriBase != null) 'fetchUriBase': fetchUriBase,
+    if (assetName != null) 'assetName': assetName,
+    if (assetsSha256 != null) 'assetsSha256': assetsSha256,
+    if (libraryName != null) 'libraryName': libraryName,
+  };
+
+  @override
+  String toString() {
+    return 'BuildOptions${toJson()}';
   }
 }
 
@@ -275,7 +298,7 @@ final class FetchMode extends BuildMode {
       throw Exception(
         'The pre-built binary for the target $rustTarget-$libraryType at '
         '$dylibRemoteUri has a hash of $fileHash, which does not match '
-        '$expectedFileHash fixed in the build hook of package:wasm_run.',
+        '$expectedFileHash provided in the build hook configuration.',
       );
     }
     final library = File.fromUri(
@@ -325,12 +348,14 @@ final class LocalMode extends BuildMode {
 final class CheckoutMode extends BuildMode {
   final Uri? checkoutPath;
   final String? features;
+  final bool? defaultFeatures;
   final Future<void> Function(CLICommand command) runProcess;
 
   CheckoutMode(
     super.input,
-    this.checkoutPath,
-    this.features, {
+    this.checkoutPath, {
+    this.features,
+    this.defaultFeatures,
     this.runProcess = CLICommand.defaultRunProcess,
   });
 
@@ -368,8 +393,8 @@ final class CheckoutMode extends BuildMode {
     print('Running in `checkout` mode');
     if (checkoutPath == null) {
       throw ArgumentError(
-        'Specify the wasm_run checkout folder with the `checkoutPath` key'
-        ' in your pubspec build options.',
+        'Specify the checkout folder with the `checkoutPath` key'
+        ' in your pubspec.yaml build options.',
       );
     }
     if (!File.fromUri(checkoutPath!.resolve('Cargo.toml')).existsSync()) {
@@ -422,7 +447,7 @@ final class CheckoutMode extends BuildMode {
           '--release',
           '--config=profile.release.panic="abort"',
           '--config=profile.release.codegen-units=1',
-          if (features != null) '--no-default-features',
+          if (defaultFeatures == false) '--no-default-features',
           if (features != null) '--features=$features',
           if (isNoStd) '-Zbuild-std=core,alloc',
           if (buildStatic || isNoStd) ...['-Zbuild-std=std,panic_abort'],
@@ -493,7 +518,7 @@ OS _rustTargetToOS(String target) {
     'gnueabihf' || 'gnu' => OS.linux,
     'darwin' => OS.macOS,
     'msvc' => OS.windows,
-    _ => throw UnimplementedError('Target $target not available for rust'),
+    _ => throw UnimplementedError('Target $target not available for Rust'),
   };
 }
 

@@ -1,15 +1,16 @@
-// ignore_for_file: avoid_print
-
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:args/args.dart';
 import 'package:build_rust_binaries/build_rust_binaries.dart';
+import 'package:crypto/crypto.dart' show sha256;
 import 'package:yaml/yaml.dart';
 
 typedef _OutputToBuild = ({
   String rustTarget,
   String? features,
   String? outputName,
+  bool? defaultFeatures,
 });
 
 class BuildRustBinariesCLI {
@@ -19,6 +20,8 @@ class BuildRustBinariesCLI {
     this.createCargoConfigDefault = false,
     this.androidVersionDefault = '31,riscv64-linux-android=35',
     this.assetNameDefault = r'$libraryType-$target',
+    this.defaultFeaturesDefault = true,
+    this.computeSha256Default = true,
     this.log = print,
     this.runProcess,
   });
@@ -28,6 +31,8 @@ class BuildRustBinariesCLI {
   final bool createCargoConfigDefault;
   final String androidVersionDefault;
   final String assetNameDefault;
+  final bool defaultFeaturesDefault;
+  final bool computeSha256Default;
   final void Function(Object message) log;
   final Future<void> Function(BuildInputParams input, CLICommand command)?
   runProcess;
@@ -44,6 +49,13 @@ class BuildRustBinariesCLI {
         'features',
         abbr: 'f',
         help: 'Features to enable for the Rust build (comma-separated)',
+      )
+      ..addFlag(
+        'defaultFeatures',
+        help:
+            'Whether to enable default features for the Rust build.'
+            ' Defaults to $defaultFeaturesDefault',
+        negatable: true,
       )
       ..addOption(
         'config',
@@ -81,6 +93,19 @@ class BuildRustBinariesCLI {
             ' Defaults to $createCargoConfigDefault',
         negatable: true,
       )
+      ..addFlag(
+        'failFast',
+        abbr: 'ff',
+        help: 'Whether to stop the build process on the first failure',
+        negatable: true,
+      )
+      ..addFlag(
+        'computeSha256',
+        help:
+            'Whether to compute the SHA-256 hash of the built binaries.'
+            ' Defaults to $computeSha256Default',
+        negatable: true,
+      )
       ..addOption(
         'androidVersion',
         help:
@@ -97,20 +122,32 @@ class BuildRustBinariesCLI {
     String androidVersion,
   ) async {
     final cargoConfig = File.fromUri(
-      Uri.file(cargoProject).resolve('.cargo/config.toml'),
+      Uri.directory(cargoProject).resolve('.cargo/config.toml'),
     );
-    if (!cargoConfig.existsSync()) {
+    if (cargoConfig.existsSync()) {
+      log(
+        'Cargo config already exists at ${cargoConfig.path}, skipping creation.',
+      );
+    } else {
       final ndkHome =
           Platform.environment['ANDROID_NDK_ROOT'] ??
           Platform.environment['ANDROID_NDK_HOME'] ??
           Platform.environment['ANDROID_NDK_LATEST_HOME'];
       if (ndkHome == null) {
         throw Exception(
-          'ANDROID_NDK_ROOT, ANDROID_NDK_LATEST_HOME, or ANDROID_NDK_HOME'
-          ' environment variable must be set to create Cargo config for Android targets.',
+          'ANDROID_NDK_ROOT, ANDROID_NDK_HOME or ANDROID_NDK_LATEST_HOME'
+          ' environment variable must be set to create the .cargo/config.toml'
+          ' for Android targets.',
         );
       }
-
+      String homePath = Directory(
+        ndkHome,
+      ).absolute.uri.toFilePath(windows: false);
+      // On Windows, if the path starts with a drive letter, it may be prefixed with a slash
+      // (e.g. /C:/path/to/ndk). Remove it for correct path construction.
+      if (Platform.isWindows && homePath.startsWith('/')) {
+        homePath = homePath.substring(1);
+      }
       final os = Platform.isMacOS ? 'darwin' : Platform.operatingSystem;
       // TODO: darwin aarch64?
       // final architecture = switch (Platform.version.split('_').last) {
@@ -118,6 +155,7 @@ class BuildRustBinariesCLI {
       //   _ => 'x86_64',
       // };
       final suffix = Platform.isWindows ? '.cmd' : '';
+      final exe = Platform.isWindows ? '.exe' : '';
       String baseAV = androidVersionDefault;
       final avMap = Map.fromEntries(
         androidVersion
@@ -138,11 +176,8 @@ class BuildRustBinariesCLI {
         bool cc = false,
       }) {
         final av = avMap[rustTarget] ?? baseAV;
-        final path = Directory(ndkHome).absolute.uri
-            .resolve(
-              'toolchains/llvm/prebuilt/$os-x86_64/bin/$linkerPrefix$av-clang$suffix',
-            )
-            .toFilePath(windows: false);
+        final path =
+            '$homePath/toolchains/llvm/prebuilt/$os-x86_64/bin/$linkerPrefix$av-clang$suffix';
         if (cc) return 'CC_$rustTarget="$path"';
         return '$rustTarget.linker="$path"';
       }
@@ -161,6 +196,8 @@ armv7-unknown-linux-gnueabihf.linker="arm-linux-gnueabihf-gcc"
 riscv64gc-unknown-linux-gnu.linker="riscv64-linux-gnu-gcc"
 
 [env]
+ANDROID_NDK_HOME="$homePath"
+AR="$homePath/toolchains/llvm/prebuilt/$os-x86_64/bin/llvm-ar$exe"
 ${linkerLine('aarch64-linux-android', 'aarch64-linux-android', cc: true)}
 ${linkerLine('armv7-linux-androideabi', 'armv7a-linux-androideabi', cc: true)}
 ${linkerLine('i686-linux-android', 'i686-linux-android', cc: true)}
@@ -172,13 +209,15 @@ ${linkerLine('riscv64-linux-android', 'riscv64-linux-android', cc: true)}
 
   CheckoutMode checkoutModeBuilder(
     BuildInputParams params,
-    Uri rustDirectory,
+    Uri rustDirectory, {
     String? features,
-  ) {
+    bool? defaultFeatures,
+  }) {
     return CheckoutMode(
       params,
       rustDirectory,
-      features,
+      features: features,
+      defaultFeatures: defaultFeatures,
       runProcess: runProcess != null
           ? (command) => runProcess!(params, command)
           : CLICommand.defaultRunProcess,
@@ -200,8 +239,7 @@ ${linkerLine('riscv64-linux-android', 'riscv64-linux-android', cc: true)}
       // TODO: use pubspec config
       config = await _loadConfig(configPath);
     } catch (e) {
-      log('Error loading config file: $e');
-      exit(1);
+      throw Exception('Error loading config file: $e');
     }
 
     final outputDirStr = parserResult['outputDirectory'] as String?;
@@ -233,14 +271,21 @@ ${linkerLine('riscv64-linux-android', 'riscv64-linux-android', cc: true)}
         parserResult['assetName'] as String? ??
         config?.assetName ??
         assetNameDefault;
+    final failFast =
+        parserResult['failFast'] as bool? ?? config?.failFast ?? true;
+    final defaultFeaturesGlobal =
+        parserResult['defaultFeatures'] as bool? ?? defaultFeaturesDefault;
+    final computeSha256 =
+        parserResult['computeSha256'] as bool? ??
+        config?.computeSha256 ??
+        computeSha256Default;
 
     if (!File.fromUri(
       Uri.file(rustDirectory).resolve('Cargo.toml'),
     ).existsSync()) {
-      log(
+      throw Exception(
         'Error: Cargo.toml not found in the specified manifestPath: $manifestPath',
       );
-      exit(1);
     }
 
     if (createCargoConfig) {
@@ -251,10 +296,9 @@ ${linkerLine('riscv64-linux-android', 'riscv64-linux-android', cc: true)}
     // It can be provided via CLI or in the config file.
     final baseOutputDirStr = outputDirStr ?? config?.outputDirectory;
     if (baseOutputDirStr == null) {
-      log(
+      throw Exception(
         'Error: --outputDirectory is required (either via CLI or in config file).',
       );
-      exit(1);
     }
     final baseOutputDirectory = (await Directory(
       baseOutputDirStr,
@@ -264,8 +308,9 @@ ${linkerLine('riscv64-linux-android', 'riscv64-linux-android', cc: true)}
       log('No matching targets found in the configuration.');
       return;
     }
-
-    for (final (:rustTarget, :features, :outputName) in outputsToBuild) {
+    final builtLibraries = <String, bool>{};
+    for (final (:rustTarget, :features, :outputName, :defaultFeatures)
+        in outputsToBuild) {
       // For each output, determine the effective rust target and features.
       // CLI arguments take precedence over the output's own settings.
 
@@ -278,13 +323,22 @@ ${linkerLine('riscv64-linux-android', 'riscv64-linux-android', cc: true)}
         ' ${effectiveFeatures ?? 'none'}',
       );
 
-      // TODO: find library name from cargo metadata
-      String libraryName = assetName
+      final libraryName = assetName
           .replaceAll(r'$output', outputName ?? 'cli')
-          // TODO: .replaceAll(r'$libraryName', libraryName)
+          // TODO: .replaceAll(r'$libraryName', libraryName) find library name from cargo metadata
           .replaceAll(r'$libraryType', libraryType)
-          .replaceAll(r'$features', effectiveFeatures ?? 'defaults')
+          .replaceAll(
+            r'$features',
+            effectiveFeatures?.replaceAll(',', '_') ?? 'defaults',
+          )
           .replaceAll(r'$target', rustTarget);
+      if (builtLibraries.containsKey(libraryName)) {
+        throw Exception(
+          ' Duplicate output name "$libraryName" for target "$rustTarget".'
+          ' This may cause outputs to overwrite each other. Change the assetName'
+          ' ($assetName) template to include more variables and make it unique.',
+        );
+      }
       final params = BuildInputParams(
         outputDirectory: baseOutputDirectory,
         rustTarget: rustTarget,
@@ -294,7 +348,8 @@ ${linkerLine('riscv64-linux-android', 'riscv64-linux-android', cc: true)}
       final buildMode = checkoutModeBuilder(
         params,
         Uri.directory(rustDirectory),
-        effectiveFeatures,
+        features: effectiveFeatures,
+        defaultFeatures: defaultFeatures ?? defaultFeaturesGlobal,
       );
 
       try {
@@ -302,12 +357,41 @@ ${linkerLine('riscv64-linux-android', 'riscv64-linux-android', cc: true)}
         final outFilePath = baseOutputDirectory
             .resolve(libraryName)
             .toFilePath(windows: Platform.isWindows);
-        // TODO: validate duplicate outputs
         await File.fromUri(builtLibrary).rename(outFilePath);
         log('Successfully built: $outFilePath');
+        builtLibraries[libraryName] = true;
       } catch (e) {
-        log('Error building target $rustTarget: $e');
+        final errorMessage =
+            'Error building library $libraryName ($libraryType-$rustTarget)';
+        if (failFast) {
+          log(errorMessage);
+          rethrow;
+        }
+        log('$errorMessage: $e');
+        builtLibraries[libraryName] = false;
       }
+    }
+
+    builtLibraries.forEach((name, success) {
+      log(
+        'Library $name: ${success ? '✅ built successfully' : '❌ failed to build'}',
+      );
+    });
+    if (builtLibraries.values.any((success) => !success)) {
+      throw Exception('Some libraries failed to build.');
+    } else if (computeSha256) {
+      final f = await Future.wait(
+        builtLibraries.keys.map((l) async {
+          final d = await File.fromUri(
+            baseOutputDirectory.resolve(l),
+          ).readAsBytes();
+          return MapEntry(l, sha256.convert(d).toString());
+        }),
+      );
+      final file = await File.fromUri(
+        baseOutputDirectory.resolve('sha256-hashes.json'),
+      ).create();
+      await file.writeAsString(jsonEncode(Map.fromEntries(f)));
     }
   }
 
@@ -351,22 +435,28 @@ ${linkerLine('riscv64-linux-android', 'riscv64-linux-android', cc: true)}
                   (t) => (
                     rustTarget: t,
                     features: o.value.features,
-                    // TODO: replece other? features?
                     outputName: o.key,
+                    defaultFeatures: o.value.defaultFeatures,
                   ),
                 ),
           )
           .toList();
     } else if (requestedTargets != null) {
       outputsToBuild = requestedTargets
-          .map((t) => (rustTarget: t, features: null, outputName: null))
+          .map(
+            (t) => (
+              rustTarget: t,
+              features: null,
+              outputName: null,
+              defaultFeatures: null,
+            ),
+          )
           .toList();
     } else {
-      log(
+      throw Exception(
         'Error: No targets provided.'
         ' Please provide a config file or specify targets.',
       );
-      exit(1);
     }
     return outputsToBuild;
   }
@@ -395,6 +485,8 @@ class BuildBinariesParams {
   final String? cargoProject;
   final bool? createCargoConfig;
   final String? androidVersion;
+  final bool? failFast;
+  final bool? computeSha256;
 
   BuildBinariesParams({
     required this.buildStatic,
@@ -406,6 +498,8 @@ class BuildBinariesParams {
     required this.cargoProject,
     required this.createCargoConfig,
     required this.androidVersion,
+    required this.failFast,
+    required this.computeSha256,
   });
 
   factory BuildBinariesParams.fromJson(Map<dynamic, dynamic> json) {
@@ -429,6 +523,8 @@ class BuildBinariesParams {
       androidVersion: json['androidVersion'] is num
           ? json['androidVersion'].toString()
           : json['androidVersion'] as String?,
+      failFast: json['failFast'] as bool?,
+      computeSha256: json['computeSha256'] as bool?,
     );
   }
 
@@ -443,19 +539,21 @@ class BuildBinariesParams {
       'cargoProject': cargoProject,
       'createCargoConfig': createCargoConfig,
       'androidVersion': androidVersion,
+      'failFast': failFast,
+      'computeSha256': computeSha256,
     };
   }
 }
 
 class BuildBinariesOutput {
   final String? features;
+  final bool? defaultFeatures;
   final List<String> targets;
-  final String? androidVersion;
 
   BuildBinariesOutput({
     required this.features,
     required this.targets,
-    this.androidVersion,
+    required this.defaultFeatures,
   });
 
   factory BuildBinariesOutput.fromJson(Map<dynamic, dynamic> json) {
@@ -463,9 +561,7 @@ class BuildBinariesOutput {
     return BuildBinariesOutput(
       features: features is List ? features.join(',') : features as String?,
       targets: (json['targets'] as List<dynamic>).cast<String>(),
-      androidVersion: json['androidVersion'] is num
-          ? json['androidVersion'].toString()
-          : json['androidVersion'] as String?,
+      defaultFeatures: json['defaultFeatures'] as bool?,
     );
   }
 
@@ -473,7 +569,7 @@ class BuildBinariesOutput {
     return {
       'features': features,
       'targets': targets,
-      'androidVersion': androidVersion,
+      'defaultFeatures': defaultFeatures,
     };
   }
 }
