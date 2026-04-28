@@ -95,7 +95,6 @@ class BuildRustBinariesCLI {
       )
       ..addFlag(
         'failFast',
-        abbr: 'ff',
         help: 'Whether to stop the build process on the first failure',
         negatable: true,
       )
