@@ -9,7 +9,7 @@ hostSupportedTargets:
     - "i686-linux-android"
     - "armv7-linux-androideabi"
     - "aarch64-linux-android"
-    - "riscv64-linux-android"
+    # - "riscv64-linux-android"
 
     - "x86_64-unknown-linux-gnu"
     - "aarch64-unknown-linux-gnu"
@@ -18,7 +18,7 @@ hostSupportedTargets:
     - "i686-linux-android"
     - "armv7-linux-androideabi"
     - "aarch64-linux-android"
-    - "riscv64-linux-android"
+    # - "riscv64-linux-android"
 
     - "x86_64-unknown-linux-gnu"
     - "aarch64-unknown-linux-gnu"
@@ -38,7 +38,7 @@ hostSupportedTargets:
     - "i686-linux-android"
     - "armv7-linux-androideabi"
     - "aarch64-linux-android"
-    - "riscv64-linux-android"
+    # - "riscv64-linux-android"
 outputs:
   wasm_run-wasmi-$target:
     features: wasmi,wasi
@@ -49,13 +49,13 @@ outputs:
       - "x86_64-linux-android"
       - "i686-linux-android"
       - "armv7-linux-androideabi"
+      - "armv7-unknown-linux-gnueabihf"
   wasm_run-wasmtime-$target:
     targets:
       - "aarch64-linux-android"
-      - "riscv64-linux-android"
+      # - "riscv64-linux-android"
       # - "aarch64-unknown-fuchsia"
       # - "x86_64-unknown-fuchsia"
-      - "armv7-unknown-linux-gnueabihf"
       - "aarch64-unknown-linux-gnu"
       # - "i686-unknown-linux-gnu"
       # - "riscv32gc-unknown-linux-gnu"

@@ -66,6 +66,7 @@ Future<void> runProcessWithConfigAPI(
         'x86_64-linux-android',
         'aarch64-apple-ios',
         'x86_64-apple-ios',
+        'armv7-unknown-linux-gnueabihf',
       ].contains(input.rustTarget)) {
     final prefix = command.workingDirectory!.absolute.uri.toFilePath();
     bool updated = false;
