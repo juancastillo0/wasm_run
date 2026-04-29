@@ -13,7 +13,7 @@ flutter_rust_bridge_codegen = "2.12.0"
 flutter_rust_bridge = "=2.12.0"
 anyhow = "1.0.102"
 once_cell = "1.21.4"
-wat = "1.246.2"
+wat = "1.247.0"
 
 rayon = "1.11.0"
 
