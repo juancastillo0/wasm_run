@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:args/args.dart';
@@ -10,7 +9,7 @@ typedef _OutputToBuild = ({
   String rustTarget,
   String? features,
   String? outputName,
-  bool? defaultFeatures,
+  bool? noDefaultFeatures,
 });
 
 class BuildRustBinariesCLI {
@@ -20,8 +19,9 @@ class BuildRustBinariesCLI {
     this.createCargoConfigDefault = false,
     this.androidVersionDefault = '31,riscv64-linux-android=35',
     this.assetNameDefault = r'$libraryType-$target',
-    this.defaultFeaturesDefault = true,
+    this.noDefaultFeaturesDefault = false,
     this.computeSha256Default = true,
+    this.failFastDefault = true,
     this.log = print,
     this.runProcess,
   });
@@ -31,7 +31,8 @@ class BuildRustBinariesCLI {
   final bool createCargoConfigDefault;
   final String androidVersionDefault;
   final String assetNameDefault;
-  final bool defaultFeaturesDefault;
+  final bool noDefaultFeaturesDefault;
+  final bool failFastDefault;
   final bool computeSha256Default;
   final void Function(Object message) log;
   final Future<void> Function(BuildInputParams input, CLICommand command)?
@@ -51,11 +52,10 @@ class BuildRustBinariesCLI {
         help: 'Features to enable for the Rust build (comma-separated)',
       )
       ..addFlag(
-        'defaultFeatures',
+        'noDefaultFeatures',
         help:
             'Whether to enable default features for the Rust build.'
-            ' Defaults to $defaultFeaturesDefault',
-        negatable: true,
+            ' Defaults to $noDefaultFeaturesDefault',
       )
       ..addOption(
         'config',
@@ -95,7 +95,9 @@ class BuildRustBinariesCLI {
       )
       ..addFlag(
         'failFast',
-        help: 'Whether to stop the build process on the first failure',
+        help:
+            'Whether to stop the build process on the first failure.'
+            ' Defaults to $failFastDefault',
         negatable: true,
       )
       ..addFlag(
@@ -112,7 +114,8 @@ class BuildRustBinariesCLI {
             ' Version number or comma separated <target>=<version>.'
             ' Defaults to $androidVersionDefault',
       )
-      ..addFlag('buildStatic', help: 'Build static binaries');
+      ..addFlag('buildStatic', help: 'Build static binaries')
+      ..addFlag('buildDynamic', help: 'Build dynamic binaries');
     return parser;
   }
 
@@ -210,13 +213,13 @@ ${linkerLine('riscv64-linux-android', 'riscv64-linux-android', cc: true)}
     BuildInputParams params,
     Uri rustDirectory, {
     String? features,
-    bool? defaultFeatures,
+    bool? noDefaultFeatures,
   }) {
     return CheckoutMode(
       params,
       rustDirectory,
       features: features,
-      defaultFeatures: defaultFeatures,
+      noDefaultFeatures: noDefaultFeatures,
       runProcess: runProcess != null
           ? (command) => runProcess!(params, command)
           : CLICommand.defaultRunProcess,
@@ -255,11 +258,20 @@ ${linkerLine('riscv64-linux-android', 'riscv64-linux-android', cc: true)}
         : manifestPath;
     final cargoProject =
         parserResult['cargoProject'] as String? ?? rustDirectory;
+    final buildDynamic =
+        parserResult.parsedFlag('buildDynamic') ?? config?.buildDynamic ?? true;
     final buildStatic =
-        parserResult['buildStatic'] as bool? ?? config?.buildStatic ?? false;
+        parserResult.parsedFlag('buildStatic') ??
+        config?.buildStatic ??
+        !buildDynamic;
+    if (!buildDynamic && !buildStatic) {
+      throw Exception(
+        'At least one of --buildStatic or --buildDynamic must be true.',
+      );
+    }
     // TODO: use cargo ndk integration instead of custom config generation
     final createCargoConfig =
-        parserResult['createCargoConfig'] as bool? ??
+        parserResult.parsedFlag('createCargoConfig') ??
         config?.createCargoConfig ??
         createCargoConfigDefault;
     final androidVersion =
@@ -271,11 +283,14 @@ ${linkerLine('riscv64-linux-android', 'riscv64-linux-android', cc: true)}
         config?.assetName ??
         assetNameDefault;
     final failFast =
-        parserResult['failFast'] as bool? ?? config?.failFast ?? true;
-    final defaultFeaturesGlobal =
-        parserResult['defaultFeatures'] as bool? ?? defaultFeaturesDefault;
+        parserResult.parsedFlag('failFast') ??
+        config?.failFast ??
+        failFastDefault;
+    final noDefaultFeaturesGlobal =
+        parserResult.parsedFlag('noDefaultFeatures') ??
+        noDefaultFeaturesDefault;
     final computeSha256 =
-        parserResult['computeSha256'] as bool? ??
+        parserResult.parsedFlag('computeSha256') ??
         config?.computeSha256 ??
         computeSha256Default;
 
@@ -308,7 +323,7 @@ ${linkerLine('riscv64-linux-android', 'riscv64-linux-android', cc: true)}
       return;
     }
     final builtLibraries = <String, bool>{};
-    for (final (:rustTarget, :features, :outputName, :defaultFeatures)
+    for (final (:rustTarget, :features, :outputName, :noDefaultFeatures)
         in outputsToBuild) {
       // For each output, determine the effective rust target and features.
       // CLI arguments take precedence over the output's own settings.
@@ -316,58 +331,62 @@ ${linkerLine('riscv64-linux-android', 'riscv64-linux-android', cc: true)}
       // If --features is provided via CLI, use it.
       // Otherwise, use the features specified in this output.
       final effectiveFeatures = cliFeatures ?? features;
-      final libraryType = buildStatic ? 'static' : 'dynamic';
-      log(
-        'Building target: $rustTarget-$libraryType with features:'
-        ' ${effectiveFeatures ?? 'none'}',
-      );
-
-      final libraryName = assetName
-          .replaceAll(r'$output', outputName ?? 'cli')
-          // TODO: .replaceAll(r'$libraryName', libraryName) find library name from cargo metadata
-          .replaceAll(r'$libraryType', libraryType)
-          .replaceAll(
-            r'$features',
-            effectiveFeatures?.replaceAll(',', '_') ?? 'defaults',
-          )
-          .replaceAll(r'$target', rustTarget);
-      if (builtLibraries.containsKey(libraryName)) {
-        throw Exception(
-          ' Duplicate output name "$libraryName" for target "$rustTarget".'
-          ' This may cause outputs to overwrite each other. Change the assetName'
-          ' ($assetName) template to include more variables and make it unique.',
+      for (final libraryType in [
+        if (buildStatic) 'static',
+        if (buildDynamic) 'dynamic',
+      ]) {
+        log(
+          'Building target: $rustTarget-$libraryType with features:'
+          ' ${effectiveFeatures ?? 'none'}',
         );
-      }
-      final params = BuildInputParams(
-        outputDirectory: baseOutputDirectory,
-        rustTarget: rustTarget,
-        buildStatic: buildStatic,
-        libraryName: libraryName,
-      );
-      final buildMode = checkoutModeBuilder(
-        params,
-        Uri.directory(rustDirectory),
-        features: effectiveFeatures,
-        defaultFeatures: defaultFeatures ?? defaultFeaturesGlobal,
-      );
 
-      try {
-        final builtLibrary = await buildMode.build();
-        final outFilePath = baseOutputDirectory
-            .resolve(libraryName)
-            .toFilePath(windows: Platform.isWindows);
-        await File.fromUri(builtLibrary).rename(outFilePath);
-        log('Successfully built: $outFilePath');
-        builtLibraries[libraryName] = true;
-      } catch (e) {
-        final errorMessage =
-            'Error building library $libraryName ($libraryType-$rustTarget)';
-        if (failFast) {
-          log(errorMessage);
-          rethrow;
+        final libraryName = assetName
+            .replaceAll(r'$output', outputName ?? 'cli')
+            // TODO: .replaceAll(r'$libraryName', libraryName) find library name from cargo metadata
+            .replaceAll(r'$libraryType', libraryType)
+            .replaceAll(
+              r'$features',
+              effectiveFeatures?.replaceAll(',', '_') ?? 'defaults',
+            )
+            .replaceAll(r'$target', rustTarget);
+        if (builtLibraries.containsKey(libraryName)) {
+          throw Exception(
+            ' Duplicate output name "$libraryName" for target "$rustTarget".'
+            ' This may cause outputs to overwrite each other. Change the assetName'
+            ' ($assetName) template to include more variables and make it unique.',
+          );
         }
-        log('$errorMessage: $e');
-        builtLibraries[libraryName] = false;
+        final params = BuildInputParams(
+          outputDirectory: baseOutputDirectory,
+          rustTarget: rustTarget,
+          buildStatic: libraryType == 'static',
+          libraryName: libraryName,
+        );
+        final buildMode = checkoutModeBuilder(
+          params,
+          Uri.directory(rustDirectory),
+          features: effectiveFeatures,
+          noDefaultFeatures: noDefaultFeatures ?? noDefaultFeaturesGlobal,
+        );
+
+        try {
+          final builtLibrary = await buildMode.build();
+          final outFilePath = baseOutputDirectory
+              .resolve(libraryName)
+              .toFilePath(windows: Platform.isWindows);
+          await File.fromUri(builtLibrary).rename(outFilePath);
+          log('Successfully built: $outFilePath');
+          builtLibraries[libraryName] = true;
+        } catch (e) {
+          final errorMessage =
+              'Error building library $libraryName ($libraryType-$rustTarget)';
+          if (failFast) {
+            log(errorMessage);
+            rethrow;
+          }
+          log('$errorMessage: $e');
+          builtLibraries[libraryName] = false;
+        }
       }
     }
 
@@ -388,9 +407,9 @@ ${linkerLine('riscv64-linux-android', 'riscv64-linux-android', cc: true)}
         }),
       );
       final file = await File.fromUri(
-        baseOutputDirectory.resolve('sha256-hashes.json'),
+        baseOutputDirectory.resolve('sha256-hashes.csv'),
       ).create();
-      await file.writeAsString(jsonEncode(Map.fromEntries(f)));
+      await file.writeAsString(f.map((e) => '${e.key},${e.value}').join('\n'));
     }
   }
 
@@ -435,7 +454,7 @@ ${linkerLine('riscv64-linux-android', 'riscv64-linux-android', cc: true)}
                     rustTarget: t,
                     features: o.value.features,
                     outputName: o.key,
-                    defaultFeatures: o.value.defaultFeatures,
+                    noDefaultFeatures: o.value.noDefaultFeatures,
                   ),
                 ),
           )
@@ -447,7 +466,7 @@ ${linkerLine('riscv64-linux-android', 'riscv64-linux-android', cc: true)}
               rustTarget: t,
               features: null,
               outputName: null,
-              defaultFeatures: null,
+              noDefaultFeatures: null,
             ),
           )
           .toList();
@@ -458,6 +477,12 @@ ${linkerLine('riscv64-linux-android', 'riscv64-linux-android', cc: true)}
       );
     }
     return outputsToBuild;
+  }
+}
+
+extension on ArgResults {
+  bool? parsedFlag(String name) {
+    return wasParsed(name) ? flag(name) : null;
   }
 }
 
@@ -476,6 +501,7 @@ ${linkerLine('riscv64-linux-android', 'riscv64-linux-android', cc: true)}
 ///     targets: ["aarch64-apple-ios", "aarch64-apple-ios-sim"]
 class BuildBinariesParams {
   final bool? buildStatic;
+  final bool? buildDynamic;
   final String? outputDirectory;
   final String? assetName;
   final Map<String, List<String>>? hostSupportedTargets;
@@ -489,6 +515,7 @@ class BuildBinariesParams {
 
   BuildBinariesParams({
     required this.buildStatic,
+    required this.buildDynamic,
     required this.outputDirectory,
     required this.assetName,
     required this.hostSupportedTargets,
@@ -504,6 +531,7 @@ class BuildBinariesParams {
   factory BuildBinariesParams.fromJson(Map<dynamic, dynamic> json) {
     return BuildBinariesParams(
       buildStatic: json['buildStatic'] as bool?,
+      buildDynamic: json['buildDynamic'] as bool?,
       outputDirectory: json['outputDirectory'] as String?,
       assetName: json['assetName'] as String?,
       hostSupportedTargets:
@@ -530,6 +558,7 @@ class BuildBinariesParams {
   Map<String, dynamic> toJson() {
     return {
       'buildStatic': buildStatic,
+      'buildDynamic': buildDynamic,
       'outputDirectory': outputDirectory,
       'assetName': assetName,
       'hostSupportedTargets': hostSupportedTargets,
@@ -546,13 +575,13 @@ class BuildBinariesParams {
 
 class BuildBinariesOutput {
   final String? features;
-  final bool? defaultFeatures;
+  final bool? noDefaultFeatures;
   final List<String> targets;
 
   BuildBinariesOutput({
     required this.features,
     required this.targets,
-    required this.defaultFeatures,
+    required this.noDefaultFeatures,
   });
 
   factory BuildBinariesOutput.fromJson(Map<dynamic, dynamic> json) {
@@ -560,7 +589,7 @@ class BuildBinariesOutput {
     return BuildBinariesOutput(
       features: features is List ? features.join(',') : features as String?,
       targets: (json['targets'] as List<dynamic>).cast<String>(),
-      defaultFeatures: json['defaultFeatures'] as bool?,
+      noDefaultFeatures: json['noDefaultFeatures'] as bool?,
     );
   }
 
@@ -568,7 +597,7 @@ class BuildBinariesOutput {
     return {
       'features': features,
       'targets': targets,
-      'defaultFeatures': defaultFeatures,
+      'noDefaultFeatures': noDefaultFeatures,
     };
   }
 }

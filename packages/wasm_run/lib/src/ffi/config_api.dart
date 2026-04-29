@@ -30,14 +30,11 @@ void main(List<String> args) async {
 }
 
 Future<bool> configApi(String impl, String prefix) async {
-  print('config_api: using WASM runtime "$impl"');
+  print('config_api: configuring WASM runtime "$impl"');
 
   final cargoTomlFile = File(join([prefix, 'Cargo.toml']));
   final originalToml = await cargoTomlFile.readAsString();
-  if (originalToml.contains('''
-[features]
-default = ["$impl", "wasi"]
-''')) {
+  if (originalToml.contains('default = ["$impl", "wasi"]')) {
     return false;
   }
 
@@ -52,6 +49,7 @@ default = ["$impl", "wasi"]
 
   await apiSourceFile.copy(apiFile.path);
   await cargoTomlSourceFile.copy(cargoTomlFile.path);
+  print('config_api: using WASM runtime "$impl"');
   return true;
 }
 
@@ -69,7 +67,7 @@ Future<void> runProcessWithConfigAPI(
         'aarch64-apple-ios',
         'x86_64-apple-ios',
       ].contains(input.rustTarget)) {
-    final prefix = command.workingDirectory!.path;
+    final prefix = command.workingDirectory!.absolute.uri.toFilePath();
     bool updated = false;
     try {
       updated = await configApi('wasmi', prefix);

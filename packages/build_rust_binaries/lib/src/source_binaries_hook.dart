@@ -91,7 +91,7 @@ hooks:
         inputParams,
         buildOptions.checkoutPath,
         features: buildOptions.features,
-        defaultFeatures: buildOptions.defaultFeatures,
+        noDefaultFeatures: buildOptions.noDefaultFeatures,
         runProcess: params.runProcess != null
             ? (command) => params.runProcess!(inputParams, command)
             : CLICommand.defaultRunProcess,
@@ -125,7 +125,7 @@ class BuildOptions {
   final Uri? localPath;
   final Uri? checkoutPath;
   final String? features;
-  final bool? defaultFeatures;
+  final bool? noDefaultFeatures;
   final String? fetchUri;
   final String? fetchUriBase;
 
@@ -140,7 +140,7 @@ class BuildOptions {
     this.localPath,
     this.checkoutPath,
     this.features,
-    this.defaultFeatures,
+    this.noDefaultFeatures,
     this.fetchUri,
     this.fetchUriBase,
     this.assetsSha256,
@@ -161,8 +161,8 @@ class BuildOptions {
       localPath: defines.path('localPath') ?? defaults?.localPath,
       checkoutPath: defines.path('checkoutPath') ?? defaults?.checkoutPath,
       features: features is List ? features.join(',') : features as String?,
-      defaultFeatures:
-          defines['defaultFeatures'] as bool? ?? defaults?.defaultFeatures,
+      noDefaultFeatures:
+          defines['noDefaultFeatures'] as bool? ?? defaults?.noDefaultFeatures,
       fetchUri: defines['fetchUri'] as String? ?? defaults?.fetchUri,
       fetchUriBase:
           defines['fetchUriBase'] as String? ?? defaults?.fetchUriBase,
@@ -179,7 +179,7 @@ class BuildOptions {
     if (localPath != null) 'localPath': localPath.toString(),
     if (checkoutPath != null) 'checkoutPath': checkoutPath.toString(),
     if (features != null) 'features': features,
-    if (defaultFeatures != null) 'defaultFeatures': defaultFeatures,
+    if (noDefaultFeatures != null) 'noDefaultFeatures': noDefaultFeatures,
     if (fetchUri != null) 'fetchUri': fetchUri,
     if (fetchUriBase != null) 'fetchUriBase': fetchUriBase,
     if (assetName != null) 'assetName': assetName,
@@ -348,14 +348,14 @@ final class LocalMode extends BuildMode {
 final class CheckoutMode extends BuildMode {
   final Uri? checkoutPath;
   final String? features;
-  final bool? defaultFeatures;
+  final bool? noDefaultFeatures;
   final Future<void> Function(CLICommand command) runProcess;
 
   CheckoutMode(
     super.input,
     this.checkoutPath, {
     this.features,
-    this.defaultFeatures,
+    this.noDefaultFeatures,
     this.runProcess = CLICommand.defaultRunProcess,
   });
 
@@ -447,7 +447,7 @@ final class CheckoutMode extends BuildMode {
           '--release',
           '--config=profile.release.panic="abort"',
           '--config=profile.release.codegen-units=1',
-          if (defaultFeatures == false) '--no-default-features',
+          if (noDefaultFeatures == true) '--no-default-features',
           if (features != null) '--features=$features',
           if (isNoStd) '-Zbuild-std=core,alloc',
           if (buildStatic || isNoStd) ...['-Zbuild-std=std,panic_abort'],
