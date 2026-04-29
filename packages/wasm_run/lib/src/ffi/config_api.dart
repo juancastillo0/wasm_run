@@ -74,13 +74,11 @@ Future<void> runProcessWithConfigAPI(
     try {
       updated = await configApi('wasmi', prefix);
       await CLICommand.defaultRunProcess(command);
-    } catch (e) {
+    } finally {
       if (updated) {
-        try {
-          await configApi('wasmtime', prefix);
-        } catch (_) {}
+        // Restore to wasmtime after the build
+        await configApi('wasmtime', prefix);
       }
-      rethrow;
     }
   } else {
     return CLICommand.defaultRunProcess(command);
