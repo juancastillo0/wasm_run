@@ -38,55 +38,70 @@ class BuildRustBinariesCLI {
   final Future<void> Function(BuildInputParams input, CLICommand command)?
   runProcess;
 
+  static const configCLIKey = 'config';
+  static const outputCLIKey = 'output';
+  static const featuresCLIKey = 'features';
+  static const targetsCLIKey = 'targets';
+  static const manifestPathCLIKey = 'manifest-path';
+  static const cargoProjectCLIKey = 'cargo-project';
+  static const createCargoConfigCLIKey = 'create-cargo-config';
+  static const androidVersionCLIKey = 'android-version';
+  static const assetNameCLIKey = 'asset-name';
+  static const noDefaultFeaturesCLIKey = 'no-default-features';
+  static const failFastCLIKey = 'fail-fast';
+  static const computeSha256CLIKey = 'compute-sha256';
+  static const buildDynamicCLIKey = 'build-dynamic';
+  static const buildStaticCLIKey = 'build-static';
+
   ArgParser makeParser() {
     final parser = ArgParser()
       ..addFlag('help', abbr: 'h', negatable: false)
       ..addOption(
-        'outputDirectory',
+        outputCLIKey,
         abbr: 'o',
         help: 'Directory to place built libraries',
       )
       ..addOption(
-        'features',
+        featuresCLIKey,
         abbr: 'f',
         help: 'Features to enable for the Rust build (comma-separated)',
       )
       ..addFlag(
-        'noDefaultFeatures',
+        noDefaultFeaturesCLIKey,
         help:
             'Whether to enable default features for the Rust build.'
             ' Defaults to $noDefaultFeaturesDefault',
       )
       ..addOption(
-        'config',
+        configCLIKey,
         abbr: 'c',
         help: 'Path to config file',
         defaultsTo: configPathDefault,
       )
       ..addOption(
-        'targets',
+        targetsCLIKey,
         abbr: 't',
         help: 'Comma-separated list of targets to build',
       )
       ..addOption(
-        'assetName',
+        assetNameCLIKey,
         help: 'Asset name template, e.g. wasm_run_dart-\$libraryType-\$target',
       )
       ..addOption(
-        'manifestPath',
+        manifestPathCLIKey,
         abbr: 'm',
         help:
             'Path to the Rust Cargo manifest (Cargo.toml).'
             ' Defaults to $manifestPathDefault',
       )
       ..addOption(
-        'cargoProject',
+        cargoProjectCLIKey,
         help:
             'Path to the Rust Cargo project.'
             ' Defaults to the directory containing the manifestPath',
       )
       ..addFlag(
-        'createCargoConfig',
+        createCargoConfigCLIKey,
         help:
             'Creates a Cargo linkers configuration .cargo/config.toml'
             ' based on the environment Android NDK path and androidVersion.'
@@ -94,28 +109,28 @@ class BuildRustBinariesCLI {
         negatable: true,
       )
       ..addFlag(
-        'failFast',
+        failFastCLIKey,
         help:
             'Whether to stop the build process on the first failure.'
             ' Defaults to $failFastDefault',
         negatable: true,
       )
       ..addFlag(
-        'computeSha256',
+        computeSha256CLIKey,
         help:
             'Whether to compute the SHA-256 hash of the built binaries.'
             ' Defaults to $computeSha256Default',
         negatable: true,
       )
       ..addOption(
-        'androidVersion',
+        androidVersionCLIKey,
         help:
             'Android version for NDK Cargo linkers configuration.'
             ' Version number or comma separated <target>=<version>.'
             ' Defaults to $androidVersionDefault',
       )
-      ..addFlag('buildStatic', help: 'Build static binaries')
-      ..addFlag('buildDynamic', help: 'Build dynamic binaries');
+      ..addFlag(buildStaticCLIKey, help: 'Build static binaries')
+      ..addFlag(buildDynamicCLIKey, help: 'Build dynamic binaries');
     return parser;
   }
 
@@ -235,7 +250,7 @@ ${linkerLine('riscv64-linux-android', 'riscv64-linux-android', cc: true)}
       return;
     }
 
-    final configPath = parserResult['config'] as String;
+    final configPath = parserResult[configCLIKey] as String;
     BuildBinariesParams? config;
     try {
       // TODO: use pubspec config
@@ -244,11 +259,11 @@ ${linkerLine('riscv64-linux-android', 'riscv64-linux-android', cc: true)}
       throw Exception('Error loading config file: $e');
     }
 
-    final outputDirStr = parserResult['outputDirectory'] as String?;
-    final cliFeatures = parserResult['features'] as String?;
-    final targetsStr = parserResult['targets'] as String?;
+    final outputDirStr = parserResult[outputCLIKey] as String?;
+    final cliFeatures = parserResult[featuresCLIKey] as String?;
+    final targetsStr = parserResult[targetsCLIKey] as String?;
     final manifestPath =
-        parserResult['manifestPath'] as String? ??
+        parserResult[manifestPathCLIKey] as String? ??
         config?.manifestPath ??
         manifestPathDefault;
     final rustDirectory = manifestPath.endsWith('Cargo.toml')
@@ -257,40 +272,42 @@ ${linkerLine('riscv64-linux-android', 'riscv64-linux-android', cc: true)}
           ).resolve('..').toFilePath(windows: Platform.isWindows)
         : manifestPath;
     final cargoProject =
-        parserResult['cargoProject'] as String? ?? rustDirectory;
+        parserResult[cargoProjectCLIKey] as String? ?? rustDirectory;
     final buildDynamic =
-        parserResult.parsedFlag('buildDynamic') ?? config?.buildDynamic ?? true;
+        parserResult.parsedFlag(buildDynamicCLIKey) ??
+        config?.buildDynamic ??
+        true;
     final buildStatic =
-        parserResult.parsedFlag('buildStatic') ??
+        parserResult.parsedFlag(buildStaticCLIKey) ??
         config?.buildStatic ??
         !buildDynamic;
     if (!buildDynamic && !buildStatic) {
       throw Exception(
-        'At least one of --buildStatic or --buildDynamic must be true.',
+        'At least one of --$buildStaticCLIKey or --$buildDynamicCLIKey must be true.',
       );
     }
     // TODO: use cargo ndk integration instead of custom config generation
     final createCargoConfig =
-        parserResult.parsedFlag('createCargoConfig') ??
+        parserResult.parsedFlag(createCargoConfigCLIKey) ??
         config?.createCargoConfig ??
         createCargoConfigDefault;
     final androidVersion =
-        parserResult['androidVersion'] as String? ??
+        parserResult[androidVersionCLIKey] as String? ??
         config?.androidVersion ??
         androidVersionDefault;
     final assetName =
-        parserResult['assetName'] as String? ??
+        parserResult[assetNameCLIKey] as String? ??
         config?.assetName ??
         assetNameDefault;
     final failFast =
-        parserResult.parsedFlag('failFast') ??
+        parserResult.parsedFlag(failFastCLIKey) ??
         config?.failFast ??
         failFastDefault;
     final noDefaultFeaturesGlobal =
-        parserResult.parsedFlag('noDefaultFeatures') ??
+        parserResult.parsedFlag(noDefaultFeaturesCLIKey) ??
         noDefaultFeaturesDefault;
     final computeSha256 =
-        parserResult.parsedFlag('computeSha256') ??
+        parserResult.parsedFlag(computeSha256CLIKey) ??
         config?.computeSha256 ??
         computeSha256Default;
 
@@ -311,7 +328,7 @@ ${linkerLine('riscv64-linux-android', 'riscv64-linux-android', cc: true)}
     final baseOutputDirStr = outputDirStr ?? config?.outputDirectory;
     if (baseOutputDirStr == null) {
       throw Exception(
-        'Error: --outputDirectory is required (either via CLI or in config file).',
+        'Error: --output is required (either via CLI or in config file).',
       );
     }
     final baseOutputDirectory = (await Directory(
