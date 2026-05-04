@@ -239,7 +239,7 @@ ${linkerLine('riscv64-linux-android', 'riscv64-linux-android', cc: true)}
     BuildBinariesParams? config;
     try {
       // TODO: use pubspec config
-      config = await _loadConfig(configPath);
+      config = await loadConfig(configPath);
     } catch (e) {
       throw Exception('Error loading config file: $e');
     }
@@ -317,14 +317,14 @@ ${linkerLine('riscv64-linux-android', 'riscv64-linux-android', cc: true)}
     final baseOutputDirectory = (await Directory(
       baseOutputDirStr,
     ).create(recursive: true)).absolute.uri;
-    final outputsToBuild = _outputsToBuild(targetsStr, config);
-    if (outputsToBuild.isEmpty) {
+    final outputs = outputsToBuild(targetsStr, config);
+    if (outputs.isEmpty) {
       log('No matching targets found in the configuration.');
       return;
     }
     final builtLibraries = <String, bool>{};
     for (final (:rustTarget, :features, :outputName, :noDefaultFeatures)
-        in outputsToBuild) {
+        in outputs) {
       // For each output, determine the effective rust target and features.
       // CLI arguments take precedence over the output's own settings.
 
@@ -413,7 +413,7 @@ ${linkerLine('riscv64-linux-android', 'riscv64-linux-android', cc: true)}
     }
   }
 
-  Future<BuildBinariesParams?> _loadConfig(String configPath) async {
+  Future<BuildBinariesParams?> loadConfig(String configPath) async {
     final file = File(configPath);
     if (!file.existsSync()) {
       if (configPath == configPathDefault) return null;
@@ -427,7 +427,7 @@ ${linkerLine('riscv64-linux-android', 'riscv64-linux-android', cc: true)}
     return BuildBinariesParams.fromJson(yamlMap as Map<dynamic, dynamic>);
   }
 
-  List<_OutputToBuild> _outputsToBuild(
+  List<_OutputToBuild> outputsToBuild(
     String? targetsStr,
     BuildBinariesParams? config,
   ) {
