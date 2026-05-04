@@ -60,24 +60,6 @@ melos:
       description: Updates version numbers in all build files
       run: bash scripts/version.sh
 
-    build:
-      run: melos run build:apple && melos run build:android && melos run build:other
-      description: Build all native libraries for the project.
-      env:
-        BUILD_RUST_WASM_EXAMPLES: false
-
-    build:apple:
-      run: bash scripts/build-apple.sh
-      description: Build the XCFramework for iOS and macOS.
-
-    build:android:
-      run: bash scripts/build-android.sh
-      description: Build the .tar.gz for Android.
-
-    build:other:
-      run: bash scripts/build-other.sh
-      description: Build the .tar.gz for all other platforms.
-
     build:wasm_examples:
       run: bash scripts/build-rust-wasm-examples.sh
       description: Build WASI and threads Rust WASM examples.

@@ -155,14 +155,6 @@ jobs:
           export SDKROOT=$(xcrun --show-sdk-path)
           sudo xcode-select --install || true
 
-      - name: Build the XCFramework
-        run: melos run build:apple -- dev
-      - name: Copy the XCFramework to the needed location
-        run: |
-          CURR_VERSION=wasm_run-v`awk '/^version: /{print $2}' packages/wasm_run/pubspec.yaml`
-          cp platform-build/WasmRun.xcframework.zip packages/wasm_run_flutter/macos/Frameworks/$CURR_VERSION.zip
-          echo Copied file!
-
       - name: Build Flutter MacOS example
         working-directory: packages/wasm_run_flutter/example
         run: flutter build macos --target=integration_test/main_test.dart --debug
@@ -223,15 +215,6 @@ jobs:
           toolchain: ${{ env.RUST_TOOLCHAIN }}
           components: rustfmt
 
-      - name: Build the binaries
-        run: melos run build:other -- dev
-      - name: Copy the binaries to the needed location
-        shell: bash
-        run: |
-          CURR_VERSION=wasm_run-v`awk '/^version: /{print $2}' packages/wasm_run/pubspec.yaml`
-          cp platform-build/other.tar.gz packages/wasm_run_flutter/windows/$CURR_VERSION.tar.gz
-          echo Copied file!
-
       - name: Run Flutter integration tests
         working-directory: packages/wasm_run_flutter/example
         run: flutter test -d windows integration_test
@@ -257,14 +240,6 @@ jobs:
           toolchain: ${{ env.RUST_TOOLCHAIN }}
           components: rustfmt
 
-      - name: Build the binaries
-        run: melos run build:other -- dev
-      - name: Copy the binaries to the needed location
-        run: |
-          CURR_VERSION=wasm_run-v`awk '/^version: /{print $2}' packages/wasm_run/pubspec.yaml`
-          cp platform-build/other.tar.gz packages/wasm_run_flutter/linux/$CURR_VERSION.tar.gz
-          echo Copied file!
-
       - name: Run Flutter integration tests
         working-directory: packages/wasm_run_flutter/example
         run: flutter test -d linux integration_test
@@ -288,14 +263,6 @@ jobs:
           DEVICE_ID=$(xcrun xctrace list devices | grep iPhone | head -1 | awk '{print $NF}' | tr -d '()')
           echo "DEVICE_ID=$DEVICE_ID" >> $GITHUB_ENV
           xcrun simctl boot $DEVICE_ID
-
-      - name: Build the XCFramework
-        run: melos run build:apple -- dev
-      - name: Copy the XCFramework to the needed location
-        run: |
-          CURR_VERSION=wasm_run-v`awk '/^version: /{print $2}' packages/wasm_run/pubspec.yaml`
-          cp platform-build/WasmRun.xcframework.zip packages/wasm_run_flutter/ios/Frameworks/$CURR_VERSION.zip
-          echo Copied file!
 
       - name: Run Flutter integration tests
         working-directory: packages/wasm_run_flutter/example
@@ -334,14 +301,6 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install gcc-aarch64-linux-gnu gcc-arm-linux-gnueabihf gcc-riscv64-linux-gnu gcc-i686-linux-gnu
-
-      - name: Build the binaries
-        run: melos run build:android -- dev
-      - name: Copy the binaries to the needed location
-        run: |
-          CURR_VERSION=wasm_run-v`awk '/^version: /{print $2}' packages/wasm_run/pubspec.yaml`
-          cp platform-build/android.tar.gz packages/wasm_run_flutter/android/$CURR_VERSION.tar.gz
-          echo Copied file!
 
       - name: Build Flutter Android APK example
         working-directory: packages/wasm_run_flutter/example
@@ -393,15 +352,6 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install gcc-aarch64-linux-gnu gcc-arm-linux-gnueabihf gcc-riscv64-linux-gnu gcc-i686-linux-gnu
-
-      - name: Build the binaries
-        run: melos run build:android -- dev
-      - name: Copy the binaries to the needed location
-        run: |
-          CURR_VERSION=wasm_run-v`awk '/^version: /{print $2}' packages/wasm_run/pubspec.yaml`
-          cp platform-build/android.tar.gz packages/wasm_run_flutter/android/$CURR_VERSION.tar.gz
-          echo Copied file! $CURR_VERSION
-          ls packages/wasm_run_flutter/android
 
       - name: Gradle cache
         uses: gradle/gradle-build-action@v2
