@@ -364,11 +364,16 @@ androidVersion: "31"
             hostSupportedTargets: {
               'darwin': ['aarch64-apple-ios'],
               'windows': ['x86_64-pc-windows-msvc'],
+              'linux': ['x86_64-unknown-linux-gnu'],
             },
             outputs: {
               'mylib': BuildBinariesOutput(
                 features: null,
-                targets: ['aarch64-apple-ios', 'x86_64-pc-windows-msvc'],
+                targets: [
+                  'aarch64-apple-ios',
+                  'x86_64-pc-windows-msvc',
+                  'x86_64-unknown-linux-gnu',
+                ],
                 noDefaultFeatures: null,
               ),
             },
@@ -382,7 +387,13 @@ androidVersion: "31"
 
           final results = cli.outputsToBuild(null, config);
           expect(results.length, equals(1));
-          expect(results[0].rustTarget, equals('x86_64-pc-windows-msvc'));
+          if (Platform.isWindows) {
+            expect(results[0].rustTarget, equals('x86_64-pc-windows-msvc'));
+          } else if (Platform.isMacOS) {
+            expect(results[0].rustTarget, equals('aarch64-apple-ios'));
+          } else {
+            expect(results[0].rustTarget, equals('x86_64-unknown-linux-gnu'));
+          }
         },
       );
 
