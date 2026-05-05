@@ -106,7 +106,10 @@ class WasmRunLibrary {
       await setUpDesktopDynamicLibrary();
     }
 
-    await defaultInstance();
+    try {
+      await RustLib.init();
+      _wrapper = true;
+    } catch (_) {}
   }
 }
 
