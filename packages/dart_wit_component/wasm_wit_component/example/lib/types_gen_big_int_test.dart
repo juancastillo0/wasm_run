@@ -82,7 +82,7 @@ Future<TypesExampleWorld> initTypesWorld(
   Future<Uint8List> Function()? getWitComponentExampleBytes,
 ) async {
   if (_isWeb) {
-    await WasmRunLibrary.setUp(override: false);
+    await WasmRunLibrary.setUp();
   }
   final WasmModule module;
   if (getWitComponentExampleBytes != null) {

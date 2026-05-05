@@ -65,7 +65,7 @@ void main() async {
 Future<RustCryptoWorld> initTypesWorld({
   Future<Uint8List> Function()? getWitComponentExampleBytes,
 }) async {
-  await WasmRunLibrary.setUp(override: false);
+  await WasmRunLibrary.setUp();
   final WasmModule module;
   if (getWitComponentExampleBytes != null) {
     final bytes = await getWitComponentExampleBytes();

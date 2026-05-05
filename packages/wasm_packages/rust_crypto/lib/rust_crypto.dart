@@ -31,7 +31,7 @@ Future<RustCryptoWorld> rustCryptoInstance({
   required WasiConfig wasiConfig,
   Future<WasmModule> Function()? loadModule,
 }) async {
-  await WasmRunLibrary.setUp(override: false);
+  await WasmRunLibrary.setUp();
   // TODO: support smaller WASM modules if the user only needs a subset of the API
   const filename = 'rust_crypto_wasm.wasm';
 

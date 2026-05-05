@@ -2,7 +2,6 @@ import 'dart:typed_data';
 
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart'
     show ExternalLibrary;
-import 'package:wasm_run/src/ffi/setup_dynamic_library.dart';
 import 'package:wasm_run/src/ffi/stub.dart'
     if (dart.library.io) 'ffi/io.dart'
     if (dart.library.html) 'ffi/web.dart';
@@ -50,22 +49,6 @@ class WasmRunLibrary {
 
   static const _isWeb = identical(0, 0.0);
 
-  /// Sets the dynamic library to use for the native bindings.
-  ///
-  /// You may call [setUp] or execute the script `dart run wasm_run:setup`
-  /// to download the right library for your current platform
-  /// and configure it so that you don't need to call [set]
-  /// manually.
-  ///
-  /// When building a pure Dart application (backend or cli, for example),
-  /// you can call `WasmRunLibrary.set(<nativeLibraryForYourPlatform>)`
-  /// before using the package. The <nativeLibraryForYourPlatform> can be
-  /// downloaded from the releases of the Github repository of the package:
-  /// https://github.com/juancastillo0/wasm_run/releases
-  static void set(ExternalLibrary lib) {
-    _createWrapper(lib);
-  }
-
   /// Returns whether the dynamic library is reachable in the default locations
   /// for the current application or in the WASM_RUN_DART_DYNAMIC_LIBRARY
   /// environment variable.
@@ -80,11 +63,10 @@ class WasmRunLibrary {
   }
 
   /// Sets up the dynamic library to use for the native bindings.
-  /// If [override] is true, it will override the current library if it exists.
   static Future<void> setUp({
-    required bool override,
     bool? isFlutter,
     Future<ByteData> Function(String)? loadAsset,
+    ExternalLibrary? lib,
   }) async {
     if (isFlutter != null) kIsFlutter = isFlutter;
     if (loadAsset != null) globalLoadAsset = loadAsset;
@@ -100,16 +82,12 @@ class WasmRunLibrary {
           defaultValue: true,
         ),
       );
-    } else if (override && _wrapper != null) {
+    } else if (lib != null && _wrapper != null) {
       throw _alreadyInitialized;
-    } else if ((override || !await isReachable()) && !kIsFlutter) {
-      await setUpDesktopDynamicLibrary();
-    }
-
-    try {
-      await RustLib.init();
+    } else if (_wrapper == null) {
+      await RustLib.init(externalLibrary: lib);
       _wrapper = true;
-    } catch (_) {}
+    }
   }
 }
 

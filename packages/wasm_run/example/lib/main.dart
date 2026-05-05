@@ -73,7 +73,7 @@ void testAll({TestArgs? testArgs}) {
   print('RUNNING ALL TEST IN ${getRunnerIdentity()}');
 
   test('WasmFeature', () async {
-    await WasmRunLibrary.setUp(override: false);
+    await WasmRunLibrary.setUp();
     final runtime = await wasmRuntimeFeatures();
     final defaultFeatures = runtime.defaultFeatures;
     final supportedFeatures = runtime.supportedFeatures;

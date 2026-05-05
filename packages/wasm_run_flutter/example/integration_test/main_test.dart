@@ -20,12 +20,8 @@ void main() {
   print('INTEGRATION TEST IN ${getRunnerIdentity()}');
 
   group('end-to-end test', () {
-    setUp(() async {
-      await WasmRunLibrary.setUp(
-        override: false,
-        isFlutter: true,
-        loadAsset: rootBundle.load,
-      );
+    setUpAll(() async {
+      await WasmRunLibrary.setUp(isFlutter: true, loadAsset: rootBundle.load);
     });
 
     testAll(

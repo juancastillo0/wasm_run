@@ -24,7 +24,7 @@ Future<DartWitGeneratorWorld> createDartWitGenerator({
   required WasiConfig wasiConfig,
   Future<WasmModule> Function()? loadModule,
 }) async {
-  await WasmRunLibrary.setUp(override: false);
+  await WasmRunLibrary.setUp();
 
   final WasmModule module;
   if (loadModule != null) {

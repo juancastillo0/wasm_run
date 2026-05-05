@@ -427,7 +427,7 @@ Future<${packageNameType}World> create$packageNameType({
   Future<WasmModule> Function()? loadModule,
   WorkersConfig? workersConfig,
 }) async {
-  await WasmRunLibrary.setUp(override: false);
+  await WasmRunLibrary.setUp();
 
   final WasmModule module;
   if (loadModule != null) {
@@ -487,7 +487,7 @@ Future<${packageNameType}World> create${packageNameType}Worker({
   Future<WasmModule> Function()? loadModule,
   WorkersConfig? workersConfig,
 }) async {
-  await WasmRunLibrary.setUp(override: false);
+  await WasmRunLibrary.setUp();
 
   final WasmModule module;
   if (loadModule != null) {

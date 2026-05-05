@@ -23,7 +23,7 @@ Future<CompressionRsWorld> createCompressionRs({
   Future<WasmModule> Function()? loadModule,
   WorkersConfig? workersConfig,
 }) async {
-  await WasmRunLibrary.setUp(override: false);
+  await WasmRunLibrary.setUp();
 
   final WasmModule module;
   if (loadModule != null) {
