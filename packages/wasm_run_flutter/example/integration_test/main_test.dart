@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:path_provider/path_provider.dart'
     show getApplicationDocumentsDirectory;
+import 'package:wasm_run/wasm_run.dart';
 import 'package:wasm_run_example/main.dart';
 import 'package:wasm_run_example/runner_identity/runner_identity.dart';
 
@@ -19,6 +20,14 @@ void main() {
   print('INTEGRATION TEST IN ${getRunnerIdentity()}');
 
   group('end-to-end test', () {
+    setUp(() async {
+      await WasmRunLibrary.setUp(
+        override: false,
+        isFlutter: true,
+        loadAsset: rootBundle.load,
+      );
+    });
+
     testAll(
       testArgs: TestArgs(
         getDirectory: getApplicationDocumentsDirectory,
