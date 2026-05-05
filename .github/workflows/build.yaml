@@ -155,9 +155,6 @@ jobs:
           export SDKROOT=$(xcrun --show-sdk-path)
           sudo xcode-select --install || true
 
-      - name: Build Flutter MacOS example
-        working-directory: packages/wasm_run_flutter/example
-        run: flutter build macos --target=integration_test/main_test.dart --debug
       - name: Run Flutter integration tests
         working-directory: packages/wasm_run_flutter/example
         run: flutter test -d macos integration_test --timeout "1200s" # 20 minutes

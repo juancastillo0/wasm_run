@@ -31,8 +31,10 @@ void main() {
         final server = await HttpServer.bind('localhost', 0);
         server.listen((request) {
           request.response.statusCode = statusCode;
-          request.response.headers.contentType =
-              ContentType('application', 'octet-stream');
+          request.response.headers.contentType = ContentType(
+            'application',
+            'octet-stream',
+          );
           request.response.add(bytes);
           request.response.close();
         });
@@ -72,10 +74,7 @@ void main() {
               );
               expect(assets.first.linkMode, isA<DynamicLoadingBundled>());
               expect(assets.first.file, isNotNull);
-              expect(
-                File.fromUri(assets.first.file!).existsSync(),
-                isTrue,
-              );
+              expect(File.fromUri(assets.first.file!).existsSync(), isTrue);
             },
           );
         } finally {
@@ -116,8 +115,9 @@ void main() {
 
       test('fails on SHA-256 mismatch', () async {
         final binaryBytes = utf8.encode('real-binary-content');
-        final wrongHash =
-            sha256.convert(utf8.encode('different-content')).toString();
+        final wrongHash = sha256
+            .convert(utf8.encode('different-content'))
+            .toString();
         final server = await _serveBinary(binaryBytes);
 
         try {
@@ -159,8 +159,7 @@ void main() {
         if (command.executable == 'cargo' && command.args.contains('rustc')) {
           final emitIdx = command.args.indexOf('--emit');
           if (emitIdx >= 0 && emitIdx + 1 < command.args.length) {
-            final outPath =
-                command.args[emitIdx + 1].replaceFirst('link=', '');
+            final outPath = command.args[emitIdx + 1].replaceFirst('link=', '');
             await File(outPath).create(recursive: true);
             await File(outPath).writeAsString('mock-binary');
           }
@@ -168,8 +167,7 @@ void main() {
       }
 
       Directory _createCheckoutProject() {
-        final dir = Directory('${tempDir.path}/checkout_project')
-          ..createSync();
+        final dir = Directory('${tempDir.path}/checkout_project')..createSync();
         File('${dir.path}/Cargo.toml').writeAsStringSync('''
 [package]
 name = "test_lib"
@@ -200,74 +198,81 @@ edition = "2021"
           linkModePreference: LinkModePreference.dynamic,
           check: (input, output) {
             expect(
-              capturedCommands.any((c) =>
-                  c.executable == 'rustup' &&
-                  c.args.contains('target') &&
-                  c.args.contains('add') &&
-                  c.args.contains('x86_64-unknown-linux-gnu')),
+              capturedCommands.any(
+                (c) =>
+                    c.executable == 'rustup' &&
+                    c.args.contains('target') &&
+                    c.args.contains('add') &&
+                    c.args.contains('x86_64-unknown-linux-gnu'),
+              ),
               isTrue,
             );
             expect(
-              capturedCommands.any((c) =>
-                  c.executable == 'cargo' &&
-                  c.args.contains('rustc') &&
-                  c.args.any((a) => a == '--crate-type=cdylib')),
+              capturedCommands.any(
+                (c) =>
+                    c.executable == 'cargo' &&
+                    c.args.contains('rustc') &&
+                    c.args.any((a) => a == '--crate-type=cdylib'),
+              ),
               isTrue,
             );
 
             final assets = output.assets.code;
             expect(assets, hasLength(1));
             expect(assets.first.file, isNotNull);
-            expect(
-              File.fromUri(assets.first.file!).existsSync(),
-              isTrue,
-            );
+            expect(File.fromUri(assets.first.file!).existsSync(), isTrue);
           },
         );
       });
 
-      test('static build uses --crate-type=staticlib and installs rust-src',
-          () async {
-        final checkoutDir = _createCheckoutProject();
+      test(
+        'static build uses --crate-type=staticlib and installs rust-src',
+        () async {
+          final checkoutDir = _createCheckoutProject();
 
-        await testCodeBuildHook(
-          mainMethod: (args) => sourceRustBinariesBuildHook(
-            args,
-            SourceBinariesParams(
-              fetchAssetUrl: (_) => Uri.parse('http://localhost/unused'),
-              runProcess: mockRunProcess,
-              defaultBuildOptions: BuildOptions(
-                buildMode: BuildModeEnum.checkout,
-                checkoutPath: checkoutDir.uri,
-                libraryName: 'test_lib',
+          await testCodeBuildHook(
+            mainMethod: (args) => sourceRustBinariesBuildHook(
+              args,
+              SourceBinariesParams(
+                fetchAssetUrl: (_) => Uri.parse('http://localhost/unused'),
+                runProcess: mockRunProcess,
+                defaultBuildOptions: BuildOptions(
+                  buildMode: BuildModeEnum.checkout,
+                  checkoutPath: checkoutDir.uri,
+                  libraryName: 'test_lib',
+                ),
               ),
             ),
-          ),
-          linkingEnabled: true,
-          targetArchitecture: Architecture.x64,
-          targetOS: OS.linux,
-          linkModePreference: LinkModePreference.dynamic,
-          check: (input, output) {
-            expect(
-              capturedCommands.any((c) =>
-                  c.executable == 'rustup' &&
-                  c.args.contains('toolchain') &&
-                  c.args.contains('install') &&
-                  c.args.contains('--component') &&
-                  c.args.contains('rust-src')),
-              isTrue,
-            );
-            expect(
-              capturedCommands.any((c) =>
-                  c.executable == 'cargo' &&
-                  c.args.contains('rustc') &&
-                  c.args.any((a) => a == '--crate-type=staticlib') &&
-                  c.args.any((a) => a == '-Zbuild-std=std,panic_abort')),
-              isTrue,
-            );
-          },
-        );
-      });
+            linkingEnabled: true,
+            targetArchitecture: Architecture.x64,
+            targetOS: OS.linux,
+            linkModePreference: LinkModePreference.dynamic,
+            check: (input, output) {
+              expect(
+                capturedCommands.any(
+                  (c) =>
+                      c.executable == 'rustup' &&
+                      c.args.contains('toolchain') &&
+                      c.args.contains('install') &&
+                      c.args.contains('--component') &&
+                      c.args.contains('rust-src'),
+                ),
+                isTrue,
+              );
+              expect(
+                capturedCommands.any(
+                  (c) =>
+                      c.executable == 'cargo' &&
+                      c.args.contains('rustc') &&
+                      c.args.any((a) => a == '--crate-type=staticlib') &&
+                      c.args.any((a) => a == '-Zbuild-std=std,panic_abort'),
+                ),
+                isTrue,
+              );
+            },
+          );
+        },
+      );
 
       test('fails when Cargo.toml is missing', () async {
         final emptyDir = Directory('${tempDir.path}/empty_dir')..createSync();

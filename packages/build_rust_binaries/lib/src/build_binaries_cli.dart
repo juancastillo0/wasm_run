@@ -439,9 +439,10 @@ ${linkerLine('riscv64-linux-android', 'riscv64-linux-android', cc: true)}
 
     final content = await file.readAsString();
     final yamlMap = loadYaml(content);
-    if (yamlMap == null) return null;
-
-    return BuildBinariesParams.fromJson(yamlMap as Map<dynamic, dynamic>);
+    if (yamlMap is! Map) return null;
+    final m = yamlMap['build_rust_binaries'];
+    if (m is Map) return BuildBinariesParams.fromJson(m);
+    return BuildBinariesParams.fromJson(yamlMap);
   }
 
   List<_OutputToBuild> outputsToBuild(
