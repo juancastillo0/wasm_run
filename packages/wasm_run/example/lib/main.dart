@@ -8,9 +8,6 @@ import 'package:test/test.dart';
 import 'package:wasm_run/load_module.dart';
 // ignore: implementation_imports
 import 'package:wasm_run/src/ffi.dart' show defaultInstance;
-// ignore: implementation_imports
-import 'package:wasm_run/src/ffi/setup_dynamic_library.dart'
-    show setUpDesktopDynamicLibrary;
 // TODO(wat): implement wat in main api
 // ignore: implementation_imports
 import 'package:wasm_run/src/rust/api.dart' as api;
@@ -558,32 +555,6 @@ void testAll({TestArgs? testArgs}) {
 
   /// Threads tests
   threadsTest(testArgs: testArgs);
-
-  test(
-    'setUpDesktopDynamicLibrary',
-    testOn: 'windows || mac-os || linux',
-    () async {
-      if (Platform.isAndroid || Platform.isIOS) return;
-
-      final library = Directory.current.uri
-          .resolve('dart_wasm_run_dynamic_library')
-          .toFilePath();
-      await setUpDesktopDynamicLibrary(dynamicLibraryPath: library);
-      addTearDown(() => File(library).deleteSync());
-      expect(await WasmRunLibrary.isReachable(), true);
-
-      expect(
-        () => WasmRunLibrary.setUp(override: true),
-        throwsA(
-          predicate(
-            (p0) => p0.toString().contains(
-              'WasmRun bindings were already configured',
-            ),
-          ),
-        ),
-      );
-    },
-  );
 
   test('multi value', () async {
     final binary = await getBinary(

@@ -3,11 +3,11 @@ import 'dart:typed_data';
 
 import 'package:wasm_run/src/ffi.dart';
 import 'package:wasm_run/src/ffi/library_locator.dart';
-import 'package:wasm_run/src/ffi/setup_dynamic_library.dart';
 import 'package:wasm_run/src/rust/frb_generated.dart';
 
 Future<void> setUpLibraryImpl({required bool features, required bool wasi}) =>
-    setUpDesktopDynamicLibrary();
+    // Use the dart build hooks or build_binaries cli
+    Future.value();
 
 Future<WasmRunDart> createWrapperImpl(ExternalLibrary dylib) async {
   await RustLib.init(externalLibrary: _validateLibrary(dylib));
