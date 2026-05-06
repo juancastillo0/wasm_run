@@ -9,11 +9,7 @@ import 'package:wasm_run/wasm_run.dart';
 
 Future<TypesqlParserState> parserState() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await WasmRunLibrary.setUp(
-    override: false,
-    isFlutter: true,
-    loadAsset: rootBundle.load,
-  );
+  await WasmRunLibrary.setUp(isFlutter: true, loadAsset: rootBundle.load);
   final parserFut = createTypesqlParser();
   final parser = await parserFut;
   final db = await loadSqlite();

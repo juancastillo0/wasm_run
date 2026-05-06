@@ -10,11 +10,7 @@ import 'package:wasm_run/wasm_run.dart';
 
 Future<ImageOpsState> imageState() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await WasmRunLibrary.setUp(
-    override: false,
-    isFlutter: true,
-    loadAsset: rootBundle.load,
-  );
+  await WasmRunLibrary.setUp(isFlutter: true, loadAsset: rootBundle.load);
   final parser = await createImageOps(
     wasiConfig: const WasiConfig(preopenedDirs: [], webBrowserFileSystem: {}),
   );

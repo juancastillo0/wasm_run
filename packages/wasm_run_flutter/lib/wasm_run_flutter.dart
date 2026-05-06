@@ -16,10 +16,6 @@ class WasmRunFlutterNative {
   /// Registers the native bindings for the WasmRun plugin.
   /// For more information, see: [WasmRunLibrary.setUp].
   static void registerWith() {
-    WasmRunLibrary.setUp(
-      override: false,
-      isFlutter: true,
-      loadAsset: rootBundle.load,
-    );
+    WasmRunLibrary.setUp(isFlutter: true, loadAsset: rootBundle.load);
   }
 }

@@ -84,8 +84,11 @@ class WasmRunLibrary {
       );
     } else if (lib != null && _wrapper != null) {
       throw _alreadyInitialized;
-    } else if (_wrapper == null) {
+    } else if (lib != null) {
       await RustLib.init(externalLibrary: lib);
+      _wrapper = true;
+    } else if (_wrapper == null) {
+      await defaultInstance();
       _wrapper = true;
     }
   }

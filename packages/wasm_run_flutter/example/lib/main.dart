@@ -9,11 +9,7 @@ import 'package:wasm_run/wasm_run.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await WasmRunLibrary.setUp(
-    override: false,
-    isFlutter: true,
-    loadAsset: rootBundle.load,
-  );
+  await WasmRunLibrary.setUp(isFlutter: true, loadAsset: rootBundle.load);
 
   /// WASM WAT source:
   ///
