@@ -4,30 +4,8 @@ import 'dart:io';
 
 import 'package:build_rust_binaries/build_rust_binaries.dart';
 
-const validImpl = ['wasmtime', 'wasmi'];
-
 String join(List<String> pathSegments) =>
     pathSegments.join(Platform.pathSeparator);
-
-void main(List<String> args) async {
-  final implIndex = args.indexWhere((element) => element == '--impl');
-  final impl = implIndex != -1
-      ? args[implIndex + 1]
-      : args.isNotEmpty
-      ? args[0]
-      : 'wasmtime';
-  if (!validImpl.contains(impl)) {
-    throw Exception('Invalid impl: $impl. Valid impls are: $validImpl');
-  }
-  final prefix = join([
-    // remove "scripts/config_api.dart"
-    ...Platform.script.pathSegments.reversed.skip(2).toList().reversed,
-    'packages',
-    'wasm_run',
-    'native',
-  ]);
-  await configApi(impl, prefix);
-}
 
 Future<bool> configApi(String impl, String prefix) async {
   print('config_api: configuring WASM runtime "$impl"');
