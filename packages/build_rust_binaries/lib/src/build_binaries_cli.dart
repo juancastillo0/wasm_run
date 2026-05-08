@@ -154,7 +154,10 @@ class BuildRustBinariesCLI {
         throw Exception(
           'ANDROID_NDK_ROOT, ANDROID_NDK_HOME or ANDROID_NDK_LATEST_HOME'
           ' environment variable must be set to create the .cargo/config.toml'
-          ' for Android targets.',
+          ' for Android targets. You can download it from https://developer.android.com/ndk/downloads'
+          ' or use the ones managed in Android Studio, usually found in'
+          ' ~/Android/Sdk/ndk/<version> for linux systems'
+          ' or C:/Users/<user>/AppData/Local/Android/Sdk/ndk/<version> for windows',
         );
       }
       String homePath = Directory(
@@ -253,7 +256,6 @@ ${linkerLine('riscv64-linux-android', 'riscv64-linux-android', cc: true)}
     final configPath = parserResult[configCLIKey] as String;
     BuildBinariesParams? config;
     try {
-      // TODO: use pubspec config
       config = await loadConfig(configPath);
     } catch (e) {
       throw Exception('Error loading config file: $e');
@@ -286,7 +288,7 @@ ${linkerLine('riscv64-linux-android', 'riscv64-linux-android', cc: true)}
         'At least one of --$buildStaticCLIKey or --$buildDynamicCLIKey must be true.',
       );
     }
-    // TODO: use cargo ndk integration instead of custom config generation
+    // TODO: use cargo ndk and cargo cross integration instead of custom config generation
     final createCargoConfig =
         parserResult.parsedFlag(createCargoConfigCLIKey) ??
         config?.createCargoConfig ??

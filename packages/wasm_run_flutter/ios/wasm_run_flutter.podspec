@@ -1,26 +1,3 @@
-release_tag_name = 'wasm_run-v0.1.0' # generated; do not edit
-
-# We cannot distribute the XCFramework alongside the library directly,
-# so we have to fetch the correct version here.
-framework_name = 'WasmRun.xcframework'
-remote_zip_name = "#{framework_name}.zip"
-url = "https://github.com/juancastillo0/wasm_run/releases/download/#{release_tag_name}/#{remote_zip_name}"
-local_zip_name = "#{release_tag_name}.zip"
-`
-cd Frameworks
-
-if [ ! -f #{local_zip_name} ]
-then
-  rm -rf #{framework_name}
-  curl -L #{url} -o #{local_zip_name}
-  unzip #{local_zip_name}
-  truncate -s 0 #{local_zip_name}
-  rm -rf #{framework_name}/macos-*
-fi
-
-cd -
-`
-
 Pod::Spec.new do |s|
   s.name          = 'wasm_run_flutter'
   s.version       = '0.0.1'
@@ -36,7 +13,6 @@ Pod::Spec.new do |s|
   s.source              = { :path => '.' }
   s.source_files        = 'Classes/**/*'
   s.public_header_files = 'Classes/**/*.h'
-  s.vendored_frameworks = "Frameworks/#{framework_name}"
 
   s.ios.deployment_target = '11.0'
   s.osx.deployment_target = '10.13'

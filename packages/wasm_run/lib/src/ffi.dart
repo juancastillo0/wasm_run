@@ -62,6 +62,16 @@ class WasmRunLibrary {
     }
   }
 
+  /// Configures the library for Flutter applications. Used by wasm_run_flutter.
+  /// This is used load files from Flutter's bundled assets.
+  static void configAssetLoader({
+    bool? isFlutter,
+    Future<ByteData> Function(String)? loadAsset,
+  }) {
+    if (isFlutter != null) kIsFlutter = isFlutter;
+    if (loadAsset != null) globalLoadAsset = loadAsset;
+  }
+
   /// Sets up the dynamic library to use for the native bindings.
   static Future<void> setUp({
     bool? isFlutter,
