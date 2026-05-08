@@ -2,17 +2,13 @@ import 'dart:io';
 
 import 'package:args/args.dart';
 import 'package:build_rust_binaries/build_rust_binaries.dart';
+import 'package:build_rust_binaries/src/build_mode.dart';
 import 'package:crypto/crypto.dart' show sha256;
 import 'package:yaml/yaml.dart';
 
-typedef _OutputToBuild = ({
-  String rustTarget,
-  String? features,
-  String? outputName,
-  bool? noDefaultFeatures,
-});
-
 class BuildRustBinariesCLI {
+  /// CLI for building Rust binaries. Can be used as a standalone tool or
+  /// as a CLI in the bin directory of packages and apps.
   BuildRustBinariesCLI({
     this.configPathDefault = 'build_binaries.config.yaml',
     this.manifestPathDefault = './rust/Cargo.toml',
@@ -26,16 +22,36 @@ class BuildRustBinariesCLI {
     this.runProcess,
   });
 
+  /// Default path to the configuration file
   final String configPathDefault;
+
+  /// Default path to the Rust Cargo manifest (Cargo.toml)
   final String manifestPathDefault;
+
+  /// Default value for whether to create a Cargo linkers configuration
   final bool createCargoConfigDefault;
+
+  /// Default Android version for the build as integrer or comma separated <target>=<version>
   final String androidVersionDefault;
+
+  /// Default asset name template
   final String assetNameDefault;
+
+  /// Default value for whether to enable default features for the Rust build.
   final bool noDefaultFeaturesDefault;
+
+  /// Default value for whether to stop the build process on the first failure.
   final bool failFastDefault;
+
+  /// Default value for whether to compute the SHA-256 hash of the built binaries.
   final bool computeSha256Default;
+
+  /// Logging function to use for outputting messages. Defaults to [print].
   final void Function(Object message) log;
-  final Future<void> Function(BuildInputParams input, CLICommand command)?
+
+  /// Optional function to run a process with the given command.
+  /// If not provided, a default implementation using Process.run will be used.
+  final Future<void> Function(BuildInputParams input, CliCommand command)?
   runProcess;
 
   static const configCLIKey = 'config';
@@ -53,6 +69,7 @@ class BuildRustBinariesCLI {
   static const buildDynamicCLIKey = 'build-dynamic';
   static const buildStaticCLIKey = 'build-static';
 
+  /// Creates a parser for the CLI arguments.
   ArgParser makeParser() {
     final parser = ArgParser()
       ..addFlag('help', abbr: 'h', negatable: false)
@@ -134,6 +151,9 @@ class BuildRustBinariesCLI {
     return parser;
   }
 
+  /// Creates a Cargo configuration file for Android targets based on the provided
+  /// [cargoProject] path and [androidVersion]. The Android NDK path is determined
+  /// from environment variables. If the configuration file already exists, it will be left unchanged.
   Future<void> createCargoConfigFile(
     String cargoProject,
     String androidVersion,
@@ -167,6 +187,9 @@ class BuildRustBinariesCLI {
       // (e.g. /C:/path/to/ndk). Remove it for correct path construction.
       if (Platform.isWindows && homePath.startsWith('/')) {
         homePath = homePath.substring(1);
+      }
+      if (homePath.endsWith('/')) {
+        homePath = homePath.substring(0, homePath.length - 1);
       }
       final os = Platform.isMacOS ? 'darwin' : Platform.operatingSystem;
       // TODO: darwin aarch64?
@@ -227,23 +250,25 @@ ${linkerLine('riscv64-linux-android', 'riscv64-linux-android', cc: true)}
     }
   }
 
-  CheckoutMode checkoutModeBuilder(
+  /// Builder for the CheckoutBuildMode, which is used to build the Rust binaries.
+  BuildMode checkoutModeBuilder(
     BuildInputParams params,
     Uri rustDirectory, {
     String? features,
     bool? noDefaultFeatures,
   }) {
-    return CheckoutMode(
+    return CheckoutBuildMode(
       params,
       rustDirectory,
       features: features,
       noDefaultFeatures: noDefaultFeatures,
       runProcess: runProcess != null
           ? (command) => runProcess!(params, command)
-          : CLICommand.defaultRunProcess,
+          : CliCommand.defaultRunProcess,
     );
   }
 
+  /// Main CLI entry point. Parses arguments, loads configuration, and builds the specified Rust binaries.
   Future<void> mainCli(List<String> args) async {
     final parser = makeParser();
     final parserResult = parser.parse(args);
@@ -354,19 +379,19 @@ ${linkerLine('riscv64-linux-android', 'riscv64-linux-android', cc: true)}
         if (buildStatic) 'static',
         if (buildDynamic) 'dynamic',
       ]) {
+        final featuresTemplate = BuildInputParams.featuresAssetTemplate(
+          effectiveFeatures,
+          noDefaultFeatures: noDefaultFeatures ?? noDefaultFeaturesGlobal,
+        );
         log(
-          'Building target: $rustTarget-$libraryType with features:'
-          ' ${effectiveFeatures ?? 'none'}',
+          'Building target: $rustTarget-$libraryType with features: $featuresTemplate',
         );
 
         final libraryName = assetName
             .replaceAll(r'$output', outputName ?? 'cli')
             // TODO: .replaceAll(r'$libraryName', libraryName) find library name from cargo metadata
             .replaceAll(r'$libraryType', libraryType)
-            .replaceAll(
-              r'$features',
-              effectiveFeatures?.replaceAll(',', '_') ?? 'defaults',
-            )
+            .replaceAll(r'$features', featuresTemplate)
             .replaceAll(r'$target', rustTarget);
         if (builtLibraries.containsKey(libraryName)) {
           throw Exception(
@@ -432,6 +457,8 @@ ${linkerLine('riscv64-linux-android', 'riscv64-linux-android', cc: true)}
     }
   }
 
+  /// Parse the configuration file at [configPath] and returns a [BuildBinariesParams] object.
+  /// If the file does not exist and the path is the default, returns null.
   Future<BuildBinariesParams?> loadConfig(String configPath) async {
     final file = File(configPath);
     if (!file.existsSync()) {
@@ -447,7 +474,7 @@ ${linkerLine('riscv64-linux-android', 'riscv64-linux-android', cc: true)}
     return BuildBinariesParams.fromJson(yamlMap);
   }
 
-  List<_OutputToBuild> outputsToBuild(
+  List<OutputToBuild> outputsToBuild(
     String? targetsStr,
     BuildBinariesParams? config,
   ) {
@@ -456,7 +483,7 @@ ${linkerLine('riscv64-linux-android', 'riscv64-linux-android', cc: true)}
         ? targetsStr.split(',').map((e) => e.trim()).toSet()
         : null;
 
-    final List<_OutputToBuild> outputsToBuild;
+    final List<OutputToBuild> outputsToBuild;
     if (config != null) {
       final hostOS = Platform.isMacOS ? 'darwin' : Platform.operatingSystem;
       final hostTargets = config.hostSupportedTargets?[hostOS];
@@ -506,6 +533,13 @@ extension on ArgResults {
   }
 }
 
+typedef OutputToBuild = ({
+  String rustTarget,
+  String? features,
+  bool? noDefaultFeatures,
+  String? outputName,
+});
+
 /// outputDirectory: platform-build
 /// assetName: wasm_run_dart-$libraryType-$target
 /// hostSupportedTargets:
@@ -520,17 +554,47 @@ extension on ArgResults {
 ///     features: wasmi,wasi
 ///     targets: ["aarch64-apple-ios", "aarch64-apple-ios-sim"]
 class BuildBinariesParams {
+  /// Whether to build static libraries. If false, dynamic libraries will be built.
+  /// Defaults to true if buildDynamic is false, otherwise false.
   final bool? buildStatic;
+
+  /// Whether to build dynamic libraries. If false, static libraries will be built.
+  /// Defaults to true.
   final bool? buildDynamic;
+
+  /// Directory to place built libraries
   final String? outputDirectory;
+
+  /// Template for the name of the asset to be created.
+  /// By default it is '$libraryType-$target', where libraryType is
+  /// either 'static' or 'dynamic' and target is the Rust target triple.
+  /// It can be customized to include other variables like features.
   final String? assetName;
+
+  /// Map of host OS to supported Rust targets.
+  /// If provided, only targets supported on the current host will be built.
   final Map<String, List<String>>? hostSupportedTargets;
+
+  /// Map of output name to its configuration, including features and targets.
   final Map<String, BuildBinariesOutput> outputs;
+
+  /// Path to the Rust Cargo manifest (Cargo.toml). Defaults to './rust/Cargo.toml'.
   final String? manifestPath;
+
+  /// Path to the Rust Cargo project. Defaults to the directory containing the manifestPath.
   final String? cargoProject;
+
+  /// Whether to create a Cargo linkers configuration .cargo/config.toml
+  /// based on the environment Android NDK path and [androidVersion].
   final bool? createCargoConfig;
+
+  /// Android version to use when creating the Cargo linkers configuration.
   final String? androidVersion;
+
+  /// Whether to stop the build process on the first failure. Defaults to true.
   final bool? failFast;
+
+  /// Whether to compute the SHA-256 hash of the built binaries. Defaults to true.
   final bool? computeSha256;
 
   BuildBinariesParams({
@@ -594,8 +658,14 @@ class BuildBinariesParams {
 }
 
 class BuildBinariesOutput {
+  /// Comma-separated list of features to enable for this output\
   final String? features;
+
+  /// Whether to disable default features for this output.
+  /// Overrides the global noDefaultFeatures if set.
   final bool? noDefaultFeatures;
+
+  /// List of Rust targets to build for this output
   final List<String> targets;
 
   BuildBinariesOutput({

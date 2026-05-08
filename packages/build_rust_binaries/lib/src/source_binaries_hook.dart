@@ -1,17 +1,34 @@
 import 'dart:io';
 
+import 'package:build_rust_binaries/src/build_mode.dart';
 import 'package:code_assets/code_assets.dart';
-import 'package:crypto/crypto.dart' show sha256;
 import 'package:hooks/hooks.dart';
 
 class SourceBinariesParams {
+  /// Provides the URI to fetch the precompiled binary for a given build input, used in `fetch` mode.
   final Uri Function(BuildInputParams input)? fetchAssetUrl;
+
+  /// Provides the expected sha256 hash for a given asset, used in `fetch` mode
+  /// to verify the integrity of the fetched binary.
   final String Function(BuildInputParams input)? sha256ForAsset;
-  final BuildOptions? defaultBuildOptions;
+
+  /// The name of the code asset to add to the build output
+  final String codeAssetName;
+
+  /// Default build options that can be overridden by user defines in the pubspec.yaml.
+  final SourceBinariesOptions? defaultBuildOptions;
+
+  /// An optional [HttpClient] that can be used for fetching precompiled binaries in `fetch` mode.
   final HttpClient httpClient;
+
+  /// An optional callback that can be used to provide custom build logic for web targets.
   final Future<void> Function(BuildInput input, BuildOutputBuilder output)?
   buildWeb;
-  final Future<void> Function(BuildInputParams input, CLICommand command)?
+
+  /// An optional callback that can be used to provide a custom implementation
+  /// for running CLI commands, allowing for integration with custom logging,
+  /// error handling, or process management solutions.
+  final Future<void> Function(BuildInputParams input, CliCommand command)?
   runProcess;
 
   SourceBinariesParams({
@@ -21,32 +38,38 @@ class SourceBinariesParams {
     this.buildWeb,
     HttpClient? httpClient,
     this.runProcess,
+    this.codeAssetName = 'src/rust/frb_generated.io.dart',
   }) : httpClient = httpClient ?? HttpClient();
-}
 
-Future<void> sourceRustBinariesBuildHook(
-  List<String> args,
-  SourceBinariesParams params,
-) async {
-  await build(args, (input, output) async {
-    try {
-      input.config.code;
-    } catch (_) {
-      // TODO: compile wasm?
-      return params.buildWeb?.call(input, output);
-    }
-    BuildOptions buildOptions;
-    try {
-      buildOptions = BuildOptions.fromDefines(
-        input.userDefines,
-        params.defaultBuildOptions,
-      );
-    } catch (e) {
-      final packageName = input.packageName;
-      final checkoutPathDefault =
-          params.defaultBuildOptions?.checkoutPath ??
-          '${packageName}_root/packages/$packageName/rust/';
-      throw ArgumentError('''
+  /// A build hook for sourcing Rust binaries, supporting multiple build modes:
+  /// - `fetch`: Fetches precompiled binaries from a remote URI, with optional integrity verification using sha256 hashes.
+  /// - `local`: Uses a locally existing binary specified by the user.
+  /// - `checkout`: Builds the Rust library from a local git checkout of the Rust repository, with support for custom features and build configurations.
+  ///
+  /// The build mode and related options are specified through user defines in the package's pubspec.yaml.
+  /// This hook fetch and local mode is designed to be used with the `build_binaries` cli, since it will build
+  /// multiple targets at once which can be uploaded to a CDN Such as GIthub Releases or used in a local directory.
+  /// The build mode uses the same infraestructure for building the Rust library as the CLI.
+  Future<void> mainCli(List<String> args) async {
+    await build(args, (input, output) async {
+      try {
+        input.config.code;
+      } catch (_) {
+        // TODO: compile wasm?
+        return buildWeb?.call(input, output);
+      }
+      SourceBinariesOptions buildOptions;
+      try {
+        buildOptions = SourceBinariesOptions.fromDefines(
+          input.userDefines,
+          defaultBuildOptions,
+        );
+      } catch (e) {
+        final packageName = input.packageName;
+        final checkoutPathDefault =
+            defaultBuildOptions?.checkoutPath ??
+            '${packageName}_root/packages/$packageName/rust/';
+        throw ArgumentError('''
 Error: $e
 
 
@@ -78,64 +101,101 @@ hooks:
       checkoutPath: $checkoutPathDefault
 ```
 ''');
-    }
-    print('Read build options: $buildOptions');
+      }
+      print('Read build options: $buildOptions');
 
-    final inputParams = BuildInputParams.fromBuildInput(
-      input,
-      libraryName: buildOptions.libraryName,
-    );
-    final buildMode = switch (buildOptions.buildMode) {
-      BuildModeEnum.local => LocalMode(inputParams, buildOptions.localPath),
-      BuildModeEnum.checkout => CheckoutMode(
+      final inputParams = BuildInputParams.fromBuildInput(
+        input,
+        libraryName: buildOptions.libraryName,
+      );
+      final buildMode = createBuildMode(inputParams, buildOptions);
+      final builtLibrary = await buildMode.build();
+
+      output.assets.code.add(
+        CodeAsset(
+          package: input.packageName,
+          name: codeAssetName,
+          linkMode: DynamicLoadingBundled(),
+          file: builtLibrary,
+        ),
+        routing:
+            buildOptions.buildMode != BuildModeEnum.local &&
+                input.config.linkingEnabled
+            ? ToLinkHook(input.packageName)
+            : const ToAppBundle(),
+      );
+      output.dependencies.addAll(buildMode.dependencies);
+      output.dependencies.add(input.packageRoot.resolve('pubspec.yaml'));
+    });
+  }
+
+  BuildMode createBuildMode(
+    BuildInputParams inputParams,
+    SourceBinariesOptions buildOptions,
+  ) {
+    return switch (buildOptions.buildMode) {
+      BuildModeEnum.local => LocalBuildMode(inputParams, buildOptions),
+      BuildModeEnum.checkout => CheckoutBuildMode(
         inputParams,
         buildOptions.checkoutPath,
         features: buildOptions.features,
         noDefaultFeatures: buildOptions.noDefaultFeatures,
-        runProcess: params.runProcess != null
-            ? (command) => params.runProcess!(inputParams, command)
-            : CLICommand.defaultRunProcess,
+        runProcess: runProcess != null
+            ? (command) => runProcess!(inputParams, command)
+            : CliCommand.defaultRunProcess,
       ),
-      BuildModeEnum.fetch => FetchMode(inputParams, params, buildOptions),
+      BuildModeEnum.fetch => FetchBuildMode(inputParams, this, buildOptions),
     };
-    final builtLibrary = await buildMode.build();
-
-    output.assets.code.add(
-      CodeAsset(
-        package: input.packageName,
-        name: 'src/rust/frb_generated.io.dart',
-        linkMode: DynamicLoadingBundled(),
-        file: builtLibrary,
-      ),
-      routing:
-          buildOptions.buildMode != BuildModeEnum.local &&
-              input.config.linkingEnabled
-          ? ToLinkHook(input.packageName)
-          : const ToAppBundle(),
-    );
-    output.dependencies.addAll(buildMode.dependencies);
-    output.dependencies.add(input.packageRoot.resolve('pubspec.yaml'));
-  });
+  }
 }
 
 enum BuildModeEnum { local, checkout, fetch }
 
-class BuildOptions {
+class SourceBinariesOptions {
+  /// The mode to use for sourcing the Rust binaries
   final BuildModeEnum buildMode;
+
+  /// The path to the locally existing binary or directory of binaries to use
+  /// when [buildMode] is set to `local`. If a directory is provided, the binary will be
+  /// selected based on the [assetName].
   final Uri? localPath;
+
+  /// The path to the git checkout of the Rust repository to build from
+  /// when [buildMode] is set to `checkout`.
   final Uri? checkoutPath;
+
+  /// The features to use when building the Rust library,
+  /// either as a comma-separated string or a list of strings.
   final String? features;
+
+  /// Whether to disable the default features when building the Rust library.
   final bool? noDefaultFeatures;
+
+  /// The URI to fetch the precompiled binary from
+  /// when [buildMode] is set to `fetch`.
   final String? fetchUri;
+
+  /// The base URI to fetch the precompiled binary from
+  /// when [buildMode] is set to `fetch`. From this base URI, the final URI
+  /// will be constructed by appending the [assetName].
   final String? fetchUriBase;
 
+  /// The name of the binary asset to fetch, used to construct
+  /// the final URI when [fetchUriBase] is provided or if a [localPath]
+  /// directory is used.
   /// $libraryName-$libraryType-$features-$target
   /// Default: $libraryName-$libraryType-$target
   final String? assetName;
+
+  /// A map of asset names to their expected sha256 hash,
+  /// used to verify the integrity of fetched binaries.
   final Map<String, String>? assetsSha256;
+
+  /// The name of the library to build or fetch.
+  /// This is used to construct the asset name and the output file name.
   final String? libraryName;
 
-  BuildOptions({
+  SourceBinariesOptions({
     required this.buildMode,
     this.localPath,
     this.checkoutPath,
@@ -148,12 +208,21 @@ class BuildOptions {
     this.assetName,
   });
 
-  factory BuildOptions.fromDefines(
+  /// Creates a [SourceBinariesOptions] instance from user [defines] in the pubspec.yaml,
+  /// falling back to provided [defaults] when necessary.
+  ///
+  /// ```yaml
+  /// hooks:
+  ///   user_defines:
+  ///     package_name:
+  ///       buildMode: fetch
+  /// ```
+  factory SourceBinariesOptions.fromDefines(
     HookInputUserDefines defines,
-    BuildOptions? defaults,
+    SourceBinariesOptions? defaults,
   ) {
     final features = defines['features'];
-    return BuildOptions(
+    return SourceBinariesOptions(
       buildMode: BuildModeEnum.values.firstWhere(
         (element) => element.name == defines['buildMode'],
         orElse: () => defaults?.buildMode ?? BuildModeEnum.fetch,
@@ -189,17 +258,65 @@ class BuildOptions {
 
   @override
   String toString() {
-    return 'BuildOptions${toJson()}';
+    return 'SourceBinariesOptions${toJson()}';
   }
 }
 
 class BuildInputParams {
+  /// The directory where the built or fetched binary should be placed.
   final Uri outputDirectory;
+
+  /// The Rust target triple to build for, e.g. `x86_64-apple-darwin`.
   final String rustTarget;
+
+  /// Whether to build a static library (e.g. .a) or a dynamic library (e.g. .so, .dll, .dylib).
+  /// As of dart 3.11, it is used for the experimental `dart build cli`
   final bool buildStatic;
+
+  /// The name of the library to build or fetch.
   final String libraryName;
+
+  /// The original [BuildInput] that contains all the information
+  /// about the build configuration and environment.
   final BuildInput? buildInput;
+
+  /// The target operating system, derived from the Rust target triple.
   OS get targetOS => _rustTargetToOS(rustTarget);
+
+  /// The expected file name of the built or fetched binary,
+  /// based on the target OS and linking preferences.
+  String get filename => buildStatic
+      ? targetOS.staticlibFileName(libraryName)
+      : targetOS.dylibFileName(libraryName);
+
+  /// $libraryName-$libraryType-$features-$target
+  /// Default: $libraryName-$libraryType-$target
+  String assetName(SourceBinariesOptions options) {
+    final libraryType = buildStatic ? 'static' : 'dynamic';
+    final features = featuresAssetTemplate(
+      options.features,
+      noDefaultFeatures: options.noDefaultFeatures,
+    );
+    return options.assetName
+            ?.replaceAll(r'$libraryName', libraryName)
+            .replaceAll(r'$libraryType', libraryType)
+            .replaceAll(r'$features', features)
+            .replaceAll(r'$target', rustTarget) ??
+        '$libraryName-$libraryType-$rustTarget';
+  }
+
+  static String featuresAssetTemplate(
+    String? features, {
+    required bool? noDefaultFeatures,
+  }) {
+    if (features == null && noDefaultFeatures != true) {
+      return 'default';
+    }
+    return <String>[
+      ?features?.replaceAll(',', '_'),
+      if (noDefaultFeatures == true) 'no_default',
+    ].join('-');
+  }
 
   BuildInputParams({
     required this.outputDirectory,
@@ -223,258 +340,7 @@ class BuildInputParams {
       libraryName: libraryName ?? input.packageName,
     );
   }
-
-  String Function(String) get filename =>
-      buildStatic ? targetOS.staticlibFileName : targetOS.dylibFileName;
 }
-
-sealed class BuildMode {
-  final BuildInputParams input;
-
-  const BuildMode(this.input);
-
-  List<Uri> get dependencies;
-
-  Future<Uri> build();
-}
-
-final class FetchMode extends BuildMode {
-  FetchMode(super.input, this.params, this.buildOptions);
-  final SourceBinariesParams params;
-  final BuildOptions buildOptions;
-
-  @override
-  Future<Uri> build() async {
-    print('Running in `fetch` mode');
-    final rustTarget = input.rustTarget;
-    final libraryType = input.buildStatic ? 'static' : 'dynamic';
-    final libraryName = input.libraryName;
-
-    /// $libraryName-$libraryType-$features-$target
-    /// Default: $libraryName-$libraryType-$target
-    final assetName =
-        buildOptions.assetName
-            ?.replaceAll(r'$libraryName', libraryName)
-            .replaceAll(r'$libraryType', libraryType)
-            .replaceAll(r'$features', buildOptions.features ?? 'defaults')
-            .replaceAll(r'$target', rustTarget) ??
-        '$libraryName-$libraryType-$rustTarget';
-
-    final Uri dylibRemoteUri;
-    if (buildOptions.fetchUri != null) {
-      dylibRemoteUri = Uri.parse(buildOptions.fetchUri!);
-    } else if (buildOptions.fetchUriBase != null) {
-      dylibRemoteUri = Uri.parse(buildOptions.fetchUriBase!).resolve(assetName);
-    } else if (params.fetchAssetUrl != null) {
-      dylibRemoteUri = params.fetchAssetUrl!(input);
-    } else {
-      throw ArgumentError(
-        'No `fetchUri` provided for fetch build mode, and `fetchAssetUrl` is not set in the parameters.',
-      );
-    }
-
-    String? expectedFileHash;
-    if (buildOptions.assetsSha256 != null) {
-      expectedFileHash = buildOptions.assetsSha256![assetName];
-      if (expectedFileHash == null) {
-        throw Exception(
-          'Sha256 hash for the asset $assetName was not provided.',
-        );
-      }
-    } else if (params.sha256ForAsset != null) {
-      expectedFileHash = params.sha256ForAsset!(input);
-    }
-
-    final request = await params.httpClient.getUrl(dylibRemoteUri);
-    final response = await request.close();
-    if (response.statusCode != 200) {
-      throw ArgumentError('The request to $dylibRemoteUri failed');
-    }
-    final bytes = await response.fold<List<int>>([], (a, b) => a..addAll(b));
-    final fileHash = expectedFileHash != null
-        ? sha256.convert(bytes).toString()
-        : null;
-    if (fileHash != expectedFileHash) {
-      throw Exception(
-        'The pre-built binary for the target $rustTarget-$libraryType at '
-        '$dylibRemoteUri has a hash of $fileHash, which does not match '
-        '$expectedFileHash provided in the build hook configuration.',
-      );
-    }
-    final library = File.fromUri(
-      input.outputDirectory.resolve(input.filename(input.libraryName)),
-    );
-    await library.writeAsBytes(bytes);
-    return library.uri;
-  }
-
-  @override
-  List<Uri> get dependencies => [];
-}
-
-final class LocalMode extends BuildMode {
-  final Uri? localPath;
-  LocalMode(super.input, this.localPath);
-
-  String get _localLibraryPath {
-    if (localPath != null) {
-      return localPath!.toFilePath(windows: Platform.isWindows);
-    }
-    throw ArgumentError(
-      '`localPath` is not set in the build options. '
-      'If the `buildMode` is set to `local`, the '
-      '`localPath` key must contain the path to the binary.',
-    );
-  }
-
-  @override
-  Future<Uri> build() async {
-    print('Running in `local` mode');
-    final targetOS = input.targetOS;
-    final dylibFileName = targetOS.dylibFileName(input.libraryName);
-    final dylibFileUri = input.outputDirectory.resolve(dylibFileName);
-    final file = File(_localLibraryPath);
-    if (!(await file.exists())) {
-      throw FileSystemException('Could not find binary.', _localLibraryPath);
-    }
-    await file.copy(dylibFileUri.toFilePath(windows: Platform.isWindows));
-    return dylibFileUri;
-  }
-
-  @override
-  List<Uri> get dependencies => [Uri.file(_localLibraryPath)];
-}
-
-final class CheckoutMode extends BuildMode {
-  final Uri? checkoutPath;
-  final String? features;
-  final bool? noDefaultFeatures;
-  final Future<void> Function(CLICommand command) runProcess;
-
-  CheckoutMode(
-    super.input,
-    this.checkoutPath, {
-    this.features,
-    this.noDefaultFeatures,
-    this.runProcess = CLICommand.defaultRunProcess,
-  });
-
-  /// Taken from https://github.com/unicode-org/icu4x/blob/3b55a3ee7e2b879a83065ceb7d1540e44688b548/ffi/capi/build.sh
-  ///
-  /// ```bash
-  /// NIGHTLY="${PINNED_CI_NIGHTLY:=nightly-2025-09-27}"
-  ///
-  /// case $TARGET in
-  ///     "riscv64-linux-android" | "riscv64gc-unknown-linux-gnu" | "wasm32-unknown-unknown")
-  ///         NO_STD="1" ;;
-  ///     *)
-  ///         NO_STD="0" ;;
-  /// esac
-  ///
-  /// if [[ "$TYPE" = "static" ]] || [[ $NO_STD == 1 ]]; then
-  ///     rustup toolchain install --no-self-update $NIGHTLY --component rust-src
-  ///     rustup target add $TARGET --toolchain $NIGHTLY
-  /// else
-  ///     rustup target add $TARGET
-  /// fi
-  ///
-  /// # Explanation of flags:
-  /// # -Zunstable-options: enables other unstable flags
-  /// # -Cpanic=immediate-abort: removes unwind machinery and associated Debug impls
-  /// # --config=profile.release.codegen-units=1: generate the code in a single process to enable more opportunities for optimization
-  /// # -Zbuild-std=std,panic_abort: rebuild the standard library with panic-abort behavior and our RUSTFLAGS
-  ///
-  /// if [[ $NO_STD == 1 ]]; then
-  ///     RUSTFLAGS="-Zunstable-options -Cpanic=immediate-abort $RUSTFLAGS"
-  /// fi
-  /// ```
-  @override
-  Future<Uri> build() async {
-    print('Running in `checkout` mode');
-    if (checkoutPath == null) {
-      throw ArgumentError(
-        'Specify the checkout folder with the `checkoutPath` key'
-        ' in your pubspec.yaml build options.',
-      );
-    }
-    if (!File.fromUri(checkoutPath!.resolve('Cargo.toml')).existsSync()) {
-      throw ArgumentError(
-        'The `Cargo.toml` file could not by found at $checkoutPath',
-      );
-    }
-    final out = input.outputDirectory.resolve(
-      input.filename(input.libraryName),
-    );
-    final rustTarget = input.rustTarget;
-    final buildStatic = input.buildStatic;
-    final workingDirectory = Directory.fromUri(checkoutPath!);
-
-    final isNoStd = _isNoStdTarget(rustTarget);
-    // TODO: provide other option
-    final nightly =
-        Platform.environment['PINNED_CI_NIGHTLY'] ?? 'nightly-2025-09-27';
-
-    if (buildStatic || isNoStd) {
-      await runProcess(
-        CLICommand('rustup', [
-          'toolchain',
-          'install',
-          '--no-self-update',
-          nightly,
-          '--component',
-          'rust-src',
-        ], workingDirectory: workingDirectory),
-      );
-    }
-
-    await runProcess(
-      CLICommand('rustup', [
-        'target',
-        'add',
-        rustTarget,
-        if (buildStatic || isNoStd) ...['--toolchain', nightly],
-      ], workingDirectory: workingDirectory),
-    );
-
-    await runProcess(
-      CLICommand(
-        'cargo',
-        [
-          if (buildStatic || isNoStd) '+$nightly',
-          'rustc',
-          '--manifest-path=Cargo.toml',
-          '--crate-type=${buildStatic ? 'staticlib' : 'cdylib'}',
-          '--release',
-          '--config=profile.release.panic="abort"',
-          '--config=profile.release.codegen-units=1',
-          if (noDefaultFeatures == true) '--no-default-features',
-          if (features != null) '--features=$features',
-          if (isNoStd) '-Zbuild-std=core,alloc',
-          if (buildStatic || isNoStd) ...['-Zbuild-std=std,panic_abort'],
-          '--target=$rustTarget',
-          '--',
-          '--emit',
-          'link=${out.toFilePath(windows: Platform.isWindows)}',
-        ],
-        workingDirectory: workingDirectory,
-        environment: {
-          if (isNoStd)
-            'RUSTFLAGS': '-Zunstable-options -Cpanic=immediate-abort',
-        },
-      ),
-    );
-    return out;
-  }
-
-  // TODO: use cargo project as dependency with Cargo.lock
-  @override
-  List<Uri> get dependencies => [checkoutPath!.resolve('Cargo.toml')];
-}
-
-bool _isNoStdTarget(String target) => const [
-  'riscv64-linux-android',
-  'riscv64gc-unknown-linux-gnu',
-].contains(target);
 
 String _asRustTarget(CodeConfig code) {
   if (code.targetOS == OS.iOS &&
@@ -522,20 +388,20 @@ OS _rustTargetToOS(String target) {
   };
 }
 
-class CLICommand {
+class CliCommand {
   final String executable;
   final List<String> args;
   final Directory? workingDirectory;
   final Map<String, String>? environment;
 
-  CLICommand(
+  CliCommand(
     this.executable,
     this.args, {
     this.workingDirectory,
     this.environment,
   });
 
-  static Future<void> defaultRunProcess(CLICommand command) async {
+  static Future<void> defaultRunProcess(CliCommand command) async {
     final executable = command.executable;
     final arguments = command.args;
     final workingDirectory = command.workingDirectory;

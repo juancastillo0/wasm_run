@@ -9,7 +9,7 @@ import 'package:test/test.dart';
 
 void main() {
   late Directory tempDir;
-  late List<CLICommand> capturedCommands;
+  late List<CliCommand> capturedCommands;
 
   setUp(() {
     tempDir = Directory.systemTemp.createTempSync('hook_test_');
@@ -48,14 +48,11 @@ void main() {
 
         try {
           await testCodeBuildHook(
-            mainMethod: (args) => sourceRustBinariesBuildHook(
-              args,
-              SourceBinariesParams(
-                fetchAssetUrl: (_) =>
-                    Uri.parse('http://localhost:${server.port}/lib.so'),
-                sha256ForAsset: (_) => expectedHash,
-              ),
-            ),
+            mainMethod: (args) => SourceBinariesParams(
+              fetchAssetUrl: (_) =>
+                  Uri.parse('http://localhost:${server.port}/lib.so'),
+              sha256ForAsset: (_) => expectedHash,
+            ).mainCli(args),
             targetArchitecture: Architecture.x64,
             targetOS: OS.linux,
             linkModePreference: LinkModePreference.dynamic,
@@ -88,13 +85,10 @@ void main() {
         try {
           await expectLater(
             testCodeBuildHook(
-              mainMethod: (args) => sourceRustBinariesBuildHook(
-                args,
-                SourceBinariesParams(
-                  fetchAssetUrl: (_) =>
-                      Uri.parse('http://localhost:${server.port}/lib.so'),
-                ),
-              ),
+              mainMethod: (args) => SourceBinariesParams(
+                fetchAssetUrl: (_) =>
+                    Uri.parse('http://localhost:${server.port}/lib.so'),
+              ).mainCli(args),
               targetArchitecture: Architecture.x64,
               targetOS: OS.linux,
               linkModePreference: LinkModePreference.dynamic,
@@ -123,14 +117,11 @@ void main() {
         try {
           await expectLater(
             testCodeBuildHook(
-              mainMethod: (args) => sourceRustBinariesBuildHook(
-                args,
-                SourceBinariesParams(
-                  fetchAssetUrl: (_) =>
-                      Uri.parse('http://localhost:${server.port}/lib.so'),
-                  sha256ForAsset: (_) => wrongHash,
-                ),
-              ),
+              mainMethod: (args) => SourceBinariesParams(
+                fetchAssetUrl: (_) =>
+                    Uri.parse('http://localhost:${server.port}/lib.so'),
+                sha256ForAsset: (_) => wrongHash,
+              ).mainCli(args),
               targetArchitecture: Architecture.x64,
               targetOS: OS.linux,
               linkModePreference: LinkModePreference.dynamic,
@@ -153,7 +144,7 @@ void main() {
     group('checkout mode', () {
       Future<void> mockRunProcess(
         BuildInputParams input,
-        CLICommand command,
+        CliCommand command,
       ) async {
         capturedCommands.add(command);
         if (command.executable == 'cargo' && command.args.contains('rustc')) {
@@ -181,18 +172,15 @@ edition = "2021"
         final checkoutDir = _createCheckoutProject();
 
         await testCodeBuildHook(
-          mainMethod: (args) => sourceRustBinariesBuildHook(
-            args,
-            SourceBinariesParams(
-              fetchAssetUrl: (_) => Uri.parse('http://localhost/unused'),
-              runProcess: mockRunProcess,
-              defaultBuildOptions: BuildOptions(
-                buildMode: BuildModeEnum.checkout,
-                checkoutPath: checkoutDir.uri,
-                libraryName: 'test_lib',
-              ),
+          mainMethod: (args) => SourceBinariesParams(
+            fetchAssetUrl: (_) => Uri.parse('http://localhost/unused'),
+            runProcess: mockRunProcess,
+            defaultBuildOptions: SourceBinariesOptions(
+              buildMode: BuildModeEnum.checkout,
+              checkoutPath: checkoutDir.uri,
+              libraryName: 'test_lib',
             ),
-          ),
+          ).mainCli(args),
           targetArchitecture: Architecture.x64,
           targetOS: OS.linux,
           linkModePreference: LinkModePreference.dynamic,
@@ -231,18 +219,15 @@ edition = "2021"
           final checkoutDir = _createCheckoutProject();
 
           await testCodeBuildHook(
-            mainMethod: (args) => sourceRustBinariesBuildHook(
-              args,
-              SourceBinariesParams(
-                fetchAssetUrl: (_) => Uri.parse('http://localhost/unused'),
-                runProcess: mockRunProcess,
-                defaultBuildOptions: BuildOptions(
-                  buildMode: BuildModeEnum.checkout,
-                  checkoutPath: checkoutDir.uri,
-                  libraryName: 'test_lib',
-                ),
+            mainMethod: (args) => SourceBinariesParams(
+              fetchAssetUrl: (_) => Uri.parse('http://localhost/unused'),
+              runProcess: mockRunProcess,
+              defaultBuildOptions: SourceBinariesOptions(
+                buildMode: BuildModeEnum.checkout,
+                checkoutPath: checkoutDir.uri,
+                libraryName: 'test_lib',
               ),
-            ),
+            ).mainCli(args),
             linkingEnabled: true,
             targetArchitecture: Architecture.x64,
             targetOS: OS.linux,
@@ -279,18 +264,15 @@ edition = "2021"
 
         await expectLater(
           testCodeBuildHook(
-            mainMethod: (args) => sourceRustBinariesBuildHook(
-              args,
-              SourceBinariesParams(
-                fetchAssetUrl: (_) => Uri.parse('http://localhost/unused'),
-                runProcess: mockRunProcess,
-                defaultBuildOptions: BuildOptions(
-                  buildMode: BuildModeEnum.checkout,
-                  checkoutPath: emptyDir.uri,
-                  libraryName: 'test_lib',
-                ),
+            mainMethod: (args) => SourceBinariesParams(
+              fetchAssetUrl: (_) => Uri.parse('http://localhost/unused'),
+              runProcess: mockRunProcess,
+              defaultBuildOptions: SourceBinariesOptions(
+                buildMode: BuildModeEnum.checkout,
+                checkoutPath: emptyDir.uri,
+                libraryName: 'test_lib',
               ),
-            ),
+            ).mainCli(args),
             targetArchitecture: Architecture.x64,
             targetOS: OS.linux,
             linkModePreference: LinkModePreference.dynamic,
@@ -308,17 +290,14 @@ edition = "2021"
           ..writeAsBytesSync(binaryContent);
 
         await testCodeBuildHook(
-          mainMethod: (args) => sourceRustBinariesBuildHook(
-            args,
-            SourceBinariesParams(
-              fetchAssetUrl: (_) => Uri.parse('http://localhost/unused'),
-              defaultBuildOptions: BuildOptions(
-                buildMode: BuildModeEnum.local,
-                localPath: binaryFile.uri,
-                libraryName: 'test_lib',
-              ),
+          mainMethod: (args) => SourceBinariesParams(
+            fetchAssetUrl: (_) => Uri.parse('http://localhost/unused'),
+            defaultBuildOptions: SourceBinariesOptions(
+              buildMode: BuildModeEnum.local,
+              localPath: binaryFile.uri,
+              libraryName: 'test_lib',
             ),
-          ),
+          ).mainCli(args),
           targetArchitecture: Architecture.x64,
           targetOS: OS.linux,
           linkModePreference: LinkModePreference.dynamic,
@@ -338,17 +317,14 @@ edition = "2021"
 
         await expectLater(
           testCodeBuildHook(
-            mainMethod: (args) => sourceRustBinariesBuildHook(
-              args,
-              SourceBinariesParams(
-                fetchAssetUrl: (_) => Uri.parse('http://localhost/unused'),
-                defaultBuildOptions: BuildOptions(
-                  buildMode: BuildModeEnum.local,
-                  localPath: missingFile,
-                  libraryName: 'test_lib',
-                ),
+            mainMethod: (args) => SourceBinariesParams(
+              fetchAssetUrl: (_) => Uri.parse('http://localhost/unused'),
+              defaultBuildOptions: SourceBinariesOptions(
+                buildMode: BuildModeEnum.local,
+                localPath: missingFile,
+                libraryName: 'test_lib',
               ),
-            ),
+            ).mainCli(args),
             targetArchitecture: Architecture.x64,
             targetOS: OS.linux,
             linkModePreference: LinkModePreference.dynamic,

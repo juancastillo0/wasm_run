@@ -55,7 +55,7 @@ Future<bool> configApi(String impl, String prefix) async {
 
 Future<void> runProcessWithConfigAPI(
   BuildInputParams input,
-  CLICommand command,
+  CliCommand command,
 ) async {
   if (command.executable == 'cargo' &&
       command.args.contains('rustc') &&
@@ -72,7 +72,7 @@ Future<void> runProcessWithConfigAPI(
     bool updated = false;
     try {
       updated = await configApi('wasmi', prefix);
-      await CLICommand.defaultRunProcess(command);
+      await CliCommand.defaultRunProcess(command);
     } finally {
       if (updated) {
         // Restore to wasmtime after the build
@@ -80,6 +80,6 @@ Future<void> runProcessWithConfigAPI(
       }
     }
   } else {
-    return CLICommand.defaultRunProcess(command);
+    return CliCommand.defaultRunProcess(command);
   }
 }

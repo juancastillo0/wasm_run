@@ -9,6 +9,13 @@ import 'package:test/test.dart';
 /// full path including the trailing separator, so Uri.file treats it as a directory.
 String _dirPath(String path) => '${path.replaceAll(r'\', '/')}/';
 
+const _testCargoToml = '''
+[package]
+name = "test"
+version = "0.1.0"
+edition = "2021"
+''';
+
 void main() {
   group('CLI', () {
     group('Argument parsing', () {
@@ -762,12 +769,9 @@ androidVersion: "31"
               'no_output_dir_test',
             );
             try {
-              File('${tempDir.path}/Cargo.toml').writeAsStringSync('''
-[package]
-name = "test"
-version = "0.1.0"
-edition = "2021"
-''');
+              File(
+                '${tempDir.path}/Cargo.toml',
+              ).writeAsStringSync(_testCargoToml);
               await expectLater(
                 () => cli.mainCli([
                   '--manifest-path',
@@ -791,10 +795,10 @@ edition = "2021"
 
       group('5.3 Output Directory from Config', () {
         test('Uses outputDirectory from config when CLI arg omitted', () async {
-          final capturedCommands = <CLICommand>[];
+          final capturedCommands = <CliCommand>[];
           Future<void> mockRunProcess(
             BuildInputParams input,
-            CLICommand command,
+            CliCommand command,
           ) async {
             capturedCommands.add(command);
             if (command.executable == 'cargo' &&
@@ -819,12 +823,9 @@ edition = "2021"
             'output_dir_config_test',
           );
           try {
-            File('${tempDir.path}/Cargo.toml').writeAsStringSync('''
-[package]
-name = "test"
-version = "0.1.0"
-edition = "2021"
-''');
+            File(
+              '${tempDir.path}/Cargo.toml',
+            ).writeAsStringSync(_testCargoToml);
             final outputDir = '${tempDir.path}/build-output';
             final configFile = File('${tempDir.path}/config.yaml');
             final hostOs = Platform.isMacOS
@@ -884,10 +885,10 @@ manifestPath: ${_dirPath(tempDir.path)}
 
       group('5.5 Duplicate Output Name Detection', () {
         test('Throws when asset template produces duplicate names', () async {
-          final capturedCommands = <CLICommand>[];
+          final capturedCommands = <CliCommand>[];
           Future<void> mockRunProcess(
             BuildInputParams input,
-            CLICommand command,
+            CliCommand command,
           ) async {
             capturedCommands.add(command);
             if (command.executable == 'cargo' &&
@@ -910,12 +911,9 @@ manifestPath: ${_dirPath(tempDir.path)}
           );
           final tempDir = Directory.systemTemp.createTempSync('dup_name_test');
           try {
-            File('${tempDir.path}/Cargo.toml').writeAsStringSync('''
-[package]
-name = "test"
-version = "0.1.0"
-edition = "2021"
-''');
+            File(
+              '${tempDir.path}/Cargo.toml',
+            ).writeAsStringSync(_testCargoToml);
             final hostOs = Platform.isMacOS
                 ? 'darwin'
                 : Platform.operatingSystem;
@@ -955,13 +953,13 @@ manifestPath: ${_dirPath(tempDir.path)}
 
     group('Build orchestration', () {
       late List<String> logMessages;
-      late List<CLICommand> capturedCommands;
+      late List<CliCommand> capturedCommands;
 
       /// Creates a mock runProcess that records commands and creates
       /// fake output files for cargo rustc builds.
       Future<void> mockRunProcess(
         BuildInputParams input,
-        CLICommand command,
+        CliCommand command,
       ) async {
         capturedCommands.add(command);
         if (command.executable == 'cargo' && command.args.contains('rustc')) {
@@ -980,12 +978,7 @@ manifestPath: ${_dirPath(tempDir.path)}
         bool useNoStd = false,
       }) {
         final tempDir = Directory.systemTemp.createTempSync('build_orch_test');
-        File('${tempDir.path}/Cargo.toml').writeAsStringSync('''
-[package]
-name = "test"
-version = "0.1.0"
-edition = "2021"
-''');
+        File('${tempDir.path}/Cargo.toml').writeAsStringSync(_testCargoToml);
         final hostOs = Platform.isMacOS ? 'darwin' : Platform.operatingSystem;
         final target = useNoStd
             ? 'riscv64-linux-android'
@@ -1155,12 +1148,9 @@ manifestPath: ${_dirPath(tempDir.path)}
             'features_cli_test',
           );
           try {
-            File('${tempDir.path}/Cargo.toml').writeAsStringSync('''
-[package]
-name = "test"
-version = "0.1.0"
-edition = "2021"
-''');
+            File(
+              '${tempDir.path}/Cargo.toml',
+            ).writeAsStringSync(_testCargoToml);
             final hostOs = Platform.isMacOS
                 ? 'darwin'
                 : Platform.operatingSystem;
@@ -1264,7 +1254,7 @@ failFast: true
             var callCount = 0;
             Future<void> failingMockRunProcess(
               BuildInputParams input,
-              CLICommand command,
+              CliCommand command,
             ) async {
               capturedCommands.add(command);
               if (command.executable == 'cargo' &&
@@ -1333,7 +1323,7 @@ failFast: false
             var buildAttempts = 0;
             Future<void> failingMockRunProcess(
               BuildInputParams input,
-              CLICommand command,
+              CliCommand command,
             ) async {
               capturedCommands.add(command);
               if (command.executable == 'cargo' &&
@@ -1506,12 +1496,9 @@ manifestPath: ${_dirPath(dir.path)}
               'libtype_test2',
             );
             try {
-              File('${tempDir2.path}/Cargo.toml').writeAsStringSync('''
-[package]
-name = "test"
-version = "0.1.0"
-edition = "2021"
-''');
+              File(
+                '${tempDir2.path}/Cargo.toml',
+              ).writeAsStringSync(_testCargoToml);
               final outputDir2 = '${tempDir2.path}/out2';
               final configFile2 = File('${tempDir2.path}/config2.yaml');
               await configFile2.writeAsString('''
@@ -1528,10 +1515,10 @@ outputs:
 manifestPath: ${_dirPath(tempDir2.path)}
 ''');
 
-              final capturedCommands2 = <CLICommand>[];
+              final capturedCommands2 = <CliCommand>[];
               Future<void> mock2(
                 BuildInputParams input,
-                CLICommand command,
+                CliCommand command,
               ) async {
                 capturedCommands2.add(command);
                 if (command.executable == 'cargo' &&
@@ -1576,11 +1563,11 @@ manifestPath: ${_dirPath(tempDir2.path)}
 
     group('Edge cases and error handling', () {
       late List<String> logMessages;
-      late List<CLICommand> capturedCommands;
+      late List<CliCommand> capturedCommands;
 
       Future<void> mockRunProcess(
         BuildInputParams input,
-        CLICommand command,
+        CliCommand command,
       ) async {
         capturedCommands.add(command);
         if (command.executable == 'cargo' && command.args.contains('rustc')) {
@@ -1604,12 +1591,9 @@ manifestPath: ${_dirPath(tempDir2.path)}
             'concurrent_test',
           );
           try {
-            File('${tempDir.path}/Cargo.toml').writeAsStringSync('''
-[package]
-name = "test"
-version = "0.1.0"
-edition = "2021"
-''');
+            File(
+              '${tempDir.path}/Cargo.toml',
+            ).writeAsStringSync(_testCargoToml);
             final hostOs = Platform.isMacOS
                 ? 'darwin'
                 : Platform.operatingSystem;
