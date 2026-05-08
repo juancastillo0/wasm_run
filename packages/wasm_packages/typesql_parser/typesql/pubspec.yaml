@@ -14,7 +14,7 @@ dependencies:
   meta: ^1.17.0
   sqlite3: ^3.3.0
   recase: ^4.1.0
-  wasm_wit_component: ^0.0.1
+  wasm_wit_component: ^0.2.0
 
 dev_dependencies:
   lints: ^6.1.0

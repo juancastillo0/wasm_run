@@ -45,7 +45,7 @@ class WasmRunLibrary {
   const WasmRunLibrary._();
 
   /// The current version of the package.
-  static const version = '0.1.0';
+  static const version = '0.2.0';
 
   static const _isWeb = identical(0, 0.0);
 

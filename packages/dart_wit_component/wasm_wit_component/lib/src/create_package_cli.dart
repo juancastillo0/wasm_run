@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:args/args.dart';
 import 'package:recase/recase.dart';
 import 'package:wasm_wit_component/generator.dart';
+import 'package:wasm_wit_component/wasm_wit_component.dart';
 
 Future<void> createPackageCli(List<String> arguments) async {
   final parser = ArgParser();
@@ -267,8 +268,8 @@ flutter:
     - lib/assets/
 
 dependencies:
-  wasm_run: ^0.1.0
-  wasm_wit_component: ^0.0.1
+  wasm_run: ^${WasmRunLibrary.version}
+  wasm_wit_component: ^0.2.0
 
 dev_dependencies:
   lints: ^2.0.0

@@ -1,6 +1,6 @@
 name: wasm_wit_component
 description: Wasm code generator and bindings for Web Assembly Interface Types (WIT) and Wasm Components
-version: 0.0.1
+version: 0.2.0
 homepage: https://github.com/juancastillo0/wasm_run
 
 topics:
@@ -18,7 +18,7 @@ environment:
   sdk: ^3.10.0
 resolution: workspace
 dependencies:
-  wasm_run: ^0.1.0
+  wasm_run: ^0.2.0
   args: ^2.4.0
   recase: ^4.1.0
 
