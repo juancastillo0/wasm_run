@@ -8,12 +8,10 @@ homepage: https://github.com/juancastillo0/wasm_run
 
 topics:
   - rust
-  - interop
   - cross-compilation
   - ffi
   - build
   - hooks
-  - binaries
 
 environment:
   sdk: ^3.10.0
@@ -29,3 +27,4 @@ dependencies:
 
 dev_dependencies:
   test: ^1.30.0
+  very_good_analysis: ^10.0.0

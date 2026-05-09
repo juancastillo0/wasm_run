@@ -3,6 +3,6 @@
 /// for a Github Releases.
 library;
 
-export 'src/source_binaries_hook.dart';
 export 'src/build_binaries_cli.dart';
 export 'src/build_mode.dart' show BuildMode;
+export 'src/source_binaries_hook.dart';

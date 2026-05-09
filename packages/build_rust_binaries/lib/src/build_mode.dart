@@ -37,7 +37,8 @@ final class FetchBuildMode extends BuildMode {
       dylibRemoteUri = params.fetchAssetUrl!(input);
     } else {
       throw ArgumentError(
-        'No `fetchUri` provided for fetch build mode, and `fetchAssetUrl` is not set in the parameters.',
+        'No `fetchUri` provided for fetch build mode, and `fetchAssetUrl`'
+        ' is not set in the parameters.',
       );
     }
 
@@ -65,8 +66,8 @@ final class FetchBuildMode extends BuildMode {
     if (fileHash != expectedFileHash) {
       final libraryType = input.buildStatic ? 'static' : 'dynamic';
       throw Exception(
-        'The pre-built binary for the target ${input.rustTarget}-$libraryType at '
-        '$dylibRemoteUri has a hash of $fileHash, which does not match '
+        'The pre-built binary for the target ${input.rustTarget}-$libraryType'
+        ' at $dylibRemoteUri has a hash of $fileHash, which does not match '
         '$expectedFileHash provided in the build hook configuration.',
       );
     }
@@ -242,9 +243,10 @@ final class CheckoutBuildMode extends BuildMode {
   // TODO: use cargo project as dependency with Cargo.lock for workspace support and better change detection
   @override
   List<Uri> get dependencies => [
-    File.fromUri(checkoutPath!.resolve('Cargo.lock')).existsSync()
-        ? checkoutPath!.resolve('Cargo.lock')
-        : checkoutPath!.resolve('Cargo.toml'),
+    if (File.fromUri(checkoutPath!.resolve('Cargo.lock')).existsSync())
+      checkoutPath!.resolve('Cargo.lock')
+    else
+      checkoutPath!.resolve('Cargo.toml'),
   ];
 }
 

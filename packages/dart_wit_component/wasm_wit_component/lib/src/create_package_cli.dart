@@ -269,7 +269,7 @@ flutter:
 
 dependencies:
   wasm_run: ^${WasmRunLibrary.version}
-  wasm_wit_component: ^0.2.0
+  wasm_wit_component: ^${WasmRunLibrary.version}
 
 dev_dependencies:
   lints: ^2.0.0

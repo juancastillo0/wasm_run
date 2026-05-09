@@ -5,7 +5,8 @@ import 'package:code_assets/code_assets.dart';
 import 'package:hooks/hooks.dart';
 
 class SourceBinariesParams {
-  /// Provides the URI to fetch the precompiled binary for a given build input, used in `fetch` mode.
+  /// Provides the URI to fetch the precompiled binary for a given build input,
+  /// used in `fetch` mode.
   final Uri Function(BuildInputParams input)? fetchAssetUrl;
 
   /// Provides the expected sha256 hash for a given asset, used in `fetch` mode
@@ -18,7 +19,8 @@ class SourceBinariesParams {
   /// Default build options that can be overridden by user defines in the pubspec.yaml.
   final SourceBinariesOptions? defaultBuildOptions;
 
-  /// An optional [HttpClient] that can be used for fetching precompiled binaries in `fetch` mode.
+  /// An optional [HttpClient] that can be used for fetching
+  /// precompiled binaries in `fetch` mode.
   final HttpClient httpClient;
 
   /// An optional callback that can be used to provide custom build logic for web targets.
@@ -42,14 +44,18 @@ class SourceBinariesParams {
   }) : httpClient = httpClient ?? HttpClient();
 
   /// A build hook for sourcing Rust binaries, supporting multiple build modes:
-  /// - `fetch`: Fetches precompiled binaries from a remote URI, with optional integrity verification using sha256 hashes.
+  /// - `fetch`: Fetches precompiled binaries from a remote URI, with optional
+  ///   integrity verification using sha256 hashes.
   /// - `local`: Uses a locally existing binary specified by the user.
-  /// - `checkout`: Builds the Rust library from a local git checkout of the Rust repository, with support for custom features and build configurations.
+  /// - `checkout`: Builds the Rust library from a local git checkout of the
+  ///   Rust repository, with support for custom features and build configurations.
   ///
-  /// The build mode and related options are specified through user defines in the package's pubspec.yaml.
-  /// This hook fetch and local mode is designed to be used with the `build_binaries` cli, since it will build
-  /// multiple targets at once which can be uploaded to a CDN Such as GIthub Releases or used in a local directory.
-  /// The build mode uses the same infraestructure for building the Rust library as the CLI.
+  /// The build mode and related options are specified through user defines
+  /// in the package's pubspec.yaml. This hook fetch and local mode is designed
+  /// to be used with the build_binaries` cli, since it will build
+  /// multiple targets at once which can be uploaded to a CDN Such as
+  /// Github Releases or used in a local directory. The build mode uses the same
+  /// infrastructure for building the Rust library as the CLI.
   Future<void> mainCli(List<String> args) async {
     await build(args, (input, output) async {
       try {
@@ -118,11 +124,11 @@ hooks:
           linkMode: DynamicLoadingBundled(),
           file: builtLibrary,
         ),
-        routing:
-            buildOptions.buildMode != BuildModeEnum.local &&
-                input.config.linkingEnabled
-            ? ToLinkHook(input.packageName)
-            : const ToAppBundle(),
+        // TODO: implement ToLinkHook
+        //  buildOptions.buildMode != BuildModeEnum.local &&
+        //         input.config.linkingEnabled
+        //     ? ToLinkHook(input.packageName)
+        routing: const ToAppBundle(),
       );
       output.dependencies.addAll(buildMode.dependencies);
       output.dependencies.add(input.packageRoot.resolve('pubspec.yaml'));
@@ -156,8 +162,8 @@ class SourceBinariesOptions {
   final BuildModeEnum buildMode;
 
   /// The path to the locally existing binary or directory of binaries to use
-  /// when [buildMode] is set to `local`. If a directory is provided, the binary will be
-  /// selected based on the [assetName].
+  /// when [buildMode] is set to `local`. If a directory is provided,
+  /// the binary will be selected based on the [assetName].
   final Uri? localPath;
 
   /// The path to the git checkout of the Rust repository to build from
@@ -314,7 +320,7 @@ class BuildInputParams {
     }
     return <String>[
       ?features?.replaceAll(',', '_'),
-      if (noDefaultFeatures == true) 'no_default',
+      if (noDefaultFeatures ?? false) 'no_default',
     ].join('-');
   }
 
