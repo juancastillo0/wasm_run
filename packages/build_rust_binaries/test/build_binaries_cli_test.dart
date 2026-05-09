@@ -9,6 +9,9 @@ import 'package:test/test.dart';
 /// full path including the trailing separator, so Uri.file treats it as a directory.
 String _dirPath(String path) => '${path.replaceAll(r'\', '/')}/';
 
+Future<void> _delay(int milliseconds) =>
+    Future.delayed(Duration(milliseconds: milliseconds));
+
 const _testCargoToml = '''
 [package]
 name = "test"
@@ -252,7 +255,7 @@ androidVersion: "31"
 
       group('2.4 Non-Default Missing Config File', () {
         test('Custom config path throws exception when file missing', () async {
-          final nonexistentPath = 'nonexistent_config_file_12345.yaml';
+          const nonexistentPath = 'nonexistent_config_file_12345.yaml';
           expect(
             () => cli.loadConfig(nonexistentPath),
             throwsA(
@@ -282,7 +285,7 @@ androidVersion: "31"
           } finally {
             // On Windows, loadYaml may keep a file handle open.
             // Force cleanup by waiting and retrying deletion.
-            await Future.delayed(Duration(milliseconds: 100));
+            await _delay(100);
             if (configFile.existsSync()) configFile.deleteSync();
             try {
               tempDir.deleteSync(recursive: true);
@@ -675,7 +678,7 @@ androidVersion: "31"
               expect(content, contains('ANDROID_NDK_HOME'));
             } finally {
               // Force cleanup on Windows
-              await Future.delayed(const Duration(milliseconds: 200));
+              await _delay(200);
               try {
                 tempDir.deleteSync(recursive: true);
               } catch (_) {}
@@ -715,7 +718,7 @@ androidVersion: "31"
               expect(content, contains('aarch64-linux-android33-clang'));
               expect(content, contains('armv7a-linux-androideabi31-clang'));
             } finally {
-              await Future.delayed(const Duration(milliseconds: 200));
+              await _delay(200);
               try {
                 tempDir.deleteSync(recursive: true);
               } catch (_) {}

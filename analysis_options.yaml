@@ -117,6 +117,7 @@ linter:
     sort_constructors_first: false
     cascade_invocations: false
     join_return_with_assignment: false
+    avoid_catches_without_on_clauses: false
 
     # Util classes are awesome!
     # avoid_classes_with_only_static_members: false

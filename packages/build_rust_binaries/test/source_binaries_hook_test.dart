@@ -24,7 +24,7 @@ void main() {
 
   group('sourceRustBinariesBuildHook', () {
     group('fetch mode', () {
-      Future<HttpServer> _serveBinary(
+      Future<HttpServer> serveBinary(
         List<int> bytes, {
         int statusCode = 200,
       }) async {
@@ -44,7 +44,7 @@ void main() {
       test('downloads binary and verifies SHA-256 hash', () async {
         final binaryBytes = utf8.encode('mock-binary-content');
         final expectedHash = sha256.convert(binaryBytes).toString();
-        final server = await _serveBinary(binaryBytes);
+        final server = await serveBinary(binaryBytes);
 
         try {
           await testCodeBuildHook(
@@ -80,7 +80,7 @@ void main() {
       });
 
       test('fails on HTTP error status', () async {
-        final server = await _serveBinary([], statusCode: 404);
+        final server = await serveBinary([], statusCode: 404);
 
         try {
           await expectLater(
@@ -112,7 +112,7 @@ void main() {
         final wrongHash = sha256
             .convert(utf8.encode('different-content'))
             .toString();
-        final server = await _serveBinary(binaryBytes);
+        final server = await serveBinary(binaryBytes);
 
         try {
           await expectLater(
@@ -157,7 +157,7 @@ void main() {
         }
       }
 
-      Directory _createCheckoutProject() {
+      Directory createCheckoutProject() {
         final dir = Directory('${tempDir.path}/checkout_project')..createSync();
         File('${dir.path}/Cargo.toml').writeAsStringSync('''
 [package]
@@ -169,7 +169,7 @@ edition = "2021"
       }
 
       test('builds dynamic library with correct cargo commands', () async {
-        final checkoutDir = _createCheckoutProject();
+        final checkoutDir = createCheckoutProject();
 
         await testCodeBuildHook(
           mainMethod: (args) => SourceBinariesParams(
@@ -216,7 +216,7 @@ edition = "2021"
       test(
         'static build uses --crate-type=staticlib and installs rust-src',
         () async {
-          final checkoutDir = _createCheckoutProject();
+          final checkoutDir = createCheckoutProject();
 
           await testCodeBuildHook(
             mainMethod: (args) => SourceBinariesParams(
