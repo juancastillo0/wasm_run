@@ -96,7 +96,8 @@ enum Int64TypeConfig implements ToJsonSerializable {
   /// Unsafe in all platforms.
   /// Web can not represent 64 bit integers since it uses doubles for all numbers.
   /// Native cannot represent unsigned 64 big integers, see [nativeObject].
-  coreInt;
+  coreInt
+  ;
 
   /// Returns a new instance from a JSON value.
   /// May throw if the value does not have the expected structure.
