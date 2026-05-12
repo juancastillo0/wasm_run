@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:args/args.dart';
 import 'package:build_rust_binaries/build_rust_binaries.dart';
 import 'package:build_rust_binaries/src/build_mode.dart';
+import 'package:build_rust_binaries/src/cargo_config.dart';
 import 'package:crypto/crypto.dart' show sha256;
 import 'package:yaml/yaml.dart';
 
@@ -31,7 +32,7 @@ class BuildRustBinariesCLI {
   /// Default value for whether to create a Cargo linkers configuration
   final bool createCargoConfigDefault;
 
-  /// Default Android version for the build as integrer or comma separated <target>=<version>
+  /// Default Android version for the build as integer or comma separated <target>=<version>
   final String androidVersionDefault;
 
   /// Default asset name template
@@ -166,86 +167,23 @@ class BuildRustBinariesCLI {
         'Cargo config already exists at ${cargoConfig.path}, skipping creation.',
       );
     } else {
-      final ndkHome =
-          Platform.environment['ANDROID_NDK_ROOT'] ??
-          Platform.environment['ANDROID_NDK_HOME'] ??
-          Platform.environment['ANDROID_NDK_LATEST_HOME'];
-      if (ndkHome == null) {
-        throw Exception(
-          'ANDROID_NDK_ROOT, ANDROID_NDK_HOME or ANDROID_NDK_LATEST_HOME'
-          ' environment variable must be set to create the .cargo/config.toml'
-          ' for Android targets. You can download it from https://developer.android.com/ndk/downloads'
-          ' or use the ones managed in Android Studio, usually found in'
-          ' ~/Android/Sdk/ndk/<version> for linux systems'
-          ' or C:/Users/<user>/AppData/Local/Android/Sdk/ndk/<version> for windows',
-        );
-      }
-      String homePath = Directory(
-        ndkHome,
-      ).absolute.uri.toFilePath(windows: false);
-      // On Windows, if the path starts with a drive letter, it may be prefixed with a slash
-      // (e.g. /C:/path/to/ndk). Remove it for correct path construction.
-      if (Platform.isWindows && homePath.startsWith('/')) {
-        homePath = homePath.substring(1);
-      }
-      if (homePath.endsWith('/')) {
-        homePath = homePath.substring(0, homePath.length - 1);
-      }
-      final os = Platform.isMacOS ? 'darwin' : Platform.operatingSystem;
-      // TODO: darwin aarch64?
-      // final architecture = switch (Platform.version.split('_').last) {
-      //   'arm64' => 'aarch64',
-      //   _ => 'x86_64',
-      // };
-      final suffix = Platform.isWindows ? '.cmd' : '';
-      final exe = Platform.isWindows ? '.exe' : '';
-      String baseAV = androidVersionDefault;
-      final avMap = Map.fromEntries(
-        androidVersion
-            .split(',')
-            .where((v) {
-              final hasTarget = v.contains('=');
-              if (!hasTarget) baseAV = v;
-              return hasTarget;
-            })
-            .map((v) {
-              final s = v.split('=');
-              return MapEntry(s[0], s[1]);
-            }),
+      final contents = cargoConfigContents(
+        androidVersion,
+        androidVersionDefault: androidVersionDefault,
       );
-      String linkerLine(
-        String rustTarget,
-        String linkerPrefix, {
-        bool cc = false,
-      }) {
-        final av = avMap[rustTarget] ?? baseAV;
-        final path =
-            '$homePath/toolchains/llvm/prebuilt/$os-x86_64/bin/$linkerPrefix$av-clang$suffix';
-        if (cc) return 'CC_$rustTarget="$path"';
-        return '$rustTarget.linker="$path"';
-      }
-
       await cargoConfig.create(recursive: true);
       // ignore: leading_newlines_in_multiline_strings
       await cargoConfig.writeAsString('''\
 [target]
-${linkerLine('aarch64-linux-android', 'aarch64-linux-android')}
-${linkerLine('armv7-linux-androideabi', 'armv7a-linux-androideabi')}
-${linkerLine('i686-linux-android', 'i686-linux-android')}
-${linkerLine('x86_64-linux-android', 'x86_64-linux-android')}
-${linkerLine('riscv64-linux-android', 'riscv64-linux-android')}
+${androidTargets.map((target) => '$target.linker="${contents.linkers[target]}"').join('\n')}
 aarch64-unknown-linux-gnu.linker="aarch64-linux-gnu-gcc"
 armv7-unknown-linux-gnueabihf.linker="arm-linux-gnueabihf-gcc"
 riscv64gc-unknown-linux-gnu.linker="riscv64-linux-gnu-gcc"
 
 [env]
-ANDROID_NDK_HOME="$homePath"
-AR="$homePath/toolchains/llvm/prebuilt/$os-x86_64/bin/llvm-ar$exe"
-${linkerLine('aarch64-linux-android', 'aarch64-linux-android', cc: true)}
-${linkerLine('armv7-linux-androideabi', 'armv7a-linux-androideabi', cc: true)}
-${linkerLine('i686-linux-android', 'i686-linux-android', cc: true)}
-${linkerLine('x86_64-linux-android', 'x86_64-linux-android', cc: true)}
-${linkerLine('riscv64-linux-android', 'riscv64-linux-android', cc: true)}
+ANDROID_NDK_HOME="${contents.ndkHome}"
+AR="${contents.ar}"
+${androidTargets.map((target) => 'CC_$target="${contents.linkers[target]}"').join('\n')}
 ''');
     }
   }
@@ -256,12 +194,14 @@ ${linkerLine('riscv64-linux-android', 'riscv64-linux-android', cc: true)}
     Uri rustDirectory, {
     String? features,
     bool? noDefaultFeatures,
+    String? androidVersion,
   }) {
     return CheckoutBuildMode(
       params,
       rustDirectory,
       features: features,
       noDefaultFeatures: noDefaultFeatures,
+      androidVersion: androidVersion,
       runProcess: runProcess != null
           ? (command) => runProcess!(params, command)
           : CliCommand.defaultRunProcess,
@@ -411,6 +351,7 @@ ${linkerLine('riscv64-linux-android', 'riscv64-linux-android', cc: true)}
           Uri.directory(rustDirectory),
           features: effectiveFeatures,
           noDefaultFeatures: noDefaultFeatures ?? noDefaultFeaturesGlobal,
+          androidVersion: androidVersion,
         );
 
         try {

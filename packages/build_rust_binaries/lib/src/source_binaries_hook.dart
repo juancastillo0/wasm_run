@@ -75,6 +75,7 @@ class SourceBinariesParams {
         final checkoutPathDefault =
             defaultBuildOptions?.checkoutPath ??
             '${packageName}_root/packages/$packageName/rust/';
+        // TODO: allow configuring the available build modes in the default options
         throw ArgumentError('''
 Error: $e
 
@@ -146,6 +147,7 @@ hooks:
         buildOptions.checkoutPath,
         features: buildOptions.features,
         noDefaultFeatures: buildOptions.noDefaultFeatures,
+        androidVersion: buildOptions.androidVersion,
         runProcess: runProcess != null
             ? (command) => runProcess!(inputParams, command)
             : CliCommand.defaultRunProcess,
@@ -201,6 +203,12 @@ class SourceBinariesOptions {
   /// This is used to construct the asset name and the output file name.
   final String? libraryName;
 
+  /// The Android Version used to configure the linkers and environment
+  /// variables for compilation. ANDROID_NDK_HOME should
+  /// point to the installation of the android ndk.
+  /// Only used for the checkout mode.
+  final String? androidVersion;
+
   SourceBinariesOptions({
     required this.buildMode,
     this.localPath,
@@ -212,6 +220,7 @@ class SourceBinariesOptions {
     this.assetsSha256,
     this.libraryName,
     this.assetName,
+    this.androidVersion,
   });
 
   /// Creates a [SourceBinariesOptions] instance from user [defines] in the pubspec.yaml,
@@ -246,6 +255,8 @@ class SourceBinariesOptions {
           (defines['assetsSha256'] as Map?)?.cast<String, String>() ??
           defaults?.assetsSha256,
       libraryName: defines['libraryName'] as String? ?? defaults?.libraryName,
+      androidVersion:
+          defines['androidVersion'] as String? ?? defaults?.androidVersion,
     );
   }
 
@@ -260,6 +271,7 @@ class SourceBinariesOptions {
     if (assetName != null) 'assetName': assetName,
     if (assetsSha256 != null) 'assetsSha256': assetsSha256,
     if (libraryName != null) 'libraryName': libraryName,
+    if (androidVersion != null) 'androidVersion': androidVersion,
   };
 
   @override

@@ -43,6 +43,7 @@ void main(List<String> args) async {
           'https://github.com/juancastillo0/wasm_run/releases/download/wasm_run-v${WasmRunLibrary.version}/',
       libraryName: 'wasm_run_dart',
       assetsSha256: assetsSha256,
+      androidVersion: '31',
     ),
     // TODO: web support? retrieve feature-detection and wasi js libs?
     buildWeb: (input, output) async {},

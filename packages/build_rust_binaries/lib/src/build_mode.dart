@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:build_rust_binaries/src/cargo_config.dart';
 import 'package:build_rust_binaries/src/source_binaries_hook.dart';
 import 'package:code_assets/code_assets.dart';
 import 'package:crypto/crypto.dart' show sha256;
@@ -124,6 +125,7 @@ final class CheckoutBuildMode extends BuildMode {
   final Uri? checkoutPath;
   final String? features;
   final bool? noDefaultFeatures;
+  final String? androidVersion;
   final Future<void> Function(CliCommand command) runProcess;
 
   CheckoutBuildMode(
@@ -131,6 +133,7 @@ final class CheckoutBuildMode extends BuildMode {
     this.checkoutPath, {
     this.features,
     this.noDefaultFeatures,
+    this.androidVersion,
     this.runProcess = CliCommand.defaultRunProcess,
   });
 
@@ -181,6 +184,29 @@ final class CheckoutBuildMode extends BuildMode {
     final rustTarget = input.rustTarget;
     final buildStatic = input.buildStatic;
     final workingDirectory = Directory.fromUri(checkoutPath!);
+    bool hasCargoConfig() => File.fromUri(
+      workingDirectory.uri.resolve('.cargo/config.toml'),
+    ).existsSync();
+
+    Map<String, String>? environment;
+    if (androidVersion != null &&
+        androidTargets.contains(rustTarget) &&
+        !hasCargoConfig()) {
+      final contents = cargoConfigContents(
+        androidVersion!,
+        androidVersionDefault: '31',
+      );
+      final linker = contents.linkers[rustTarget];
+      if (linker != null) {
+        final t = rustTarget.toUpperCase().replaceAll('-', '_');
+        environment = {
+          'AR': contents.ar,
+          'ANDROID_NDK_HOME': contents.ndkHome,
+          'CARGO_TARGET_${t}_LINKER': linker,
+          'CC_$t': linker,
+        };
+      }
+    }
 
     final isNoStd = _isNoStdTarget(rustTarget);
     // TODO: provide other option
@@ -234,6 +260,7 @@ final class CheckoutBuildMode extends BuildMode {
         environment: {
           if (isNoStd)
             'RUSTFLAGS': '-Zunstable-options -Cpanic=immediate-abort',
+          if (environment != null) ...environment,
         },
       ),
     );
