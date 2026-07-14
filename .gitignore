@@ -39,7 +39,6 @@ build/
 /platform-build
 /packages/wasm_packages/release_files/
 .vscode/settings.json
-.fvm/flutter_sdk
 packages/wasm_run/coverage
 packages/rust_wasi_example/Cargo.lock
 scripts/config_api.exe
@@ -49,3 +48,11 @@ packages/flutter_wasmi/example/android/local.properties
 packages/flutter_wasmi/example/ios/Flutter/Generated.xcconfig
 packages/flutter_wasmi/example/macos/Flutter/ephemeral/Flutter-Generated.xcconfig
 **/graphify-out/cache/**
+.agents
+plans
+platform-build
+packages/wasm_run/platform-build
+graphify-out
+
+# FVM Version Cache
+.fvm/
