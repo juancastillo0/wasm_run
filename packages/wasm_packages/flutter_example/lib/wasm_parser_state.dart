@@ -78,8 +78,9 @@ class WasmParserState extends ChangeNotifier with ErrorNotifier {
   }
 
   Uint8List? wat2wasm() {
-    final result =
-        _wasmParser.wat2wasm(input: WatInput.text(watController.joinedText));
+    final result = _wasmParser.wat2wasm(
+      input: WatInput.text(watController.joinedText),
+    );
     if (result.isOk) {
       loadWasm(result.ok!, overrideWat: false);
     }
@@ -90,8 +91,9 @@ class WasmParserState extends ChangeNotifier with ErrorNotifier {
     if (_wasmBytes == null) {
       return setError('Please load or parse a WASM file.');
     }
-    final result =
-        _wasmParser.wasmComponent2wit(input: WasmInput.binary(_wasmBytes!));
+    final result = _wasmParser.wasmComponent2wit(
+      input: WasmInput.binary(_wasmBytes!),
+    );
     result.map(setWit).mapErr(setError);
   }
 

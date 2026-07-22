@@ -13,7 +13,8 @@ Future<void> generateCli(List<String> arguments) async {
   final args = GeneratorCLIArgs.fromArgs(arguments);
   final witInputPath = args.witInputPath;
   // TODO: multiple files or directory
-  final dartFilePath = args.dartFilePath ??
+  final dartFilePath =
+      args.dartFilePath ??
       (witInputPath.endsWith('.wit')
           ? '${witInputPath.substring(0, witInputPath.length - 4)}_wit.gen.dart'
           : '${witInputPath}_wit.gen.dart');
@@ -124,7 +125,8 @@ class GeneratorCLIArgs {
       asyncWorker: args.namedBool[_Arg.asyncWorker] ?? false,
       sameClassUnion: args.namedBool[_Arg.sameClassUnion] ?? true,
       objectComparator: args.singleArgValue(_Arg.objectComparator),
-      int64Type: args.singleArgEnum(_Arg.int64Type, Int64TypeConfig.values) ??
+      int64Type:
+          args.singleArgEnum(_Arg.int64Type, Int64TypeConfig.values) ??
           Int64TypeConfig.bigInt,
     );
 
@@ -212,9 +214,9 @@ class _CLIArgs {
     required this.arguments,
     required List<String>? valueNames,
     String? configFile,
-  })  : positional = [],
-        namedBool = {},
-        namedValues = {} {
+  }) : positional = [],
+       namedBool = {},
+       namedValues = {} {
     final Set<int> usedIndices = {};
     for (final arg in arguments.indexed) {
       if (!arg.$2.startsWith('-')) {
@@ -274,9 +276,7 @@ class _CLIArgs {
   String? singleArgValue(String name) {
     final values = namedValues[name];
     if (values != null && values.length > 1) {
-      throw Exception(
-        'Too many values for argument `name`. $values',
-      );
+      throw Exception('Too many values for argument `name`. $values');
     }
     return values?[0];
   }

@@ -38,10 +38,7 @@ class CoreFuncType {
 }
 
 // @dataclass
-typedef ExternDecl = ({
-  String name,
-  ComponentExternType t,
-});
+typedef ExternDecl = ({String name, ComponentExternType t});
 
 // @dataclass
 class ComponentType extends ComponentExternType {
@@ -255,10 +252,7 @@ class ListType extends DespecializedValType {
 }
 
 // @dataclass
-typedef Field = ({
-  String label,
-  ValType t,
-});
+typedef Field = ({String label, ValType t});
 
 /// A collection of named fields.
 /// `record` in wit and a `class` or `Map<String, Object?>` in Dart.
@@ -429,15 +423,21 @@ DespecializedValType _despecialize(ValType t) {
   }
   return switch (t) {
     DespecializedValType() => t,
-    Tuple(:final ts) =>
-      RecordType([...ts.indexed.map((t) => (label: t.$1.toString(), t: t.$2))]),
-    Union(:final ts) =>
-      Variant([...ts.indexed.map((t) => Case(t.$1.toString(), t.$2))]),
+    Tuple(:final ts) => RecordType([
+      ...ts.indexed.map((t) => (label: t.$1.toString(), t: t.$2)),
+    ]),
+    Union(:final ts) => Variant([
+      ...ts.indexed.map((t) => Case(t.$1.toString(), t.$2)),
+    ]),
     EnumType(:final labels) => Variant([...labels.map((e) => Case(e, null))]),
-    OptionType(:final t) =>
-      Variant([const Case('none', null), Case('some', t)]),
-    ResultType(:final ok, :final error) =>
-      Variant([Case('ok', ok), Case('error', error)]),
+    OptionType(:final t) => Variant([
+      const Case('none', null),
+      Case('some', t),
+    ]),
+    ResultType(:final ok, :final error) => Variant([
+      Case('ok', ok),
+      Case('error', error),
+    ]),
   };
 }
 

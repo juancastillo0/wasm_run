@@ -87,15 +87,13 @@ class Ok<O, E> implements Result<O, E> {
   Map<String, Object?> toJson([
     Object? Function(O value)? mapOk,
     Object? Function(E value)? mapError,
-  ]) =>
-      {'ok': mapOk == null ? ok : mapOk(ok)};
+  ]) => {'ok': mapOk == null ? ok : mapOk(ok)};
 
   @override
   (int, Object?) toWasm([
     Object? Function(O value)? mapOk,
     Object? Function(E value)? mapError,
-  ]) =>
-      (0, mapOk == null ? ok : mapOk(ok));
+  ]) => (0, mapOk == null ? ok : mapOk(ok));
 
   @override
   O unwrap() => ok;
@@ -144,15 +142,13 @@ class Err<O, E> implements Result<O, E> {
   Map<String, Object?> toJson([
     Object? Function(O value)? mapOk,
     Object? Function(E value)? mapError,
-  ]) =>
-      {'error': mapError == null ? error : mapError(error)};
+  ]) => {'error': mapError == null ? error : mapError(error)};
 
   @override
   (int, Object?) toWasm([
     Object? Function(O value)? mapOk,
     Object? Function(E value)? mapError,
-  ]) =>
-      (1, mapError == null ? error : mapError(error));
+  ]) => (1, mapError == null ? error : mapError(error));
 
   @override
   O unwrap() => throw ResultException(this);

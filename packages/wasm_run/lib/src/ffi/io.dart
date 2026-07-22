@@ -1,19 +1,17 @@
-import 'dart:ffi';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:wasm_run/src/bridge_generated.dart';
+import 'package:wasm_run/src/ffi.dart';
 import 'package:wasm_run/src/ffi/library_locator.dart';
-import 'package:wasm_run/src/ffi/setup_dynamic_library.dart';
-
-typedef ExternalLibrary = DynamicLibrary;
+import 'package:wasm_run/src/rust/frb_generated.dart';
 
 Future<void> setUpLibraryImpl({required bool features, required bool wasi}) =>
-    setUpDesktopDynamicLibrary();
+    // Use the dart build hooks or build_binaries cli
+    Future.value();
 
-WasmRunDart createWrapperImpl(ExternalLibrary dylib) {
-  final validated = _validateLibrary(dylib);
-  return WasmRunDartImpl(validated);
+Future<WasmRunDart> createWrapperImpl(ExternalLibrary dylib) async {
+  await RustLib.init(externalLibrary: _validateLibrary(dylib));
+  return true;
 }
 
 ExternalLibrary localTestingLibraryImpl() {
@@ -37,7 +35,7 @@ ExternalLibrary localTestingLibraryImpl() {
   ]) {
     if (!File(dir).existsSync()) continue;
     print('Using localTestingLibrary: ${File(dir).absolute.uri.toFilePath()}');
-    return _validateLibrary(DynamicLibrary.open(dir));
+    return _validateLibrary(ExternalLibrary.open(dir));
   }
   throw Exception('Could not find $filename in debug or release');
 }
@@ -45,19 +43,20 @@ ExternalLibrary localTestingLibraryImpl() {
 ExternalLibrary createLibraryImpl() {
   final envPath = Platform.environment[dynamicLibraryEnvVariable];
   if (envPath != null) {
-    return _validateLibrary(DynamicLibrary.open(envPath));
+    return _validateLibrary(ExternalLibrary.open(envPath));
   }
   try {
-    final DynamicLibrary library;
+    final ExternalLibrary library;
     if (Platform.isIOS || Platform.isMacOS) {
       try {
-        return _validateLibrary(DynamicLibrary.executable());
+        // TODO(migrationv1): use loadExternalLibrary()?
+        return _validateLibrary(ExternalLibrary.process(iKnowHowToUseIt: true));
       } catch (_) {}
-      library = DynamicLibrary.open(appleLib);
+      library = ExternalLibrary.open(appleLib);
     } else if (Platform.isWindows) {
-      library = DynamicLibrary.open(windowsLib);
+      library = ExternalLibrary.open(windowsLib);
     } else {
-      library = DynamicLibrary.open(linuxLib);
+      library = ExternalLibrary.open(linuxLib);
     }
 
     return _validateLibrary(library);
@@ -65,7 +64,7 @@ ExternalLibrary createLibraryImpl() {
     try {
       final nativeDir = libBuildOutDir();
       final libName = getDesktopLibName();
-      final lib = DynamicLibrary.open(nativeDir.resolve(libName).toFilePath());
+      final lib = ExternalLibrary.open(nativeDir.resolve(libName).toFilePath());
       return _validateLibrary(lib);
     } catch (_) {}
     try {
@@ -78,8 +77,8 @@ ExternalLibrary createLibraryImpl() {
   }
 }
 
-DynamicLibrary _validateLibrary(DynamicLibrary library) {
-  if (library.providesSymbol('wire_compile_wasm')) {
+ExternalLibrary _validateLibrary(ExternalLibrary library) {
+  if (library.ffiDynamicLibrary.providesSymbol('frb_get_rust_content_hash')) {
     return library;
   }
   throw Exception('Invalid library $library');
@@ -92,9 +91,6 @@ Future<Uint8List> getUriBodyBytesImpl(Uri uri) async {
   if (response.contentLength == 0) {
     throw Exception('Failed to fetch $uri: ${response.statusCode}');
   }
-  final bytes = await response.fold(
-    BytesBuilder(),
-    (b, d) => b..add(d),
-  );
+  final bytes = await response.fold(BytesBuilder(), (b, d) => b..add(d));
   return bytes.takeBytes();
 }

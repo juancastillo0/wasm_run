@@ -35,13 +35,11 @@ class ObjectComparator {
       return a.length == b.length && a.every(b.contains);
     } else if (a is Map && b is Map) {
       return a.length == b.length &&
-          a.entries.every(
-            (e) {
-              final otherValue = b[e.key];
-              return (otherValue != null || b.containsKey(e.key)) &&
-                  areEqual(otherValue, e.value);
-            },
-          );
+          a.entries.every((e) {
+            final otherValue = b[e.key];
+            return (otherValue != null || b.containsKey(e.key)) &&
+                areEqual(otherValue, e.value);
+          });
     } else if (a is Record && b is Record) {
       return areEqual(recordToList(a), recordToList(b));
     } else {
@@ -122,33 +120,37 @@ ValueTy _flatToWasmType(FlatType e) {
 }
 
 List<FlatValue> _mapFlatToValues(List<Object?> values, List<FlatType> types) {
-  return values.indexed.map((e) {
-    final type = types[e.$1];
-    // const isWeb = identical(0, 0.0);
-    // if (isWeb && type == FlattenType.i64 && e.$2 is int) {
-    //   return Value(type, i64.fromInt(e.$2! as int));
-    // }
-    return FlatValue(type, e.$2!);
-  }).toList(growable: false);
+  return values.indexed
+      .map((e) {
+        final type = types[e.$1];
+        // const isWeb = identical(0, 0.0);
+        // if (isWeb && type == FlattenType.i64 && e.$2 is int) {
+        //   return Value(type, i64.fromInt(e.$2! as int));
+        // }
+        return FlatValue(type, e.$2!);
+      })
+      .toList(growable: false);
 }
 
 List<Object?> _mapValuesToFlat(Int64TypeConfig config, List<FlatValue> values) {
-  return values.map((e) {
-    const isWeb = identical(0, 0.0);
-    if (isWeb && e.t == FlatType.i64 && e.v is int) {
-      return i64.fromInt(e.v as int);
-    }
-    // if (e.t == FlatType.i64) {
-    //   return switch (config) {
-    //     Int64TypeConfig.bigInt => i64.fromBigInt(e.v as BigInt),
-    //     Int64TypeConfig.bigIntUnsignedOnly =>
-    //       e.v is int ? i64.fromInt(e.v as int) : i64.fromBigInt(e.v as BigInt),
-    //     Int64TypeConfig.coreInt => i64.fromInt(e.v as int),
-    //     Int64TypeConfig.nativeObject => e.v,
-    //   };
-    // }
-    return e.v;
-  }).toList(growable: false);
+  return values
+      .map((e) {
+        const isWeb = identical(0, 0.0);
+        if (isWeb && e.t == FlatType.i64 && e.v is int) {
+          return i64.fromInt(e.v as int);
+        }
+        // if (e.t == FlatType.i64) {
+        //   return switch (config) {
+        //     Int64TypeConfig.bigInt => i64.fromBigInt(e.v as BigInt),
+        //     Int64TypeConfig.bigIntUnsignedOnly =>
+        //       e.v is int ? i64.fromInt(e.v as int) : i64.fromBigInt(e.v as BigInt),
+        //     Int64TypeConfig.coreInt => i64.fromInt(e.v as int),
+        //     Int64TypeConfig.nativeObject => e.v,
+        //   };
+        // }
+        return e.v;
+      })
+      .toList(growable: false);
 }
 
 /// Creates a core [WasmFunction] from a component [CanonLowerCallee] function
@@ -200,7 +202,10 @@ List<WasmImport> resourceImports(
       '[resource-new]${rt.resourceName}',
       WasmFunction(
         (Object? a) => canon_resource_new(
-            getWasmLibrary().componentInstance, rt, a! as int),
+          getWasmLibrary().componentInstance,
+          rt,
+          a! as int,
+        ),
         params: const [ValueTy.i32],
         results: const [ValueTy.i32],
       ),
@@ -210,7 +215,10 @@ List<WasmImport> resourceImports(
       '[resource-rep]${rt.resourceName}',
       WasmFunction(
         (Object? a) => canon_resource_rep(
-            getWasmLibrary().componentInstance, rt, a! as int),
+          getWasmLibrary().componentInstance,
+          rt,
+          a! as int,
+        ),
         params: const [ValueTy.i32],
         results: const [ValueTy.i32],
       ),
@@ -223,6 +231,7 @@ List<WasmImport> resourceImports(
           getWasmLibrary().componentInstance,
           rt,
           a! as int,
+          isIndex: true,
         ),
         params: const [ValueTy.i32],
         results: const [],
@@ -258,15 +267,16 @@ class WasmLibrary {
     this.stringEncoding = StringEncoding.utf8,
     Int64TypeConfig int64Type = Int64TypeConfig.bigInt,
     WasmMemory? wasmMemory,
-  })  : _realloc = instance.getFunction('cabi_realloc')!.inner,
-        wasmMemory = wasmMemory ??
-            instance.getMemory('memory') ??
-            instance.exports.values.whereType<WasmMemory>().first,
-        componentInstance = ComponentInstance(
-          id: componentId,
-          instance: instance,
-          int64Type: int64Type,
-        );
+  }) : _realloc = instance.getFunction('cabi_realloc')!.inner,
+       wasmMemory =
+           wasmMemory ??
+           instance.getMemory('memory') ??
+           instance.exports.values.whereType<WasmMemory>().first,
+       componentInstance = ComponentInstance(
+         id: componentId,
+         instance: instance,
+         int64Type: int64Type,
+       );
 
   /// The [WasmInstance] that implements the WASM component model.
   final WasmInstance instance;
@@ -383,6 +393,7 @@ class WasmLibrary {
     final postFunc = postReturnFunction(name);
     Future<List<FlatValue>> coreFunc(List<FlatValue> p) async {
       final args = _mapValuesToFlat(componentInstance.int64Type, p);
+      // ignore: experimental_member_use
       final resultsParallel = await instance.runParallel(func, [args]);
       final results = resultsParallel[0];
       if (results.isEmpty) return const [];

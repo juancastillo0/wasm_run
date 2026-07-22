@@ -1,0 +1,30 @@
+name: build_rust_binaries
+description: > 
+  Dart build hooks and CLI for building Rust locally or automatically in CI/CD
+  and retrieving Rust binaries from a CDN like those built in Github Actions
+  for a Github Releases.
+version: 0.1.0
+homepage: https://github.com/juancastillo0/wasm_run
+
+topics:
+  - rust
+  - cross-compilation
+  - ffi
+  - build
+  - hooks
+
+environment:
+  sdk: ^3.10.0
+resolution: workspace
+
+dependencies:
+  yaml: ^3.1.0
+  args: ^2.4.0
+
+  code_assets: ^1.0.0
+  crypto: ^3.0.0
+  hooks: ^1.0.0
+
+dev_dependencies:
+  test: ^1.30.0
+  very_good_analysis: ^10.0.0

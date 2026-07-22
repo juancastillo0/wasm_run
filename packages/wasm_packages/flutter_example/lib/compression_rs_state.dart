@@ -5,11 +5,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_example/flutter_utils.dart';
 import 'package:wasm_wit_component/wasm_wit_component.dart';
 
-enum CompressorView {
-  compress,
-  zip,
-  tar,
-}
+enum CompressorView { compress, zip, tar }
 
 class CompressionRsState extends ChangeNotifier with ErrorNotifier {
   CompressionRsState(this.compressionRs);
@@ -25,8 +21,9 @@ class CompressionRsState extends ChangeNotifier with ErrorNotifier {
 
   void compress(InputFileState file, CompressorKind kind) {
     if (file.compressed[kind] != null) return;
-    final result =
-        kind.compressor(compressionRs).compress(input: Input.bytes(file.bytes));
+    final result = kind
+        .compressor(compressionRs)
+        .compress(input: Input.bytes(file.bytes));
     file.compressed[kind] = result.mapErr(setError).ok;
     notifyListeners();
   }
@@ -127,8 +124,9 @@ class CompressionRsState extends ChangeNotifier with ErrorNotifier {
       }
     } else {
       final Result<List<TarFile>, String> result;
-      final decompressed =
-          file.decompressed.values.whereType<Uint8List>().firstOrNull;
+      final decompressed = file.decompressed.values
+          .whereType<Uint8List>()
+          .firstOrNull;
       if (decompressed != null) {
         result = compressionRs.archive.viewTar(tarBytes: decompressed);
       } else if (file.name.endsWith('.tar')) {
@@ -166,13 +164,13 @@ class CompressionRsState extends ChangeNotifier with ErrorNotifier {
 
 extension CompressorKindExt on CompressorKind {
   List<String> get extensions => switch (this) {
-        CompressorKind.gzip => const ['gz', 'tgz', 'gzip'],
-        CompressorKind.brotli => const ['br'],
-        CompressorKind.zstd => const ['zst'],
-        CompressorKind.lz4 => const ['lz4'],
-        CompressorKind.deflate => const ['deflate'],
-        CompressorKind.zlib => const ['zlib'],
-      };
+    CompressorKind.gzip => const ['gz', 'tgz', 'gzip'],
+    CompressorKind.brotli => const ['br'],
+    CompressorKind.zstd => const ['zst'],
+    CompressorKind.lz4 => const ['lz4'],
+    CompressorKind.deflate => const ['deflate'],
+    CompressorKind.zlib => const ['zlib'],
+  };
 }
 
 String removeExtension(String e, List<String> extension) {
@@ -188,11 +186,11 @@ class InputFileState {
 
   final TextEditingController archivePath;
   ZipFile? zipFile;
-  final zipOptions = ValueNotifier(const ZipOptions(
-    compressionMethod: ZipCompressionMethod.deflated,
-  ));
+  final zipOptions = ValueNotifier(
+    const ZipOptions(compressionMethod: ZipCompressionMethod.deflated),
+  );
   final tarHeader = ValueNotifier(const TarHeaderModel());
 
   InputFileState(this.name, this.bytes, {this.zipFile})
-      : archivePath = TextEditingController(text: name);
+    : archivePath = TextEditingController(text: name);
 }

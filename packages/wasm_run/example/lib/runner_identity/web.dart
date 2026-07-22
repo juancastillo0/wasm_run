@@ -1,12 +1,14 @@
-import 'dart:html' as html;
-// ignore: depend_on_referenced_packages
-import 'package:flutter_rust_bridge/flutter_rust_bridge.dart' as frb;
+import 'dart:js_interop' as js_util;
+import 'dart:js_interop_unsafe';
 
 String getRunnerIdentityImpl() {
-  return html.window.navigator.userAgent;
+  return ((js_util.globalContext['navigator']!
+              as js_util.JSObject)['userAgent']!
+          as js_util.JSString)
+      .toDart;
 }
 
-typedef OpenDynamicLibraryResultImpl = frb.WasmModule;
+typedef OpenDynamicLibraryResultImpl = Object;
 
 OpenDynamicLibraryResultImpl openDynamicLibraryImpl(String path) {
   throw UnimplementedError();

@@ -9,11 +9,7 @@ import 'package:wasm_run/wasm_run.dart';
 
 Future<TypesqlParserState> parserState() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await WasmRunLibrary.setUp(
-    override: false,
-    isFlutter: true,
-    loadAsset: rootBundle.load,
-  );
+  await WasmRunLibrary.setUp(isFlutter: true, loadAsset: rootBundle.load);
   final parserFut = createTypesqlParser();
   final parser = await parserFut;
   final db = await loadSqlite();
@@ -44,11 +40,8 @@ SELECT * FROM foo WHERE bar = :c;
         ModelType(
           fields
               .map(
-                (e) => ModelField(
-                  'foo.${e.name}',
-                  e.type,
-                  nullable: e.nullable,
-                ),
+                (e) =>
+                    ModelField('foo.${e.name}', e.type, nullable: e.nullable),
               )
               .toList(),
         ),
@@ -73,10 +66,10 @@ SELECT * FROM foo WHERE bar = :c;
         'users': ModelType(
           [
             ModelField('id', BaseType.int, nullable: false),
-            ModelField('name', BaseType.string, nullable: false)
+            ModelField('name', BaseType.string, nullable: false),
           ],
           keys: [
-            ModelKey(fields: {'id'}, primary: true, unique: true)
+            ModelKey(fields: {'id'}, primary: true, unique: true),
           ],
         ),
         'posts': ModelType(
@@ -86,10 +79,10 @@ SELECT * FROM foo WHERE bar = :c;
             ModelField('title', BaseType.string, nullable: false),
             ModelField('subtitle', BaseType.string, nullable: true),
             ModelField('body', BaseType.string, nullable: false),
-            ModelField('created_at', BaseType.datetime, nullable: false)
+            ModelField('created_at', BaseType.datetime, nullable: false),
           ],
           keys: [
-            ModelKey(fields: {'id'}, primary: true, unique: true)
+            ModelKey(fields: {'id'}, primary: true, unique: true),
           ],
           references: [
             ModelReference(
@@ -107,27 +100,28 @@ SELECT * FROM foo WHERE bar = :c;
               'priority',
               BaseType.int,
               nullable: true,
-              defaultValue:
-                  const SqlValueNumber(NumberValue(value: '0', long: false)),
+              defaultValue: const SqlValueNumber(
+                NumberValue(value: '0', long: false),
+              ),
             ),
-            ModelField('description', BaseType.string, nullable: true)
+            ModelField('description', BaseType.string, nullable: true),
           ],
           keys: [
-            ModelKey(fields: {'code'}, primary: true, unique: true)
+            ModelKey(fields: {'code'}, primary: true, unique: true),
           ],
         ),
         'posts_topics': ModelType(
           [
             // TODO: should not be nullable
             ModelField('topic_code', BaseType.string, nullable: true),
-            ModelField('post_id', BaseType.int, nullable: true)
+            ModelField('post_id', BaseType.int, nullable: true),
           ],
           keys: [
             ModelKey(
               fields: {'topic_code', 'post_id'},
               primary: true,
               unique: true,
-            )
+            ),
           ],
           references: [
             ModelReference(
@@ -149,29 +143,41 @@ SELECT * FROM foo WHERE bar = :c;
       expect(typeFinder.allTables, allTables);
 
       final allSelects = {
-        const SqlQuery(body: SqlSelectRef(index_: 0), orderBy: [], locks: []):
-            ModelType([
+        const SqlQuery(
+          body: SqlSelectRef(index_: 0),
+          orderBy: [],
+          locks: [],
+        ): ModelType([
           ModelField('users.id', BaseType.int, nullable: false),
-          ModelField('users.name', BaseType.string, nullable: false)
+          ModelField('users.name', BaseType.string, nullable: false),
         ]),
-        const SqlQuery(body: SqlSelectRef(index_: 1), orderBy: [], locks: []):
-            ModelType([
+        const SqlQuery(
+          body: SqlSelectRef(index_: 1),
+          orderBy: [],
+          locks: [],
+        ): ModelType([
           ModelField('users.id', BaseType.int, nullable: false),
-          ModelField('users.name', BaseType.string, nullable: false)
+          ModelField('users.name', BaseType.string, nullable: false),
         ]),
-        const SqlQuery(body: SqlSelectRef(index_: 2), orderBy: [], locks: []):
-            ModelType([
+        const SqlQuery(
+          body: SqlSelectRef(index_: 2),
+          orderBy: [],
+          locks: [],
+        ): ModelType([
           ModelField('users.id', BaseType.int, nullable: false),
           ModelField('user_name', BaseType.string, nullable: false),
-          ModelField('pt.topic_code', BaseType.string.nullable(),
-              nullable: true),
+          ModelField(
+            'pt.topic_code',
+            BaseType.string.nullable(),
+            nullable: true,
+          ),
           ModelField('posts.id', BaseType.int, nullable: false),
           ModelField('posts.user_id', BaseType.int, nullable: false),
           ModelField('posts.title', BaseType.string, nullable: false),
           // TODO: BaseType.string.nullable() vs nullable: true
           ModelField('posts.subtitle', BaseType.string, nullable: true),
           ModelField('posts.body', BaseType.string, nullable: false),
-          ModelField('posts.created_at', BaseType.datetime, nullable: false)
+          ModelField('posts.created_at', BaseType.datetime, nullable: false),
         ]),
       };
 
@@ -221,7 +227,11 @@ CREATE TABLE users (
           preparedStatement: null,
           prepareError: 'no such table: users',
           placeholders: [
-            const SqlPlaceholder(SqlValuePlaceholder(':minId'), 0, BaseType.int)
+            const SqlPlaceholder(
+              SqlValuePlaceholder(':minId'),
+              0,
+              BaseType.int,
+            ),
           ],
           identifier: '2. QUERY:SELECT:users',
           closestComment: null,
@@ -238,7 +248,7 @@ VALUES (1, 'name1'), (2, :c)''',
           preparedStatement: null,
           prepareError: 'no such table: users',
           placeholders: [
-            const SqlPlaceholder(SqlValuePlaceholder(':c'), 0, BaseType.string)
+            const SqlPlaceholder(SqlValuePlaceholder(':c'), 0, BaseType.string),
           ],
           identifier: '3. INSERT:users',
           closestComment: null,
@@ -254,7 +264,10 @@ VALUES (1, 'name1'), (2, :c)''',
           prepareError: 'no such table: users',
           placeholders: [
             const SqlPlaceholder(
-                SqlValuePlaceholder(':name'), 0, BaseType.string),
+              SqlValuePlaceholder(':name'),
+              0,
+              BaseType.string,
+            ),
             const SqlPlaceholder(SqlValuePlaceholder(':id'), 1, BaseType.int),
           ],
           identifier: '4. UPDATE:users',
@@ -363,14 +376,15 @@ WHERE users.id = 1 and posts.subtitle is not null''',
           },
           {
             ...e.dataClassProps.fields,
-            'prepareError':
-                e.prepareError == null ? null : contains(e.prepareError),
+            'prepareError': e.prepareError == null
+                ? null
+                : contains(e.prepareError),
           },
         );
         expect(s.preparedStatement != null, e.prepareError == null);
       }
 
-// )], comments: [],
+      // )], comments: [],
     });
   });
 }

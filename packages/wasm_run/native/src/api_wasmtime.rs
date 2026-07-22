@@ -1,12 +1,11 @@
 pub use crate::atomics::*;
-use crate::bridge_generated::{wire_list_wasm_val, Wire2Api};
 use crate::config::*;
 pub use crate::external::*;
+use crate::frb_generated::{wire_cst_list_wasm_val, CstDecode};
+use crate::frb_generated::{RustOpaque, StreamSink};
 use crate::types::*;
 use anyhow::{Ok, Result};
-use flutter_rust_bridge::{
-    support::new_leak_box_ptr, DartAbi, IntoDart, RustOpaque, StreamSink, SyncReturn,
-};
+use flutter_rust_bridge::{frb, DartAbi, IntoDart};
 use once_cell::sync::Lazy;
 use std::io::Write;
 use std::sync::mpsc::{self, Receiver, Sender};
@@ -21,8 +20,9 @@ type ValueType = wasmtime::ValType;
 
 static ARRAY: Lazy<RwLock<GlobalState>> = Lazy::new(|| RwLock::new(Default::default()));
 
-thread_local!(static STORE: RefCell<Option<WasmiModuleImpl>> = RefCell::new(None));
+thread_local!(static STORE: RefCell<Option<WasmiModuleImpl>> = const { RefCell::new(None) });
 
+#[frb(ignore)]
 #[derive(Default)]
 struct GlobalState {
     map: HashMap<u32, WasmiModuleImpl>,
@@ -71,6 +71,7 @@ struct HostFunction {
 #[derive(Clone)]
 pub struct WasmRunModuleId(pub u32, pub RustOpaque<CallStack>);
 
+#[frb(ignore)]
 #[derive(Clone, Default)]
 pub struct CallStack(Arc<RwLock<Vec<RwLock<StoreContextMut<'static, StoreState>>>>>);
 
@@ -117,11 +118,12 @@ fn make_wasi_ctx(
     Ok(wasi_ctx)
 }
 
+#[frb(sync)]
 pub fn module_builder(
     module: CompiledModule,
-    num_threads: Option<usize>,
+    num_threads: Option<u32>,
     wasi_config: Option<WasiConfigNative>,
-) -> Result<SyncReturn<WasmRunModuleId>> {
+) -> Result<WasmRunModuleId> {
     let guard = module.0.lock().unwrap();
     let engine = guard.engine();
 
@@ -198,11 +200,11 @@ pub fn module_builder(
         pool: None,
         threads,
         channels: num_threads
-            .map(|num_threads| Arc::new(Mutex::new(FunctionChannels::new(num_threads)))),
+            .map(|num_threads| Arc::new(Mutex::new(FunctionChannels::new(num_threads as usize)))),
     };
     arr.map.insert(id, module_builder);
 
-    Ok(SyncReturn(module_id))
+    Ok(module_id)
 }
 
 struct ModuleIOWriter {
@@ -222,7 +224,7 @@ impl Write for ModuleIOWriter {
             };
             let mut bytes_written = buf.len();
             if let Some(stream) = sink {
-                if !stream.add(buf.to_owned()) {
+                if stream.add(buf.to_owned()).is_err() {
                     bytes_written = 0;
                 }
             }
@@ -265,7 +267,8 @@ impl FunctionChannels {
 }
 
 impl WasmRunInstanceId {
-    pub fn exports(&self) -> SyncReturn<Vec<ModuleExportValue>> {
+    #[frb(sync)]
+    pub fn exports(&self) -> Vec<ModuleExportValue> {
         let mut v = ARRAY.write().unwrap();
         let value = v.map.get_mut(&self.0).unwrap();
         let instance = value.instance.unwrap();
@@ -273,18 +276,19 @@ impl WasmRunInstanceId {
             .exports(&mut value.store)
             .map(|e| (e.name().to_owned(), e.into_extern()))
             .collect::<Vec<(String, wasmtime::Extern)>>();
-        SyncReturn(
-            l.into_iter()
-                .map(|e| ModuleExportValue::from_export(e, &value.store))
-                .collect(),
-        )
+
+        l.into_iter()
+            .map(|e| ModuleExportValue::from_export(e, &value.store))
+            .collect()
     }
 }
 
 impl WasmRunModuleId {
-    pub fn instantiate_sync(&self) -> Result<SyncReturn<WasmRunInstanceId>> {
-        Ok(SyncReturn(self.instantiate()?))
+    #[frb(sync)]
+    pub fn instantiate_sync(&self) -> Result<WasmRunInstanceId> {
+        Ok(self.instantiate()?)
     }
+
     pub fn instantiate(&self) -> Result<WasmRunInstanceId> {
         let mut state = ARRAY.write().unwrap();
         let module = state.map.get_mut(&self.0).unwrap();
@@ -375,12 +379,12 @@ impl WasmRunModuleId {
             hf.clone(),
             Some(m.channels.as_ref().unwrap().lock().unwrap().workers[thread_index].clone()),
         )
-        .unwrap()
-        .0;
+        .unwrap();
         ff
     }
 
-    pub fn link_imports(&self, imports: Vec<ModuleImport>) -> Result<SyncReturn<()>> {
+    #[frb(sync)]
+    pub fn link_imports(&self, imports: Vec<ModuleImport>) -> Result<()> {
         let mut arr = ARRAY.write().unwrap();
         let m = arr.map.get_mut(&self.0).unwrap();
         if m.instance.is_some() {
@@ -461,7 +465,7 @@ impl WasmRunModuleId {
                 }
             }
         }
-        Ok(SyncReturn(()))
+        Ok(())
     }
 
     pub fn stdio_stream(&self, sink: StreamSink<Vec<u8>>, kind: StdIOKind) -> Result<()> {
@@ -490,13 +494,15 @@ impl WasmRunModuleId {
         Ok(())
     }
 
+    #[frb(sync)]
     pub fn call_function_handle_sync(
         &self,
         func: RustOpaque<WFunc>,
         args: Vec<WasmVal>,
-    ) -> Result<SyncReturn<Vec<WasmVal>>> {
-        self.call_function_handle(func, args).map(SyncReturn)
+    ) -> Result<Vec<WasmVal>> {
+        self.call_function_handle(func, args)
     }
+
     pub fn call_function_handle(
         &self,
         func: RustOpaque<WFunc>,
@@ -516,7 +522,7 @@ impl WasmRunModuleId {
         &self,
         func_name: String,
         args: Vec<WasmVal>,
-        num_tasks: usize,
+        num_tasks: u32,
         function_stream: StreamSink<ParallelExec>,
     ) {
         use rayon::prelude::*;
@@ -532,10 +538,10 @@ impl WasmRunModuleId {
                 .unwrap();
             let num_params = func.ty(&module.store).params().count();
             if (num_params == 0 && !args.is_empty())
-                || (num_params != 0 && args.len() % num_params != 0)
-                || num_params * num_tasks != args.len()
+                || (num_params != 0 && !args.len().is_multiple_of(num_params))
+                || num_params * (num_tasks as usize) != args.len()
             {
-                function_stream.add(ParallelExec::Err(format!(
+                let _ = function_stream.add(ParallelExec::Err(format!(
                     "Number of arguments must be a multiple of {num_params}"
                 )));
                 return;
@@ -607,10 +613,10 @@ impl WasmRunModuleId {
             loop {
                 let req = main_recv_c.recv().unwrap();
                 if req.function_pointer == 0 {
-                    function_stream.add(ParallelExec::Ok(req.args));
+                    let _ = function_stream.add(ParallelExec::Ok(req.args));
                     return;
                 }
-                function_stream.add(ParallelExec::Call(req));
+                let _ = function_stream.add(ParallelExec::Call(req));
                 // TODO: try this code with sync function
                 // let worker = &c.workers_out[req.worker_index];
 
@@ -627,17 +633,14 @@ impl WasmRunModuleId {
                 // worker.send(results).unwrap();
             }
         } else {
-            function_stream.add(ParallelExec::Err(
+            let _ = function_stream.add(ParallelExec::Err(
                 "Instance has no thread pool configured".to_string(),
             ));
         }
     }
 
-    pub fn worker_execution(
-        &self,
-        worker_index: usize,
-        results: Vec<WasmVal>,
-    ) -> Result<SyncReturn<()>> {
+    #[frb(sync)]
+    pub fn worker_execution(&self, worker_index: u32, results: Vec<WasmVal>) -> Result<()> {
         let m = ARRAY.read().unwrap();
         let module = m.map.get(&self.0).unwrap();
         let worker = &module
@@ -646,10 +649,10 @@ impl WasmRunModuleId {
             .unwrap()
             .lock()
             .unwrap()
-            .workers_out[worker_index];
+            .workers_out[worker_index as usize];
 
         worker.send(results.into_iter().map(|v| v.to_val()).collect())?;
-        Ok(SyncReturn(()))
+        Ok(())
     }
 
     fn with_module_mut<T>(&self, f: impl FnOnce(StoreContextMut<'_, StoreState>) -> T) -> T {
@@ -664,7 +667,12 @@ impl WasmRunModuleId {
 
         let mut ctx = value.store.as_context_mut();
         {
-            let v = RwLock::new(unsafe { std::mem::transmute(ctx.as_context_mut()) });
+            let v = RwLock::new(unsafe {
+                std::mem::transmute::<
+                    wasmtime::StoreContextMut<'_, StoreState>,
+                    wasmtime::StoreContextMut<'_, StoreState>,
+                >(ctx.as_context_mut())
+            });
             self.1 .0.write().unwrap().push(v);
         }
         let result = f(ctx);
@@ -684,22 +692,24 @@ impl WasmRunModuleId {
         f(&value.store.as_context())
     }
 
-    pub fn get_function_type(&self, func: RustOpaque<WFunc>) -> SyncReturn<FuncTy> {
-        SyncReturn(self.with_module(|store| (&func.func_wasmtime.ty(store)).into()))
+    #[frb(sync)]
+    pub fn get_function_type(&self, func: RustOpaque<WFunc>) -> FuncTy {
+        self.with_module(|store| (&func.func_wasmtime.ty(store)).into())
     }
 
+    #[frb(sync)]
     pub fn create_function(
         &self,
-        function_pointer: usize,
+        function_pointer: i64,
         function_id: u32,
         param_types: Vec<ValueTy>,
         result_types: Vec<ValueTy>,
-    ) -> Result<SyncReturn<RustOpaque<WFunc>>> {
+    ) -> Result<RustOpaque<WFunc>> {
         self.with_module_mut(|store| {
             Self::_create_function(
                 store,
                 HostFunction {
-                    function_pointer,
+                    function_pointer: function_pointer as usize,
                     function_id,
                     param_types,
                     result_types,
@@ -709,12 +719,14 @@ impl WasmRunModuleId {
         })
     }
 
+    #[frb(sync)]
     fn _create_function(
         mut store: StoreContextMut<'_, StoreState>,
         hf: HostFunction,
         worker_channel: Option<WorkerSendRecv>,
-    ) -> Result<SyncReturn<RustOpaque<WFunc>>> {
-        let f: WasmFunction = unsafe { std::mem::transmute(hf.function_pointer) };
+    ) -> Result<RustOpaque<WFunc>> {
+        let p: usize = hf.function_pointer.try_into().unwrap();
+        let f: WasmFunction = unsafe { std::mem::transmute(p) };
         let func = Func::new(
             store.as_context_mut(),
             FuncType::new(
@@ -756,7 +768,7 @@ impl WasmRunModuleId {
         );
         let raw_id = unsafe { func.to_raw(&mut store) as usize };
         store.data_mut().functions.insert(raw_id, hf);
-        Ok(SyncReturn(RustOpaque::new(func.into())))
+        Ok(RustOpaque::new(func.into()))
     }
 
     fn execute_function(
@@ -769,16 +781,21 @@ impl WasmRunModuleId {
         let inputs = vec![mapped].into_dart();
         let stack = {
             let stack = caller.data().stack.clone();
-            let v = RwLock::new(unsafe { std::mem::transmute(caller) });
+            let v = RwLock::new(unsafe {
+                std::mem::transmute::<
+                    wasmtime::StoreContextMut<'_, StoreState>,
+                    wasmtime::StoreContextMut<'_, StoreState>,
+                >(caller)
+            });
             stack.0.write().unwrap().push(v);
             stack
         };
 
         let output: Vec<WasmVal> = unsafe {
-            let pointer = new_leak_box_ptr(inputs);
+            let pointer = flutter_rust_bridge::for_generated::new_leak_box_ptr(inputs);
             let result = f(function_id, pointer);
             pointer.drop_in_place();
-            result.wire2api()
+            result.cst_decode()
         };
         // TODO: use Drop for this
         let last_caller = stack.0.write().unwrap().pop();
@@ -799,19 +816,17 @@ impl WasmRunModuleId {
         Ok(())
     }
 
-    pub fn create_memory(&self, memory_type: MemoryTy) -> Result<SyncReturn<RustOpaque<Memory>>> {
+    #[frb(sync)]
+    pub fn create_memory(&self, memory_type: MemoryTy) -> Result<RustOpaque<Memory>> {
         self.with_module_mut(|store| {
             let mem_type = memory_type.to_memory_type()?;
             let memory = Memory::new(store, mem_type).map_err(to_anyhow)?;
-            Ok(SyncReturn(RustOpaque::new(memory)))
+            Ok(RustOpaque::new(memory))
         })
     }
 
-    pub fn create_global(
-        &self,
-        value: WasmVal,
-        mutable: bool,
-    ) -> Result<SyncReturn<RustOpaque<Global>>> {
+    #[frb(sync)]
+    pub fn create_global(&self, value: WasmVal, mutable: bool) -> Result<RustOpaque<Global>> {
         self.with_module_mut(|mut store| {
             let mapped = value.to_val();
             let global = Global::new(
@@ -826,15 +841,12 @@ impl WasmRunModuleId {
                 ),
                 mapped,
             )?;
-            Ok(SyncReturn(RustOpaque::new(global)))
+            Ok(RustOpaque::new(global))
         })
     }
 
-    pub fn create_table(
-        &self,
-        value: WasmVal,
-        table_type: TableArgs,
-    ) -> Result<SyncReturn<RustOpaque<Table>>> {
+    #[frb(sync)]
+    pub fn create_table(&self, value: WasmVal, table_type: TableArgs) -> Result<RustOpaque<Table>> {
         self.with_module_mut(|mut store| {
             let mapped_value = value.to_val();
             let table = Table::new(
@@ -843,60 +855,68 @@ impl WasmRunModuleId {
                 mapped_value,
             )
             .map_err(to_anyhow)?;
-            Ok(SyncReturn(RustOpaque::new(table)))
+            Ok(RustOpaque::new(table))
         })
     }
 
     // GLOBAL
 
-    pub fn get_global_type(&self, global: RustOpaque<Global>) -> SyncReturn<GlobalTy> {
-        SyncReturn(self.with_module(|store| (&global.ty(store)).into()))
+    #[frb(sync)]
+    pub fn get_global_type(&self, global: RustOpaque<Global>) -> GlobalTy {
+        self.with_module(|store| (&global.ty(store)).into())
     }
 
-    pub fn get_global_value(&self, global: RustOpaque<Global>) -> SyncReturn<WasmVal> {
-        SyncReturn(self.with_module_mut(|store| WasmVal::from_val(global.get(store))))
+    #[frb(sync)]
+    pub fn get_global_value(&self, global: RustOpaque<Global>) -> WasmVal {
+        self.with_module_mut(|store| WasmVal::from_val(global.get(store)))
     }
 
-    pub fn set_global_value(
-        &self,
-        global: RustOpaque<Global>,
-        value: WasmVal,
-    ) -> Result<SyncReturn<()>> {
+    #[frb(sync)]
+    pub fn set_global_value(&self, global: RustOpaque<Global>, value: WasmVal) -> Result<()> {
         self.with_module_mut(|mut store| {
             let mapped = value.to_val();
             global
                 .set(&mut store, mapped)
-                .map(|_| SyncReturn(()))
+                .map(|_| ())
                 .map_err(to_anyhow)
         })
     }
 
     // MEMORY
 
-    pub fn get_memory_type(&self, memory: RustOpaque<Memory>) -> SyncReturn<MemoryTy> {
-        SyncReturn(self.with_module(|store| (&memory.ty(store)).into()))
+    #[frb(sync)]
+    pub fn get_memory_type(&self, memory: RustOpaque<Memory>) -> MemoryTy {
+        self.with_module(|store| (&memory.ty(store)).into())
     }
-    pub fn get_memory_data(&self, memory: RustOpaque<Memory>) -> SyncReturn<Vec<u8>> {
-        SyncReturn(self.with_module(|store| memory.data(store).to_owned()))
+
+    #[frb(sync)]
+    pub fn get_memory_data(&self, memory: RustOpaque<Memory>) -> Vec<u8> {
+        self.with_module(|store| memory.data(store).to_owned())
     }
-    pub fn get_memory_data_pointer(&self, memory: RustOpaque<Memory>) -> SyncReturn<usize> {
-        SyncReturn(self.with_module(|store| memory.data_ptr(store) as usize))
+
+    #[frb(sync)]
+    pub fn get_memory_data_pointer(&self, memory: RustOpaque<Memory>) -> usize {
+        self.with_module(|store| memory.data_ptr(store) as usize)
     }
+
+    #[frb(sync)]
     pub fn get_memory_data_pointer_and_length(
         &self,
         memory: RustOpaque<Memory>,
-    ) -> SyncReturn<PointerAndLength> {
-        SyncReturn(self.with_module(|store| PointerAndLength {
-            pointer: memory.data_ptr(store) as usize,
-            length: memory.data_size(store),
-        }))
+    ) -> PointerAndLength {
+        self.with_module(|store| PointerAndLength {
+            pointer: (memory.data_ptr(store) as usize).try_into().unwrap(),
+            length: memory.data_size(store).try_into().unwrap(),
+        })
     }
+
+    #[frb(sync)]
     pub fn read_memory(
         &self,
         memory: RustOpaque<Memory>,
         offset: usize,
         bytes: usize,
-    ) -> Result<SyncReturn<Vec<u8>>> {
+    ) -> Result<Vec<u8>> {
         self.with_module(|store| {
             let mut buffer = Vec::with_capacity(bytes);
             #[allow(clippy::uninit_vec)]
@@ -905,91 +925,82 @@ impl WasmRunModuleId {
             };
             memory
                 .read(store, offset, &mut buffer)
-                .map(|_| SyncReturn(buffer))
+                .map(|_| buffer)
                 .map_err(to_anyhow)
         })
     }
-    pub fn get_memory_pages(&self, memory: RustOpaque<Memory>) -> SyncReturn<u32> {
-        SyncReturn(self.with_module(|store| memory.size(store).try_into().unwrap()))
+
+    #[frb(sync)]
+    pub fn get_memory_pages(&self, memory: RustOpaque<Memory>) -> u32 {
+        self.with_module(|store| memory.size(store).try_into().unwrap())
     }
 
+    #[frb(sync)]
     pub fn write_memory(
         &self,
         memory: RustOpaque<Memory>,
         offset: usize,
         buffer: Vec<u8>,
-    ) -> Result<SyncReturn<()>> {
-        self.with_module_mut(|store| {
-            memory
-                .write(store, offset, &buffer)
-                .map(SyncReturn)
-                .map_err(to_anyhow)
-        })
+    ) -> Result<()> {
+        self.with_module_mut(|store| memory.write(store, offset, &buffer).map_err(to_anyhow))
     }
-    pub fn grow_memory(&self, memory: RustOpaque<Memory>, pages: u32) -> Result<SyncReturn<u32>> {
+
+    #[frb(sync)]
+    pub fn grow_memory(&self, memory: RustOpaque<Memory>, pages: u32) -> Result<u32> {
         self.with_module_mut(|store| {
             memory
                 .grow(store, pages.into())
-                .map(|p| SyncReturn(p.try_into().unwrap()))
+                .map(|p| p.try_into().unwrap())
                 .map_err(to_anyhow)
         })
     }
 
     // TABLE
 
-    pub fn get_table_size(&self, table: RustOpaque<Table>) -> SyncReturn<u32> {
-        SyncReturn(self.with_module(|store| table.size(store)))
-    }
-    pub fn get_table_type(&self, table: RustOpaque<Table>) -> SyncReturn<TableTy> {
-        SyncReturn(self.with_module(|store| (&table.ty(store)).into()))
+    #[frb(sync)]
+    pub fn get_table_size(&self, table: RustOpaque<Table>) -> u32 {
+        self.with_module(|store| table.size(store))
     }
 
-    pub fn grow_table(
-        &self,
-        table: RustOpaque<Table>,
-        delta: u32,
-        value: WasmVal,
-    ) -> Result<SyncReturn<u32>> {
+    #[frb(sync)]
+    pub fn get_table_type(&self, table: RustOpaque<Table>) -> TableTy {
+        self.with_module(|store| (&table.ty(store)).into())
+    }
+
+    #[frb(sync)]
+    pub fn grow_table(&self, table: RustOpaque<Table>, delta: u32, value: WasmVal) -> Result<u32> {
         self.with_module_mut(|mut store| {
             let mapped = value.to_val();
-            table
-                .grow(&mut store, delta, mapped)
-                .map(SyncReturn)
-                .map_err(to_anyhow)
+            table.grow(&mut store, delta, mapped).map_err(to_anyhow)
         })
     }
 
-    pub fn get_table(&self, table: RustOpaque<Table>, index: u32) -> SyncReturn<Option<WasmVal>> {
-        SyncReturn(self.with_module_mut(|store| table.get(store, index).map(WasmVal::from_val)))
+    #[frb(sync)]
+    pub fn get_table(&self, table: RustOpaque<Table>, index: u32) -> Option<WasmVal> {
+        self.with_module_mut(|store| table.get(store, index).map(WasmVal::from_val))
     }
 
-    pub fn set_table(
-        &self,
-        table: RustOpaque<Table>,
-        index: u32,
-        value: WasmVal,
-    ) -> Result<SyncReturn<()>> {
+    #[frb(sync)]
+    pub fn set_table(&self, table: RustOpaque<Table>, index: u32, value: WasmVal) -> Result<()> {
         self.with_module_mut(|mut store| {
             let mapped = value.to_val();
-            table
-                .set(&mut store, index, mapped)
-                .map(SyncReturn)
-                .map_err(to_anyhow)
+            table.set(&mut store, index, mapped).map_err(to_anyhow)
         })
     }
 
+    #[frb(sync)]
     pub fn fill_table(
         &self,
         table: RustOpaque<Table>,
         index: u32,
         value: WasmVal,
         len: u32,
-    ) -> Result<SyncReturn<()>> {
+    ) -> Result<()> {
         self.with_module_mut(|mut store| {
             let mapped = value.to_val();
             table
                 .fill(&mut store, index, mapped, len)
-                .map(|_| SyncReturn(()))
+                .map(|_| ())
                 .map_err(to_anyhow)
         })
     }
@@ -997,14 +1008,23 @@ impl WasmRunModuleId {
     // FUEL
     //
 
-    pub fn add_fuel(&self, delta: u64) -> Result<SyncReturn<()>> {
-        self.with_module_mut(|mut store| store.add_fuel(delta).map(SyncReturn))
+    #[frb(sync)]
+    pub fn add_fuel(&self, delta: i64) -> Result<()> {
+        self.with_module_mut(|mut store| store.add_fuel(delta.cast_unsigned()))
     }
-    pub fn fuel_consumed(&self) -> SyncReturn<Option<u64>> {
-        self.with_module_mut(|store| SyncReturn(store.fuel_consumed()))
+
+    #[frb(sync)]
+    pub fn fuel_consumed(&self) -> Option<i64> {
+        self.with_module_mut(|store| store.fuel_consumed().map(|f| f.cast_signed()))
     }
-    pub fn consume_fuel(&self, delta: u64) -> Result<SyncReturn<u64>> {
-        self.with_module_mut(|mut store| store.consume_fuel(delta).map(SyncReturn))
+
+    #[frb(sync)]
+    pub fn consume_fuel(&self, delta: i64) -> Result<i64> {
+        self.with_module_mut(|mut store| {
+            store
+                .consume_fuel(delta.cast_unsigned())
+                .map(|f| f.cast_signed())
+        })
     }
 }
 
@@ -1013,40 +1033,36 @@ pub fn parse_wat_format(wat: String) -> Result<Vec<u8>> {
 }
 
 type WasmFunction =
-    unsafe extern "C" fn(function_id: u32, args: *mut DartAbi) -> *mut wire_list_wasm_val;
+    unsafe extern "C" fn(function_id: u32, args: *mut DartAbi) -> *mut wire_cst_list_wasm_val;
 
 pub struct CompiledModule(pub RustOpaque<Arc<std::sync::Mutex<Module>>>);
 
 impl CompiledModule {
-    pub fn create_shared_memory(
-        &self,
-        memory_type: MemoryTy,
-    ) -> Result<SyncReturn<WasmRunSharedMemory>> {
+    #[frb(sync)]
+    pub fn create_shared_memory(&self, memory_type: MemoryTy) -> Result<WasmRunSharedMemory> {
         let module = self.0.lock().unwrap();
         let memory = SharedMemory::new(module.engine(), memory_type.to_memory_type()?)?;
-        Ok(SyncReturn(memory.into()))
+        Ok(memory.into())
     }
 
-    pub fn get_module_imports(&self) -> SyncReturn<Vec<ModuleImportDesc>> {
-        SyncReturn(
-            self.0
-                .lock()
-                .unwrap()
-                .imports()
-                .map(|i| (&i).into())
-                .collect(),
-        )
+    #[frb(sync)]
+    pub fn get_module_imports(&self) -> Vec<ModuleImportDesc> {
+        self.0
+            .lock()
+            .unwrap()
+            .imports()
+            .map(|i| (&i).into())
+            .collect()
     }
 
-    pub fn get_module_exports(&self) -> SyncReturn<Vec<ModuleExportDesc>> {
-        SyncReturn(
-            self.0
-                .lock()
-                .unwrap()
-                .exports()
-                .map(|i| (&i).into())
-                .collect(),
-        )
+    #[frb(sync)]
+    pub fn get_module_exports(&self) -> Vec<ModuleExportDesc> {
+        self.0
+            .lock()
+            .unwrap()
+            .exports()
+            .map(|i| (&i).into())
+            .collect()
     }
 }
 
@@ -1063,19 +1079,19 @@ pub fn compile_wasm(module_wasm: Vec<u8>, config: ModuleConfig) -> Result<Compil
     Ok(module.into())
 }
 
-pub fn compile_wasm_sync(
-    module_wasm: Vec<u8>,
-    config: ModuleConfig,
-) -> Result<SyncReturn<CompiledModule>> {
-    compile_wasm(module_wasm, config).map(SyncReturn)
+#[frb(sync)]
+pub fn compile_wasm_sync(module_wasm: Vec<u8>, config: ModuleConfig) -> Result<CompiledModule> {
+    compile_wasm(module_wasm, config)
 }
 
-pub fn wasm_features_for_config(config: ModuleConfig) -> SyncReturn<WasmFeatures> {
-    SyncReturn(config.wasm_features())
+#[frb(sync)]
+pub fn wasm_features_for_config(config: ModuleConfig) -> WasmFeatures {
+    config.wasm_features()
 }
 
-pub fn wasm_runtime_features() -> SyncReturn<WasmRuntimeFeatures> {
-    SyncReturn(WasmRuntimeFeatures::default())
+#[frb(sync)]
+pub fn wasm_runtime_features() -> WasmRuntimeFeatures {
+    WasmRuntimeFeatures::default()
 }
 
 #[derive(Debug, Clone)]
@@ -1088,20 +1104,36 @@ impl From<SharedMemory> for WasmRunSharedMemory {
 }
 
 impl WasmRunSharedMemory {
-    pub fn ty(&self) -> SyncReturn<MemoryTy> {
-        SyncReturn((&self.0.read().unwrap().ty()).into())
+    #[frb(sync)]
+    pub fn ty(&self) -> MemoryTy {
+        (&self.0.read().unwrap().ty()).into()
     }
-    pub fn size(&self) -> SyncReturn<u64> {
-        SyncReturn(self.0.read().unwrap().size())
+
+    #[frb(sync)]
+    pub fn size(&self) -> i64 {
+        self.0.read().unwrap().size().cast_signed()
     }
-    pub fn data_size(&self) -> SyncReturn<usize> {
-        SyncReturn(self.0.read().unwrap().data_size())
+
+    #[frb(sync)]
+    pub fn data_size(&self) -> i64 {
+        self.0.read().unwrap().data_size().try_into().unwrap()
     }
-    pub fn data_pointer(&self) -> SyncReturn<usize> {
-        SyncReturn(self.0.read().unwrap().data().as_ptr() as usize)
+
+    #[frb(sync)]
+    pub fn data_pointer(&self) -> i64 {
+        (self.0.read().unwrap().data().as_ptr() as usize)
+            .try_into()
+            .unwrap()
     }
-    pub fn grow(&self, delta: u64) -> Result<SyncReturn<u64>> {
-        Ok(SyncReturn(self.0.read().unwrap().grow(delta)?))
+
+    #[frb(sync)]
+    pub fn grow(&self, delta: i64) -> Result<i64> {
+        Ok(self
+            .0
+            .read()
+            .unwrap()
+            .grow(delta.cast_unsigned())?
+            .cast_signed())
     }
     // pub fn atomic_i8(&self) -> crate::atomics::Ati8 {
     //     crate::atomics::Ati8(self.0.read().unwrap().data().as_ptr() as usize)
@@ -1110,10 +1142,14 @@ impl WasmRunSharedMemory {
     pub fn atomics(&self) -> Atomics {
         Atomics(self.0.read().unwrap().data().as_ptr() as usize)
     }
-    pub fn atomic_notify(&self, addr: u64, count: u32) -> Result<SyncReturn<u32>> {
-        Ok(SyncReturn(
-            self.0.read().unwrap().atomic_notify(addr, count)?,
-        ))
+
+    #[frb(sync)]
+    pub fn atomic_notify(&self, addr: i64, count: u32) -> Result<u32> {
+        Ok(self
+            .0
+            .read()
+            .unwrap()
+            .atomic_notify(addr.cast_unsigned(), count)?)
     }
 
     /// Equivalent of the WebAssembly `memory.atomic.wait32` instruction for
@@ -1150,19 +1186,19 @@ impl WasmRunSharedMemory {
     ///
     /// This function will return an error if `addr` is not within bounds or
     /// not aligned to a 4-byte boundary.
+    #[frb(sync)]
     pub fn atomic_wait32(
         &self,
-        addr: u64,
+        addr: i64,
         expected: u32,
         // TODO: timeout: Option<Instant>,
-    ) -> Result<SyncReturn<SharedMemoryWaitResult>> {
-        Ok(SyncReturn(
-            self.0
-                .read()
-                .unwrap()
-                .atomic_wait32(addr, expected, None)?
-                .into(),
-        ))
+    ) -> Result<SharedMemoryWaitResult> {
+        Ok(self
+            .0
+            .read()
+            .unwrap()
+            .atomic_wait32(addr.cast_unsigned(), expected, None)?
+            .into())
     }
 
     /// Equivalent of the WebAssembly `memory.atomic.wait64` instruction for
@@ -1174,25 +1210,26 @@ impl WasmRunSharedMemory {
     ///
     /// Returns the same error as [`SharedMemory::atomic_wait32`] except that
     /// the specified address must be 8-byte aligned instead of 4-byte aligned.
+    #[frb(sync)]
     pub fn atomic_wait64(
         &self,
-        addr: u64,
-        expected: u64,
+        addr: i64,
+        expected: i64,
         // TODO: timeout: Option<Instant>,
-    ) -> Result<SyncReturn<SharedMemoryWaitResult>> {
-        Ok(SyncReturn(
-            self.0
-                .read()
-                .unwrap()
-                .atomic_wait64(addr, expected, None)?
-                .into(),
-        ))
+    ) -> Result<SharedMemoryWaitResult> {
+        Ok(self
+            .0
+            .read()
+            .unwrap()
+            .atomic_wait64(addr.cast_unsigned(), expected.cast_unsigned(), None)?
+            .into())
     }
 }
 
 impl Atomics {
     /// Adds the provided value to the existing value at the specified index of the array. Returns the old value at that index.
-    pub fn add(&self, offset: usize, kind: AtomicKind, val: i64, order: AtomicOrdering) -> i64 {
+    pub fn add(&self, offset: i64, kind: AtomicKind, val: i64, order: AtomicOrdering) -> i64 {
+        let offset: usize = offset.try_into().unwrap();
         unsafe {
             match kind {
                 AtomicKind::I32 => Ati32(self.0)
@@ -1223,7 +1260,8 @@ impl Atomics {
     }
 
     /// Returns the value at the specified index of the array.
-    pub fn load(&self, offset: usize, kind: AtomicKind, order: AtomicOrdering) -> i64 {
+    pub fn load(&self, offset: i64, kind: AtomicKind, order: AtomicOrdering) -> i64 {
+        let offset: usize = offset.try_into().unwrap();
         unsafe {
             match kind {
                 AtomicKind::I32 => Ati32(self.0).load(offset, order).into(),
@@ -1239,7 +1277,8 @@ impl Atomics {
     }
 
     /// Stores a value at the specified index of the array. Returns the value.
-    pub fn store(&self, offset: usize, kind: AtomicKind, val: i64, order: AtomicOrdering) {
+    pub fn store(&self, offset: i64, kind: AtomicKind, val: i64, order: AtomicOrdering) {
+        let offset: usize = offset.try_into().unwrap();
         unsafe {
             match kind {
                 AtomicKind::I32 => Ati32(self.0).store(offset, val.try_into().unwrap(), order),
@@ -1255,7 +1294,8 @@ impl Atomics {
     }
 
     /// Stores a value at the specified index of the array. Returns the old value.
-    pub fn swap(&self, offset: usize, kind: AtomicKind, val: i64, order: AtomicOrdering) -> i64 {
+    pub fn swap(&self, offset: i64, kind: AtomicKind, val: i64, order: AtomicOrdering) -> i64 {
+        let offset: usize = offset.try_into().unwrap();
         unsafe {
             match kind {
                 AtomicKind::I32 => Ati32(self.0)
@@ -1288,13 +1328,14 @@ impl Atomics {
     /// Stores a value at the specified index of the array, if it equals a value. Returns the old value.
     pub fn compare_exchange(
         &self,
-        offset: usize,
+        offset: i64,
         kind: AtomicKind,
         current: i64,
         new_value: i64,
         success: AtomicOrdering,
         failure: AtomicOrdering,
     ) -> CompareExchangeResult {
+        let offset: usize = offset.try_into().unwrap();
         unsafe {
             match kind {
                 AtomicKind::I32 => Ati32(self.0)
@@ -1368,7 +1409,8 @@ impl Atomics {
     }
 
     /// Subtracts a value at the specified index of the array. Returns the old value at that index.
-    pub fn sub(&self, offset: usize, kind: AtomicKind, val: i64, order: AtomicOrdering) -> i64 {
+    pub fn sub(&self, offset: i64, kind: AtomicKind, val: i64, order: AtomicOrdering) -> i64 {
+        let offset: usize = offset.try_into().unwrap();
         unsafe {
             match kind {
                 AtomicKind::I32 => Ati32(self.0)
@@ -1399,7 +1441,8 @@ impl Atomics {
     }
 
     /// Computes a bitwise AND on the value at the specified index of the array with the provided value. Returns the old value at that index.
-    pub fn and(&self, offset: usize, kind: AtomicKind, val: i64, order: AtomicOrdering) -> i64 {
+    pub fn and(&self, offset: i64, kind: AtomicKind, val: i64, order: AtomicOrdering) -> i64 {
+        let offset: usize = offset.try_into().unwrap();
         unsafe {
             match kind {
                 AtomicKind::I32 => Ati32(self.0)
@@ -1430,7 +1473,8 @@ impl Atomics {
     }
 
     /// Computes a bitwise OR on the value at the specified index of the array with the provided value. Returns the old value at that index.
-    pub fn or(&self, offset: usize, kind: AtomicKind, val: i64, order: AtomicOrdering) -> i64 {
+    pub fn or(&self, offset: i64, kind: AtomicKind, val: i64, order: AtomicOrdering) -> i64 {
+        let offset: usize = offset.try_into().unwrap();
         unsafe {
             match kind {
                 AtomicKind::I32 => Ati32(self.0)
@@ -1461,7 +1505,8 @@ impl Atomics {
     }
 
     /// Computes a bitwise XOR on the value at the specified index of the array with the provided value. Returns the old value at that index.
-    pub fn xor(&self, offset: usize, kind: AtomicKind, val: i64, order: AtomicOrdering) -> i64 {
+    pub fn xor(&self, offset: i64, kind: AtomicKind, val: i64, order: AtomicOrdering) -> i64 {
+        let offset: usize = offset.try_into().unwrap();
         unsafe {
             match kind {
                 AtomicKind::I32 => Ati32(self.0)

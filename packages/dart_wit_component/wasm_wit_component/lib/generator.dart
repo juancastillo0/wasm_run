@@ -24,7 +24,7 @@ Future<DartWitGeneratorWorld> createDartWitGenerator({
   required WasiConfig wasiConfig,
   Future<WasmModule> Function()? loadModule,
 }) async {
-  await WasmRunLibrary.setUp(override: false);
+  await WasmRunLibrary.setUp();
 
   final WasmModule module;
   if (loadModule != null) {
@@ -47,9 +47,7 @@ Future<DartWitGeneratorWorld> createDartWitGenerator({
     );
     module = await uris.loadModule();
   }
-  final builder = module.builder(
-    wasiConfig: wasiConfig,
-  );
+  final builder = module.builder(wasiConfig: wasiConfig);
   final world = await DartWitGeneratorWorld.init(
     builder,
     imports: const DartWitGeneratorWorldImports(),
@@ -58,9 +56,7 @@ Future<DartWitGeneratorWorld> createDartWitGenerator({
 }
 
 /// Returns a [WitGeneratorConfig] with the default configuration
-WitGeneratorConfig defaultGeneratorConfig({
-  required WitGeneratorInput inputs,
-}) {
+WitGeneratorConfig defaultGeneratorConfig({required WitGeneratorInput inputs}) {
   return WitGeneratorConfig(
     inputs: inputs,
     jsonSerialization: true,
@@ -103,8 +99,9 @@ WasiConfig wasiConfigFromPath(
     inheritEnv: true,
     preopenedDirs: [
       PreopenedDir(
-        hostPath:
-            allowedPath.toFilePath(windows: !_isWeb && Platform.isWindows),
+        hostPath: allowedPath.toFilePath(
+          windows: !_isWeb && Platform.isWindows,
+        ),
         wasmGuestPath: allowedPath.toFilePath(windows: false),
       ),
     ],

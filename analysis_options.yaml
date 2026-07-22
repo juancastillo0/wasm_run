@@ -1,4 +1,4 @@
-include: package:very_good_analysis/analysis_options.4.0.0.yaml
+include: package:very_good_analysis/analysis_options.10.0.0.yaml
 
 # You might want to exclude auto-generated files from dart analysis
 analyzer:
@@ -8,8 +8,7 @@ analyzer:
     strict-raw-types: true
 
   exclude:
-    - "packages/wasm_run/lib/src/bridge_generated.dart"
-    - "packages/wasm_run/lib/src/bridge_generated.web.dart"
+    - "packages/wasm_run/lib/src/rust/**.dart"
     #- '**.freezed.dart'
     #- '**.g.dart'
 
@@ -118,6 +117,7 @@ linter:
     sort_constructors_first: false
     cascade_invocations: false
     join_return_with_assignment: false
+    avoid_catches_without_on_clauses: false
 
     # Util classes are awesome!
     # avoid_classes_with_only_static_members: false

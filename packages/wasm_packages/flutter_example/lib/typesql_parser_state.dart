@@ -7,7 +7,7 @@ import 'package:typesql_generator/typesql_generator.dart';
 class TypesqlParserState extends ChangeNotifier with ErrorNotifier {
   ///
   TypesqlParserState(this.sqlParser, this.sqlite3)
-      : db = sqlite3.openInMemory() {
+    : db = sqlite3.openInMemory() {
     sqlController.addListener(_update);
     sqlController.text = '''
 CREATE TABLE users (
@@ -103,8 +103,9 @@ WHERE users.id = 1 and posts.subtitle is not null;
       typeFinder = SqlTypeFinder(sqlController.text, parsed, db);
       if (selectedStatement != null) {
         final index = parsed.statements.indexOf(selectedStatement!.statement);
-        selectedStatement =
-            index == -1 ? null : typeFinder!.statementsInfo[index];
+        selectedStatement = index == -1
+            ? null
+            : typeFinder!.statementsInfo[index];
       }
       dartOutput = generateDartFromSql('sql', typeFinder!);
       setError('');
@@ -122,12 +123,17 @@ WHERE users.id = 1 and posts.subtitle is not null;
     try {
       if (statementInfo.isSelect) {
         final result = prepared.selectWith(parameters);
-        results[statementInfo.statement] =
-            SelectResult(result.columnNames, result.tableNames, result.rows);
+        results[statementInfo.statement] = SelectResult(
+          result.columnNames,
+          result.tableNames,
+          result.rows,
+        );
       } else {
         prepared.executeWith(parameters);
-        results[statementInfo.statement] =
-            UpdateResult(db.lastInsertRowId, db.getUpdatedRows());
+        results[statementInfo.statement] = UpdateResult(
+          db.lastInsertRowId,
+          db.getUpdatedRows(),
+        );
       }
     } catch (e) {
       results[statementInfo.statement] = ErrorResult(e);

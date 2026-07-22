@@ -31,13 +31,12 @@ String getDesktopLibName() {
 /// Returns the uri representing the target output directory of generated
 /// dynamic libraries.
 Uri libBuildOutDir() {
-  final pkgRoot = _packageRootUri(Platform.script.resolve('./')) ??
+  final pkgRoot =
+      _packageRootUri(Platform.script.resolve('./')) ??
       _packageRootUri(Directory.current.uri);
 
   if (pkgRoot == null) {
-    throw ArgumentError(
-      'Could not find package root with "$_pkgConfigFile".',
-    );
+    throw ArgumentError('Could not find package root with "$_pkgConfigFile".');
   }
   return pkgRoot.resolve(_wasmRunToolDir);
 }

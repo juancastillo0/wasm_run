@@ -199,11 +199,7 @@ class BTypeBigInt extends BTypeNumeric {
 }
 
 /// Collection types
-enum BTypeCollectionKind {
-  list,
-  map,
-  set,
-}
+enum BTypeCollectionKind { list, map, set }
 
 class BTypeList<T extends BType> extends BTypeNotNull {
   final T inner;
@@ -419,13 +415,13 @@ class SqlTypeToDart {
       BTypeDynamic() => getter,
       BTypeNullable(:final inner) =>
         '$getter == null ? null : ${typeFromJson(path, inner)}',
-      BTypeList(inner: final values) ||
-      BTypeJsonArray(:final BType values) =>
+      BTypeList(inner: final values) || BTypeJsonArray(:final BType values) =>
         '($getter as Iterable).map((item) => ${typeFromJson(addPath('item'), values)}).toList()',
       // TODO: use list to preserve order
-      BTypeTable(:final inner) => inner == null
-          ? getter
-          : '${ReCase(path.join('_')).pascalCase}.fromJson($getter)',
+      BTypeTable(:final inner) =>
+        inner == null
+            ? getter
+            : '${ReCase(path.join('_')).pascalCase}.fromJson($getter)',
       BTypeJsonObject() =>
         '${ReCase(path.join('_')).pascalCase}.fromJson($getter)',
       BTypeJsonUnKeyedObject(:final values) =>

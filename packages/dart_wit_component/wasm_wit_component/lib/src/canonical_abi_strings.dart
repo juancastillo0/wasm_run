@@ -53,7 +53,13 @@ PointerAndSize store_string_into_range(Context cx, ParsedString v) {
       switch (src_simple_encoding) {
         case StringEncoding.utf8:
           return _store_string_copy(
-              cx, src, src_code_units, 1, 1, StringEncoding.utf8);
+            cx,
+            src,
+            src_code_units,
+            1,
+            1,
+            StringEncoding.utf8,
+          );
         case StringEncoding.utf16:
           return _store_utf16_to_utf8(cx, src, src_code_units);
         case StringEncoding.latin1utf16:
@@ -65,10 +71,22 @@ PointerAndSize store_string_into_range(Context cx, ParsedString v) {
           return _store_utf8_to_utf16(cx, src, src_code_units);
         case StringEncoding.utf16:
           return _store_string_copy(
-              cx, src, src_code_units, 2, 2, StringEncoding.utf16);
+            cx,
+            src,
+            src_code_units,
+            2,
+            2,
+            StringEncoding.utf16,
+          );
         case StringEncoding.latin1utf16:
           return _store_string_copy(
-              cx, src, src_code_units, 2, 2, StringEncoding.utf16);
+            cx,
+            src,
+            src_code_units,
+            2,
+            2,
+            StringEncoding.utf16,
+          );
       }
     case StringEncoding.latin1utf16:
       switch (src_encoding) {
@@ -80,10 +98,19 @@ PointerAndSize store_string_into_range(Context cx, ParsedString v) {
           switch (src_simple_encoding) {
             case StringEncoding.latin1utf16:
               return _store_string_copy(
-                  cx, src, src_code_units, 1, 2, StringEncoding.latin1utf16);
+                cx,
+                src,
+                src_code_units,
+                1,
+                2,
+                StringEncoding.latin1utf16,
+              );
             case StringEncoding.utf16:
               return _store_probably_utf16_to_latin1_or_utf16(
-                  cx, src, src_code_units);
+                cx,
+                src,
+                src_code_units,
+              );
             case _:
               throw unreachableException;
           }
@@ -121,13 +148,19 @@ PointerAndSize _store_string_copy(
 // #
 
 PointerAndSize _store_utf16_to_utf8(
-    Context cx, String src, int src_code_units) {
+  Context cx,
+  String src,
+  int src_code_units,
+) {
   final worst_case_size = src_code_units * 3;
   return _store_string_to_utf8(cx, src, src_code_units, worst_case_size);
 }
 
 PointerAndSize _store_latin1_to_utf8(
-    Context cx, String src, int src_code_units) {
+  Context cx,
+  String src,
+  int src_code_units,
+) {
   final worst_case_size = src_code_units * 2;
   return _store_string_to_utf8(cx, src, src_code_units, worst_case_size);
 }
@@ -137,7 +170,11 @@ PointerAndSize _store_latin1_to_utf8(
 /// in a single UTF-8 byte and then, failing that, reallocates to a worst-case size,
 /// finishes the copy, and then finishes with a shrinking reallocation.
 PointerAndSize _store_string_to_utf8(
-    Context cx, String src, int src_code_units, int worst_case_size) {
+  Context cx,
+  String src,
+  int src_code_units,
+  int worst_case_size,
+) {
   assert(src_code_units <= MAX_STRING_BYTE_LENGTH);
   int ptr = cx.opts.realloc(0, 0, 1, src_code_units);
   trap_if(ptr + src_code_units > cx.opts.memory.length);
@@ -170,7 +207,10 @@ PointerAndSize _store_string_to_utf8(
 /// a two-byte UTF-16 code unit) and then does a shrinking reallocation at the
 /// end if multiple UTF-8 bytes were collapsed into a single 2-byte UTF-16 code unit
 PointerAndSize _store_utf8_to_utf16(
-    Context cx, String src, int src_code_units) {
+  Context cx,
+  String src,
+  int src_code_units,
+) {
   final worst_case_size = 2 * src_code_units;
   trap_if(worst_case_size > MAX_STRING_BYTE_LENGTH);
   int ptr = cx.opts.realloc(0, 0, 2, worst_case_size);
@@ -199,7 +239,10 @@ PointerAndSize _store_utf8_to_utf16(
 /// inserting a 0 byte after every Latin-1 byte
 /// (iterating in reverse to avoid clobbering later bytes)
 PointerAndSize _store_string_to_latin1_or_utf16(
-    Context cx, String src, int src_code_units) {
+  Context cx,
+  String src,
+  int src_code_units,
+) {
   assert(src_code_units <= MAX_STRING_BYTE_LENGTH);
   int ptr = cx.opts.realloc(0, 0, 2, src_code_units);
   trap_if(ptr != align_to(ptr, 2));
@@ -221,8 +264,12 @@ PointerAndSize _store_string_to_latin1_or_utf16(
       }
       final encoded = StringEncoding.utf16.encode(src);
       final lenEncoded = encoded.length;
-      cx.opts.memory.setRange(ptr + 2 * dst_byte_length, ptr + lenEncoded,
-          encoded, 2 * dst_byte_length);
+      cx.opts.memory.setRange(
+        ptr + 2 * dst_byte_length,
+        ptr + lenEncoded,
+        encoded,
+        2 * dst_byte_length,
+      );
       if (worst_case_size > lenEncoded) {
         ptr = cx.opts.realloc(ptr, worst_case_size, 2, lenEncoded);
         trap_if(ptr != align_to(ptr, 2));
@@ -253,7 +300,10 @@ PointerAndSize _store_string_to_latin1_or_utf16(
 /// other components can recover the Latin-1 compression.
 /// (The Latin-1 check can be inexpensively fused with the UTF-16 validate+copy loop.)
 PointerAndSize _store_probably_utf16_to_latin1_or_utf16(
-    Context cx, String src, int src_code_units) {
+  Context cx,
+  String src,
+  int src_code_units,
+) {
   final src_byte_length = 2 * src_code_units;
   trap_if(src_byte_length > MAX_STRING_BYTE_LENGTH);
   int ptr = cx.opts.realloc(0, 0, 2, src_byte_length);
@@ -293,9 +343,9 @@ enum StringEncoding {
       'utf16' => utf16,
       'latin1+utf16' || 'latin1utf16' => latin1utf16,
       _ => throw Exception(
-          'Invalid string encoding: $json.'
-          ' Values: ${StringEncoding.values}',
-        ),
+        'Invalid string encoding: $json.'
+        ' Values: ${StringEncoding.values}',
+      ),
     };
   }
 
@@ -413,7 +463,10 @@ ParsedString load_string(Context cx, int ptr) {
 const int UTF16_TAG = 2147483648;
 
 ParsedString load_string_from_range(
-    Context cx, int ptr, int tagged_code_units) {
+  Context cx,
+  int ptr,
+  int tagged_code_units,
+) {
   final int alignment;
   final int byte_length;
   final StringEncoding encoding;
@@ -441,8 +494,11 @@ ParsedString load_string_from_range(
   trap_if(ptr + byte_length > cx.opts.memory.length);
   final String s;
   try {
-    final codeUnits =
-        Uint8List.sublistView(cx.opts.memory, ptr, ptr + byte_length);
+    final codeUnits = Uint8List.sublistView(
+      cx.opts.memory,
+      ptr,
+      ptr + byte_length,
+    );
     s = encoding.decode(codeUnits);
   } catch (e, s) {
     trap(e, s);

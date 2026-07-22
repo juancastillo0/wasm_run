@@ -10,11 +10,7 @@ import 'package:wasm_run/wasm_run.dart';
 
 Future<ImageOpsState> imageState() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await WasmRunLibrary.setUp(
-    override: false,
-    isFlutter: true,
-    loadAsset: rootBundle.load,
-  );
+  await WasmRunLibrary.setUp(isFlutter: true, loadAsset: rootBundle.load);
   final parser = await createImageOps(
     wasiConfig: const WasiConfig(preopenedDirs: [], webBrowserFileSystem: {}),
   );
@@ -32,18 +28,24 @@ void main() {
       final crop100x52 = await rootBundle.load('assets/images/crop-100x52.png');
       final grayscale = await rootBundle.load('assets/images/grayscale.png');
       final grayrot90 = await rootBundle.load('assets/images/gray-rot90.png');
-      final resize102x50Jpg =
-          await rootBundle.load('assets/images/resize-102x50.jpg');
-      final resize102x50 =
-          await rootBundle.load('assets/images/resize-102x50.png');
-      final resize102x50Exact =
-          await rootBundle.load('assets/images/resize-102x50-exact.png');
-      final webpconvertblur2 =
-          await rootBundle.load('assets/images/webp-convert-blur2.bmp');
-      final webpconvertBmp =
-          await rootBundle.load('assets/images/webp-convert.bmp');
-      final webpexample =
-          await rootBundle.load('assets/images/webp-example.webp');
+      final resize102x50Jpg = await rootBundle.load(
+        'assets/images/resize-102x50.jpg',
+      );
+      final resize102x50 = await rootBundle.load(
+        'assets/images/resize-102x50.png',
+      );
+      final resize102x50Exact = await rootBundle.load(
+        'assets/images/resize-102x50-exact.png',
+      );
+      final webpconvertblur2 = await rootBundle.load(
+        'assets/images/webp-convert-blur2.bmp',
+      );
+      final webpconvertBmp = await rootBundle.load(
+        'assets/images/webp-convert.bmp',
+      );
+      final webpexample = await rootBundle.load(
+        'assets/images/webp-example.webp',
+      );
 
       ImageRef? initialRef;
 
@@ -86,9 +88,7 @@ void main() {
       expect(state.previousRef, flipHRef);
 
       ///
-      state.op(
-        (ref) => state.imageOps.operations.grayscale(imageRef: ref),
-      );
+      state.op((ref) => state.imageOps.operations.grayscale(imageRef: ref));
       validateState(
         buffer: grayscale.buffer.asUint8List(),
         color: ColorType.la8,
@@ -96,9 +96,7 @@ void main() {
       final grayscaleRef = state.ref;
 
       /// grayrot90
-      state.op(
-        (ref) => state.imageOps.operations.rotate90(imageRef: ref),
-      );
+      state.op((ref) => state.imageOps.operations.rotate90(imageRef: ref));
       validateState(
         previousRef: grayscaleRef,
         color: ColorType.la8,

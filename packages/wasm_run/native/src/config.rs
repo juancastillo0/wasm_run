@@ -179,7 +179,8 @@ impl From<ModuleConfig> for wasmtime::Config {
             wtc.wasm_backtrace.map(|v| config.wasm_backtrace(v));
             wtc.native_unwind_info.map(|v| config.native_unwind_info(v));
             // wtc.epoch_interruption.map(|v| config.epoch_interruption(v));
-            wtc.max_wasm_stack.map(|v| config.max_wasm_stack(v));
+            wtc.max_wasm_stack
+                .map(|v| config.max_wasm_stack(v as usize));
             wtc.wasm_simd.map(|v| config.wasm_simd(v));
             wtc.wasm_relaxed_simd.map(|v| config.wasm_relaxed_simd(v));
             wtc.relaxed_simd_deterministic
@@ -216,7 +217,8 @@ impl From<ModuleConfig> for wasmi::Config {
         if let Some(wic) = c.wasmi {
             wic.stack_limits
                 .map(|v| config.set_stack_limits(v.try_into().unwrap()));
-            wic.cached_stacks.map(|v| config.set_cached_stacks(v));
+            wic.cached_stacks
+                .map(|v| config.set_cached_stacks(v.try_into().unwrap()));
             wic.mutable_global.map(|v| config.wasm_mutable_global(v));
             wic.sign_extension.map(|v| config.wasm_sign_extension(v));
             wic.saturating_float_to_int
@@ -235,7 +237,7 @@ pub struct ModuleConfigWasmi {
     /// The limits set on the value stack and call stack.
     pub stack_limits: Option<WasiStackLimits>,
     /// The amount of Wasm stacks to keep in cache at most.
-    pub cached_stacks: Option<usize>,
+    pub cached_stacks: Option<i64>,
     /// Is `true` if the `mutable-global` Wasm proposal is enabled.
     pub mutable_global: Option<bool>,
     /// Is `true` if the `sign-extension` Wasm proposal is enabled.
@@ -258,11 +260,11 @@ pub struct ModuleConfigWasmi {
 #[derive(Debug, Copy, Clone)]
 pub struct WasiStackLimits {
     /// The initial value stack height that the Wasm stack prepares.
-    pub initial_value_stack_height: usize,
+    pub initial_value_stack_height: i64,
     /// The maximum value stack height in use that the Wasm stack allows.
-    pub maximum_value_stack_height: usize,
+    pub maximum_value_stack_height: i64,
     /// The maximum number of nested calls that the Wasm stack allows.
-    pub maximum_recursion_depth: usize,
+    pub maximum_recursion_depth: i64,
 }
 
 #[cfg(not(feature = "wasmtime"))]
@@ -273,9 +275,9 @@ impl TryFrom<WasiStackLimits> for wasmi::StackLimits {
         use crate::types::to_anyhow;
 
         Self::new(
-            value.initial_value_stack_height,
-            value.maximum_value_stack_height,
-            value.maximum_recursion_depth,
+            value.initial_value_stack_height.try_into().unwrap(),
+            value.maximum_value_stack_height.try_into().unwrap(),
+            value.maximum_recursion_depth.try_into().unwrap(),
         )
         .map_err(to_anyhow)
     }
@@ -293,7 +295,7 @@ pub struct ModuleConfigWasmtime {
     // TODO: pub wasm_backtrace_details: WasmBacktraceDetails, // Or WASMTIME_BACKTRACE_DETAILS env var
     //
     // TODO: pub epoch_interruption: Option<bool>, // vs consume_fuel
-    pub max_wasm_stack: Option<usize>,
+    pub max_wasm_stack: Option<i64>,
     /// Whether or not to enable the `threads` WebAssembly feature.
     /// This includes atomics and shared memory as well.
     /// This is not enabled by default.

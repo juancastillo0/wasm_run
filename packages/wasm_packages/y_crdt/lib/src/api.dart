@@ -16,20 +16,17 @@ class YCrdtApiImports implements YCrdtWorldImports {
 
   @override
   void Function({required YEvent event, required int functionId})
-      get eventCallback => _eventCallback;
+  get eventCallback => _eventCallback;
 
   @override
   void Function({required List<YEvent> event, required int functionId})
-      get eventDeepCallback => _eventDeepCallback;
+  get eventDeepCallback => _eventDeepCallback;
 
   @override
   void Function({required YUndoEvent event, required int functionId})
-      get undoEventCallback => _undoEventCallback;
+  get undoEventCallback => _undoEventCallback;
 
-  void _eventCallback({
-    required YEvent event,
-    required int functionId,
-  }) {
+  void _eventCallback({required YEvent event, required int functionId}) {
     final callback = _callbacks[functionId];
     if (callback == null) {
       throw Exception('Callback not found for functionId: $functionId');
@@ -95,8 +92,9 @@ class YCrdt {
   final YCrdtApiImports callbacks;
   YDocMethods get _m => world.yDocMethods;
   late final _valueFinalizer = Finalizer<YValue>(_disposeValue);
-  late final _transactionFinalizer =
-      Finalizer<YTransaction>(_disposeTransaction);
+  late final _transactionFinalizer = Finalizer<YTransaction>(
+    _disposeTransaction,
+  );
   late final _snapshotFinalizer = Finalizer<YSnapshot>(_disposeSnapshot);
   late final _undoManagerFinalizer = Finalizer(_disposeUndoManager);
 
@@ -127,46 +125,40 @@ class YCrdt {
     YDocI doc,
     YValueI scope, {
     UndoManagerOptions options = const UndoManagerOptions(),
-  }) =>
-      YUndoManager._(
-        _m.undoManagerNew(
-            //  TODO: remove as YType
-            doc: doc._ref,
-            options: options,
-            scope: scope._ref as YType),
-        this,
-      );
+  }) => YUndoManager._(
+    _m.undoManagerNew(
+      //  TODO: remove as YType
+      doc: doc._ref,
+      options: options,
+      scope: scope._ref as YType,
+    ),
+    this,
+  );
 
-  Uint8List encodeStateVector({
-    required YDocI doc,
-  }) =>
+  Uint8List encodeStateVector({required YDocI doc}) =>
       _m.encodeStateVector(ref: doc._ref);
 
   Result<Uint8List, Error> encodeStateAsUpdate({
     required YDocI doc,
     Uint8List? vector,
-  }) =>
-      _m.encodeStateAsUpdate(ref: doc._ref, vector: vector);
+  }) => _m.encodeStateAsUpdate(ref: doc._ref, vector: vector);
 
   Result<Uint8List, Error> encodeStateAsUpdateV2({
     required YDocI doc,
     Uint8List? vector,
-  }) =>
-      _m.encodeStateAsUpdateV2(ref: doc._ref, vector: vector);
+  }) => _m.encodeStateAsUpdateV2(ref: doc._ref, vector: vector);
 
   Result<void, Error> applyUpdate({
     required YDocI doc,
     required Uint8List diff,
     required Origin origin,
-  }) =>
-      _m.applyUpdate(ref: doc._ref, diff: diff, origin: origin);
+  }) => _m.applyUpdate(ref: doc._ref, diff: diff, origin: origin);
 
   Result<void, Error> applyUpdateV2({
     required YDocI doc,
     required Uint8List diff,
     required Origin origin,
-  }) =>
-      _m.applyUpdateV2(ref: doc._ref, diff: diff, origin: origin);
+  }) => _m.applyUpdateV2(ref: doc._ref, diff: diff, origin: origin);
 }
 
 /// [YValueI] or [AnyVal]
@@ -209,7 +201,6 @@ sealed class YValueI extends YValueAny {
 class YUndoManager {
   final UndoManagerRef _ref;
   final YCrdt _world;
-  YDocMethods get _m => _world._m;
 
   YUndoManager._(this._ref, this._world) {
     _world._undoManagerFinalizer.attach(this, _ref);
@@ -228,17 +219,12 @@ class YDocI extends YValueI {
   void destroy({YTransaction? parentTxn}) =>
       _m.yDocDestroy(ref: _ref, parentTxn: parentTxn);
 
-  List<YDocI> subdocs({
-    required YTransactionI txn,
-  }) =>
-      _m
-          .yDocSubdocs(ref: _ref, txn: txn._ref)
-          .map((d) => YDocI._(d, _world))
-          .toList();
+  List<YDocI> subdocs({required YTransactionI txn}) => _m
+      .yDocSubdocs(ref: _ref, txn: txn._ref)
+      .map((d) => YDocI._(d, _world))
+      .toList();
 
-  List<String> subdocGuids({
-    required YTransactionI txn,
-  }) =>
+  List<String> subdocGuids({required YTransactionI txn}) =>
       _m.yDocSubdocGuids(ref: _ref, txn: txn._ref);
 
   YDocI? parentDoc() {
@@ -301,64 +287,58 @@ class YTextI extends YValueI {
     required String chunk,
     TextAttrsI? attributes,
     YTransactionI? txn,
-  }) =>
-      _m.yTextInsert(
-          ref: _ref,
-          index_: index,
-          chunk: chunk,
-          attributes:
-              attributes == null ? null : AnyVal.map(attributes).toItem(),
-          txn: txn?._ref);
+  }) => _m.yTextInsert(
+    ref: _ref,
+    index_: index,
+    chunk: chunk,
+    attributes: attributes == null ? null : AnyVal.map(attributes).toItem(),
+    txn: txn?._ref,
+  );
 
   void insertEmbed({
     required int /*U32*/ index,
     required AnyVal embed,
     TextAttrsI? attributes,
     YTransactionI? txn,
-  }) =>
-      _m.yTextInsertEmbed(
-          ref: _ref,
-          index_: index,
-          embed: embed.toItem(),
-          attributes:
-              attributes == null ? null : AnyVal.map(attributes).toItem(),
-          txn: txn?._ref);
+  }) => _m.yTextInsertEmbed(
+    ref: _ref,
+    index_: index,
+    embed: embed.toItem(),
+    attributes: attributes == null ? null : AnyVal.map(attributes).toItem(),
+    txn: txn?._ref,
+  );
 
   List<YTextDelta> yTextToDelta({
     YSnapshotI? snapshot,
     YSnapshotI? prevSnapshot,
     YTransactionI? txn,
-  }) =>
-      _m.yTextToDelta(
-          ref: _ref,
-          snapshot: snapshot?._ref,
-          prevSnapshot: prevSnapshot?._ref,
-          txn: txn?._ref);
+  }) => _m.yTextToDelta(
+    ref: _ref,
+    snapshot: snapshot?._ref,
+    prevSnapshot: prevSnapshot?._ref,
+    txn: txn?._ref,
+  );
 
   void format({
     required int /*U32*/ index,
     required int /*U32*/ length,
     required TextAttrsI attributes,
     YTransactionI? txn,
-  }) =>
-      _m.yTextFormat(
-          ref: _ref,
-          index_: index,
-          length: length,
-          attributes: AnyVal.map(attributes).toItem(),
-          txn: txn?._ref);
+  }) => _m.yTextFormat(
+    ref: _ref,
+    index_: index,
+    length: length,
+    attributes: AnyVal.map(attributes).toItem(),
+    txn: txn?._ref,
+  );
 
-  void push(
-    String chunk, {
-    TextAttrsI? attributes,
-    YTransactionI? txn,
-  }) =>
+  void push(String chunk, {TextAttrsI? attributes, YTransactionI? txn}) =>
       _m.yTextPush(
-          ref: _ref,
-          chunk: chunk,
-          attributes:
-              attributes == null ? null : AnyVal.map(attributes).toItem(),
-          txn: txn?._ref);
+        ref: _ref,
+        chunk: chunk,
+        attributes: attributes == null ? null : AnyVal.map(attributes).toItem(),
+        txn: txn?._ref,
+      );
 
   void delete({
     required int /*U32*/ index,
@@ -367,18 +347,14 @@ class YTextI extends YValueI {
   }) =>
       _m.yTextDelete(ref: _ref, index_: index, length: length, txn: txn?._ref);
 
-  void Function() observe(
-    void Function(YTextEventI event) function,
-  ) =>
+  void Function() observe(void Function(YTextEventI event) function) =>
       _world.callbacks.addCallback(
         (YTextEvent e) => function(YTextEventI.fromValue(e, _world)),
         (functionId) => _m.yTextObserve(ref: _ref, functionId: functionId),
         _m.callbackDispose,
       );
 
-  void Function() observeDeep(
-    void Function(List<YEventI> event) function,
-  ) =>
+  void Function() observeDeep(void Function(List<YEventI> event) function) =>
       _world.callbacks.addDeepCallback(
         (e) => function(e.map((v) => YEventI.fromValue(v, _world)).toList()),
         (functionId) => _m.yTextObserveDeep(ref: _ref, functionId: functionId),
@@ -412,20 +388,18 @@ class YArrayI extends YValueI {
     required int /*U32*/ index,
     required List<AnyVal> items,
     YTransactionI? txn,
-  }) =>
-      _m.yArrayInsert(
-        ref: _ref,
-        index_: index,
-        items: AnyVal.array(items).toItem(),
-        txn: txn?._ref,
-      );
+  }) => _m.yArrayInsert(
+    ref: _ref,
+    index_: index,
+    items: AnyVal.array(items).toItem(),
+    txn: txn?._ref,
+  );
 
-  void push(
-    List<AnyVal> items, {
-    YTransactionI? txn,
-  }) =>
-      _m.yArrayPush(
-          ref: _ref, items: AnyVal.array(items).toItem(), txn: txn?._ref);
+  void push(List<AnyVal> items, {YTransactionI? txn}) => _m.yArrayPush(
+    ref: _ref,
+    items: AnyVal.array(items).toItem(),
+    txn: txn?._ref,
+  );
 
   void delete({
     required int /*U32*/ index,
@@ -438,33 +412,32 @@ class YArrayI extends YValueI {
     required int /*U32*/ source,
     required int /*U32*/ target,
     YTransactionI? txn,
-  }) =>
-      _m.yArrayMoveContent(
-          ref: _ref, source: source, target: target, txn: txn?._ref);
+  }) => _m.yArrayMoveContent(
+    ref: _ref,
+    source: source,
+    target: target,
+    txn: txn?._ref,
+  );
 
-  Result<YValueAny, Error> get(
-    int /*U32*/ index, {
-    YTransactionI? txn,
-  }) {
-    final Result<YValue, String> result =
-        _m.yArrayGet(ref: _ref, index_: index, txn: txn?._ref);
+  Result<YValueAny, Error> get(int /*U32*/ index, {YTransactionI? txn}) {
+    final Result<YValue, String> result = _m.yArrayGet(
+      ref: _ref,
+      index_: index,
+      txn: txn?._ref,
+    );
     if (result.isError) return Err(result.error!);
 
     return Ok(YValueAny.fromValue(result.ok!, _world));
   }
 
-  void Function() observe(
-    void Function(YArrayEventI event) function,
-  ) =>
+  void Function() observe(void Function(YArrayEventI event) function) =>
       _world.callbacks.addCallback(
         (YArrayEvent e) => function(YArrayEventI.fromValue(e, _world)),
         (functionId) => _m.yArrayObserve(ref: _ref, functionId: functionId),
         _m.callbackDispose,
       );
 
-  void Function() observeDeep(
-    void Function(List<YEventI> event) function,
-  ) =>
+  void Function() observeDeep(void Function(List<YEventI> event) function) =>
       _world.callbacks.addDeepCallback(
         (e) => function(e.map((v) => YEventI.fromValue(v, _world)).toList()),
         (functionId) => _m.yArrayObserveDeep(ref: _ref, functionId: functionId),
@@ -487,48 +460,30 @@ class YMapI extends YValueI {
   // TODO:
   // bool yMapPrelim() => _m.yMapPrelim(ref: _ref);
 
-  int /*U32*/ length({
-    YTransactionI? txn,
-  }) =>
+  int /*U32*/ length({YTransactionI? txn}) =>
       _m.yMapLength(ref: _ref, txn: txn?._ref);
 
-  Map<String, AnyVal> toJson({
-    YTransactionI? txn,
-  }) =>
+  Map<String, AnyVal> toJson({YTransactionI? txn}) =>
       (AnyVal.fromItem(_m.yMapToJson(ref: _ref, txn: txn?._ref)) as AnyValMap)
           .value;
-  void set(
-    String key,
-    AnyVal value, {
-    YTransactionI? txn,
-  }) =>
+  void set(String key, AnyVal value, {YTransactionI? txn}) =>
       _m.yMapSet(ref: _ref, key: key, value: value.toItem(), txn: txn?._ref);
 
-  void delete(
-    String key, {
-    YTransactionI? txn,
-  }) =>
+  void delete(String key, {YTransactionI? txn}) =>
       _m.yMapDelete(ref: _ref, key: key, txn: txn?._ref);
 
   // TODO: positional param
-  YValue? get(
-    String key, {
-    YTransactionI? txn,
-  }) =>
+  YValue? get(String key, {YTransactionI? txn}) =>
       _m.yMapGet(ref: _ref, key: key, txn: txn?._ref);
 
-  void Function() observe(
-    void Function(YMapEventI event) function,
-  ) =>
+  void Function() observe(void Function(YMapEventI event) function) =>
       _world.callbacks.addCallback(
         (YMapEvent e) => function(YMapEventI.fromValue(e, _world)),
         (functionId) => _m.yMapObserve(ref: _ref, functionId: functionId),
         _m.callbackDispose,
       );
 
-  void Function() observeDeep(
-    void Function(List<YEventI> event) function,
-  ) =>
+  void Function() observeDeep(void Function(List<YEventI> event) function) =>
       _world.callbacks.addDeepCallback(
         (e) => function(e.map((v) => YEventI.fromValue(v, _world)).toList()),
         (functionId) => _m.yMapObserveDeep(ref: _ref, functionId: functionId),

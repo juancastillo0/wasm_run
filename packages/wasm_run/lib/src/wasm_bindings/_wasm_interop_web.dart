@@ -1,17 +1,18 @@
 import 'dart:collection' show Queue, UnmodifiableMapView;
 import 'dart:convert' show utf8;
-import 'dart:js_util' as js_util;
+import 'dart:js_interop';
+import 'dart:js_interop_unsafe';
 import 'dart:typed_data' show Uint8List;
 
-import 'package:wasm_interop/wasm_interop.dart';
 import 'package:wasm_run/src/ffi.dart' show WasmRunLibrary;
 import 'package:wasm_run/src/logger.dart';
 import 'package:wasm_run/src/wasm_bindings/_atomics_web.dart';
 import 'package:wasm_run/src/wasm_bindings/_wasi_web.dart';
-
 import 'package:wasm_run/src/wasm_bindings/_wasm_feature_detect_web.dart';
 import 'package:wasm_run/src/wasm_bindings/_wasm_worker.dart';
+import 'package:wasm_run/src/wasm_bindings/make_function_num_args.web.dart';
 import 'package:wasm_run/src/wasm_bindings/wasm.dart';
+import 'package:web/web.dart';
 
 bool isVoidReturn(dynamic value) {
   switch (value) {
@@ -24,35 +25,36 @@ bool isVoidReturn(dynamic value) {
 
 Future<WasmRuntimeFeatures> _calculateFeatures() async {
   final wfd = wasmFeatureDetect;
-  final features = await Future.wait([
-    js_util.promiseToFuture<bool>(wfd.bigInt()), // 0 TODO: left
-    js_util.promiseToFuture<bool>(wfd.bulkMemory()), // 1
-    js_util.promiseToFuture<bool>(wfd.exceptions()), // 2
-    js_util.promiseToFuture<bool>(wfd.extendedConst()), // 3
-    js_util.promiseToFuture<bool>(wfd.gc()), // 4
+  final featuresJs = await Future.wait<JSBoolean>([
+    wfd.bigInt().toDart, // 0 TODO: left
+    wfd.bulkMemory().toDart, // 1
+    wfd.exceptions().toDart, // 2
+    wfd.extendedConst().toDart, // 3
+    wfd.gc().toDart, // 4
     // TODO:  js_util.promiseToFuture<bool>(wfd.jspi()), // 5 left
-    Future.value(false),
-    js_util.promiseToFuture<bool>(wfd.memory64()), // 6
-    js_util.promiseToFuture<bool>(wfd.multiValue()), // 7
-    js_util.promiseToFuture<bool>(wfd.mutableGlobals()), // 8
-    js_util.promiseToFuture<bool>(wfd.referenceTypes()), // 9
-    js_util.promiseToFuture<bool>(wfd.relaxedSimd()), // 10
-    js_util.promiseToFuture<bool>(wfd.saturatedFloatToInt()), // 11
-    js_util.promiseToFuture<bool>(wfd.signExtensions()), // 12
-    js_util.promiseToFuture<bool>(wfd.simd()), // 13
-    js_util.promiseToFuture<bool>(wfd.streamingCompilation()), // 14
-    js_util.promiseToFuture<bool>(wfd.tailCall()), // 15
-    js_util.promiseToFuture<bool>(wfd.threads()), // 16
+    Future.value(false.toJS),
+    wfd.memory64().toDart, // 6
+    wfd.multiValue().toDart, // 7
+    wfd.mutableGlobals().toDart, // 8
+    wfd.referenceTypes().toDart, // 9
+    wfd.relaxedSimd().toDart, // 10
+    wfd.saturatedFloatToInt().toDart, // 11
+    wfd.signExtensions().toDart, // 12
+    wfd.simd().toDart, // 13
+    wfd.streamingCompilation().toDart, // 14
+    wfd.tailCall().toDart, // 15
+    wfd.threads().toDart, // 16
   ]);
+  final features = featuresJs.map((f) => f.toDart).toList(growable: false);
 
   bool typeReflection;
   try {
-    final type = _getGlobalType(Global.i32(value: 0, mutable: true).jsObject);
-    final hasFunctionProperty = js_util.hasProperty(
-      js_util.getProperty(js_util.globalThis, 'WebAssembly'),
-      'Function',
+    final type = _getGlobalType(
+      Global(GlobalDescriptor(value: 'i32', mutable: true), 0.toJS),
     );
-    typeReflection = (type?.mutable ?? false) &&
+    final hasFunctionProperty = WebAssembly['Function'].isDefinedAndNotNull;
+    typeReflection =
+        (type?.mutable ?? false) &&
         type?.value == ValueTy.i32 &&
         hasFunctionProperty;
   } catch (_) {
@@ -114,24 +116,19 @@ Future<WasmModule> compileWasmModule(
   return _WasmModule.compileAsync(bytes);
 }
 
-WasmModule compileWasmModuleSync(
-  Uint8List bytes, {
-  ModuleConfig? config,
-}) {
+WasmModule compileWasmModuleSync(Uint8List bytes, {ModuleConfig? config}) {
   return _WasmModule(bytes);
 }
 
-Map<String, Object> _mapWasiFiles(Map<String, WasiFd> items) {
-  return items.map(
-    (key, value) {
-      if (value is WasiFile) {
-        return MapEntry(key, WasiWebFile(value.content));
-      } else {
-        final items = _mapWasiFiles((value as WasiDirectory).items);
-        return MapEntry(key, WasiWebDirectory(items));
-      }
-    },
-  );
+Map<String, JSObject> _mapWasiFiles(Map<String, WasiFd> items) {
+  return items.map((key, value) {
+    if (value is WasiFile) {
+      return MapEntry(key, WasiWebFile(value.content.toJS));
+    } else {
+      final items = _mapWasiFiles((value as WasiDirectory).items);
+      return MapEntry(key, WasiWebDirectory(items.jsify()!));
+    }
+  });
 }
 
 class _WASI {
@@ -142,13 +139,32 @@ class _WASI {
   _WASI(this.inner, this.stdout, this.stderr);
 }
 
+extension type MemoryDescriptorWithShared._(MemoryDescriptor _)
+    implements MemoryDescriptor {
+  external factory MemoryDescriptorWithShared({
+    required int initial,
+    int maximum,
+    bool shared,
+  });
+
+  external int get initial;
+  external set initial(int value);
+  external int get maximum;
+  external set maximum(int value);
+  external bool get shared;
+  external set shared(bool value);
+}
+
+@JS('SharedArrayBuffer')
+external JSFunction get sharedArrayBufferConstructor;
+
 class _WasmModule extends WasmModule {
   final Module module;
-  _WasmModule(Uint8List bytes) : module = Module.fromBytes(bytes);
+  _WasmModule(Uint8List bytes) : module = Module(bytes.toJS);
   _WasmModule._(this.module);
 
   static Future<WasmModule> compileAsync(Uint8List bytes) async {
-    final module = await Module.fromBytesAsync(bytes);
+    final module = await WebAssembly.compile(bytes.toJS).toDart;
     return _WasmModule._(module);
   }
 
@@ -158,7 +174,13 @@ class _WasmModule extends WasmModule {
     required int maxPages,
   }) {
     return _SharedMemory(
-      Memory.shared(initial: minPages, maximum: maxPages),
+      Memory(
+        MemoryDescriptorWithShared(
+          initial: minPages,
+          maximum: maxPages,
+          shared: true,
+        ),
+      ),
       MemoryTy(minimum: minPages, maximum: maxPages, shared: true),
     );
   }
@@ -173,20 +195,18 @@ class _WasmModule extends WasmModule {
       final stdout = wasiConfig.captureStdout ? WasiStdio() : null;
       final stderr = wasiConfig.captureStderr ? WasiStdio() : null;
 
-      final wasiWeb = WASI(
+      final wasiWeb = WASI.create(
         wasiConfig.args,
         wasiConfig.env
             .map((e) => '${e.name}=${e.value}')
             .toList(growable: false),
         [
-          OpenFile(WasiWebFile(Uint8List(0))), // TODO: stdin
-          stdout?.fd ?? OpenFile(WasiWebFile(Uint8List(0))),
-          stderr?.fd ?? OpenFile(WasiWebFile(Uint8List(0))),
+          OpenFile(WasiWebFile(Uint8List(0).toJS)), // TODO: stdin
+          stdout?.fd ?? OpenFile(WasiWebFile(Uint8List(0).toJS)),
+          stderr?.fd ?? OpenFile(WasiWebFile(Uint8List(0).toJS)),
           ...wasiConfig.webBrowserFileSystem.entries.map(
-            (e) => PreopenDirectory(
-              e.key,
-              js_util.jsify(_mapWasiFiles(e.value.items)) as Object,
-            ),
+            (e) =>
+                PreopenDirectory(e.key, _mapWasiFiles(e.value.items).jsify()!),
           ),
         ],
       );
@@ -198,12 +218,12 @@ class _WasmModule extends WasmModule {
 
   @override
   List<WasmModuleImport> getImports() {
-    return module.imports
+    return Module.imports(module).toDart
         .map(
           (e) => WasmModuleImport(
             e.module,
             e.name,
-            WasmExternalKind.values.byName(e.kind.name),
+            WasmExternalKind.values.byName(e.kind),
             type: _getExternalType(e),
           ),
         )
@@ -212,11 +232,11 @@ class _WasmModule extends WasmModule {
 
   @override
   List<WasmModuleExport> getExports() {
-    return module.exports
+    return Module.exports(module).toDart
         .map(
           (e) => WasmModuleExport(
             e.name,
-            WasmExternalKind.values.byName(e.kind.name),
+            WasmExternalKind.values.byName(e.kind),
             type: _getExternalType(e),
           ),
         )
@@ -237,7 +257,11 @@ class _Builder extends WasmInstanceBuilder {
   @override
   WasmMemory createMemory({required int minPages, int? maxPages}) {
     return _Memory(
-      Memory(initial: minPages, maximum: maxPages),
+      Memory(
+        maxPages == null
+            ? MemoryDescriptor(initial: minPages)
+            : MemoryDescriptor(initial: minPages, maximum: maxPages),
+      ),
       MemoryTy(minimum: minPages, maximum: maxPages, shared: false),
     );
   }
@@ -248,23 +272,19 @@ class _Builder extends WasmInstanceBuilder {
     required int minSize,
     int? maxSize,
   }) {
+    final element = value.type == ValueTy.funcRef ? 'anyfunc' : 'externref';
     return _Table(
-      value.type == ValueTy.funcRef
-          ? Table.funcref(
-              initial: minSize,
-              maximum: maxSize,
-              value: value.value,
-            )
-          : Table.externref(
-              initial: minSize,
-              maximum: maxSize,
-              value: value.value,
-            ),
-      TableTy(
-        element: value.type,
-        minimum: minSize,
-        maximum: maxSize,
+      Table(
+        maxSize == null
+            ? TableDescriptor(element: element, initial: minSize)
+            : TableDescriptor(
+                element: element,
+                initial: minSize,
+                maximum: maxSize,
+              ),
+        wasmValueToJS(value),
       ),
+      TableTy(element: value.type, minimum: minSize, maximum: maxSize),
       value,
     );
   }
@@ -273,31 +293,11 @@ class _Builder extends WasmInstanceBuilder {
   WasmGlobal createGlobal(WasmValue value, {required bool mutable}) {
     final type = GlobalTy(value: value.type, mutable: mutable);
 
-    final val = value.value;
-    final Global inner;
-    switch (value.type) {
-      case ValueTy.i32:
-        inner = Global.i32(value: val! as int, mutable: mutable);
-        break;
-      case ValueTy.i64:
-        inner = Global.i64(value: i64.toBigInt(val!), mutable: mutable);
-        break;
-      case ValueTy.f32:
-        inner = Global.f32(value: val! as double, mutable: mutable);
-        break;
-      case ValueTy.f64:
-        inner = Global.f64(value: val! as double, mutable: mutable);
-        break;
-      case ValueTy.v128:
-        throw UnsupportedError('v128 external values are not supported on web');
-      case ValueTy.externRef:
-        inner = Global.externref(value: val, mutable: mutable);
-        break;
-      case ValueTy.funcRef:
-        // TODO(web): Implement funcRef "anyfunc"
-        inner = Global.externref(value: val, mutable: mutable);
-        break;
-    }
+    final descriptor = GlobalDescriptor(
+      value: value.type.name.toLowerCase(),
+      mutable: mutable,
+    );
+    final inner = Global(descriptor, wasmValueToJS(value));
     return _Global(inner, type, value);
   }
 
@@ -319,14 +319,18 @@ class _Builder extends WasmInstanceBuilder {
     if (workersConfig != null) {
       throw Exception('numThreads is not supported in buildSync()');
     }
-    final instance = Instance.fromModule(_module, importMap: _mapImports());
+    final instance = Instance(_module, _mapImports().jsify()! as JSObject);
     return _Instance(this, instance, null);
   }
 
   @override
   Future<WasmInstance> build() async {
     final instance =
-        await Instance.fromModuleAsync(_module, importMap: _mapImports());
+        (await WebAssembly.instantiate(
+              _module,
+              _mapImports().jsify()! as JSObject,
+            ).toDart)
+            as Instance;
 
     List<WasmWorker>? workers;
     if (workersConfig != null) {
@@ -335,23 +339,23 @@ class _Builder extends WasmInstanceBuilder {
     return _Instance(this, instance, workers);
   }
 
-  Map<String, Map<String, Object>> _mapImports() {
+  Map<String, Map<String, JSAny>> _mapImports() {
     final mappedImports = importMap.map(
       (key, value) => MapEntry(
         key,
         value.map((key, value) {
-          final mapped = value.when(
+          final mapped = value.when<JSAny>(
             memory: (memory) => (memory as _Memory).memory,
             table: (table) => (table as _Table).table,
             global: (global) => (global as _Global).global,
-            function: (function) => function.inner,
+            function: wasmFunctionToJS,
           );
           return MapEntry(key, mapped);
         }),
       ),
     );
     if (wasi != null) {
-      final wasiImports = js_util.dartify(wasi!.inner.wasiImport)!;
+      final wasiImports = wasi!.inner.wasiImport.dartify()!;
       final previous = mappedImports['wasi_snapshot_preview1'] ?? {};
       mappedImports['wasi_snapshot_preview1'] = (wasiImports as Map).cast()
         ..addAll(previous);
@@ -368,7 +372,7 @@ class _Builder extends WasmInstanceBuilder {
         value.map((key, value) {
           final mapped = value.when(
             memory: (memory) => memory is _SharedMemory
-                ? memory.memory.jsObject
+                ? memory.memory
                 : typeToJson(ExternalType.memory(memory.type!)),
             table: (table) {
               final map = typeToJson(ExternalType.table(table.type!));
@@ -415,7 +419,7 @@ class _Builder extends WasmInstanceBuilder {
       ),
     );
     if (wasi != null) {
-      final wasiImports = js_util.dartify(wasi!.inner.wasiImport)!;
+      final wasiImports = wasi!.inner.wasiImport.dartify()!;
       final previous = mappedImports['wasi_snapshot_preview1'] ?? {};
       // TODO: implement wasi in workers
       mappedImports['wasi_snapshot_preview1'] = (wasiImports as Map).cast()
@@ -423,18 +427,15 @@ class _Builder extends WasmInstanceBuilder {
     }
 
     final workers = await Future.wait(
-      Iterable.generate(
-        workersConfig!.numberOfWorkers,
-        (index) {
-          return WasmWorker.create(
-            workerId: index + 1,
-            workersConfig: workersConfig!,
-            wasmModule: _module.jsObject,
-            wasmImports: mappedImports,
-            functions: functions,
-          );
-        },
-      ),
+      Iterable.generate(workersConfig!.numberOfWorkers, (index) {
+        return WasmWorker.create(
+          workerId: index + 1,
+          workersConfig: workersConfig!,
+          wasmModule: _module,
+          wasmImports: mappedImports,
+          functions: functions,
+        );
+      }),
     );
 
     return workers;
@@ -454,41 +455,38 @@ class _Instance extends WasmInstance {
   final Queue<WorkerTask> tasks = Queue();
 
   _Instance(this.builder, this.instance, this.workers)
-      : module = _WasmModule._(instance.module),
-        availableWorkers = workers ?? [] {
+    : module = _WasmModule._(builder._module),
+      availableWorkers = workers ?? [] {
     exports = UnmodifiableMapView(
-      Map.fromEntries(
-        instance.functions.entries
-            .map<MapEntry<String, WasmExternal>>(
-              (e) => MapEntry(e.key, _makeWasmFunction(e.value, e.key)),
-            )
-            .followedBy(
-              instance.globals.entries
-                  .map((e) => MapEntry(e.key, _Global(e.value, null, null))),
-            )
-            .followedBy(
-          instance.memories.entries.map((e) {
-            final c =
-                js_util.getProperty<Object>(e.value.buffer, 'constructor');
-            if (js_util.getProperty<Object>(c, 'name') == 'SharedArrayBuffer') {
-              return MapEntry(e.key, _SharedMemory(e.value, null));
-            }
-            return MapEntry(e.key, _Memory(e.value, null));
-          }),
-        ).followedBy(
-          instance.tables.entries
-              .map((e) => MapEntry(e.key, _Table(e.value, null, null))),
-        ),
-      ),
+      (instance.exports.dartify()! as Map).cast<String, JSObject>().map((k, v) {
+        if (v.isA<JSFunction>()) {
+          return MapEntry(k, _makeWasmFunction(v as JSFunction, k));
+        } else if (v.isA<Global>()) {
+          return MapEntry(k, _Global(v as Global, null, null));
+        } else if (v.isA<Table>()) {
+          return MapEntry(k, _Table(v as Table, null, null));
+        } else if (v.isA<Memory>()) {
+          final constructorJS = (v as Memory).buffer['constructor'];
+          if (constructorJS.isA<JSObject>() &&
+                  ((constructorJS! as JSObject)['name'] as JSString?)?.toDart ==
+                      'SharedArrayBuffer' ||
+              v.buffer.instanceof(sharedArrayBufferConstructor)) {
+            return MapEntry(k, _SharedMemory(v, null));
+          }
+          return MapEntry(k, _Memory(v, null));
+        } else {
+          throw Exception('$k $v could not be casted to a WasmExternal');
+        }
+      }),
     );
     final wasi = builder.wasi?.inner;
     if (wasi != null) {
       if (getFunction('_start')?.params.isEmpty ?? false) {
-        wasi.start(instance.jsObject);
+        wasi.start(instance);
       } else if (getFunction('_initialize')?.params.isEmpty ?? false) {
-        wasi.initialize(instance.jsObject);
+        wasi.initialize(instance);
       } else {
-        js_util.setProperty(wasi, 'inst', instance.jsObject);
+        wasi.inst = instance;
         logWasiNoStartOrInitialize();
       }
     }
@@ -544,28 +542,30 @@ class _Instance extends WasmInstance {
     bool exclusive = false,
   }) async {
     if (builder.wasi == null) return null;
-    final directories =
-        builder.wasi!.inner.fds.sublist(3).cast<PreopenDirectory>();
-    final oflags = (create ? oflagsCREAT : 0) |
+    final directories = builder.wasi!.inner.fds.toDart
+        .sublist(3)
+        .cast<PreopenDirectory>();
+    final oflags =
+        (create ? oflagsCREAT : 0) |
         (truncate ? oflagsTRUNC : 0) |
         // (directory ? oflagsDIRECTORY : 0) |
         (exclusive ? oflagsEXCL : 0);
     for (final dir in directories) {
-      final dirName = utf8.decode(dir.prestat_name);
+      final dirName = utf8.decode(dir.prestat_name.toDart);
       if (!path.startsWith(dirName)) {
         continue;
       }
       final value = dir.path_open(
-        0,
+        0.toJS,
         path.substring(dirName.length),
-        oflags,
-        i64.fromInt(0),
-        i64.fromInt(0),
-        0,
+        oflags.toJS,
+        i64.fromInt(0) as JSBigInt,
+        i64.fromInt(0) as JSBigInt,
+        0.toJS,
       );
       if (value.fd_obj != null) {
         final file = (value.fd_obj! as OpenFile).file;
-        return WasiFile(file.data);
+        return WasiFile(file.data.toDart);
       }
     }
     // TODO: throw Exception('No preopened dir for $path');
@@ -611,27 +611,26 @@ class _Instance extends WasmInstance {
   }
 }
 
-WasmExternal _makeWasmFunction(Function value, String? name) {
+WasmExternal _makeWasmFunction(JSFunction value, String? name) {
   final ty = _getFuncType(value);
-  final params = ty?.parameters.cast<ValueTy?>() ??
-      List.filled(
-        js_util.getProperty(value, 'length') as int,
-        null,
-      );
-
+  final params =
+      ty?.parameters.cast<ValueTy?>() ??
+      List.filled((value['length']! as JSNumber).toDartInt, null);
   final function = WasmFunction(
-    value,
+    // TODO(migrationv1): more args
+    value as Function,
     name: name,
     params: params,
-    call: ([args]) {
-      final result = js_util.callMethod<Object?>(value, 'apply', [null, args]);
-      if (result is List) return result;
-      if (js_util.typeofEquals<dynamic>(result, 'undefined') ||
-          isVoidReturn(result)) return const [];
+    call: ([List<Object?>? args]) {
+      final result = value.callMethod('apply'.toJS, value, args.jsify());
+
+      if (result.isA<JSArray>()) return (result! as JSArray).toDart;
+      if (result.isUndefined || isVoidReturn(result)) return const [];
       return List.filled(1, result);
     },
     // results is not supported on web https://github.com/WebAssembly/js-types/blob/main/proposals/js-types/Overview.md
     results: ty?.results,
+    jsFunction: value,
   );
   return function;
 }
@@ -641,12 +640,14 @@ class _SharedMemory extends _Memory implements WasmSharedMemory {
 
   @override
   int atomicNotify(int addr, int count) {
-    return atomics.notify(view, addr, count);
+    // TODO(migrationv1): use memory.buffer?
+    return atomics.notify(view.toJS, addr, count);
   }
 
   @override
   SharedMemoryWaitResult atomicWait32(int addr, int expected) {
-    final value = atomics.wait(view, addr, expected, null);
+    // TODO(migrationv1): use memory.buffer?
+    final value = atomics.wait(view.toJS, addr, expected, null);
     switch (value) {
       case 'ok':
         return SharedMemoryWaitResult.ok;
@@ -665,27 +666,41 @@ class _SharedMemory extends _Memory implements WasmSharedMemory {
   }
 }
 
+/// A JavaScript `Uint8Array`.
+@JS('Uint8Array')
+extension type _JSUint8Array2._(JSObject _jsUint8Array) implements JSObject {
+  /// Creates a JavaScript `Uint8Array` with [buffer] as its backing storage,
+  /// offset by [byteOffset] bytes, of size [length].
+  ///
+  /// If no [buffer] is provided, creates an empty `Uint8Array`.
+  // ignore: unused_element_parameter
+  external _JSUint8Array2([JSObject buffer, int byteOffset, int length]);
+}
+
 class _Memory extends WasmMemory {
   final Memory memory;
   @override
   final MemoryTy? type;
 
-  _Memory(this.memory, MemoryTy? type)
-      : type = type ?? _getMemoryType(memory.jsObject);
+  _Memory(this.memory, MemoryTy? type) : type = type ?? _getMemoryType(memory);
 
   @override
   void grow(int deltaPages) {
     memory.grow(deltaPages);
   }
 
-  @override
-  int get lengthInBytes => memory.lengthInBytes;
+  // Necessary since the SharedArrayBuffer throws when casting to JSArrayBuffer
+  // https://github.com/dart-lang/sdk/issues/56455
+  JSObject get _buffer => memory['buffer']! as JSObject;
 
   @override
-  int get lengthInPages => memory.lengthInPages;
+  int get lengthInBytes => (_buffer['byteLength']! as JSNumber).toDartInt;
 
   @override
-  Uint8List get view => Uint8List.view(memory.buffer);
+  int get lengthInPages => lengthInBytes >> 16;
+
+  @override
+  Uint8List get view => (_JSUint8Array2(_buffer) as JSUint8Array).toDart;
 }
 
 class _Global extends WasmGlobal {
@@ -695,14 +710,17 @@ class _Global extends WasmGlobal {
   final WasmValue? _initialValue;
 
   _Global(this.global, GlobalTy? type, this._initialValue)
-      : type = type ?? _getGlobalType(global.jsObject);
+    : type = type ?? _getGlobalType(global);
 
   @override
-  Object? get() => global.jsObject.value;
+  Object? get() {
+    final v = global.value;
+    return v.isA<JSBoxedDartObject>() ? (v! as JSBoxedDartObject).toDart : v;
+  }
 
   @override
   void set(WasmValue value) {
-    global.jsObject.value = value.value;
+    global.value = wasmValueToJS(value);
   }
 }
 
@@ -713,27 +731,22 @@ class _Table extends WasmTable {
   final WasmValue? _initialValue;
 
   _Table(this.table, TableTy? type, this._initialValue)
-      : type = type ?? _getTableType(table.jsObject);
+    : type = type ?? _getTableType(table);
 
   @override
   void set(int index, WasmValue value) {
-    if (value.type == ValueTy.funcRef && value.value is WasmFunction) {
-      final v = value.value! as WasmFunction;
-      table.jsObject.set(index, v.inner);
-    } else {
-      table.jsObject.set(index, value.value);
-    }
+    table.set(index, wasmValueToJS(value));
   }
 
   @override
   Object? get(int index) {
-    final v = table.jsObject.get(index);
-    if (v is Function &&
+    final v = table.get(index);
+    if (v.isA<JSFunction>() &&
         v is! WasmFunction &&
-        js_util.hasProperty(v, 'length')) {
-      return _makeWasmFunction(v, null);
+        (v! as JSFunction).has('length')) {
+      return _makeWasmFunction(v as JSFunction, null);
     }
-    return v;
+    return v.isA<JSBoxedDartObject>() ? (v! as JSBoxedDartObject).toDart : v;
   }
 
   @override
@@ -751,7 +764,7 @@ class _Table extends WasmTable {
   }
 }
 
-ExternalType? _getExternalType(Object value) {
+ExternalType? _getExternalType(JSObject value) {
   final type = _getType(value);
   if (type == null) return null;
   if (type['mutable'] is bool && type['value'] is String) {
@@ -774,31 +787,31 @@ String valueTypeToJson(ValueTy ty) {
 }
 
 Map<String, Object?> typeToJson(ExternalType ty) {
-  return ty.when(
-    func: (func) => {
+  return switch (ty) {
+    (ExternalType_Func(field0: final func)) => {
       'parameters': func.parameters.map(valueTypeToJson).toList(),
       'results': func.results.map(valueTypeToJson).toList(),
     },
-    global: (global) => {
+    (ExternalType_Global(field0: final global)) => {
       'value': valueTypeToJson(global.value),
       'mutable': global.mutable,
     },
-    table: (table) => {
-      'element': valueTypeToJson(table.element),
+    (ExternalType_Table(field0: final table)) => {
+      'element': valueTypeToJson(table.element).toLowerCase(),
       'minimum': table.minimum,
       'initial': table.minimum,
       if (table.maximum != null) 'maximum': table.maximum,
     },
-    memory: (memory) => {
+    (ExternalType_Memory(field0: final memory)) => {
       'shared': memory.shared,
       'minimum': memory.minimum,
       'initial': memory.minimum,
       if (memory.maximum != null) 'maximum': memory.maximum,
     },
-  );
+  };
 }
 
-MemoryTy? _getMemoryType(Object value) {
+MemoryTy? _getMemoryType(JSObject value) {
   final t = _getType(value);
   if (t == null) return null;
   return MemoryTy(
@@ -808,17 +821,14 @@ MemoryTy? _getMemoryType(Object value) {
   );
 }
 
-GlobalTy? _getGlobalType(Object value) {
+GlobalTy? _getGlobalType(JSObject value) {
   final t = _getType(value);
   if (t == null) return null;
   final ty = ValueTy.values.byName(t['value']! as String);
-  return GlobalTy(
-    value: ty,
-    mutable: t['mutable'] == true,
-  );
+  return GlobalTy(value: ty, mutable: t['mutable'] == true);
 }
 
-TableTy? _getTableType(Object value) {
+TableTy? _getTableType(JSObject value) {
   final t = _getType(value);
   if (t == null) return null;
   final ty = ValueTy.values.firstWhere(
@@ -832,7 +842,7 @@ TableTy? _getTableType(Object value) {
   );
 }
 
-FuncTy? _getFuncType(Function value) {
+FuncTy? _getFuncType(JSObject value) {
   final type = _getType(value);
   if (type == null) return null;
   final params = (type['parameters'] as List?)
@@ -849,8 +859,43 @@ FuncTy? _getFuncType(Function value) {
   return FuncTy(parameters: params, results: results);
 }
 
-Map<String, Object?>? _getType(Object value) {
-  if (!js_util.hasProperty(value, 'type')) return null;
-  final type = js_util.callMethod<Object?>(value, 'type', const []);
-  return (js_util.dartify(type)! as Map).cast();
+Map<String, Object?>? _getType(JSObject value) {
+  if (!value.has('type')) return null;
+  final type = value.callMethod('type'.toJS);
+  return (type!.dartify()! as Map).cast();
+}
+
+JSAny? wasmValueToJS(WasmValue value) {
+  final v = value.value;
+  return switch (value.type) {
+    ValueTy.i32 => (v as int?)?.toJS,
+    ValueTy.i64 => v as JSBigInt?,
+    ValueTy.f32 => (v as double?)?.toJS,
+    ValueTy.f64 => (v as double?)?.toJS,
+    ValueTy.v128 => throw Exception(
+      'v128 external values are not supported on JavaScript',
+    ),
+    ValueTy.externRef => () {
+      try {
+        return v?.toJSBox;
+      } catch (_) {
+        return v! as JSAny;
+      }
+    }(),
+    // TODO(migrationv1): should we use toJSBox?
+    ValueTy.funcRef => v == null ? null : wasmFunctionToJS(v as WasmFunction),
+  };
+}
+
+JSFunction wasmFunctionToJS(WasmFunction v) {
+  return v.jsFunction as JSFunction? ??
+      // TODO(migrationv1): test
+      makeFunctionNumArgsJS(v.numberOfParameters, (List<Object?> a) {
+        final r = v.call(a);
+        return switch (r.length) {
+          0 => null,
+          1 => r[0],
+          _ => r,
+        };
+      });
 }

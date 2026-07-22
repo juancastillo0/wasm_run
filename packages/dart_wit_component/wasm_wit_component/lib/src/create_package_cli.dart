@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:args/args.dart';
 import 'package:recase/recase.dart';
 import 'package:wasm_wit_component/generator.dart';
+import 'package:wasm_wit_component/wasm_wit_component.dart';
 
 Future<void> createPackageCli(List<String> arguments) async {
   final parser = ArgParser();
@@ -12,10 +13,7 @@ Future<void> createPackageCli(List<String> arguments) async {
     abbr: 'd',
     help: 'The directory of the Dart package',
   );
-  parser.addOption(
-    'rust-name',
-    help: 'Name of the Rust package',
-  );
+  parser.addOption('rust-name', help: 'Name of the Rust package');
   parser.addFlag(
     'only-rust',
     help: 'Whether to only generate the Rust package',
@@ -31,11 +29,7 @@ Future<void> createPackageCli(List<String> arguments) async {
     help: 'Whether to build the wasm component module',
     defaultsTo: true,
   );
-  parser.addFlag(
-    'run',
-    help: 'Whether to run tests',
-    defaultsTo: true,
-  );
+  parser.addFlag('run', help: 'Whether to run tests', defaultsTo: true);
   parser.addFlag(
     'test',
     help: 'Whether to add Dart tests code',
@@ -66,7 +60,8 @@ Future<void> createPackageCli(List<String> arguments) async {
   final args = CreatePackageArgs(
     directory: directory,
     onlyRust: result['only-rust']! as bool,
-    rustName: result['rust-name'] as String? ??
+    rustName:
+        result['rust-name'] as String? ??
         '${Uri.parse(directory).pathSegments.last}_wasm',
     template: CreatePackageTemplate.values.byName(result['template'] as String),
     asyncWorker: result['async-worker']! as bool,
@@ -123,10 +118,7 @@ Future<void> _generateAndFormat(
   if (generateResult.isError) throw Exception(generateResult.error);
 
   try {
-    final formatGeneration = await Process.run(
-      'dart',
-      ['format', filePath],
-    );
+    final formatGeneration = await Process.run('dart', ['format', filePath]);
     if (formatGeneration.exitCode != 0) {
       print(formatGeneration.stderr);
     }
@@ -155,10 +147,7 @@ Future<void> _writeDirectory(
   }
 }
 
-enum CreatePackageTemplate {
-  simple,
-  complete,
-}
+enum CreatePackageTemplate { simple, complete }
 
 /// Arguments for the `create` command.
 class CreatePackageArgs {
@@ -189,8 +178,9 @@ class CreatePackageArgs {
     return CreatePackageArgs(
       directory: json['directory']! as String,
       rustName: json['rustName']! as String,
-      template:
-          CreatePackageTemplate.values.byName(json['template']! as String),
+      template: CreatePackageTemplate.values.byName(
+        json['template']! as String,
+      ),
       onlyRust: json['onlyRust']! as bool,
       asyncWorker: json['asyncWorker']! as bool,
       wasi: json['wasi']! as bool,
@@ -211,27 +201,17 @@ class CreatePackageArgs {
       'pubspec.yaml': pubspecFile(),
       'analysis_options.yaml': analysisOptionsFile(),
       'README.md': readmeFile(),
-      'example': {
-        '${dartName}_example.dart': exampleDartFile(),
-      },
-      'test': {
-        '${dartName}_test.dart': testDartFile(),
-      },
+      'example': {'${dartName}_example.dart': exampleDartFile()},
+      'test': {'${dartName}_test.dart': testDartFile()},
       'lib': {
-        'src': {
-          dartWitGen: '',
-        },
+        'src': {dartWitGen: ''},
         if (asyncWorker) '${dartName}_worker.dart': libDartWorkerFile(),
         // TODO: wasm file
         '$dartName.dart': libDartFile(),
       },
       rustName: {
-        'wit': {
-          '$witPackageName.wit': witFile(),
-        },
-        'src': {
-          'lib.rs': libRustFile(),
-        },
+        'wit': {'$witPackageName.wit': witFile()},
+        'src': {'lib.rs': libRustFile()},
         '.gitignore': 'Cargo.lock\ntarget/',
         'Cargo.toml': cargoTomlFile(),
       },
@@ -281,19 +261,19 @@ topics:
   - wit
 
 environment:
-  sdk: ^3.0.0
+  sdk: ^3.10.0
 
 flutter:
   assets:
     - lib/assets/
 
 dependencies:
-  wasm_run: ^0.1.0
-  wasm_wit_component: ^0.0.1
+  wasm_run: ^${WasmRunLibrary.version}
+  wasm_wit_component: ^${WasmRunLibrary.version}
 
 dev_dependencies:
   lints: ^2.0.0
-  test: ^1.21.0
+  test: ^1.30.0
 ''';
   }
 
@@ -316,7 +296,8 @@ analyzer:
   String readmeFile() {
     String asyncWorkerSection = '';
     if (asyncWorker) {
-      asyncWorkerSection = '''
+      asyncWorkerSection =
+          '''
 
 ## Async Worker
 
@@ -447,7 +428,7 @@ Future<${packageNameType}World> create$packageNameType({
   Future<WasmModule> Function()? loadModule,
   WorkersConfig? workersConfig,
 }) async {
-  await WasmRunLibrary.setUp(override: false);
+  await WasmRunLibrary.setUp();
 
   final WasmModule module;
   if (loadModule != null) {
@@ -507,7 +488,7 @@ Future<${packageNameType}World> create${packageNameType}Worker({
   Future<WasmModule> Function()? loadModule,
   WorkersConfig? workersConfig,
 }) async {
-  await WasmRunLibrary.setUp(override: false);
+  await WasmRunLibrary.setUp();
 
   final WasmModule module;
   if (loadModule != null) {

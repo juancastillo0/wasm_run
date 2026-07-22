@@ -62,10 +62,10 @@ void addModelClass(
 
   for (final f in t.fields) {
     final nullable = model.nullable(f);
-    final d = SqlTypeToDart(
-      [className, f.name],
-      nullable ? f.type.nullable() : f.type,
-    );
+    final d = SqlTypeToDart([
+      className,
+      f.name,
+    ], nullable ? f.type.nullable() : f.type);
     for (final obj in d.objects) {
       addModelClass(
         buf,
@@ -78,7 +78,7 @@ void addModelClass(
               // TODO:
               nullable: e.value is BTypeNullable,
             ),
-          )
+          ),
         ]),
       );
     }
@@ -94,10 +94,10 @@ void addFieldsAndConstructor(
   for (final c in t.fields) {
     // TODO: remove . from name
     final name = ReCase(c.name).camelCase;
-    final ty = SqlTypeToDart(
-      [className, name],
-      model.nullable(c) ? c.type.nullable() : c.type,
-    );
+    final ty = SqlTypeToDart([
+      className,
+      name,
+    ], model.nullable(c) ? c.type.nullable() : c.type);
     final tyName = model.nullableOption(c)
         ? 'Option<${ty.name.substring(0, ty.name.length - 1)}>?'
         : ty.name;
@@ -136,8 +136,8 @@ void addFromJson(
       nullableOption
           ? c.type.notNull()
           : nullable
-              ? c.type.nullable()
-              : c.type,
+          ? c.type.nullable()
+          : c.type,
     );
     final fj = nullableOption
         ? '$fName == null ? null : Option.fromJson($fName, ($fName) => ${ty.fromJson})'
@@ -172,8 +172,9 @@ void addModelKeys(
         final f = t.fields.firstWhere((f) => f.name == e);
         return ModelField(e, f.type, nullable: f.nullable, optional: false);
       }).toList();
-      final keyName =
-          ReCase('${className}_key_${key.fields.join('_')}').pascalCase;
+      final keyName = ReCase(
+        '${className}_key_${key.fields.join('_')}',
+      ).pascalCase;
       addModelClass(
         buf,
         keyName,
@@ -182,7 +183,7 @@ void addModelKeys(
           tableName: tableName,
           interfaces: [
             if (key.unique)
-              'SqlUniqueKeyModel<${className}, ${addedUpdate ?? className}>'
+              'SqlUniqueKeyModel<${className}, ${addedUpdate ?? className}>',
           ],
         ),
       );
@@ -209,12 +210,7 @@ String? addModelClassUpdate(
   final name = '${className}Update';
   final didGenerate = t.fields.any((e) => !e.nullable);
   if (didGenerate) {
-    addModelClass(
-      buf,
-      name,
-      t,
-      model: model.copyWith(allNullable: true),
-    );
+    addModelClass(buf, name, t, model: model.copyWith(allNullable: true));
   } else {
     buf.writeln('typedef ${name} = $className;');
   }
@@ -232,12 +228,7 @@ String? addModelClassInsert(
   final name = '${className}Insert';
   final didGenerate = t.fields.any((e) => e.defaultValue != null || e.optional);
   if (didGenerate) {
-    addModelClass(
-      buf,
-      name,
-      t,
-      model: model.copyWith(useOptional: true),
-    );
+    addModelClass(buf, name, t, model: model.copyWith(useOptional: true));
   } else {
     buf.writeln('typedef ${name} = $className;');
   }

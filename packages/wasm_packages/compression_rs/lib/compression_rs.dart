@@ -23,7 +23,7 @@ Future<CompressionRsWorld> createCompressionRs({
   Future<WasmModule> Function()? loadModule,
   WorkersConfig? workersConfig,
 }) async {
-  await WasmRunLibrary.setUp(override: false);
+  await WasmRunLibrary.setUp();
 
   final WasmModule module;
   if (loadModule != null) {
@@ -52,11 +52,13 @@ class Compressor {
   final Result<IoSuccess, IoError> Function({
     required Input input,
     required String outputPath,
-  }) compressFile;
+  })
+  compressFile;
   final Result<IoSuccess, IoError> Function({
     required Input input,
     required String outputPath,
-  }) decompressFile;
+  })
+  decompressFile;
 
   Compressor({
     required this.name,
@@ -69,62 +71,62 @@ class Compressor {
 
 extension BrotliExt on Brotli {
   Compressor get compressor => Compressor(
-        name: 'brotli',
-        compress: brotliCompress,
-        decompress: brotliDecompress,
-        compressFile: brotliCompressFile,
-        decompressFile: brotliDecompressFile,
-      );
+    name: 'brotli',
+    compress: brotliCompress,
+    decompress: brotliDecompress,
+    compressFile: brotliCompressFile,
+    decompressFile: brotliDecompressFile,
+  );
 }
 
 extension ZstdExt on Zstd {
   Compressor get compressor => Compressor(
-        name: 'zstd',
-        compress: zstdCompress,
-        decompress: zstdDecompress,
-        compressFile: zstdCompressFile,
-        decompressFile: zstdDecompressFile,
-      );
+    name: 'zstd',
+    compress: zstdCompress,
+    decompress: zstdDecompress,
+    compressFile: zstdCompressFile,
+    decompressFile: zstdDecompressFile,
+  );
 }
 
 extension Lz4Ext on Lz4 {
   Compressor get compressor => Compressor(
-        name: 'lz4',
-        compress: lz4Compress,
-        decompress: lz4Decompress,
-        compressFile: lz4CompressFile,
-        decompressFile: lz4DecompressFile,
-      );
+    name: 'lz4',
+    compress: lz4Compress,
+    decompress: lz4Decompress,
+    compressFile: lz4CompressFile,
+    decompressFile: lz4DecompressFile,
+  );
 }
 
 extension GzipExt on Gzip {
   Compressor get compressor => Compressor(
-        name: 'gzip',
-        compress: gzipCompress,
-        decompress: gzipDecompress,
-        compressFile: gzipCompressFile,
-        decompressFile: gzipDecompressFile,
-      );
+    name: 'gzip',
+    compress: gzipCompress,
+    decompress: gzipDecompress,
+    compressFile: gzipCompressFile,
+    decompressFile: gzipDecompressFile,
+  );
 }
 
 extension ZlibExt on Zlib {
   Compressor get compressor => Compressor(
-        name: 'zlib',
-        compress: zlibCompress,
-        decompress: zlibDecompress,
-        compressFile: zlibCompressFile,
-        decompressFile: zlibDecompressFile,
-      );
+    name: 'zlib',
+    compress: zlibCompress,
+    decompress: zlibDecompress,
+    compressFile: zlibCompressFile,
+    decompressFile: zlibDecompressFile,
+  );
 }
 
 extension DeflateExt on Deflate {
   Compressor get compressor => Compressor(
-        name: 'deflate',
-        compress: deflateCompress,
-        decompress: deflateDecompress,
-        compressFile: deflateCompressFile,
-        decompressFile: deflateDecompressFile,
-      );
+    name: 'deflate',
+    compress: deflateCompress,
+    decompress: deflateDecompress,
+    compressFile: deflateCompressFile,
+    decompressFile: deflateDecompressFile,
+  );
 }
 
 extension CompressorKindExt on CompressorKind {

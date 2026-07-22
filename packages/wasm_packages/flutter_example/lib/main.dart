@@ -24,9 +24,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurpleAccent),
         useMaterial3: true,
-        appBarTheme: const AppBarTheme(
-          toolbarHeight: 48,
-        ),
+        appBarTheme: const AppBarTheme(toolbarHeight: 48),
         inputDecorationTheme: const InputDecorationTheme(
           isDense: true,
           filled: true,
@@ -64,25 +62,25 @@ enum AppTab {
   Widget tab(GlobalState state) {
     return switch (this) {
       AppTab.wasmParser => LoaderWidget(
-          loader: state.wasmParser,
-          child: const WasmParserPage(),
-        ),
+        loader: state.wasmParser,
+        child: const WasmParserPage(),
+      ),
       AppTab.compressionRs => LoaderWidget(
-          loader: state.compressionRs,
-          child: const CompressionRsPage(),
-        ),
+        loader: state.compressionRs,
+        child: const CompressionRsPage(),
+      ),
       AppTab.imageOps => LoaderWidget(
-          loader: state.imageOps,
-          child: const ImageOpsPage(),
-        ),
+        loader: state.imageOps,
+        child: const ImageOpsPage(),
+      ),
       AppTab.rustCrypto => LoaderWidget(
-          loader: state.rustCrypto,
-          child: const RustCryptoPage(),
-        ),
+        loader: state.rustCrypto,
+        child: const RustCryptoPage(),
+      ),
       AppTab.sqlParser => LoaderWidget(
-          loader: state.sqlParser,
-          child: const TypesqlParserPage(),
-        ),
+        loader: state.sqlParser,
+        child: const TypesqlParserPage(),
+      ),
     };
   }
 }
@@ -139,10 +137,10 @@ class _MyHomePageState extends State<MyHomePage> {
                   padding: const EdgeInsets.all(8),
                   value: tab,
                   items: AppTab.values
-                      .map((t) => DropdownMenuItem(
-                            value: t,
-                            child: Text(t.uiName),
-                          ))
+                      .map(
+                        (t) =>
+                            DropdownMenuItem(value: t, child: Text(t.uiName)),
+                      )
                       .toList(),
                   onChanged: (t) => setState(() {
                     tab = t!;
@@ -189,8 +187,9 @@ class LoaderWidget extends StatelessWidget {
           );
         } else if (state == null) {
           loader.load();
-          return const CircularProgressIndicator()
-              .container(alignment: Alignment.center);
+          return const CircularProgressIndicator().container(
+            alignment: Alignment.center,
+          );
         }
         return child;
       },

@@ -1,6 +1,6 @@
 name: wasm_wit_component
 description: Wasm code generator and bindings for Web Assembly Interface Types (WIT) and Wasm Components
-version: 0.0.1
+version: 0.2.0
 homepage: https://github.com/juancastillo0/wasm_run
 
 topics:
@@ -15,15 +15,15 @@ flutter:
     - lib/dart_wit_component.wasm
 
 environment:
-  sdk: ">=3.0.0 <4.0.0"
-
+  sdk: ^3.10.0
+resolution: workspace
 dependencies:
-  wasm_run: ^0.1.0
+  wasm_run: ^0.2.0
   args: ^2.4.0
   recase: ^4.1.0
 
 dev_dependencies:
-  very_good_analysis: ^5.0.0
-  test: ^1.21.0
+  very_good_analysis: ^10.0.0
+  test: ^1.30.0
   wasm_wit_component_example:
     path: example

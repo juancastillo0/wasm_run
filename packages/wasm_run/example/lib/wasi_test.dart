@@ -21,8 +21,7 @@ Future<Uint8List> getWasiExample({
       '../rust_wasi_example/target/wasm32-wasi/release/rust_wasi_example.wasm',
       '../../rust_wasi_example/target/wasm32-wasi/release/rust_wasi_example.wasm',
       if (!isWeb)
-        getRootDirectory()
-            .uri
+        getRootDirectory().uri
             .resolve(
               'packages/wasm_run_flutter/example/assets/rust_wasi_example.wasm',
             )
@@ -71,8 +70,7 @@ void wasiTest({TestArgs? testArgs}) {
         WasmModuleExport('print_hello', WasmExternalKind.function),
         WasmModuleExport('read_file_size', WasmExternalKind.function),
         WasmModuleExport('stderr_log', WasmExternalKind.function),
-      ].map((e) => e.toString()).toList()
-        ..sort(),
+      ].map((e) => e.toString()).toList()..sort(),
     );
     expect(
       module.getImports().map((e) => e.toString()),
@@ -137,10 +135,9 @@ void wasiTest({TestArgs? testArgs}) {
     final features = await wasmRuntimeFeatures();
     if (features.supportedFeatures.typeReflection) {
       // TODO: add more tests
-      module.getImports().first.type!.maybeWhen(
-            orElse: () => throw Exception(),
-            func: (field0) => field0.parameters,
-          );
+      if (module.getImports().first.type! is! ExternalType_Func) {
+        throw Exception();
+      }
     }
 
     final String directoryToAllow;
@@ -155,18 +152,15 @@ void wasiTest({TestArgs? testArgs}) {
           ? await testArgs!.getDirectory!()
           : Directory.current;
       directoryToAllow = dirToAllow.path;
-      final fileToDelete =
-          File('${dirToAllow.path}${Platform.pathSeparator}wasi.wasm')
-            ..writeAsBytesSync(binary);
+      final fileToDelete = File(
+        '${dirToAllow.path}${Platform.pathSeparator}wasi.wasm',
+      )..writeAsBytesSync(binary);
       addTearDown(fileToDelete.deleteSync);
       final wasmGuestPath = Platform.isWindows
           ? (dirToAllow.path.split('\\')..[0] = '').join('/')
           : dirToAllow.path;
       preopenedDirs = [
-        PreopenedDir(
-          wasmGuestPath: wasmGuestPath,
-          hostPath: dirToAllow.path,
-        )
+        PreopenedDir(wasmGuestPath: wasmGuestPath, hostPath: dirToAllow.path),
       ];
       wasmGuestFilePath = Platform.isWindows
           ? '$wasmGuestPath/${fileToDelete.uri.pathSegments.last}'
@@ -185,9 +179,7 @@ void wasiTest({TestArgs? testArgs}) {
         env: [EnvVariable(name: 'name', value: 'value')],
         preopenedDirs: preopenedDirs,
         webBrowserFileSystem: {
-          directoryToAllow: WasiDirectory({
-            'wasi.wasm': WasiFile(binary),
-          })
+          directoryToAllow: WasiDirectory({'wasi.wasm': WasiFile(binary)}),
         },
       ),
     );
@@ -217,10 +209,9 @@ void wasiTest({TestArgs? testArgs}) {
     final memory = instance1.getMemory('memory')!;
     final alloc_ = instance1.getFunction('alloc')!.inner;
     int alloc(int bytes) => alloc_(bytes) as int;
-    final dealloc = instance1.getFunction('dealloc')!.inner as void Function(
-      int offset,
-      int bytes,
-    );
+    final dealloc =
+        instance1.getFunction('dealloc')!.inner
+            as void Function(int offset, int bytes);
 
     final getArgs = instance1.getFunction('get_args')!;
     final initialMemOffset = getArgs().first! as int;
@@ -235,15 +226,11 @@ void wasiTest({TestArgs? testArgs}) {
     final getEnvVars = instance1.getFunction('get_env_vars')!;
     final Map<String, String> parsedEnvVars = {};
     final envVarsOffset = getEnvVars().first! as int;
-    Parser.parseList(
-      Parser(memory.view, envVarsOffset),
-      (p) {
-        final key = Parser.parseUtf8(p);
-        final value = Parser.parseUtf8(p);
-        parsedEnvVars[key] = value;
-      },
-      dealloc: dealloc,
-    );
+    Parser.parseList(Parser(memory.view, envVarsOffset), (p) {
+      final key = Parser.parseUtf8(p);
+      final value = Parser.parseUtf8(p);
+      parsedEnvVars[key] = value;
+    }, dealloc: dealloc);
     expect(parsedEnvVars, {'name': 'value'});
 
     T withBufferOffset<T>(Uint8List buffer, T Function(int offset) f) {

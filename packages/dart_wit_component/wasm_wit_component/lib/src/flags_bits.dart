@@ -13,16 +13,16 @@ class FlagsBits implements ToJsonSerializable {
 
   /// Creates a [FlagsBits] from a [ByteData] instance.
   FlagsBits(this.data, {required this.numFlags})
-      : assert(
-          data.lengthInBytes % 4 == 0,
-          "ByteData's length should be a multiple of 4",
-        ) {
+    : assert(
+        data.lengthInBytes % 4 == 0,
+        "ByteData's length should be a multiple of 4",
+      ) {
     _zeroOutUnusedBits();
   }
 
   /// Creates a [FlagsBits] with all flags set to `false`.
   FlagsBits.none({required this.numFlags})
-      : data = ByteData((numFlags / 32).ceil() * 4);
+    : data = ByteData((numFlags / 32).ceil() * 4);
 
   /// Creates a [FlagsBits] with all flags set to `true`.
   factory FlagsBits.all({required int numFlags}) =>
@@ -39,10 +39,7 @@ class FlagsBits implements ToJsonSerializable {
 
   /// Creates a [FlagsBits] from a JSON representation.
   /// [json_] must be a [List] of [int]s or [bool]s.
-  factory FlagsBits.fromJson(
-    Object? json_, {
-    List<Object>? flagsKeys,
-  }) {
+  factory FlagsBits.fromJson(Object? json_, {List<Object>? flagsKeys}) {
     int? numFlags = flagsKeys?.length;
     if (json_ is Map) {
       final nFlags = json_['numFlags'];

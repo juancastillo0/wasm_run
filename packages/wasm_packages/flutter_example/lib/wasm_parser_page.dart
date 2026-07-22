@@ -63,7 +63,7 @@ class WasmParserPage extends StatelessWidget {
                         child: TabBarView(
                           children: [
                             WatView(state: state),
-                            WasmComponentView(state: state)
+                            WasmComponentView(state: state),
                           ],
                         ),
                       ),
@@ -86,9 +86,7 @@ class WasmParserPage extends StatelessWidget {
             Expanded(child: WasmTypeView(state: state)),
             Expanded(child: WasmComponentView(state: state)),
           ],
-        ).container(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-        );
+        ).container(padding: const EdgeInsets.symmetric(horizontal: 12));
       },
     );
   }
@@ -97,22 +95,19 @@ class WasmParserPage extends StatelessWidget {
 const wasmFileType = fsa.FilePickerAcceptType(
   description: 'WebAssembly',
   accept: {
-    'application/wasm': ['.wasm']
+    'application/wasm': ['.wasm'],
   },
 );
 const watFileType = fsa.FilePickerAcceptType(
   description: 'WebAssemblyText',
   accept: {
-    'application/wat': ['.wat']
+    'application/wat': ['.wat'],
   },
 );
 
 void loadWasm(void Function(String name, Uint8List bytes) onLoad) async {
   final files = await fsa.FileSystem.instance.showOpenFilePickerWebSafe(
-    const fsa.FsOpenOptions(
-      multiple: false,
-      types: [wasmFileType],
-    ),
+    const fsa.FsOpenOptions(multiple: false, types: [wasmFileType]),
   );
   if (files.isNotEmpty) {
     final file = files.first;
@@ -122,10 +117,7 @@ void loadWasm(void Function(String name, Uint8List bytes) onLoad) async {
 }
 
 class WatView extends StatelessWidget {
-  const WatView({
-    super.key,
-    required this.state,
-  });
+  const WatView({super.key, required this.state});
 
   final WasmParserState state;
 
@@ -133,10 +125,7 @@ class WatView extends StatelessWidget {
   Widget build(BuildContext context) {
     void loadWat() async {
       final files = await fsa.FileSystem.instance.showOpenFilePickerWebSafe(
-        const fsa.FsOpenOptions(
-          multiple: false,
-          types: [watFileType],
-        ),
+        const fsa.FsOpenOptions(multiple: false, types: [watFileType]),
       );
       if (files.isNotEmpty) {
         final file = files.first;
@@ -152,10 +141,7 @@ class WatView extends StatelessWidget {
           crossAxisAlignment: WrapCrossAlignment.center,
           children: [
             const Text('WAT').title(),
-            ElevatedButton(
-              onPressed: loadWat,
-              child: const Text('load'),
-            ),
+            ElevatedButton(onPressed: loadWat, child: const Text('load')),
             ElevatedButton(
               onPressed: () => downloadFile(
                 'module.wat',
@@ -167,8 +153,9 @@ class WatView extends StatelessWidget {
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text('Examples:')
-                    .container(padding: const EdgeInsets.only(left: 10)),
+                const Text(
+                  'Examples:',
+                ).container(padding: const EdgeInsets.only(left: 10)),
                 ButtonBar(
                   buttonPadding: const EdgeInsets.all(1),
                   children: [
@@ -186,21 +173,14 @@ class WatView extends StatelessWidget {
             ),
           ],
         ),
-        Expanded(
-          child: PaginatedTextField(
-            controller: state.watController,
-          ),
-        ),
+        Expanded(child: PaginatedTextField(controller: state.watController)),
       ],
     );
   }
 }
 
 class WasmTypeView extends StatelessWidget {
-  const WasmTypeView({
-    super.key,
-    required this.state,
-  });
+  const WasmTypeView({super.key, required this.state});
 
   final WasmParserState state;
 
@@ -214,9 +194,7 @@ class WasmTypeView extends StatelessWidget {
 
     Widget wasmModuleTypeWidget(ModuleType value) {
       final line = BoxDecoration(
-        border: Border(
-          top: BorderSide(color: Colors.grey.shade300),
-        ),
+        border: Border(top: BorderSide(color: Colors.grey.shade300)),
       );
       const externNameStyle = TextStyle(
         fontWeight: FontWeight.w600,
@@ -226,13 +204,14 @@ class WasmTypeView extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text('ModuleType')
-                .title()
-                .container(alignment: Alignment.center),
+            const Text(
+              'ModuleType',
+            ).title().container(alignment: Alignment.center),
             const Text('Imports').subtitle(),
             if (value.imports.isEmpty)
-              const Text('No imports')
-                  .container(padding: const EdgeInsets.all(6)),
+              const Text(
+                'No imports',
+              ).container(padding: const EdgeInsets.all(6)),
             ...value.imports.map(
               (e) => SelectableText.rich(
                 TextSpan(
@@ -244,10 +223,7 @@ class WasmTypeView extends StatelessWidget {
                     TextSpan(text: '\n${e.type}'),
                   ],
                 ),
-              ).container(
-                padding: const EdgeInsets.all(6),
-                decoration: line,
-              ),
+              ).container(padding: const EdgeInsets.all(6), decoration: line),
             ),
             const Text('Exports').subtitle(),
             if (value.exports.isEmpty) const Text('No exports'),
@@ -259,11 +235,8 @@ class WasmTypeView extends StatelessWidget {
                     TextSpan(text: '\n${e.type}'),
                   ],
                 ),
-              ).container(
-                padding: const EdgeInsets.all(6),
-                decoration: line,
-              ),
-            )
+              ).container(padding: const EdgeInsets.all(6), decoration: line),
+            ),
           ],
         ).container(padding: const EdgeInsets.all(6)),
       );
@@ -284,12 +257,12 @@ class WasmTypeView extends StatelessWidget {
           switch (state.wasmType!) {
             final ModuleType value => wasmModuleTypeWidget(value),
             final ComponentType value => Column(
-                children: [
-                  const Text('ComponentType').title(),
-                  const Text('Modules'),
-                  ...value.modules.map(wasmModuleTypeWidget)
-                ],
-              ),
+              children: [
+                const Text('ComponentType').title(),
+                const Text('Modules'),
+                ...value.modules.map(wasmModuleTypeWidget),
+              ],
+            ),
           },
         ],
       );
@@ -303,9 +276,7 @@ class WasmTypeView extends StatelessWidget {
           children: [
             const Text('WASM').title(),
             ElevatedButton(
-              onPressed: () => loadWasm(
-                (_, bytes) => state.loadWasm(bytes),
-              ),
+              onPressed: () => loadWasm((_, bytes) => state.loadWasm(bytes)),
               child: const Text('load'),
             ),
             if (state.wasmType != null)
@@ -320,27 +291,28 @@ class WasmTypeView extends StatelessWidget {
             DropdownButtonFormField(
               isDense: true,
               isExpanded: true,
-              items: [
-                'packages/wasm_parser/lib/assets/wasm_parser_wasm.wasm',
-                'packages/wasm_parser/lib/assets/wasm_parser_wasm.threads.wasm',
-                'packages/compression_rs/lib/assets/compression_rs_wasm.wasm',
-                'packages/compression_rs/lib/assets/compression_rs_wasm.threads.wasm',
-                'packages/rust_crypto/lib/assets/rust_crypto_wasm.wasm',
-                'packages/image_ops/lib/assets/image_ops_wasm.wasm',
-              ]
-                  .map(
-                    (e) => DropdownMenuItem(
-                      value: e,
-                      child: Text(
-                        Uri.parse(e)
-                            .pathSegments
-                            .last
-                            .replaceFirst(RegExp(r'.wasm$'), ''),
-                        style: const TextStyle(fontSize: 12),
-                      ),
-                    ),
-                  )
-                  .toList(),
+              items:
+                  [
+                        'packages/wasm_parser/lib/assets/wasm_parser_wasm.wasm',
+                        'packages/wasm_parser/lib/assets/wasm_parser_wasm.threads.wasm',
+                        'packages/compression_rs/lib/assets/compression_rs_wasm.wasm',
+                        'packages/compression_rs/lib/assets/compression_rs_wasm.threads.wasm',
+                        'packages/rust_crypto/lib/assets/rust_crypto_wasm.wasm',
+                        'packages/image_ops/lib/assets/image_ops_wasm.wasm',
+                      ]
+                      .map(
+                        (e) => DropdownMenuItem(
+                          value: e,
+                          child: Text(
+                            Uri.parse(e).pathSegments.last.replaceFirst(
+                              RegExp(r'.wasm$'),
+                              '',
+                            ),
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                        ),
+                      )
+                      .toList(),
               value: null,
               hint: const Text('Packages'),
               onChanged: (v) async {
@@ -348,15 +320,10 @@ class WasmTypeView extends StatelessWidget {
                 final bytes = await rootBundle.load(v);
                 state.loadWasm(bytes.buffer.asUint8List());
               },
-            ).container(
-              width: 200,
-              padding: const EdgeInsets.only(left: 10),
-            ),
+            ).container(width: 200, padding: const EdgeInsets.only(left: 10)),
           ],
         ),
-        Expanded(
-          child: SingleChildScrollView(child: wasmTypeWidget()),
-        ),
+        Expanded(child: SingleChildScrollView(child: wasmTypeWidget())),
         ErrorMessage(state: state),
       ],
     );
@@ -364,10 +331,7 @@ class WasmTypeView extends StatelessWidget {
 }
 
 class WasmComponentView extends StatelessWidget {
-  const WasmComponentView({
-    super.key,
-    required this.state,
-  });
+  const WasmComponentView({super.key, required this.state});
 
   final WasmParserState state;
 
@@ -384,43 +348,36 @@ class WasmComponentView extends StatelessWidget {
     }
 
     void addAdapter() {
-      loadWasm(
-        (name, bytes) async {
-          String name_ = name.split('.').first;
-          await showDialog<Object?>(
-            context: context,
-            builder: (context) {
-              final navigator = Navigator.of(context);
-              return AlertDialog(
-                content: TextFormField(
-                  decoration: const InputDecoration(
-                    labelText: 'Adapter Name',
-                  ),
-                  initialValue: name_,
-                  onFieldSubmitted: (name) {
-                    name_ = name;
-                    navigator.pop();
-                  },
-                  onChanged: (name) => name_ = name,
+      loadWasm((name, bytes) async {
+        String name_ = name.split('.').first;
+        await showDialog<Object?>(
+          context: context,
+          builder: (context) {
+            final navigator = Navigator.of(context);
+            return AlertDialog(
+              content: TextFormField(
+                decoration: const InputDecoration(labelText: 'Adapter Name'),
+                initialValue: name_,
+                onFieldSubmitted: (name) {
+                  name_ = name;
+                  navigator.pop();
+                },
+                onChanged: (name) => name_ = name,
+              ),
+              actions: [
+                TextButton(
+                  onPressed: navigator.pop,
+                  child: const Text('Accept'),
                 ),
-                actions: [
-                  TextButton(
-                    onPressed: navigator.pop,
-                    child: const Text('Accept'),
-                  ),
-                ],
-              );
-            },
-          );
+              ],
+            );
+          },
+        );
 
-          state.addAdapter(
-            ComponentAdapter(
-              name: name_,
-              wasm: WasmInput.binary(bytes),
-            ),
-          );
-        },
-      );
+        state.addAdapter(
+          ComponentAdapter(name: name_, wasm: WasmInput.binary(bytes)),
+        );
+      });
     }
 
     return Column(
@@ -457,9 +414,8 @@ class WasmComponentView extends StatelessWidget {
                     Text(e.name).container(padding: const EdgeInsets.all(6)),
                     if (e.wasm is WasmInputBinary)
                       TextButton(
-                        onPressed: () => state.loadWasm(
-                          (e.wasm as WasmInputBinary).value,
-                        ),
+                        onPressed: () =>
+                            state.loadWasm((e.wasm as WasmInputBinary).value),
                         child: const Text('loadWasm'),
                       ),
                     IconButton(

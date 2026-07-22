@@ -27,7 +27,7 @@ Future<WasmParserWorld> createWasmParserWorker({
   Future<WasmModule> Function()? loadModule,
   WorkersConfig? workersConfig,
 }) async {
-  await WasmRunLibrary.setUp(override: false);
+  await WasmRunLibrary.setUp();
 
   final WasmModule module;
   if (loadModule != null) {
@@ -40,9 +40,7 @@ Future<WasmParserWorld> createWasmParserWorker({
     );
     final uris = WasmFileUris(uri: uri);
     module = await uris.loadModule(
-      config: ModuleConfig(
-        wasmtime: ModuleConfigWasmtime(wasmThreads: true),
-      ),
+      config: ModuleConfig(wasmtime: ModuleConfigWasmtime(wasmThreads: true)),
     );
   }
   final numWorkers = identical(0, 0.0) ? 2 : Platform.numberOfProcessors;

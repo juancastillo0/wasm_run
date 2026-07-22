@@ -10,8 +10,7 @@ class WasmRunFlutterWeb {
   ///
   /// For more information, see: [WasmRunLibrary.setUp].
   static void registerWith(Registrar registrar) {
-    WasmRunLibrary.setUp(
-      override: false,
+    WasmRunLibrary.configAssetLoader(
       isFlutter: true,
       loadAsset: rootBundle.load,
     );

@@ -14,7 +14,7 @@ class SqlGeneratorBuilder implements Builder {
 
   @override
   final buildExtensions = const {
-    '.sql': ['.sql.dart']
+    '.sql': ['.sql.dart'],
   };
 
   @override
@@ -33,14 +33,12 @@ class SqlGeneratorBuilder implements Builder {
       await buildStep.writeAsString(output, '/*\n$error\n*/');
       return;
     }
-    final fileName = inputId.pathSegments.last
-        .substring(0, inputId.pathSegments.last.length - 4);
-    final inMemDB = state.db.openInMemory();
-    final typed = SqlTypeFinder(
-      contents,
-      result.unwrap(),
-      inMemDB,
+    final fileName = inputId.pathSegments.last.substring(
+      0,
+      inputId.pathSegments.last.length - 4,
     );
+    final inMemDB = state.db.openInMemory();
+    final typed = SqlTypeFinder(contents, result.unwrap(), inMemDB);
     final out = generateDartFromSql(fileName, typed);
 
     // Write out the new asset.
@@ -127,8 +125,10 @@ class ${ReCase(fileName).pascalCase}Queries {
       tableName: t.key,
     );
     final fields = t.value.fields
-        .map((e) =>
-            "(name: '${e.name}', type: ${e.type.instantiation}, hasDefault: ${e.optional || e.defaultValue != null})")
+        .map(
+          (e) =>
+              "(name: '${e.name}', type: ${e.type.instantiation}, hasDefault: ${e.optional || e.defaultValue != null})",
+        )
         .join(',');
 
     final generics = '<${className}, ${addedUpdate ?? className}>';
@@ -151,7 +151,7 @@ class ${ReCase(fileName).pascalCase}Queries {
   final Map<String, int> classNames = {};
 
   final List<({String func, String? args, StatementInfo info})>
-      dbDefinitionFunctions = [];
+  dbDefinitionFunctions = [];
   for (final info in typed.statementsInfo) {
     // final info = typed.statementsInfo.firstWhere((e) => e.statement == t.key);
 
@@ -194,32 +194,27 @@ class ${ReCase(fileName).pascalCase}Queries {
     }
     bool withReturn = info.isSelect || info.model != null && !isDefinition;
     if (withReturn) {
-      bufQueries.writeln(
-        'Future<List<$className>> ${functionName}(',
-      );
+      bufQueries.writeln('Future<List<$className>> ${functionName}(');
     } else {
-      bufQueries.writeln(
-        'Future<SqlExecution> ${functionName}(',
-      );
+      bufQueries.writeln('Future<SqlExecution> ${functionName}(');
     }
     final method = withReturn ? 'query' : 'execute';
     if (info.placeholders.isNotEmpty) {
       bufQueries.writeln('${className}Args args) async {');
       // final allPositional = info.placeholders.every((e) => e.isPositional);
       final model = ModelType([
-        ...info.placeholders.map(
-          (e) {
-            return ModelField(
-              e.isPositional ? 'arg${e.index}' : e.nameOrIndex.substring(1),
-              e.type,
-              nullable: false,
-            );
-          },
-        )
+        ...info.placeholders.map((e) {
+          return ModelField(
+            e.isPositional ? 'arg${e.index}' : e.nameOrIndex.substring(1),
+            e.type,
+            nullable: false,
+          );
+        }),
       ]);
       addModelClass(buf, '${className}Args', model);
-      final args =
-          model.fields.map((e) => 'args.${ReCase(e.name).camelCase}').join(',');
+      final args = model.fields
+          .map((e) => 'args.${ReCase(e.name).camelCase}')
+          .join(',');
       bufQueries.writeln(
         'final result = await executor.$method(\'\'\'${info.text}\'\'\', [${args}]);',
       );
@@ -263,8 +258,9 @@ class ${ReCase(fileName).pascalCase}Queries {
   }
 
   if (errors.isEmpty && dbDefinitionFunctions.every((e) => e.args == null)) {
-    for (final info in typed.statementsInfo
-        .where((info) => !isDatabaseDefinitionStatement(info.statement))) {
+    for (final info in typed.statementsInfo.where(
+      (info) => !isDatabaseDefinitionStatement(info.statement),
+    )) {
       try {
         final prepared = inMemDB.prepare(info.text);
         prepared.dispose();
@@ -277,17 +273,19 @@ class ${ReCase(fileName).pascalCase}Queries {
   if (errors.isNotEmpty) {
     bufQueries.writeln('/** ${errors.join('\n\n')} */');
   }
-// SqlInsert()
-// SqlUpdate()
-// SqlDelete()
-// SqlQuery()
+  // SqlInsert()
+  // SqlUpdate()
+  // SqlDelete()
+  // SqlQuery()
 
   bufQueries.writeln('}');
   buf.write(bufQueries);
 
   String out = buf.toString();
   try {
-    out = DartFormatter().format(out);
+    out = DartFormatter(
+      languageVersion: DartFormatter.latestLanguageVersion,
+    ).format(out);
   } catch (_) {}
   return out;
 }

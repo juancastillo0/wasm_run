@@ -4,31 +4,23 @@ import 'dart:convert' show jsonDecode;
 class UsersUpdate with BaseDataClass implements SqlUpdateModel<Users> {
   final int? id;
   final String? name;
-  const UsersUpdate({
-    this.id,
-    this.name,
-  });
+  const UsersUpdate({this.id, this.name});
   @override
-  DataClassProps get dataClassProps => DataClassProps('UsersUpdate', {
-        'id': id,
-        'name': name,
-      });
+  DataClassProps get dataClassProps =>
+      DataClassProps('UsersUpdate', {'id': id, 'name': name});
   factory UsersUpdate.fromJson(Object? obj_) {
     final obj = obj_ is String ? jsonDecode(obj_) : obj_;
     final list = obj is Map
         ? const ['id', 'name'].map((f) => obj[f]).toList(growable: false)
         : obj;
     return switch (list) {
-      [
-        final id,
-        final name,
-      ] =>
-        UsersUpdate(
-          id: id == null ? null : id as int,
-          name: name == null ? null : name as String,
-        ),
+      [final id, final name] => UsersUpdate(
+        id: id == null ? null : id as int,
+        name: name == null ? null : name as String,
+      ),
       _ => throw Exception(
-          'Invalid JSON or SQL Row for UsersUpdate.fromJson ${obj.runtimeType}'),
+        'Invalid JSON or SQL Row for UsersUpdate.fromJson ${obj.runtimeType}',
+      ),
     };
   }
   @override
@@ -42,31 +34,20 @@ class Users
     implements SqlInsertModel<Users>, SqlReturnModel {
   final int id;
   final String name;
-  const Users({
-    required this.id,
-    required this.name,
-  });
+  const Users({required this.id, required this.name});
   @override
-  DataClassProps get dataClassProps => DataClassProps('users', {
-        'id': id,
-        'name': name,
-      });
+  DataClassProps get dataClassProps =>
+      DataClassProps('users', {'id': id, 'name': name});
   factory Users.fromJson(Object? obj_) {
     final obj = obj_ is String ? jsonDecode(obj_) : obj_;
     final list = obj is Map
         ? const ['id', 'name'].map((f) => obj[f]).toList(growable: false)
         : obj;
     return switch (list) {
-      [
-        final id,
-        final name,
-      ] =>
-        Users(
-          id: id as int,
-          name: name as String,
-        ),
+      [final id, final name] => Users(id: id as int, name: name as String),
       _ => throw Exception(
-          'Invalid JSON or SQL Row for Users.fromJson ${obj.runtimeType}'),
+        'Invalid JSON or SQL Row for Users.fromJson ${obj.runtimeType}',
+      ),
     };
   }
   @override
@@ -77,27 +58,19 @@ class UsersKeyId
     with BaseDataClass
     implements SqlUniqueKeyModel<Users, UsersUpdate> {
   final int id;
-  const UsersKeyId({
-    required this.id,
-  });
+  const UsersKeyId({required this.id});
   @override
-  DataClassProps get dataClassProps => DataClassProps('UsersKeyId', {
-        'id': id,
-      });
+  DataClassProps get dataClassProps => DataClassProps('UsersKeyId', {'id': id});
   factory UsersKeyId.fromJson(Object? obj_) {
     final obj = obj_ is String ? jsonDecode(obj_) : obj_;
     final list = obj is Map
         ? const ['id'].map((f) => obj[f]).toList(growable: false)
         : obj;
     return switch (list) {
-      [
-        final id,
-      ] =>
-        UsersKeyId(
-          id: id as int,
-        ),
+      [final id] => UsersKeyId(id: id as int),
       _ => throw Exception(
-          'Invalid JSON or SQL Row for UsersKeyId.fromJson ${obj.runtimeType}'),
+        'Invalid JSON or SQL Row for UsersKeyId.fromJson ${obj.runtimeType}',
+      ),
     };
   }
   @override
@@ -108,42 +81,38 @@ class TopicsUpdate with BaseDataClass implements SqlUpdateModel<Topics> {
   final String? code;
   final Option<int>? priority;
   final Option<String>? description;
-  const TopicsUpdate({
-    this.code,
-    this.priority,
-    this.description,
-  });
+  const TopicsUpdate({this.code, this.priority, this.description});
   @override
   DataClassProps get dataClassProps => DataClassProps('TopicsUpdate', {
-        'code': code,
-        'priority': priority,
-        'description': description,
-      });
+    'code': code,
+    'priority': priority,
+    'description': description,
+  });
   factory TopicsUpdate.fromJson(Object? obj_) {
     final obj = obj_ is String ? jsonDecode(obj_) : obj_;
     final list = obj is Map
-        ? const ['code', 'priority', 'description']
-            .map((f) => obj[f])
-            .toList(growable: false)
+        ? const [
+            'code',
+            'priority',
+            'description',
+          ].map((f) => obj[f]).toList(growable: false)
         : obj;
     return switch (list) {
-      [
-        final code,
-        final priority,
-        final description,
-      ] =>
-        TopicsUpdate(
-          code: code == null ? null : code as String,
-          priority: priority == null
-              ? null
-              : Option.fromJson(priority, (priority) => priority as int),
-          description: description == null
-              ? null
-              : Option.fromJson(
-                  description, (description) => description as String),
-        ),
+      [final code, final priority, final description] => TopicsUpdate(
+        code: code == null ? null : code as String,
+        priority: priority == null
+            ? null
+            : Option.fromJson(priority, (priority) => priority as int),
+        description: description == null
+            ? null
+            : Option.fromJson(
+                description,
+                (description) => description as String,
+              ),
+      ),
       _ => throw Exception(
-          'Invalid JSON or SQL Row for TopicsUpdate.fromJson ${obj.runtimeType}'),
+        'Invalid JSON or SQL Row for TopicsUpdate.fromJson ${obj.runtimeType}',
+      ),
     };
   }
   @override
@@ -158,37 +127,31 @@ class Topics
   final String code;
   final int? priority;
   final String? description;
-  const Topics({
-    required this.code,
-    this.priority,
-    this.description,
-  });
+  const Topics({required this.code, this.priority, this.description});
   @override
   DataClassProps get dataClassProps => DataClassProps('topics', {
-        'code': code,
-        'priority': priority,
-        'description': description,
-      });
+    'code': code,
+    'priority': priority,
+    'description': description,
+  });
   factory Topics.fromJson(Object? obj_) {
     final obj = obj_ is String ? jsonDecode(obj_) : obj_;
     final list = obj is Map
-        ? const ['code', 'priority', 'description']
-            .map((f) => obj[f])
-            .toList(growable: false)
+        ? const [
+            'code',
+            'priority',
+            'description',
+          ].map((f) => obj[f]).toList(growable: false)
         : obj;
     return switch (list) {
-      [
-        final code,
-        final priority,
-        final description,
-      ] =>
-        Topics(
-          code: code as String,
-          priority: priority == null ? null : priority as int,
-          description: description == null ? null : description as String,
-        ),
+      [final code, final priority, final description] => Topics(
+        code: code as String,
+        priority: priority == null ? null : priority as int,
+        description: description == null ? null : description as String,
+      ),
       _ => throw Exception(
-          'Invalid JSON or SQL Row for Topics.fromJson ${obj.runtimeType}'),
+        'Invalid JSON or SQL Row for Topics.fromJson ${obj.runtimeType}',
+      ),
     };
   }
   @override
@@ -199,27 +162,20 @@ class TopicsKeyCode
     with BaseDataClass
     implements SqlUniqueKeyModel<Topics, TopicsUpdate> {
   final String code;
-  const TopicsKeyCode({
-    required this.code,
-  });
+  const TopicsKeyCode({required this.code});
   @override
-  DataClassProps get dataClassProps => DataClassProps('TopicsKeyCode', {
-        'code': code,
-      });
+  DataClassProps get dataClassProps =>
+      DataClassProps('TopicsKeyCode', {'code': code});
   factory TopicsKeyCode.fromJson(Object? obj_) {
     final obj = obj_ is String ? jsonDecode(obj_) : obj_;
     final list = obj is Map
         ? const ['code'].map((f) => obj[f]).toList(growable: false)
         : obj;
     return switch (list) {
-      [
-        final code,
-      ] =>
-        TopicsKeyCode(
-          code: code as String,
-        ),
+      [final code] => TopicsKeyCode(code: code as String),
       _ => throw Exception(
-          'Invalid JSON or SQL Row for TopicsKeyCode.fromJson ${obj.runtimeType}'),
+        'Invalid JSON or SQL Row for TopicsKeyCode.fromJson ${obj.runtimeType}',
+      ),
     };
   }
   @override
@@ -243,19 +199,24 @@ class PostsUpdate with BaseDataClass implements SqlUpdateModel<Posts> {
   });
   @override
   DataClassProps get dataClassProps => DataClassProps('PostsUpdate', {
-        'id': id,
-        'user_id': userId,
-        'title': title,
-        'subtitle': subtitle,
-        'body': body,
-        'created_at': createdAt,
-      });
+    'id': id,
+    'user_id': userId,
+    'title': title,
+    'subtitle': subtitle,
+    'body': body,
+    'created_at': createdAt,
+  });
   factory PostsUpdate.fromJson(Object? obj_) {
     final obj = obj_ is String ? jsonDecode(obj_) : obj_;
     final list = obj is Map
-        ? const ['id', 'user_id', 'title', 'subtitle', 'body', 'created_at']
-            .map((f) => obj[f])
-            .toList(growable: false)
+        ? const [
+            'id',
+            'user_id',
+            'title',
+            'subtitle',
+            'body',
+            'created_at',
+          ].map((f) => obj[f]).toList(growable: false)
         : obj;
     return switch (list) {
       [
@@ -277,11 +238,12 @@ class PostsUpdate with BaseDataClass implements SqlUpdateModel<Posts> {
           createdAt: createdAt == null
               ? null
               : createdAt is int
-                  ? DateTime.fromMicrosecondsSinceEpoch(createdAt)
-                  : DateTime.parse(createdAt as String),
+              ? DateTime.fromMicrosecondsSinceEpoch(createdAt)
+              : DateTime.parse(createdAt as String),
         ),
       _ => throw Exception(
-          'Invalid JSON or SQL Row for PostsUpdate.fromJson ${obj.runtimeType}'),
+        'Invalid JSON or SQL Row for PostsUpdate.fromJson ${obj.runtimeType}',
+      ),
     };
   }
   @override
@@ -305,19 +267,24 @@ class PostsInsert with BaseDataClass implements SqlInsertModel<Posts> {
   });
   @override
   DataClassProps get dataClassProps => DataClassProps('PostsInsert', {
-        'id': id,
-        'user_id': userId,
-        'title': title,
-        'subtitle': subtitle,
-        'body': body,
-        'created_at': createdAt,
-      });
+    'id': id,
+    'user_id': userId,
+    'title': title,
+    'subtitle': subtitle,
+    'body': body,
+    'created_at': createdAt,
+  });
   factory PostsInsert.fromJson(Object? obj_) {
     final obj = obj_ is String ? jsonDecode(obj_) : obj_;
     final list = obj is Map
-        ? const ['id', 'user_id', 'title', 'subtitle', 'body', 'created_at']
-            .map((f) => obj[f])
-            .toList(growable: false)
+        ? const [
+            'id',
+            'user_id',
+            'title',
+            'subtitle',
+            'body',
+            'created_at',
+          ].map((f) => obj[f]).toList(growable: false)
         : obj;
     return switch (list) {
       [
@@ -337,11 +304,12 @@ class PostsInsert with BaseDataClass implements SqlInsertModel<Posts> {
           createdAt: createdAt == null
               ? null
               : createdAt is int
-                  ? DateTime.fromMicrosecondsSinceEpoch(createdAt)
-                  : DateTime.parse(createdAt as String),
+              ? DateTime.fromMicrosecondsSinceEpoch(createdAt)
+              : DateTime.parse(createdAt as String),
         ),
       _ => throw Exception(
-          'Invalid JSON or SQL Row for PostsInsert.fromJson ${obj.runtimeType}'),
+        'Invalid JSON or SQL Row for PostsInsert.fromJson ${obj.runtimeType}',
+      ),
     };
   }
   @override
@@ -365,19 +333,24 @@ class Posts with BaseDataClass implements SqlReturnModel {
   });
   @override
   DataClassProps get dataClassProps => DataClassProps('posts', {
-        'id': id,
-        'user_id': userId,
-        'title': title,
-        'subtitle': subtitle,
-        'body': body,
-        'created_at': createdAt,
-      });
+    'id': id,
+    'user_id': userId,
+    'title': title,
+    'subtitle': subtitle,
+    'body': body,
+    'created_at': createdAt,
+  });
   factory Posts.fromJson(Object? obj_) {
     final obj = obj_ is String ? jsonDecode(obj_) : obj_;
     final list = obj is Map
-        ? const ['id', 'user_id', 'title', 'subtitle', 'body', 'created_at']
-            .map((f) => obj[f])
-            .toList(growable: false)
+        ? const [
+            'id',
+            'user_id',
+            'title',
+            'subtitle',
+            'body',
+            'created_at',
+          ].map((f) => obj[f]).toList(growable: false)
         : obj;
     return switch (list) {
       [
@@ -399,7 +372,8 @@ class Posts with BaseDataClass implements SqlReturnModel {
               : DateTime.parse(createdAt as String),
         ),
       _ => throw Exception(
-          'Invalid JSON or SQL Row for Posts.fromJson ${obj.runtimeType}'),
+        'Invalid JSON or SQL Row for Posts.fromJson ${obj.runtimeType}',
+      ),
     };
   }
   @override
@@ -410,27 +384,19 @@ class PostsKeyId
     with BaseDataClass
     implements SqlUniqueKeyModel<Posts, PostsUpdate> {
   final int id;
-  const PostsKeyId({
-    required this.id,
-  });
+  const PostsKeyId({required this.id});
   @override
-  DataClassProps get dataClassProps => DataClassProps('PostsKeyId', {
-        'id': id,
-      });
+  DataClassProps get dataClassProps => DataClassProps('PostsKeyId', {'id': id});
   factory PostsKeyId.fromJson(Object? obj_) {
     final obj = obj_ is String ? jsonDecode(obj_) : obj_;
     final list = obj is Map
         ? const ['id'].map((f) => obj[f]).toList(growable: false)
         : obj;
     return switch (list) {
-      [
-        final id,
-      ] =>
-        PostsKeyId(
-          id: id as int,
-        ),
+      [final id] => PostsKeyId(id: id as int),
       _ => throw Exception(
-          'Invalid JSON or SQL Row for PostsKeyId.fromJson ${obj.runtimeType}'),
+        'Invalid JSON or SQL Row for PostsKeyId.fromJson ${obj.runtimeType}',
+      ),
     };
   }
   @override
@@ -448,33 +414,28 @@ class PostsTopics
         SqlReturnModel {
   final String? topicCode;
   final int? postId;
-  const PostsTopics({
-    this.topicCode,
-    this.postId,
-  });
+  const PostsTopics({this.topicCode, this.postId});
   @override
   DataClassProps get dataClassProps => DataClassProps('posts_topics', {
-        'topic_code': topicCode,
-        'post_id': postId,
-      });
+    'topic_code': topicCode,
+    'post_id': postId,
+  });
   factory PostsTopics.fromJson(Object? obj_) {
     final obj = obj_ is String ? jsonDecode(obj_) : obj_;
     final list = obj is Map
-        ? const ['topic_code', 'post_id']
-            .map((f) => obj[f])
-            .toList(growable: false)
+        ? const [
+            'topic_code',
+            'post_id',
+          ].map((f) => obj[f]).toList(growable: false)
         : obj;
     return switch (list) {
-      [
-        final topicCode,
-        final postId,
-      ] =>
-        PostsTopics(
-          topicCode: topicCode == null ? null : topicCode as String,
-          postId: postId == null ? null : postId as int,
-        ),
+      [final topicCode, final postId] => PostsTopics(
+        topicCode: topicCode == null ? null : topicCode as String,
+        postId: postId == null ? null : postId as int,
+      ),
       _ => throw Exception(
-          'Invalid JSON or SQL Row for PostsTopics.fromJson ${obj.runtimeType}'),
+        'Invalid JSON or SQL Row for PostsTopics.fromJson ${obj.runtimeType}',
+      ),
     };
   }
   @override
@@ -486,34 +447,28 @@ class PostsTopicsKeyTopicCodePostId
     implements SqlUniqueKeyModel<PostsTopics, PostsTopics> {
   final String? topicCode;
   final int? postId;
-  const PostsTopicsKeyTopicCodePostId({
-    this.topicCode,
-    this.postId,
-  });
+  const PostsTopicsKeyTopicCodePostId({this.topicCode, this.postId});
   @override
-  DataClassProps get dataClassProps =>
-      DataClassProps('PostsTopicsKeyTopicCodePostId', {
-        'topic_code': topicCode,
-        'post_id': postId,
-      });
+  DataClassProps get dataClassProps => DataClassProps(
+    'PostsTopicsKeyTopicCodePostId',
+    {'topic_code': topicCode, 'post_id': postId},
+  );
   factory PostsTopicsKeyTopicCodePostId.fromJson(Object? obj_) {
     final obj = obj_ is String ? jsonDecode(obj_) : obj_;
     final list = obj is Map
-        ? const ['topic_code', 'post_id']
-            .map((f) => obj[f])
-            .toList(growable: false)
+        ? const [
+            'topic_code',
+            'post_id',
+          ].map((f) => obj[f]).toList(growable: false)
         : obj;
     return switch (list) {
-      [
-        final topicCode,
-        final postId,
-      ] =>
-        PostsTopicsKeyTopicCodePostId(
-          topicCode: topicCode == null ? null : topicCode as String,
-          postId: postId == null ? null : postId as int,
-        ),
+      [final topicCode, final postId] => PostsTopicsKeyTopicCodePostId(
+        topicCode: topicCode == null ? null : topicCode as String,
+        postId: postId == null ? null : postId as int,
+      ),
       _ => throw Exception(
-          'Invalid JSON or SQL Row for PostsTopicsKeyTopicCodePostId.fromJson ${obj.runtimeType}'),
+        'Invalid JSON or SQL Row for PostsTopicsKeyTopicCodePostId.fromJson ${obj.runtimeType}',
+      ),
     };
   }
   @override
@@ -541,16 +496,14 @@ class PostsWithTopicsJsonUpdate
   factory PostsWithTopicsJsonUpdate.fromJson(Object? obj_) {
     final obj = obj_ is String ? jsonDecode(obj_) : obj_;
     final list = obj is Map
-        ? const ['posts.id', 'posts.user_id', 'json_value']
-            .map((f) => obj[f])
-            .toList(growable: false)
+        ? const [
+            'posts.id',
+            'posts.user_id',
+            'json_value',
+          ].map((f) => obj[f]).toList(growable: false)
         : obj;
     return switch (list) {
-      [
-        final postsId,
-        final postsUserId,
-        final jsonValue,
-      ] =>
+      [final postsId, final postsUserId, final jsonValue] =>
         PostsWithTopicsJsonUpdate(
           postsId: postsId == null ? null : postsId as int,
           postsUserId: postsUserId == null ? null : postsUserId as int,
@@ -559,7 +512,8 @@ class PostsWithTopicsJsonUpdate
               : PostsWithTopicsJsonUpdateJsonValue.fromJson(jsonValue),
         ),
       _ => throw Exception(
-          'Invalid JSON or SQL Row for PostsWithTopicsJsonUpdate.fromJson ${obj.runtimeType}'),
+        'Invalid JSON or SQL Row for PostsWithTopicsJsonUpdate.fromJson ${obj.runtimeType}',
+      ),
     };
   }
   @override
@@ -604,7 +558,7 @@ class PostsWithTopicsJsonUpdateJsonValue with BaseDataClass {
             'subtitle',
             'body',
             'created_at',
-            'topics'
+            'topics',
           ].map((f) => obj[f]).toList(growable: false)
         : obj;
     return switch (list) {
@@ -631,7 +585,8 @@ class PostsWithTopicsJsonUpdateJsonValue with BaseDataClass {
               .toList(),
         ),
       _ => throw Exception(
-          'Invalid JSON or SQL Row for PostsWithTopicsJsonUpdateJsonValue.fromJson ${obj.runtimeType}'),
+        'Invalid JSON or SQL Row for PostsWithTopicsJsonUpdateJsonValue.fromJson ${obj.runtimeType}',
+      ),
     };
   }
 }
@@ -659,23 +614,22 @@ class PostsWithTopicsJson
   factory PostsWithTopicsJson.fromJson(Object? obj_) {
     final obj = obj_ is String ? jsonDecode(obj_) : obj_;
     final list = obj is Map
-        ? const ['posts.id', 'posts.user_id', 'json_value']
-            .map((f) => obj[f])
-            .toList(growable: false)
+        ? const [
+            'posts.id',
+            'posts.user_id',
+            'json_value',
+          ].map((f) => obj[f]).toList(growable: false)
         : obj;
     return switch (list) {
-      [
-        final postsId,
-        final postsUserId,
-        final jsonValue,
-      ] =>
+      [final postsId, final postsUserId, final jsonValue] =>
         PostsWithTopicsJson(
           postsId: postsId as int,
           postsUserId: postsUserId as int,
           jsonValue: PostsWithTopicsJsonJsonValue.fromJson(jsonValue),
         ),
       _ => throw Exception(
-          'Invalid JSON or SQL Row for PostsWithTopicsJson.fromJson ${obj.runtimeType}'),
+        'Invalid JSON or SQL Row for PostsWithTopicsJson.fromJson ${obj.runtimeType}',
+      ),
     };
   }
   @override
@@ -720,7 +674,7 @@ class PostsWithTopicsJsonJsonValue with BaseDataClass {
             'subtitle',
             'body',
             'created_at',
-            'topics'
+            'topics',
           ].map((f) => obj[f]).toList(growable: false)
         : obj;
     return switch (list) {
@@ -747,7 +701,8 @@ class PostsWithTopicsJsonJsonValue with BaseDataClass {
               .toList(),
         ),
       _ => throw Exception(
-          'Invalid JSON or SQL Row for PostsWithTopicsJsonJsonValue.fromJson ${obj.runtimeType}'),
+        'Invalid JSON or SQL Row for PostsWithTopicsJsonJsonValue.fromJson ${obj.runtimeType}',
+      ),
     };
   }
 }
@@ -755,33 +710,28 @@ class PostsWithTopicsJsonJsonValue with BaseDataClass {
 class QuerySelectUsers1 with BaseDataClass {
   final int usersId;
   final String usersName;
-  const QuerySelectUsers1({
-    required this.usersId,
-    required this.usersName,
-  });
+  const QuerySelectUsers1({required this.usersId, required this.usersName});
   @override
   DataClassProps get dataClassProps => DataClassProps('QuerySelectUsers1', {
-        'users.id': usersId,
-        'users.name': usersName,
-      });
+    'users.id': usersId,
+    'users.name': usersName,
+  });
   factory QuerySelectUsers1.fromJson(Object? obj_) {
     final obj = obj_ is String ? jsonDecode(obj_) : obj_;
     final list = obj is Map
-        ? const ['users.id', 'users.name']
-            .map((f) => obj[f])
-            .toList(growable: false)
+        ? const [
+            'users.id',
+            'users.name',
+          ].map((f) => obj[f]).toList(growable: false)
         : obj;
     return switch (list) {
-      [
-        final usersId,
-        final usersName,
-      ] =>
-        QuerySelectUsers1(
-          usersId: usersId as int,
-          usersName: usersName as String,
-        ),
+      [final usersId, final usersName] => QuerySelectUsers1(
+        usersId: usersId as int,
+        usersName: usersName as String,
+      ),
       _ => throw Exception(
-          'Invalid JSON or SQL Row for QuerySelectUsers1.fromJson ${obj.runtimeType}'),
+        'Invalid JSON or SQL Row for QuerySelectUsers1.fromJson ${obj.runtimeType}',
+      ),
     };
   }
 }
@@ -789,87 +739,68 @@ class QuerySelectUsers1 with BaseDataClass {
 class QuerySelectUsers2 with BaseDataClass {
   final int usersId;
   final String usersName;
-  const QuerySelectUsers2({
-    required this.usersId,
-    required this.usersName,
-  });
+  const QuerySelectUsers2({required this.usersId, required this.usersName});
   @override
   DataClassProps get dataClassProps => DataClassProps('QuerySelectUsers2', {
-        'users.id': usersId,
-        'users.name': usersName,
-      });
+    'users.id': usersId,
+    'users.name': usersName,
+  });
   factory QuerySelectUsers2.fromJson(Object? obj_) {
     final obj = obj_ is String ? jsonDecode(obj_) : obj_;
     final list = obj is Map
-        ? const ['users.id', 'users.name']
-            .map((f) => obj[f])
-            .toList(growable: false)
+        ? const [
+            'users.id',
+            'users.name',
+          ].map((f) => obj[f]).toList(growable: false)
         : obj;
     return switch (list) {
-      [
-        final usersId,
-        final usersName,
-      ] =>
-        QuerySelectUsers2(
-          usersId: usersId as int,
-          usersName: usersName as String,
-        ),
+      [final usersId, final usersName] => QuerySelectUsers2(
+        usersId: usersId as int,
+        usersName: usersName as String,
+      ),
       _ => throw Exception(
-          'Invalid JSON or SQL Row for QuerySelectUsers2.fromJson ${obj.runtimeType}'),
+        'Invalid JSON or SQL Row for QuerySelectUsers2.fromJson ${obj.runtimeType}',
+      ),
     };
   }
 }
 
 class QuerySelectUsers2Args with BaseDataClass {
   final int minId;
-  const QuerySelectUsers2Args({
-    required this.minId,
-  });
+  const QuerySelectUsers2Args({required this.minId});
   @override
-  DataClassProps get dataClassProps => DataClassProps('QuerySelectUsers2Args', {
-        'minId': minId,
-      });
+  DataClassProps get dataClassProps =>
+      DataClassProps('QuerySelectUsers2Args', {'minId': minId});
   factory QuerySelectUsers2Args.fromJson(Object? obj_) {
     final obj = obj_ is String ? jsonDecode(obj_) : obj_;
     final list = obj is Map
         ? const ['minId'].map((f) => obj[f]).toList(growable: false)
         : obj;
     return switch (list) {
-      [
-        final minId,
-      ] =>
-        QuerySelectUsers2Args(
-          minId: minId as int,
-        ),
+      [final minId] => QuerySelectUsers2Args(minId: minId as int),
       _ => throw Exception(
-          'Invalid JSON or SQL Row for QuerySelectUsers2Args.fromJson ${obj.runtimeType}'),
+        'Invalid JSON or SQL Row for QuerySelectUsers2Args.fromJson ${obj.runtimeType}',
+      ),
     };
   }
 }
 
 class InsertUsers1Args with BaseDataClass {
   final String c;
-  const InsertUsers1Args({
-    required this.c,
-  });
+  const InsertUsers1Args({required this.c});
   @override
-  DataClassProps get dataClassProps => DataClassProps('InsertUsers1Args', {
-        'c': c,
-      });
+  DataClassProps get dataClassProps =>
+      DataClassProps('InsertUsers1Args', {'c': c});
   factory InsertUsers1Args.fromJson(Object? obj_) {
     final obj = obj_ is String ? jsonDecode(obj_) : obj_;
     final list = obj is Map
         ? const ['c'].map((f) => obj[f]).toList(growable: false)
         : obj;
     return switch (list) {
-      [
-        final c,
-      ] =>
-        InsertUsers1Args(
-          c: c as String,
-        ),
+      [final c] => InsertUsers1Args(c: c as String),
       _ => throw Exception(
-          'Invalid JSON or SQL Row for InsertUsers1Args.fromJson ${obj.runtimeType}'),
+        'Invalid JSON or SQL Row for InsertUsers1Args.fromJson ${obj.runtimeType}',
+      ),
     };
   }
 }
@@ -877,33 +808,28 @@ class InsertUsers1Args with BaseDataClass {
 class UpdateUserName with BaseDataClass {
   final int usersId;
   final String usersName;
-  const UpdateUserName({
-    required this.usersId,
-    required this.usersName,
-  });
+  const UpdateUserName({required this.usersId, required this.usersName});
   @override
   DataClassProps get dataClassProps => DataClassProps('UpdateUserName', {
-        'users.id': usersId,
-        'users.name': usersName,
-      });
+    'users.id': usersId,
+    'users.name': usersName,
+  });
   factory UpdateUserName.fromJson(Object? obj_) {
     final obj = obj_ is String ? jsonDecode(obj_) : obj_;
     final list = obj is Map
-        ? const ['users.id', 'users.name']
-            .map((f) => obj[f])
-            .toList(growable: false)
+        ? const [
+            'users.id',
+            'users.name',
+          ].map((f) => obj[f]).toList(growable: false)
         : obj;
     return switch (list) {
-      [
-        final usersId,
-        final usersName,
-      ] =>
-        UpdateUserName(
-          usersId: usersId as int,
-          usersName: usersName as String,
-        ),
+      [final usersId, final usersName] => UpdateUserName(
+        usersId: usersId as int,
+        usersName: usersName as String,
+      ),
       _ => throw Exception(
-          'Invalid JSON or SQL Row for UpdateUserName.fromJson ${obj.runtimeType}'),
+        'Invalid JSON or SQL Row for UpdateUserName.fromJson ${obj.runtimeType}',
+      ),
     };
   }
 }
@@ -911,58 +837,45 @@ class UpdateUserName with BaseDataClass {
 class UpdateUserNameArgs with BaseDataClass {
   final String name;
   final int id;
-  const UpdateUserNameArgs({
-    required this.name,
-    required this.id,
-  });
+  const UpdateUserNameArgs({required this.name, required this.id});
   @override
-  DataClassProps get dataClassProps => DataClassProps('UpdateUserNameArgs', {
-        'name': name,
-        'id': id,
-      });
+  DataClassProps get dataClassProps =>
+      DataClassProps('UpdateUserNameArgs', {'name': name, 'id': id});
   factory UpdateUserNameArgs.fromJson(Object? obj_) {
     final obj = obj_ is String ? jsonDecode(obj_) : obj_;
     final list = obj is Map
         ? const ['name', 'id'].map((f) => obj[f]).toList(growable: false)
         : obj;
     return switch (list) {
-      [
-        final name,
-        final id,
-      ] =>
-        UpdateUserNameArgs(
-          name: name as String,
-          id: id as int,
-        ),
+      [final name, final id] => UpdateUserNameArgs(
+        name: name as String,
+        id: id as int,
+      ),
       _ => throw Exception(
-          'Invalid JSON or SQL Row for UpdateUserNameArgs.fromJson ${obj.runtimeType}'),
+        'Invalid JSON or SQL Row for UpdateUserNameArgs.fromJson ${obj.runtimeType}',
+      ),
     };
   }
 }
 
 class DeleteUsersByIdArgs with BaseDataClass {
   final List<dynamic> ids;
-  const DeleteUsersByIdArgs({
-    required this.ids,
-  });
+  const DeleteUsersByIdArgs({required this.ids});
   @override
-  DataClassProps get dataClassProps => DataClassProps('DeleteUsersByIdArgs', {
-        'ids': ids,
-      });
+  DataClassProps get dataClassProps =>
+      DataClassProps('DeleteUsersByIdArgs', {'ids': ids});
   factory DeleteUsersByIdArgs.fromJson(Object? obj_) {
     final obj = obj_ is String ? jsonDecode(obj_) : obj_;
     final list = obj is Map
         ? const ['ids'].map((f) => obj[f]).toList(growable: false)
         : obj;
     return switch (list) {
-      [
-        final ids,
-      ] =>
-        DeleteUsersByIdArgs(
-          ids: (ids as Iterable).map((item) => item).toList(),
-        ),
+      [final ids] => DeleteUsersByIdArgs(
+        ids: (ids as Iterable).map((item) => item).toList(),
+      ),
       _ => throw Exception(
-          'Invalid JSON or SQL Row for DeleteUsersByIdArgs.fromJson ${obj.runtimeType}'),
+        'Invalid JSON or SQL Row for DeleteUsersByIdArgs.fromJson ${obj.runtimeType}',
+      ),
     };
   }
 }
@@ -990,16 +903,16 @@ class QuerySelectUsers3 with BaseDataClass {
   });
   @override
   DataClassProps get dataClassProps => DataClassProps('QuerySelectUsers3', {
-        'users.id': usersId,
-        'user_name': userName,
-        'pt.topic_code': ptTopicCode,
-        'posts.id': postsId,
-        'posts.user_id': postsUserId,
-        'posts.title': postsTitle,
-        'posts.subtitle': postsSubtitle,
-        'posts.body': postsBody,
-        'posts.created_at': postsCreatedAt,
-      });
+    'users.id': usersId,
+    'user_name': userName,
+    'pt.topic_code': ptTopicCode,
+    'posts.id': postsId,
+    'posts.user_id': postsUserId,
+    'posts.title': postsTitle,
+    'posts.subtitle': postsSubtitle,
+    'posts.body': postsBody,
+    'posts.created_at': postsCreatedAt,
+  });
   factory QuerySelectUsers3.fromJson(Object? obj_) {
     final obj = obj_ is String ? jsonDecode(obj_) : obj_;
     final list = obj is Map
@@ -1012,7 +925,7 @@ class QuerySelectUsers3 with BaseDataClass {
             'posts.title',
             'posts.subtitle',
             'posts.body',
-            'posts.created_at'
+            'posts.created_at',
           ].map((f) => obj[f]).toList(growable: false)
         : obj;
     return switch (list) {
@@ -1041,7 +954,8 @@ class QuerySelectUsers3 with BaseDataClass {
               : DateTime.parse(postsCreatedAt as String),
         ),
       _ => throw Exception(
-          'Invalid JSON or SQL Row for QuerySelectUsers3.fromJson ${obj.runtimeType}'),
+        'Invalid JSON or SQL Row for QuerySelectUsers3.fromJson ${obj.runtimeType}',
+      ),
     };
   }
 }
@@ -1057,32 +971,30 @@ class UsersWithPosts with BaseDataClass {
   });
   @override
   DataClassProps get dataClassProps => DataClassProps('UsersWithPosts', {
-        'users.id': usersId,
-        'user_name': userName,
-        'posts': posts,
-      });
+    'users.id': usersId,
+    'user_name': userName,
+    'posts': posts,
+  });
   factory UsersWithPosts.fromJson(Object? obj_) {
     final obj = obj_ is String ? jsonDecode(obj_) : obj_;
     final list = obj is Map
-        ? const ['users.id', 'user_name', 'posts']
-            .map((f) => obj[f])
-            .toList(growable: false)
+        ? const [
+            'users.id',
+            'user_name',
+            'posts',
+          ].map((f) => obj[f]).toList(growable: false)
         : obj;
     return switch (list) {
-      [
-        final usersId,
-        final userName,
-        final posts,
-      ] =>
-        UsersWithPosts(
-          usersId: usersId as int,
-          userName: userName as String,
-          posts: (posts as Iterable)
-              .map((item) => UsersWithPostsPostsItem.fromJson(item))
-              .toList(),
-        ),
+      [final usersId, final userName, final posts] => UsersWithPosts(
+        usersId: usersId as int,
+        userName: userName as String,
+        posts: (posts as Iterable)
+            .map((item) => UsersWithPostsPostsItem.fromJson(item))
+            .toList(),
+      ),
       _ => throw Exception(
-          'Invalid JSON or SQL Row for UsersWithPosts.fromJson ${obj.runtimeType}'),
+        'Invalid JSON or SQL Row for UsersWithPosts.fromJson ${obj.runtimeType}',
+      ),
     };
   }
 }
@@ -1125,7 +1037,7 @@ class UsersWithPostsPostsItem with BaseDataClass {
             'subtitle',
             'body',
             'created_at',
-            'topics'
+            'topics',
           ].map((f) => obj[f]).toList(growable: false)
         : obj;
     return switch (list) {
@@ -1152,7 +1064,8 @@ class UsersWithPostsPostsItem with BaseDataClass {
               .toList(),
         ),
       _ => throw Exception(
-          'Invalid JSON or SQL Row for UsersWithPostsPostsItem.fromJson ${obj.runtimeType}'),
+        'Invalid JSON or SQL Row for UsersWithPostsPostsItem.fromJson ${obj.runtimeType}',
+      ),
     };
   }
 }
@@ -1168,32 +1081,30 @@ class UsersWithPostsJSON with BaseDataClass {
   });
   @override
   DataClassProps get dataClassProps => DataClassProps('UsersWithPostsJSON', {
-        'users.id': usersId,
-        'user_name': userName,
-        'posts': posts,
-      });
+    'users.id': usersId,
+    'user_name': userName,
+    'posts': posts,
+  });
   factory UsersWithPostsJSON.fromJson(Object? obj_) {
     final obj = obj_ is String ? jsonDecode(obj_) : obj_;
     final list = obj is Map
-        ? const ['users.id', 'user_name', 'posts']
-            .map((f) => obj[f])
-            .toList(growable: false)
+        ? const [
+            'users.id',
+            'user_name',
+            'posts',
+          ].map((f) => obj[f]).toList(growable: false)
         : obj;
     return switch (list) {
-      [
-        final usersId,
-        final userName,
-        final posts,
-      ] =>
-        UsersWithPostsJSON(
-          usersId: usersId as int,
-          userName: userName as String,
-          posts: (posts as Iterable)
-              .map((item) => UsersWithPostsJSONPostsItem.fromJson(item))
-              .toList(),
-        ),
+      [final usersId, final userName, final posts] => UsersWithPostsJSON(
+        usersId: usersId as int,
+        userName: userName as String,
+        posts: (posts as Iterable)
+            .map((item) => UsersWithPostsJSONPostsItem.fromJson(item))
+            .toList(),
+      ),
       _ => throw Exception(
-          'Invalid JSON or SQL Row for UsersWithPostsJSON.fromJson ${obj.runtimeType}'),
+        'Invalid JSON or SQL Row for UsersWithPostsJSON.fromJson ${obj.runtimeType}',
+      ),
     };
   }
 }
@@ -1236,7 +1147,7 @@ class UsersWithPostsJSONPostsItem with BaseDataClass {
             'subtitle',
             'body',
             'created_at',
-            'topics'
+            'topics',
           ].map((f) => obj[f]).toList(growable: false)
         : obj;
     return switch (list) {
@@ -1263,7 +1174,8 @@ class UsersWithPostsJSONPostsItem with BaseDataClass {
               .toList(),
         ),
       _ => throw Exception(
-          'Invalid JSON or SQL Row for UsersWithPostsJSONPostsItem.fromJson ${obj.runtimeType}'),
+        'Invalid JSON or SQL Row for UsersWithPostsJSONPostsItem.fromJson ${obj.runtimeType}',
+      ),
     };
   }
 }
@@ -1271,58 +1183,43 @@ class UsersWithPostsJSONPostsItem with BaseDataClass {
 class DeleteUsers1 with BaseDataClass {
   final int id;
   final String name;
-  const DeleteUsers1({
-    required this.id,
-    required this.name,
-  });
+  const DeleteUsers1({required this.id, required this.name});
   @override
-  DataClassProps get dataClassProps => DataClassProps('DeleteUsers1', {
-        'id': id,
-        'name': name,
-      });
+  DataClassProps get dataClassProps =>
+      DataClassProps('DeleteUsers1', {'id': id, 'name': name});
   factory DeleteUsers1.fromJson(Object? obj_) {
     final obj = obj_ is String ? jsonDecode(obj_) : obj_;
     final list = obj is Map
         ? const ['id', 'name'].map((f) => obj[f]).toList(growable: false)
         : obj;
     return switch (list) {
-      [
-        final id,
-        final name,
-      ] =>
-        DeleteUsers1(
-          id: id as int,
-          name: name as String,
-        ),
+      [final id, final name] => DeleteUsers1(
+        id: id as int,
+        name: name as String,
+      ),
       _ => throw Exception(
-          'Invalid JSON or SQL Row for DeleteUsers1.fromJson ${obj.runtimeType}'),
+        'Invalid JSON or SQL Row for DeleteUsers1.fromJson ${obj.runtimeType}',
+      ),
     };
   }
 }
 
 class DeleteUsers1Args with BaseDataClass {
   final int arg0;
-  const DeleteUsers1Args({
-    required this.arg0,
-  });
+  const DeleteUsers1Args({required this.arg0});
   @override
-  DataClassProps get dataClassProps => DataClassProps('DeleteUsers1Args', {
-        'arg0': arg0,
-      });
+  DataClassProps get dataClassProps =>
+      DataClassProps('DeleteUsers1Args', {'arg0': arg0});
   factory DeleteUsers1Args.fromJson(Object? obj_) {
     final obj = obj_ is String ? jsonDecode(obj_) : obj_;
     final list = obj is Map
         ? const ['arg0'].map((f) => obj[f]).toList(growable: false)
         : obj;
     return switch (list) {
-      [
-        final arg0,
-      ] =>
-        DeleteUsers1Args(
-          arg0: arg0 as int,
-        ),
+      [final arg0] => DeleteUsers1Args(arg0: arg0 as int),
       _ => throw Exception(
-          'Invalid JSON or SQL Row for DeleteUsers1Args.fromJson ${obj.runtimeType}'),
+        'Invalid JSON or SQL Row for DeleteUsers1Args.fromJson ${obj.runtimeType}',
+      ),
     };
   }
 }
@@ -1332,63 +1229,52 @@ class ExampleQueries {
   final SqlTypedExecutor typedExecutor;
 
   ExampleQueries(this.executor)
-      : typedExecutor = SqlTypedExecutor(executor, types: tableSpecs);
+    : typedExecutor = SqlTypedExecutor(executor, types: tableSpecs);
 
   static const Map<Type, SqlTypeData> tableSpecs = {
-    Users: SqlTypeData<Users, UsersUpdate>.value(
-        'users',
-        [
-          (name: 'id', type: BTypeInteger(), hasDefault: false),
-          (name: 'name', type: BTypeString(), hasDefault: false)
-        ],
-        Users.fromJson),
-    Topics: SqlTypeData<Topics, TopicsUpdate>.value(
-        'topics',
-        [
-          (name: 'code', type: BTypeString(), hasDefault: false),
-          (name: 'priority', type: BTypeInteger(), hasDefault: true),
-          (name: 'description', type: BTypeString(), hasDefault: false)
-        ],
-        Topics.fromJson),
-    Posts: SqlTypeData<Posts, PostsUpdate>.value(
-        'posts',
-        [
-          (name: 'id', type: BTypeInteger(), hasDefault: false),
-          (name: 'user_id', type: BTypeInteger(), hasDefault: false),
-          (name: 'title', type: BTypeString(), hasDefault: false),
-          (name: 'subtitle', type: BTypeString(), hasDefault: false),
-          (name: 'body', type: BTypeString(), hasDefault: false),
-          (name: 'created_at', type: BTypeDateTime(), hasDefault: true)
-        ],
-        Posts.fromJson),
-    PostsTopics: SqlTypeData<PostsTopics, PostsTopics>.value(
-        'posts_topics',
-        [
-          (name: 'topic_code', type: BTypeString(), hasDefault: false),
-          (name: 'post_id', type: BTypeInteger(), hasDefault: false)
-        ],
-        PostsTopics.fromJson),
+    Users: SqlTypeData<Users, UsersUpdate>.value('users', [
+      (name: 'id', type: BTypeInteger(), hasDefault: false),
+      (name: 'name', type: BTypeString(), hasDefault: false),
+    ], Users.fromJson),
+    Topics: SqlTypeData<Topics, TopicsUpdate>.value('topics', [
+      (name: 'code', type: BTypeString(), hasDefault: false),
+      (name: 'priority', type: BTypeInteger(), hasDefault: true),
+      (name: 'description', type: BTypeString(), hasDefault: false),
+    ], Topics.fromJson),
+    Posts: SqlTypeData<Posts, PostsUpdate>.value('posts', [
+      (name: 'id', type: BTypeInteger(), hasDefault: false),
+      (name: 'user_id', type: BTypeInteger(), hasDefault: false),
+      (name: 'title', type: BTypeString(), hasDefault: false),
+      (name: 'subtitle', type: BTypeString(), hasDefault: false),
+      (name: 'body', type: BTypeString(), hasDefault: false),
+      (name: 'created_at', type: BTypeDateTime(), hasDefault: true),
+    ], Posts.fromJson),
+    PostsTopics: SqlTypeData<PostsTopics, PostsTopics>.value('posts_topics', [
+      (name: 'topic_code', type: BTypeString(), hasDefault: false),
+      (name: 'post_id', type: BTypeInteger(), hasDefault: false),
+    ], PostsTopics.fromJson),
     PostsWithTopicsJson:
         SqlTypeData<PostsWithTopicsJson, PostsWithTopicsJsonUpdate>.value(
-            'posts_with_topics_json',
-            [
-              (name: 'posts.id', type: BTypeInteger(), hasDefault: false),
-              (name: 'posts.user_id', type: BTypeInteger(), hasDefault: false),
-              (
-                name: 'json_value',
-                type: BTypeJsonObject({
-                  'id': BTypeInteger(),
-                  'user_id': BTypeInteger(),
-                  'title': BTypeString(),
-                  'subtitle': BTypeNullable(BTypeString()),
-                  'body': BTypeString(),
-                  'created_at': BTypeDateTime(),
-                  'topics': BTypeJsonArray(BTypeNullable(BTypeString()))
-                }),
-                hasDefault: false
-              )
-            ],
-            PostsWithTopicsJson.fromJson),
+          'posts_with_topics_json',
+          [
+            (name: 'posts.id', type: BTypeInteger(), hasDefault: false),
+            (name: 'posts.user_id', type: BTypeInteger(), hasDefault: false),
+            (
+              name: 'json_value',
+              type: BTypeJsonObject({
+                'id': BTypeInteger(),
+                'user_id': BTypeInteger(),
+                'title': BTypeString(),
+                'subtitle': BTypeNullable(BTypeString()),
+                'body': BTypeString(),
+                'created_at': BTypeDateTime(),
+                'topics': BTypeJsonArray(BTypeNullable(BTypeString())),
+              }),
+              hasDefault: false,
+            ),
+          ],
+          PostsWithTopicsJson.fromJson,
+        ),
   };
   late final SqlTypedController<Users, UsersUpdate> usersController =
       SqlTypedController(typedExecutor);
@@ -1397,9 +1283,9 @@ class ExampleQueries {
   late final SqlTypedController<Posts, PostsUpdate> postsController =
       SqlTypedController(typedExecutor);
   late final SqlTypedController<PostsTopics, PostsTopics>
-      postsTopicsController = SqlTypedController(typedExecutor);
+  postsTopicsController = SqlTypedController(typedExecutor);
   late final SqlTypedController<PostsWithTopicsJson, PostsWithTopicsJsonUpdate>
-      postsWithTopicsJsonController = SqlTypedController(typedExecutor);
+  postsWithTopicsJsonController = SqlTypedController(typedExecutor);
   Future<SqlExecution> createTableUsers() async {
     final result = await executor.execute('''-- 
 CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT NOT NULL)''');
@@ -1415,39 +1301,52 @@ FROM users''');
   }
 
   Future<List<QuerySelectUsers2>> querySelectUsers2(
-      QuerySelectUsers2Args args) async {
-    final result = await executor.query('''
+    QuerySelectUsers2Args args,
+  ) async {
+    final result = await executor.query(
+      '''
 -- 
 SELECT *
 FROM users
-WHERE users.id >= :minId''', [args.minId]);
+WHERE users.id >= :minId''',
+      [args.minId],
+    );
     return result.map(QuerySelectUsers2.fromJson).toList();
   }
 
   Future<SqlExecution> insertUsers1(InsertUsers1Args args) async {
-    final result = await executor.execute('''
+    final result = await executor.execute(
+      '''
 -- 
 INSERT INTO users(id, name)
 VALUES (1, 'name1'),
-    (2, :c)''', [args.c]);
+    (2, :c)''',
+      [args.c],
+    );
     return result;
   }
 
   Future<List<UpdateUserName>> updateUserName(UpdateUserNameArgs args) async {
-    final result = await executor.query('''
+    final result = await executor.query(
+      '''
 -- {"name":"updateUserName"}
 UPDATE users
 SET name = :name
 WHERE :id = id
-RETURNING *''', [args.name, args.id]);
+RETURNING *''',
+      [args.name, args.id],
+    );
     return result.map(UpdateUserName.fromJson).toList();
   }
 
   Future<SqlExecution> deleteUsersById(DeleteUsersByIdArgs args) async {
-    final result = await executor.execute('''
+    final result = await executor.execute(
+      '''
 -- {"name":"deleteUsersById"}
 DELETE FROM users
-WHERE id IN (:ids)''', [args.ids]);
+WHERE id IN (:ids)''',
+      [args.ids],
+    );
     return result;
   }
 
@@ -1574,9 +1473,12 @@ GROUP BY posts.id''');
   }
 
   Future<List<DeleteUsers1>> deleteUsers1(DeleteUsers1Args args) async {
-    final result = await executor.query('''
+    final result = await executor.query(
+      '''
 --
-DELETE FROM users WHERE (id = ?) RETURNING id,name''', [args.arg0]);
+DELETE FROM users WHERE (id = ?) RETURNING id,name''',
+      [args.arg0],
+    );
     return result.map(DeleteUsers1.fromJson).toList();
   }
 

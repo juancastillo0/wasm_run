@@ -1,37 +1,25 @@
 import 'dart:typed_data';
 
 import 'package:meta/meta.dart';
-import 'package:wasm_run/src/bridge_generated.dart'
-    show
-        EnvVariable,
-        ExternalType,
-        GlobalTy,
-        MemoryTy,
-        PreopenedDir,
-        SharedMemoryWaitResult,
-        TableTy,
-        U8Array16,
-        ValueTy,
-        WasiConfigNative;
 import 'package:wasm_run/src/int64_bigint/int64_bigint.dart';
+import 'package:wasm_run/src/rust/atomics.dart' show SharedMemoryWaitResult;
+import 'package:wasm_run/src/rust/config.dart'
+    show EnvVariable, PreopenedDir, WasiConfigNative;
+import 'package:wasm_run/src/rust/lib.dart' show U8Array16;
+import 'package:wasm_run/src/rust/types.dart'
+    show ExternalType, GlobalTy, MemoryTy, TableTy, ValueTy;
 import 'package:wasm_run/src/wasm_bindings/_wasm_interop_stub.dart'
     if (dart.library.io) '_wasm_interop_native.dart'
-    if (dart.library.html) '_wasm_interop_web.dart' show isVoidReturn;
+    if (dart.library.html) '_wasm_interop_web.dart'
+    show isVoidReturn;
 
-export 'package:wasm_run/src/bridge_generated.dart'
-    show
-        EnvVariable,
-        ExternalType,
-        FuncTy,
-        GlobalTy,
-        MemoryTy,
-        PreopenedDir,
-        SharedMemoryWaitResult,
-        TableTy,
-        U8Array16,
-        ValueTy,
-        WasmFeatures;
 export 'package:wasm_run/src/int64_bigint/int64_bigint.dart';
+export 'package:wasm_run/src/rust/atomics.dart' show SharedMemoryWaitResult;
+export 'package:wasm_run/src/rust/config.dart'
+    show EnvVariable, PreopenedDir, WasmFeatures;
+export 'package:wasm_run/src/rust/lib.dart' show U8Array16;
+export 'package:wasm_run/src/rust/types.dart'
+    show ExternalType, FuncTy, GlobalTy, MemoryTy, TableTy, ValueTy;
 
 /// A compiled WASM module.
 /// You may introspect it by using [getImports] and [getExports].
@@ -452,6 +440,7 @@ class WasmFunction extends WasmExternal {
     required this.results,
     this.name,
     List<Object?> Function([List<Object?>? args])? call,
+    this.jsFunction,
   }) : _call = call;
 
   /// Constructs a Wasm function with no results.
@@ -460,8 +449,9 @@ class WasmFunction extends WasmExternal {
     required this.params,
     this.name,
     List<Object?> Function([List<Object?>? args])? call,
-  })  : results = const [],
-        _call = call;
+  }) : results = const [],
+       _call = call,
+       jsFunction = null;
 
   /// Optional name for debugging purposes.
   final String? name;
@@ -488,12 +478,17 @@ class WasmFunction extends WasmExternal {
   /// not be cast to a [List].
   final Function inner;
 
+  /// The [js_interop.JSFunction] that is called internally.
+  /// Saved for maintaining the same reference with JS.
+  /// // TODO(migrationv1): validate whether this is necessary
+  final Object? jsFunction;
+
   final List<Object?> Function([List<Object?>? args])? _call;
 
   /// Invokes [inner] with the given [args]
   /// and casts the result to a [List] of Dart values.
   List<Object?> call([List<Object?>? args]) {
-    if (_call != null) return _call!(args);
+    if (_call != null) return _call(args);
 
     // `?? const []` is required for dart2js
     final values = Function.apply(inner, args ?? const []);
@@ -561,11 +556,11 @@ abstract class WasmExternal {
 
   /// The kind of this [WasmExternal].
   WasmExternalKind get kind => when(
-        memory: (_) => WasmExternalKind.memory,
-        table: (_) => WasmExternalKind.table,
-        global: (_) => WasmExternalKind.global,
-        function: (_) => WasmExternalKind.function,
-      );
+    memory: (_) => WasmExternalKind.memory,
+    table: (_) => WasmExternalKind.table,
+    global: (_) => WasmExternalKind.global,
+    function: (_) => WasmExternalKind.function,
+  );
 }
 
 /// A WASM import that can be used in [WasmInstanceBuilder.addImports]
@@ -595,7 +590,7 @@ class WasmValue {
   ///
   /// Cloud be an:
   /// - [int] for [ValueTy.i32]
-  /// - [I64] ([int] or JS browser's `BigInt`) for [ValueTy.i64]
+  /// - [I64] ([int] or [js_interop.JSBigInt]) for [ValueTy.i64]
   /// - [double] for [ValueTy.f32]
   /// - [double] for [ValueTy.f64]
   /// - [U8Array16] for [ValueTy.v128]
@@ -608,45 +603,30 @@ class WasmValue {
   final ValueTy type;
 
   /// Value of 32-bit signed or unsigned integer.
-  const WasmValue.i32(
-    int this.value,
-  ) : type = ValueTy.i32;
+  const WasmValue.i32(int this.value) : type = ValueTy.i32;
 
   /// Value of 64-bit signed or unsigned integer.
-  WasmValue.i64BigInt(
-    BigInt value,
-  )   : value = i64.fromBigInt(value),
-        type = ValueTy.i64;
+  WasmValue.i64BigInt(BigInt value)
+    : value = i64.fromBigInt(value),
+      type = ValueTy.i64;
 
   /// Value of 64-bit signed or unsigned integer.
-  WasmValue.i64(int value)
-      : value = i64.fromInt(value),
-        type = ValueTy.i64;
+  WasmValue.i64(int value) : value = i64.fromInt(value), type = ValueTy.i64;
 
   /// Value of 32-bit IEEE 754-2008 floating point number.
-  const WasmValue.f32(
-    double this.value,
-  ) : type = ValueTy.f32;
+  const WasmValue.f32(double this.value) : type = ValueTy.f32;
 
   /// Value of 64-bit IEEE 754-2008 floating point number.
-  const WasmValue.f64(
-    double this.value,
-  ) : type = ValueTy.f64;
+  const WasmValue.f64(double this.value) : type = ValueTy.f64;
 
   /// A 128 bit number.
-  const WasmValue.v128(
-    U8Array16 this.value,
-  ) : type = ValueTy.v128;
+  const WasmValue.v128(U8Array16 this.value) : type = ValueTy.v128;
 
   /// A nullable function reference.
-  const factory WasmValue.funcRef(
-    WasmFunction? value,
-  ) = WasmValueRef.funcRef;
+  const factory WasmValue.funcRef(WasmFunction? value) = WasmValueRef.funcRef;
 
   /// A nullable external object reference.
-  const factory WasmValue.externRef(
-    Object? value,
-  ) = WasmValueRef.externRef;
+  const factory WasmValue.externRef(Object? value) = WasmValueRef.externRef;
 
   @override
   String toString() => 'WasmValue($value, $type)';
@@ -680,14 +660,10 @@ class WasmValueRef implements WasmValue {
   final ValueTy type;
 
   /// A nullable function reference.
-  const WasmValueRef.funcRef(
-    WasmFunction? this.value,
-  ) : type = ValueTy.funcRef;
+  const WasmValueRef.funcRef(WasmFunction? this.value) : type = ValueTy.funcRef;
 
   /// A nullable external object reference.
-  const WasmValueRef.externRef(
-    this.value,
-  ) : type = ValueTy.externRef;
+  const WasmValueRef.externRef(this.value) : type = ValueTy.externRef;
 }
 
 /// Returns the fuel that can be used to limit the amount of
@@ -728,12 +704,7 @@ class WasmModuleImport {
   final ExternalType? type;
 
   /// [WasmModule] import entry.
-  const WasmModuleImport(
-    this.module,
-    this.name,
-    this.kind, {
-    this.type,
-  });
+  const WasmModuleImport(this.module, this.name, this.kind, {this.type});
 
   @override
   String toString() => 'WasmModuleImport($module, $name, $kind)';
@@ -751,11 +722,7 @@ class WasmModuleExport {
   final ExternalType? type;
 
   /// [WasmModule] exports entry.
-  const WasmModuleExport(
-    this.name,
-    this.kind, {
-    this.type,
-  });
+  const WasmModuleExport(this.name, this.kind, {this.type});
 
   @override
   String toString() => 'WasmModuleExport($name, $kind)';
@@ -773,7 +740,7 @@ enum WasmExternalKind {
   memory,
 
   /// [WasmTable]
-  table
+  table,
 }
 
 // TODO: https://developer.mozilla.org/en-US/docs/WebAssembly/JavaScript_interface/Global/Global

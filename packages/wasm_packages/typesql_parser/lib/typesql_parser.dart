@@ -19,7 +19,7 @@ Future<TypesqlParserWorld> createTypesqlParser({
   Future<WasmModule> Function()? loadModule,
   WorkersConfig? workersConfig,
 }) async {
-  await WasmRunLibrary.setUp(override: false);
+  await WasmRunLibrary.setUp();
 
   final WasmModule module;
   if (loadModule != null) {
@@ -33,9 +33,7 @@ Future<TypesqlParserWorld> createTypesqlParser({
     final uris = WasmFileUris(uri: uri);
     module = await uris.loadModule();
   }
-  final builder = module.builder(
-    workersConfig: workersConfig,
-  );
+  final builder = module.builder(workersConfig: workersConfig);
 
   return TypesqlParserWorld.init(
     builder,

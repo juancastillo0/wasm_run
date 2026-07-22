@@ -29,8 +29,9 @@ AstTopologicalSort topologicalSortAst(
     ),
   );
 
-  final List<SqlAst> toProcess =
-      asts.where((e) => dependencies[e]!.isEmpty).toList();
+  final List<SqlAst> toProcess = asts
+      .where((e) => dependencies[e]!.isEmpty)
+      .toList();
   final List<SqlAst> sorted = [];
   final result = AstTopologicalSort(sorted, dependencies);
   int i = 0;
@@ -50,11 +51,11 @@ AstTopologicalSort topologicalSortAst(
   }
   final nonDeleted = edges.entries.where((e) => e.value.isNotEmpty).toList();
   if (nonDeleted.isNotEmpty) {
-    final msg = nonDeleted.map((e) =>
-        '${astDefinedTableName(e.key)} -> ${e.value.map(astDefinedTableName).join(', ')}\n');
-    throw Exception(
-      'Cycle detected: ${msg}',
+    final msg = nonDeleted.map(
+      (e) =>
+          '${astDefinedTableName(e.key)} -> ${e.value.map(astDefinedTableName).join(', ')}\n',
     );
+    throw Exception('Cycle detected: ${msg}');
   }
   return result;
 }
@@ -68,7 +69,7 @@ class AstTopologicalSort {
   late final Map<SqlAst, List<SqlAst>> references;
 
   AstTopologicalSort(this.statements, this.dependencies)
-      : references = makeReferences(dependencies);
+    : references = makeReferences(dependencies);
 
   static Map<SqlAst, List<AstDepEdge>> makeDependencies(
     List<SqlAst> asts,
@@ -97,9 +98,9 @@ class AstTopologicalSort {
       incoming[k] = name == null
           ? []
           : edges.entries
-              .where((e) => e.value.any((n) => n.name == name))
-              .map((e) => e.key)
-              .toList();
+                .where((e) => e.value.any((n) => n.name == name))
+                .map((e) => e.key)
+                .toList();
     }
     return incoming;
   }
@@ -123,8 +124,7 @@ String? astDefinedTableName(SqlAst ast) {
     Commit() ||
     Rollback() ||
     // TODO: savepoint name?
-    Savepoint() =>
-      null,
+    Savepoint() => null,
     CreateFunction() => ast.name.joined,
     CreateProcedure() => ast.name.joined,
     CreateMacro() => ast.name.joined,
@@ -143,8 +143,7 @@ String? astDefinedTableName(SqlAst ast) {
     SqlExplainTable() ||
     SqlExplain() ||
     // TODO: merge?
-    SqlMerge() =>
-      null,
+    SqlMerge() => null,
   };
 }
 
@@ -177,16 +176,20 @@ class DependenciesVisitor extends SqlAstVisitor {
   @override
   void processTableFactor(TableFactor node) {
     (switch (node) {
-      TableFactorTable() =>
-        dependencies.add((ast: node, name: node.name.joined)),
+      TableFactorTable() => dependencies.add((
+        ast: node,
+        name: node.name.joined,
+      )),
       TableFactorDerived() => null,
       // TODO: add functions dependencies
       TableFactorTableFunction() => null,
       TableFactorUnnest() => null,
       // Will be processed in `super.processTableFactor(node);`
       TableFactorNestedJoin() => null,
-      TableFactorPivot() =>
-        dependencies.add((ast: node, name: node.name.joined)),
+      TableFactorPivot() => dependencies.add((
+        ast: node,
+        name: node.name.joined,
+      )),
     });
     super.processTableFactor(node);
   }
@@ -197,7 +200,7 @@ class DependenciesVisitor extends SqlAstVisitor {
     if (schemaName != null || node.tableName != null) {
       dependencies.add((
         ast: node,
-        name: '${schemaName == null ? '' : '$schemaName.'}${node.tableName}'
+        name: '${schemaName == null ? '' : '$schemaName.'}${node.tableName}',
       ));
     }
     super.processTable(node);

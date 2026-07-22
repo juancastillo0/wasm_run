@@ -130,8 +130,8 @@ class WasmFileUris {
     final value = f.threads && f.simd && threadsSimdUri != null
         ? threadsSimdUri!
         : f.simd && simdUri != null
-            ? simdUri!
-            : uri;
+        ? simdUri!
+        : uri;
     return value;
   }
 
@@ -233,10 +233,7 @@ class WasmFileUrisException implements Exception {
   final List<ErrorWithTrace> errors;
 
   /// Creates a new [WasmFileUrisException] with the given [uris] and [errors].
-  const WasmFileUrisException(
-    this.uris,
-    this.errors,
-  );
+  const WasmFileUrisException(this.uris, this.errors);
 
   @override
   String toString() => 'WasmFileUrisException($uris, ${errors.join('\n')})';

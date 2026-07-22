@@ -1,23 +1,32 @@
 import 'dart:typed_data';
 
-import 'package:wasm_run/src/bridge_generated.dart';
-import 'package:wasm_run/src/ffi/setup_dynamic_library.dart';
+import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart'
+    show ExternalLibrary;
 import 'package:wasm_run/src/ffi/stub.dart'
     if (dart.library.io) 'ffi/io.dart'
     if (dart.library.html) 'ffi/web.dart';
+import 'package:wasm_run/src/rust/frb_generated.dart';
+
+export 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart'
+    show ExternalLibrary;
+
+// TODO(migrationv1): remove
+typedef WasmRunDart = bool;
 
 WasmRunDart? _wrapper;
 
-final _alreadyInitialized =
-    Exception('WasmRun bindings were already configured');
+final _alreadyInitialized = Exception(
+  'WasmRun bindings were already configured',
+);
 
-WasmRunDart _createWrapper(ExternalLibrary lib) {
+Future<WasmRunDart> _createWrapper(ExternalLibrary lib) async {
   if (_wrapper != null) throw _alreadyInitialized;
-  _wrapper = createWrapperImpl(lib);
+  _wrapper = await createWrapperImpl(lib);
   return _wrapper!;
 }
 
-WasmRunDart _createLib() => _createWrapper(createLibraryImpl());
+Future<WasmRunDart> _createLib() async =>
+    _createWrapper(await createLibraryImpl());
 
 /// Executes a GET request to the [uri] and returns the body bytes.
 Future<Uint8List> getUriBodyBytes(Uri uri) => getUriBodyBytesImpl(uri);
@@ -36,45 +45,38 @@ class WasmRunLibrary {
   const WasmRunLibrary._();
 
   /// The current version of the package.
-  static const version = '0.1.0';
+  static const version = '0.2.0';
 
   static const _isWeb = identical(0, 0.0);
-
-  /// Sets the dynamic library to use for the native bindings.
-  ///
-  /// You may call [setUp] or execute the script `dart run wasm_run:setup`
-  /// to download the right library for your current platform
-  /// and configure it so that you don't need to call [set]
-  /// manually.
-  ///
-  /// When building a pure Dart application (backend or cli, for example),
-  /// you can call `WasmRunLibrary.set(<nativeLibraryForYourPlatform>)`
-  /// before using the package. The <nativeLibraryForYourPlatform> can be
-  /// downloaded from the releases of the Github repository of the package:
-  /// https://github.com/juancastillo0/wasm_run/releases
-  static void set(ExternalLibrary lib) {
-    _createWrapper(lib);
-  }
 
   /// Returns whether the dynamic library is reachable in the default locations
   /// for the current application or in the WASM_RUN_DART_DYNAMIC_LIBRARY
   /// environment variable.
-  static bool isReachable() {
+  static Future<bool> isReachable() async {
     if (_isWeb || _wrapper != null) return true;
     try {
-      createLibraryImpl();
+      await createLibraryImpl();
       return true;
     } catch (_) {
       return false;
     }
   }
 
-  /// Sets up the dynamic library to use for the native bindings.
-  /// If [override] is true, it will override the current library if it exists.
-  static Future<void> setUp({
-    required bool override,
+  /// Configures the library for Flutter applications. Used by wasm_run_flutter.
+  /// This is used load files from Flutter's bundled assets.
+  static void configAssetLoader({
     bool? isFlutter,
     Future<ByteData> Function(String)? loadAsset,
+  }) {
+    if (isFlutter != null) kIsFlutter = isFlutter;
+    if (loadAsset != null) globalLoadAsset = loadAsset;
+  }
+
+  /// Sets up the dynamic library to use for the native bindings.
+  static Future<void> setUp({
+    bool? isFlutter,
+    Future<ByteData> Function(String)? loadAsset,
+    ExternalLibrary? lib,
   }) async {
     if (isFlutter != null) kIsFlutter = isFlutter;
     if (loadAsset != null) globalLoadAsset = loadAsset;
@@ -90,16 +92,21 @@ class WasmRunLibrary {
           defaultValue: true,
         ),
       );
+    } else if (lib != null && _wrapper != null) {
+      throw _alreadyInitialized;
+    } else if (lib != null) {
+      await RustLib.init(externalLibrary: lib);
+      _wrapper = true;
+    } else if (_wrapper == null) {
+      await defaultInstance();
+      _wrapper = true;
     }
-    if (override && _wrapper != null) throw _alreadyInitialized;
-    if (!override && isReachable()) return;
-    await setUpDesktopDynamicLibrary();
   }
 }
 
-WasmRunDart defaultInstance() {
+Future<WasmRunDart> defaultInstance() async {
   if (_wrapper != null) {
-    return _wrapper!;
+    return Future.value(_wrapper!);
   }
   try {
     return _createLib();
@@ -108,18 +115,23 @@ WasmRunDart defaultInstance() {
       final externalLib = localTestingLibraryImpl();
       return _createWrapper(externalLib);
     } catch (_) {
-      if (!WasmRunLibrary._isWeb) {
-        print(
-          'When building a pure Dart application (backend or cli, for example),'
-          ' you must execute the cli command `wasm_run:setup`'
-          ' to download the binary locally, run `WasmRunLibrary.setUp`, or'
-          ' call `WasmRunLibrary.set(<nativeLibraryForYourPlatform>)`'
-          ' before using the library. The <nativeLibraryForYourPlatform> can'
-          ' be downloaded from the releases of the github repository'
-          ' of the package.',
-        );
+      try {
+        await RustLib.init();
+        return true;
+      } catch (_) {
+        if (!WasmRunLibrary._isWeb) {
+          print(
+            'When building a pure Dart application (backend or cli, for example),'
+            ' you must execute the cli command `wasm_run:setup`'
+            ' to download the binary locally, run `WasmRunLibrary.setUp`, or'
+            ' call `WasmRunLibrary.set(<nativeLibraryForYourPlatform>)`'
+            ' before using the library. The <nativeLibraryForYourPlatform> can'
+            ' be downloaded from the releases of the github repository'
+            ' of the package.',
+          );
+        }
+        rethrow;
       }
-      rethrow;
     }
   }
 }

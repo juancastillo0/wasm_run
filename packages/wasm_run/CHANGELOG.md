@@ -1,3 +1,11 @@
+## 0.2.0
+
+ - flutter_rust_bridge: ^2.12.0
+ - dart-sdk: ^3.10.0 
+ - `WasmRunLibrary`, `setUpDesktopDynamicLibrary`, `uriForPackage` and `getUriBodyBytes` utilities
+ - Use dart build hooks for sourcing the binaries
+ - (BREAKING) remove `bin/setup`, `setUpDesktopDynamicLibrary` and `WasmRunLibrary.setUp`'s `override` argument
+
 ## 0.1.0+2
 
  - [FIX] Use lowercase String comparison for Safari WASM functions. [PR](https://github.com/juancastillo0/wasm_run/pull/57) thanks to [michelerenzullo](https://github.com/michelerenzullo)

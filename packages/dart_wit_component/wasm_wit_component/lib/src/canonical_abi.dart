@@ -36,7 +36,7 @@ class Trap implements Exception {
 
   /// An exception thrown during wasm execution or loading
   Trap([this.sourceError, StackTrace? stackTrace])
-      : stackTrace = stackTrace ?? StackTrace.current;
+    : stackTrace = stackTrace ?? StackTrace.current;
 
   @override
   String toString() {
@@ -54,12 +54,8 @@ class CanonicalOptions {
   final void Function() _updateMemoryView;
 
   /// "cabi_realloc" export
-  final int Function(
-    int ptr,
-    int size_initial,
-    int alignment,
-    int size_final,
-  ) realloc;
+  final int Function(int ptr, int size_initial, int alignment, int size_final)
+  realloc;
 
   /// "cabi_post_<funcname>"
   /// The (post-return ...) option may only be present in canon lift and specifies a
@@ -105,8 +101,7 @@ class ComponentInstance {
   Object liftUnsignedI64(Object i) {
     return switch (int64Type) {
       Int64TypeConfig.bigInt ||
-      Int64TypeConfig.bigIntUnsignedOnly =>
-        i64.toBigInt(i).toUnsigned(64),
+      Int64TypeConfig.bigIntUnsignedOnly => i64.toBigInt(i).toUnsigned(64),
       Int64TypeConfig.coreInt => i64.toInt(i),
       Int64TypeConfig.nativeObject => i,
     };
@@ -116,8 +111,7 @@ class ComponentInstance {
     return switch (int64Type) {
       Int64TypeConfig.bigInt => i64.toBigInt(i),
       Int64TypeConfig.bigIntUnsignedOnly ||
-      Int64TypeConfig.coreInt =>
-        i64.toInt(i),
+      Int64TypeConfig.coreInt => i64.toInt(i),
       Int64TypeConfig.nativeObject => i,
     };
   }
@@ -134,31 +128,32 @@ class ComponentInstance {
 
   void setUint64(ByteData data, int ptr, Object v) {
     return switch (int64Type) {
-      Int64TypeConfig.bigInt ||
-      Int64TypeConfig.bigIntUnsignedOnly =>
-        i64.setUint64(
-          data,
-          ptr,
-          i64.fromBigInt(v as BigInt),
-          Endian.little,
-        ),
-      Int64TypeConfig.coreInt =>
-        i64.setUint64(data, ptr, i64.fromInt(v as int), Endian.little),
-      Int64TypeConfig.nativeObject =>
-        i64.setUint64(data, ptr, v, Endian.little),
+      Int64TypeConfig.bigInt || Int64TypeConfig.bigIntUnsignedOnly =>
+        i64.setUint64(data, ptr, i64.fromBigInt(v as BigInt), Endian.little),
+      Int64TypeConfig.coreInt => i64.setUint64(
+        data,
+        ptr,
+        i64.fromInt(v as int),
+        Endian.little,
+      ),
+      Int64TypeConfig.nativeObject => i64.setUint64(
+        data,
+        ptr,
+        v,
+        Endian.little,
+      ),
     };
   }
 
   void setInt64(ByteData data, int ptr, Object v) {
     return switch (int64Type) {
       Int64TypeConfig.bigInt => i64.setInt64(
-          data,
-          ptr,
-          i64.fromBigInt(v as BigInt),
-          Endian.little,
-        ),
-      Int64TypeConfig.coreInt ||
-      Int64TypeConfig.bigIntUnsignedOnly =>
+        data,
+        ptr,
+        i64.fromBigInt(v as BigInt),
+        Endian.little,
+      ),
+      Int64TypeConfig.coreInt || Int64TypeConfig.bigIntUnsignedOnly =>
         i64.setInt64(data, ptr, i64.fromInt(v as int), Endian.little),
       Int64TypeConfig.nativeObject => i64.setInt64(data, ptr, v, Endian.little),
     };
@@ -197,6 +192,7 @@ class Handle {
 /// consults the free list, which is popped LIFO to better detect
 /// use-after-free bugs in the guest code.
 class HandleTable {
+  final Map<int, Handle> repToHandle = {};
   final List<Handle?> array = [];
   final List<int> free = [];
 
@@ -210,6 +206,7 @@ class HandleTable {
       i = array.length;
       array.add(h);
     }
+    repToHandle[h.rep] = h;
     return i;
   }
 
@@ -507,9 +504,8 @@ List<FlatValue> canon_lower(
   return flat_results;
 }
 
-typedef CanonLowerCallee = (ListValue, void Function()) Function(
-  ListValue args,
-);
+typedef CanonLowerCallee =
+    (ListValue, void Function()) Function(ListValue args);
 
 // ### `resource.new`
 
@@ -520,8 +516,18 @@ int canon_resource_new(ComponentInstance inst, ResourceType rt, int rep) {
 
 // ### `resource.drop`
 
-void canon_resource_drop(ComponentInstance inst, ResourceType rt, int i) {
-  final h = inst.handles.remove(rt, i);
+void canon_resource_drop(
+  ComponentInstance inst,
+  ResourceType rt,
+  int i, {
+  // TODO: this should not be necessary, save te index/handle in the object
+  //  instead of just the rep
+  bool isIndex = false,
+}) {
+  final h = isIndex
+      ? inst.handles.remove(rt, i)
+      : inst.handles.rt_to_table[rt]!.repToHandle.remove(i);
+  if (h == null) return;
   if (h.own) {
     assert(h.scope == null);
     trap_if(h.lend_count != 0);
@@ -530,8 +536,9 @@ void canon_resource_drop(ComponentInstance inst, ResourceType rt, int i) {
     // trap_if(inst.id != rt.componentInstance && !rt.impl.may_enter);
 
     /// types-example-namespace:types-example-pkg/api#[dtor]r1
-    final dtor = inst.instance
-        .getFunction('${rt.componentInstance}#[dtor]${rt.resourceName}');
+    final dtor = inst.instance.getFunction(
+      '${rt.componentInstance}#[dtor]${rt.resourceName}',
+    );
     dtor?.call([h.rep]);
   } else {
     assert(h.scope != null);

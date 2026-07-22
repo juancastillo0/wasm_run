@@ -82,7 +82,7 @@ Future<TypesExampleWorld> initTypesWorld(
   Future<Uint8List> Function()? getWitComponentExampleBytes,
 ) async {
   if (_isWeb) {
-    await WasmRunLibrary.setUp(override: false);
+    await WasmRunLibrary.setUp();
   }
   final WasmModule module;
   if (getWitComponentExampleBytes != null) {
@@ -101,10 +101,7 @@ Future<TypesExampleWorld> initTypesWorld(
   print(module);
   final builder = module.builder();
 
-  final world = await TypesExampleWorld.init(
-    builder,
-    imports: imports,
-  );
+  final world = await TypesExampleWorld.init(builder, imports: imports);
   return world;
 }
 
@@ -127,7 +124,7 @@ class _InlineImpl implements InlineImport {
 class _ImportsImpl implements ApiImportsImport {
   final List<List<HumanApiImports>> apiA1B2Data = [];
   final List<({ErrnoApiImports e, Input i, Permissions p, R r})>
-      recordFuncData = [];
+  recordFuncData = [];
 
   @override
   ({T7 h1, HumanApiImports val2}) apiA1B2({
@@ -161,8 +158,9 @@ class _RoundTripNumbersHostImpl implements RoundTripNumbersImport {
   }
 
   @override
-  RoundTripNumbersListData roundTripNumbersList(
-      {required RoundTripNumbersListData data}) {
+  RoundTripNumbersListData roundTripNumbersList({
+    required RoundTripNumbersListData data,
+  }) {
     roundTripNumbersListData.add(data);
     return data;
   }
@@ -219,7 +217,7 @@ class _TypesWorldTest {
         si64: [BigInt.from(0), BigInt.from(2), BigInt.from(-44)],
         si64List: [
           [BigInt.from(0), BigInt.from(2), BigInt.from(-44)],
-          []
+          [],
         ],
         si8: Int8List.fromList([1, 32]),
         un16: Uint16List.fromList([2, 33]),
@@ -227,12 +225,12 @@ class _TypesWorldTest {
         un64: [BigInt.from(0), BigInt.from(2), BigInt.from(44)],
         un64List: [
           [BigInt.from(0), BigInt.from(2), BigInt.from(44)],
-          []
+          [],
         ],
         un8: Uint8List.fromList([1, 32]),
         un8List: [
           Uint8List.fromList([1, 32]),
-          Uint8List.fromList([])
+          Uint8List.fromList([]),
         ],
       );
       final response = world.roundTripNumbers.roundTripNumbersList(data: data);
@@ -325,10 +323,7 @@ class _TypesWorldTest {
       expect(b, BigInt.from(0));
     }
     {
-      final (a, b) = world.reNamed(
-        perm: Permissions.all(),
-        e: const Empty(),
-      );
+      final (a, b) = world.reNamed(perm: Permissions.all(), e: const Empty());
       expect(a, 7);
       expect(b, BigInt.from(0));
     }
@@ -344,15 +339,19 @@ class _TypesWorldTest {
     }
 
     {
-      final (opt, v) = world
-          .reNamed2(tup: (Uint16List.fromList([0, 39]),), e: const Empty());
+      final (opt, v) = world.reNamed2(
+        tup: (Uint16List.fromList([0, 39]),),
+        e: const Empty(),
+      );
       expect(opt, 2);
       expect(v, 1);
     }
     {
       // ignore: prefer_const_constructors
-      final (opt, v) =
-          world.reNamed2(tup: (Uint16List.fromList([]),), e: Empty());
+      final (opt, v) = world.reNamed2(
+        tup: (Uint16List.fromList([]),),
+        e: Empty(),
+      );
       expect(opt, 0);
       expect(v, -1);
     }
@@ -360,7 +359,8 @@ class _TypesWorldTest {
       final (opt, v) = world.reNamed2(
         tup: (
           Uint16List.fromList(
-              List.generate(256, (index) => index, growable: false)),
+            List.generate(256, (index) => index, growable: false),
+          ),
         ),
         e: const Empty(),
       );
@@ -394,12 +394,14 @@ class _TypesWorldTest {
     {
       world.api.class_(
         break_: Some(
-          Err(ErrnoApi(
-            aU1: BigInt.from(1),
-            listS1: [BigInt.from(1)],
-            str: 'str',
-            c: 'c',
-          )),
+          Err(
+            ErrnoApi(
+              aU1: BigInt.from(1),
+              listS1: [BigInt.from(1)],
+              str: 'str',
+              c: 'c',
+            ),
+          ),
         ),
       );
       expect(inlineImpl.inlineImpData[3], const ['c']);
@@ -408,12 +410,14 @@ class _TypesWorldTest {
     {
       world.api.class_(
         break_: Some(
-          Err(ErrnoApi(
-            aU1: BigInt.from(1),
-            listS1: [BigInt.from(34)],
-            str: 'str',
-            c: 'o',
-          )),
+          Err(
+            ErrnoApi(
+              aU1: BigInt.from(1),
+              listS1: [BigInt.from(34)],
+              str: 'str',
+              c: 'o',
+            ),
+          ),
         ),
       );
       expect(inlineImpl.inlineImpData[5], const ['o']);
@@ -447,10 +451,9 @@ class _TypesWorldTest {
           ),
         ),
       );
-      expect(
-        importsImpl.apiA1B2Data[1],
-        [HumanApiImports.adult(('ss', null, (BigInt.from(33),)))],
-      );
+      expect(importsImpl.apiA1B2Data[1], [
+        HumanApiImports.adult(('ss', null, (BigInt.from(33),))),
+      ]);
     }
     {
       world.api.continue_(
@@ -464,10 +467,9 @@ class _TypesWorldTest {
           ),
         ),
       );
-      expect(
-        importsImpl.apiA1B2Data[2],
-        [HumanApiImports.adult(('k', None(), (BigInt.from(-33),)))],
-      );
+      expect(importsImpl.apiA1B2Data[2], [
+        HumanApiImports.adult(('k', None(), (BigInt.from(-33),))),
+      ]);
     }
     {
       world.api.continue_(
@@ -481,14 +483,9 @@ class _TypesWorldTest {
           ),
         ),
       );
-      expect(
-        importsImpl.apiA1B2Data[3],
-        [
-          HumanApiImports.adult(
-            ('poi', Some('poik'), (BigInt.from(34943),)),
-          )
-        ],
-      );
+      expect(importsImpl.apiA1B2Data[3], [
+        HumanApiImports.adult(('poi', Some('poik'), (BigInt.from(34943),))),
+      ]);
     }
     {
       world.api.continue_(
@@ -502,27 +499,18 @@ class _TypesWorldTest {
           ),
         ),
       );
-      expect(
-        importsImpl.apiA1B2Data[4],
-        [HumanApiImports.child(BigInt.from(2))],
-      );
+      expect(importsImpl.apiA1B2Data[4], [
+        HumanApiImports.child(BigInt.from(2)),
+      ]);
     }
     {
       world.api.continue_(
         extends_: (),
         abstract_: Err(
-          ErrnoApi(
-            aU1: BigInt.from(2),
-            c: null,
-            listS1: [],
-            str: '',
-          ),
+          ErrnoApi(aU1: BigInt.from(2), c: null, listS1: [], str: ''),
         ),
       );
-      expect(
-        importsImpl.apiA1B2Data[5],
-        [const HumanApiImports.baby()],
-      );
+      expect(importsImpl.apiA1B2Data[5], [const HumanApiImports.baby()]);
     }
 
     final baseData = RoundTripNumbersData(
@@ -580,10 +568,7 @@ class _TypesWorldTest {
       final result = world.roundTripNumbers.roundTripNumbers(data: data);
       final expectedData = data.copyWith(f32: double.infinity);
       expect(result, expectedData);
-      expect(
-        roundTripNumbersHostImpl.roundTripNumbersData[2],
-        expectedData,
-      );
+      expect(roundTripNumbersHostImpl.roundTripNumbersData[2], expectedData);
     }
     {
       final data = RoundTripNumbersData(
@@ -604,10 +589,7 @@ class _TypesWorldTest {
       expect(roundTripNumbersHostImpl.roundTripNumbersData[3], expectedData);
     }
     {
-      final data = baseData.copyWith(
-        f32: double.nan,
-        f64: double.nan,
-      );
+      final data = baseData.copyWith(f32: double.nan, f64: double.nan);
       final result = world.roundTripNumbers.roundTripNumbers(data: data);
       expect(result.f32, isNaN);
       expect(result.f64, isNaN);
@@ -642,6 +624,11 @@ class _TypesWorldTest {
 
       final def = R1.staticDefault(api);
       expect(def, 'DEFAULT');
+
+      // TODO(migrationv1): drop and handles. Merge receives reference of r1 dropped in staticF1
+      //  improve error message
+      // final v = R1.staticF1(api, a: r1);
+      // print('v $v');
 
       final rMerged = R1.merge(api, lhs: r1, rhs: r1);
       expect(rMerged.length(), 2);

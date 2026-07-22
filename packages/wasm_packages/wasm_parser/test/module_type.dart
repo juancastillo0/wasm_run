@@ -15,53 +15,37 @@ ModuleType moduleToType(WasmModule module) {
         .toList(),
     exports: module
         .getExports()
-        .map(
-          (e) => ModuleExport(
-            name: e.name,
-            type: mapExternalType(e.type!),
-          ),
-        )
+        .map((e) => ModuleExport(name: e.name, type: mapExternalType(e.type!)))
         .toList(),
   );
 }
 
-// ExternalType mapExternType(ExternType type) {
-//   switch (type) {
-//     case ExternType.functionType:
-//       return ExternalType.functionType;
-//     case ExternType.globalType:
-//       return ExternalType.globalType;
-//     case ExternType.memoryType:
-//       return ExternalType.memoryType;
-//     case ExternType.tableType:
-//       return ExternalType.tableType;
-//   }
-// }
-
-// TODO: support union with sealed
-
 ExternType mapExternalType(ExternalType type) {
-  return type.when(
-    func: (func) => FunctionType(
-      parameters: func.parameters.map(mapValueTy).toList(),
-      results: func.results.map(mapValueTy).toList(),
-    ),
-    global: (global) => GlobalType(
-      mutable: global.mutable,
-      value: mapValueTy(global.value),
-    ),
-    table: (table) => TableType(
-      minimum: table.minimum,
-      maximum: table.maximum,
-      element: (mapValueTy(table.element) as ValueTypeRef).value,
-    ),
-    memory: (memory) => MemoryType(
-      minimum: BigInt.from(memory.minimum),
-      maximum: memory.maximum == null ? null : BigInt.from(memory.maximum!),
-      shared: memory.shared,
-      memory64: false,
-    ),
-  );
+  switch (type) {
+    case ExternalType_Func(field0: final func):
+      return FunctionType(
+        parameters: func.parameters.map(mapValueTy).toList(),
+        results: func.results.map(mapValueTy).toList(),
+      );
+    case ExternalType_Global(field0: final global):
+      return GlobalType(
+        mutable: global.mutable,
+        value: mapValueTy(global.value),
+      );
+    case ExternalType_Table(field0: final table):
+      return TableType(
+        minimum: table.minimum,
+        maximum: table.maximum,
+        element: (mapValueTy(table.element) as ValueTypeRef).value,
+      );
+    case ExternalType_Memory(field0: final memory):
+      return MemoryType(
+        minimum: BigInt.from(memory.minimum),
+        maximum: memory.maximum == null ? null : BigInt.from(memory.maximum!),
+        shared: memory.shared,
+        memory64: false,
+      );
+  }
 }
 
 ValueType mapValueTy(ValueTy type) {
@@ -71,9 +55,11 @@ ValueType mapValueTy(ValueTy type) {
     ValueTy.f32 => const ValueType.f32(),
     ValueTy.f64 => const ValueType.f64(),
     ValueTy.v128 => const ValueType.v128(),
-    ValueTy.externRef =>
-      const ValueType.ref(RefType(nullable: true, heapType: HeapType.extern())),
-    ValueTy.funcRef =>
-      const ValueType.ref(RefType(nullable: true, heapType: HeapType.func())),
+    ValueTy.externRef => const ValueType.ref(
+      RefType(nullable: true, heapType: HeapType.extern()),
+    ),
+    ValueTy.funcRef => const ValueType.ref(
+      RefType(nullable: true, heapType: HeapType.func()),
+    ),
   };
 }

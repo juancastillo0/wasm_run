@@ -38,8 +38,9 @@ Object? Function(int ptr) _loadFunction(Context cx, ValType t) {
   return switch (t_) {
     Bool() => (ptr) => convert_int_to_bool(load_int(cx, ptr, 1)),
     IntType() => (ptr) => _load_int_type(cx, ptr, t_),
-    Float32() => (ptr) =>
-        canonicalize32(reinterpret_i32_as_float(load_int(cx, ptr, 4))),
+    Float32() => (ptr) => canonicalize32(
+      reinterpret_i32_as_float(load_int(cx, ptr, 4)),
+    ),
     Float64() => (ptr) => canonicalize64(_loadFloat64(cx, ptr)),
     Char() => (ptr) => convert_i32_to_char(load_int(cx, ptr, 4)),
     StringType() => (ptr) => load_string(cx, ptr),
@@ -236,29 +237,23 @@ ListValue load_list_from_range(
     Float32() => _loadNumList(cx, Float32List.sublistView(bytes()), elem_type),
     Float64() => _loadNumList(cx, Float64List.sublistView(bytes()), elem_type),
     Bool() => bytes().map(convert_int_to_bool).toList(growable: false),
-    Char() => (_loadNumList(
-        cx,
-        Uint32List.sublistView(bytes()),
-        const U32(),
-      ) as Uint32List)
+    Char() =>
+      (_loadNumList(cx, Uint32List.sublistView(bytes()), const U32())
+              as Uint32List)
           .map(convert_i32_to_char)
           .toList(growable: false),
     _ => (() {
-        final function = _loadFunction(cx, elem_type);
-        return List.generate(
-          length,
-          (i) => function(ptr + i * elem_size),
-          growable: LIST_GROWABLE,
-        );
-      })()
+      final function = _loadFunction(cx, elem_type);
+      return List.generate(
+        length,
+        (i) => function(ptr + i * elem_size),
+        growable: LIST_GROWABLE,
+      );
+    })(),
   };
 }
 
-ListValue _loadNumList(
-  Context cx,
-  TypedData data,
-  NumType type,
-) {
+ListValue _loadNumList(Context cx, TypedData data, NumType type) {
   final list = data as List<num>;
   if (Endian.host != Endian.little) {
     final getFunc = _load_num_type_func(cx, ByteData.sublistView(data), type);
@@ -293,11 +288,7 @@ RecordValue _load_record(Context cx, int ptr, List<Field> fields) {
 /// to find a case label it knows about. While the code below appears to perform case-label
 /// lookup at runtime, a normal implementation can build the appropriate index tables
 /// at compile-time so that variant-passing is always O(1) and not involving string operations.
-VariantValue2 _load_variant(
-  Context cx,
-  int ptr,
-  List<Case> cases,
-) {
+VariantValue2 _load_variant(Context cx, int ptr, List<Case> cases) {
   final disc_size = discriminant_type(cases).size();
   final case_index = load_int(cx, ptr, disc_size);
   ptr += disc_size;
@@ -393,15 +384,27 @@ void store(Context cx, Object? v, ValType t, int ptr) {
     S32() => store_int(cx, v! as int, ptr, 4, signed: true),
     S64() => cx.inst.setInt64(cx.opts.getByteData(), ptr, v!),
     Float32() => store_int(
-        cx, reinterpret_float_as_i32(canonicalize32(v! as double)), ptr, 4),
+      cx,
+      reinterpret_float_as_i32(canonicalize32(v! as double)),
+      ptr,
+      4,
+    ),
     Float64() => _storeFloat64(cx, canonicalize64(v! as double), ptr),
     Char() => store_int(cx, char_to_i32(v! as String), ptr, 4),
     StringType() => store_string(cx, ParsedString.fromJson(v), ptr),
     ListType(:final t) => _store_list(cx, v! as ListValue, ptr, t),
-    RecordType(:final fields) =>
-      _store_record(cx, toRecordValue(v, fields), ptr, fields),
-    Variant(:final cases) =>
-      _store_variant(cx, toVariantValue(v, cases), ptr, cases),
+    RecordType(:final fields) => _store_record(
+      cx,
+      toRecordValue(v, fields),
+      ptr,
+      fields,
+    ),
+    Variant(:final cases) => _store_variant(
+      cx,
+      toVariantValue(v, cases),
+      ptr,
+      cases,
+    ),
     Flags(:final labels) => _store_flags(cx, v! as FlagsValue, ptr, labels),
     Own() => store_int(cx, lower_own(cx, v! as HandleRep, t_), ptr, 4),
     Borrow() => store_int(cx, lower_borrow(cx, v! as HandleRep, t_), ptr, 4),
@@ -421,22 +424,49 @@ void Function(Object? v, int ptr) _storeFunction(Context cx, ValType t) {
     S32() => (v, ptr) => store_int(cx, v! as int, ptr, 4, signed: true),
     S64() => (v, ptr) => cx.inst.setInt64(cx.opts.getByteData(), ptr, v!),
     Float32() => (v, ptr) => store_int(
-        cx, reinterpret_float_as_i32(canonicalize32(v! as double)), ptr, 4),
-    Float64() => (v, ptr) =>
-        _storeFloat64(cx, canonicalize64(v! as double), ptr),
+      cx,
+      reinterpret_float_as_i32(canonicalize32(v! as double)),
+      ptr,
+      4,
+    ),
+    Float64() => (v, ptr) => _storeFloat64(
+      cx,
+      canonicalize64(v! as double),
+      ptr,
+    ),
     Char() => (v, ptr) => store_int(cx, char_to_i32(v! as String), ptr, 4),
     StringType() => (v, ptr) => store_string(cx, ParsedString.fromJson(v), ptr),
     ListType(:final t) => (v, ptr) => _store_list(cx, v! as ListValue, ptr, t),
-    RecordType(:final fields) => (v, ptr) =>
-        _store_record(cx, toRecordValue(v, fields), ptr, fields),
-    Variant(:final cases) => (v, ptr) =>
-        _store_variant(cx, toVariantValue(v, cases), ptr, cases),
-    Flags(:final labels) => (v, ptr) =>
-        _store_flags(cx, v! as FlagsValue, ptr, labels),
-    Own() => (v, ptr) =>
-        store_int(cx, lower_own(cx, v! as HandleRep, t_), ptr, 4),
-    Borrow() => (v, ptr) =>
-        store_int(cx, lower_borrow(cx, v! as HandleRep, t_), ptr, 4),
+    RecordType(:final fields) => (v, ptr) => _store_record(
+      cx,
+      toRecordValue(v, fields),
+      ptr,
+      fields,
+    ),
+    Variant(:final cases) => (v, ptr) => _store_variant(
+      cx,
+      toVariantValue(v, cases),
+      ptr,
+      cases,
+    ),
+    Flags(:final labels) => (v, ptr) => _store_flags(
+      cx,
+      v! as FlagsValue,
+      ptr,
+      labels,
+    ),
+    Own() => (v, ptr) => store_int(
+      cx,
+      lower_own(cx, v! as HandleRep, t_),
+      ptr,
+      4,
+    ),
+    Borrow() => (v, ptr) => store_int(
+      cx,
+      lower_borrow(cx, v! as HandleRep, t_),
+      ptr,
+      4,
+    ),
   };
 }
 // #
@@ -515,7 +545,10 @@ void _store_list(Context cx, ListValue v, int ptr, ValType elem_type) {
 }
 
 PointerAndSize store_list_into_range(
-    Context cx, ListValue v, ValType elem_type) {
+  Context cx,
+  ListValue v,
+  ValType elem_type,
+) {
   final size_elem = elem_type.size();
   final alignment_elem = elem_type.alignment();
 
@@ -531,8 +564,11 @@ PointerAndSize store_list_into_range(
       // TODO: more efficient big endian implementation
       cx.opts.memory.setAll(ptr, Uint8List.sublistView(data));
     case (Char(), final List<String> chars, Endian.little):
-      Uint32List.view(cx.opts.memory.buffer, ptr, chars.length)
-          .setAll(0, chars.map(char_to_i32));
+      Uint32List.view(
+        cx.opts.memory.buffer,
+        ptr,
+        chars.length,
+      ).setAll(0, chars.map(char_to_i32));
     default:
       final function = _storeFunction(cx, elem_type);
       for (final (i, e) in v.indexed) {
@@ -544,12 +580,7 @@ PointerAndSize store_list_into_range(
 
 /// Lists and records are stored by recursively storing their elements
 /// and are symmetric to the loading functions.
-void _store_record(
-  Context cx,
-  RecordValue v,
-  int ptr,
-  List<Field> fields,
-) {
+void _store_record(Context cx, RecordValue v, int ptr, List<Field> fields) {
   for (final f in fields) {
     ptr = align_to(ptr, f.t.alignment());
     store(cx, v[f.label], f.t, ptr);

@@ -6,9 +6,11 @@ void main() {
   group('typesql_parser api', () {
     test('sql', () async {
       final world = await createTypesqlParser();
-      final result = world.parseSql(sql: '''
+      final result = world.parseSql(
+        sql: '''
 SELECT * FROM foo WHERE bar = c
-''');
+''',
+      );
 
       switch (result) {
         case Ok(:final ok):
@@ -20,9 +22,11 @@ SELECT * FROM foo WHERE bar = c
 
     test('sql2', () async {
       final world = await createTypesqlParser();
-      final result = world.parseSql(sql: '''
+      final result = world.parseSql(
+        sql: '''
 SELECT * FROM foo WHERE bar = 10
-''');
+''',
+      );
 
       switch (result) {
         case Ok(:final ok):
@@ -34,7 +38,8 @@ SELECT * FROM foo WHERE bar = 10
 
     test('multiple statements', () async {
       final world = await createTypesqlParser();
-      final result = world.parseSql(sql: '''
+      final result = world.parseSql(
+        sql: '''
 CREATE TABLE users (
   id INTEGER PRIMARY KEY,
   name TEXT NOT NULL,
@@ -67,7 +72,8 @@ FROM users
 INNER JOIN posts ON posts.user_id = users.id
 LEFT JOIN posts_topics pt ON pt.post_id = posts.id
 WHERE users.id = 1 and posts.subtitle is not null;
-''');
+''',
+      );
 
       print(result.unwrap());
     });

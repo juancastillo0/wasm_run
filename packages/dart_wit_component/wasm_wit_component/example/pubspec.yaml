@@ -4,19 +4,16 @@ publish_to: "none"
 version: 1.0.0+1
 
 environment:
-  sdk: ">=3.0.0 <4.0.0"
+  sdk: ^3.10.0
+resolution: workspace
 
 dependencies:
-  wasm_run:
-  wasm_wit_component:
-  test: ^1.21.0
-  dart_style: ^2.3.0
-
-dev_dependencies:
-  very_good_analysis: ^5.0.0
-
-dependency_overrides:
   wasm_run:
     path: ../../../wasm_run
   wasm_wit_component:
     path: ../
+  test: ^1.30.0
+  dart_style: ^3.1.7
+
+dev_dependencies:
+  very_good_analysis: ^10.0.0

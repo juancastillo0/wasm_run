@@ -2,7 +2,8 @@ import 'dart:typed_data';
 
 import 'package:wasm_run/src/int64_bigint/_int64_bigint_stub.dart'
     if (dart.library.io) '_int64_bigint_native.dart'
-    if (dart.library.html) '_int64_bigint_web.dart' as impl;
+    if (dart.library.html) '_int64_bigint_web.dart'
+    as impl;
 
 /// [int] for dart:io, Js`BigInt` for dart:html
 /// Utility static functions in: [i64].
@@ -28,10 +29,12 @@ class i64 {
   static I64 fromBigInt(BigInt value) => impl.int64FromBigIntImpl(value);
 
   /// Convert [I64] to [int]
-  static int toInt(I64 value) => impl.toIntImpl(value);
+  // ignore: unnecessary_cast
+  static int toInt(I64 value) => impl.toIntImpl(value as impl.I64);
 
   /// Convert [I64] to [BigInt]
-  static BigInt toBigInt(I64 value) => impl.toBigIntImpl(value);
+  // ignore: unnecessary_cast
+  static BigInt toBigInt(I64 value) => impl.toBigIntImpl(value as impl.I64);
 
   /// Read [I64] from [bytes] ([ByteData]) in [offset]
   static I64 getInt64(ByteData bytes, int offset, Endian endian) =>

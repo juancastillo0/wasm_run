@@ -27,7 +27,7 @@ Future<CompressionRsWorld> createCompressionRsInMemoryWorker({
   Future<WasmModule> Function()? loadModule,
   WorkersConfig? workersConfig,
 }) async {
-  await WasmRunLibrary.setUp(override: false);
+  await WasmRunLibrary.setUp();
 
   final WasmModule module;
   if (loadModule != null) {
@@ -40,9 +40,7 @@ Future<CompressionRsWorld> createCompressionRsInMemoryWorker({
     );
     final uris = WasmFileUris(uri: uri);
     module = await uris.loadModule(
-      config: ModuleConfig(
-        wasmtime: ModuleConfigWasmtime(wasmThreads: true),
-      ),
+      config: ModuleConfig(wasmtime: ModuleConfigWasmtime(wasmThreads: true)),
     );
   }
   final defaultNumWorkers = identical(0, 0.0) ? 2 : Platform.numberOfProcessors;
@@ -57,17 +55,19 @@ Future<CompressionRsWorld> createCompressionRsInMemoryWorker({
 class AsyncCompressor {
   final String name;
   final Future<Result<Uint8List, IoError>> Function({required Input input})
-      compress;
+  compress;
   final Future<Result<Uint8List, IoError>> Function({required Input input})
-      decompress;
+  decompress;
   final Future<Result<IoSuccess, IoError>> Function({
     required Input input,
     required String outputPath,
-  }) compressFile;
+  })
+  compressFile;
   final Future<Result<IoSuccess, IoError>> Function({
     required Input input,
     required String outputPath,
-  }) decompressFile;
+  })
+  decompressFile;
 
   AsyncCompressor({
     required this.name,
@@ -80,40 +80,40 @@ class AsyncCompressor {
 
 extension BrotliExt on Brotli {
   AsyncCompressor get compressor => AsyncCompressor(
-        name: 'brotli',
-        compress: brotliCompress,
-        decompress: brotliDecompress,
-        compressFile: brotliCompressFile,
-        decompressFile: brotliDecompressFile,
-      );
+    name: 'brotli',
+    compress: brotliCompress,
+    decompress: brotliDecompress,
+    compressFile: brotliCompressFile,
+    decompressFile: brotliDecompressFile,
+  );
 }
 
 extension GzipExt on Gzip {
   AsyncCompressor get compressor => AsyncCompressor(
-        name: 'gzip',
-        compress: gzipCompress,
-        decompress: gzipDecompress,
-        compressFile: gzipCompressFile,
-        decompressFile: gzipDecompressFile,
-      );
+    name: 'gzip',
+    compress: gzipCompress,
+    decompress: gzipDecompress,
+    compressFile: gzipCompressFile,
+    decompressFile: gzipDecompressFile,
+  );
 }
 
 extension ZlibExt on Zlib {
   AsyncCompressor get compressor => AsyncCompressor(
-        name: 'zlib',
-        compress: zlibCompress,
-        decompress: zlibDecompress,
-        compressFile: zlibCompressFile,
-        decompressFile: zlibDecompressFile,
-      );
+    name: 'zlib',
+    compress: zlibCompress,
+    decompress: zlibDecompress,
+    compressFile: zlibCompressFile,
+    decompressFile: zlibDecompressFile,
+  );
 }
 
 extension DeflateExt on Deflate {
   AsyncCompressor get compressor => AsyncCompressor(
-        name: 'deflate',
-        compress: deflateCompress,
-        decompress: deflateDecompress,
-        compressFile: deflateCompressFile,
-        decompressFile: deflateDecompressFile,
-      );
+    name: 'deflate',
+    compress: deflateCompress,
+    decompress: deflateDecompress,
+    compressFile: deflateCompressFile,
+    decompressFile: deflateDecompressFile,
+  );
 }

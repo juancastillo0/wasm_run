@@ -3,9 +3,14 @@
 import 'dart:convert' show base64Decode;
 import 'dart:typed_data' show Uint8List;
 
-import 'package:wasm_run_flutter/wasm_run_flutter.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show rootBundle;
+import 'package:wasm_run/wasm_run.dart';
 
 Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await WasmRunLibrary.setUp(isFlutter: true, loadAsset: rootBundle.load);
+
   /// WASM WAT source:
   ///
   /// ```wat
@@ -68,4 +73,65 @@ Future<void> main() async {
 
   final resultInner = add.inner(-1, 8) as int;
   assert(resultInner == 7);
+
+  runApp(MyApp(add: add));
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key, required this.add});
+  final WasmFunction add;
+
+  // This widget is the root of your application.
+  @override
+  Widget build(BuildContext context) {
+    int aValue = 1;
+    int bValue = 4;
+    return MaterialApp(
+      theme: ThemeData(
+        inputDecorationTheme: const InputDecorationTheme(
+          isDense: true,
+          filled: true,
+          labelStyle: TextStyle(height: 0.5),
+          contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+        ),
+      ),
+      home: Scaffold(
+        body: Center(
+          child: StatefulBuilder(
+            builder: (context, setState) {
+              return Row(
+                mainAxisSize: .min,
+                children: [
+                  SizedBox(
+                    width: 75,
+                    child: TextFormField(
+                      initialValue: aValue.toString(),
+                      keyboardType: TextInputType.number,
+                      onChanged: (value) {
+                        final v = int.tryParse(value);
+                        if (v != null) setState(() => aValue = v);
+                      },
+                    ),
+                  ),
+                  const Text('+'),
+                  SizedBox(
+                    width: 75,
+                    child: TextFormField(
+                      initialValue: bValue.toString(),
+                      keyboardType: TextInputType.number,
+                      onChanged: (value) {
+                        final v = int.tryParse(value);
+                        if (v != null) setState(() => bValue = v);
+                      },
+                    ),
+                  ),
+                  Text('= ${add.inner(aValue, bValue)}'),
+                ],
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
 }

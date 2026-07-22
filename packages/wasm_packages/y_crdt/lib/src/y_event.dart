@@ -24,10 +24,10 @@ class YTextEventI with EqualityMixin implements YEventI, ToJsonSerializable {
   });
 
   factory YTextEventI.fromValue(YTextEvent e, YCrdt ycrdt) => YTextEventI(
-        delta: e.delta.map(YTextDeltaI.fromValue).toList(),
-        path: e.path,
-        target: YTextI._(e.target, ycrdt),
-      );
+    delta: e.delta.map(YTextDeltaI.fromValue).toList(),
+    path: e.path,
+    target: YTextI._(e.target, ycrdt),
+  );
 
   // TODO: implement json
   // /// Returns a new instance from a JSON value.
@@ -53,11 +53,11 @@ class YTextEventI with EqualityMixin implements YEventI, ToJsonSerializable {
   /// Returns this as a serializable JSON value.
   @override
   Map<String, Object?> toJson() => {
-        'runtimeType': 'YTextEventI',
-        'target': target.toJson(),
-        'delta': delta.map((e) => e.toJson()).toList(),
-        'path': path.map((e) => e.toJson()).toList(),
-      };
+    'runtimeType': 'YTextEventI',
+    'target': target.toJson(),
+    'delta': delta.map((e) => e.toJson()).toList(),
+    'path': path.map((e) => e.toJson()).toList(),
+  };
   @override
   String toString() => '${toJson()}';
 
@@ -66,11 +66,11 @@ class YTextEventI with EqualityMixin implements YEventI, ToJsonSerializable {
     YTextI? target,
     List<YTextDeltaI>? delta,
     EventPath? path,
-  }) =>
-      YTextEventI(
-          target: target ?? this.target,
-          delta: delta ?? this.delta,
-          path: path ?? this.path);
+  }) => YTextEventI(
+    target: target ?? this.target,
+    delta: delta ?? this.delta,
+    path: path ?? this.path,
+  );
 
   @override
   List<Object?> get props => [target, delta, path];
@@ -88,12 +88,12 @@ class YMapEventI with EqualityMixin implements YEventI {
   });
 
   factory YMapEventI.fromValue(YMapEvent v, YCrdt ycrdt) => YMapEventI(
-        target: YMapI._(v.target, ycrdt),
-        keys: Map.fromEntries(
-          v.keys.map((e) => MapEntry(e.$1, YMapDeltaI.fromValue(e.$2, ycrdt))),
-        ),
-        path: v.path,
-      );
+    target: YMapI._(v.target, ycrdt),
+    keys: Map.fromEntries(
+      v.keys.map((e) => MapEntry(e.$1, YMapDeltaI.fromValue(e.$2, ycrdt))),
+    ),
+    path: v.path,
+  );
 
   // TODO: implement json
   // /// Returns a new instance from a JSON value.
@@ -136,23 +136,19 @@ class YMapEventI with EqualityMixin implements YEventI {
   //       'path': path.map((e) => e.toJson()).toList(),
   //     };
   @override
-  String toString() => '${{
-        'runtimeType': 'YMapEventI',
-        'target': target,
-        'keys': keys,
-        'path': path,
-      }}';
+  String toString() =>
+      '${{'runtimeType': 'YMapEventI', 'target': target, 'keys': keys, 'path': path}}';
 
   /// Returns a new instance by overriding the values passed as arguments
   YMapEventI copyWith({
     YMapI? target,
     Map<String, YMapDeltaI>? keys,
     EventPath? path,
-  }) =>
-      YMapEventI(
-          target: target ?? this.target,
-          keys: keys ?? this.keys,
-          path: path ?? this.path);
+  }) => YMapEventI(
+    target: target ?? this.target,
+    keys: keys ?? this.keys,
+    path: path ?? this.path,
+  );
 
   @override
   List<Object?> get props => [target, keys, path];
@@ -207,23 +203,19 @@ class YArrayEventI with EqualityMixin implements YEventI {
   //       'path': path.map((e) => e.toJson()).toList(),
   //     };
   @override
-  String toString() => '${{
-        'runtimeType': 'YArrayEventI',
-        'target': target,
-        'delta': delta,
-        'path': path,
-      }}';
+  String toString() =>
+      '${{'runtimeType': 'YArrayEventI', 'target': target, 'delta': delta, 'path': path}}';
 
   /// Returns a new instance by overriding the values passed as arguments
   YArrayEventI copyWith({
     YArrayI? target,
     List<YArrayDeltaI>? delta,
     EventPath? path,
-  }) =>
-      YArrayEventI(
-          target: target ?? this.target,
-          delta: delta ?? this.delta,
-          path: path ?? this.path);
+  }) => YArrayEventI(
+    target: target ?? this.target,
+    delta: delta ?? this.delta,
+    path: path ?? this.path,
+  );
 
   @override
   List<Object?> get props => [target, delta, path];
@@ -271,11 +263,7 @@ class YMapDeltaI {
   final YMapDeltaAction action;
   final YValueAny? oldValue;
   final YValueAny? newValue;
-  const YMapDeltaI({
-    required this.action,
-    this.oldValue,
-    this.newValue,
-  });
+  const YMapDeltaI({required this.action, this.oldValue, this.newValue});
 
   // /// Returns a new instance from a JSON value.
   // /// May throw if the value does not have the expected structure.
@@ -313,23 +301,19 @@ class YMapDeltaI {
   //     };
 
   @override
-  String toString() => '${{
-        'runtimeType': 'YMapDeltaI',
-        'action': action,
-        'old-value': oldValue,
-        'new-value': newValue,
-      }}';
+  String toString() =>
+      '${{'runtimeType': 'YMapDeltaI', 'action': action, 'old-value': oldValue, 'new-value': newValue}}';
 
   /// Returns a new instance by overriding the values passed as arguments
   YMapDeltaI copyWith({
     YMapDeltaAction? action,
     Option<YValueAny>? oldValue,
     Option<YValueAny>? newValue,
-  }) =>
-      YMapDeltaI(
-          action: action ?? this.action,
-          oldValue: oldValue != null ? oldValue.value : this.oldValue,
-          newValue: newValue != null ? newValue.value : this.newValue);
+  }) => YMapDeltaI(
+    action: action ?? this.action,
+    oldValue: oldValue != null ? oldValue.value : this.oldValue,
+    newValue: newValue != null ? newValue.value : this.newValue,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -344,10 +328,12 @@ class YMapDeltaI {
   factory YMapDeltaI.fromValue(YMapDelta v, YCrdt ycrdt) {
     return YMapDeltaI(
       action: v.action,
-      newValue:
-          v.newValue == null ? null : YValueAny.fromValue(v.newValue!, ycrdt),
-      oldValue:
-          v.oldValue == null ? null : YValueAny.fromValue(v.oldValue!, ycrdt),
+      newValue: v.newValue == null
+          ? null
+          : YValueAny.fromValue(v.newValue!, ycrdt),
+      oldValue: v.oldValue == null
+          ? null
+          : YValueAny.fromValue(v.oldValue!, ycrdt),
     );
   }
 }
@@ -355,9 +341,7 @@ class YMapDeltaI {
 class YArrayDeltaIInsert implements YArrayDeltaI {
   final List<YValueAny> insert;
 
-  const YArrayDeltaIInsert({
-    required this.insert,
-  });
+  const YArrayDeltaIInsert({required this.insert});
 
   // /// Returns a new instance from a JSON value.
   // /// May throw if the value does not have the expected structure.
@@ -381,15 +365,11 @@ class YArrayDeltaIInsert implements YArrayDeltaI {
   //     };
 
   @override
-  String toString() => '${{
-        'runtimeType': 'YArrayDeltaIInsert',
-        'insert': insert,
-      }}';
+  String toString() =>
+      '${{'runtimeType': 'YArrayDeltaIInsert', 'insert': insert}}';
 
   /// Returns a new instance by overriding the values passed as arguments
-  YArrayDeltaIInsert copyWith({
-    List<YValueAny>? insert,
-  }) =>
+  YArrayDeltaIInsert copyWith({List<YValueAny>? insert}) =>
       YArrayDeltaIInsert(insert: insert ?? this.insert);
   @override
   bool operator ==(Object other) =>
@@ -405,9 +385,7 @@ class YArrayDeltaIInsert implements YArrayDeltaI {
 
 class YArrayDeltaIDelete implements YArrayDeltaI, ToJsonSerializable {
   final int /*U32*/ delete;
-  const YArrayDeltaIDelete({
-    required this.delete,
-  });
+  const YArrayDeltaIDelete({required this.delete});
 
   /// Returns a new instance from a JSON value.
   /// May throw if the value does not have the expected structure.
@@ -416,19 +394,18 @@ class YArrayDeltaIDelete implements YArrayDeltaI, ToJsonSerializable {
         ? _spec.fields.map((f) => json_[f.label]).toList(growable: false)
         : json_;
     return switch (json) {
-      [final delete] || (final delete,) => YArrayDeltaIDelete(
-          delete: delete! as int,
-        ),
-      _ => throw Exception('Invalid JSON $json_')
+      [final delete] ||
+      (final delete,) => YArrayDeltaIDelete(delete: delete! as int),
+      _ => throw Exception('Invalid JSON $json_'),
     };
   }
 
   /// Returns this as a serializable JSON value.
   @override
   Map<String, Object?> toJson() => {
-        'runtimeType': 'YArrayDeltaIDelete',
-        'delete': delete,
-      };
+    'runtimeType': 'YArrayDeltaIDelete',
+    'delete': delete,
+  };
 
   /// Returns this as a WASM canonical abi value.
   List<Object?> toWasm() => [delete];
@@ -436,9 +413,7 @@ class YArrayDeltaIDelete implements YArrayDeltaI, ToJsonSerializable {
   String toString() => '${toJson()}';
 
   /// Returns a new instance by overriding the values passed as arguments
-  YArrayDeltaIDelete copyWith({
-    int /*U32*/ ? delete,
-  }) =>
+  YArrayDeltaIDelete copyWith({int /*U32*/ ? delete}) =>
       YArrayDeltaIDelete(delete: delete ?? this.delete);
   @override
   bool operator ==(Object other) =>
@@ -457,14 +432,14 @@ sealed class YArrayDeltaI {
   factory YArrayDeltaI.fromValue(YArrayDelta e, YCrdt ycrdt) {
     return switch (e) {
       YArrayDeltaInsert(insert: final insert) => YArrayDeltaIInsert(
-          insert: insert.map((e) => YValueAny.fromValue(e, ycrdt)).toList(),
-        ),
+        insert: insert.map((e) => YValueAny.fromValue(e, ycrdt)).toList(),
+      ),
       YArrayDeltaDelete(delete: final delete) => YArrayDeltaIDelete(
-          delete: delete,
-        ),
+        delete: delete,
+      ),
       YArrayDeltaRetain(retain: final retain) => YArrayDeltaIRetain(
-          retain: retain,
-        ),
+        retain: retain,
+      ),
     };
   }
   // /// Returns a new instance from a JSON value.
@@ -508,9 +483,7 @@ sealed class YArrayDeltaI {
 
 class YArrayDeltaIRetain implements YArrayDeltaI, ToJsonSerializable {
   final int /*U32*/ retain;
-  const YArrayDeltaIRetain({
-    required this.retain,
-  });
+  const YArrayDeltaIRetain({required this.retain});
 
   /// Returns a new instance from a JSON value.
   /// May throw if the value does not have the expected structure.
@@ -519,27 +492,24 @@ class YArrayDeltaIRetain implements YArrayDeltaI, ToJsonSerializable {
         ? const ['retain'].map((f) => json_[f]).toList(growable: false)
         : json_;
     return switch (json) {
-      [final retain] || (final retain,) => YArrayDeltaIRetain(
-          retain: retain! as int,
-        ),
-      _ => throw Exception('Invalid JSON $json_')
+      [final retain] ||
+      (final retain,) => YArrayDeltaIRetain(retain: retain! as int),
+      _ => throw Exception('Invalid JSON $json_'),
     };
   }
 
   /// Returns this as a serializable JSON value.
   @override
   Map<String, Object?> toJson() => {
-        'runtimeType': 'YArrayDeltaIRetain',
-        'retain': retain,
-      };
+    'runtimeType': 'YArrayDeltaIRetain',
+    'retain': retain,
+  };
 
   @override
   String toString() => '${toJson()}';
 
   /// Returns a new instance by overriding the values passed as arguments
-  YArrayDeltaIRetain copyWith({
-    int /*U32*/ ? retain,
-  }) =>
+  YArrayDeltaIRetain copyWith({int /*U32*/ ? retain}) =>
       YArrayDeltaIRetain(retain: retain ?? this.retain);
   @override
   bool operator ==(Object other) =>
@@ -556,43 +526,41 @@ class YArrayDeltaIRetain implements YArrayDeltaI, ToJsonSerializable {
 class YTextDeltaIRetain implements YTextDeltaI, ToJsonSerializable {
   final int /*U32*/ retain;
   final TextAttrsI? attributes;
-  const YTextDeltaIRetain({
-    required this.retain,
-    this.attributes,
-  });
+  const YTextDeltaIRetain({required this.retain, this.attributes});
 
   /// Returns a new instance from a JSON value.
   /// May throw if the value does not have the expected structure.
   factory YTextDeltaIRetain.fromJson(Object? json_) {
     final json = json_ is Map
-        ? const ['retain', 'attributes']
-            .map((f) => json_[f])
-            .toList(growable: false)
+        ? const [
+            'retain',
+            'attributes',
+          ].map((f) => json_[f]).toList(growable: false)
         : json_;
     return switch (json) {
       [final retain, final attributes] ||
-      (final retain, final attributes) =>
-        YTextDeltaIRetain(
-          retain: retain! as int,
-          attributes: Option.fromJson(
-                  attributes, (some) => AnyVal.fromJson(some) as AnyValMap)
-              .value
-              ?.value,
-        ),
-      _ => throw Exception('Invalid JSON $json_')
+      (final retain, final attributes) => YTextDeltaIRetain(
+        retain: retain! as int,
+        attributes: Option.fromJson(
+          attributes,
+          (some) => AnyVal.fromJson(some) as AnyValMap,
+        ).value?.value,
+      ),
+      _ => throw Exception('Invalid JSON $json_'),
     };
   }
 
   /// Returns this as a serializable JSON value.
   @override
   Map<String, Object?> toJson() => {
-        'runtimeType': 'YTextDeltaIRetain',
-        'retain': retain,
-        'attributes': (attributes == null
-            ? const None().toJson()
-            : Option.fromValue(attributes)
-                .toJson((some) => some.map((k, v) => MapEntry(k, v.toJson())))),
-      };
+    'runtimeType': 'YTextDeltaIRetain',
+    'retain': retain,
+    'attributes': (attributes == null
+        ? const None().toJson()
+        : Option.fromValue(
+            attributes,
+          ).toJson((some) => some.map((k, v) => MapEntry(k, v.toJson())))),
+  };
 
   @override
   String toString() => '${toJson()}';
@@ -601,10 +569,10 @@ class YTextDeltaIRetain implements YTextDeltaI, ToJsonSerializable {
   YTextDeltaIRetain copyWith({
     int /*U32*/ ? retain,
     Option<TextAttrsI>? attributes,
-  }) =>
-      YTextDeltaIRetain(
-          retain: retain ?? this.retain,
-          attributes: attributes != null ? attributes.value : this.attributes);
+  }) => YTextDeltaIRetain(
+    retain: retain ?? this.retain,
+    attributes: attributes != null ? attributes.value : this.attributes,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -620,43 +588,41 @@ class YTextDeltaIRetain implements YTextDeltaI, ToJsonSerializable {
 class YTextDeltaIInsert implements YTextDeltaI, ToJsonSerializable {
   final String insert;
   final TextAttrsI? attributes;
-  const YTextDeltaIInsert({
-    required this.insert,
-    this.attributes,
-  });
+  const YTextDeltaIInsert({required this.insert, this.attributes});
 
   /// Returns a new instance from a JSON value.
   /// May throw if the value does not have the expected structure.
   factory YTextDeltaIInsert.fromJson(Object? json_) {
     final json = json_ is Map
-        ? const ['insert', 'attributes']
-            .map((f) => json_[f])
-            .toList(growable: false)
+        ? const [
+            'insert',
+            'attributes',
+          ].map((f) => json_[f]).toList(growable: false)
         : json_;
     return switch (json) {
       [final insert, final attributes] ||
-      (final insert, final attributes) =>
-        YTextDeltaIInsert(
-          insert: insert is String ? insert : (insert! as ParsedString).value,
-          attributes: Option.fromJson(
-                  attributes, (some) => AnyVal.fromJson(some) as AnyValMap)
-              .value
-              ?.value,
-        ),
-      _ => throw Exception('Invalid JSON $json_')
+      (final insert, final attributes) => YTextDeltaIInsert(
+        insert: insert is String ? insert : (insert! as ParsedString).value,
+        attributes: Option.fromJson(
+          attributes,
+          (some) => AnyVal.fromJson(some) as AnyValMap,
+        ).value?.value,
+      ),
+      _ => throw Exception('Invalid JSON $json_'),
     };
   }
 
   /// Returns this as a serializable JSON value.
   @override
   Map<String, Object?> toJson() => {
-        'runtimeType': 'YTextDeltaIInsert',
-        'insert': insert,
-        'attributes': (attributes == null
-            ? const None().toJson()
-            : Option.fromValue(attributes)
-                .toJson((some) => some.map((k, v) => MapEntry(k, v.toJson())))),
-      };
+    'runtimeType': 'YTextDeltaIInsert',
+    'insert': insert,
+    'attributes': (attributes == null
+        ? const None().toJson()
+        : Option.fromValue(
+            attributes,
+          ).toJson((some) => some.map((k, v) => MapEntry(k, v.toJson())))),
+  };
 
   @override
   String toString() => '${toJson()}';
@@ -665,10 +631,10 @@ class YTextDeltaIInsert implements YTextDeltaI, ToJsonSerializable {
   YTextDeltaIInsert copyWith({
     String? insert,
     Option<TextAttrsI>? attributes,
-  }) =>
-      YTextDeltaIInsert(
-          insert: insert ?? this.insert,
-          attributes: attributes != null ? attributes.value : this.attributes);
+  }) => YTextDeltaIInsert(
+    insert: insert ?? this.insert,
+    attributes: attributes != null ? attributes.value : this.attributes,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -691,9 +657,12 @@ sealed class YTextDeltaI implements ToJsonSerializable {
       final rt = json['runtimeType'];
       if (rt is String) {
         json = (
-          const ['YTextDeltaIInsert', 'YTextDeltaIDelete', 'YTextDeltaIRetain']
-              .indexOf(rt),
-          json
+          const [
+            'YTextDeltaIInsert',
+            'YTextDeltaIDelete',
+            'YTextDeltaIRetain',
+          ].indexOf(rt),
+          json,
         );
       } else {
         final MapEntry(:key, :value) = json.entries.first;
@@ -709,20 +678,20 @@ sealed class YTextDeltaI implements ToJsonSerializable {
   }
 
   factory YTextDeltaI.fromValue(YTextDelta e) => switch (e) {
-        YTextDeltaInsert() => YTextDeltaIInsert(
-            insert: e.insert,
-            attributes: e.attributes == null
-                ? null
-                : (AnyVal.fromItem(e.attributes!) as AnyValMap).value,
-          ),
-        YTextDeltaDelete() => YTextDeltaIDelete(delete: e.delete),
-        YTextDeltaRetain() => YTextDeltaIRetain(
-            retain: e.retain,
-            attributes: e.attributes == null
-                ? null
-                : (AnyVal.fromItem(e.attributes!) as AnyValMap).value,
-          ),
-      };
+    YTextDeltaInsert() => YTextDeltaIInsert(
+      insert: e.insert,
+      attributes: e.attributes == null
+          ? null
+          : (AnyVal.fromItem(e.attributes!) as AnyValMap).value,
+    ),
+    YTextDeltaDelete() => YTextDeltaIDelete(delete: e.delete),
+    YTextDeltaRetain() => YTextDeltaIRetain(
+      retain: e.retain,
+      attributes: e.attributes == null
+          ? null
+          : (AnyVal.fromItem(e.attributes!) as AnyValMap).value,
+    ),
+  };
 
   /// Returns this as a serializable JSON value.
   @override
@@ -731,9 +700,7 @@ sealed class YTextDeltaI implements ToJsonSerializable {
 
 class YTextDeltaIDelete implements YTextDeltaI, ToJsonSerializable {
   final int /*U32*/ delete;
-  const YTextDeltaIDelete({
-    required this.delete,
-  });
+  const YTextDeltaIDelete({required this.delete});
 
   /// Returns a new instance from a JSON value.
   /// May throw if the value does not have the expected structure.
@@ -742,27 +709,24 @@ class YTextDeltaIDelete implements YTextDeltaI, ToJsonSerializable {
         ? const ['delete'].map((f) => json_[f]).toList(growable: false)
         : json_;
     return switch (json) {
-      [final delete] || (final delete,) => YTextDeltaIDelete(
-          delete: delete! as int,
-        ),
-      _ => throw Exception('Invalid JSON $json_')
+      [final delete] ||
+      (final delete,) => YTextDeltaIDelete(delete: delete! as int),
+      _ => throw Exception('Invalid JSON $json_'),
     };
   }
 
   /// Returns this as a serializable JSON value.
   @override
   Map<String, Object?> toJson() => {
-        'runtimeType': 'YTextDeltaIDelete',
-        'delete': delete,
-      };
+    'runtimeType': 'YTextDeltaIDelete',
+    'delete': delete,
+  };
 
   @override
   String toString() => '${toJson()}';
 
   /// Returns a new instance by overriding the values passed as arguments
-  YTextDeltaIDelete copyWith({
-    int /*U32*/ ? delete,
-  }) =>
+  YTextDeltaIDelete copyWith({int /*U32*/ ? delete}) =>
       YTextDeltaIDelete(delete: delete ?? this.delete);
   @override
   bool operator ==(Object other) =>

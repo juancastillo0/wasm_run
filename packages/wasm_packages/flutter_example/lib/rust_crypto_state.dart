@@ -9,16 +9,7 @@ import 'package:flutter_example/flutter_utils.dart';
 import 'package:rust_crypto/rust_crypto.dart';
 import 'package:wasm_wit_component/wasm_wit_component.dart';
 
-enum RCHash {
-  sha1,
-  blake3,
-  sha256,
-  sha224,
-  sha384,
-  sha512,
-  md5,
-  crc32,
-}
+enum RCHash { sha1, blake3, sha256, sha224, sha384, sha512, md5, crc32 }
 
 class BinaryInputData {
   ///
@@ -27,12 +18,14 @@ class BinaryInputData {
     required this.isKey,
     this.generate,
     List<InputEncoding>? allowedEncodings,
-  })  : encoding = allowedEncodings?.first ??
-            (isKey ? InputEncoding.base64 : InputEncoding.utf8),
-        allowedEncodings = allowedEncodings ??
-            (isKey
-                ? [InputEncoding.base64, InputEncoding.hex]
-                : InputEncoding.values);
+  }) : encoding =
+           allowedEncodings?.first ??
+           (isKey ? InputEncoding.base64 : InputEncoding.utf8),
+       allowedEncodings =
+           allowedEncodings ??
+           (isKey
+               ? [InputEncoding.base64, InputEncoding.hex]
+               : InputEncoding.values);
 
   final void Function()? generate;
   final void Function() _notifyListeners;
@@ -52,8 +45,9 @@ class BinaryInputData {
     if (this.encoding == encoding) return;
     if (encoding == InputEncoding.file) {
       if (file == null) {
-        final files = await FileSystem.instance
-            .showOpenFilePickerWebSafe(const FsOpenOptions(multiple: false));
+        final files = await FileSystem.instance.showOpenFilePickerWebSafe(
+          const FsOpenOptions(multiple: false),
+        );
         if (files.isEmpty) return;
         final file_ = files.first.file;
         final bytes = await file_.readAsBytes();
@@ -63,8 +57,10 @@ class BinaryInputData {
       if (this.encoding == InputEncoding.file && file!.bytes.length > 1000000) {
         this.encoding = InputEncoding.fromText(text);
       }
-      textController.text =
-          outputText(encoding, inputBytes(this.encoding, text, file));
+      textController.text = outputText(
+        encoding,
+        inputBytes(this.encoding, text, file),
+      );
     }
     this.encoding = encoding;
     _notifyListeners();
@@ -106,10 +102,16 @@ class RustCryptoState extends ChangeNotifier with ErrorNotifier {
   final associatedDataController = TextEditingController();
 
   late final hashInput = BinaryInputData(notifyListeners, isKey: false);
-  late final hmacKeyInput =
-      BinaryInputData(notifyListeners, isKey: true, generate: generateHmacKey);
-  late final aesKeyInput =
-      BinaryInputData(notifyListeners, isKey: true, generate: generateAesKey);
+  late final hmacKeyInput = BinaryInputData(
+    notifyListeners,
+    isKey: true,
+    generate: generateHmacKey,
+  );
+  late final aesKeyInput = BinaryInputData(
+    notifyListeners,
+    isKey: true,
+    generate: generateAesKey,
+  );
   late final planTextInput = BinaryInputData(notifyListeners, isKey: false);
   late final cipherTextInput = BinaryInputData(
     notifyListeners,
@@ -142,26 +144,27 @@ class RustCryptoState extends ChangeNotifier with ErrorNotifier {
       RCHash.sha512 => rustCrypto.sha2.sha512(bytes: bytes),
       RCHash.md5 => rustCrypto.hashes.md5(bytes: bytes),
       RCHash.sha1 => rustCrypto.hashes.sha1(bytes: bytes),
-      RCHash.crc32 => (ByteData(4)
-            ..setUint32(0, rustCrypto.hashes.crc32(bytes: bytes)))
-          .buffer
-          .asUint8List(),
+      RCHash.crc32 =>
+        (ByteData(4)..setUint32(0, rustCrypto.hashes.crc32(bytes: bytes)))
+            .buffer
+            .asUint8List(),
     };
     hashValues[type] = outputText(hashOutputEncoding, hash);
   }
 
   void _hmacBytes(Uint8List bytes, Uint8List key, RCHash type) {
     final hmac = switch (type) {
-      RCHash.blake3 =>
-        rustCrypto.blake3.macKeyedHash(bytes: bytes, key: key.sublist(0, 32)),
+      RCHash.blake3 => rustCrypto.blake3.macKeyedHash(
+        bytes: bytes,
+        key: key.sublist(0, 32),
+      ),
       RCHash.sha224 => rustCrypto.hmac.hmacSha224(bytes: bytes, key: key),
       RCHash.sha256 => rustCrypto.hmac.hmacSha256(bytes: bytes, key: key),
       RCHash.sha384 => rustCrypto.hmac.hmacSha384(bytes: bytes, key: key),
       RCHash.sha512 => rustCrypto.hmac.hmacSha512(bytes: bytes, key: key),
       RCHash.md5 ||
       RCHash.sha1 ||
-      RCHash.crc32 =>
-        Result<Uint8List, String>.ok(Uint8List(0)),
+      RCHash.crc32 => Result<Uint8List, String>.ok(Uint8List(0)),
     };
     return switch (hmac) {
       Ok(:final ok) => hmacValues[type] = outputText(hashOutputEncoding, ok),
@@ -194,8 +197,11 @@ class RustCryptoState extends ChangeNotifier with ErrorNotifier {
   void encrypt() {
     final plainText = planTextInput.bytes;
     final nonce_ = inputBytes(InputEncoding.base64, nonceController.text, null);
-    final associatedData_ =
-        inputBytes(InputEncoding.utf8, associatedDataController.text, null);
+    final associatedData_ = inputBytes(
+      InputEncoding.utf8,
+      associatedDataController.text,
+      null,
+    );
 
     final Result<Uint8List, String> encryptedR;
     if (isConcat) {
@@ -219,12 +225,16 @@ class RustCryptoState extends ChangeNotifier with ErrorNotifier {
     if (encrypted == null) return;
     if (planTextInput.encoding == InputEncoding.file) {
       final file = planTextInput.file!;
-      cipherTextInput.file =
-          CryptoFileInput('${file.name}$encryptedExt', encrypted);
+      cipherTextInput.file = CryptoFileInput(
+        '${file.name}$encryptedExt',
+        encrypted,
+      );
       cipherTextInput.encoding = InputEncoding.file;
     } else {
-      cipherTextInput.textController.text =
-          outputText(cipherTextInput.encoding, encrypted);
+      cipherTextInput.textController.text = outputText(
+        cipherTextInput.encoding,
+        encrypted,
+      );
     }
     notifyListeners();
   }
@@ -244,8 +254,11 @@ class RustCryptoState extends ChangeNotifier with ErrorNotifier {
         cipherText: cipherText,
         key: aesKeyInput.bytes,
         nonce: inputBytes(InputEncoding.base64, nonceController.text, null),
-        associatedData:
-            inputBytes(InputEncoding.utf8, associatedDataController.text, null),
+        associatedData: inputBytes(
+          InputEncoding.utf8,
+          associatedDataController.text,
+          null,
+        ),
       );
     }
     final decrypted = decryptedR.mapErr(setError).ok;
@@ -259,12 +272,16 @@ class RustCryptoState extends ChangeNotifier with ErrorNotifier {
       planTextInput.encoding = InputEncoding.file;
     } else {
       try {
-        planTextInput.textController.text =
-            outputText(planTextInput.encoding, decrypted);
+        planTextInput.textController.text = outputText(
+          planTextInput.encoding,
+          decrypted,
+        );
       } catch (_) {
         planTextInput.encoding = InputEncoding.base64;
-        planTextInput.textController.text =
-            outputText(InputEncoding.base64, decrypted);
+        planTextInput.textController.text = outputText(
+          InputEncoding.base64,
+          decrypted,
+        );
       }
     }
     notifyListeners();
@@ -305,22 +322,22 @@ class RustCryptoState extends ChangeNotifier with ErrorNotifier {
         )
         .mapErr(setError)
         .map((hash) {
-      passwordHashController.text = hash;
-      // passwordRawHashBase64 = hash.split('\$').last;
-      // final keyBytes = rustCrypto.argon2
-      //     .rawHash(
-      //       config: argon2config,
-      //       password: passwordInput.bytes,
-      //       salt: inputBytes(
-      //         InputEncoding.base64,
-      //         '${saltController.text}==',
-      //         null,
-      //       ),
-      //     )
-      //     .unwrap();
-      // passwordRawHashBase64 = outputText(InputEncoding.base64, keyBytes);
-      notifyListeners();
-    });
+          passwordHashController.text = hash;
+          // passwordRawHashBase64 = hash.split('\$').last;
+          // final keyBytes = rustCrypto.argon2
+          //     .rawHash(
+          //       config: argon2config,
+          //       password: passwordInput.bytes,
+          //       salt: inputBytes(
+          //         InputEncoding.base64,
+          //         '${saltController.text}==',
+          //         null,
+          //       ),
+          //     )
+          //     .unwrap();
+          // passwordRawHashBase64 = outputText(InputEncoding.base64, keyBytes);
+          notifyListeners();
+        });
   }
 
   void verifyPassword() {
@@ -465,18 +482,14 @@ Uint8List inputBytes(
   InputEncoding inputEncoding,
   String text,
   CryptoFileInput? file,
-) =>
-    switch (inputEncoding) {
-      InputEncoding.utf8 => const Utf8Encoder().convert(text),
-      InputEncoding.hex => hexToBytes(text),
-      InputEncoding.base64 => base64.decode(addBase64Padding(text)),
-      InputEncoding.file => file!.bytes,
-    };
+) => switch (inputEncoding) {
+  InputEncoding.utf8 => const Utf8Encoder().convert(text),
+  InputEncoding.hex => hexToBytes(text),
+  InputEncoding.base64 => base64.decode(addBase64Padding(text)),
+  InputEncoding.file => file!.bytes,
+};
 
-String outputText(
-  InputEncoding outputEncoding,
-  Uint8List bytes,
-) =>
+String outputText(InputEncoding outputEncoding, Uint8List bytes) =>
     switch (outputEncoding) {
       InputEncoding.utf8 => const Utf8Decoder().convert(bytes),
       InputEncoding.hex => bytesToHex(bytes),

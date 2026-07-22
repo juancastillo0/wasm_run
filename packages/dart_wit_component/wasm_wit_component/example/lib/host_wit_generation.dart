@@ -14,11 +14,7 @@ class RecordTest implements ToJsonSerializable {
   final int /*U32*/ a;
   final String b;
   final double /*F64*/ c;
-  const RecordTest({
-    required this.a,
-    required this.b,
-    required this.c,
-  });
+  const RecordTest({required this.a, required this.b, required this.c});
 
   /// Returns a new instance from a JSON value.
   /// May throw if the value does not have the expected structure.
@@ -28,20 +24,20 @@ class RecordTest implements ToJsonSerializable {
         : json_;
     return switch (json) {
       [final a, final b, final c] || (final a, final b, final c) => RecordTest(
-          a: a! as int,
-          b: b is String ? b : (b! as ParsedString).value,
-          c: c! as double,
-        ),
-      _ => throw Exception('Invalid JSON $json_')
+        a: a! as int,
+        b: b is String ? b : (b! as ParsedString).value,
+        c: c! as double,
+      ),
+      _ => throw Exception('Invalid JSON $json_'),
     };
   }
   @override
   Map<String, Object?> toJson() => {
-        'runtimeType': 'RecordTest',
-        'a': a,
-        'b': b,
-        'c': c,
-      };
+    'runtimeType': 'RecordTest',
+    'a': a,
+    'b': b,
+    'c': c,
+  };
 
   /// Returns this as a WASM canonical abi value.
   List<Object?> toWasm() => [a, b, c];
@@ -50,11 +46,7 @@ class RecordTest implements ToJsonSerializable {
       'RecordTest${Map.fromIterables(_spec.fields.map((f) => f.label), _props)}';
 
   /// Returns a new instance by overriding the values passed as arguments
-  RecordTest copyWith({
-    int /*U32*/ ? a,
-    String? b,
-    double /*F64*/ ? c,
-  }) =>
+  RecordTest copyWith({int /*U32*/ ? a, String? b, double /*F64*/ ? c}) =>
       RecordTest(a: a ?? this.a, b: b ?? this.b, c: c ?? this.c);
   @override
   bool operator ==(Object other) =>
@@ -69,47 +61,40 @@ class RecordTest implements ToJsonSerializable {
   static const _spec = RecordType([
     (label: 'a', t: U32()),
     (label: 'b', t: StringType()),
-    (label: 'c', t: Float64())
+    (label: 'c', t: Float64()),
   ]);
 }
 
 class HostWorldImports {
-  final void Function({
-    required String msg,
-  }) print;
-  const HostWorldImports({
-    required this.print,
-  });
+  final void Function({required String msg}) print;
+  const HostWorldImports({required this.print});
 }
 
 class HostWorld {
   final HostWorldImports imports;
   final WasmLibrary library;
 
-  HostWorld({
-    required this.imports,
-    required this.library,
-  })  : _run = library.getComponentFunction(
-          'run',
-          const FuncType([], []),
-        )!,
-        _get_ = library.getComponentFunction(
-          'get',
-          const FuncType([], [('', RecordTest._spec)]),
-        )!,
-        _map = library.getComponentFunction(
-          'map',
-          const FuncType([('rec', RecordTest._spec)], [('', RecordTest._spec)]),
-        )!,
-        _mapI = library.getComponentFunction(
-          'map-i',
-          const FuncType([('rec', RecordTest._spec), ('i', Float32())],
-              [('', RecordTest._spec)]),
-        )!,
-        _receiveI = library.getComponentFunction(
-          'receive-i',
-          const FuncType([('rec', RecordTest._spec), ('i', Float32())], []),
-        )!;
+  HostWorld({required this.imports, required this.library})
+    : _run = library.getComponentFunction('run', const FuncType([], []))!,
+      _get_ = library.getComponentFunction(
+        'get',
+        const FuncType([], [('', RecordTest._spec)]),
+      )!,
+      _map = library.getComponentFunction(
+        'map',
+        const FuncType([('rec', RecordTest._spec)], [('', RecordTest._spec)]),
+      )!,
+      _mapI = library.getComponentFunction(
+        'map-i',
+        const FuncType(
+          [('rec', RecordTest._spec), ('i', Float32())],
+          [('', RecordTest._spec)],
+        ),
+      )!,
+      _receiveI = library.getComponentFunction(
+        'receive-i',
+        const FuncType([('rec', RecordTest._spec), ('i', Float32())], []),
+      )!;
 
   static Future<HostWorld> init(
     WasmInstanceBuilder builder, {
@@ -124,19 +109,26 @@ class HostWorld {
       (ListValue, void Function()) execImportsPrint(ListValue args) {
         final args0 = args[0];
         imports.print(
-            msg: args0 is String ? args0 : (args0! as ParsedString).value);
+          msg: args0 is String ? args0 : (args0! as ParsedString).value,
+        );
         return (const [], () {});
       }
 
-      final lowered =
-          loweredImportFunction(r'$root#print', ft, execImportsPrint, getLib);
+      final lowered = loweredImportFunction(
+        r'$root#print',
+        ft,
+        execImportsPrint,
+        getLib,
+      );
       builder.addImport(r'$root', 'print', lowered);
     }
     final instance = await builder.build();
 
-    library = WasmLibrary(instance,
-        componentId: 'host-namespace:host-pkg/host',
-        int64Type: Int64TypeConfig.bigInt);
+    library = WasmLibrary(
+      instance,
+      componentId: 'host-namespace:host-pkg/host',
+      int64Type: Int64TypeConfig.bigInt,
+    );
     return HostWorld(imports: imports, library: library);
   }
 
@@ -158,29 +150,21 @@ class HostWorld {
   }
 
   final ListValue Function(ListValue) _map;
-  RecordTest map({
-    required RecordTest rec,
-  }) {
+  RecordTest map({required RecordTest rec}) {
     final results = _map([rec.toWasm()]);
     final result = results[0];
     return withContext(() => RecordTest.fromJson(result));
   }
 
   final ListValue Function(ListValue) _mapI;
-  RecordTest mapI({
-    required RecordTest rec,
-    required double /*F32*/ i,
-  }) {
+  RecordTest mapI({required RecordTest rec, required double /*F32*/ i}) {
     final results = _mapI([rec.toWasm(), i]);
     final result = results[0];
     return withContext(() => RecordTest.fromJson(result));
   }
 
   final ListValue Function(ListValue) _receiveI;
-  void receiveI({
-    required RecordTest rec,
-    required double /*F32*/ i,
-  }) {
+  void receiveI({required RecordTest rec, required double /*F32*/ i}) {
     _receiveI([rec.toWasm(), i]);
   }
 }
