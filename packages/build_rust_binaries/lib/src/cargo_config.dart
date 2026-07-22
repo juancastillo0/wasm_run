@@ -75,7 +75,7 @@ CargoConfigs cargoConfigContents(
         })
         .map((v) {
           final s = v.split('=');
-          validateVersion(v[1]);
+          validateVersion(s[1]);
           return MapEntry(s[0], s[1]);
         }),
   );
