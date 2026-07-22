@@ -432,8 +432,7 @@ enum InputEncoding {
   utf8,
   hex,
   base64,
-  file
-  ;
+  file;
 
   factory InputEncoding.fromText(String text) {
     try {

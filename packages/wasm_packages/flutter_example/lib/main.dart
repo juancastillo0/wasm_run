@@ -55,8 +55,7 @@ enum AppTab {
   compressionRs,
   imageOps,
   rustCrypto,
-  sqlParser
-  ;
+  sqlParser;
 
   String get uiName => name.substring(0, 1).toUpperCase() + name.substring(1);
 

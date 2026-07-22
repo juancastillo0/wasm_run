@@ -335,8 +335,7 @@ enum StringEncoding {
   utf16,
 
   /// [latin1]
-  latin1utf16
-  ;
+  latin1utf16;
 
   factory StringEncoding.fromJson(Object? json) {
     return switch (json) {

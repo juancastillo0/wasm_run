@@ -120,8 +120,7 @@ class WasmParserState extends ChangeNotifier with ErrorNotifier {
 enum WatExample {
   global(_globalExample),
   add(_addExample),
-  hello(_helloExample)
-  ;
+  hello(_helloExample);
 
   const WatExample(this.wat);
   final String wat;

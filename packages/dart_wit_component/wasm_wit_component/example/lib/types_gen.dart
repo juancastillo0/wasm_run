@@ -119,8 +119,7 @@ enum ErrnoTypesInterface implements ToJsonSerializable {
   tooBig,
   tooSmall,
   tooFast,
-  tooSlow
-  ;
+  tooSlow;
 
   /// Returns a new instance from a JSON value.
   /// May throw if the value does not have the expected structure.
@@ -1366,8 +1365,7 @@ enum LogLevel implements ToJsonSerializable {
   debug,
   info,
   warn,
-  error
-  ;
+  error;
 
   /// Returns a new instance from a JSON value.
   /// May throw if the value does not have the expected structure.
