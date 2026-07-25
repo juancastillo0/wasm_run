@@ -1,3 +1,7 @@
+## 0.2.0+1
+
+- Fix instance dispose
+
 ## 0.2.0
 
  - flutter_rust_bridge: ^2.12.0

@@ -1,6 +1,6 @@
 name: rust_crypto
 description: Hashes, Hmacs, Argon2 Passwords and AES-GCM-SIV encryption. Digests for sha1, sha2, md5, blake3, crc32
-version: 0.0.1
+version: 0.2.0
 repository: https://github.com/juancastillo0/wasm_run
 topics:
   - wasm

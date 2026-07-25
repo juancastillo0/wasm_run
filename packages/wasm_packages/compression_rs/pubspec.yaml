@@ -1,6 +1,6 @@
 name: compression_rs
 description: Compression, decompression, zip and tar achieves (brotli, lz4, zstd, gzip, zlib, ...)
-version: 0.0.1
+version: 0.2.0
 repository: https://github.com/juancastillo0/wasm_run
 topics:
   - wasm

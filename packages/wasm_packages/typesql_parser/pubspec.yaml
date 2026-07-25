@@ -1,6 +1,6 @@
 name: typesql_parser
 description: SQL parser, AST and visitors
-version: 0.0.1
+version: 0.2.0
 repository: https://github.com/juancastillo0/wasm_run
 topics:
   - wasm

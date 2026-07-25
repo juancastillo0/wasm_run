@@ -1,6 +1,6 @@
 name: typesql_generator
 description: SQL types code generator from .sql files to Dart queries and models
-version: 0.0.1
+version: 0.2.0
 repository: https://github.com/juancastillo0/wasm_run
 topics:
   - sql
@@ -11,7 +11,7 @@ environment:
 resolution: workspace
 
 dependencies:
-  typesql: ^0.0.1
+  typesql: ^0.2.0
   build: ^4.0.5
   recase: ^4.1.0
   dart_style: ^3.1.7

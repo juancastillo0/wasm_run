@@ -1,6 +1,6 @@
 name: image_ops
 description: Enconding, deconding, transformations and operations over multiple image formats (png, jpeg, ico, gif, bmp, tiff, webp, avif, tga, farbfeld, ...)
-version: 0.0.1
+version: 0.2.0
 repository: https://github.com/juancastillo0/wasm_run
 topics:
   - wasm
