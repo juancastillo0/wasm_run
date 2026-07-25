@@ -1,3 +1,7 @@
+## 0.2.0+1
+
+- Add CMakeLists.txt for android, windows and linux
+
 ## 0.2.0
 
  - flutter_rust_bridge: ^2.12.0
