@@ -716,7 +716,7 @@ class _Instance extends WasmInstance {
 
   @override
   void dispose() {
-    // TODO: dispose
+    builder.mod.dispose();
   }
 }
 
