@@ -109,7 +109,7 @@ Future<WasmRunDart> defaultInstance() async {
     return Future.value(_wrapper!);
   }
   try {
-    return _createLib();
+    return await _createLib();
   } catch (_) {
     try {
       final externalLib = localTestingLibraryImpl();

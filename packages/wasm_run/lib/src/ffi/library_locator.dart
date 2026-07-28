@@ -38,7 +38,12 @@ Uri libBuildOutDir() {
   if (pkgRoot == null) {
     throw ArgumentError('Could not find package root with "$_pkgConfigFile".');
   }
-  return pkgRoot.resolve(_wasmRunToolDir);
+  final ownWasmRunPath = pkgRoot.resolve(_wasmRunToolDir);
+  return FileSystemEntity.isFileSync(
+        ownWasmRunPath.resolve(getDesktopLibName()).toFilePath(),
+      )
+      ? ownWasmRunPath
+      : pkgRoot.resolve('.dart_tool/lib/');
 }
 
 const _wasmRunToolDir = '.dart_tool/wasm_run/';
