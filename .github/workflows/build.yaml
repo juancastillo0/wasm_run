@@ -289,7 +289,7 @@ jobs:
           components: rustfmt
       - uses: nttld/setup-ndk@v1
         with:
-          ndk-version: r27d
+          ndk-version: r28c
       - uses: actions/setup-java@v5
         with:
           distribution: zulu
@@ -340,7 +340,7 @@ jobs:
           components: rustfmt
       - uses: nttld/setup-ndk@v1
         with:
-          ndk-version: r27d
+          ndk-version: r28c
       - uses: actions/setup-java@v5
         with:
           distribution: zulu
