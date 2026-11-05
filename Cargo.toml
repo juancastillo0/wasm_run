@@ -13,3 +13,6 @@ exclude = [
     "packages/wasm_packages/y_crdt/y_crdt_wasm/Cargo.toml",
 ]
 resolver = "2"
+
+[patch.crates-io]
+wasmtime-jit-icache-coherence = { path = "vendor/wasmtime-jit-icache-coherence" }
