@@ -7,7 +7,7 @@ use std::io::Result;
 ))]
 mod details {
     use super::*;
-    use libc::{syscall, EINVAL, EPERM};
+    use libc::{syscall, EINVAL, ENOSYS, EPERM};
     use std::io::Error;
 
     const MEMBARRIER_CMD_GLOBAL: libc::c_int = 1;
@@ -63,6 +63,9 @@ mod details {
             Err(e) if e.raw_os_error().unwrap() == EINVAL => {
                 membarrier(MEMBARRIER_CMD_GLOBAL)?;
             }
+
+            // Kernel built without CONFIG_MEMBARRIER (e.g. Samsung S9/S10/Note 10).
+            Err(e) if e.raw_os_error().unwrap() == ENOSYS => {}
 
             // In any other case we got an actual error, so lets propagate that up
             e => e?,
